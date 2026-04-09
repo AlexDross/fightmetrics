@@ -521,7 +521,7 @@ for p in sorted(out, key=lambda x: x['name']):
     p4p = ufc_p4p_rankings.get(nm) or _old_p4p.get(nm)
 
 # ELO: prefer existing calibrated value, fall back to computed for new fighters
-    elo = _old_elo.get(nm) or p.get('elo')
+    elo = p.get('elo')
 
     entry = {
         'n':   nm,
