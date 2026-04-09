@@ -555,7 +555,7 @@ const eloToRating = (elo, weightClass) => {
 
 const FIGHTERS = _D2.map((d) => {
   const eloRec = ELO_RATINGS[d.n] ?? null;
-  const fightHistory = FIGHT_HISTORY[d.n] ?? [];
+  const fightHistory = sortHistoryDesc(FIGHT_HISTORY[d.n] ?? []);
   const officialRank = UFC_RANKINGS[d.n] ?? null;
   const fallbackRank =
     d.dr != null ? { division: d.w, rank: Math.round(d.dr) } : null;
@@ -626,10 +626,11 @@ const FIGHTERS = _D2.map((d) => {
   const oqiProxy = parseFloat(
     (0.65 * rankTier + 0.35 * eloStrength).toFixed(3)
   );
-  const momentumScore = Math.max(
-    -2,
-    Math.min(2, ((d.ws ?? 0) - (d.ls ?? 0)) / 4)
-  );
+const momentumScore = Math.max(
+  -2,
+  Math.min(2, ((winStreak ?? 0) - (loseStreak ?? 0)) / 4)
+);
+  
   const qualityMomentum = computeMomentum(fightHistory);
 
   return {
