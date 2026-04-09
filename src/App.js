@@ -619,10 +619,11 @@ const FIGHTERS = _D2.map((d) => {
   const oqiProxy = parseFloat(
     (0.65 * rankTier + 0.35 * eloStrength).toFixed(3)
   );
-  const momentumScore = Math.max(
+const momentumScore = Math.max(
     -2,
     Math.min(2, ((d.ws ?? 0) - (d.ls ?? 0)) / 4)
   );
+  const qualityMomentum = computeMomentum(fightHistory);
 
   return {
     FIGHTER: d.n,
@@ -674,6 +675,7 @@ const FIGHTERS = _D2.map((d) => {
     KD_PER_MIN: kdPerMin,
     OQI: oqiProxy,
     MOMENTUM: momentumScore,
+    QUALITY_MOMENTUM: qualityMomentum,
     FINISH_QUALITY: finishRate / 100,
     FIGHT_HISTORY: fightHistory,
 
@@ -1189,11 +1191,20 @@ const MODEL = {
 const computeMatchupEdges = (fA, fB, oddsA = null, oddsB = null) => {
   const S = MODEL.SCALES;
 
+// ── Fix 3: Form-adjusted striking stats ────────────────────────────────────
+  // Discount ASL/ASP for fighters on loss streaks — proxy for stats including
+  // losing performances where output understates true competitive level.
+  // Penalty: 7% per consecutive loss, capped at 20% (3+ losses)
+  const formDecay = (ls) => Math.max(0.80, 1 - Math.min(ls ?? 0, 3) * 0.07);
+  const aslA = (fA.ASL ?? 0) * formDecay(fA.LOSE_STREAK);
+  const aslB = (fB.ASL ?? 0) * formDecay(fB.LOSE_STREAK);
+  const aspA = (fA.ASP ?? 0) * (0.6 + 0.4 * formDecay(fA.LOSE_STREAK));
+  const aspB = (fB.ASP ?? 0) * (0.6 + 0.4 * formDecay(fB.LOSE_STREAK));
+
   // ── Compute each raw differential ──────────────────────────────────────────
   const feats = {
-    sig_str_dif: ((fA.ASL ?? 0) - (fB.ASL ?? 0)) / S.sig_str_dif,
-    avg_sig_str_pct_dif:
-      ((fA.ASP ?? 0) - (fB.ASP ?? 0)) / S.avg_sig_str_pct_dif,
+    sig_str_dif: (aslA - aslB) / S.sig_str_dif,
+    avg_sig_str_pct_dif: (aspA - aspB) / S.avg_sig_str_pct_dif,
     avg_td_dif: ((fA.ATL ?? 0) - (fB.ATL ?? 0)) / S.avg_td_dif,
     avg_td_pct_dif: ((fA.ATP ?? 0) - (fB.ATP ?? 0)) / S.avg_td_pct_dif,
     avg_sub_att_dif: ((fA.ASA ?? 0) - (fB.ASA ?? 0)) / S.avg_sub_att_dif,
@@ -1318,6 +1329,12 @@ const computeMatchupEdges = (fA, fB, oddsA = null, oddsB = null) => {
 
   const oddsScore = useOdds ? clamp(oddsEdge) * (W.odds_edge ?? 0) : 0;
 
+// ── Fix 2: Quality momentum — opponent-tier-weighted form signal ───────────
+  // Uses computeMomentum output which rewards wins vs elite, penalizes losses to weak
+  const QUALITY_MOM_W = 0.055;
+  const qualMomDiff = ((fA.QUALITY_MOMENTUM ?? 0) - (fB.QUALITY_MOMENTUM ?? 0));
+  const qualMomScore = clamp(qualMomDiff / 2) * QUALITY_MOM_W;
+
   const composite =
     strikingScore +
     grapplingScore +
@@ -1325,7 +1342,8 @@ const computeMatchupEdges = (fA, fB, oddsA = null, oddsB = null) => {
     formScore +
     expScore +
     analyticsScore +
-    oddsScore;
+    oddsScore +
+    qualMomScore;
 
   // ── Platt calibration ─────────────────────────────────────────────────────
   const P = useOdds ? MODEL.PLATT_OD : MODEL.PLATT_NO;
