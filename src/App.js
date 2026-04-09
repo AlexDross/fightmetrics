@@ -513,8 +513,6 @@ const computeQualityAdjustment = (fightHistory) => {
 const getFightRoundCount = (fight) => {
   const rn = Number(fight?.rn);
   if (Number.isFinite(rn) && rn > 0) return rn;
-  // If round is missing, only infer distance for decisions.
-  // We do not assume round 3 for finishes with missing data.
   if (isDecisionMethod(fight?.me || '')) return fight?.tb ? 5 : 3;
   return null;
 };
@@ -525,10 +523,8 @@ const sumFightRounds = (history) =>
     return sum + (rounds ?? 0);
   }, 0);
 
-// "Deep rounds" here means count of fights that reached round 3 or later,
-// not the total number of rounds fought after round 2.
-// With sparse history data, count only explicit round numbers or full-distance
-// decisions; do not credit unknown-round finishes as having reached R3.
+// Count fights that reached round 3 or later.
+// Explicit round number wins. If round is missing, infer only from decisions.
 const sumDeepRounds = (history) =>
   (history || []).reduce((sum, fight) => {
     const rounds = getFightRoundCount(fight);
@@ -1527,7 +1523,7 @@ const computeMatchupEdges = (fA, fB, oddsA = null, oddsB = null) => {
     }),
     auditRow({
       group: 'Experience',
-      label: 'Career Rounds 3+',
+      label: 'Fights Reaching R3+',
       aLabel: 'DEEP_ROUNDS',
       bLabel: 'DEEP_ROUNDS',
       aValue: fA.DEEP_ROUNDS ?? 0,
