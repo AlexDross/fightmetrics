@@ -986,12 +986,13 @@ const calcTrackedProfit = (entry) => {
   return entry.actualWinner === entry.trackedSide ? (dec - 1) * 100 : -100;
 };
 
-const sortHistoryDesc = (history) =>
-  [...(history || [])].sort((a, b) => {
+function sortHistoryDesc(history) {
+  return [...(history || [])].sort((a, b) => {
     const aTime = a?.dt ? new Date(a.dt).getTime() : 0;
     const bTime = b?.dt ? new Date(b.dt).getTime() : 0;
     return bTime - aTime;
   });
+}
 
 function getResultStreak(history, target) {
   let streak = 0;
