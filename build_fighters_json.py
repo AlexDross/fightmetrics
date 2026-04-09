@@ -78,8 +78,8 @@ def nan_int(v):
 
 # ─── Fetch UFC Rankings ───────────────────────────────────────────────────────
 print("Fetching UFC rankings...")
-ufc_div_rankings = {}   # name -> division rank
-ufc_p4p_rankings = {}   # name -> p4p rank
+ufc_div_rankings = {}
+ufc_p4p_rankings = {}
 try:
     import requests
     r = requests.get(
@@ -88,22 +88,15 @@ try:
         timeout=15
     )
     html = r.text
-
-    # Find all ranking blocks — each has a division title followed by a table
     blocks = re.split(r'<div[^>]+class="[^"]*view-grouping[^"]*"[^>]*>', html)
-    p4p_rank = 1
-    in_p4p = False
-
     for block in blocks:
         title_m = re.search(r'<div[^>]+class="[^"]*view-grouping-header[^"]*"[^>]*>\s*<h4[^>]*>([^<]+)</h4>', block)
         if not title_m:
-            # fallback: look for any h4
             title_m = re.search(r'<h4[^>]*>([^<]+)</h4>', block)
         if not title_m:
             continue
         div_title = title_m.group(1).strip()
         is_p4p = 'pound' in div_title.lower()
-
         rows = re.findall(r'<tr[^>]*>(.*?)</tr>', block, re.DOTALL)
         rank = 1
         for row in rows:
@@ -118,7 +111,6 @@ try:
             else:
                 ufc_div_rankings[name] = rank
             rank += 1
-
     print(f"  Division rankings: {len(ufc_div_rankings)} fighters")
     print(f"  P4P rankings: {len(ufc_p4p_rankings)} fighters")
 except Exception as e:
@@ -227,7 +219,6 @@ for name, fight_list in fights_by_fighter.items():
     wc     = fight_list[0]['weight_class'] if fight_list else None
     tott   = tott_lookup.get(name,{})
 
-    # true_lfd from raw results — not filtered by stats availability
     all_fights_sorted = sorted(
         [f for f in fight_list if f['result'] in ('W','L','NC')],
         key=lambda x: x['date'] or '', reverse=True
@@ -362,9 +353,9 @@ print("Computing ELO ratings...")
 
 BASE_ELO    = 1500
 K_BASE      = 32
-K_EARLY     = 48    # inflated K for first 5 UFC fights
-K_FINISH    = 1.4   # multiplier for KO/TKO/Sub
-K_EARLY_RND = 1.2   # additional multiplier for R1/R2 finish
+K_EARLY     = 48
+K_FINISH    = 1.4
+K_EARLY_RND = 1.2
 
 def get_k(n_fights, method, end_round):
     k = K_EARLY if n_fights <= 5 else K_BASE
@@ -380,7 +371,6 @@ def get_k(n_fights, method, end_round):
 def elo_expected(ra, rb):
     return 1 / (1 + 10 ** ((rb - ra) / 400))
 
-# Build deduplicated chronological bout list
 all_bouts = []
 seen_bouts = set()
 for name, fight_list in fights_by_fighter.items():
@@ -422,9 +412,8 @@ for b in all_bouts:
     elo_peak[w]    = max(elo_peak[w], elo_ratings[w])
     elo_peak[l]    = max(elo_peak[l], elo_ratings[l])
 
-# Inject ELO into profiles
 for p in profiles:
-    p['elo'] = elo_ratings.get(p['name'])
+    p['elo_computed'] = elo_ratings.get(p['name'])
 
 print(f"  ELO computed for {len(elo_ratings)} fighters.")
 
@@ -442,12 +431,11 @@ with open(OUTPUT_FILE,'w') as f: json.dump(out,f,indent=2)
 
 print(f"\n✅  Done! {OUTPUT_FILE} — {len(out)} fighters.")
 
-# Sanity check
 checks = ['Israel Adesanya','Jon Jones','Islam Makhachev','Alex Pereira','Dricus Du Plessis']
 for name in checks:
     p=next((x for x in out if x['name']==name),None)
     if p:
-        print(f"  {p['name']:25s} | {(p['weight_class'] or '?'):22s} | {p['record']:8s} | elo={p.get('elo','?')} | cardio={str(p['cardio_ratio']):5s} | sig/min={p['stats']['sig_str_per_min']}")
+        print(f"  {p['name']:25s} | {(p['weight_class'] or '?'):22s} | {p['record']:8s} | elo_computed={p.get('elo_computed','?')} | cardio={str(p['cardio_ratio']):5s}")
 
 # ─── Export fightersData.js (short-key format for React app) ──────────────────
 print("\nConverting to fightersData.js format...")
@@ -455,11 +443,8 @@ print("\nConverting to fightersData.js format...")
 import re as _re
 from datetime import date as _date
 
-# Load existing fightersData.js to preserve title bouts (tb) only
-# ELO, dr, p4p are now computed automatically
-_old_tb = {}
-_old_dr = {}
-_old_p4p = {}
+# Load existing fightersData.js to preserve ELO, title bouts, dr, p4p
+_old_elo, _old_tb, _old_dr, _old_p4p = {}, {}, {}, {}
 _js_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'src', 'fightersData.js')
 if os.path.exists(_js_path):
     _js = open(_js_path).read()
@@ -470,10 +455,11 @@ if os.path.exists(_js_path):
             m = _re.search(rf"{key}:([-\d.]+|null)", s)
             if not m or m.group(1) == 'null': return None
             return float(m.group(1))
-        _old_tb[_nm]  = int(_gv('tb') or 0)
-        _old_dr[_nm]  = _gv('dr')
-        _old_p4p[_nm] = _gv('p4p')
-    print(f"  Loaded title bouts for {len(_old_tb)} fighters from existing fightersData.js")
+        _old_elo[_nm]  = _gv('elo')
+        _old_tb[_nm]   = int(_gv('tb') or 0)
+        _old_dr[_nm]   = _gv('dr')
+        _old_p4p[_nm]  = _gv('p4p')
+    print(f"  Loaded existing values for {len(_old_elo)} fighters from fightersData.js")
 else:
     print("  No existing fightersData.js found")
 
@@ -517,12 +503,12 @@ for p in sorted(out, key=lambda x: x['name']):
 
     st  = p.get('stats', {})
 
+    # ELO: prefer existing calibrated value; use computed only for brand new fighters
+    elo = _old_elo.get(nm) or p.get('elo_computed')
+
     # Rankings: use freshly scraped values, fall back to existing
     dr  = ufc_div_rankings.get(nm) or _old_dr.get(nm)
     p4p = ufc_p4p_rankings.get(nm) or _old_p4p.get(nm)
-
-# ELO: prefer existing calibrated value, fall back to computed for new fighters
-    elo = p.get('elo')
 
     entry = {
         'n':   nm,
