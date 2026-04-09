@@ -177,6 +177,13 @@ for name, fight_list in fights_by_fighter.items():
     wc     = fight_list[0]['weight_class'] if fight_list else None
     tott   = tott_lookup.get(name,{})
 
+    # true_lfd from raw results — not filtered by stats availability
+    all_fights_sorted = sorted(
+        [f for f in fight_list if f['result'] in ('W','L','NC')],
+        key=lambda x: x['date'] or '', reverse=True
+    )
+    true_lfd = all_fights_sorted[0]['date'] if all_fights_sorted else None
+
     fight_history = []
     for fight in scored:
         event,opponent = fight['event'],fight['opponent']
@@ -239,6 +246,7 @@ for name, fight_list in fights_by_fighter.items():
         'name':name,'weight_class':wc,
         'record':f"{wins}-{losses}"+(f"-{ncs}NC" if ncs else ""),
         'wins':wins,'losses':losses,
+        'true_lfd':true_lfd,
         'age':calc_age(tott.get('dob')),'dob':tott.get('dob'),
         'height_in':tott.get('height_in'),'weight_lbs':tott.get('weight_lbs'),
         'reach_in':tott.get('reach_in'),'stance':tott.get('stance'),
@@ -319,6 +327,7 @@ for name in checks:
     p=next((x for x in out if x['name']==name),None)
     if p:
         print(f"  {p['name']:25s} | {(p['weight_class'] or '?'):22s} | {p['record']:8s} | cardio={str(p['cardio_ratio']):5s} | sig/min={p['stats']['sig_str_per_min']}")
+
 # ─── Export fightersData.js (short-key format for React app) ──────────────────
 print("\nConverting to fightersData.js format...")
 
@@ -327,7 +336,7 @@ from datetime import date as _date
 
 # Load existing fightersData.js to preserve ELO, ranks, title bouts
 _old_elo, _old_dr, _old_p4p, _old_tb = {}, {}, {}, {}
-_js_path = os.path.join(os.path.dirname(__file__), 'src', 'fightersData.js')
+_js_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'src', 'fightersData.js')
 if os.path.exists(_js_path):
     _js = open(_js_path).read()
     for _m in _re.finditer(r"\{n:'([^']+)'[^}]+\}", _js):
@@ -373,7 +382,9 @@ js_lines = []
 for p in sorted(out, key=lambda x: x['name']):
     nm  = p['name']
     fh  = p.get('fight_history', [])
-    lfd = fh[0]['date'] if fh else None
+
+    # Use true_lfd (from raw results) so recent fights with missing stats still update lfd
+    lfd = p.get('true_lfd') or (fh[0]['date'] if fh else None)
     dsl = (TODAY - _date.fromisoformat(lfd)).days if lfd else None
 
     ws, ls = _streak(fh)
