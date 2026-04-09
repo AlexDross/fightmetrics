@@ -64,9 +64,10 @@ def parse_date(s):
 def clean_wc(s):
     if not isinstance(s,str): return None
     s = s.strip()
-    s = re.sub(r'\bUFC\b',   '', s, flags=re.IGNORECASE)
-    s = re.sub(r'\bTitle\b', '', s, flags=re.IGNORECASE)
-    s = re.sub(r'\bBout\b',  '', s, flags=re.IGNORECASE)
+    s = re.sub(r'\bUFC\b',     '', s, flags=re.IGNORECASE)
+    s = re.sub(r'\bTitle\b',   '', s, flags=re.IGNORECASE)
+    s = re.sub(r'\bBout\b',    '', s, flags=re.IGNORECASE)
+    s = re.sub(r'\bInterim\b', '', s, flags=re.IGNORECASE)
     return re.sub(r'\s+',' ',s).strip()
 
 def safe_div(a,b,default=0.0): return a/b if b else default
