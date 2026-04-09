@@ -513,6 +513,8 @@ const computeQualityAdjustment = (fightHistory) => {
 const getFightRoundCount = (fight) => {
   const rn = Number(fight?.rn);
   if (Number.isFinite(rn) && rn > 0) return rn;
+  // If round is missing, only infer distance for decisions.
+  // We do not assume round 3 for finishes with missing data.
   if (isDecisionMethod(fight?.me || '')) return fight?.tb ? 5 : 3;
   return null;
 };
@@ -523,8 +525,10 @@ const sumFightRounds = (history) =>
     return sum + (rounds ?? 0);
   }, 0);
 
-// Count fights that reached round 3 or later.
-// Explicit round number wins. If round is missing, infer only from decisions.
+// "Deep rounds" here means count of fights that reached round 3 or later,
+// not the total number of rounds fought after round 2.
+// With sparse history data, count only explicit round numbers or full-distance
+// decisions; do not credit unknown-round finishes as having reached R3.
 const sumDeepRounds = (history) =>
   (history || []).reduce((sum, fight) => {
     const rounds = getFightRoundCount(fight);
@@ -626,11 +630,10 @@ const FIGHTERS = _D2.map((d) => {
   const oqiProxy = parseFloat(
     (0.65 * rankTier + 0.35 * eloStrength).toFixed(3)
   );
-const momentumScore = Math.max(
-  -2,
-  Math.min(2, ((winStreak ?? 0) - (loseStreak ?? 0)) / 4)
-);
-  
+  const momentumScore = Math.max(
+    -2,
+    Math.min(2, ((winStreak ?? 0) - (loseStreak ?? 0)) / 4)
+  );
   const qualityMomentum = computeMomentum(fightHistory);
 
   return {
@@ -1371,7 +1374,258 @@ const computeMatchupEdges = (fA, fB, oddsA = null, oddsB = null) => {
     (fA.QUALITY_MOMENTUM ?? 0) - (fB.QUALITY_MOMENTUM ?? 0);
   const qualMomScore = clamp(qualMomDiff / 2) * QUALITY_MOM_W;
 
-
+  const auditRows = [
+    auditRow({
+      group: 'Striking',
+      label: 'Sig Strikes Landed / Min',
+      aLabel: 'ASL',
+      bLabel: 'ASL',
+      aValue: aslA,
+      bValue: aslB,
+      diff: feats.sig_str_dif,
+      scale: S.sig_str_dif,
+      weight: W.sig_str_dif,
+    }),
+    auditRow({
+      group: 'Striking',
+      label: 'Strike Accuracy',
+      aLabel: 'ASP',
+      bLabel: 'ASP',
+      aValue: aspA,
+      bValue: aspB,
+      diff: feats.avg_sig_str_pct_dif,
+      scale: S.avg_sig_str_pct_dif,
+      weight: accCombinedW,
+    }),
+    auditRow({
+      group: 'Grappling',
+      label: 'Takedowns / 15 Min',
+      aLabel: 'ATL',
+      bLabel: 'ATL',
+      aValue: fA.ATL ?? 0,
+      bValue: fB.ATL ?? 0,
+      diff: feats.avg_td_dif,
+      scale: S.avg_td_dif,
+      weight: tdOffenseWeight,
+    }),
+    auditRow({
+      group: 'Grappling',
+      label: 'Takedown Accuracy',
+      aLabel: 'ATP',
+      bLabel: 'ATP',
+      aValue: fA.ATP ?? 0,
+      bValue: fB.ATP ?? 0,
+      diff: feats.avg_td_pct_dif,
+      scale: S.avg_td_pct_dif,
+      weight: tdDefenseWeight,
+    }),
+    auditRow({
+      group: 'Grappling',
+      label: 'Sub Attempts / 15 Min',
+      aLabel: 'ASA',
+      bLabel: 'ASA',
+      aValue: fA.ASA ?? 0,
+      bValue: fB.ASA ?? 0,
+      diff: feats.avg_sub_att_dif,
+      scale: S.avg_sub_att_dif,
+      weight: subThreatWeight,
+    }),
+    auditRow({
+      group: 'Grappling',
+      label: 'Control Time %',
+      aLabel: 'CONTROL_TIME_PCT',
+      bLabel: 'CONTROL_TIME_PCT',
+      aValue: fA.CONTROL_TIME_PCT ?? 0,
+      bValue: fB.CONTROL_TIME_PCT ?? 0,
+      diff: feats.control_time_dif,
+      scale: S.control_time_dif,
+      weight: controlWeight,
+    }),
+    auditRow({
+      group: 'Physical',
+      label: 'Reach',
+      aLabel: 'REACH_IN',
+      bLabel: 'REACH_IN',
+      aValue: fA.REACH_IN ?? 0,
+      bValue: fB.REACH_IN ?? 0,
+      diff: feats.reach_dif,
+      scale: S.reach_dif,
+      weight: W.reach_dif,
+    }),
+    auditRow({
+      group: 'Physical',
+      label: 'Height',
+      aLabel: 'HEIGHT_IN',
+      bLabel: 'HEIGHT_IN',
+      aValue: fA.HEIGHT_IN ?? 0,
+      bValue: fB.HEIGHT_IN ?? 0,
+      diff: feats.height_dif,
+      scale: S.height_dif,
+      weight: W.height_dif,
+    }),
+    auditRow({
+      group: 'Physical',
+      label: 'Age',
+      aLabel: 'AGE',
+      bLabel: 'AGE',
+      aValue: fA.AGE ?? 30,
+      bValue: fB.AGE ?? 30,
+      diff: feats.age_dif,
+      scale: S.age_dif,
+      weight: W.age_dif,
+      higherBetter: false,
+    }),
+    auditRow({
+      group: 'Form',
+      label: 'Win Streak',
+      aLabel: 'WIN_STREAK',
+      bLabel: 'WIN_STREAK',
+      aValue: fA.WIN_STREAK ?? 0,
+      bValue: fB.WIN_STREAK ?? 0,
+      diff: feats.win_streak_dif,
+      scale: S.win_streak_dif,
+      weight: W.win_streak_dif,
+    }),
+    auditRow({
+      group: 'Form',
+      label: 'Loss Streak',
+      aLabel: 'LOSE_STREAK',
+      bLabel: 'LOSE_STREAK',
+      aValue: fA.LOSE_STREAK ?? 0,
+      bValue: fB.LOSE_STREAK ?? 0,
+      diff: feats.lose_streak_dif,
+      scale: S.lose_streak_dif,
+      weight: W.lose_streak_dif,
+      higherBetter: false,
+    }),
+    auditRow({
+      group: 'Form',
+      label: 'UFC Wins',
+      aLabel: 'WINS',
+      bLabel: 'WINS',
+      aValue: fA.WINS ?? 0,
+      bValue: fB.WINS ?? 0,
+      diff: feats.win_dif,
+      scale: S.win_dif,
+      weight: W.win_dif,
+    }),
+    auditRow({
+      group: 'Form',
+      label: 'UFC Losses',
+      aLabel: 'LOSSES',
+      bLabel: 'LOSSES',
+      aValue: fA.LOSSES ?? 0,
+      bValue: fB.LOSSES ?? 0,
+      diff: feats.loss_dif,
+      scale: S.loss_dif,
+      weight: W.loss_dif,
+      higherBetter: false,
+    }),
+    auditRow({
+      group: 'Experience',
+      label: 'UFC Fight Count',
+      aLabel: 'UFC_FIGHT_COUNT',
+      bLabel: 'UFC_FIGHT_COUNT',
+      aValue: fA.UFC_FIGHT_COUNT ?? 0,
+      bValue: fB.UFC_FIGHT_COUNT ?? 0,
+      diff: feats.ufc_fight_count_dif,
+      scale: S.ufc_fight_count_dif,
+      weight: fightCountWeight,
+    }),
+    auditRow({
+      group: 'Experience',
+      label: 'Career Rounds 3+',
+      aLabel: 'DEEP_ROUNDS',
+      bLabel: 'DEEP_ROUNDS',
+      aValue: fA.DEEP_ROUNDS ?? 0,
+      bValue: fB.DEEP_ROUNDS ?? 0,
+      diff: feats.deep_round_dif,
+      scale: S.total_round_dif,
+      weight: deepRoundsWeight,
+    }),
+    auditRow({
+      group: 'Finishing',
+      label: 'KO Wins',
+      aLabel: 'KO_WINS',
+      bLabel: 'KO_WINS',
+      aValue: fA.KO_WINS ?? 0,
+      bValue: fB.KO_WINS ?? 0,
+      diff: feats.ko_dif,
+      scale: S.ko_dif,
+      weight: W.ko_dif,
+    }),
+    auditRow({
+      group: 'Finishing',
+      label: 'Submission Wins',
+      aLabel: 'SUB_WINS',
+      bLabel: 'SUB_WINS',
+      aValue: fA.SUB_WINS ?? 0,
+      bValue: fB.SUB_WINS ?? 0,
+      diff: feats.sub_dif,
+      scale: S.sub_dif,
+      weight: W.sub_dif,
+    }),
+    auditRow({
+      group: 'Analytics',
+      label: 'ELO',
+      aLabel: 'ELO',
+      bLabel: 'ELO',
+      aValue: fA.ELO ?? 1500,
+      bValue: fB.ELO ?? 1500,
+      diff: feats.elo_dif,
+      scale: S.elo_dif,
+      weight: W.elo_dif,
+    }),
+    auditRow({
+      group: 'Analytics',
+      label: 'Days Since Last Fight',
+      aLabel: 'DAYS_SINCE_LAST',
+      bLabel: 'DAYS_SINCE_LAST',
+      aValue: fA.DAYS_SINCE_LAST ?? 180,
+      bValue: fB.DAYS_SINCE_LAST ?? 180,
+      diff: feats.layoff_dif,
+      scale: S.layoff_dif,
+      weight: W.layoff_dif,
+      higherBetter: false,
+    }),
+    auditRow({
+      group: 'Analytics',
+      label: 'Cardio Ratio',
+      aLabel: 'CARDIO_RATIO',
+      bLabel: 'CARDIO_RATIO',
+      aValue: fA.CARDIO_RATIO ?? 1,
+      bValue: fB.CARDIO_RATIO ?? 1,
+      diff: feats.cardio_dif,
+      scale: S.cardio_dif,
+      weight: W.cardio_dif,
+    }),
+    auditRow({
+      group: 'Analytics',
+      label: 'Quality Momentum',
+      aLabel: 'QUALITY_MOMENTUM',
+      bLabel: 'QUALITY_MOMENTUM',
+      aValue: fA.QUALITY_MOMENTUM ?? 0,
+      bValue: fB.QUALITY_MOMENTUM ?? 0,
+      diff: qualMomDiff / 2,
+      scale: 2,
+      weight: QUALITY_MOM_W,
+    }),
+    ...(useOdds
+      ? [
+          auditRow({
+            group: 'Market',
+            label: 'Odds Edge',
+            aLabel: 'ODDS_IMPLIED',
+            bLabel: 'ODDS_IMPLIED',
+            aValue: oddsImplA ?? 0,
+            bValue: oddsImplB ?? 0,
+            diff: oddsEdge,
+            scale: S.odds_edge,
+            weight: W.odds_edge ?? 0,
+          }),
+        ]
+      : []),
+  ];
 
   const composite =
     strikingScore +
@@ -1450,6 +1704,9 @@ const computeMatchupEdges = (fA, fB, oddsA = null, oddsB = null) => {
     pB: 1 - pA,
     composite,
     edges,
+    auditRows,
+    activeWeights: W,
+    activeScales: S,
     oddsImplA,
     oddsImplB,
     feats,
@@ -2693,6 +2950,41 @@ function MatchupSimulator({ allFighters, onSavePrediction, onOpenROI }) {
     return a < b ? 'A' : 'B';
   };
 
+  const formatAuditValue = (label, value) => {
+    if (value == null) return '—';
+    if (label === 'Strike Accuracy' || label === 'Takedown Accuracy')
+      return `${(Number(value) * 100).toFixed(1)}%`;
+    if (label === 'Odds Edge') return `${(Number(value) * 100).toFixed(1)}%`;
+    if (label === 'Control Time %') return `${Number(value).toFixed(1)}%`;
+    if (label === 'Reach') return fmtReach(Number(value));
+    if (label === 'Height') return fmtHeight(Number(value));
+    if (label === 'Cardio Ratio' || label === 'Quality Momentum')
+      return `${Number(value) > 0 && label === 'Quality Momentum' ? '+' : ''}${Number(value).toFixed(2)}`;
+    if (label === 'ELO' || label.includes('Fight Count') || label.includes('Rounds') || label.includes('Wins') || label === 'Age' || label === 'Days Since Last Fight')
+      return `${Number(value).toFixed(0)}`;
+    return `${Number(value).toFixed(2)}`;
+  };
+
+  const auditGroups = useMemo(() => {
+    if (!result?.auditRows) return [];
+    const order = [
+      'Striking',
+      'Grappling',
+      'Physical',
+      'Form',
+      'Experience',
+      'Finishing',
+      'Analytics',
+      'Market',
+    ];
+    return order
+      .map((group) => ({
+        group,
+        rows: result.auditRows.filter((row) => row.group === group),
+      }))
+      .filter((entry) => entry.rows.length > 0);
+  }, [result]);
+
   const FighterPanel = ({ f, setF, color, ph }) => {
     const tc = color === 'blue' ? 'text-blue-400' : 'text-red-400';
     const bc =
@@ -3667,8 +3959,78 @@ function MatchupSimulator({ allFighters, onSavePrediction, onOpenROI }) {
             </div>
           </div>
 
+          <div className="bg-slate-900 border border-amber-700/40 rounded-xl p-5">
+            <div className="flex items-start justify-between gap-4 mb-5">
+              <div>
+                <p className="text-amber-300 text-xs font-semibold uppercase tracking-widest">
+                  Temporary Full Model Audit
+                </p>
+                <p className="text-slate-500 text-xs mt-1">
+                  Every active prediction feature, its normalized differential,
+                  applied weight, and exact contribution to the composite score.
+                </p>
+              </div>
+              <div className="text-right text-xs text-slate-500">
+                <p>Composite: {result.composite.toFixed(3)}</p>
+                <p>Platt: a={MODEL.PLATT_NO.a.toFixed(3)} · b={MODEL.PLATT_NO.b.toFixed(3)}</p>
+              </div>
+            </div>
 
-
+            <div className="space-y-4">
+              {auditGroups.map(({ group, rows }) => (
+                <div key={group} className="border border-slate-800 rounded-xl overflow-hidden">
+                  <div className="bg-slate-800/50 px-4 py-3 border-b border-slate-800">
+                    <p className="text-white text-sm font-bold">{group}</p>
+                  </div>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead className="bg-slate-900/80">
+                        <tr className="text-slate-500 text-xs uppercase tracking-wider">
+                          <th className="text-left px-4 py-3">Feature</th>
+                          <th className="text-right px-3 py-3">{fA.FIGHTER.split(' ').pop()}</th>
+                          <th className="text-right px-3 py-3">{fB.FIGHTER.split(' ').pop()}</th>
+                          <th className="text-right px-3 py-3">Norm Diff</th>
+                          <th className="text-right px-3 py-3">Scale</th>
+                          <th className="text-right px-3 py-3">Weight</th>
+                          <th className="text-right px-4 py-3">Contribution</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {rows.map((row) => (
+                          <tr key={`${group}-${row.label}`} className="border-t border-slate-800">
+                            <td className="px-4 py-3">
+                              <p className="text-slate-200 font-semibold">{row.label}</p>
+                              <p className="text-slate-500 text-xs mt-0.5">
+                                {row.aLabel} vs {row.bLabel}
+                              </p>
+                            </td>
+                            <td className="px-3 py-3 text-right font-mono text-blue-300">
+                              {formatAuditValue(row.label, row.aValue)}
+                            </td>
+                            <td className="px-3 py-3 text-right font-mono text-red-300">
+                              {formatAuditValue(row.label, row.bValue)}
+                            </td>
+                            <td className={`px-3 py-3 text-right font-mono ${row.diff > 0 ? 'text-blue-300' : row.diff < 0 ? 'text-red-300' : 'text-slate-400'}`}>
+                              {row.diff > 0 ? '+' : ''}{row.diff.toFixed(3)}
+                            </td>
+                            <td className="px-3 py-3 text-right font-mono text-slate-400">
+                              {row.scale.toFixed(3)}
+                            </td>
+                            <td className="px-3 py-3 text-right font-mono text-slate-300">
+                              {row.weight.toFixed(4)}
+                            </td>
+                            <td className={`px-4 py-3 text-right font-mono font-bold ${row.contribution > 0 ? 'text-blue-300' : row.contribution < 0 ? 'text-red-300' : 'text-slate-400'}`}>
+                              {row.contribution > 0 ? '+' : ''}{row.contribution.toFixed(4)}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
 
           {/* ── FINISH PROBABILITY ── */}
           <div className="bg-slate-900 border border-slate-700 rounded-xl p-5">
