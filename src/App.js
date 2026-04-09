@@ -510,18 +510,29 @@ const computeQualityAdjustment = (fightHistory) => {
   return Math.max(-18, Math.min(12, winBoost - lossPenalty));
 };
 
-const getFightRoundCount = (fight) => Math.max(1, Number(fight?.rn) || 3);
+const getFightRoundCount = (fight) => {
+  const rn = Number(fight?.rn);
+  if (Number.isFinite(rn) && rn > 0) return rn;
+  // If round is missing, only infer distance for decisions.
+  // We do not assume round 3 for finishes with missing data.
+  if (isDecisionMethod(fight?.me || '')) return fight?.tb ? 5 : 3;
+  return null;
+};
 
 const sumFightRounds = (history) =>
-  (history || []).reduce((sum, fight) => sum + getFightRoundCount(fight), 0);
+  (history || []).reduce((sum, fight) => {
+    const rounds = getFightRoundCount(fight);
+    return sum + (rounds ?? 0);
+  }, 0);
 
-// "Deep rounds" capture proven ability to operate once a fight extends past
-// the early finishing window, without rewarding raw accumulated rounds alone.
+// "Deep rounds" means total career rounds fought from round 3 onward.
+// With sparse history data, count only explicit round numbers or full-distance
+// decisions; do not credit unknown-round finishes as having reached R3.
 const sumDeepRounds = (history) =>
-  (history || []).reduce(
-    (sum, fight) => sum + Math.max(0, getFightRoundCount(fight) - 2),
-    0
-  );
+  (history || []).reduce((sum, fight) => {
+    const rounds = getFightRoundCount(fight);
+    return sum + Math.max(0, (rounds ?? 0) - 2);
+  }, 0);
 
 // ─── FIGHTERS MAPPING (v5) ────────────────────────────────────────────────────
 // Replace the entire `const FIGHTERS = _D.map((d) => { ... });` block with this.
@@ -562,8 +573,7 @@ const FIGHTERS = _D2.map((d) => {
   const wins = fightHistory.length > 0 ? historyWins.length : d.wi ?? 0;
   const losses = fightHistory.length > 0 ? historyLosses.length : d.lo ?? 0;
   const totalFights = wins + losses;
-  const totalRounds =
-    fightHistory.length > 0 ? sumFightRounds(fightHistory) : d.tr ?? 0;
+  const totalRounds = d.tr ?? (fightHistory.length > 0 ? sumFightRounds(fightHistory) : 0);
   const deepRounds = fightHistory.length > 0 ? sumDeepRounds(fightHistory) : 0;
   const koWins =
     fightHistory.length > 0
@@ -2225,7 +2235,7 @@ const SIMULATOR_COMPARISON_GROUPS = [
       },
       {
         key: 'DEEP_ROUNDS',
-        label: 'Deep Rounds (R3+)',
+        label: 'Career Rounds 3+',
         higherBetter: true,
         decimals: 0,
       },
