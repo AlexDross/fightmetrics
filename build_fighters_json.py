@@ -97,7 +97,7 @@ for _,r in tott_df.iterrows():
 # ─── Parse fight results ──────────────────────────────────────────────────────
 print("Parsing results...")
 results_df['EVENT'] = results_df['EVENT'].str.strip()
-results_df['DATE']  = results_df['EVENT'].map(event_dates)
+results_df['DATE']  = results_df['EVENT'].str.strip().map(event_dates)
 
 def split_bout(bout):
     parts = re.split(r'\s+vs\.?\s+', str(bout).strip(), maxsplit=1)
