@@ -364,7 +364,7 @@ def _streak(fight_history):
 
 def _fmt(v):
     if v is None: return 'null'
-    if isinstance(v, str): return f"'{v}'"
+    if isinstance(v, str): return "'" + v.replace("'", "\\'") + "'"
     if isinstance(v, float):
         return str(int(v)) if v == int(v) and abs(v) < 1e9 else str(v)
     return str(v)
