@@ -397,6 +397,7 @@ for name, fight_list in fights_by_fighter.items():
                     'end_round': f['end_round'],
                 })
 
+all_bouts = [b for b in all_bouts if b['date'] and b['date'] >= '2001-01-01']
 all_bouts.sort(key=lambda x: x['date'])
 
 elo_ratings = {}
