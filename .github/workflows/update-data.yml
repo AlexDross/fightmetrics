@@ -2,8 +2,8 @@ name: Update Fighter Data
 
 on:
   schedule:
-    - cron: '0 12 * * 2'  # Every Tuesday at noon UTC (day after fight nights)
-  workflow_dispatch:        # Also allows manual trigger
+    - cron: '0 12 * * 2'  # Every Tuesday at noon UTC
+  workflow_dispatch:        # Allows manual trigger
 
 jobs:
   update:
@@ -17,7 +17,7 @@ jobs:
           python-version: '3.10'
 
       - name: Install dependencies
-        run: pip install pandas numpy requests
+        run: pip install pandas numpy
 
       - name: Download UFC stats
         run: |
@@ -25,16 +25,13 @@ jobs:
           unzip -q main.zip
           cp scrape_ufc_stats-main/*.csv .
 
-      - name: Build fighters JSON
+      - name: Build fighters data
         run: python build_fighters_json.py
-
-      - name: Move JSON to src
-        run: cp fighters.json src/fighters.json
 
       - name: Commit and push
         run: |
           git config user.name "github-actions"
           git config user.email "actions@github.com"
-          git add src/fighters.json
+          git add src/fightersData.js fighters.json
           git commit -m "Auto-update fighter data $(date +%Y-%m-%d)" || echo "No changes"
           git push
