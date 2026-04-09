@@ -619,11 +619,10 @@ const FIGHTERS = _D2.map((d) => {
   const oqiProxy = parseFloat(
     (0.65 * rankTier + 0.35 * eloStrength).toFixed(3)
   );
-const momentumScore = Math.max(
+  const momentumScore = Math.max(
     -2,
     Math.min(2, ((d.ws ?? 0) - (d.ls ?? 0)) / 4)
   );
-  const qualityMomentum = computeMomentum(fightHistory);
 
   return {
     FIGHTER: d.n,
@@ -675,7 +674,6 @@ const momentumScore = Math.max(
     KD_PER_MIN: kdPerMin,
     OQI: oqiProxy,
     MOMENTUM: momentumScore,
-    QUALITY_MOMENTUM: qualityMomentum,
     FINISH_QUALITY: finishRate / 100,
     FIGHT_HISTORY: fightHistory,
 
@@ -1191,20 +1189,11 @@ const MODEL = {
 const computeMatchupEdges = (fA, fB, oddsA = null, oddsB = null) => {
   const S = MODEL.SCALES;
 
-// ── Fix 3: Form-adjusted striking stats ────────────────────────────────────
-  // Discount ASL/ASP for fighters on loss streaks — proxy for stats including
-  // losing performances where output understates true competitive level.
-  // Penalty: 7% per consecutive loss, capped at 20% (3+ losses)
-  const formDecay = (ls) => Math.max(0.80, 1 - Math.min(ls ?? 0, 3) * 0.07);
-  const aslA = (fA.ASL ?? 0) * formDecay(fA.LOSE_STREAK);
-  const aslB = (fB.ASL ?? 0) * formDecay(fB.LOSE_STREAK);
-  const aspA = (fA.ASP ?? 0) * (0.6 + 0.4 * formDecay(fA.LOSE_STREAK));
-  const aspB = (fB.ASP ?? 0) * (0.6 + 0.4 * formDecay(fB.LOSE_STREAK));
-
   // ── Compute each raw differential ──────────────────────────────────────────
   const feats = {
-    sig_str_dif: (aslA - aslB) / S.sig_str_dif,
-    avg_sig_str_pct_dif: (aspA - aspB) / S.avg_sig_str_pct_dif,
+    sig_str_dif: ((fA.ASL ?? 0) - (fB.ASL ?? 0)) / S.sig_str_dif,
+    avg_sig_str_pct_dif:
+      ((fA.ASP ?? 0) - (fB.ASP ?? 0)) / S.avg_sig_str_pct_dif,
     avg_td_dif: ((fA.ATL ?? 0) - (fB.ATL ?? 0)) / S.avg_td_dif,
     avg_td_pct_dif: ((fA.ATP ?? 0) - (fB.ATP ?? 0)) / S.avg_td_pct_dif,
     avg_sub_att_dif: ((fA.ASA ?? 0) - (fB.ASA ?? 0)) / S.avg_sub_att_dif,
@@ -1329,12 +1318,6 @@ const computeMatchupEdges = (fA, fB, oddsA = null, oddsB = null) => {
 
   const oddsScore = useOdds ? clamp(oddsEdge) * (W.odds_edge ?? 0) : 0;
 
-// ── Fix 2: Quality momentum — opponent-tier-weighted form signal ───────────
-  // Uses computeMomentum output which rewards wins vs elite, penalizes losses to weak
-  const QUALITY_MOM_W = 0.055;
-  const qualMomDiff = ((fA.QUALITY_MOMENTUM ?? 0) - (fB.QUALITY_MOMENTUM ?? 0));
-  const qualMomScore = clamp(qualMomDiff / 2) * QUALITY_MOM_W;
-
   const composite =
     strikingScore +
     grapplingScore +
@@ -1342,8 +1325,7 @@ const computeMatchupEdges = (fA, fB, oddsA = null, oddsB = null) => {
     formScore +
     expScore +
     analyticsScore +
-    oddsScore +
-    qualMomScore;
+    oddsScore;
 
   // ── Platt calibration ─────────────────────────────────────────────────────
   const P = useOdds ? MODEL.PLATT_OD : MODEL.PLATT_NO;
@@ -1453,10 +1435,10 @@ function Header({ view, setView }) {
         </div>
         <div>
           <h1 className="text-white font-black text-base tracking-tight leading-none">
-            FightMetrics
+            DrossPom
           </h1>
           <p className="text-slate-500 text-xs mt-0.5">
-            MMA Analytics · {FIGHTERS.length} active fighters · v7
+            KenPom-Style Analytics · {FIGHTERS.length} active fighters · v7
           </p>
         </div>
       </div>
@@ -2106,6 +2088,168 @@ function FightCard({ fight, index }) {
   );
 }
 
+const SIMULATOR_COMPARISON_GROUPS = [
+  {
+    title: 'Striking Inputs',
+    icon: '⚔️',
+    items: [
+      {
+        key: 'ASL',
+        label: 'Sig Strikes Landed / Min',
+        higherBetter: true,
+        decimals: 2,
+      },
+      {
+        key: 'ASP',
+        label: 'Strike Accuracy %',
+        higherBetter: true,
+        decimals: 1,
+        pct: true,
+      },
+    ],
+  },
+  {
+    title: 'Grappling Inputs',
+    icon: '🤼',
+    items: [
+      {
+        key: 'ATL',
+        label: 'Takedowns / 15 Min',
+        higherBetter: true,
+        decimals: 2,
+      },
+      {
+        key: 'ATP',
+        label: 'Takedown Accuracy %',
+        higherBetter: true,
+        decimals: 1,
+        pct: true,
+      },
+      {
+        key: 'ASA',
+        label: 'Sub Attempts / 15 Min',
+        higherBetter: true,
+        decimals: 2,
+      },
+      {
+        key: 'CONTROL_TIME_PCT',
+        label: 'Control Time %',
+        higherBetter: true,
+        decimals: 1,
+        pct: true,
+      },
+    ],
+  },
+  {
+    title: 'Physical Inputs',
+    icon: '📏',
+    items: [
+      {
+        key: 'REACH_IN',
+        label: 'Reach',
+        higherBetter: true,
+        format: (v) => fmtReach(v),
+      },
+      {
+        key: 'HEIGHT_IN',
+        label: 'Height',
+        higherBetter: true,
+        format: (v) => fmtHeight(v),
+      },
+      {
+        key: 'AGE',
+        label: 'Age',
+        higherBetter: false,
+        decimals: 0,
+      },
+    ],
+  },
+  {
+    title: 'Form Inputs',
+    icon: '📈',
+    items: [
+      {
+        key: 'WIN_STREAK',
+        label: 'Win Streak',
+        higherBetter: true,
+        decimals: 0,
+      },
+      {
+        key: 'LOSE_STREAK',
+        label: 'Loss Streak',
+        higherBetter: false,
+        decimals: 0,
+      },
+      {
+        key: 'WINS',
+        label: 'UFC Wins',
+        higherBetter: true,
+        decimals: 0,
+      },
+      {
+        key: 'LOSSES',
+        label: 'UFC Losses',
+        higherBetter: false,
+        decimals: 0,
+      },
+    ],
+  },
+  {
+    title: 'Experience Inputs',
+    icon: '🎖️',
+    items: [
+      {
+        key: 'UFC_FIGHT_COUNT',
+        label: 'UFC Fight Count',
+        higherBetter: true,
+        decimals: 0,
+      },
+      {
+        key: 'DEEP_ROUNDS',
+        label: 'Deep Rounds (R3+)',
+        higherBetter: true,
+        decimals: 0,
+      },
+      {
+        key: 'KO_WINS',
+        label: 'KO Wins',
+        higherBetter: true,
+        decimals: 0,
+      },
+      {
+        key: 'SUB_WINS',
+        label: 'Submission Wins',
+        higherBetter: true,
+        decimals: 0,
+      },
+    ],
+  },
+  {
+    title: 'Analytics Inputs',
+    icon: '📊',
+    items: [
+      {
+        key: 'ELO',
+        label: 'ELO',
+        higherBetter: true,
+        decimals: 0,
+      },
+      {
+        key: 'DAYS_SINCE_LAST',
+        label: 'Days Since Last Fight',
+        higherBetter: false,
+        decimals: 0,
+      },
+      {
+        key: 'CARDIO_RATIO',
+        label: 'Cardio Ratio',
+        higherBetter: true,
+        decimals: 2,
+      },
+    ],
+  },
+];
+
 // ─── MATCHUP SIMULATOR ────────────────────────────────────────────────────────
 function MatchupSimulator({ allFighters, onSavePrediction, onOpenROI }) {
   const [fA, setFA] = useState(null);
@@ -2444,6 +2588,31 @@ function MatchupSimulator({ allFighters, onSavePrediction, onOpenROI }) {
     if (v == null) return '—';
     const s = Math.abs(v).toFixed(dec) + (pct ? '%' : '');
     return signed ? (v >= 0 ? `+${s}` : `-${s}`) : s;
+  };
+
+  const formatComparisonValue = (fighter, item) => {
+    const v = fighter?.[item.key];
+    if (v == null) return '—';
+    if (item.format) return item.format(v);
+    return `${Number(v).toFixed(item.decimals ?? 1)}${item.pct ? '%' : ''}`;
+  };
+
+  const formatDelta = (a, b, item) => {
+    if (a == null || b == null) return '—';
+    const diff = a - b;
+    if (Math.abs(diff) < 0.001) return 'Even';
+    const abs = Math.abs(diff);
+    const value = item.formatDelta
+      ? item.formatDelta(abs)
+      : `${abs.toFixed(item.decimals ?? 1)}${item.pct ? '%' : ''}`;
+    return `${diff > 0 ? '+' : '-'}${value}`;
+  };
+
+  const getComparisonOutcome = (a, b, item) => {
+    if (a == null || b == null) return 'even';
+    if (Math.abs(a - b) < 0.001) return 'even';
+    if (item.higherBetter) return a > b ? 'A' : 'B';
+    return a < b ? 'A' : 'B';
   };
 
   const FighterPanel = ({ f, setF, color, ph }) => {
@@ -3313,6 +3482,103 @@ function MatchupSimulator({ allFighters, onSavePrediction, onOpenROI }) {
                   </div>
                 );
               })}
+            </div>
+          </div>
+
+          <div className="bg-slate-900 border border-slate-700 rounded-xl p-5">
+            <div className="flex items-start justify-between gap-4 mb-5">
+              <div>
+                <p className="text-slate-400 text-xs font-semibold uppercase tracking-widest">
+                  Model Input Comparison
+                </p>
+                <p className="text-slate-500 text-xs mt-1">
+                  Every stat currently feeding the matchup score, grouped by the
+                  same buckets the simulator uses.
+                </p>
+              </div>
+              <div className="text-right text-xs text-slate-500">
+                <p>Blue = {fA.FIGHTER.split(' ').pop()} edge</p>
+                <p>Red = {fB.FIGHTER.split(' ').pop()} edge</p>
+              </div>
+            </div>
+            <div className="space-y-4">
+              {SIMULATOR_COMPARISON_GROUPS.map((group) => (
+                <div
+                  key={group.title}
+                  className="border border-slate-800 rounded-xl overflow-hidden"
+                >
+                  <div className="bg-slate-800/50 px-4 py-3 border-b border-slate-800 flex items-center justify-between">
+                    <p className="text-white text-sm font-bold">
+                      {group.icon} {group.title}
+                    </p>
+                    <span className="text-slate-500 text-xs">
+                      {group.items.length} inputs
+                    </span>
+                  </div>
+                  <div className="divide-y divide-slate-800">
+                    {group.items.map((item) => {
+                      const a = fA[item.key];
+                      const b = fB[item.key];
+                      const outcome = getComparisonOutcome(a, b, item);
+                      const delta = formatDelta(a, b, item);
+                      return (
+                        <div
+                          key={item.key}
+                          className="grid grid-cols-[1.2fr_0.9fr_0.7fr_0.9fr] gap-3 px-4 py-3 items-center"
+                        >
+                          <div>
+                            <p className="text-slate-200 text-sm font-semibold">
+                              {item.label}
+                            </p>
+                            <p className="text-slate-500 text-xs mt-0.5">
+                              {outcome === 'even'
+                                ? 'No edge'
+                                : outcome === 'A'
+                                ? `${fA.FIGHTER.split(' ').pop()} edge`
+                                : `${fB.FIGHTER.split(' ').pop()} edge`}
+                            </p>
+                          </div>
+                          <div className="text-left">
+                            <p
+                              className={`font-mono text-sm font-bold ${
+                                outcome === 'A'
+                                  ? 'text-blue-400'
+                                  : 'text-slate-300'
+                              }`}
+                            >
+                              {formatComparisonValue(fA, item)}
+                            </p>
+                          </div>
+                          <div className="text-center">
+                            <span
+                              className={`inline-flex items-center justify-center min-w-16 px-2 py-1 rounded-full text-xs font-black ${
+                                outcome === 'A'
+                                  ? 'bg-blue-950/50 text-blue-300 border border-blue-800/60'
+                                  : outcome === 'B'
+                                  ? 'bg-red-950/50 text-red-300 border border-red-800/60'
+                                  : 'bg-slate-800 text-slate-400 border border-slate-700'
+                              }`}
+                            >
+                              {delta}
+                            </span>
+                          </div>
+                          <div className="text-right">
+                            <p
+                              className={`font-mono text-sm font-bold ${
+                                outcome === 'B'
+                                  ? 'text-red-400'
+                                  : 'text-slate-300'
+                              }`}
+                            >
+                              {formatComparisonValue(fB, item)}
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
 
