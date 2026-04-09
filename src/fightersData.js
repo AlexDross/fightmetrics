@@ -2217,4 +2217,4 @@ export const _D2 = [
   {n:'Joshua Burkman',w:'Welterweight',ag:37,ht:70.0,rh:72.0,st:'Orthodox',wi:6,lo:12,ws:0,ls:4,tr:44,tb:0,kow:1,sbw:1,dcw:3,asl:29.9444,asp:0.521,asa:0.2222,atl:1.8889,atp:0.381,elo:1402.1,crd:0.8985,lfd:'2018-02-18',dsl:2964,dr:null,p4p:null,wlb:170},
   {n:'Daniel Lacerda',w:'Flyweight',ag:27,ht:66.0,rh:70.0,st:'Switch',wi:0,lo:4,ws:0,ls:4,tr:7,tb:0,kow:0,sbw:0,dcw:0,asl:3.95,asp:0.45,asa:1.2,atl:2.32,atp:0.5,elo:1401.6,crd:1.0,lfd:'2024-02-24',dsl:767,dr:null,p4p:null,wlb:125},
   {n:'BJ Penn',w:'Lightweight',ag:40,ht:69.0,rh:70.0,st:'Orthodox',wi:12,lo:14,ws:0,ls:7,tr:74,tb:11,kow:6,sbw:4,dcw:1,asl:35.9615,asp:0.528,asa:0.4615,atl:1.0,atp:0.316,elo:1396.7,crd:0.8733,lfd:'2019-05-11',dsl:2517,dr:null,p4p:null,wlb:155},
-];
+];// restored
