@@ -319,3 +319,106 @@ for name in checks:
     p=next((x for x in out if x['name']==name),None)
     if p:
         print(f"  {p['name']:25s} | {(p['weight_class'] or '?'):22s} | {p['record']:8s} | cardio={str(p['cardio_ratio']):5s} | sig/min={p['stats']['sig_str_per_min']}")
+# ─── Export fightersData.js (short-key format for React app) ──────────────────
+print("\nConverting to fightersData.js format...")
+
+import os, re as _re
+from datetime import date as _date
+
+# Load existing fightersData.js to preserve ELO, ranks, title bouts
+_old_elo, _old_dr, _old_p4p, _old_tb = {}, {}, {}, {}
+_js_path = os.path.join(os.path.dirname(__file__), 'src', 'fightersData.js')
+if os.path.exists(_js_path):
+    _js = open(_js_path).read()
+    for _m in _re.finditer(r"\{n:'([^']+)'[^}]+\}", _js):
+        _s = _m.group(0)
+        _nm = _re.search(r"n:'([^']+)'", _s).group(1)
+        def _gv(key, s=_s):
+            m = _re.search(rf"{key}:([-\d.]+|null)", s)
+            if not m or m.group(1) == 'null': return None
+            return float(m.group(1))
+        _old_elo[_nm] = _gv('elo')
+        _old_dr[_nm]  = _gv('dr')
+        _old_p4p[_nm] = _gv('p4p')
+        _old_tb[_nm]  = int(_gv('tb') or 0)
+    print(f"  Loaded ELO/ranks for {len(_old_elo)} fighters from existing fightersData.js")
+else:
+    print("  No existing fightersData.js found — ELO/ranks will be null")
+
+TODAY = _date.today()
+
+def _streak(fight_history):
+    ws = ls = 0
+    for fh in fight_history:
+        r = fh.get('result')
+        if ws == 0 and ls == 0:
+            if r == 'W': ws = 1
+            elif r == 'L': ls = 1
+        elif ws > 0:
+            if r == 'W': ws += 1
+            else: break
+        elif ls > 0:
+            if r == 'L': ls += 1
+            else: break
+    return ws, ls
+
+def _fmt(v):
+    if v is None: return 'null'
+    if isinstance(v, str): return f"'{v}'"
+    if isinstance(v, float):
+        return str(int(v)) if v == int(v) and abs(v) < 1e9 else str(v)
+    return str(v)
+
+js_lines = []
+for p in sorted(out, key=lambda x: x['name']):
+    nm  = p['name']
+    fh  = p.get('fight_history', [])
+    lfd = fh[0]['date'] if fh else None
+    dsl = (TODAY - _date.fromisoformat(lfd)).days if lfd else None
+
+    ws, ls = _streak(fh)
+
+    kow = sum(1 for f in fh if f['result']=='W' and any(x in f.get('method','').upper() for x in ['KO','TKO']))
+    sbw = sum(1 for f in fh if f['result']=='W' and 'SUB' in f.get('method','').upper())
+    dcw = sum(1 for f in fh if f['result']=='W' and 'DEC' in f.get('method','').upper())
+
+    st  = p.get('stats', {})
+    entry = {
+        'n':   nm,
+        'w':   p.get('weight_class'),
+        'ag':  p.get('age'),
+        'ht':  p.get('height_in'),
+        'rh':  p.get('reach_in'),
+        'st':  p.get('stance', 'Orthodox'),
+        'wi':  p.get('wins', 0),
+        'lo':  p.get('losses', 0),
+        'ws':  ws,
+        'ls':  ls,
+        'tr':  p.get('fights_in_db', 0),
+        'tb':  _old_tb.get(nm, 0),
+        'kow': kow,
+        'sbw': sbw,
+        'dcw': dcw,
+        'asl': round(st.get('sig_str_per_min', 0), 4),
+        'asp': round(st.get('sig_str_acc', 0), 4),
+        'asa': round(st.get('sig_str_abs_per_min', 0), 4),
+        'atl': round(st.get('td_per_15', 0), 4),
+        'atp': round(st.get('td_acc', 0), 4),
+        'elo': _old_elo.get(nm),
+        'crd': round(p.get('cardio_ratio') or 0, 4),
+        'lfd': lfd,
+        'dsl': dsl,
+        'dr':  _old_dr.get(nm),
+        'p4p': _old_p4p.get(nm),
+        'wlb': p.get('weight_lbs'),
+    }
+    inner = ','.join(f"{k}:{_fmt(v)}" for k, v in entry.items())
+    js_lines.append(f"  {{{inner}}}")
+
+js_out = "export const _D2 = [\n" + ",\n".join(js_lines) + "\n];\n"
+
+# Write to src/fightersData.js
+_out_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'src', 'fightersData.js')
+with open(_out_path, 'w') as _f:
+    _f.write(js_out)
+print(f"✅  fightersData.js written — {len(js_lines)} fighters → {_out_path}")
