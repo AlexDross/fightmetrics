@@ -520,8 +520,8 @@ for p in sorted(out, key=lambda x: x['name']):
     dr  = ufc_div_rankings.get(nm) or _old_dr.get(nm)
     p4p = ufc_p4p_rankings.get(nm) or _old_p4p.get(nm)
 
-    # ELO: use freshly computed value
-    elo = p.get('elo')
+# ELO: prefer existing calibrated value, fall back to computed for new fighters
+    elo = _old_elo.get(nm) or p.get('elo')
 
     entry = {
         'n':   nm,
