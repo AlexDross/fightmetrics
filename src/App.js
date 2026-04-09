@@ -1018,12 +1018,20 @@ function isKoMethod(method = '') {
   const m = String(method).toLowerCase().trim();
 
   if (!m) return false;
+  if (isSubMethod(m) || isDecisionMethod(m)) return false;
 
   return (
     m === 'ko' ||
     m === 'tko' ||
     m === 'tko-dr' ||
     m.includes('ko/tko') ||
+    m.includes(' tko') ||
+    m.startsWith('tko') ||
+    m === 'doctor stoppage' ||
+    m === 'corner stoppage' ||
+    m.includes('doctor stoppage') ||
+    m.includes('corner stoppage') ||
+    m.includes('retirement') ||
     m.includes('punch') ||
     m.includes('punches') ||
     m.includes('elbow') ||
@@ -1032,9 +1040,9 @@ function isKoMethod(method = '') {
     m.includes('knees') ||
     m.includes('kick') ||
     m.includes('head kick') ||
+    m.includes('body kick') ||
     m.includes('leg kick') ||
-    m.includes('doctor stoppage') ||
-    m.includes('corner stoppage')
+    m.includes('spinning back fist')
   );
 }
 
@@ -1042,19 +1050,31 @@ function isSubMethod(method = '') {
   const m = String(method).toLowerCase().trim();
 
   if (!m) return false;
+  if (isDecisionMethod(m)) return false;
 
   return (
     m === 'sub' ||
+    m.includes('submission') ||
     m.includes('choke') ||
-    m.includes('armbar') ||
-    m.includes('triangle') ||
-    m.includes('arm triangle') ||
     m.includes('rear naked choke') ||
     m.includes('guillotine') ||
+    m.includes('triangle') ||
+    m.includes('arm triangle') ||
     m.includes('anaconda') ||
-    m.includes('kneebar') ||
+    m.includes('darce') ||
+    m.includes('brabo') ||
+    m.includes('bulldog choke') ||
+    m.includes('von flue') ||
+    m.includes('north-south choke') ||
+    m.includes('armbar') ||
     m.includes('kimura') ||
+    m.includes('americana') ||
+    m.includes('omoplata') ||
+    m.includes('kneebar') ||
     m.includes('heel hook') ||
+    m.includes('toe hold') ||
+    m.includes('calf slicer') ||
+    m.includes('twister') ||
     m.includes('lock')
   );
 }
