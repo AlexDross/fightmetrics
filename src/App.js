@@ -2106,6 +2106,7 @@ const SIMULATOR_COMPARISON_GROUPS = [
   {
     title: 'Striking Inputs',
     icon: '⚔️',
+    description: 'Directly feeds the striking score.',
     items: [
       {
         key: 'ASL',
@@ -2125,6 +2126,7 @@ const SIMULATOR_COMPARISON_GROUPS = [
   {
     title: 'Grappling Inputs',
     icon: '🤼',
+    description: 'Wrestling, submission threat, and control inputs.',
     items: [
       {
         key: 'ATL',
@@ -2157,6 +2159,7 @@ const SIMULATOR_COMPARISON_GROUPS = [
   {
     title: 'Physical Inputs',
     icon: '📏',
+    description: 'Size and age inputs used in the physical bucket.',
     items: [
       {
         key: 'REACH_IN',
@@ -2179,8 +2182,9 @@ const SIMULATOR_COMPARISON_GROUPS = [
     ],
   },
   {
-    title: 'Form Inputs',
+    title: 'Form & Resume Inputs',
     icon: '📈',
+    description: 'Recent streaks plus overall UFC win/loss resume.',
     items: [
       {
         key: 'WIN_STREAK',
@@ -2211,6 +2215,7 @@ const SIMULATOR_COMPARISON_GROUPS = [
   {
     title: 'Experience Inputs',
     icon: '🎖️',
+    description: 'Actual deep-fight and UFC cage-time experience.',
     items: [
       {
         key: 'UFC_FIGHT_COUNT',
@@ -2224,6 +2229,13 @@ const SIMULATOR_COMPARISON_GROUPS = [
         higherBetter: true,
         decimals: 0,
       },
+    ],
+  },
+  {
+    title: 'Finishing Profile',
+    icon: '💥',
+    description: 'Historical finishing totals that feed the finish side of the matchup.',
+    items: [
       {
         key: 'KO_WINS',
         label: 'KO Wins',
@@ -2239,9 +2251,17 @@ const SIMULATOR_COMPARISON_GROUPS = [
     ],
   },
   {
-    title: 'Analytics Inputs',
+    title: 'Context & Analytics',
     icon: '📊',
+    description: 'Includes opponent-quality-adjusted momentum plus ELO, layoff, and cardio.',
     items: [
+      {
+        key: 'QUALITY_MOMENTUM',
+        label: 'Quality Momentum',
+        higherBetter: true,
+        decimals: 2,
+        signed: true,
+      },
       {
         key: 'ELO',
         label: 'ELO',
@@ -2608,6 +2628,8 @@ function MatchupSimulator({ allFighters, onSavePrediction, onOpenROI }) {
     const v = fighter?.[item.key];
     if (v == null) return '—';
     if (item.format) return item.format(v);
+    const base = `${Math.abs(Number(v)).toFixed(item.decimals ?? 1)}${item.pct ? '%' : ''}`;
+    if (item.signed) return Number(v) > 0 ? `+${base}` : Number(v) < 0 ? `-${base}` : base;
     return `${Number(v).toFixed(item.decimals ?? 1)}${item.pct ? '%' : ''}`;
   };
 
@@ -3506,8 +3528,8 @@ function MatchupSimulator({ allFighters, onSavePrediction, onOpenROI }) {
                   Model Input Comparison
                 </p>
                 <p className="text-slate-500 text-xs mt-1">
-                  Every stat currently feeding the matchup score, grouped by the
-                  same buckets the simulator uses.
+                  Only rows shown here feed the current matchup score directly,
+                  and the buckets now match the real scoring logic.
                 </p>
               </div>
               <div className="text-right text-xs text-slate-500">
@@ -3522,9 +3544,16 @@ function MatchupSimulator({ allFighters, onSavePrediction, onOpenROI }) {
                   className="border border-slate-800 rounded-xl overflow-hidden"
                 >
                   <div className="bg-slate-800/50 px-4 py-3 border-b border-slate-800 flex items-center justify-between">
-                    <p className="text-white text-sm font-bold">
-                      {group.icon} {group.title}
-                    </p>
+                    <div>
+                      <p className="text-white text-sm font-bold">
+                        {group.icon} {group.title}
+                      </p>
+                      {group.description && (
+                        <p className="text-slate-500 text-xs mt-1">
+                          {group.description}
+                        </p>
+                      )}
+                    </div>
                     <span className="text-slate-500 text-xs">
                       {group.items.length} inputs
                     </span>
