@@ -1768,10 +1768,10 @@ function Header({ view, setView }) {
         </div>
         <div>
           <h1 className="text-white font-black text-base tracking-tight leading-none">
-            DrossPom
+            FightMetrics
           </h1>
           <p className="text-slate-500 text-xs mt-0.5">
-            KenPom-Style Analytics · {FIGHTERS.length} active fighters · v7
+            MMA Analytics · {FIGHTERS.length} active fighters · v7
           </p>
         </div>
       </div>
