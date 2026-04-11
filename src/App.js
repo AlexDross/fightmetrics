@@ -2846,6 +2846,19 @@ function MatchupSimulator({ allFighters, onSavePrediction, onOpenROI }) {
         : trackedSide === fB.FIGHTER
         ? market?.fairLineB ?? null
         : null;
+    const betRecommendedFighter =
+      market?.bestBet === 'A'
+        ? fA.FIGHTER
+        : market?.bestBet === 'B'
+        ? fB.FIGHTER
+        : '';
+
+    const betRecommendedOdds =
+      market?.bestBet === 'A'
+        ? oddsA || ''
+        : market?.bestBet === 'B'
+        ? oddsB || ''
+        : '';
 
     onSavePrediction?.({
       id: createPredictionId(),
@@ -2864,6 +2877,10 @@ function MatchupSimulator({ allFighters, onSavePrediction, onOpenROI }) {
       predictedProb: predictedWinner === fA.FIGHTER ? result.pA : result.pB,
       trackedSide,
       trackedProb,
+      betAction: market?.betAction ?? 'NO BET',
+      bestBet: market?.bestBet ?? null,
+      betRecommendedFighter,
+      betRecommendedOdds,
       marketOdds: trackedOdds,
       edge: trackedEdge,
       edgeA: market?.edgeA ?? null,
@@ -5406,6 +5423,15 @@ function ROITab({ entries, onUpdateEntry, onDeleteEntry, onClearEntries }) {
           entry.trackedSide === entry.fighterA
             ? entry.edgeA ?? entry.edge
             : entry.edgeB ?? entry.edge,
+        displayBetAction: entry.betAction ?? 'NO BET',
+        displayBetFighter:
+          entry.betRecommendedFighter ??
+          (entry.bestBet === 'A'
+            ? entry.fighterA
+            : entry.bestBet === 'B'
+            ? entry.fighterB
+            : ''),
+        displayBetOdds: entry.betRecommendedOdds ?? '',
       })),
     [entries]
   );
@@ -5578,12 +5604,32 @@ function ROITab({ entries, onUpdateEntry, onDeleteEntry, onClearEntries }) {
                     </p>
                   </div>
                   <div className="bg-slate-800/40 rounded-lg p-3">
-                    <p className="text-slate-500 text-xs">Tracked side</p>
-                    <p className="text-white font-bold text-sm mt-1">
-                      {entry.trackedSide}
+                    <p className="text-slate-500 text-xs uppercase tracking-wider">
+                      Bet Rec
                     </p>
+
+                    <div className="mt-2">
+                      <span
+                        className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-black ${
+                          entry.displayBetAction === 'STRONG BET'
+                            ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                            : entry.displayBetAction === 'BET'
+                            ? 'bg-emerald-900/30 text-emerald-400 border border-emerald-800'
+                            : entry.displayBetAction === 'LEAN'
+                            ? 'bg-yellow-900/30 text-yellow-400 border border-yellow-800'
+                            : 'bg-slate-800 text-slate-400 border border-slate-700'
+                        }`}
+                      >
+                        {entry.displayBetAction}
+                      </span>
+                    </div>
+
+                    <p className="text-white font-bold text-sm mt-3">
+                      {entry.displayBetFighter || 'No bet side'}
+                    </p>
+
                     <p className="text-slate-600 text-xs mt-1">
-                      {((trackedProb ?? 0) * 100).toFixed(1)}%
+                      {entry.displayBetOdds || 'No saved line'}
                     </p>
                   </div>
                   <div className="bg-slate-800/40 rounded-lg p-3">
