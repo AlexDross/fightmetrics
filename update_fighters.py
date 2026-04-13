@@ -1,7 +1,7 @@
 """
-FightMetrics — fighters_v5.json Auto-Update Script
+FightMetrics — fighters.json Auto-Update Script
 ===================================================
-Reads Greco1899 CSVs and patches fighters_v5.json with:
+Reads Greco1899 CSVs and patches fighters.json with:
   - wins, losses
   - win_streak, lose_streak
   - last_fight_date, days_since_last
@@ -21,7 +21,7 @@ import os
 from datetime import datetime, date
 
 # ─── Config ───────────────────────────────────────────────────────────────────
-JSON_FILE = "fighters_v5.json"
+JSON_FILE = "fighters.json"
 
 # ─── Helpers ──────────────────────────────────────────────────────────────────
 def parse_date(s):
@@ -51,7 +51,7 @@ def compute_streak(fights):
             else:           break
     return ws, ls
 
-# ─── Load existing fighters_v5.json ──────────────────────────────────────────
+# ─── Load existing fighters.json ──────────────────────────────────────────
 print(f"Loading {JSON_FILE}...")
 if not os.path.exists(JSON_FILE):
     print(f"ERROR: {JSON_FILE} not found!")
@@ -137,7 +137,7 @@ for name, fights in fights_by_fighter.items():
     }
 
 # ─── Patch existing fighters ──────────────────────────────────────────────────
-print("Patching fighters_v5.json...")
+print("Patching fighters.json...")
 
 FIELDS_TO_UPDATE = [
     'wins', 'losses', 'win_streak', 'lose_streak',
