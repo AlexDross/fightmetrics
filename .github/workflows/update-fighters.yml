@@ -60,3 +60,7 @@ jobs:
             git push
             echo "✅  Pushed updated fightersData.js"
           fi
+
+      - name: Trigger Vercel redeploy
+        run: |
+          curl -X POST "${{ secrets.VERCEL_DEPLOY_HOOK }}"
