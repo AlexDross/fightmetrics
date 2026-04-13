@@ -970,8 +970,12 @@ const americanToDecimal = (str) => {
 const createPredictionId = () =>
   `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
+const isPushResult = (value) => value === 'NC' || value === 'DRAW';
+
 const isResolvedWinner = (value, entry) =>
-  value === entry?.fighterA || value === entry?.fighterB || value === 'NC';
+  value === entry?.fighterA ||
+  value === entry?.fighterB ||
+  isPushResult(value);
 
 const calcTrackedProfit = (entry) => {
   if (
@@ -980,10 +984,14 @@ const calcTrackedProfit = (entry) => {
     !isResolvedWinner(entry.actualWinner, entry)
   )
     return null;
-  if (entry.actualWinner === 'NC') return 0;
+
+  if (isPushResult(entry.actualWinner)) return 0;
+
   const dec = americanToDecimal(entry.marketOdds);
   if (!dec) return null;
-  return entry.actualWinner === entry.trackedSide ? (dec - 1) * 100 : -100;
+
+  // 1-unit flat staking
+  return entry.actualWinner === entry.trackedSide ? dec - 1 : -1;
 };
 
 function sortHistoryDesc(history) {
@@ -5440,18 +5448,27 @@ function ROITab({ entries, onUpdateEntry, onDeleteEntry, onClearEntries }) {
     const graded = evaluatedEntries.filter((entry) =>
       isResolvedWinner(entry.actualWinner, entry)
     );
-    const decisive = graded.filter((entry) => entry.actualWinner !== 'NC');
+
+    const decisive = graded.filter(
+      (entry) =>
+        entry.actualWinner === entry.fighterA ||
+        entry.actualWinner === entry.fighterB
+    );
+
     const correct = decisive.filter(
       (entry) => entry.displayWinner === entry.actualWinner
     ).length;
-    const betEntries = decisive.filter((entry) =>
+
+    const betEntries = graded.filter((entry) =>
       Boolean(americanToDecimal(entry.marketOdds))
     );
+
     const profit = betEntries.reduce(
       (sum, entry) => sum + (calcTrackedProfit(entry) ?? 0),
       0
     );
-    const stake = betEntries.length * 100;
+
+    const stake = betEntries.length;
     return {
       total: entries.length,
       graded: graded.length,
@@ -5509,9 +5526,9 @@ function ROITab({ entries, onUpdateEntry, onDeleteEntry, onClearEntries }) {
             label: 'ROI',
             value: `${summary.roi >= 0 ? '+' : ''}${summary.roi.toFixed(1)}%`,
             tone: summary.roi >= 0 ? 'text-emerald-400' : 'text-red-400',
-            sub: `${summary.profit >= 0 ? '+' : ''}$${summary.profit.toFixed(
+            sub: `${summary.profit >= 0 ? '+' : ''}${summary.profit.toFixed(
               2
-            )} on ${summary.bets} bets`,
+            )}u on ${summary.bets} bets`,
           },
         ].map(({ label, value, tone, sub }) => (
           <div
@@ -5565,15 +5582,15 @@ function ROITab({ entries, onUpdateEntry, onDeleteEntry, onClearEntries }) {
                             ? 'bg-slate-800 text-slate-400 border-slate-700'
                             : correct
                             ? 'bg-emerald-900/40 text-emerald-400 border-emerald-800'
-                            : entry.actualWinner === 'NC'
+                            : isPushResult(entry.actualWinner)
                             ? 'bg-slate-800 text-slate-300 border-slate-700'
                             : 'bg-red-900/40 text-red-400 border-red-800'
                         }`}
                       >
                         {!graded
                           ? 'Pending'
-                          : entry.actualWinner === 'NC'
-                          ? 'No Contest'
+                          : isPushResult(entry.actualWinner)
+                          ? 'Push'
                           : correct
                           ? 'Correct'
                           : 'Miss'}
@@ -5646,7 +5663,7 @@ function ROITab({ entries, onUpdateEntry, onDeleteEntry, onClearEntries }) {
                     </p>
                   </div>
                   <div className="bg-slate-800/40 rounded-lg p-3">
-                    <p className="text-slate-500 text-xs">Flat Profit</p>
+                      <p className="text-slate-500 text-xs">Units</p>
                     <p
                       className={`font-bold text-sm mt-1 ${
                         profit == null
@@ -5658,10 +5675,14 @@ function ROITab({ entries, onUpdateEntry, onDeleteEntry, onClearEntries }) {
                     >
                       {profit == null
                         ? 'Pending'
-                        : `${profit >= 0 ? '+' : ''}$${profit.toFixed(2)}`}
+                        : `${profit >= 0 ? '+' : ''}${profit.toFixed(2)}u`}
                     </p>
                     <p className="text-slate-600 text-xs mt-1">
-                      {entry.actualWinner || 'Awaiting result'}
+                      {entry.actualWinner === 'NC'
+                        ? 'No Contest'
+                        : entry.actualWinner === 'DRAW'
+                        ? 'Draw'
+                        : entry.actualWinner || 'Awaiting result'}
                     </p>
                   </div>
                 </div>
@@ -5747,6 +5768,7 @@ function ROITab({ entries, onUpdateEntry, onDeleteEntry, onClearEntries }) {
                       <option value={entry.fighterA}>{entry.fighterA}</option>
                       <option value={entry.fighterB}>{entry.fighterB}</option>
                       <option value="NC">No Contest</option>
+                      <option value="DRAW">Draw</option>
                     </select>
                   </div>
                 </div>
