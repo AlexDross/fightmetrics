@@ -52,7 +52,9 @@ def fmt(v):
     return str(v)
 
 def patch_field(entry_str, key, new_val):
-    return re.sub(rf"({key}:)([-\d.']+|null)", rf"\g<1>{fmt(new_val)}", entry_str)
+    # IMPORTANT: use comma prefix to prevent partial matches
+    # e.g. 'lo:' would wrongly match inside 'elo:' without the comma
+    return re.sub(rf"(,{key}:)([-\d.']+|null)", rf"\g<1>{fmt(new_val)}", entry_str)
 
 # Load fightersData.js
 print(f"Loading {JS_PATH}...")
@@ -110,7 +112,8 @@ for name, fights in fights_by_fighter.items():
     dcw = sum(1 for f in fights if f['result'] == 'W' and 'DEC' in f['method'])
     updates[name] = dict(wi=wi, lo=lo, ws=ws, ls=ls, tr=wi+lo, lfd=lfd, dsl=dsl, kow=kow, sbw=sbw, dcw=dcw)
 
-# Patch entries
+# Patch entries — only update fighters already in the file, never add new ones
+# (new fighters need manual review to get physical stats, elo, rankings etc.)
 print("Patching fightersData.js...")
 FIELDS = ['wi', 'lo', 'ws', 'ls', 'tr', 'kow', 'sbw', 'dcw', 'dsl']
 updated_count = 0
@@ -122,24 +125,12 @@ for name, entry_str in existing.items():
         for field in FIELDS:
             entry_str = patch_field(entry_str, field, u[field])
         if u['lfd']:
-            entry_str = re.sub(r"lfd:'[^']*'", f"lfd:'{u['lfd']}'", entry_str)
-            entry_str = re.sub(r"lfd:null",     f"lfd:'{u['lfd']}'", entry_str)
+            entry_str = re.sub(r",lfd:'[^']*'", f",lfd:'{u['lfd']}'", entry_str)
+            entry_str = re.sub(r",lfd:null",     f",lfd:'{u['lfd']}'", entry_str)
         updated_count += 1
     new_lines.append(f"  {entry_str}")
 
-added_count = 0
-for name, u in updates.items():
-    if name not in existing:
-        if u['wi'] + u['lo'] < 2: continue
-        entry = (f"{{n:'{name.replace(chr(39), chr(92)+chr(39))}',w:null,ag:null,ht:null,rh:null,"
-                 f"st:'Orthodox',wi:{u['wi']},lo:{u['lo']},ws:{u['ws']},ls:{u['ls']},"
-                 f"tr:{u['tr']},tb:0,kow:{u['kow']},sbw:{u['sbw']},dcw:{u['dcw']},"
-                 f"asl:null,asp:null,asa:null,atl:null,atp:null,elo:null,crd:0,"
-                 f"lfd:{fmt(u['lfd'])},dsl:{fmt(u['dsl'])},dr:null,p4p:null,wlb:null}}")
-        new_lines.append(f"  {entry}")
-        added_count += 1
-
-print(f"  Updated {updated_count}, added {added_count} new fighters")
+print(f"  Updated {updated_count} fighters (no new fighters added automatically)")
 
 new_js = "export const _D2 = [\n" + ",\n".join(new_lines) + "\n];\n"
 with open(JS_PATH, 'w') as f:
