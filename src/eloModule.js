@@ -1,4 +1,5 @@
 // ─── ELO RATINGS ──────────────────────────────────────────────────────────────
+// CUTOFF_DATE: 2026-03-31
 // Computed from 8,435 UFC fights (UFC 2 through Mar 2026)
 // K-factor weighted by finish method and round; early-fighter K inflated
 // Format: { fighterName: { elo, peak, n } }
