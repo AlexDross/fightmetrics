@@ -1,34 +1,28 @@
 """
-FightMetrics — Auto-Update Script v7.0 (SAFE)
-==============================================
-Only updates fields that are safe to auto-compute from Greco1899 CSVs.
-All stats requiring the Colab pipeline are left untouched.
+FightMetrics — Auto-Update Script v8.0 (FINAL SAFE)
+====================================================
+Only updates record fields and fight history.
+Nothing that affects rankings is touched.
 
 UPDATES:
   fightersData.js  — wi, lo, ws, ls, lfd, dsl, kow, sbw, dcw, tr
-                     elo (incremental, exact Colab formula)
   fightHistory.js  — adds new fight entries for existing fighters
-  eloModule.js     — incremental Elo update
 
-NEVER TOUCHES:
-  asl, asp, asa, atl, atp  — computed by Colab from Kaggle dataset
-  crd                      — computed by Colab
-  cardioModule.js          — computed by Colab
-  dr, p4p                  — rankings
-  tb, ht, rh, st, w, ag   — physical attributes
+NEVER TOUCHES (leave for Colab pipeline):
+  elo, crd, asl, asp, asa, atl, atp  — affect rankings/ratings
+  eloModule.js, cardioModule.js       — affect rankings/ratings
+  dr, p4p                             — rankings
+  tb, ht, rh, st, w, ag              — physical attributes
 """
 
 import pandas as pd
 import re, os, json
 from datetime import datetime, date
-from collections import defaultdict
 
-SRC      = os.path.dirname(os.path.abspath(__file__))
-JS_PATH  = os.path.join(SRC, 'src', 'fightersData.js')
-FH_PATH  = os.path.join(SRC, 'src', 'fightHistory.js')
-ELO_PATH = os.path.join(SRC, 'src', 'eloModule.js')
+SRC     = os.path.dirname(os.path.abspath(__file__))
+JS_PATH = os.path.join(SRC, 'src', 'fightersData.js')
+FH_PATH = os.path.join(SRC, 'src', 'fightHistory.js')
 
-# ─── Helpers ──────────────────────────────────────────────────────────────────
 def parse_date(s):
     if not isinstance(s, str): return None
     try: return datetime.strptime(s.strip(), '%B %d, %Y').strftime('%Y-%m-%d')
@@ -59,7 +53,6 @@ def fmt(v):
     return str(v)
 
 def patch_field(entry_str, key, new_val):
-    # Comma prefix prevents 'lo:' matching inside 'elo:'
     return re.sub(rf"(,{key}:)([-\d.']+|null)", rf"\g<1>{fmt(new_val)}", entry_str)
 
 # ─── Load CSVs ────────────────────────────────────────────────────────────────
@@ -86,8 +79,8 @@ if has_details:
         key = (str(row.get('BOUT','')).strip(), str(row.get('EVENT','')).strip())
         try: rn = int(float(str(row.get('ROUND','0')).strip()))
         except: rn = 0
-        ti = str(row.get('TIME','5:00')).strip() or '5:00'
-        wc = str(row.get('WEIGHTCLASS','') or row.get('WEIGHT CLASS','') or '').strip()
+        ti  = str(row.get('TIME','5:00')).strip() or '5:00'
+        wc  = str(row.get('WEIGHTCLASS','') or row.get('WEIGHT CLASS','') or '').strip()
         detail_lookup[key] = {'rn': rn, 'ti': ti, 'wc': wc}
 
 res_cols  = results_df.columns.tolist()
@@ -102,11 +95,11 @@ fights_by_fighter = {}
 for _, row in results_df.iterrows():
     fa, fb = split_bout(row.get('BOUT',''))
     if fa is None: continue
-    outcome = str(row.get('OUTCOME','')).strip()
-    winner  = fa if outcome == 'W/L' else (fb if outcome == 'L/W' else None)
-    method  = str(row.get('METHOD','')).strip()
-    event   = str(row.get('EVENT','')).strip()
-    dt      = row['DATE']
+    outcome  = str(row.get('OUTCOME','')).strip()
+    winner   = fa if outcome == 'W/L' else (fb if outcome == 'L/W' else None)
+    method   = str(row.get('METHOD','')).strip()
+    event    = str(row.get('EVENT','')).strip()
+    dt       = row['DATE']
     bout_key = (str(row.get('BOUT','')).strip(), event)
     detail   = detail_lookup.get(bout_key, {})
     rn = detail.get('rn', 0)
@@ -129,7 +122,7 @@ for _, row in results_df.iterrows():
 for n in fights_by_fighter:
     fights_by_fighter[n].sort(key=lambda x: x['date'] or '', reverse=True)
 
-# ─── Record updates ────────────────────────────────────────────────────────────
+# ─── Compute record updates ────────────────────────────────────────────────────
 print("Computing record stats...")
 TODAY = date.today()
 record_updates = {}
@@ -145,70 +138,6 @@ for name, fights in fights_by_fighter.items():
     dcw = sum(1 for f in fights if f['result']=='W' and 'DEC' in f['method'])
     record_updates[name] = dict(wi=wi, lo=lo, ws=ws, ls=ls, tr=wi+lo,
                                 lfd=lfd, dsl=dsl, kow=kow, sbw=sbw, dcw=dcw)
-
-# ─── Incremental Elo update ────────────────────────────────────────────────────
-print("\nRunning incremental Elo update...")
-
-elo_content = open(ELO_PATH).read()
-cutoff_m    = re.search(r'CUTOFF_DATE:\s*(\d{4}-\d{2}-\d{2})', elo_content)
-cutoff_date = cutoff_m.group(1) if cutoff_m else '2026-03-31'
-print(f"  Cutoff date: {cutoff_date}")
-
-json_m = re.search(r'export\s+const\s+ELO_RATINGS\s*=\s*(\{.+\});?\s*$', elo_content, re.DOTALL)
-elo_ratings = json.loads(json_m.group(1))
-print(f"  Loaded {len(elo_ratings)} existing Elo ratings")
-
-K_BASE = 32
-def k_factor(m):
-    if 'KO' in m or 'TKO' in m: return K_BASE * 1.4
-    if 'SUB' in m: return K_BASE * 1.3
-    return K_BASE
-
-def expected_score(own, opp):
-    return 1.0 / (1.0 + 10.0 ** ((opp - own) / 400.0))
-
-new_fights = []
-for _, row in results_df.iterrows():
-    fa, fb = split_bout(row.get('BOUT',''))
-    if fa is None: continue
-    outcome = str(row.get('OUTCOME','')).strip()
-    if outcome not in ('W/L','L/W'): continue
-    dt = row['DATE']
-    if not dt or dt <= cutoff_date: continue
-    winner = fa if outcome == 'W/L' else fb
-    loser  = fb if outcome == 'W/L' else fa
-    method = str(row.get('METHOD','')).strip().upper()
-    new_fights.append({'date': dt, 'winner': winner, 'loser': loser, 'method': method})
-
-new_fights.sort(key=lambda x: x['date'])
-print(f"  Found {len(new_fights)} new fights after {cutoff_date}")
-
-DEFAULT_ELO = 1500.0
-for fight in new_fights:
-    w, l = fight['winner'], fight['loser']
-    w_rec = elo_ratings.get(w, {'elo': DEFAULT_ELO, 'peak': DEFAULT_ELO, 'n': 0})
-    l_rec = elo_ratings.get(l, {'elo': DEFAULT_ELO, 'peak': DEFAULT_ELO, 'n': 0})
-    w_elo = w_rec['elo']; l_elo = l_rec['elo']
-    k = k_factor(fight['method'])
-    exp = expected_score(w_elo, l_elo)
-    new_w = round(w_elo + k * (1.0 - exp), 1)
-    new_l = round(l_elo + k * (0.0 - (1.0 - exp)), 1)
-    elo_ratings[w] = {'elo': new_w, 'peak': max(w_rec.get('peak', new_w), new_w), 'n': w_rec['n'] + 1}
-    elo_ratings[l] = {'elo': new_l, 'peak': l_rec.get('peak', new_l), 'n': l_rec['n'] + 1}
-
-new_cutoff = str(TODAY)
-elo_header = (
-    f"// ─── ELO RATINGS ────────────────────────────────────────────────────────\n"
-    f"// CUTOFF_DATE: {new_cutoff}\n"
-    f"// Computed from 8,435+ UFC fights (UFC 2 through {new_cutoff})\n"
-    f"// K-factor: KO/TKO×1.4 · Sub×1.3 · Decision×1.0 · K_BASE=32\n"
-    f"// Format: {{ fighterName: {{ elo, peak, n }} }}\n"
-    f"// elo = current rating · peak = highest ever · n = UFC fights processed\n"
-)
-elo_js_data = json.dumps(elo_ratings, separators=(',',':'), ensure_ascii=False)
-with open(ELO_PATH, 'w') as f:
-    f.write(f"{elo_header}export const ELO_RATINGS = {elo_js_data};\n")
-print(f"  Wrote {len(elo_ratings)} fighters to eloModule.js (cutoff → {new_cutoff})")
 
 # ─── Patch fightersData.js ────────────────────────────────────────────────────
 print("\nPatching fightersData.js...")
@@ -235,8 +164,6 @@ for name, entry_str in existing.items():
         if u['lfd']:
             entry_str = re.sub(r",lfd:'[^']*'", f",lfd:'{u['lfd']}'", entry_str)
             entry_str = re.sub(r",lfd:null",     f",lfd:'{u['lfd']}'", entry_str)
-    if name in elo_ratings:
-        entry_str = patch_field(entry_str, 'elo', elo_ratings[name]['elo'])
     new_lines.append(f"  {entry_str}")
 
 new_js = "export const _D2 = [\n" + ",\n".join(new_lines) + "\n];\n"
@@ -247,8 +174,8 @@ print(f"  Patched {len(new_lines)} fighters")
 # ─── Patch fightHistory.js ────────────────────────────────────────────────────
 print("\nPatching fightHistory.js...")
 fh_content = open(FH_PATH).read()
-json_m2 = re.search(r'export\s+const\s+FIGHT_HISTORY\s*=\s*(\{.+\})\s*;?\s*$', fh_content, re.DOTALL)
-fight_history = json.loads(json_m2.group(1))
+json_m = re.search(r'export\s+const\s+FIGHT_HISTORY\s*=\s*(\{.+\})\s*;?\s*$', fh_content, re.DOTALL)
+fight_history = json.loads(json_m.group(1))
 updated_fh = 0; added_fights = 0
 
 for fighter_name, history in fight_history.items():
@@ -283,6 +210,5 @@ checks = ['Renato Moicano','Islam Makhachev','Jon Jones','Khamzat Chimaev','Alex
 print("\nSanity check:")
 for name in checks:
     r = record_updates.get(name, {})
-    e = elo_ratings.get(name, {})
     print(f"  {name:25s} | {r.get('wi','?')}-{r.get('lo','?')} "
-          f"| elo:{e.get('elo','?')} | lfd:{r.get('lfd','?')}")
+          f"| ws:{r.get('ws','?')} ls:{r.get('ls','?')} | lfd:{r.get('lfd','?')}")
