@@ -1,36 +1,31 @@
 """
-FightMetrics — fighters.json Auto-Update Script
-===================================================
-Reads Greco1899 CSVs and patches fighters.json with:
-  - wins, losses
-  - win_streak, lose_streak
-  - last_fight_date, days_since_last
-  - ko_wins, sub_wins, dec_wins
+FightMetrics — src/fightersData.js Auto-Update Script
+======================================================
+Reads Greco1899 CSVs and patches src/fightersData.js with:
+  - wi, lo        (win/loss record)
+  - ws, ls        (win/loss streak)
+  - lfd, dsl      (last fight date / days since last)
+  - kow, sbw, dcw (win method counts)
+  - tr            (total fights)
 
 NEVER touches:
-  - avg_sig_str_landed, avg_sig_str_pct, avg_sub_att, avg_td_landed, avg_td_pct
-  - elo, cardio_ratio
-  - div_rank, p4p_rank
-  - height_cms, reach_cms, weight_lbs, age, stance
+  - asl, asp, asa, atl, atp  (per-round stats)
+  - elo, crd                 (rating components)
+  - dr, p4p                  (rankings)
+  - tb, ht, rh, st, w        (physical attributes)
 """
 
 import pandas as pd
-import json
 import re
 import os
 from datetime import datetime, date
 
-# ─── Config ───────────────────────────────────────────────────────────────────
-JSON_FILE = "fighters.json"
+JS_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'src', 'fightersData.js')
 
-# ─── Helpers ──────────────────────────────────────────────────────────────────
 def parse_date(s):
-    if not isinstance(s, str):
-        return None
-    try:
-        return datetime.strptime(s.strip(), '%B %d, %Y').strftime('%Y-%m-%d')
-    except:
-        return None
+    if not isinstance(s, str): return None
+    try: return datetime.strptime(s.strip(), '%B %d, %Y').strftime('%Y-%m-%d')
+    except: return None
 
 def split_bout(bout):
     parts = re.split(r'\s+vs\.?\s+', str(bout).strip(), maxsplit=1)
@@ -41,171 +36,120 @@ def compute_streak(fights):
     for f in fights:
         r = f['result']
         if ws == 0 and ls == 0:
-            if r == 'W':   ws = 1
+            if r == 'W': ws = 1
             elif r == 'L': ls = 1
         elif ws > 0:
-            if r == 'W':   ws += 1
-            else:           break
+            if r == 'W': ws += 1
+            else: break
         elif ls > 0:
-            if r == 'L':   ls += 1
-            else:           break
+            if r == 'L': ls += 1
+            else: break
     return ws, ls
 
-# ─── Load existing fighters.json ──────────────────────────────────────────
-print(f"Loading {JSON_FILE}...")
-if not os.path.exists(JSON_FILE):
-    print(f"ERROR: {JSON_FILE} not found!")
+def fmt(v):
+    if v is None: return 'null'
+    if isinstance(v, str): return f"'{v}'"
+    return str(v)
+
+def patch_field(entry_str, key, new_val):
+    return re.sub(rf"({key}:)([-\d.']+|null)", rf"\g<1>{fmt(new_val)}", entry_str)
+
+# Load fightersData.js
+print(f"Loading {JS_PATH}...")
+if not os.path.exists(JS_PATH):
+    print(f"ERROR: {JS_PATH} not found!")
     exit(1)
 
-with open(JSON_FILE, 'r') as f:
-    fighters = json.load(f)
+js_content = open(JS_PATH).read()
+existing = {}
+for m in re.finditer(r"\{n:'([^']+)'[^}]+\}", js_content):
+    entry_str = m.group(0)
+    name_m = re.search(r"n:'([^']+)'", entry_str)
+    if name_m: existing[name_m.group(1)] = entry_str
 
-# Build lookup by name
-fighter_map = {f['name']: f for f in fighters}
-print(f"  Loaded {len(fighters)} fighters")
+print(f"  Found {len(existing)} fighters")
 
-# ─── Load Greco1899 CSVs ──────────────────────────────────────────────────────
+# Load CSVs
 print("Loading CSVs...")
 results_df = pd.read_csv('ufc_fight_results.csv', dtype=str)
 events_df  = pd.read_csv('ufc_event_details.csv',  dtype=str)
 
-event_dates = dict(zip(
-    events_df['EVENT'].str.strip(),
-    events_df['DATE'].apply(parse_date)
-))
-
+event_dates = dict(zip(events_df['EVENT'].str.strip(), events_df['DATE'].apply(parse_date)))
 results_df['EVENT'] = results_df['EVENT'].str.strip()
 results_df['DATE']  = results_df['EVENT'].map(event_dates)
 
-# ─── Build fight history per fighter ─────────────────────────────────────────
+# Build fight history
 print("Parsing fight results...")
 fights_by_fighter = {}
-
 for _, row in results_df.iterrows():
     fa, fb = split_bout(row.get('BOUT', ''))
-    if fa is None:
-        continue
-
+    if fa is None: continue
     outcome = str(row.get('OUTCOME', '')).strip()
-    if   outcome == 'W/L': winner = fa
-    elif outcome == 'L/W': winner = fb
-    else:                  winner = None
-
+    winner = fa if outcome == 'W/L' else (fb if outcome == 'L/W' else None)
     method = str(row.get('METHOD', '')).strip().upper()
+    for fighter in [fa, fb]:
+        res = 'NC' if winner is None else ('W' if fighter == winner else 'L')
+        fights_by_fighter.setdefault(fighter, []).append({'result': res, 'date': row['DATE'], 'method': method})
 
-    for fighter, opponent in [(fa, fb), (fb, fa)]:
-        if winner is None:       res = 'NC'
-        elif fighter == winner:  res = 'W'
-        else:                    res = 'L'
-        fights_by_fighter.setdefault(fighter, []).append({
-            'result': res,
-            'date':   row['DATE'],
-            'method': method,
-        })
+for n in fights_by_fighter:
+    fights_by_fighter[n].sort(key=lambda x: x['date'] or '', reverse=True)
 
-for name in fights_by_fighter:
-    fights_by_fighter[name].sort(key=lambda x: x['date'] or '', reverse=True)
-
-# ─── Compute updates ──────────────────────────────────────────────────────────
+# Compute updates
 print("Computing updated stats...")
 TODAY = date.today()
 updates = {}
-
 for name, fights in fights_by_fighter.items():
-    wins   = sum(1 for f in fights if f['result'] == 'W')
-    losses = sum(1 for f in fights if f['result'] == 'L')
+    wi = sum(1 for f in fights if f['result'] == 'W')
+    lo = sum(1 for f in fights if f['result'] == 'L')
     ws, ls = compute_streak(fights)
-
     dated = [f for f in fights if f['result'] in ('W', 'L', 'NC') and f['date']]
-    lfd   = dated[0]['date'] if dated else None
-    dsl   = (TODAY - date.fromisoformat(lfd)).days if lfd else None
+    lfd = dated[0]['date'] if dated else None
+    dsl = (TODAY - date.fromisoformat(lfd)).days if lfd else None
+    kow = sum(1 for f in fights if f['result'] == 'W' and any(x in f['method'] for x in ['KO', 'TKO']))
+    sbw = sum(1 for f in fights if f['result'] == 'W' and 'SUB' in f['method'])
+    dcw = sum(1 for f in fights if f['result'] == 'W' and 'DEC' in f['method'])
+    updates[name] = dict(wi=wi, lo=lo, ws=ws, ls=ls, tr=wi+lo, lfd=lfd, dsl=dsl, kow=kow, sbw=sbw, dcw=dcw)
 
-    ko_wins  = sum(1 for f in fights if f['result'] == 'W' and any(x in f['method'] for x in ['KO', 'TKO']))
-    sub_wins = sum(1 for f in fights if f['result'] == 'W' and 'SUB' in f['method'])
-    dec_wins = sum(1 for f in fights if f['result'] == 'W' and 'DEC' in f['method'])
-
-    updates[name] = {
-        'wins':             wins,
-        'losses':           losses,
-        'win_streak':       ws,
-        'lose_streak':      ls,
-        'last_fight_date':  lfd,
-        'days_since_last':  dsl,
-        'ko_wins':          ko_wins,
-        'sub_wins':         sub_wins,
-        'dec_wins':         dec_wins,
-    }
-
-# ─── Patch existing fighters ──────────────────────────────────────────────────
-print("Patching fighters.json...")
-
-FIELDS_TO_UPDATE = [
-    'wins', 'losses', 'win_streak', 'lose_streak',
-    'last_fight_date', 'days_since_last',
-    'ko_wins', 'sub_wins', 'dec_wins',
-]
-
+# Patch entries
+print("Patching fightersData.js...")
+FIELDS = ['wi', 'lo', 'ws', 'ls', 'tr', 'kow', 'sbw', 'dcw', 'dsl']
 updated_count = 0
-added_count   = 0
+new_lines = []
 
-for fighter in fighters:
-    name = fighter['name']
+for name, entry_str in existing.items():
     if name in updates:
         u = updates[name]
-        for field in FIELDS_TO_UPDATE:
-            fighter[field] = u[field]
+        for field in FIELDS:
+            entry_str = patch_field(entry_str, field, u[field])
+        if u['lfd']:
+            entry_str = re.sub(r"lfd:'[^']*'", f"lfd:'{u['lfd']}'", entry_str)
+            entry_str = re.sub(r"lfd:null",     f"lfd:'{u['lfd']}'", entry_str)
         updated_count += 1
+    new_lines.append(f"  {entry_str}")
 
-# Add new fighters who appear in CSVs but not in JSON
+added_count = 0
 for name, u in updates.items():
-    if name not in fighter_map:
-        total = u['wins'] + u['losses']
-        if total < 2:  # skip one-fight wonders
-            continue
-        fighters.append({
-            'name':              name,
-            'weight_class':      None,
-            'last_fight_date':   u['last_fight_date'],
-            'days_since_last':   u['days_since_last'],
-            'elo':               None,
-            'cardio_ratio':      None,
-            'wins':              u['wins'],
-            'losses':            u['losses'],
-            'win_streak':        u['win_streak'],
-            'lose_streak':       u['lose_streak'],
-            'longest_win_streak': u['win_streak'],
-            'total_rounds':      None,
-            'title_bouts':       0,
-            'ko_wins':           u['ko_wins'],
-            'sub_wins':          u['sub_wins'],
-            'dec_wins':          u['dec_wins'],
-            'avg_sig_str_landed': None,
-            'avg_sig_str_pct':   None,
-            'avg_sub_att':       None,
-            'avg_td_landed':     None,
-            'avg_td_pct':        None,
-            'height_cms':        None,
-            'reach_cms':         None,
-            'weight_lbs':        None,
-            'age':               None,
-            'stance':            None,
-            'div_rank':          None,
-            'p4p_rank':          None,
-        })
+    if name not in existing:
+        if u['wi'] + u['lo'] < 2: continue
+        entry = (f"{{n:'{name.replace(chr(39), chr(92)+chr(39))}',w:null,ag:null,ht:null,rh:null,"
+                 f"st:'Orthodox',wi:{u['wi']},lo:{u['lo']},ws:{u['ws']},ls:{u['ls']},"
+                 f"tr:{u['tr']},tb:0,kow:{u['kow']},sbw:{u['sbw']},dcw:{u['dcw']},"
+                 f"asl:null,asp:null,asa:null,atl:null,atp:null,elo:null,crd:0,"
+                 f"lfd:{fmt(u['lfd'])},dsl:{fmt(u['dsl'])},dr:null,p4p:null,wlb:null}}")
+        new_lines.append(f"  {entry}")
         added_count += 1
 
-print(f"  Updated {updated_count} fighters, added {added_count} new fighters")
+print(f"  Updated {updated_count}, added {added_count} new fighters")
 
-# ─── Write output ─────────────────────────────────────────────────────────────
-with open(JSON_FILE, 'w') as f:
-    json.dump(fighters, f, indent=2)
+new_js = "export const _D2 = [\n" + ",\n".join(new_lines) + "\n];\n"
+with open(JS_PATH, 'w') as f:
+    f.write(new_js)
 
-print(f"\n✅  Done — {JSON_FILE} saved ({len(fighters)} total fighters)")
+print(f"\n✅  Done — src/fightersData.js saved ({len(new_lines)} total fighters)")
 
-# Sanity check
-checks = ['Islam Makhachev', 'Jon Jones', 'Renato Moicano', 'Khamzat Chimaev', 'Alex Pereira']
+checks = ['Renato Moicano', 'Islam Makhachev', 'Jon Jones', 'Khamzat Chimaev', 'Alex Pereira']
 print("\nSanity check:")
 for name in checks:
     if name in updates:
         u = updates[name]
-        print(f"  {name:25s} | {u['wins']}-{u['losses']} | ws:{u['win_streak']} ls:{u['lose_streak']} | lfd:{u['last_fight_date']}")
+        print(f"  {name:25s} | {u['wi']}-{u['lo']} | ws:{u['ws']} ls:{u['ls']} | lfd:{u['lfd']}")
