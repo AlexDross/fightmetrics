@@ -47,16 +47,16 @@ jobs:
       - name: Run update_fighters.py
         run: python update_fighters.py
 
-      # 6. Commit and push only if fighters.json actually changed
+      # 6. Commit and push only if fightersData.js actually changed
       - name: Commit and push if changed
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add fighters.json
+          git add src/fightersData.js
           if git diff --staged --quiet; then
-            echo "No changes to fighters.json — skipping commit"
+            echo "No changes to fightersData.js — skipping commit"
           else
-            git commit -m "Auto-update fighters.json $(date -u +'%Y-%m-%d')"
+            git commit -m "Auto-update fightersData.js $(date -u +'%Y-%m-%d')"
             git push
-            echo "✅  Pushed updated fighters.json"
+            echo "✅  Pushed updated fightersData.js"
           fi
