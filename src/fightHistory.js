@@ -20887,6 +20887,17 @@ export const FIGHT_HISTORY = {
   ],
   "Josh Hokit": [
     {
+      "dt": "2026-04-11",
+      "op": "Curtis Blaydes",
+      "re": "W",
+      "me": "Decision - Unanimous",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Heavyweight",
+      "tb": false,
+      "ev": "UFC 327: Prochazka vs. Ulberg"
+    },
+    {
       "dt": "2026-01-24",
       "op": "Denzel Freeman",
       "re": "W",
@@ -22389,6 +22400,17 @@ export const FIGHT_HISTORY = {
     }
   ],
   "Guilherme Pat": [
+    {
+      "dt": "2026-04-04",
+      "op": "Thomas Petersen",
+      "re": "L",
+      "me": "Decision - Majority",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Heavyweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Moicano vs. Duncan"
+    },
     {
       "dt": "2025-12-13",
       "op": "Allen Frye Jr.",
@@ -24034,6 +24056,17 @@ export const FIGHT_HISTORY = {
     }
   ],
   "Chris Duncan": [
+    {
+      "dt": "2026-04-04",
+      "op": "Renato Moicano",
+      "re": "L",
+      "me": "Submission",
+      "rn": 2,
+      "ti": "3:14",
+      "wc": "Lightweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Moicano vs. Duncan"
+    },
     {
       "dt": "2025-12-06",
       "op": "Terrance McKinney",
@@ -26675,6 +26708,17 @@ export const FIGHT_HISTORY = {
   ],
   "Abdul Rakhman Yakhyaev": [
     {
+      "dt": "2026-04-04",
+      "op": "Brendson Ribeiro",
+      "re": "W",
+      "me": "Submission",
+      "rn": 1,
+      "ti": "2:52",
+      "wc": "Light Heavyweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Moicano vs. Duncan"
+    },
+    {
       "dt": "2025-11-22",
       "op": "Rafael Cerqueira",
       "re": "W",
@@ -28833,6 +28877,17 @@ export const FIGHT_HISTORY = {
   ],
   "Ethyn Ewing": [
     {
+      "dt": "2026-04-04",
+      "op": "Rafael Estevam",
+      "re": "W",
+      "me": "KO/TKO",
+      "rn": 3,
+      "ti": "1:44",
+      "wc": "Featherweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Moicano vs. Duncan"
+    },
+    {
       "dt": "2025-11-15",
       "op": "Malcolm Wellmaker",
       "re": "W",
@@ -30023,6 +30078,17 @@ export const FIGHT_HISTORY = {
   ],
   "Randy Brown": [
     {
+      "dt": "2026-04-11",
+      "op": "Kevin Holland",
+      "re": "L",
+      "me": "Decision - Unanimous",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Welterweight",
+      "tb": false,
+      "ev": "UFC 327: Prochazka vs. Ulberg"
+    },
+    {
       "dt": "2025-11-08",
       "op": "Gabriel Bonfim",
       "re": "L",
@@ -30646,6 +30712,17 @@ export const FIGHT_HISTORY = {
     }
   ],
   "Chris Padilla": [
+    {
+      "dt": "2026-04-11",
+      "op": "MarQuel Mederos",
+      "re": "NC",
+      "me": "Decision - Majority",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Lightweight",
+      "tb": false,
+      "ev": "UFC 327: Prochazka vs. Ulberg"
+    },
     {
       "dt": "2025-11-08",
       "op": "Ismael Bonfim",
@@ -32060,6 +32137,17 @@ export const FIGHT_HISTORY = {
   ],
   "Charles Radtke": [
     {
+      "dt": "2026-04-11",
+      "op": "Francisco Prado",
+      "re": "W",
+      "me": "Decision - Unanimous",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Welterweight",
+      "tb": false,
+      "ev": "UFC 327: Prochazka vs. Ulberg"
+    },
+    {
       "dt": "2025-11-01",
       "op": "Daniel Frunza",
       "re": "W",
@@ -33148,6 +33236,17 @@ export const FIGHT_HISTORY = {
   ],
   "Virna Jandiroba": [
     {
+      "dt": "2026-04-04",
+      "op": "Tabatha Ricci",
+      "re": "W",
+      "me": "Decision - Unanimous",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Women\\",
+      "tb": false,
+      "ev": "UFC Fight Night: Moicano vs. Duncan"
+    },
+    {
       "dt": "2025-10-25",
       "op": "Mackenzie Dern",
       "re": "L",
@@ -33771,6 +33870,17 @@ export const FIGHT_HISTORY = {
     }
   ],
   "Azamat Murzakanov": [
+    {
+      "dt": "2026-04-11",
+      "op": "Paulo Costa",
+      "re": "L",
+      "me": "KO/TKO",
+      "rn": 3,
+      "ti": "1:23",
+      "wc": "Light Heavyweight",
+      "tb": false,
+      "ev": "UFC 327: Prochazka vs. Ulberg"
+    },
     {
       "dt": "2025-10-25",
       "op": "Aleksandar Rakic",
@@ -34899,6 +35009,17 @@ export const FIGHT_HISTORY = {
     }
   ],
   "Kevin Holland": [
+    {
+      "dt": "2026-04-11",
+      "op": "Randy Brown",
+      "re": "W",
+      "me": "Decision - Unanimous",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Welterweight",
+      "tb": false,
+      "ev": "UFC 327: Prochazka vs. Ulberg"
+    },
     {
       "dt": "2025-10-18",
       "op": "Mike Malott",
@@ -36459,6 +36580,17 @@ export const FIGHT_HISTORY = {
   ],
   "Azamat Bekoev": [
     {
+      "dt": "2026-04-04",
+      "op": "Tresean Gore",
+      "re": "L",
+      "me": "Submission",
+      "rn": 3,
+      "ti": "3:27",
+      "wc": "Middleweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Moicano vs. Duncan"
+    },
+    {
       "dt": "2025-10-18",
       "op": "Yousri Belgaroui",
       "re": "L",
@@ -36539,6 +36671,17 @@ export const FIGHT_HISTORY = {
     }
   ],
   "Mateusz Gamrot": [
+    {
+      "dt": "2026-04-11",
+      "op": "Esteban Ribovics",
+      "re": "W",
+      "me": "Submission",
+      "rn": 2,
+      "ti": "4:19",
+      "wc": "Lightweight",
+      "tb": false,
+      "ev": "UFC 327: Prochazka vs. Ulberg"
+    },
     {
       "dt": "2025-10-11",
       "op": "Charles Oliveira",
@@ -36807,6 +36950,17 @@ export const FIGHT_HISTORY = {
     }
   ],
   "Vicente Luque": [
+    {
+      "dt": "2026-04-11",
+      "op": "Kelvin Gastelum",
+      "re": "W",
+      "me": "Submission",
+      "rn": 1,
+      "ti": "4:08",
+      "wc": "Welterweight",
+      "tb": false,
+      "ev": "UFC 327: Prochazka vs. Ulberg"
+    },
     {
       "dt": "2025-10-11",
       "op": "Joel Alvarez",
@@ -37570,6 +37724,17 @@ export const FIGHT_HISTORY = {
   ],
   "Thomas Petersen": [
     {
+      "dt": "2026-04-04",
+      "op": "Guilherme Pat",
+      "re": "W",
+      "me": "Decision - Majority",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Heavyweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Moicano vs. Duncan"
+    },
+    {
       "dt": "2025-10-11",
       "op": "Vitor Petrino",
       "re": "L",
@@ -37696,6 +37861,17 @@ export const FIGHT_HISTORY = {
     }
   ],
   "Stewart Nicoll": [
+    {
+      "dt": "2026-04-04",
+      "op": "Alessandro Costa",
+      "re": "L",
+      "me": "KO/TKO",
+      "rn": 2,
+      "ti": "4:56",
+      "wc": "Flyweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Moicano vs. Duncan"
+    },
     {
       "dt": "2025-10-11",
       "op": "Lucas Rocha",
@@ -38491,6 +38667,17 @@ export const FIGHT_HISTORY = {
     }
   ],
   "Jiri Prochazka": [
+    {
+      "dt": "2026-04-11",
+      "op": "Carlos Ulberg",
+      "re": "L",
+      "me": "KO/TKO",
+      "rn": 1,
+      "ti": "3:45",
+      "wc": "Light Heavyweight",
+      "tb": false,
+      "ev": "UFC 327: Prochazka vs. Ulberg"
+    },
     {
       "dt": "2025-10-04",
       "op": "Khalil Rountree Jr.",
@@ -39677,6 +39864,17 @@ export const FIGHT_HISTORY = {
   ],
   "Carlos Ulberg": [
     {
+      "dt": "2026-04-11",
+      "op": "Jiri Prochazka",
+      "re": "W",
+      "me": "KO/TKO",
+      "rn": 1,
+      "ti": "3:45",
+      "wc": "Light Heavyweight",
+      "tb": false,
+      "ev": "UFC 327: Prochazka vs. Ulberg"
+    },
+    {
       "dt": "2025-09-27",
       "op": "Dominick Reyes",
       "re": "W",
@@ -39788,6 +39986,17 @@ export const FIGHT_HISTORY = {
     }
   ],
   "Dominick Reyes": [
+    {
+      "dt": "2026-04-11",
+      "op": "Johnny Walker",
+      "re": "W",
+      "me": "Decision - Split",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Light Heavyweight",
+      "tb": false,
+      "ev": "UFC 327: Prochazka vs. Ulberg"
+    },
     {
       "dt": "2025-09-27",
       "op": "Carlos Ulberg",
@@ -41299,6 +41508,17 @@ export const FIGHT_HISTORY = {
   ],
   "Kelvin Gastelum": [
     {
+      "dt": "2026-04-11",
+      "op": "Vicente Luque",
+      "re": "L",
+      "me": "Submission",
+      "rn": 1,
+      "ti": "4:08",
+      "wc": "Middleweight",
+      "tb": false,
+      "ev": "UFC 327: Prochazka vs. Ulberg"
+    },
+    {
       "dt": "2025-09-13",
       "op": "Dustin Stoltzfus",
       "re": "W",
@@ -42437,6 +42657,17 @@ export const FIGHT_HISTORY = {
   ],
   "Tatiana Suarez": [
     {
+      "dt": "2026-04-11",
+      "op": "Loopy Godinez",
+      "re": "W",
+      "me": "Submission",
+      "rn": 2,
+      "ti": "2:29",
+      "wc": "Women\\",
+      "tb": false,
+      "ev": "UFC 327: Prochazka vs. Ulberg"
+    },
+    {
       "dt": "2025-09-13",
       "op": "Amanda Lemos",
       "re": "W",
@@ -42538,6 +42769,17 @@ export const FIGHT_HISTORY = {
   ],
   "Alessandro Costa": [
     {
+      "dt": "2026-04-04",
+      "op": "Stewart Nicoll",
+      "re": "W",
+      "me": "KO/TKO",
+      "rn": 2,
+      "ti": "4:56",
+      "wc": "Flyweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Moicano vs. Duncan"
+    },
+    {
       "dt": "2025-09-13",
       "op": "Alden Coria",
       "re": "L",
@@ -42594,6 +42836,17 @@ export const FIGHT_HISTORY = {
     }
   ],
   "Alice Pereira": [
+    {
+      "dt": "2026-04-04",
+      "op": "Hailey Cowan",
+      "re": "W",
+      "me": "KO/TKO",
+      "rn": 2,
+      "ti": "4:24",
+      "wc": "Women\\",
+      "tb": false,
+      "ev": "UFC Fight Night: Moicano vs. Duncan"
+    },
     {
       "dt": "2025-09-13",
       "op": "Montse Rendon",
@@ -43102,6 +43355,17 @@ export const FIGHT_HISTORY = {
   ],
   "Robert Ruchala": [
     {
+      "dt": "2026-04-04",
+      "op": "Jose Delano",
+      "re": "L",
+      "me": "Decision - Unanimous",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Featherweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Moicano vs. Duncan"
+    },
+    {
       "dt": "2025-09-06",
       "op": "William Gomis",
       "re": "L",
@@ -43114,6 +43378,17 @@ export const FIGHT_HISTORY = {
     }
   ],
   "Brendson Ribeiro": [
+    {
+      "dt": "2026-04-04",
+      "op": "Abdul Rakhman Yakhyaev",
+      "re": "L",
+      "me": "Submission",
+      "rn": 1,
+      "ti": "2:52",
+      "wc": "Light Heavyweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Moicano vs. Duncan"
+    },
     {
       "dt": "2025-09-06",
       "op": "Oumar Sy",
@@ -43425,6 +43700,17 @@ export const FIGHT_HISTORY = {
     }
   ],
   "Johnny Walker": [
+    {
+      "dt": "2026-04-11",
+      "op": "Dominick Reyes",
+      "re": "L",
+      "me": "Decision - Split",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Light Heavyweight",
+      "tb": false,
+      "ev": "UFC 327: Prochazka vs. Ulberg"
+    },
     {
       "dt": "2025-08-23",
       "op": "Zhang Mingyang",
@@ -44743,6 +45029,17 @@ export const FIGHT_HISTORY = {
   ],
   "Aaron Pico": [
     {
+      "dt": "2026-04-11",
+      "op": "Patricio Pitbull",
+      "re": "W",
+      "me": "Decision - Unanimous",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Featherweight",
+      "tb": false,
+      "ev": "UFC 327: Prochazka vs. Ulberg"
+    },
+    {
       "dt": "2025-08-16",
       "op": "Lerone Murphy",
       "re": "L",
@@ -45580,6 +45877,17 @@ export const FIGHT_HISTORY = {
   ],
   "Loopy Godinez": [
     {
+      "dt": "2026-04-11",
+      "op": "Tatiana Suarez",
+      "re": "L",
+      "me": "Submission",
+      "rn": 2,
+      "ti": "2:29",
+      "wc": "Women\\",
+      "tb": false,
+      "ev": "UFC 327: Prochazka vs. Ulberg"
+    },
+    {
       "dt": "2025-08-16",
       "op": "Jessica Andrade",
       "re": "W",
@@ -45869,6 +46177,17 @@ export const FIGHT_HISTORY = {
     }
   ],
   "Dione Barbosa": [
+    {
+      "dt": "2026-04-04",
+      "op": "Melissa Gatto",
+      "re": "W",
+      "me": "Decision - Majority",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Women\\",
+      "tb": false,
+      "ev": "UFC Fight Night: Moicano vs. Duncan"
+    },
     {
       "dt": "2025-08-16",
       "op": "Karine Silva",
@@ -46436,6 +46755,17 @@ export const FIGHT_HISTORY = {
   ],
   "Esteban Ribovics": [
     {
+      "dt": "2026-04-11",
+      "op": "Mateusz Gamrot",
+      "re": "L",
+      "me": "Submission",
+      "rn": 2,
+      "ti": "4:19",
+      "wc": "Lightweight",
+      "tb": false,
+      "ev": "UFC 327: Prochazka vs. Ulberg"
+    },
+    {
       "dt": "2025-08-02",
       "op": "Elves Brener",
       "re": "W",
@@ -46886,6 +47216,17 @@ export const FIGHT_HISTORY = {
   ],
   "Tresean Gore": [
     {
+      "dt": "2026-04-04",
+      "op": "Azamat Bekoev",
+      "re": "W",
+      "me": "Submission",
+      "rn": 3,
+      "ti": "3:27",
+      "wc": "Middleweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Moicano vs. Duncan"
+    },
+    {
       "dt": "2025-08-02",
       "op": "Rodolfo Vieira",
       "re": "L",
@@ -47014,6 +47355,17 @@ export const FIGHT_HISTORY = {
     }
   ],
   "Rafael Estevam": [
+    {
+      "dt": "2026-04-04",
+      "op": "Ethyn Ewing",
+      "re": "L",
+      "me": "KO/TKO",
+      "rn": 3,
+      "ti": "1:44",
+      "wc": "Flyweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Moicano vs. Duncan"
+    },
     {
       "dt": "2025-08-02",
       "op": "Felipe Bunes",
@@ -47979,6 +48331,17 @@ export const FIGHT_HISTORY = {
   ],
   "Tabatha Ricci": [
     {
+      "dt": "2026-04-04",
+      "op": "Virna Jandiroba",
+      "re": "L",
+      "me": "Decision - Unanimous",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Women\\",
+      "tb": false,
+      "ev": "UFC Fight Night: Moicano vs. Duncan"
+    },
+    {
       "dt": "2025-07-26",
       "op": "Amanda Ribas",
       "re": "W",
@@ -48583,6 +48946,17 @@ export const FIGHT_HISTORY = {
   ],
   "Paulo Costa": [
     {
+      "dt": "2026-04-11",
+      "op": "Azamat Murzakanov",
+      "re": "W",
+      "me": "KO/TKO",
+      "rn": 3,
+      "ti": "1:23",
+      "wc": "Middleweight",
+      "tb": false,
+      "ev": "UFC 327: Prochazka vs. Ulberg"
+    },
+    {
       "dt": "2025-07-19",
       "op": "Roman Kopylov",
       "re": "W",
@@ -48986,6 +49360,17 @@ export const FIGHT_HISTORY = {
     }
   ],
   "Francisco Prado": [
+    {
+      "dt": "2026-04-11",
+      "op": "Charles Radtke",
+      "re": "L",
+      "me": "Decision - Unanimous",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Welterweight",
+      "tb": false,
+      "ev": "UFC 327: Prochazka vs. Ulberg"
+    },
     {
       "dt": "2025-07-19",
       "op": "Nikolay Veretennikov",
@@ -49885,6 +50270,17 @@ export const FIGHT_HISTORY = {
   ],
   "Nate Landwehr": [
     {
+      "dt": "2026-04-11",
+      "op": "Cub Swanson",
+      "re": "L",
+      "me": "KO/TKO",
+      "rn": 1,
+      "ti": "4:06",
+      "wc": "Featherweight",
+      "tb": false,
+      "ev": "UFC 327: Prochazka vs. Ulberg"
+    },
+    {
       "dt": "2025-07-12",
       "op": "Morgan Charriere",
       "re": "L",
@@ -50761,6 +51157,17 @@ export const FIGHT_HISTORY = {
   ],
   "Renato Moicano": [
     {
+      "dt": "2026-04-04",
+      "op": "Chris Duncan",
+      "re": "W",
+      "me": "Submission",
+      "rn": 2,
+      "ti": "3:14",
+      "wc": "Lightweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Moicano vs. Duncan"
+    },
+    {
       "dt": "2025-06-28",
       "op": "Beneil Dariush",
       "re": "L",
@@ -51287,6 +51694,17 @@ export const FIGHT_HISTORY = {
     }
   ],
   "Curtis Blaydes": [
+    {
+      "dt": "2026-04-11",
+      "op": "Josh Hokit",
+      "re": "L",
+      "me": "Decision - Unanimous",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Heavyweight",
+      "tb": false,
+      "ev": "UFC 327: Prochazka vs. Ulberg"
+    },
     {
       "dt": "2025-06-21",
       "op": "Rizvan Kuniev",
@@ -53149,6 +53567,17 @@ export const FIGHT_HISTORY = {
     }
   ],
   "MarQuel Mederos": [
+    {
+      "dt": "2026-04-11",
+      "op": "Chris Padilla",
+      "re": "NC",
+      "me": "Decision - Majority",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Lightweight",
+      "tb": false,
+      "ev": "UFC 327: Prochazka vs. Ulberg"
+    },
     {
       "dt": "2025-06-07",
       "op": "Mark Choinski",
@@ -57861,6 +58290,17 @@ export const FIGHT_HISTORY = {
   ],
   "Hailey Cowan": [
     {
+      "dt": "2026-04-04",
+      "op": "Alice Pereira",
+      "re": "L",
+      "me": "KO/TKO",
+      "rn": 2,
+      "ti": "4:24",
+      "wc": "Women\\",
+      "tb": false,
+      "ev": "UFC Fight Night: Moicano vs. Duncan"
+    },
+    {
       "dt": "2025-04-12",
       "op": "Nora Cornolle",
       "re": "L",
@@ -61781,6 +62221,17 @@ export const FIGHT_HISTORY = {
   ],
   "Cub Swanson": [
     {
+      "dt": "2026-04-11",
+      "op": "Nate Landwehr",
+      "re": "W",
+      "me": "KO/TKO",
+      "rn": 1,
+      "ti": "4:06",
+      "wc": "Featherweight",
+      "tb": false,
+      "ev": "UFC 327: Prochazka vs. Ulberg"
+    },
+    {
       "dt": "2024-12-14",
       "op": "Billy Quarantillo",
       "re": "W",
@@ -63306,6 +63757,17 @@ export const FIGHT_HISTORY = {
     }
   ],
   "Shi Ming": [
+    {
+      "dt": "2025-08-22",
+      "op": "Bruna Brasil",
+      "re": "L",
+      "me": "Decision - Unanimous",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Women\\",
+      "tb": false,
+      "ev": "UFC - Road to UFC 4.6"
+    },
     {
       "dt": "2024-11-23",
       "op": "Feng Xiaocan",
@@ -70065,6 +70527,17 @@ export const FIGHT_HISTORY = {
   ],
   "Darrius Flowers": [
     {
+      "dt": "2026-04-04",
+      "op": "Lando Vannata",
+      "re": "W",
+      "me": "KO/TKO",
+      "rn": 2,
+      "ti": "0:52",
+      "wc": "Welterweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Moicano vs. Duncan"
+    },
+    {
       "dt": "2024-07-13",
       "op": "Evan Elder",
       "re": "L",
@@ -71137,6 +71610,17 @@ export const FIGHT_HISTORY = {
     }
   ],
   "Melissa Gatto": [
+    {
+      "dt": "2026-04-04",
+      "op": "Dione Barbosa",
+      "re": "L",
+      "me": "Decision - Majority",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Women\\",
+      "tb": false,
+      "ev": "UFC Fight Night: Moicano vs. Duncan"
+    },
     {
       "dt": "2024-05-18",
       "op": "Tamires Vidal",
@@ -76561,6 +77045,17 @@ export const FIGHT_HISTORY = {
   ],
   "Manolo Zecchini": [
     {
+      "dt": "2026-04-04",
+      "op": "Tommy McMillen",
+      "re": "L",
+      "me": "KO/TKO",
+      "rn": 1,
+      "ti": "3:57",
+      "wc": "Featherweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Moicano vs. Duncan"
+    },
+    {
       "dt": "2023-09-02",
       "op": "Morgan Charriere",
       "re": "L",
@@ -77668,6 +78163,17 @@ export const FIGHT_HISTORY = {
     }
   ],
   "Makhmud Muradov": [
+    {
+      "dt": "2024-02-03",
+      "op": "Aliaskhab Khizriev",
+      "re": "NC",
+      "me": "Could Not Continue",
+      "rn": 1,
+      "ti": "0:11",
+      "wc": "Middleweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Dolidze vs. Imavov"
+    },
     {
       "dt": "2023-07-22",
       "op": "Bryan Barberena",
@@ -80774,6 +81280,17 @@ export const FIGHT_HISTORY = {
     }
   ],
   "Lando Vannata": [
+    {
+      "dt": "2026-04-04",
+      "op": "Darrius Flowers",
+      "re": "L",
+      "me": "KO/TKO",
+      "rn": 2,
+      "ti": "0:52",
+      "wc": "Lightweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Moicano vs. Duncan"
+    },
     {
       "dt": "2023-04-15",
       "op": "Daniel Zellhuber",
@@ -89664,6 +90181,17 @@ export const FIGHT_HISTORY = {
   ],
   "Ronnie Lawrence": [
     {
+      "dt": "2023-06-17",
+      "op": "Dan Argueta",
+      "re": "NC",
+      "me": "Overturned",
+      "rn": 1,
+      "ti": "2:20",
+      "wc": "Bantamweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Vettori vs. Cannonier"
+    },
+    {
       "dt": "2022-07-09",
       "op": "Saidyokub Kakhramonov",
       "re": "L",
@@ -92956,6 +93484,17 @@ export const FIGHT_HISTORY = {
   ],
   "Aliaskhab Khizriev": [
     {
+      "dt": "2024-02-03",
+      "op": "Makhmud Muradov",
+      "re": "NC",
+      "me": "Could Not Continue",
+      "rn": 1,
+      "ti": "0:11",
+      "wc": "Middleweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Dolidze vs. Imavov"
+    },
+    {
       "dt": "2022-03-26",
       "op": "Denis Tiuliulin",
       "re": "W",
@@ -92968,6 +93507,17 @@ export const FIGHT_HISTORY = {
     }
   ],
   "Luis Saldana": [
+    {
+      "dt": "2022-08-20",
+      "op": "Sean Woodson",
+      "re": "NC",
+      "me": "Decision - Split",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Featherweight",
+      "tb": false,
+      "ev": "UFC 278: Usman vs. Edwards"
+    },
     {
       "dt": "2022-03-26",
       "op": "Bruno Souza",
@@ -100553,6 +101103,17 @@ export const FIGHT_HISTORY = {
   ],
   "Kai Kamaka": [
     {
+      "dt": "2021-07-31",
+      "op": "Danny Chavez",
+      "re": "NC",
+      "me": "Decision - Majority",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Featherweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Hall vs. Strickland"
+    },
+    {
       "dt": "2021-05-01",
       "op": "TJ Brown",
       "re": "L",
@@ -101747,6 +102308,17 @@ export const FIGHT_HISTORY = {
     }
   ],
   "Gustavo Lopez": [
+    {
+      "dt": "2021-09-18",
+      "op": "Alatengheili",
+      "re": "NC",
+      "me": "Decision - Unanimous",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Bantamweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Smith vs. Spann"
+    },
     {
       "dt": "2021-03-20",
       "op": "Adrian Yanez",
@@ -104177,6 +104749,17 @@ export const FIGHT_HISTORY = {
     }
   ],
   "Martin Day": [
+    {
+      "dt": "2021-02-06",
+      "op": "Timur Valiev",
+      "re": "L",
+      "me": "Decision - Unanimous",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Bantamweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Overeem vs. Volkov"
+    },
     {
       "dt": "2020-11-28",
       "op": "Anderson Dos Santos",
@@ -112251,6 +112834,17 @@ export const FIGHT_HISTORY = {
   ],
   "Enrique Barzola": [
     {
+      "dt": "2020-03-14",
+      "op": "Rani Yahya",
+      "re": "NC",
+      "me": "Decision - Majority",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Featherweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Lee vs. Oliveira"
+    },
+    {
       "dt": "2019-10-26",
       "op": "Movsar Evloev",
       "re": "L",
@@ -115742,6 +116336,17 @@ export const FIGHT_HISTORY = {
     }
   ],
   "Derrick Krantz": [
+    {
+      "dt": "2019-08-31",
+      "op": "Song Kenan",
+      "re": "L",
+      "me": "Decision - Unanimous",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Welterweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Andrade vs. Zhang"
+    },
     {
       "dt": "2019-05-18",
       "op": "Vicente Luque",
@@ -131367,6 +131972,17 @@ export const FIGHT_HISTORY = {
   ],
   "Joachim Christensen": [
     {
+      "dt": "2017-06-25",
+      "op": "Dominick Reyes",
+      "re": "L",
+      "me": "KO/TKO",
+      "rn": 1,
+      "ti": "0:29",
+      "wc": "Light Heavyweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Chiesa vs. Lee"
+    },
+    {
       "dt": "2017-05-13",
       "op": "Gadzhimurad Antigulov",
       "re": "L",
@@ -138356,6 +138972,17 @@ export const FIGHT_HISTORY = {
   ],
   "Michael Graves": [
     {
+      "dt": "2016-07-30",
+      "op": "Bojan Velickovic",
+      "re": "NC",
+      "me": "Decision - Majority",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Welterweight",
+      "tb": false,
+      "ev": "UFC 201: Lawler vs. Woodley"
+    },
+    {
       "dt": "2016-04-16",
       "op": "Randy Brown",
       "re": "W",
@@ -144528,6 +145155,17 @@ export const FIGHT_HISTORY = {
   ],
   "Todd Duffee": [
     {
+      "dt": "2019-09-14",
+      "op": "Jeff Hughes",
+      "re": "NC",
+      "me": "Could Not Continue",
+      "rn": 1,
+      "ti": "4:03",
+      "wc": "Heavyweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Cowboy vs. Gaethje"
+    },
+    {
       "dt": "2015-07-15",
       "op": "Frank Mir",
       "re": "L",
@@ -145075,6 +145713,17 @@ export const FIGHT_HISTORY = {
     }
   ],
   "Levan Makashvili": [
+    {
+      "dt": "2016-01-30",
+      "op": "Damon Jackson",
+      "re": "NC",
+      "me": "Decision - Majority",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Featherweight",
+      "tb": false,
+      "ev": "UFC on FOX: Johnson vs. Bader"
+    },
     {
       "dt": "2015-06-27",
       "op": "Hacran Dias",
@@ -156909,6 +157558,17 @@ export const FIGHT_HISTORY = {
   ],
   "Matthew Riddle": [
     {
+      "dt": "2013-02-16",
+      "op": "Che Mills",
+      "re": "NC",
+      "me": "Overturned",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Welterweight",
+      "tb": false,
+      "ev": "UFC on FUEL TV: Barao vs McDonald"
+    },
+    {
       "dt": "2012-11-17",
       "op": "John Maguire",
       "re": "W",
@@ -157528,6 +158188,17 @@ export const FIGHT_HISTORY = {
     }
   ],
   "Che Mills": [
+    {
+      "dt": "2013-02-16",
+      "op": "Matthew Riddle",
+      "re": "NC",
+      "me": "Overturned",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Welterweight",
+      "tb": false,
+      "ev": "UFC on FUEL TV: Barao vs McDonald"
+    },
     {
       "dt": "2012-09-29",
       "op": "Duane Ludwig",
@@ -158959,6 +159630,17 @@ export const FIGHT_HISTORY = {
   ],
   "Norifumi Yamamoto": [
     {
+      "dt": "2015-02-28",
+      "op": "Roman Salazar",
+      "re": "NC",
+      "me": "Could Not Continue",
+      "rn": 2,
+      "ti": "2:37",
+      "wc": "Bantamweight",
+      "tb": false,
+      "ev": "UFC 184: Rousey vs Zingano"
+    },
+    {
       "dt": "2012-02-25",
       "op": "Vaughan Lee",
       "re": "L",
@@ -159317,6 +159999,17 @@ export const FIGHT_HISTORY = {
     }
   ],
   "Brock Lesnar": [
+    {
+      "dt": "2016-07-09",
+      "op": "Mark Hunt",
+      "re": "NC",
+      "me": "Overturned",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Heavyweight",
+      "tb": false,
+      "ev": "UFC 200: Tate vs Nunes"
+    },
     {
       "dt": "2011-12-30",
       "op": "Alistair Overeem",
