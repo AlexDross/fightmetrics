@@ -136,7 +136,7 @@ for name, fights in fights_by_fighter.items():
     kow = sum(1 for f in fights if f['result']=='W' and any(x in f['method'] for x in ['KO','TKO']))
     sbw = sum(1 for f in fights if f['result']=='W' and 'SUB' in f['method'])
     dcw = sum(1 for f in fights if f['result']=='W' and 'DEC' in f['method'])
-    record_updates[name] = dict(wi=wi, lo=lo, ws=ws, ls=ls, tr=wi+lo,
+    record_updates[name] = dict(wi=wi, lo=lo, ws=ws, ls=ls,
                                 lfd=lfd, dsl=dsl, kow=kow, sbw=sbw, dcw=dcw)
 
 # ─── Patch fightersData.js ────────────────────────────────────────────────────
@@ -153,7 +153,7 @@ for name, entry_str in existing.items():
     wc_m = re.search(r"w:'([^']*)'", entry_str)
     if wc_m: wc_lookup[name] = wc_m.group(1)
 
-RECORD_FIELDS = ['wi','lo','ws','ls','tr','kow','sbw','dcw','dsl']
+RECORD_FIELDS = ['wi','lo','ws','ls','kow','sbw','dcw','dsl']
 new_lines = []
 
 for name, entry_str in existing.items():
