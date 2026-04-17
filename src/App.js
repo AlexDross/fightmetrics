@@ -34,6 +34,7 @@ import {
   Calendar,
 } from 'lucide-react';
 import { _D2 } from './fightersData';
+import { _P } from './prospectsData';
 import { ELO_RATINGS } from './eloModule';
 import { CARDIO_RATIOS } from './cardioModule';
 import { FIGHT_HISTORY } from './fightHistory';
@@ -553,7 +554,8 @@ const eloToRating = (elo, weightClass) => {
   return Math.round(((elo - s.min) / (s.max - s.min)) * 100);
 };
 
-const FIGHTERS = _D2.map((d) => {
+const FIGHTERS = [..._D2, ..._P].map((d) => {
+  const isProspect = d._p_source !== undefined;
   const eloRec = ELO_RATINGS[d.n] ?? null;
   const fightHistory = sortHistoryDesc(FIGHT_HISTORY[d.n] ?? []);
   const officialRank = UFC_RANKINGS[d.n] ?? null;
@@ -718,6 +720,14 @@ const momentumScore = Math.max(
     FACTOR_POSITION: d.atp != null ? parseFloat((d.atp * 30).toFixed(1)) : 0,
     FACTOR_FINISH: parseFloat((finishRate * 0.2).toFixed(1)),
     FACTOR_CARDIO: parseFloat((cardioRatio * 10).toFixed(1)),
+    // ── Prospect fields (undefined for UFC veterans) ──
+    IS_PROSPECT: isProspect,
+    PROSPECT_TIER: isProspect ? d._p_tier : null,
+    PROSPECT_SOURCE: isProspect ? d._p_source : null,
+    PROSPECT_SIGNED: isProspect ? d._p_signed : null,
+    PROSPECT_DEBUT: isProspect ? d._p_debut : null,
+    PROSPECT_OPPONENT: isProspect ? d._p_opponent : null,
+    PROSPECT_NOTES: isProspect ? d._p_notes : null,
   };
 });
 
@@ -1803,7 +1813,7 @@ function Header({ view, setView }) {
   );
 }
 
-function Filters({ wc, setWC, minMin, setMinMin, count }) {
+function Filters({ wc, setWC, minMin, setMinMin, showProspects, setShowProspects, count }) {
   return (
     <div className="bg-slate-900/80 border-b border-slate-800 px-5 py-3">
       <div className="flex flex-wrap items-end gap-6">
@@ -1844,6 +1854,23 @@ function Filters({ wc, setWC, minMin, setMinMin, count }) {
             Filter out fighters with very few fight minutes
           </p>
         </div>
+
+        <div className="flex flex-col gap-1">
+          <label className="text-slate-500 text-xs font-semibold uppercase tracking-wider">
+            Prospects
+          </label>
+          <label className="inline-flex items-center gap-2 cursor-pointer select-none text-sm text-slate-300">
+            <input
+              type="checkbox"
+              checked={showProspects}
+              onChange={(e) => setShowProspects(e.target.checked)}
+              className="accent-amber-500 h-4 w-4"
+            />
+            <span>Show pre-debut signees</span>
+          </label>
+          <p className="text-slate-600 text-xs">Flagged <span className="text-amber-400 font-bold">PRE-UFC</span> in tables</p>
+        </div>
+
         <div className="ml-auto flex flex-col items-end justify-end pb-1">
           <span className="text-white font-black text-xl">{count}</span>
           <span className="text-slate-500 text-xs">fighters shown</span>
@@ -2211,6 +2238,14 @@ function DataTable({ fighters }) {
                             {ufcRankLabel(f.FIGHTER)}
                           </span>
                         )}
+                        {f.IS_PROSPECT && (
+                          <span
+                            className="text-[10px] font-black font-mono px-1.5 py-0.5 rounded border bg-amber-900/40 text-amber-400 border-amber-800"
+                            title="Pre-debut UFC signee — stats from pre-UFC pro fights"
+                          >
+                            PRE-UFC
+                          </span>
+                        )}
                         {f.FIGHTER}
                       </div>
                     </td>
@@ -2354,7 +2389,14 @@ function FighterSearch({
               }}
               className="w-full text-left px-4 py-2.5 hover:bg-slate-700 text-sm flex justify-between items-center transition-colors gap-3"
             >
-              <span className="text-slate-200 font-medium">{f.FIGHTER}</span>
+              <span className="text-slate-200 font-medium flex items-center gap-2">
+                {f.IS_PROSPECT && (
+                  <span className="text-[10px] font-black font-mono px-1.5 py-0.5 rounded border bg-amber-900/40 text-amber-400 border-amber-800">
+                    PRE-UFC
+                  </span>
+                )}
+                {f.FIGHTER}
+              </span>
               <span className="text-slate-500 text-xs flex items-center gap-2">
                 <span>{DIV_SHORT[f.WEIGHT_CLASS]}</span>
                 <span className="text-red-400 font-bold">
@@ -4551,6 +4593,14 @@ function ScoutProfile({ allFighters }) {
                       #{divRank.rank}/{divRank.total} DrossPom
                     </span>
                   )}
+                  {fighter.IS_PROSPECT && (
+                    <span
+                      className="bg-amber-900/40 text-amber-400 text-xs font-black px-2 py-0.5 rounded-full border border-amber-800"
+                      title="Pre-debut UFC signee — stats from pre-UFC pro fights"
+                    >
+                      PRE-UFC
+                    </span>
+                  )}
                   {fighter.UFC_RANK && (
                     <span
                       className={`text-xs font-bold px-2 py-0.5 rounded-full border ${
@@ -5344,6 +5394,7 @@ export default function App() {
   const [view, setView] = useState('table');
   const [wc, setWC] = useState('All Divisions');
   const [minMin, setMinMin] = useState(0);
+  const [showProspects, setShowProspects] = useState(false);
   const [roiEntries, setRoiEntries] = useState(ROI_ENTRIES);
 
   const filtered = useMemo(
@@ -5353,9 +5404,15 @@ export default function App() {
           (wc === 'All Divisions' ||
             wc === 'Pound-for-Pound' ||
             f.WEIGHT_CLASS === wc) &&
-          (f.TOTAL_ROUNDS ?? 0) >= minMin
+          (f.TOTAL_ROUNDS ?? 0) >= minMin &&
+          (showProspects || !f.IS_PROSPECT)
       ),
-    [wc, minMin]
+    [wc, minMin, showProspects]
+  );
+
+  const fightersWithProspectsFiltered = useMemo(
+    () => FIGHTERS.filter((f) => showProspects || !f.IS_PROSPECT),
+    [showProspects]
   );
 
   const handleSavePrediction = (entry) => {
@@ -5385,18 +5442,20 @@ export default function App() {
           setWC={setWC}
           minMin={minMin}
           setMinMin={setMinMin}
+          showProspects={showProspects}
+          setShowProspects={setShowProspects}
           count={filtered.length}
         />
       )}
       {view === 'table' && <DataTable fighters={filtered} />}
       {view === 'simulator' && (
         <MatchupSimulator
-          allFighters={FIGHTERS}
+          allFighters={fightersWithProspectsFiltered}
           onSavePrediction={handleSavePrediction}
           onOpenROI={() => setView('roi')}
         />
       )}
-      {view === 'scout' && <ScoutProfile allFighters={FIGHTERS} />}
+      {view === 'scout' && <ScoutProfile allFighters={fightersWithProspectsFiltered} />}
       {view === 'roi' && (
         <ROITab
           entries={roiEntries}
