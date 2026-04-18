@@ -3264,15 +3264,12 @@ function MatchupSimulator({ allFighters, onSavePrediction, onOpenROI }) {
 
   const formatDelta = (a, b, item) => {
     if (a == null || b == null) return '—';
-    const diff = a - b;
-    if (Math.abs(diff) < 0.001) return 'Even';
-    const abs = Math.abs(diff);
+    if (Math.abs(a - b) < 0.001) return 'Even';
+    const abs = Math.abs(a - b);
     const value = item.formatDelta
       ? item.formatDelta(abs)
       : `${abs.toFixed(item.decimals ?? 1)}${item.pct ? '%' : ''}`;
-    const outcome = getComparisonOutcome(a, b, item);
-    if (outcome === 'even') return 'Even';
-    return `${outcome === 'A' ? '+' : '-'}${value}`;
+    return value;
   };
 
   const getComparisonOutcome = (a, b, item) => {
@@ -4195,6 +4192,12 @@ function MatchupSimulator({ allFighters, onSavePrediction, onOpenROI }) {
                       const b = fB[item.key];
                       const outcome = getComparisonOutcome(a, b, item);
                       const delta = formatDelta(a, b, item);
+                      const deltaLabel =
+                        outcome === 'even'
+                          ? 'Even'
+                          : outcome === 'A'
+                          ? `← ${delta}`
+                          : `${delta} →`;
                       return (
                         <div
                           key={item.key}
@@ -4233,7 +4236,7 @@ function MatchupSimulator({ allFighters, onSavePrediction, onOpenROI }) {
                                   : 'bg-slate-800 text-slate-400 border border-slate-700'
                               }`}
                             >
-                              {delta}
+                              {deltaLabel}
                             </span>
                           </div>
                           <div className="text-right">
