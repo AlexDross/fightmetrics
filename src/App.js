@@ -3280,41 +3280,6 @@ function MatchupSimulator({ allFighters, onSavePrediction, onOpenROI }) {
     return a < b ? 'A' : 'B';
   };
 
-  const formatAuditValue = (label, value) => {
-    if (value == null) return '—';
-    if (label === 'Strike Accuracy' || label === 'Takedown Accuracy')
-      return `${(Number(value) * 100).toFixed(1)}%`;
-    if (label === 'Odds Edge') return `${(Number(value) * 100).toFixed(1)}%`;
-    if (label === 'Control Time %') return `${Number(value).toFixed(1)}%`;
-    if (label === 'Reach') return fmtReach(Number(value));
-    if (label === 'Height') return fmtHeight(Number(value));
-    if (label === 'Cardio Ratio' || label === 'Quality Momentum')
-      return `${Number(value) > 0 && label === 'Quality Momentum' ? '+' : ''}${Number(value).toFixed(2)}`;
-    if (label === 'ELO' || label.includes('Fight Count') || label.includes('Rounds') || label.includes('Wins') || label === 'Age' || label === 'Days Since Last Fight')
-      return `${Number(value).toFixed(0)}`;
-    return `${Number(value).toFixed(2)}`;
-  };
-
-  const auditGroups = useMemo(() => {
-    if (!result?.auditRows) return [];
-    const order = [
-      'Striking',
-      'Grappling',
-      'Physical',
-      'Form',
-      'Experience',
-      'Finishing',
-      'Analytics',
-      'Market',
-    ];
-    return order
-      .map((group) => ({
-        group,
-        rows: result.auditRows.filter((row) => row.group === group),
-      }))
-      .filter((entry) => entry.rows.length > 0);
-  }, [result]);
-
   const FighterPanel = ({ f, setF, color, ph }) => {
     const tc = color === 'blue' ? 'text-blue-400' : 'text-red-400';
     const bc =
@@ -4288,83 +4253,6 @@ function MatchupSimulator({ allFighters, onSavePrediction, onOpenROI }) {
               ))}
             </div>
           </div>
-
-
-
-
-          <div className="bg-slate-900 border border-amber-700/40 rounded-xl p-5">
-            <div className="flex items-start justify-between gap-4 mb-5">
-              <div>
-                <p className="text-amber-300 text-xs font-semibold uppercase tracking-widest">
-                  Temporary Full Model Audit
-                </p>
-                <p className="text-slate-500 text-xs mt-1">
-                  Every active prediction feature, its normalized differential,
-                  applied weight, and exact contribution to the composite score.
-                </p>
-              </div>
-              <div className="text-right text-xs text-slate-500">
-                <p>Composite: {result.composite.toFixed(3)}</p>
-                <p>Platt: a={MODEL.PLATT_NO.a.toFixed(3)} · b={MODEL.PLATT_NO.b.toFixed(3)}</p>
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              {auditGroups.map(({ group, rows }) => (
-                <div key={group} className="border border-slate-800 rounded-xl overflow-hidden">
-                  <div className="bg-slate-800/50 px-4 py-3 border-b border-slate-800">
-                    <p className="text-white text-sm font-bold">{group}</p>
-                  </div>
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
-                      <thead className="bg-slate-900/80">
-                        <tr className="text-slate-500 text-xs uppercase tracking-wider">
-                          <th className="text-left px-4 py-3">Feature</th>
-                          <th className="text-right px-3 py-3">{fA.FIGHTER.split(' ').pop()}</th>
-                          <th className="text-right px-3 py-3">{fB.FIGHTER.split(' ').pop()}</th>
-                          <th className="text-right px-3 py-3">Norm Diff</th>
-                          <th className="text-right px-3 py-3">Scale</th>
-                          <th className="text-right px-3 py-3">Weight</th>
-                          <th className="text-right px-4 py-3">Contribution</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {rows.map((row) => (
-                          <tr key={`${group}-${row.label}`} className="border-t border-slate-800">
-                            <td className="px-4 py-3">
-                              <p className="text-slate-200 font-semibold">{row.label}</p>
-                              <p className="text-slate-500 text-xs mt-0.5">
-                                {row.aLabel} vs {row.bLabel}
-                              </p>
-                            </td>
-                            <td className="px-3 py-3 text-right font-mono text-blue-300">
-                              {formatAuditValue(row.label, row.aValue)}
-                            </td>
-                            <td className="px-3 py-3 text-right font-mono text-red-300">
-                              {formatAuditValue(row.label, row.bValue)}
-                            </td>
-                            <td className={`px-3 py-3 text-right font-mono ${row.diff > 0 ? 'text-blue-300' : row.diff < 0 ? 'text-red-300' : 'text-slate-400'}`}>
-                              {row.diff > 0 ? '+' : ''}{row.diff.toFixed(3)}
-                            </td>
-                            <td className="px-3 py-3 text-right font-mono text-slate-400">
-                              {row.scale.toFixed(3)}
-                            </td>
-                            <td className="px-3 py-3 text-right font-mono text-slate-300">
-                              {row.weight.toFixed(4)}
-                            </td>
-                            <td className={`px-4 py-3 text-right font-mono font-bold ${row.contribution > 0 ? 'text-blue-300' : row.contribution < 0 ? 'text-red-300' : 'text-slate-400'}`}>
-                              {row.contribution > 0 ? '+' : ''}{row.contribution.toFixed(4)}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
           {/* ── FINISH PROBABILITY ── */}
           <div className="bg-slate-900 border border-slate-700 rounded-xl p-5">
             <p className="text-slate-400 text-xs font-semibold uppercase tracking-widest mb-4">
