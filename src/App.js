@@ -5241,65 +5241,62 @@ function ScoutProfile({ allFighters }) {
                 </div>
               ) : (
                 <>
-                  {/* Performance trend chart */}
+                  {/* Recent fight timeline */}
                   {perfTrendData.length >= 2 && (
                     <div className="bg-slate-900 border border-slate-700 rounded-xl p-5">
                       <p className="text-slate-400 text-xs font-semibold uppercase tracking-wider mb-4">
-                        Recent Results Trend (Oldest → Most Recent)
+                        Recent Results (Oldest → Most Recent)
                       </p>
-                      <ResponsiveContainer width="100%" height={120}>
-                        <BarChart
-                          data={perfTrendData}
-                          margin={{ top: 5, right: 5, bottom: 5, left: 0 }}
-                        >
-                          <XAxis
-                            dataKey="fight"
-                            tick={{ fill: '#64748b', fontSize: 10 }}
-                            axisLine={false}
-                            tickLine={false}
-                          />
-                          <YAxis
-                            domain={[0, 1]}
-                            tick={false}
-                            axisLine={false}
-                            tickLine={false}
-                            width={20}
-                          />
-                          <Tooltip
-                            contentStyle={{
-                              background: '#1e293b',
-                              border: '1px solid #475569',
-                              borderRadius: 8,
-                              fontSize: 11,
-                            }}
-                            itemStyle={{ color: '#cbd5e1' }}
-                            formatter={(_, __, item) =>
-                              item?.payload?.opponent || ''
-                            }
-                            labelFormatter={(label) => label}
-                          />
-                          <Bar
-                            dataKey="score"
-                            name="Result"
-                            radius={[4, 4, 0, 0]}
-                          >
-                            {perfTrendData.map((entry, i) => (
-                              <Cell
-                                key={i}
-                                fill={
-                                  entry.result === 'W'
-                                    ? '#22c55e'
-                                    : entry.result === 'L'
-                                    ? '#ef4444'
-                                    : '#64748b'
-                                }
-                              />
-                            ))}
-                          </Bar>
-                        </BarChart>
-                      </ResponsiveContainer>
-                      <p className="text-slate-600 text-xs text-center mt-1">
-                        Green = Win · Red = Loss · Gray = NC/Other
+                      <div className="flex gap-3 overflow-x-auto pb-1">
+                        {[...fh].slice(0, 8).reverse().map((fight, i) => {
+                          const resultTone =
+                            fight.re === 'W'
+                              ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-300'
+                              : fight.re === 'L'
+                              ? 'bg-red-500/15 border-red-500/30 text-red-300'
+                              : 'bg-slate-700/40 border-slate-600 text-slate-300';
+                          const badgeTone =
+                            fight.re === 'W'
+                              ? 'bg-emerald-500 text-emerald-950'
+                              : fight.re === 'L'
+                              ? 'bg-red-500 text-red-950'
+                              : 'bg-slate-500 text-slate-950';
+                          const method = (fight.me || 'Method N/A')
+                            .replace('Decision - ', '')
+                            .replace('KO/TKO', 'KO/TKO');
+
+                          return (
+                            <div
+                              key={`${fight.op}-${fight.dt}-${i}`}
+                              className={`min-w-[180px] rounded-xl border px-4 py-3 ${resultTone}`}
+                            >
+                              <div className="flex items-center justify-between gap-3 mb-2">
+                                <span
+                                  className={`inline-flex h-7 w-7 items-center justify-center rounded-full text-xs font-black ${badgeTone}`}
+                                >
+                                  {fight.re ?? '-'}
+                                </span>
+                                <span className="text-[11px] uppercase tracking-wider text-slate-500">
+                                  F{i + 1}
+                                </span>
+                              </div>
+                              <p className="text-sm font-bold text-white truncate">
+                                {fight.op}
+                              </p>
+                              <p className="mt-1 text-xs text-slate-400">
+                                {method}
+                                {fight.rn ? ` · R${fight.rn}` : ''}
+                                {fight.ti ? ` · ${fight.ti}` : ''}
+                              </p>
+                              <p className="mt-2 text-[11px] text-slate-500 line-clamp-2">
+                                {fight.ev}
+                              </p>
+                            </div>
+                          );
+                        })}
+                      </div>
+                      <p className="text-slate-600 text-xs mt-3">
+                        Each card shows opponent, result, and finish context instead of a generic bar height.
                       </p>
                     </div>
                   )}
