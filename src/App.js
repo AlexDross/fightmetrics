@@ -3270,7 +3270,9 @@ function MatchupSimulator({ allFighters, onSavePrediction, onOpenROI }) {
     const value = item.formatDelta
       ? item.formatDelta(abs)
       : `${abs.toFixed(item.decimals ?? 1)}${item.pct ? '%' : ''}`;
-    return `${diff > 0 ? '+' : '-'}${value}`;
+    const outcome = getComparisonOutcome(a, b, item);
+    if (outcome === 'even') return 'Even';
+    return `${outcome === 'A' ? '+' : '-'}${value}`;
   };
 
   const getComparisonOutcome = (a, b, item) => {
