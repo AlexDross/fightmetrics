@@ -5629,9 +5629,9 @@ function ROITab({
         includesProspect:
           entry.includesProspect ??
           entry.fighterAIsProspect ??
-          entry.fighterBIsProspect ??
-          prospectNameSet.has(entry.fighterA) ||
-          prospectNameSet.has(entry.fighterB),
+          (entry.fighterBIsProspect ??
+            prospectNameSet.has(entry.fighterA) ||
+            prospectNameSet.has(entry.fighterB)),
         displayWinner: entry.predictedWinner,
         displayProb: entry.predictedProb ?? 0,
         displayTrackedProb:
