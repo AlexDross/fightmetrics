@@ -2799,25 +2799,25 @@ const SIMULATOR_COMPARISON_GROUPS = [
     description: 'Recent streaks plus overall UFC win/loss resume.',
     items: [
       {
-        key: 'WIN_STREAK',
+        key: 'MODEL_UFC_WIN_STREAK',
         label: 'Win Streak',
         higherBetter: true,
         decimals: 0,
       },
       {
-        key: 'LOSE_STREAK',
+        key: 'MODEL_UFC_LOSE_STREAK',
         label: 'Loss Streak',
         higherBetter: false,
         decimals: 0,
       },
       {
-        key: 'WINS',
+        key: 'MODEL_UFC_WINS',
         label: 'UFC Wins',
         higherBetter: true,
         decimals: 0,
       },
       {
-        key: 'LOSSES',
+        key: 'MODEL_UFC_LOSSES',
         label: 'UFC Losses',
         higherBetter: false,
         decimals: 0,
@@ -2830,7 +2830,7 @@ const SIMULATOR_COMPARISON_GROUPS = [
     description: 'Actual deep-fight and UFC cage-time experience.',
     items: [
       {
-        key: 'UFC_FIGHT_COUNT',
+        key: 'MODEL_UFC_FIGHT_COUNT',
         label: 'UFC Fight Count',
         higherBetter: true,
         decimals: 0,
