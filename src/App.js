@@ -2052,7 +2052,7 @@ function Header({ view, setView }) {
   );
 }
 
-function Filters({ wc, setWC, minMin, setMinMin, showProspects, setShowProspects, count }) {
+function Filters({ wc, setWC, minMin, setMinMin, count }) {
   return (
     <div className="bg-slate-900/80 border-b border-slate-800 px-5 py-3">
       <div className="flex flex-wrap items-end gap-6">
@@ -2098,15 +2098,9 @@ function Filters({ wc, setWC, minMin, setMinMin, showProspects, setShowProspects
           <label className="text-slate-500 text-xs font-semibold uppercase tracking-wider">
             Prospects
           </label>
-          <label className="inline-flex items-center gap-2 cursor-pointer select-none text-sm text-slate-300">
-            <input
-              type="checkbox"
-              checked={showProspects}
-              onChange={(e) => setShowProspects(e.target.checked)}
-              className="accent-amber-500 h-4 w-4"
-            />
-            <span>Show pre-debut signees</span>
-          </label>
+          <div className="text-sm text-slate-300">
+            Pre-debut signees always shown
+          </div>
           <p className="text-slate-600 text-xs">Flagged <span className="text-amber-400 font-bold">PRE-UFC</span> in tables</p>
         </div>
 
@@ -5630,7 +5624,6 @@ export default function App() {
   const [view, setView] = useState('table');
   const [wc, setWC] = useState('All Divisions');
   const [minMin, setMinMin] = useState(0);
-  const [showProspects, setShowProspects] = useState(false);
   const [roiEntries, setRoiEntries] = useState(ROI_ENTRIES);
 
   const filtered = useMemo(
@@ -5640,16 +5633,12 @@ export default function App() {
           (wc === 'All Divisions' ||
             wc === 'Pound-for-Pound' ||
             f.WEIGHT_CLASS === wc) &&
-          (f.TOTAL_ROUNDS ?? 0) >= minMin &&
-          (showProspects || !f.IS_PROSPECT)
+          (f.TOTAL_ROUNDS ?? 0) >= minMin
       ),
-    [wc, minMin, showProspects]
+    [wc, minMin]
   );
 
-  const fightersWithProspectsFiltered = useMemo(
-    () => FIGHTERS.filter((f) => showProspects || !f.IS_PROSPECT),
-    [showProspects]
-  );
+  const fightersWithProspectsFiltered = useMemo(() => FIGHTERS, []);
 
   const handleSavePrediction = (entry) => {
     setRoiEntries((prev) => [entry, ...prev]);
@@ -5678,8 +5667,6 @@ export default function App() {
           setWC={setWC}
           minMin={minMin}
           setMinMin={setMinMin}
-          showProspects={showProspects}
-          setShowProspects={setShowProspects}
           count={filtered.length}
         />
       )}
