@@ -32,6 +32,7 @@ import {
   Clock,
   ChevronRight,
   Calendar,
+  AlertTriangle,
 } from 'lucide-react';
 import { _D2 } from './fightersData';
 import { _P } from './prospectsData';
@@ -3160,6 +3161,9 @@ function MatchupSimulator({ allFighters, onSavePrediction, onOpenROI }) {
       eventDate,
       fighterA: fA.FIGHTER,
       fighterB: fB.FIGHTER,
+      fighterAIsProspect: !!fA.IS_PROSPECT,
+      fighterBIsProspect: !!fB.IS_PROSPECT,
+      includesProspect: !!fA.IS_PROSPECT || !!fB.IS_PROSPECT,
       division:
         fA.WEIGHT_CLASS === fB.WEIGHT_CLASS
           ? fA.WEIGHT_CLASS
@@ -3264,7 +3268,9 @@ function MatchupSimulator({ allFighters, onSavePrediction, onOpenROI }) {
 
   const formatDelta = (a, b, item) => {
     if (a == null || b == null) return '—';
-    if (Math.abs(a - b) < 0.001) return 'Even';
+    const tieThreshold =
+      item.tieThreshold ?? Math.pow(10, -((item.decimals ?? 1) + 1));
+    if (Math.abs(a - b) < tieThreshold) return 'Even';
     const abs = Math.abs(a - b);
     const value = item.formatDelta
       ? item.formatDelta(abs)
@@ -3274,7 +3280,9 @@ function MatchupSimulator({ allFighters, onSavePrediction, onOpenROI }) {
 
   const getComparisonOutcome = (a, b, item) => {
     if (a == null || b == null) return 'even';
-    if (Math.abs(a - b) < 0.001) return 'even';
+    const tieThreshold =
+      item.tieThreshold ?? Math.pow(10, -((item.decimals ?? 1) + 1));
+    if (Math.abs(a - b) < tieThreshold) return 'even';
     if (item.higherBetter) return a > b ? 'A' : 'B';
     return a < b ? 'A' : 'B';
   };
@@ -5582,6 +5590,7 @@ export default function App() {
       {view === 'roi' && (
         <ROITab
           entries={roiEntries}
+          allFighters={fightersWithProspectsFiltered}
           onUpdateEntry={handleUpdateROIEntry}
           onDeleteEntry={handleDeleteROIEntry}
           onClearEntries={handleClearROI}
@@ -5592,16 +5601,37 @@ export default function App() {
   );
 }
 
-function ROITab({ entries, onUpdateEntry, onDeleteEntry, onClearEntries }) {
+function ROITab({
+  entries,
+  allFighters,
+  onUpdateEntry,
+  onDeleteEntry,
+  onClearEntries,
+}) {
   const exportedCode = `export const ROI_ENTRIES = ${JSON.stringify(
     entries,
     null,
     2
   )};\n`;
+  const prospectNameSet = useMemo(
+    () =>
+      new Set(
+        (allFighters ?? [])
+          .filter((fighter) => fighter.IS_PROSPECT)
+          .map((fighter) => fighter.FIGHTER)
+      ),
+    [allFighters]
+  );
   const evaluatedEntries = useMemo(
     () =>
       entries.map((entry) => ({
         ...entry,
+        includesProspect:
+          entry.includesProspect ??
+          entry.fighterAIsProspect ??
+          entry.fighterBIsProspect ??
+          prospectNameSet.has(entry.fighterA) ||
+          prospectNameSet.has(entry.fighterB),
         displayWinner: entry.predictedWinner,
         displayProb: entry.predictedProb ?? 0,
         displayTrackedProb:
@@ -5623,7 +5653,7 @@ function ROITab({ entries, onUpdateEntry, onDeleteEntry, onClearEntries }) {
             : ''),
         displayBetOdds: entry.betRecommendedOdds ?? '',
       })),
-    [entries]
+    [entries, prospectNameSet]
   );
 
   const summary = useMemo(() => {
@@ -5758,6 +5788,12 @@ function ROITab({ entries, onUpdateEntry, onDeleteEntry, onClearEntries }) {
                       <h3 className="text-white font-black text-lg">
                         {entry.fighterA} vs. {entry.fighterB}
                       </h3>
+                      {entry.includesProspect && (
+                        <span className="inline-flex items-center gap-1 rounded-full border border-amber-700/70 bg-amber-900/30 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-amber-300">
+                          <AlertTriangle size={12} />
+                          Debut Hazard
+                        </span>
+                      )}
                       <span
                         className={`text-xs font-bold px-2 py-0.5 rounded-full border ${
                           !graded
