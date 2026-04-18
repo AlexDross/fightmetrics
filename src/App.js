@@ -5624,35 +5624,42 @@ function ROITab({
   );
   const evaluatedEntries = useMemo(
     () =>
-      entries.map((entry) => ({
-        ...entry,
-        includesProspect:
-          entry.includesProspect ??
-          entry.fighterAIsProspect ??
-          (entry.fighterBIsProspect ??
-            prospectNameSet.has(entry.fighterA) ||
-            prospectNameSet.has(entry.fighterB)),
-        displayWinner: entry.predictedWinner,
-        displayProb: entry.predictedProb ?? 0,
-        displayTrackedProb:
-          entry.trackedProb ??
-          (entry.trackedSide === entry.fighterA
-            ? entry.fighterAProb
-            : entry.fighterBProb),
-        displayEdge:
-          entry.trackedSide === entry.fighterA
-            ? entry.edgeA ?? entry.edge
-            : entry.edgeB ?? entry.edge,
-        displayBetAction: entry.betAction ?? 'NO BET',
-        displayBetFighter:
-          entry.betRecommendedFighter ??
-          (entry.bestBet === 'A'
-            ? entry.fighterA
-            : entry.bestBet === 'B'
-            ? entry.fighterB
-            : ''),
-        displayBetOdds: entry.betRecommendedOdds ?? '',
-      })),
+      entries.map((entry) => {
+        const resolvedIncludesProspect =
+          entry.includesProspect != null
+            ? entry.includesProspect
+            : entry.fighterAIsProspect != null
+            ? entry.fighterAIsProspect
+            : entry.fighterBIsProspect != null
+            ? entry.fighterBIsProspect
+            : prospectNameSet.has(entry.fighterA) ||
+              prospectNameSet.has(entry.fighterB);
+
+        return {
+          ...entry,
+          includesProspect: resolvedIncludesProspect,
+          displayWinner: entry.predictedWinner,
+          displayProb: entry.predictedProb ?? 0,
+          displayTrackedProb:
+            entry.trackedProb ??
+            (entry.trackedSide === entry.fighterA
+              ? entry.fighterAProb
+              : entry.fighterBProb),
+          displayEdge:
+            entry.trackedSide === entry.fighterA
+              ? entry.edgeA ?? entry.edge
+              : entry.edgeB ?? entry.edge,
+          displayBetAction: entry.betAction ?? 'NO BET',
+          displayBetFighter:
+            entry.betRecommendedFighter ??
+            (entry.bestBet === 'A'
+              ? entry.fighterA
+              : entry.bestBet === 'B'
+              ? entry.fighterB
+              : ''),
+          displayBetOdds: entry.betRecommendedOdds ?? '',
+        };
+      }),
     [entries, prospectNameSet]
   );
 
