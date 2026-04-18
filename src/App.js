@@ -800,6 +800,10 @@ const FIGHTERS = [..._D2, ..._P].map((d) => {
   const modelTitleBouts = isProspect
     ? rawTitleBouts * prospectTrust.recordTrust
     : rawTitleBouts;
+  const modelUfcWins = isProspect ? 0 : rawWins;
+  const modelUfcLosses = isProspect ? 0 : rawLosses;
+  const modelUfcWinStreak = isProspect ? 0 : winStreak;
+  const modelUfcLoseStreak = isProspect ? 0 : loseStreak;
   const modelUfcFightCount = isProspect ? 0 : rawUfcFightCount;
 
   const rating = eloToRating(modelElo, d.w);
@@ -884,6 +888,10 @@ const momentumScore = Math.max(
     RAW_CARDIO_RATIO: cardioBase,
     MODEL_WINS: modelWins,
     MODEL_LOSSES: modelLosses,
+    MODEL_UFC_WINS: modelUfcWins,
+    MODEL_UFC_LOSSES: modelUfcLosses,
+    MODEL_UFC_WIN_STREAK: modelUfcWinStreak,
+    MODEL_UFC_LOSE_STREAK: modelUfcLoseStreak,
     MODEL_TOTAL_ROUNDS: modelTotalRounds,
     MODEL_DEEP_ROUNDS: modelDeepRounds,
     MODEL_TITLE_BOUTS: modelTitleBouts,
@@ -1475,14 +1483,18 @@ const computeMatchupEdges = (fA, fB, oddsA = null, oddsB = null) => {
   // Discount striking stats for fighters on losing streaks so high-volume
   // output in losses does not overstate current offensive strength.
   const formDecay = (ls) => Math.max(0.8, 1 - Math.min(ls ?? 0, 3) * 0.07);
-  const aslA = (fA.ASL ?? 0) * formDecay(fA.LOSE_STREAK);
-  const aslB = (fB.ASL ?? 0) * formDecay(fB.LOSE_STREAK);
-  const aspA = (fA.ASP ?? 0) * (0.6 + 0.4 * formDecay(fA.LOSE_STREAK));
-  const aspB = (fB.ASP ?? 0) * (0.6 + 0.4 * formDecay(fB.LOSE_STREAK));
-  const winsA = fA.MODEL_WINS ?? fA.WINS ?? 0;
-  const winsB = fB.MODEL_WINS ?? fB.WINS ?? 0;
-  const lossesA = fA.MODEL_LOSSES ?? fA.LOSSES ?? 0;
-  const lossesB = fB.MODEL_LOSSES ?? fB.LOSSES ?? 0;
+  const loseStreakA = fA.MODEL_UFC_LOSE_STREAK ?? fA.LOSE_STREAK ?? 0;
+  const loseStreakB = fB.MODEL_UFC_LOSE_STREAK ?? fB.LOSE_STREAK ?? 0;
+  const winStreakA = fA.MODEL_UFC_WIN_STREAK ?? fA.WIN_STREAK ?? 0;
+  const winStreakB = fB.MODEL_UFC_WIN_STREAK ?? fB.WIN_STREAK ?? 0;
+  const aslA = (fA.ASL ?? 0) * formDecay(loseStreakA);
+  const aslB = (fB.ASL ?? 0) * formDecay(loseStreakB);
+  const aspA = (fA.ASP ?? 0) * (0.6 + 0.4 * formDecay(loseStreakA));
+  const aspB = (fB.ASP ?? 0) * (0.6 + 0.4 * formDecay(loseStreakB));
+  const winsA = fA.MODEL_UFC_WINS ?? fA.WINS ?? 0;
+  const winsB = fB.MODEL_UFC_WINS ?? fB.WINS ?? 0;
+  const lossesA = fA.MODEL_UFC_LOSSES ?? fA.LOSSES ?? 0;
+  const lossesB = fB.MODEL_UFC_LOSSES ?? fB.LOSSES ?? 0;
   const roundsA = fA.MODEL_TOTAL_ROUNDS ?? fA.TOTAL_ROUNDS ?? 0;
   const roundsB = fB.MODEL_TOTAL_ROUNDS ?? fB.TOTAL_ROUNDS ?? 0;
   const deepRoundsA = fA.MODEL_DEEP_ROUNDS ?? fA.DEEP_ROUNDS ?? 0;
@@ -1509,10 +1521,8 @@ const computeMatchupEdges = (fA, fB, oddsA = null, oddsB = null) => {
     reach_dif: ((fA.REACH_IN ?? 0) - (fB.REACH_IN ?? 0)) / S.reach_dif,
     height_dif: ((fA.HEIGHT_IN ?? 0) - (fB.HEIGHT_IN ?? 0)) / S.height_dif,
     age_dif: ((fB.AGE ?? 30) - (fA.AGE ?? 30)) / S.age_dif, // reversed: younger is better
-    win_streak_dif:
-      ((fA.WIN_STREAK ?? 0) - (fB.WIN_STREAK ?? 0)) / S.win_streak_dif,
-    lose_streak_dif:
-      ((fB.LOSE_STREAK ?? 0) - (fA.LOSE_STREAK ?? 0)) / S.lose_streak_dif, // reversed
+    win_streak_dif: (winStreakA - winStreakB) / S.win_streak_dif,
+    lose_streak_dif: (loseStreakB - loseStreakA) / S.lose_streak_dif, // reversed
     win_dif: (winsA - winsB) / S.win_dif,
     loss_dif: (lossesB - lossesA) / S.loss_dif, // reversed
     total_round_dif: (roundsA - roundsB) / S.total_round_dif,
@@ -1755,8 +1765,8 @@ const computeMatchupEdges = (fA, fB, oddsA = null, oddsB = null) => {
       label: 'Win Streak',
       aLabel: 'WIN_STREAK',
       bLabel: 'WIN_STREAK',
-      aValue: fA.WIN_STREAK ?? 0,
-      bValue: fB.WIN_STREAK ?? 0,
+      aValue: winStreakA,
+      bValue: winStreakB,
       diff: feats.win_streak_dif,
       scale: S.win_streak_dif,
       weight: W.win_streak_dif,
@@ -1766,8 +1776,8 @@ const computeMatchupEdges = (fA, fB, oddsA = null, oddsB = null) => {
       label: 'Loss Streak',
       aLabel: 'LOSE_STREAK',
       bLabel: 'LOSE_STREAK',
-      aValue: fA.LOSE_STREAK ?? 0,
-      bValue: fB.LOSE_STREAK ?? 0,
+      aValue: loseStreakA,
+      bValue: loseStreakB,
       diff: feats.lose_streak_dif,
       scale: S.lose_streak_dif,
       weight: W.lose_streak_dif,
@@ -1778,8 +1788,8 @@ const computeMatchupEdges = (fA, fB, oddsA = null, oddsB = null) => {
       label: 'UFC Wins',
       aLabel: 'WINS',
       bLabel: 'WINS',
-      aValue: fA.WINS ?? 0,
-      bValue: fB.WINS ?? 0,
+      aValue: winsA,
+      bValue: winsB,
       diff: feats.win_dif,
       scale: S.win_dif,
       weight: W.win_dif,
@@ -1789,8 +1799,8 @@ const computeMatchupEdges = (fA, fB, oddsA = null, oddsB = null) => {
       label: 'UFC Losses',
       aLabel: 'LOSSES',
       bLabel: 'LOSSES',
-      aValue: fA.LOSSES ?? 0,
-      bValue: fB.LOSSES ?? 0,
+      aValue: lossesA,
+      bValue: lossesB,
       diff: feats.loss_dif,
       scale: S.loss_dif,
       weight: W.loss_dif,
