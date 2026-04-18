@@ -2,8 +2,13 @@
 // ─── UFC PRE-DEBUT PROSPECTS ─────────────────────────────────────────────────
 // UFC-signed fighters who have NOT yet made their Octagon debut.
 // Stats are sourced from their pre-UFC pro fights (DWCS, LFA, Cage Warriors,
-// KSW, Rizin, PFL, Bellator, regional promotions, etc.) with competition-level
-// scaling applied to approximate UFC-level performance.
+// KSW, Rizin, PFL, Bellator, regional promotions, etc.).
+//
+// IMPORTANT:
+// These entries are raw prospect inputs plus seeded priors. App.js now treats
+// them as lower-confidence evidence, blends rate stats toward UFC divisional
+// baselines, sets UFC experience to 0, and discounts record-volume features so
+// a strong regional resume is not treated like established UFC sample quality.
 //
 // ─────────────────────────────────────────────────────────────────────────────
 // SCHEMA: Each entry mirrors _D2's compact keys exactly so it can be fed
@@ -19,23 +24,22 @@
 //     ht  — height (inches)
 //     rh  — reach (inches)
 //     st  — stance ('Orthodox' | 'Southpaw' | 'Switch')
-//     wi  — wins (pro, pre-UFC)
-//     lo  — losses (pro, pre-UFC)
+//     wi  — wins (raw pro record, pre-UFC)
+//     lo  — losses (raw pro record, pre-UFC)
 //     ws  — current win streak
 //     ls  — current loss streak
-//     tr  — total rounds fought (pro)
+//     tr  — total rounds fought (raw pro sample)
 //     tb  — title bouts (set 0 for most prospects)
 //     kow — KO/TKO wins
 //     sbw — submission wins
 //     dcw — decision wins
-//     asl — sig strikes landed per min (already comp-adjusted, see below)
-//     asp — sig strike accuracy (0–1, already comp-adjusted)
-//     asa — sub attempts per 15 min (already comp-adjusted)
-//     atl — takedowns landed per 15 (already comp-adjusted)
-//     atp — takedown accuracy (0–1, already comp-adjusted)
-//     elo — seeded ELO (see seeding formula below; used by App.js as fallback
-//           when ELO_RATINGS has no entry, which will be true for prospects)
-//     crd — seeded cardio ratio (used as fallback when CARDIO_RATIOS is empty)
+//     asl — pre-UFC sig strikes landed per min, comp-adjusted before storage
+//     asp — pre-UFC sig strike accuracy (0–1), comp-adjusted before storage
+//     asa — pre-UFC sub attempts per 15 min, comp-adjusted before storage
+//     atl — pre-UFC takedowns landed per 15, comp-adjusted before storage
+//     atp — pre-UFC takedown accuracy (0–1), comp-adjusted before storage
+//     elo — seeded prior ELO; App.js re-computes/blends this for model use
+//     crd — seeded prior cardio ratio; App.js re-computes/blends if needed
 //     lfd — last fight date (ISO 'YYYY-MM-DD') — their last REGIONAL fight
 //     dsl — days since last fight (compute at entry time; will auto-age in UI)
 //     dr  — division rank (null for prospects — they have no UFC rank)
@@ -51,7 +55,8 @@
 //     _p_signed    — UFC signing date (ISO)
 //     _p_debut     — scheduled debut date (ISO) or null
 //     _p_opponent  — scheduled debut opponent name or null
-//     _p_fights_with_stats — how many pro fights contributed real stat data
+//     _p_fights_with_stats — how many pro fights contributed real stat data;
+//                            App.js uses this to discount prospect confidence
 //     _p_notes     — free-text scouting notes
 //     _p_archived  — true once they've debuted (soft delete flag)
 //
