@@ -5239,10 +5239,10 @@ function ScoutProfile({ allFighters }) {
                   {perfTrendData.length >= 2 && (
                     <div className="bg-slate-900 border border-slate-700 rounded-xl p-5">
                       <p className="text-slate-400 text-xs font-semibold uppercase tracking-wider mb-4">
-                        Recent Results (Oldest → Most Recent)
+                        Recent Results (Most Recent → Oldest)
                       </p>
                       <div className="flex gap-3 overflow-x-auto pb-1">
-                        {[...fh].slice(0, 8).reverse().map((fight, i) => {
+                        {fh.slice(0, 8).map((fight, i) => {
                           const resultTone =
                             fight.re === 'W'
                               ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-300'
@@ -5289,9 +5289,6 @@ function ScoutProfile({ allFighters }) {
                           );
                         })}
                       </div>
-                      <p className="text-slate-600 text-xs mt-3">
-                        Each card shows opponent, result, and finish context instead of a generic bar height.
-                      </p>
                     </div>
                   )}
                   {fh.map((fight, i) => (
