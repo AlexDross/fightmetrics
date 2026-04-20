@@ -22296,6 +22296,17 @@ export const FIGHT_HISTORY = {
   ],
   "Melissa Croden": [
     {
+      "dt": "2026-04-18",
+      "op": "Daria Zhelezniakova",
+      "re": "W",
+      "me": "Decision - Unanimous",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Women\\",
+      "tb": false,
+      "ev": "UFC Fight Night: Burns vs. Malott"
+    },
+    {
       "dt": "2025-12-13",
       "op": "Luana Santos",
       "re": "L",
@@ -22424,6 +22435,17 @@ export const FIGHT_HISTORY = {
     }
   ],
   "Jamey-Lyn Horth": [
+    {
+      "dt": "2026-04-18",
+      "op": "JJ Aldrich",
+      "re": "L",
+      "me": "Decision - Unanimous",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Women\\",
+      "tb": false,
+      "ev": "UFC Fight Night: Burns vs. Malott"
+    },
     {
       "dt": "2025-12-13",
       "op": "Tereza Bleda",
@@ -24146,6 +24168,17 @@ export const FIGHT_HISTORY = {
     }
   ],
   "Karine Silva": [
+    {
+      "dt": "2026-04-18",
+      "op": "Jasmine Jasudavicius",
+      "re": "L",
+      "me": "Decision - Unanimous",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Women\\",
+      "tb": false,
+      "ev": "UFC Fight Night: Burns vs. Malott"
+    },
     {
       "dt": "2025-12-06",
       "op": "Maycee Barber",
@@ -35320,6 +35353,17 @@ export const FIGHT_HISTORY = {
   ],
   "Mike Malott": [
     {
+      "dt": "2026-04-18",
+      "op": "Gilbert Burns",
+      "re": "W",
+      "me": "KO/TKO",
+      "rn": 3,
+      "ti": "2:08",
+      "wc": "Welterweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Burns vs. Malott"
+    },
+    {
       "dt": "2025-10-18",
       "op": "Kevin Holland",
       "re": "W",
@@ -35612,6 +35656,17 @@ export const FIGHT_HISTORY = {
   ],
   "Jasmine Jasudavicius": [
     {
+      "dt": "2026-04-18",
+      "op": "Karine Silva",
+      "re": "W",
+      "me": "Decision - Unanimous",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Women\\",
+      "tb": false,
+      "ev": "UFC Fight Night: Burns vs. Malott"
+    },
+    {
       "dt": "2025-10-18",
       "op": "Manon Fiorot",
       "re": "L",
@@ -35734,6 +35789,17 @@ export const FIGHT_HISTORY = {
     }
   ],
   "Charles Jourdain": [
+    {
+      "dt": "2026-04-18",
+      "op": "Kyler Phillips",
+      "re": "W",
+      "me": "Decision - Unanimous",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Bantamweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Burns vs. Malott"
+    },
     {
       "dt": "2025-10-18",
       "op": "Davey Grant",
@@ -44542,6 +44608,17 @@ export const FIGHT_HISTORY = {
   ],
   "Gauge Young": [
     {
+      "dt": "2026-04-18",
+      "op": "Thiago Moises",
+      "re": "W",
+      "me": "Decision - Split",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Lightweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Burns vs. Malott"
+    },
+    {
       "dt": "2025-08-23",
       "op": "Maheshate",
       "re": "W",
@@ -47343,6 +47420,17 @@ export const FIGHT_HISTORY = {
   ],
   "John Yannis": [
     {
+      "dt": "2026-04-18",
+      "op": "Jamie Siraj",
+      "re": "W",
+      "me": "KO/TKO",
+      "rn": 1,
+      "ti": "2:43",
+      "wc": "Bantamweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Burns vs. Malott"
+    },
+    {
       "dt": "2025-08-02",
       "op": "Austin Bashi",
       "re": "L",
@@ -49260,6 +49348,17 @@ export const FIGHT_HISTORY = {
   ],
   "Kyler Phillips": [
     {
+      "dt": "2026-04-18",
+      "op": "Charles Jourdain",
+      "re": "L",
+      "me": "Decision - Unanimous",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Bantamweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Burns vs. Malott"
+    },
+    {
       "dt": "2025-07-19",
       "op": "Vinicius Oliveira",
       "re": "L",
@@ -49428,6 +49527,17 @@ export const FIGHT_HISTORY = {
     }
   ],
   "Robert Valentin": [
+    {
+      "dt": "2026-04-18",
+      "op": "Julien Leblanc",
+      "re": "W",
+      "me": "Submission",
+      "rn": 1,
+      "ti": "2:22",
+      "wc": "Middleweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Burns vs. Malott"
+    },
     {
       "dt": "2025-07-19",
       "op": "Ateba Gautier",
@@ -51985,6 +52095,17 @@ export const FIGHT_HISTORY = {
   ],
   "Daria Zhelezniakova": [
     {
+      "dt": "2026-04-18",
+      "op": "Melissa Croden",
+      "re": "L",
+      "me": "Decision - Unanimous",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Women\\",
+      "tb": false,
+      "ev": "UFC Fight Night: Burns vs. Malott"
+    },
+    {
       "dt": "2025-06-21",
       "op": "Melissa Mullins",
       "re": "W",
@@ -53798,6 +53919,17 @@ export const FIGHT_HISTORY = {
   ],
   "Gilbert Burns": [
     {
+      "dt": "2026-04-18",
+      "op": "Mike Malott",
+      "re": "L",
+      "me": "KO/TKO",
+      "rn": 3,
+      "ti": "2:08",
+      "wc": "Welterweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Burns vs. Malott"
+    },
+    {
       "dt": "2025-05-17",
       "op": "Michael Morales",
       "re": "L",
@@ -54300,6 +54432,17 @@ export const FIGHT_HISTORY = {
     }
   ],
   "Thiago Moises": [
+    {
+      "dt": "2026-04-18",
+      "op": "Gauge Young",
+      "re": "L",
+      "me": "Decision - Split",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Lightweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Burns vs. Malott"
+    },
     {
       "dt": "2025-05-17",
       "op": "Jared Gordon",
@@ -56615,6 +56758,17 @@ export const FIGHT_HISTORY = {
     }
   ],
   "John Castaneda": [
+    {
+      "dt": "2026-04-18",
+      "op": "Mark Vologdin",
+      "re": "NC",
+      "me": "Decision - Majority",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Featherweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Burns vs. Malott"
+    },
     {
       "dt": "2025-04-26",
       "op": "Chris Gutierrez",
@@ -59374,6 +59528,17 @@ export const FIGHT_HISTORY = {
   ],
   "Jai Herbert": [
     {
+      "dt": "2026-04-18",
+      "op": "Mandel Nallo",
+      "re": "W",
+      "me": "KO/TKO",
+      "rn": 1,
+      "ti": "2:05",
+      "wc": "Lightweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Burns vs. Malott"
+    },
+    {
       "dt": "2025-03-22",
       "op": "Chris Padilla",
       "re": "L",
@@ -60366,6 +60531,17 @@ export const FIGHT_HISTORY = {
     }
   ],
   "JJ Aldrich": [
+    {
+      "dt": "2026-04-18",
+      "op": "Jamey-Lyn Horth",
+      "re": "W",
+      "me": "Decision - Unanimous",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Women\\",
+      "tb": false,
+      "ev": "UFC Fight Night: Burns vs. Malott"
+    },
     {
       "dt": "2025-03-01",
       "op": "Andrea Lee",
@@ -68711,6 +68887,17 @@ export const FIGHT_HISTORY = {
     }
   ],
   "Dennis Buzukja": [
+    {
+      "dt": "2026-04-18",
+      "op": "Marcio Barbosa",
+      "re": "L",
+      "me": "KO/TKO",
+      "rn": 1,
+      "ti": "1:20",
+      "wc": "Lightweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Burns vs. Malott"
+    },
     {
       "dt": "2024-08-24",
       "op": "Francis Marshall",
@@ -77836,6 +78023,17 @@ export const FIGHT_HISTORY = {
     }
   ],
   "Tanner Boser": [
+    {
+      "dt": "2026-04-18",
+      "op": "Gokhan Saricam",
+      "re": "L",
+      "me": "KO/TKO",
+      "rn": 2,
+      "ti": "4:43",
+      "wc": "Light Heavyweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Burns vs. Malott"
+    },
     {
       "dt": "2023-08-05",
       "op": "Aleksa Camur",
