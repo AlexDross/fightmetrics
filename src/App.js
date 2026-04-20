@@ -561,6 +561,31 @@ const getDebutMatchupContext = (fA, fB) => {
   };
 };
 
+const EMPTY_DEBUT_ANALYTICS = {
+  a: {
+    tier: 'Established',
+    risk: 0,
+    statTrust: 1,
+    cardioTrust: 1,
+    isDebut: false,
+    isProspect: false,
+    isVeteran: true,
+    summary: 'Stable sample',
+  },
+  b: {
+    tier: 'Established',
+    risk: 0,
+    statTrust: 1,
+    cardioTrust: 1,
+    isDebut: false,
+    isProspect: false,
+    isVeteran: true,
+    summary: 'Stable sample',
+  },
+  logitShift: 0,
+  matchupHazard: false,
+};
+
 // ─── OPPONENT QUALITY ADJUSTMENT ─────────────────────────────────────────────
 const computeQualityAdjustment = (fightHistory) => {
   if (!fightHistory || fightHistory.length === 0) return 0;
@@ -2729,6 +2754,7 @@ function MatchupSimulator({ allFighters, onSavePrediction, onOpenROI }) {
     const rawA = parseAmericanOdds(oddsA);
     const rawB = parseAmericanOdds(oddsB);
     if (!rawA || !rawB || !result) return null;
+    const debutAnalytics = result.debutAnalytics ?? EMPTY_DEBUT_ANALYTICS;
 
     const { noVigA, noVigB, vig, overround } = stripVig(rawA, rawB);
     const decA = americanToDecimal(oddsA);
@@ -2767,9 +2793,9 @@ function MatchupSimulator({ allFighters, onSavePrediction, onOpenROI }) {
     // ── Step 1: Who does the model pick? (always the >50% fighter)
     const pickSide = result.pA >= 0.5 ? 'A' : 'B';
     const pickDebutProfile =
-      pickSide === 'A' ? result.debutAnalytics.a : result.debutAnalytics.b;
+      pickSide === 'A' ? debutAnalytics.a : debutAnalytics.b;
     const oppDebutProfile =
-      pickSide === 'A' ? result.debutAnalytics.b : result.debutAnalytics.a;
+      pickSide === 'A' ? debutAnalytics.b : debutAnalytics.a;
     const severeDebutHazard =
       pickDebutProfile.isDebut && oppDebutProfile.isVeteran;
     const moderateDebutHazard = pickDebutProfile.risk >= 1;
@@ -3019,11 +3045,11 @@ function MatchupSimulator({ allFighters, onSavePrediction, onOpenROI }) {
       fairLineB: market?.fairLineB ?? null,
       oddsA,
       oddsB,
-      debutTierA: result.debutAnalytics.a.tier,
-      debutTierB: result.debutAnalytics.b.tier,
-      debutRiskA: result.debutAnalytics.a.risk,
-      debutRiskB: result.debutAnalytics.b.risk,
-      matchupHazard: result.debutAnalytics.matchupHazard,
+      debutTierA: debutAnalytics.a.tier,
+      debutTierB: debutAnalytics.b.tier,
+      debutRiskA: debutAnalytics.a.risk,
+      debutRiskB: debutAnalytics.b.risk,
+      matchupHazard: debutAnalytics.matchupHazard,
       severeDebutHazard: market?.severeDebutHazard ?? false,
       moderateDebutHazard: market?.moderateDebutHazard ?? false,
       actualWinner: '',
