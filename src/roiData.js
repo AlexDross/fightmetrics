@@ -35,7 +35,7 @@ export const ROI_ENTRIES = [
     "fairLineB": "-177",
     "oddsA": "+220",
     "oddsB": "-270",
-    "actualWinner": "",
+    "actualWinner": "Mike Malott",
     "notes": ""
   },
   {
@@ -74,7 +74,7 @@ export const ROI_ENTRIES = [
     "fairLineB": "-223",
     "oddsA": "+110",
     "oddsB": "-130",
-    "actualWinner": "",
+    "actualWinner": "Charles Jourdain",
     "notes": ""
   },
   {
@@ -113,7 +113,7 @@ export const ROI_ENTRIES = [
     "fairLineB": "+150",
     "oddsA": "-166",
     "oddsB": "+140",
-    "actualWinner": "",
+    "actualWinner": "Jai Herbert",
     "notes": ""
   },
   {
@@ -152,7 +152,7 @@ export const ROI_ENTRIES = [
     "fairLineB": "+102",
     "oddsA": "-325",
     "oddsB": "+260",
-    "actualWinner": "",
+    "actualWinner": "Jasmine Jasudavicius",
     "notes": ""
   },
   {
@@ -191,7 +191,7 @@ export const ROI_ENTRIES = [
     "fairLineB": "-136",
     "oddsA": "+140",
     "oddsB": "-166",
-    "actualWinner": "",
+    "actualWinner": "Gauge Young",
     "notes": ""
   },
   {
@@ -230,7 +230,7 @@ export const ROI_ENTRIES = [
     "fairLineB": "-251",
     "oddsA": "+320",
     "oddsB": "-410",
-    "actualWinner": "",
+    "actualWinner": "Marcio Barbosa",
     "notes": ""
   },
   {
@@ -269,7 +269,7 @@ export const ROI_ENTRIES = [
     "fairLineB": "+153",
     "oddsA": "+145",
     "oddsB": "-175",
-    "actualWinner": "",
+    "actualWinner": "Robert Valentin",
     "notes": ""
   },
   {
@@ -308,7 +308,7 @@ export const ROI_ENTRIES = [
     "fairLineB": "-141",
     "oddsA": "+124",
     "oddsB": "-148",
-    "actualWinner": "",
+    "actualWinner": "Gokhan Saricam",
     "notes": ""
   },
   {
@@ -347,7 +347,7 @@ export const ROI_ENTRIES = [
     "fairLineB": "-151",
     "oddsA": "-130",
     "oddsB": "+110",
-    "actualWinner": "",
+    "actualWinner": "Melissa Croden",
     "notes": ""
   },
   {
@@ -386,7 +386,7 @@ export const ROI_ENTRIES = [
     "fairLineB": "-177",
     "oddsA": "+150",
     "oddsB": "-180",
-    "actualWinner": "",
+    "actualWinner": "JJ Aldrich",
     "notes": ""
   },
   {
@@ -425,7 +425,7 @@ export const ROI_ENTRIES = [
     "fairLineB": "-167",
     "oddsA": "-148",
     "oddsB": "+124",
-    "actualWinner": "",
+    "actualWinner": "DRAW",
     "notes": ""
   },
   {
@@ -464,7 +464,7 @@ export const ROI_ENTRIES = [
     "fairLineB": "+279",
     "oddsA": "-258",
     "oddsB": "+210",
-    "actualWinner": "",
+    "actualWinner": "John Yannis",
     "notes": ""
   },
   {
