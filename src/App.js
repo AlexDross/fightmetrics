@@ -32,8 +32,10 @@ import {
   Clock,
   ChevronRight,
   Calendar,
+  AlertTriangle,
 } from 'lucide-react';
 import { _D2 } from './fightersData';
+import { _P } from './prospectsData';
 import { ELO_RATINGS } from './eloModule';
 import { CARDIO_RATIOS } from './cardioModule';
 import { FIGHT_HISTORY } from './fightHistory';
@@ -481,111 +483,6 @@ const experienceFactor = (fightHistory) => {
   return 1.0;
 };
 
-const clampNum = (value, min, max) => Math.max(min, Math.min(max, value));
-
-const shrinkToNeutral = (value, neutral, trust) =>
-  neutral + ((value ?? neutral) - neutral) * trust;
-
-const getProspectProfile = (fighter) => {
-  const ufcFights = fighter?.UFC_FIGHT_COUNT ?? 0;
-  const totalMin = fighter?.TOTAL_MIN ?? 0;
-  const deepRounds = fighter?.DEEP_ROUNDS ?? 0;
-  const credibility = fighter?.CREDIBILITY ?? 0;
-  const rating = fighter?.ADJUSTED_RATING ?? 50;
-  const qualityMomentum = fighter?.QUALITY_MOMENTUM ?? 0;
-  const age = fighter?.AGE ?? 29;
-
-  let risk = 0;
-  if (ufcFights === 0) risk += 1.2;
-  else if (ufcFights === 1) risk += 0.85;
-  else if (ufcFights === 2) risk += 0.5;
-
-  if (totalMin < 10) risk += 0.45;
-  else if (totalMin < 25) risk += 0.2;
-
-  if (deepRounds === 0) risk += 0.25;
-  else if (deepRounds === 1) risk += 0.1;
-
-  if (credibility < 25) risk += 0.35;
-  else if (credibility < 40) risk += 0.15;
-
-  if (age >= 27 && age <= 33) risk -= 0.1;
-  if (rating >= 70) risk -= 0.08;
-  if (qualityMomentum >= 0.75) risk -= 0.08;
-
-  risk = clampNum(Number(risk.toFixed(2)), 0, 2.4);
-
-  let tier = 'Established';
-  if (ufcFights === 0) tier = 'UFC Debut';
-  else if (ufcFights <= 2) tier = 'Prospect';
-  else if (ufcFights <= 4) tier = 'Emerging';
-
-  const statTrust = clampNum(1 - risk * 0.26, 0.38, 1);
-  const cardioTrust = clampNum(statTrust + 0.08, 0.45, 1);
-
-  return {
-    tier,
-    risk,
-    statTrust: Number(statTrust.toFixed(2)),
-    cardioTrust: Number(cardioTrust.toFixed(2)),
-    isDebut: ufcFights === 0,
-    isProspect: ufcFights <= 2,
-    isVeteran: ufcFights >= 4,
-    summary:
-      risk >= 1.35
-        ? 'High translation risk'
-        : risk >= 0.75
-        ? 'Moderate translation risk'
-        : 'Stable sample',
-  };
-};
-
-const getDebutMatchupContext = (fA, fB) => {
-  const a = getProspectProfile(fA);
-  const b = getProspectProfile(fB);
-  const veteranVsDebutLogit = Math.log(0.43 / 0.57);
-  let logitShift = 0;
-
-  if (a.isDebut && b.isVeteran) {
-    logitShift += veteranVsDebutLogit * (0.85 + a.risk * 0.18);
-  }
-  if (b.isDebut && a.isVeteran) {
-    logitShift -= veteranVsDebutLogit * (0.85 + b.risk * 0.18);
-  }
-
-  return {
-    a,
-    b,
-    logitShift,
-    matchupHazard: a.risk >= 1 || b.risk >= 1,
-  };
-};
-
-const EMPTY_DEBUT_ANALYTICS = {
-  a: {
-    tier: 'Established',
-    risk: 0,
-    statTrust: 1,
-    cardioTrust: 1,
-    isDebut: false,
-    isProspect: false,
-    isVeteran: true,
-    summary: 'Stable sample',
-  },
-  b: {
-    tier: 'Established',
-    risk: 0,
-    statTrust: 1,
-    cardioTrust: 1,
-    isDebut: false,
-    isProspect: false,
-    isVeteran: true,
-    summary: 'Stable sample',
-  },
-  logitShift: 0,
-  matchupHazard: false,
-};
-
 // ─── OPPONENT QUALITY ADJUSTMENT ─────────────────────────────────────────────
 const computeQualityAdjustment = (fightHistory) => {
   if (!fightHistory || fightHistory.length === 0) return 0;
@@ -618,8 +515,6 @@ const computeQualityAdjustment = (fightHistory) => {
 const getFightRoundCount = (fight) => {
   const rn = Number(fight?.rn);
   if (Number.isFinite(rn) && rn > 0) return rn;
-  // If round is missing, only infer distance for decisions.
-  // We do not assume round 3 for finishes with missing data.
   if (isDecisionMethod(fight?.me || '')) return fight?.tb ? 5 : 3;
   return null;
 };
@@ -630,10 +525,8 @@ const sumFightRounds = (history) =>
     return sum + (rounds ?? 0);
   }, 0);
 
-// "Deep rounds" here means count of fights that reached round 3 or later,
-// not the total number of rounds fought after round 2.
-// With sparse history data, count only explicit round numbers or full-distance
-// decisions; do not credit unknown-round finishes as having reached R3.
+// Count fights that reached round 3 or later.
+// Explicit round number wins. If round is missing, infer only from decisions.
 const sumDeepRounds = (history) =>
   (history || []).reduce((sum, fight) => {
     const rounds = getFightRoundCount(fight);
@@ -659,10 +552,138 @@ const DIV_ELO_STATS = (() => {
 const eloToRating = (elo, weightClass) => {
   const s = DIV_ELO_STATS[weightClass];
   if (!s || s.max === s.min) return 50;
-  return Math.round(((elo - s.min) / (s.max - s.min)) * 100);
+  return Math.round(
+    Math.max(0, Math.min(100, ((elo - s.min) / (s.max - s.min)) * 100))
+  );
 };
 
-const FIGHTERS = _D2.map((d) => {
+const DIVISION_UFC_AVERAGES = (() => {
+  const stats = {};
+  for (const d of _D2) {
+    if (!d.w) continue;
+    if (!stats[d.w]) {
+      stats[d.w] = {
+        count: 0,
+        asl: 0,
+        asp: 0,
+        asa: 0,
+        atl: 0,
+        atp: 0,
+        crd: 0,
+        elo: 0,
+      };
+    }
+    const bucket = stats[d.w];
+    bucket.count += 1;
+    bucket.asl += d.asl ?? 0;
+    bucket.asp += d.asp ?? 0;
+    bucket.asa += d.asa ?? 0;
+    bucket.atl += d.atl ?? 0;
+    bucket.atp += d.atp ?? 0;
+    bucket.crd += d.crd ?? 1.0;
+    bucket.elo += d.elo ?? 1500;
+  }
+
+  return Object.fromEntries(
+    Object.entries(stats).map(([weightClass, bucket]) => [
+      weightClass,
+      {
+        asl: bucket.asl / bucket.count,
+        asp: bucket.asp / bucket.count,
+        asa: bucket.asa / bucket.count,
+        atl: bucket.atl / bucket.count,
+        atp: bucket.atp / bucket.count,
+        crd: bucket.crd / bucket.count,
+        elo: bucket.elo / bucket.count,
+      },
+    ])
+  );
+})();
+
+const PROSPECT_TIER_CONFIG = {
+  tier1: { rateBase: 0.8, recordBase: 0.58, eloBase: 0.46, cardioBase: 0.62 },
+  tier2: { rateBase: 0.62, recordBase: 0.42, eloBase: 0.32, cardioBase: 0.48 },
+  tier3: { rateBase: 0.46, recordBase: 0.28, eloBase: 0.18, cardioBase: 0.36 },
+};
+
+const clampNum = (value, min, max) => Math.max(min, Math.min(max, value));
+const blendToward = (value, baseline, trust) =>
+  baseline + (value - baseline) * clampNum(trust, 0, 1);
+
+const computeProspectSeededElo = (d) => {
+  if (d.elo != null && d.elo !== 1520) return d.elo;
+  const wins = d.wi ?? 0;
+  const losses = d.lo ?? 0;
+  const finishWins = (d.kow ?? 0) + (d.sbw ?? 0);
+  const finishRate = wins > 0 ? finishWins / wins : 0;
+  const tierBonus =
+    d._p_tier === 'tier1' ? 50 : d._p_tier === 'tier2' ? 25 : 0;
+  const undefeatedLast5 = losses === 0 && wins >= 5 ? 30 : 0;
+
+  return clampNum(
+    1400 +
+      (wins - losses) * 8 +
+      Math.min(40, finishRate * 50) +
+      tierBonus +
+      undefeatedLast5,
+    1370,
+    1520
+  );
+};
+
+const computeProspectSeededCardio = (d) => {
+  if (d.crd != null) return d.crd;
+  const totalRounds = d.tr ?? 0;
+  const wins = d.wi ?? 0;
+  const decisionRate = wins > 0 ? (d.dcw ?? 0) / wins : 0;
+  return clampNum(
+    0.85 + Math.min(0.3, totalRounds * 0.006) + decisionRate * 0.2,
+    0.5,
+    1.5
+  );
+};
+
+const getProspectTrustProfile = (d, totalRounds) => {
+  const cfg = PROSPECT_TIER_CONFIG[d._p_tier] ?? PROSPECT_TIER_CONFIG.tier3;
+  const statsFights = d._p_fights_with_stats ?? 0;
+  const sampleTrust =
+    statsFights <= 0 ? 0.12 : Math.min(1, 0.24 + statsFights * 0.11);
+  const roundsTrust = Math.min(1, (totalRounds ?? 0) / 30);
+
+  const rateTrust = clampNum(cfg.rateBase * sampleTrust, 0.08, 0.88);
+  const recordTrust = clampNum(
+    cfg.recordBase * (0.35 + roundsTrust * 0.65),
+    0.1,
+    0.72
+  );
+  const eloTrust = clampNum(
+    cfg.eloBase * (0.3 + sampleTrust * 0.7),
+    0.08,
+    0.58
+  );
+  const cardioTrust = clampNum(
+    cfg.cardioBase * (0.35 + Math.max(sampleTrust, roundsTrust) * 0.65),
+    0.12,
+    0.78
+  );
+  const credibilityTrust = clampNum(
+    Math.min(rateTrust, recordTrust) * 0.95,
+    0.08,
+    0.72
+  );
+
+  return {
+    statsFights,
+    rateTrust,
+    recordTrust,
+    eloTrust,
+    cardioTrust,
+    credibilityTrust,
+  };
+};
+
+const FIGHTERS = [..._D2, ..._P].map((d) => {
+  const isProspect = d._p_source !== undefined;
   const eloRec = ELO_RATINGS[d.n] ?? null;
   const fightHistory = sortHistoryDesc(FIGHT_HISTORY[d.n] ?? []);
   const officialRank = UFC_RANKINGS[d.n] ?? null;
@@ -670,30 +691,49 @@ const FIGHTERS = _D2.map((d) => {
     d.dr != null ? { division: d.w, rank: Math.round(d.dr) } : null;
   const mergedRank = officialRank ?? fallbackRank;
 
-  const liveElo = eloRec?.elo ?? d.elo ?? 1500;
-  const peakElo = eloRec?.peak ?? liveElo;
-  const cardioRatio = CARDIO_RATIOS[d.n] ?? d.crd ?? 1.0;
+  const divisionAvg = DIVISION_UFC_AVERAGES[d.w] ?? {
+    asl: 3.5,
+    asp: 0.44,
+    asa: 0.25,
+    atl: 1.0,
+    atp: 0.35,
+    crd: 1.0,
+    elo: 1450,
+  };
+  const seededProspectElo = isProspect
+    ? computeProspectSeededElo(d)
+    : d.elo ?? 1500;
+  const seededProspectCardio = isProspect
+    ? computeProspectSeededCardio(d)
+    : d.crd ?? 1.0;
+  const liveEloBase = eloRec?.elo ?? seededProspectElo;
+  const peakEloBase = eloRec?.peak ?? liveEloBase;
+  const cardioBase = CARDIO_RATIOS[d.n] ?? seededProspectCardio;
   const rankTier = currentRankTier(mergedRank);
   const historyWins = fightHistory.filter((fight) => fight.re === 'W');
   const historyLosses = fightHistory.filter((fight) => fight.re === 'L');
-  const wins = fightHistory.length > 0 ? historyWins.length : d.wi ?? 0;
-  const losses = fightHistory.length > 0 ? historyLosses.length : d.lo ?? 0;
-  const totalFights = wins + losses;
-  const totalRounds = d.tr ?? (fightHistory.length > 0 ? sumFightRounds(fightHistory) : 0);
-  const deepRounds = fightHistory.length > 0 ? sumDeepRounds(fightHistory) : 0;
-  const koWins =
+  const rawWins = fightHistory.length > 0 ? historyWins.length : d.wi ?? 0;
+  const rawLosses = fightHistory.length > 0 ? historyLosses.length : d.lo ?? 0;
+  const totalFights = rawWins + rawLosses;
+  const rawTotalRounds =
+    d.tr ?? (fightHistory.length > 0 ? sumFightRounds(fightHistory) : 0);
+  const rawDeepRounds =
+    fightHistory.length > 0
+      ? sumDeepRounds(fightHistory)
+      : Math.min(d.dcw ?? 0, Math.round((rawTotalRounds ?? 0) / 6));
+  const rawKoWins =
     fightHistory.length > 0
       ? historyWins.filter((fight) => isKoMethod(fight.me || '')).length
       : d.kow ?? 0;
-  const subWins =
+  const rawSubWins =
     fightHistory.length > 0
       ? historyWins.filter((fight) => isSubMethod(fight.me || '')).length
       : d.sbw ?? 0;
-  const decWins =
+  const rawDecWins =
     fightHistory.length > 0
       ? historyWins.filter((fight) => isDecisionMethod(fight.me || '')).length
       : d.dcw ?? 0;
-  const titleBouts =
+  const rawTitleBouts =
     fightHistory.length > 0
       ? fightHistory.filter((fight) => fight.tb).length
       : d.tb ?? 0;
@@ -710,45 +750,97 @@ const FIGHTERS = _D2.map((d) => {
         )
       )
     : d.dsl;
-  const ufcFightCount =
+  const rawUfcFightCount =
     fightHistory.length > 0 ? totalFights : eloRec?.n ?? totalFights;
+  const prospectTrust = isProspect
+    ? getProspectTrustProfile(d, rawTotalRounds)
+    : null;
+  const modelAsl = isProspect
+    ? blendToward(d.asl ?? divisionAvg.asl, divisionAvg.asl, prospectTrust.rateTrust)
+    : d.asl;
+  const modelAsp = isProspect
+    ? blendToward(d.asp ?? divisionAvg.asp, divisionAvg.asp, prospectTrust.rateTrust)
+    : d.asp;
+  const modelAsa = isProspect
+    ? blendToward(d.asa ?? divisionAvg.asa, divisionAvg.asa, prospectTrust.rateTrust)
+    : d.asa;
+  const modelAtl = isProspect
+    ? blendToward(d.atl ?? divisionAvg.atl, divisionAvg.atl, prospectTrust.rateTrust)
+    : d.atl;
+  const modelAtp = isProspect
+    ? blendToward(d.atp ?? divisionAvg.atp, divisionAvg.atp, prospectTrust.rateTrust)
+    : d.atp;
+  const modelElo = isProspect
+    ? blendToward(liveEloBase, divisionAvg.elo, prospectTrust.eloTrust)
+    : liveEloBase;
+  const modelPeakElo = isProspect
+    ? blendToward(peakEloBase, divisionAvg.elo, prospectTrust.eloTrust)
+    : peakEloBase;
+  const modelCardioRatio = isProspect
+    ? blendToward(cardioBase, divisionAvg.crd, prospectTrust.cardioTrust)
+    : cardioBase;
+  const modelWins = isProspect ? rawWins * prospectTrust.recordTrust : rawWins;
+  const modelLosses = isProspect
+    ? rawLosses * prospectTrust.recordTrust
+    : rawLosses;
+  const modelTotalRounds = isProspect
+    ? rawTotalRounds * prospectTrust.recordTrust
+    : rawTotalRounds;
+  const modelDeepRounds = isProspect
+    ? rawDeepRounds * prospectTrust.recordTrust
+    : rawDeepRounds;
+  const modelKoWins = isProspect
+    ? rawKoWins * prospectTrust.recordTrust
+    : rawKoWins;
+  const modelSubWins = isProspect
+    ? rawSubWins * prospectTrust.recordTrust
+    : rawSubWins;
+  const modelDecWins = isProspect
+    ? rawDecWins * prospectTrust.recordTrust
+    : rawDecWins;
+  const modelTitleBouts = isProspect
+    ? rawTitleBouts * prospectTrust.recordTrust
+    : rawTitleBouts;
+  const modelUfcWins = isProspect ? 0 : rawWins;
+  const modelUfcLosses = isProspect ? 0 : rawLosses;
+  const modelUfcWinStreak = isProspect ? 0 : winStreak;
+  const modelUfcLoseStreak = isProspect ? 0 : loseStreak;
+  const modelUfcFightCount = isProspect ? 0 : rawUfcFightCount;
 
-  const rating = eloToRating(liveElo, d.w);
-  // Credibility: based on total rounds fought (more rounds = more data = more credible)
-  const cred = Math.min(100, Math.round((totalRounds / 60) * 100));
-  const winPct = totalFights > 0 ? Math.round((wins / totalFights) * 100) : 0;
+  const rating = eloToRating(modelElo, d.w);
+  const baseCred = Math.min(100, Math.round((rawTotalRounds / 60) * 100));
+  const cred = isProspect
+    ? Math.max(8, Math.round(baseCred * prospectTrust.credibilityTrust))
+    : baseCred;
+  const winPct =
+    totalFights > 0 ? Math.round((rawWins / totalFights) * 100) : 0;
   // Finish rate
   const finishRate =
-    wins > 0 ? Math.round((((koWins ?? 0) + (subWins ?? 0)) / wins) * 100) : 0;
-  const totalMin = Math.round(totalRounds * 5);
+    rawWins > 0
+      ? Math.round((((rawKoWins ?? 0) + (rawSubWins ?? 0)) / rawWins) * 100)
+      : 0;
+  const totalMin = Math.round(rawTotalRounds * 5);
   const kdPerMin =
-    totalMin > 0 ? parseFloat(((koWins ?? 0) / totalMin).toFixed(4)) : 0;
+    totalMin > 0 ? parseFloat(((rawKoWins ?? 0) / totalMin).toFixed(4)) : 0;
   const controlPct = Math.min(
     100,
     parseFloat(
-      ((d.atl ?? 0) * ((d.atp ?? 0.35) + 0.15) * 10 + (d.asa ?? 0) * 3).toFixed(
-        1
-      )
+      (
+        (modelAtl ?? 0) * ((modelAtp ?? 0.35) + 0.15) * 10 +
+        (modelAsa ?? 0) * 3
+      ).toFixed(1)
     )
   );
-  const eloStrength = Math.max(0, Math.min(1, (liveElo - 1400) / 450));
+  const eloStrength = Math.max(0, Math.min(1, (modelElo - 1400) / 450));
   const oqiProxy = parseFloat(
     (0.65 * rankTier + 0.35 * eloStrength).toFixed(3)
   );
-  const momentumScore = Math.max(
-    -2,
-    Math.min(2, ((winStreak ?? 0) - (loseStreak ?? 0)) / 4)
-  );
+const momentumScore = Math.max(
+  -2,
+  Math.min(2, ((winStreak ?? 0) - (loseStreak ?? 0)) / 4)
+);
+  
   const qualityMomentum = computeMomentum(fightHistory);
-  const prospectProfile = getProspectProfile({
-    UFC_FIGHT_COUNT: ufcFightCount,
-    TOTAL_MIN: totalMin,
-    DEEP_ROUNDS: deepRounds,
-    CREDIBILITY: cred,
-    ADJUSTED_RATING: rating,
-    QUALITY_MOMENTUM: qualityMomentum,
-    AGE: d.ag,
-  });
 
   return {
     FIGHTER: d.n,
@@ -757,26 +849,26 @@ const FIGHTERS = _D2.map((d) => {
     HEIGHT_IN: d.ht,
     REACH_IN: d.rh,
     STANCE: d.st,
-    WINS: wins,
-    LOSSES: losses,
+    WINS: rawWins,
+    LOSSES: rawLosses,
     WIN_STREAK: winStreak,
     LOSE_STREAK: loseStreak,
-    TOTAL_ROUNDS: totalRounds,
-    DEEP_ROUNDS: deepRounds,
-    TITLE_BOUTS: titleBouts,
-    KO_WINS: koWins,
-    SUB_WINS: subWins,
-    DEC_WINS: decWins,
-    ASL: d.asl, // avg sig str landed per min
-    ASP: d.asp, // avg sig str pct (0–1)
-    ASA: d.asa, // avg sub attempts
-    ATL: d.atl, // avg td landed per 15min
-    ATP: d.atp, // avg td pct (0–1)
-    ELO: liveElo,
-    ELO_PEAK: peakElo,
-    UFC_FIGHT_COUNT: ufcFightCount,
+    TOTAL_ROUNDS: rawTotalRounds,
+    DEEP_ROUNDS: rawDeepRounds,
+    TITLE_BOUTS: rawTitleBouts,
+    KO_WINS: rawKoWins,
+    SUB_WINS: rawSubWins,
+    DEC_WINS: rawDecWins,
+    ASL: modelAsl,
+    ASP: modelAsp,
+    ASA: modelAsa,
+    ATL: modelAtl,
+    ATP: modelAtp,
+    ELO: modelElo,
+    ELO_PEAK: modelPeakElo,
+    UFC_FIGHT_COUNT: modelUfcFightCount,
     RANK_TIER: rankTier,
-    CARDIO_RATIO: cardioRatio,
+    CARDIO_RATIO: modelCardioRatio,
     LAST_FIGHT_DATE: lastFightDate,
     DAYS_SINCE_LAST: daysSinceLast,
     DIV_RANK: d.dr,
@@ -787,31 +879,51 @@ const FIGHTERS = _D2.map((d) => {
     CREDIBILITY: cred,
     WIN_PCT: winPct,
     FINISH_RATE: finishRate,
-    RECORD: `${wins}-${losses}`,
+    RECORD: `${rawWins}-${rawLosses}`,
+    RAW_ASL: d.asl ?? null,
+    RAW_ASP: d.asp ?? null,
+    RAW_ASA: d.asa ?? null,
+    RAW_ATL: d.atl ?? null,
+    RAW_ATP: d.atp ?? null,
+    RAW_ELO: liveEloBase,
+    RAW_CARDIO_RATIO: cardioBase,
+    MODEL_WINS: modelWins,
+    MODEL_LOSSES: modelLosses,
+    MODEL_UFC_WINS: modelUfcWins,
+    MODEL_UFC_LOSSES: modelUfcLosses,
+    MODEL_UFC_WIN_STREAK: modelUfcWinStreak,
+    MODEL_UFC_LOSE_STREAK: modelUfcLoseStreak,
+    MODEL_TOTAL_ROUNDS: modelTotalRounds,
+    MODEL_DEEP_ROUNDS: modelDeepRounds,
+    MODEL_TITLE_BOUTS: modelTitleBouts,
+    MODEL_KO_WINS: modelKoWins,
+    MODEL_SUB_WINS: modelSubWins,
+    MODEL_DEC_WINS: modelDecWins,
+    MODEL_UFC_FIGHT_COUNT: modelUfcFightCount,
+    PROSPECT_CONFIDENCE: isProspect ? prospectTrust.credibilityTrust : 1,
     // Legacy aliases (keep for UI components that reference old names)
     // Effective strike output: strikes landed per min × accuracy.
     // True net margin (landed minus absorbed) requires absorbed data not available
     // at the per-fighter aggregate level, so this is the best available proxy.
     NET_STRIKE_MARGIN:
-      d.asl != null ? parseFloat((d.asl * (d.asp ?? 0.45)).toFixed(2)) : null,
-    SIG_STR_ACC: d.asp != null ? d.asp * 100 : null,
-    TDE: d.atl,
-    TD_ACC: d.atp != null ? d.atp * 100 : null,
+      modelAsl != null
+        ? parseFloat((modelAsl * (modelAsp ?? 0.45)).toFixed(2))
+        : null,
+    SIG_STR_ACC: modelAsp != null ? modelAsp * 100 : null,
+    TDE: modelAtl,
+    TD_ACC: modelAtp != null ? modelAtp * 100 : null,
     KD_PER_MIN: kdPerMin,
     OQI: oqiProxy,
     MOMENTUM: momentumScore,
     QUALITY_MOMENTUM: qualityMomentum,
-    PROSPECT_TIER: prospectProfile.tier,
-    PROSPECT_RISK: prospectProfile.risk,
-    SAMPLE_TRUST: prospectProfile.statTrust,
     FINISH_QUALITY: finishRate / 100,
     FIGHT_HISTORY: fightHistory,
 
     // ── Legacy fields for UI compatibility (v5 equivalents) ──
-    CARDIO_DECAY: cardioRatio,
+    CARDIO_DECAY: modelCardioRatio,
     TOTAL_EFFICIENCY:
-      d.asl != null
-        ? Math.max(0, parseFloat((d.asl * (d.asp ?? 0.45)).toFixed(2)))
+      modelAsl != null
+        ? Math.max(0, parseFloat((modelAsl * (modelAsp ?? 0.45)).toFixed(2)))
         : 0,
     QUALITY_ADJUSTMENT: 0,
     LAYOFF_PENALTY: 0,
@@ -819,25 +931,39 @@ const FIGHTERS = _D2.map((d) => {
     OQI_SCALE: rankTier,
     TOTAL_MIN: totalMin,
     UFC_RANK: mergedRank,
-    SUB_THREAT_RATE: d.asa ?? 0,
+    SUB_THREAT_RATE: modelAsa ?? 0,
     KO_WIN_PCT:
-      wins > 0 ? parseFloat((((koWins ?? 0) / wins) * 100).toFixed(1)) : 0,
+      rawWins > 0
+        ? parseFloat((((rawKoWins ?? 0) / rawWins) * 100).toFixed(1))
+        : 0,
     SUB_WIN_PCT:
-      wins > 0 ? parseFloat((((subWins ?? 0) / wins) * 100).toFixed(1)) : 0,
+      rawWins > 0
+        ? parseFloat((((rawSubWins ?? 0) / rawWins) * 100).toFixed(1))
+        : 0,
     CONTROL_TIME_PCT: controlPct,
-    RECENT_STR_OUTPUT: d.asl ?? null,
-    RECENT_STR_ACC: d.asp != null ? d.asp * 100 : null,
-    RECENT_TD_RATE: d.atl ?? null,
+    RECENT_STR_OUTPUT: modelAsl ?? null,
+    RECENT_STR_ACC: modelAsp != null ? modelAsp * 100 : null,
+    RECENT_TD_RATE: modelAtl ?? null,
     RECENT_CTRL_PCT: controlPct,
     IS_LIGHT: false,
-    ASD: d.asl != null ? d.asl * (1 - (d.asp ?? 0.45)) : 0,
+    ASD: modelAsl != null ? modelAsl * (1 - (modelAsp ?? 0.45)) : 0,
     FACTOR_DAMAGE:
-      d.asl != null
-        ? parseFloat((d.asl * (d.asp ?? 0.45) * 0.4).toFixed(1))
+      modelAsl != null
+        ? parseFloat((modelAsl * (modelAsp ?? 0.45) * 0.4).toFixed(1))
         : 0,
-    FACTOR_POSITION: d.atp != null ? parseFloat((d.atp * 30).toFixed(1)) : 0,
+    FACTOR_POSITION:
+      modelAtp != null ? parseFloat((modelAtp * 30).toFixed(1)) : 0,
     FACTOR_FINISH: parseFloat((finishRate * 0.2).toFixed(1)),
-    FACTOR_CARDIO: parseFloat((cardioRatio * 10).toFixed(1)),
+    FACTOR_CARDIO: parseFloat((modelCardioRatio * 10).toFixed(1)),
+    // ── Prospect fields (undefined for UFC veterans) ──
+    IS_PROSPECT: isProspect,
+    PROSPECT_TIER: isProspect ? d._p_tier : null,
+    PROSPECT_SOURCE: isProspect ? d._p_source : null,
+    PROSPECT_SIGNED: isProspect ? d._p_signed : null,
+    PROSPECT_DEBUT: isProspect ? d._p_debut : null,
+    PROSPECT_OPPONENT: isProspect ? d._p_opponent : null,
+    PROSPECT_NOTES: isProspect ? d._p_notes : null,
+    PROSPECT_STATS_FIGHTS: isProspect ? d._p_fights_with_stats ?? 0 : null,
   };
 });
 
@@ -1090,8 +1216,12 @@ const americanToDecimal = (str) => {
 const createPredictionId = () =>
   `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
+const isPushResult = (value) => value === 'NC' || value === 'DRAW';
+
 const isResolvedWinner = (value, entry) =>
-  value === entry?.fighterA || value === entry?.fighterB || value === 'NC';
+  value === entry?.fighterA ||
+  value === entry?.fighterB ||
+  isPushResult(value);
 
 const calcTrackedProfit = (entry) => {
   if (
@@ -1100,10 +1230,14 @@ const calcTrackedProfit = (entry) => {
     !isResolvedWinner(entry.actualWinner, entry)
   )
     return null;
-  if (entry.actualWinner === 'NC') return 0;
+
+  if (isPushResult(entry.actualWinner)) return 0;
+
   const dec = americanToDecimal(entry.marketOdds);
   if (!dec) return null;
-  return entry.actualWinner === entry.trackedSide ? (dec - 1) * 100 : -100;
+
+  // 1-unit flat staking
+  return entry.actualWinner === entry.trackedSide ? dec - 1 : -1;
 };
 
 function sortHistoryDesc(history) {
@@ -1138,12 +1272,20 @@ function isKoMethod(method = '') {
   const m = String(method).toLowerCase().trim();
 
   if (!m) return false;
+  if (isSubMethod(m) || isDecisionMethod(m)) return false;
 
   return (
     m === 'ko' ||
     m === 'tko' ||
     m === 'tko-dr' ||
     m.includes('ko/tko') ||
+    m.includes(' tko') ||
+    m.startsWith('tko') ||
+    m === 'doctor stoppage' ||
+    m === 'corner stoppage' ||
+    m.includes('doctor stoppage') ||
+    m.includes('corner stoppage') ||
+    m.includes('retirement') ||
     m.includes('punch') ||
     m.includes('punches') ||
     m.includes('elbow') ||
@@ -1152,9 +1294,9 @@ function isKoMethod(method = '') {
     m.includes('knees') ||
     m.includes('kick') ||
     m.includes('head kick') ||
+    m.includes('body kick') ||
     m.includes('leg kick') ||
-    m.includes('doctor stoppage') ||
-    m.includes('corner stoppage')
+    m.includes('spinning back fist')
   );
 }
 
@@ -1162,19 +1304,31 @@ function isSubMethod(method = '') {
   const m = String(method).toLowerCase().trim();
 
   if (!m) return false;
+  if (isDecisionMethod(m)) return false;
 
   return (
     m === 'sub' ||
+    m.includes('submission') ||
     m.includes('choke') ||
-    m.includes('armbar') ||
-    m.includes('triangle') ||
-    m.includes('arm triangle') ||
     m.includes('rear naked choke') ||
     m.includes('guillotine') ||
+    m.includes('triangle') ||
+    m.includes('arm triangle') ||
     m.includes('anaconda') ||
-    m.includes('kneebar') ||
+    m.includes('darce') ||
+    m.includes('brabo') ||
+    m.includes('bulldog choke') ||
+    m.includes('von flue') ||
+    m.includes('north-south choke') ||
+    m.includes('armbar') ||
     m.includes('kimura') ||
+    m.includes('americana') ||
+    m.includes('omoplata') ||
+    m.includes('kneebar') ||
     m.includes('heel hook') ||
+    m.includes('toe hold') ||
+    m.includes('calf slicer') ||
+    m.includes('twister') ||
     m.includes('lock')
   );
 }
@@ -1326,82 +1480,68 @@ const MODEL = {
 
 const computeMatchupEdges = (fA, fB, oddsA = null, oddsB = null) => {
   const S = MODEL.SCALES;
-  const debutContext = getDebutMatchupContext(fA, fB);
-  const trustA = debutContext.a.statTrust;
-  const trustB = debutContext.b.statTrust;
-  const cardioTrustA = debutContext.a.cardioTrust;
-  const cardioTrustB = debutContext.b.cardioTrust;
 
   // Discount striking stats for fighters on losing streaks so high-volume
   // output in losses does not overstate current offensive strength.
   const formDecay = (ls) => Math.max(0.8, 1 - Math.min(ls ?? 0, 3) * 0.07);
-  const aslA = shrinkToNeutral(
-    (fA.ASL ?? 0) * formDecay(fA.LOSE_STREAK),
-    0,
-    trustA
-  );
-  const aslB = shrinkToNeutral(
-    (fB.ASL ?? 0) * formDecay(fB.LOSE_STREAK),
-    0,
-    trustB
-  );
-  const aspA = shrinkToNeutral(
-    (fA.ASP ?? 0) * (0.6 + 0.4 * formDecay(fA.LOSE_STREAK)),
-    0.45,
-    trustA
-  );
-  const aspB = shrinkToNeutral(
-    (fB.ASP ?? 0) * (0.6 + 0.4 * formDecay(fB.LOSE_STREAK)),
-    0.45,
-    trustB
-  );
-  const tdRateA = shrinkToNeutral(fA.ATL ?? 0, 1.0, trustA);
-  const tdRateB = shrinkToNeutral(fB.ATL ?? 0, 1.0, trustB);
-  const tdPctA = shrinkToNeutral(fA.ATP ?? 0, 0.38, trustA);
-  const tdPctB = shrinkToNeutral(fB.ATP ?? 0, 0.38, trustB);
-  const subAttA = shrinkToNeutral(fA.ASA ?? 0, 0.25, trustA);
-  const subAttB = shrinkToNeutral(fB.ASA ?? 0, 0.25, trustB);
-  const controlPctA = shrinkToNeutral(fA.CONTROL_TIME_PCT ?? 0, 20, trustA);
-  const controlPctB = shrinkToNeutral(fB.CONTROL_TIME_PCT ?? 0, 20, trustB);
-  const cardioA = shrinkToNeutral(fA.CARDIO_RATIO ?? 1, 1, cardioTrustA);
-  const cardioB = shrinkToNeutral(fB.CARDIO_RATIO ?? 1, 1, cardioTrustB);
+  const loseStreakA = fA.MODEL_UFC_LOSE_STREAK ?? fA.LOSE_STREAK ?? 0;
+  const loseStreakB = fB.MODEL_UFC_LOSE_STREAK ?? fB.LOSE_STREAK ?? 0;
+  const winStreakA = fA.MODEL_UFC_WIN_STREAK ?? fA.WIN_STREAK ?? 0;
+  const winStreakB = fB.MODEL_UFC_WIN_STREAK ?? fB.WIN_STREAK ?? 0;
+  const aslA = (fA.ASL ?? 0) * formDecay(loseStreakA);
+  const aslB = (fB.ASL ?? 0) * formDecay(loseStreakB);
+  const aspA = (fA.ASP ?? 0) * (0.6 + 0.4 * formDecay(loseStreakA));
+  const aspB = (fB.ASP ?? 0) * (0.6 + 0.4 * formDecay(loseStreakB));
+  const winsA = fA.MODEL_UFC_WINS ?? fA.WINS ?? 0;
+  const winsB = fB.MODEL_UFC_WINS ?? fB.WINS ?? 0;
+  const lossesA = fA.MODEL_UFC_LOSSES ?? fA.LOSSES ?? 0;
+  const lossesB = fB.MODEL_UFC_LOSSES ?? fB.LOSSES ?? 0;
+  const roundsA = fA.MODEL_TOTAL_ROUNDS ?? fA.TOTAL_ROUNDS ?? 0;
+  const roundsB = fB.MODEL_TOTAL_ROUNDS ?? fB.TOTAL_ROUNDS ?? 0;
+  const deepRoundsA = fA.MODEL_DEEP_ROUNDS ?? fA.DEEP_ROUNDS ?? 0;
+  const deepRoundsB = fB.MODEL_DEEP_ROUNDS ?? fB.DEEP_ROUNDS ?? 0;
+  const titleBoutsA = fA.MODEL_TITLE_BOUTS ?? fA.TITLE_BOUTS ?? 0;
+  const titleBoutsB = fB.MODEL_TITLE_BOUTS ?? fB.TITLE_BOUTS ?? 0;
+  const koWinsA = fA.MODEL_KO_WINS ?? fA.KO_WINS ?? 0;
+  const koWinsB = fB.MODEL_KO_WINS ?? fB.KO_WINS ?? 0;
+  const subWinsA = fA.MODEL_SUB_WINS ?? fA.SUB_WINS ?? 0;
+  const subWinsB = fB.MODEL_SUB_WINS ?? fB.SUB_WINS ?? 0;
+  const ufcFightCountA = fA.MODEL_UFC_FIGHT_COUNT ?? fA.UFC_FIGHT_COUNT ?? 0;
+  const ufcFightCountB = fB.MODEL_UFC_FIGHT_COUNT ?? fB.UFC_FIGHT_COUNT ?? 0;
 
   // ── Compute each raw differential ──────────────────────────────────────────
   const feats = {
     sig_str_dif: (aslA - aslB) / S.sig_str_dif,
     avg_sig_str_pct_dif: (aspA - aspB) / S.avg_sig_str_pct_dif,
-    avg_td_dif: (tdRateA - tdRateB) / S.avg_td_dif,
-    avg_td_pct_dif: (tdPctA - tdPctB) / S.avg_td_pct_dif,
-    avg_sub_att_dif: (subAttA - subAttB) / S.avg_sub_att_dif,
-    control_time_dif: (controlPctA - controlPctB) / S.control_time_dif,
+    avg_td_dif: ((fA.ATL ?? 0) - (fB.ATL ?? 0)) / S.avg_td_dif,
+    avg_td_pct_dif: ((fA.ATP ?? 0) - (fB.ATP ?? 0)) / S.avg_td_pct_dif,
+    avg_sub_att_dif: ((fA.ASA ?? 0) - (fB.ASA ?? 0)) / S.avg_sub_att_dif,
+    control_time_dif:
+      ((fA.CONTROL_TIME_PCT ?? 0) - (fB.CONTROL_TIME_PCT ?? 0)) /
+      S.control_time_dif,
     reach_dif: ((fA.REACH_IN ?? 0) - (fB.REACH_IN ?? 0)) / S.reach_dif,
     height_dif: ((fA.HEIGHT_IN ?? 0) - (fB.HEIGHT_IN ?? 0)) / S.height_dif,
     age_dif: ((fB.AGE ?? 30) - (fA.AGE ?? 30)) / S.age_dif, // reversed: younger is better
-    win_streak_dif:
-      ((fA.WIN_STREAK ?? 0) - (fB.WIN_STREAK ?? 0)) / S.win_streak_dif,
-    lose_streak_dif:
-      ((fB.LOSE_STREAK ?? 0) - (fA.LOSE_STREAK ?? 0)) / S.lose_streak_dif, // reversed
-    win_dif: ((fA.WINS ?? 0) - (fB.WINS ?? 0)) / S.win_dif,
-    loss_dif: ((fB.LOSSES ?? 0) - (fA.LOSSES ?? 0)) / S.loss_dif, // reversed
-    total_round_dif:
-      ((fA.TOTAL_ROUNDS ?? 0) - (fB.TOTAL_ROUNDS ?? 0)) / S.total_round_dif,
-    deep_round_dif:
-      ((fA.DEEP_ROUNDS ?? 0) - (fB.DEEP_ROUNDS ?? 0)) / S.total_round_dif,
+    win_streak_dif: (winStreakA - winStreakB) / S.win_streak_dif,
+    lose_streak_dif: (loseStreakB - loseStreakA) / S.lose_streak_dif, // reversed
+    win_dif: (winsA - winsB) / S.win_dif,
+    loss_dif: (lossesB - lossesA) / S.loss_dif, // reversed
+    total_round_dif: (roundsA - roundsB) / S.total_round_dif,
+    deep_round_dif: (deepRoundsA - deepRoundsB) / S.total_round_dif,
     total_title_bout_dif:
-      ((fA.TITLE_BOUTS ?? 0) - (fB.TITLE_BOUTS ?? 0)) / S.total_title_bout_dif,
-    ko_dif: ((fA.KO_WINS ?? 0) - (fB.KO_WINS ?? 0)) / S.ko_dif,
-    sub_dif: ((fA.SUB_WINS ?? 0) - (fB.SUB_WINS ?? 0)) / S.sub_dif,
+      (titleBoutsA - titleBoutsB) / S.total_title_bout_dif,
+    ko_dif: (koWinsA - koWinsB) / S.ko_dif,
+    sub_dif: (subWinsA - subWinsB) / S.sub_dif,
     elo_dif: ((fA.ELO ?? 1500) - (fB.ELO ?? 1500)) / S.elo_dif,
     layoff_dif:
       ((fB.DAYS_SINCE_LAST ?? 180) - (fA.DAYS_SINCE_LAST ?? 180)) /
       S.layoff_dif, // reversed
-    cardio_dif: (cardioA - cardioB) / S.cardio_dif,
+    cardio_dif:
+      ((fA.CARDIO_RATIO ?? 1) - (fB.CARDIO_RATIO ?? 1)) / S.cardio_dif,
     peak_elo_dif:
       ((fA.ELO_PEAK ?? fA.ELO ?? 1500) - (fB.ELO_PEAK ?? fB.ELO ?? 1500)) /
       S.peak_elo_dif,
-    ufc_fight_count_dif:
-      ((fA.UFC_FIGHT_COUNT ?? 0) - (fB.UFC_FIGHT_COUNT ?? 0)) /
-      S.ufc_fight_count_dif,
+    ufc_fight_count_dif: (ufcFightCountA - ufcFightCountB) / S.ufc_fight_count_dif,
     rank_tier_dif:
       ((fA.RANK_TIER ?? 0.12) - (fB.RANK_TIER ?? 0.12)) / S.rank_tier_dif,
   };
@@ -1548,8 +1688,8 @@ const computeMatchupEdges = (fA, fB, oddsA = null, oddsB = null) => {
       label: 'Takedowns / 15 Min',
       aLabel: 'ATL',
       bLabel: 'ATL',
-      aValue: tdRateA,
-      bValue: tdRateB,
+      aValue: fA.ATL ?? 0,
+      bValue: fB.ATL ?? 0,
       diff: feats.avg_td_dif,
       scale: S.avg_td_dif,
       weight: tdOffenseWeight,
@@ -1559,8 +1699,8 @@ const computeMatchupEdges = (fA, fB, oddsA = null, oddsB = null) => {
       label: 'Takedown Accuracy',
       aLabel: 'ATP',
       bLabel: 'ATP',
-      aValue: tdPctA,
-      bValue: tdPctB,
+      aValue: fA.ATP ?? 0,
+      bValue: fB.ATP ?? 0,
       diff: feats.avg_td_pct_dif,
       scale: S.avg_td_pct_dif,
       weight: tdDefenseWeight,
@@ -1570,8 +1710,8 @@ const computeMatchupEdges = (fA, fB, oddsA = null, oddsB = null) => {
       label: 'Sub Attempts / 15 Min',
       aLabel: 'ASA',
       bLabel: 'ASA',
-      aValue: subAttA,
-      bValue: subAttB,
+      aValue: fA.ASA ?? 0,
+      bValue: fB.ASA ?? 0,
       diff: feats.avg_sub_att_dif,
       scale: S.avg_sub_att_dif,
       weight: subThreatWeight,
@@ -1581,8 +1721,8 @@ const computeMatchupEdges = (fA, fB, oddsA = null, oddsB = null) => {
       label: 'Control Time %',
       aLabel: 'CONTROL_TIME_PCT',
       bLabel: 'CONTROL_TIME_PCT',
-      aValue: controlPctA,
-      bValue: controlPctB,
+      aValue: fA.CONTROL_TIME_PCT ?? 0,
+      bValue: fB.CONTROL_TIME_PCT ?? 0,
       diff: feats.control_time_dif,
       scale: S.control_time_dif,
       weight: controlWeight,
@@ -1626,8 +1766,8 @@ const computeMatchupEdges = (fA, fB, oddsA = null, oddsB = null) => {
       label: 'Win Streak',
       aLabel: 'WIN_STREAK',
       bLabel: 'WIN_STREAK',
-      aValue: fA.WIN_STREAK ?? 0,
-      bValue: fB.WIN_STREAK ?? 0,
+      aValue: winStreakA,
+      bValue: winStreakB,
       diff: feats.win_streak_dif,
       scale: S.win_streak_dif,
       weight: W.win_streak_dif,
@@ -1637,8 +1777,8 @@ const computeMatchupEdges = (fA, fB, oddsA = null, oddsB = null) => {
       label: 'Loss Streak',
       aLabel: 'LOSE_STREAK',
       bLabel: 'LOSE_STREAK',
-      aValue: fA.LOSE_STREAK ?? 0,
-      bValue: fB.LOSE_STREAK ?? 0,
+      aValue: loseStreakA,
+      bValue: loseStreakB,
       diff: feats.lose_streak_dif,
       scale: S.lose_streak_dif,
       weight: W.lose_streak_dif,
@@ -1649,8 +1789,8 @@ const computeMatchupEdges = (fA, fB, oddsA = null, oddsB = null) => {
       label: 'UFC Wins',
       aLabel: 'WINS',
       bLabel: 'WINS',
-      aValue: fA.WINS ?? 0,
-      bValue: fB.WINS ?? 0,
+      aValue: winsA,
+      bValue: winsB,
       diff: feats.win_dif,
       scale: S.win_dif,
       weight: W.win_dif,
@@ -1660,8 +1800,8 @@ const computeMatchupEdges = (fA, fB, oddsA = null, oddsB = null) => {
       label: 'UFC Losses',
       aLabel: 'LOSSES',
       bLabel: 'LOSSES',
-      aValue: fA.LOSSES ?? 0,
-      bValue: fB.LOSSES ?? 0,
+      aValue: lossesA,
+      bValue: lossesB,
       diff: feats.loss_dif,
       scale: S.loss_dif,
       weight: W.loss_dif,
@@ -1680,7 +1820,7 @@ const computeMatchupEdges = (fA, fB, oddsA = null, oddsB = null) => {
     }),
     auditRow({
       group: 'Experience',
-      label: 'Career Rounds 3+',
+      label: 'Fights Reaching R3+',
       aLabel: 'DEEP_ROUNDS',
       bLabel: 'DEEP_ROUNDS',
       aValue: fA.DEEP_ROUNDS ?? 0,
@@ -1739,8 +1879,8 @@ const computeMatchupEdges = (fA, fB, oddsA = null, oddsB = null) => {
       label: 'Cardio Ratio',
       aLabel: 'CARDIO_RATIO',
       bLabel: 'CARDIO_RATIO',
-      aValue: cardioA,
-      bValue: cardioB,
+      aValue: fA.CARDIO_RATIO ?? 1,
+      bValue: fB.CARDIO_RATIO ?? 1,
       diff: feats.cardio_dif,
       scale: S.cardio_dif,
       weight: W.cardio_dif,
@@ -1773,6 +1913,8 @@ const computeMatchupEdges = (fA, fB, oddsA = null, oddsB = null) => {
       : []),
   ];
 
+
+
   const composite =
     strikingScore +
     grapplingScore +
@@ -1785,8 +1927,7 @@ const computeMatchupEdges = (fA, fB, oddsA = null, oddsB = null) => {
 
   // ── Platt calibration ─────────────────────────────────────────────────────
   const P = useOdds ? MODEL.PLATT_OD : MODEL.PLATT_NO;
-  const matchupLogit = P.a * composite + P.b + debutContext.logitShift;
-  const pA = 1 / (1 + Math.exp(-matchupLogit));
+  const pA = 1 / (1 + Math.exp(-(P.a * composite + P.b)));
 
   const clampE = (v) => Math.max(-1.5, Math.min(1.5, v));
   const mkEdge = (raw, label, icon, weight) => ({
@@ -1858,7 +1999,6 @@ const computeMatchupEdges = (fA, fB, oddsA = null, oddsB = null) => {
     oddsImplB,
     feats,
     useOdds,
-    debutAnalytics: debutContext,
     // Legacy fields kept for UI compatibility
     diff: (fA.ELO ?? 1500) - (fB.ELO ?? 1500),
     adjA: fA.ADJUSTED_RATING ?? 0,
@@ -1896,10 +2036,10 @@ function Header({ view, setView }) {
         </div>
         <div>
           <h1 className="text-white font-black text-base tracking-tight leading-none">
-            DrossPom
+            FightMetrics
           </h1>
           <p className="text-slate-500 text-xs mt-0.5">
-            KenPom-Style Analytics · {FIGHTERS.length} active fighters · v7
+            MMA Analytics · {FIGHTERS.length} active fighters · v7
           </p>
         </div>
       </div>
@@ -1964,6 +2104,17 @@ function Filters({ wc, setWC, minMin, setMinMin, count }) {
             Filter out fighters with very few fight minutes
           </p>
         </div>
+
+        <div className="flex flex-col gap-1">
+          <label className="text-slate-500 text-xs font-semibold uppercase tracking-wider">
+            Prospects
+          </label>
+          <div className="text-sm text-slate-300">
+            Pre-debut signees always shown
+          </div>
+          <p className="text-slate-600 text-xs">Flagged <span className="text-amber-400 font-bold">PRE-UFC</span> in tables</p>
+        </div>
+
         <div className="ml-auto flex flex-col items-end justify-end pb-1">
           <span className="text-white font-black text-xl">{count}</span>
           <span className="text-slate-500 text-xs">fighters shown</span>
@@ -2331,6 +2482,14 @@ function DataTable({ fighters }) {
                             {ufcRankLabel(f.FIGHTER)}
                           </span>
                         )}
+                        {f.IS_PROSPECT && (
+                          <span
+                            className="text-[10px] font-black font-mono px-1.5 py-0.5 rounded border bg-amber-900/40 text-amber-400 border-amber-800"
+                            title="Pre-debut UFC signee — stats from pre-UFC pro fights"
+                          >
+                            PRE-UFC
+                          </span>
+                        )}
                         {f.FIGHTER}
                       </div>
                     </td>
@@ -2474,7 +2633,14 @@ function FighterSearch({
               }}
               className="w-full text-left px-4 py-2.5 hover:bg-slate-700 text-sm flex justify-between items-center transition-colors gap-3"
             >
-              <span className="text-slate-200 font-medium">{f.FIGHTER}</span>
+              <span className="text-slate-200 font-medium flex items-center gap-2">
+                {f.IS_PROSPECT && (
+                  <span className="text-[10px] font-black font-mono px-1.5 py-0.5 rounded border bg-amber-900/40 text-amber-400 border-amber-800">
+                    PRE-UFC
+                  </span>
+                )}
+                {f.FIGHTER}
+              </span>
               <span className="text-slate-500 text-xs flex items-center gap-2">
                 <span>{DIV_SHORT[f.WEIGHT_CLASS]}</span>
                 <span className="text-red-400 font-bold">
@@ -2634,25 +2800,25 @@ const SIMULATOR_COMPARISON_GROUPS = [
     description: 'Recent streaks plus overall UFC win/loss resume.',
     items: [
       {
-        key: 'WIN_STREAK',
+        key: 'MODEL_UFC_WIN_STREAK',
         label: 'Win Streak',
         higherBetter: true,
         decimals: 0,
       },
       {
-        key: 'LOSE_STREAK',
+        key: 'MODEL_UFC_LOSE_STREAK',
         label: 'Loss Streak',
         higherBetter: false,
         decimals: 0,
       },
       {
-        key: 'WINS',
+        key: 'MODEL_UFC_WINS',
         label: 'UFC Wins',
         higherBetter: true,
         decimals: 0,
       },
       {
-        key: 'LOSSES',
+        key: 'MODEL_UFC_LOSSES',
         label: 'UFC Losses',
         higherBetter: false,
         decimals: 0,
@@ -2665,7 +2831,7 @@ const SIMULATOR_COMPARISON_GROUPS = [
     description: 'Actual deep-fight and UFC cage-time experience.',
     items: [
       {
-        key: 'UFC_FIGHT_COUNT',
+        key: 'MODEL_UFC_FIGHT_COUNT',
         label: 'UFC Fight Count',
         higherBetter: true,
         decimals: 0,
@@ -2755,7 +2921,6 @@ function MatchupSimulator({ allFighters, onSavePrediction, onOpenROI }) {
     const rawA = parseAmericanOdds(oddsA);
     const rawB = parseAmericanOdds(oddsB);
     if (!rawA || !rawB || !result) return null;
-    const debutAnalytics = result.debutAnalytics ?? EMPTY_DEBUT_ANALYTICS;
 
     const { noVigA, noVigB, vig, overround } = stripVig(rawA, rawB);
     const decA = americanToDecimal(oddsA);
@@ -2793,14 +2958,6 @@ function MatchupSimulator({ allFighters, onSavePrediction, onOpenROI }) {
 
     // ── Step 1: Who does the model pick? (always the >50% fighter)
     const pickSide = result.pA >= 0.5 ? 'A' : 'B';
-    const pickDebutProfile =
-      pickSide === 'A' ? debutAnalytics.a : debutAnalytics.b;
-    const oppDebutProfile =
-      pickSide === 'A' ? debutAnalytics.b : debutAnalytics.a;
-    const severeDebutHazard =
-      pickDebutProfile.isDebut && oppDebutProfile.isVeteran;
-    const moderateDebutHazard = pickDebutProfile.risk >= 1;
-
     const pickEdge = pickSide === 'A' ? edgeA : edgeB;
     const oppEdge  = pickSide === 'A' ? edgeB : edgeA;
 
@@ -2815,12 +2972,7 @@ function MatchupSimulator({ allFighters, onSavePrediction, onOpenROI }) {
     const edgeScore = hasPickEdge ? Math.min(40, pickEdge * 280) : 0;
     const credScore = avgCred * 30;
     const alignScore = alignedDomains * 5;
-    const prospectPenalty = Math.round(
-      pickDebutProfile.risk * 11 + oppDebutProfile.risk * 3
-    );
-    const betConfidence = Math.round(
-      Math.max(0, edgeScore + credScore + alignScore - prospectPenalty)
-    );
+    const betConfidence = Math.round(Math.max(0, edgeScore + credScore + alignScore));
 
     // ── Step 4: Conviction gate + bet action ─────────────────────────────────
     // Backtested on 13,870 fights: picks at 50–55% win only 52.8% of the time.
@@ -2836,21 +2988,6 @@ function MatchupSimulator({ allFighters, onSavePrediction, onOpenROI }) {
     const betAction = (() => {
       if (conflictingSignals) return 'NO BET';
       if (!hasPickEdge)       return 'NO BET';
-      if (severeDebutHazard) {
-        if (pickProb >= 0.64 && pickEdge >= 0.14 && betConfidence >= 62)
-          return 'BET';
-        if (pickProb >= 0.60 && pickEdge >= 0.09) return 'LEAN';
-        return 'NO BET';
-      }
-      if (moderateDebutHazard) {
-        if (lowConviction) return 'NO BET';
-        if (midConviction) {
-          if (pickEdge >= 0.14 && betConfidence >= 58) return 'BET';
-          return 'LEAN';
-        }
-        if (pickEdge >= 0.11 && betConfidence >= 58) return 'BET';
-        return 'LEAN';
-      }
       // Coin-flip zone: never escalate beyond LEAN regardless of edge size
       if (lowConviction)      return 'LEAN';
       // Moderate conviction: require larger edge for BET
@@ -2873,12 +3010,6 @@ function MatchupSimulator({ allFighters, onSavePrediction, onOpenROI }) {
         return `Market underprices ${oppFighter} (+${(oppEdge * 100).toFixed(1)}pp edge) but model picks ${pickFighter} — conflicting signals`;
       }
       if (!hasPickEdge) return `No positive edge on model pick at current lines`;
-      if (severeDebutHazard) {
-        return `UFC debut vs veteran spot — historical translation risk lowers confidence and raises the bet threshold`;
-      }
-      if (moderateDebutHazard) {
-        return `${pickDebutProfile.tier} profile with ${pickDebutProfile.summary.toLowerCase()} — recommendation capped until more UFC sample exists`;
-      }
       if (lowConviction) return `Model pick is ${(pickProb * 100).toFixed(1)}% — too close to 50/50 for a bet (capped at LEAN). Edge may be real but conviction is too low.`;
       return `Edge below minimum threshold`;
     })();
@@ -2967,16 +3098,11 @@ function MatchupSimulator({ allFighters, onSavePrediction, onOpenROI }) {
       hasPickEdge,
       conflictingSignals,
       noBetReason,
-      severeDebutHazard,
-      moderateDebutHazard,
-      pickProspectRisk: pickDebutProfile.risk,
-      pickProspectTier: pickDebutProfile.tier,
     };
   }, [oddsA, oddsB, result, fA, fB]);
 
   const savePrediction = (openROI = false) => {
     if (!fA || !fB || !result) return;
-    const debutAnalytics = result.debutAnalytics ?? EMPTY_DEBUT_ANALYTICS;
 
     const predictedWinner = result.pA >= result.pB ? fA.FIGHTER : fB.FIGHTER;
     // Always track the model pick — not the value side.
@@ -3014,6 +3140,19 @@ function MatchupSimulator({ allFighters, onSavePrediction, onOpenROI }) {
         : trackedSide === fB.FIGHTER
         ? market?.fairLineB ?? null
         : null;
+    const betRecommendedFighter =
+      market?.bestBet === 'A'
+        ? fA.FIGHTER
+        : market?.bestBet === 'B'
+        ? fB.FIGHTER
+        : '';
+
+    const betRecommendedOdds =
+      market?.bestBet === 'A'
+        ? oddsA || ''
+        : market?.bestBet === 'B'
+        ? oddsB || ''
+        : '';
 
     onSavePrediction?.({
       id: createPredictionId(),
@@ -3022,6 +3161,9 @@ function MatchupSimulator({ allFighters, onSavePrediction, onOpenROI }) {
       eventDate,
       fighterA: fA.FIGHTER,
       fighterB: fB.FIGHTER,
+      fighterAIsProspect: !!fA.IS_PROSPECT,
+      fighterBIsProspect: !!fB.IS_PROSPECT,
+      includesProspect: !!fA.IS_PROSPECT || !!fB.IS_PROSPECT,
       division:
         fA.WEIGHT_CLASS === fB.WEIGHT_CLASS
           ? fA.WEIGHT_CLASS
@@ -3032,6 +3174,10 @@ function MatchupSimulator({ allFighters, onSavePrediction, onOpenROI }) {
       predictedProb: predictedWinner === fA.FIGHTER ? result.pA : result.pB,
       trackedSide,
       trackedProb,
+      betAction: market?.betAction ?? 'NO BET',
+      bestBet: market?.bestBet ?? null,
+      betRecommendedFighter,
+      betRecommendedOdds,
       marketOdds: trackedOdds,
       edge: trackedEdge,
       edgeA: market?.edgeA ?? null,
@@ -3047,13 +3193,6 @@ function MatchupSimulator({ allFighters, onSavePrediction, onOpenROI }) {
       fairLineB: market?.fairLineB ?? null,
       oddsA,
       oddsB,
-      debutTierA: debutAnalytics.a.tier,
-      debutTierB: debutAnalytics.b.tier,
-      debutRiskA: debutAnalytics.a.risk,
-      debutRiskB: debutAnalytics.b.risk,
-      matchupHazard: debutAnalytics.matchupHazard,
-      severeDebutHazard: market?.severeDebutHazard ?? false,
-      moderateDebutHazard: market?.moderateDebutHazard ?? false,
       actualWinner: '',
       notes: '',
     });
@@ -3129,56 +3268,24 @@ function MatchupSimulator({ allFighters, onSavePrediction, onOpenROI }) {
 
   const formatDelta = (a, b, item) => {
     if (a == null || b == null) return '—';
-    const diff = a - b;
-    if (Math.abs(diff) < 0.001) return 'Even';
-    const abs = Math.abs(diff);
+    const tieThreshold =
+      item.tieThreshold ?? Math.pow(10, -((item.decimals ?? 1) + 1));
+    if (Math.abs(a - b) < tieThreshold) return 'Even';
+    const abs = Math.abs(a - b);
     const value = item.formatDelta
       ? item.formatDelta(abs)
       : `${abs.toFixed(item.decimals ?? 1)}${item.pct ? '%' : ''}`;
-    return `${diff > 0 ? '+' : '-'}${value}`;
+    return value;
   };
 
   const getComparisonOutcome = (a, b, item) => {
     if (a == null || b == null) return 'even';
-    if (Math.abs(a - b) < 0.001) return 'even';
+    const tieThreshold =
+      item.tieThreshold ?? Math.pow(10, -((item.decimals ?? 1) + 1));
+    if (Math.abs(a - b) < tieThreshold) return 'even';
     if (item.higherBetter) return a > b ? 'A' : 'B';
     return a < b ? 'A' : 'B';
   };
-
-  const formatAuditValue = (label, value) => {
-    if (value == null) return '—';
-    if (label === 'Strike Accuracy' || label === 'Takedown Accuracy')
-      return `${(Number(value) * 100).toFixed(1)}%`;
-    if (label === 'Odds Edge') return `${(Number(value) * 100).toFixed(1)}%`;
-    if (label === 'Control Time %') return `${Number(value).toFixed(1)}%`;
-    if (label === 'Reach') return fmtReach(Number(value));
-    if (label === 'Height') return fmtHeight(Number(value));
-    if (label === 'Cardio Ratio' || label === 'Quality Momentum')
-      return `${Number(value) > 0 && label === 'Quality Momentum' ? '+' : ''}${Number(value).toFixed(2)}`;
-    if (label === 'ELO' || label.includes('Fight Count') || label.includes('Rounds') || label.includes('Wins') || label === 'Age' || label === 'Days Since Last Fight')
-      return `${Number(value).toFixed(0)}`;
-    return `${Number(value).toFixed(2)}`;
-  };
-
-  const auditGroups = useMemo(() => {
-    if (!result?.auditRows) return [];
-    const order = [
-      'Striking',
-      'Grappling',
-      'Physical',
-      'Form',
-      'Experience',
-      'Finishing',
-      'Analytics',
-      'Market',
-    ];
-    return order
-      .map((group) => ({
-        group,
-        rows: result.auditRows.filter((row) => row.group === group),
-      }))
-      .filter((entry) => entry.rows.length > 0);
-  }, [result]);
 
   const FighterPanel = ({ f, setF, color, ph }) => {
     const tc = color === 'blue' ? 'text-blue-400' : 'text-red-400';
@@ -4093,6 +4200,12 @@ function MatchupSimulator({ allFighters, onSavePrediction, onOpenROI }) {
                       const b = fB[item.key];
                       const outcome = getComparisonOutcome(a, b, item);
                       const delta = formatDelta(a, b, item);
+                      const deltaLabel =
+                        outcome === 'even'
+                          ? 'Even'
+                          : outcome === 'A'
+                          ? `← ${delta}`
+                          : `${delta} →`;
                       return (
                         <div
                           key={item.key}
@@ -4131,7 +4244,7 @@ function MatchupSimulator({ allFighters, onSavePrediction, onOpenROI }) {
                                   : 'bg-slate-800 text-slate-400 border border-slate-700'
                               }`}
                             >
-                              {delta}
+                              {deltaLabel}
                             </span>
                           </div>
                           <div className="text-right">
@@ -4153,80 +4266,6 @@ function MatchupSimulator({ allFighters, onSavePrediction, onOpenROI }) {
               ))}
             </div>
           </div>
-
-          <div className="bg-slate-900 border border-amber-700/40 rounded-xl p-5">
-            <div className="flex items-start justify-between gap-4 mb-5">
-              <div>
-                <p className="text-amber-300 text-xs font-semibold uppercase tracking-widest">
-                  Temporary Full Model Audit
-                </p>
-                <p className="text-slate-500 text-xs mt-1">
-                  Every active prediction feature, its normalized differential,
-                  applied weight, and exact contribution to the composite score.
-                </p>
-              </div>
-              <div className="text-right text-xs text-slate-500">
-                <p>Composite: {result.composite.toFixed(3)}</p>
-                <p>Platt: a={MODEL.PLATT_NO.a.toFixed(3)} · b={MODEL.PLATT_NO.b.toFixed(3)}</p>
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              {auditGroups.map(({ group, rows }) => (
-                <div key={group} className="border border-slate-800 rounded-xl overflow-hidden">
-                  <div className="bg-slate-800/50 px-4 py-3 border-b border-slate-800">
-                    <p className="text-white text-sm font-bold">{group}</p>
-                  </div>
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
-                      <thead className="bg-slate-900/80">
-                        <tr className="text-slate-500 text-xs uppercase tracking-wider">
-                          <th className="text-left px-4 py-3">Feature</th>
-                          <th className="text-right px-3 py-3">{fA.FIGHTER.split(' ').pop()}</th>
-                          <th className="text-right px-3 py-3">{fB.FIGHTER.split(' ').pop()}</th>
-                          <th className="text-right px-3 py-3">Norm Diff</th>
-                          <th className="text-right px-3 py-3">Scale</th>
-                          <th className="text-right px-3 py-3">Weight</th>
-                          <th className="text-right px-4 py-3">Contribution</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {rows.map((row) => (
-                          <tr key={`${group}-${row.label}`} className="border-t border-slate-800">
-                            <td className="px-4 py-3">
-                              <p className="text-slate-200 font-semibold">{row.label}</p>
-                              <p className="text-slate-500 text-xs mt-0.5">
-                                {row.aLabel} vs {row.bLabel}
-                              </p>
-                            </td>
-                            <td className="px-3 py-3 text-right font-mono text-blue-300">
-                              {formatAuditValue(row.label, row.aValue)}
-                            </td>
-                            <td className="px-3 py-3 text-right font-mono text-red-300">
-                              {formatAuditValue(row.label, row.bValue)}
-                            </td>
-                            <td className={`px-3 py-3 text-right font-mono ${row.diff > 0 ? 'text-blue-300' : row.diff < 0 ? 'text-red-300' : 'text-slate-400'}`}>
-                              {row.diff > 0 ? '+' : ''}{row.diff.toFixed(3)}
-                            </td>
-                            <td className="px-3 py-3 text-right font-mono text-slate-400">
-                              {row.scale.toFixed(3)}
-                            </td>
-                            <td className="px-3 py-3 text-right font-mono text-slate-300">
-                              {row.weight.toFixed(4)}
-                            </td>
-                            <td className={`px-4 py-3 text-right font-mono font-bold ${row.contribution > 0 ? 'text-blue-300' : row.contribution < 0 ? 'text-red-300' : 'text-slate-400'}`}>
-                              {row.contribution > 0 ? '+' : ''}{row.contribution.toFixed(4)}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
           {/* ── FINISH PROBABILITY ── */}
           <div className="bg-slate-900 border border-slate-700 rounded-xl p-5">
             <p className="text-slate-400 text-xs font-semibold uppercase tracking-widest mb-4">
@@ -4698,6 +4737,14 @@ function ScoutProfile({ allFighters }) {
                       #{divRank.rank}/{divRank.total} DrossPom
                     </span>
                   )}
+                  {fighter.IS_PROSPECT && (
+                    <span
+                      className="bg-amber-900/40 text-amber-400 text-xs font-black px-2 py-0.5 rounded-full border border-amber-800"
+                      title="Pre-debut UFC signee — stats from pre-UFC pro fights"
+                    >
+                      PRE-UFC
+                    </span>
+                  )}
                   {fighter.UFC_RANK && (
                     <span
                       className={`text-xs font-bold px-2 py-0.5 rounded-full border ${
@@ -5099,66 +5146,60 @@ function ScoutProfile({ allFighters }) {
                 </div>
               ) : (
                 <>
-                  {/* Performance trend chart */}
+                  {/* Recent fight timeline */}
                   {perfTrendData.length >= 2 && (
                     <div className="bg-slate-900 border border-slate-700 rounded-xl p-5">
                       <p className="text-slate-400 text-xs font-semibold uppercase tracking-wider mb-4">
-                        Recent Results Trend (Oldest → Most Recent)
+                        Recent Results (Most Recent → Oldest)
                       </p>
-                      <ResponsiveContainer width="100%" height={120}>
-                        <BarChart
-                          data={perfTrendData}
-                          margin={{ top: 5, right: 5, bottom: 5, left: 0 }}
-                        >
-                          <XAxis
-                            dataKey="fight"
-                            tick={{ fill: '#64748b', fontSize: 10 }}
-                            axisLine={false}
-                            tickLine={false}
-                          />
-                          <YAxis
-                            domain={[0, 1]}
-                            tick={false}
-                            axisLine={false}
-                            tickLine={false}
-                            width={20}
-                          />
-                          <Tooltip
-                            contentStyle={{
-                              background: '#1e293b',
-                              border: '1px solid #475569',
-                              borderRadius: 8,
-                              fontSize: 11,
-                            }}
-                            itemStyle={{ color: '#cbd5e1' }}
-                            formatter={(_, __, item) =>
-                              item?.payload?.opponent || ''
-                            }
-                            labelFormatter={(label) => label}
-                          />
-                          <Bar
-                            dataKey="score"
-                            name="Result"
-                            radius={[4, 4, 0, 0]}
-                          >
-                            {perfTrendData.map((entry, i) => (
-                              <Cell
-                                key={i}
-                                fill={
-                                  entry.result === 'W'
-                                    ? '#22c55e'
-                                    : entry.result === 'L'
-                                    ? '#ef4444'
-                                    : '#64748b'
-                                }
-                              />
-                            ))}
-                          </Bar>
-                        </BarChart>
-                      </ResponsiveContainer>
-                      <p className="text-slate-600 text-xs text-center mt-1">
-                        Green = Win · Red = Loss · Gray = NC/Other
-                      </p>
+                      <div className="flex gap-3 overflow-x-auto pb-1">
+                        {fh.slice(0, 8).map((fight, i) => {
+                          const resultTone =
+                            fight.re === 'W'
+                              ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-300'
+                              : fight.re === 'L'
+                              ? 'bg-red-500/15 border-red-500/30 text-red-300'
+                              : 'bg-slate-700/40 border-slate-600 text-slate-300';
+                          const badgeTone =
+                            fight.re === 'W'
+                              ? 'bg-emerald-500 text-emerald-950'
+                              : fight.re === 'L'
+                              ? 'bg-red-500 text-red-950'
+                              : 'bg-slate-500 text-slate-950';
+                          const method = (fight.me || 'Method N/A')
+                            .replace('Decision - ', '')
+                            .replace('KO/TKO', 'KO/TKO');
+
+                          return (
+                            <div
+                              key={`${fight.op}-${fight.dt}-${i}`}
+                              className={`min-w-[180px] rounded-xl border px-4 py-3 ${resultTone}`}
+                            >
+                              <div className="flex items-center justify-between gap-3 mb-2">
+                                <span
+                                  className={`inline-flex h-7 w-7 items-center justify-center rounded-full text-xs font-black ${badgeTone}`}
+                                >
+                                  {fight.re ?? '-'}
+                                </span>
+                                <span className="text-[11px] uppercase tracking-wider text-slate-500">
+                                  F{i + 1}
+                                </span>
+                              </div>
+                              <p className="text-sm font-bold text-white truncate">
+                                {fight.op}
+                              </p>
+                              <p className="mt-1 text-xs text-slate-400">
+                                {method}
+                                {fight.rn ? ` · R${fight.rn}` : ''}
+                                {fight.ti ? ` · ${fight.ti}` : ''}
+                              </p>
+                              <p className="mt-2 text-[11px] text-slate-500 line-clamp-2">
+                                {fight.ev}
+                              </p>
+                            </div>
+                          );
+                        })}
+                      </div>
                     </div>
                   )}
                   {fh.map((fight, i) => (
@@ -5505,6 +5546,8 @@ export default function App() {
     [wc, minMin]
   );
 
+  const fightersWithProspectsFiltered = useMemo(() => FIGHTERS, []);
+
   const handleSavePrediction = (entry) => {
     setRoiEntries((prev) => [entry, ...prev]);
   };
@@ -5538,15 +5581,16 @@ export default function App() {
       {view === 'table' && <DataTable fighters={filtered} />}
       {view === 'simulator' && (
         <MatchupSimulator
-          allFighters={FIGHTERS}
+          allFighters={fightersWithProspectsFiltered}
           onSavePrediction={handleSavePrediction}
           onOpenROI={() => setView('roi')}
         />
       )}
-      {view === 'scout' && <ScoutProfile allFighters={FIGHTERS} />}
+      {view === 'scout' && <ScoutProfile allFighters={fightersWithProspectsFiltered} />}
       {view === 'roi' && (
         <ROITab
           entries={roiEntries}
+          allFighters={fightersWithProspectsFiltered}
           onUpdateEntry={handleUpdateROIEntry}
           onDeleteEntry={handleDeleteROIEntry}
           onClearEntries={handleClearROI}
@@ -5557,47 +5601,93 @@ export default function App() {
   );
 }
 
-function ROITab({ entries, onUpdateEntry, onDeleteEntry, onClearEntries }) {
+function ROITab({
+  entries,
+  allFighters,
+  onUpdateEntry,
+  onDeleteEntry,
+  onClearEntries,
+}) {
   const exportedCode = `export const ROI_ENTRIES = ${JSON.stringify(
     entries,
     null,
     2
   )};\n`;
+  const prospectNameSet = useMemo(
+    () =>
+      new Set(
+        (allFighters ?? [])
+          .filter((fighter) => fighter.IS_PROSPECT)
+          .map((fighter) => fighter.FIGHTER)
+      ),
+    [allFighters]
+  );
   const evaluatedEntries = useMemo(
     () =>
-      entries.map((entry) => ({
-        ...entry,
-        displayWinner: entry.predictedWinner,
-        displayProb: entry.predictedProb ?? 0,
-        displayTrackedProb:
-          entry.trackedProb ??
-          (entry.trackedSide === entry.fighterA
-            ? entry.fighterAProb
-            : entry.fighterBProb),
-        displayEdge:
-          entry.trackedSide === entry.fighterA
-            ? entry.edgeA ?? entry.edge
-            : entry.edgeB ?? entry.edge,
-      })),
-    [entries]
+      entries.map((entry) => {
+        const resolvedIncludesProspect =
+          entry.includesProspect != null
+            ? entry.includesProspect
+            : entry.fighterAIsProspect != null
+            ? entry.fighterAIsProspect
+            : entry.fighterBIsProspect != null
+            ? entry.fighterBIsProspect
+            : prospectNameSet.has(entry.fighterA) ||
+              prospectNameSet.has(entry.fighterB);
+
+        return {
+          ...entry,
+          includesProspect: resolvedIncludesProspect,
+          displayWinner: entry.predictedWinner,
+          displayProb: entry.predictedProb ?? 0,
+          displayTrackedProb:
+            entry.trackedProb ??
+            (entry.trackedSide === entry.fighterA
+              ? entry.fighterAProb
+              : entry.fighterBProb),
+          displayEdge:
+            entry.trackedSide === entry.fighterA
+              ? entry.edgeA ?? entry.edge
+              : entry.edgeB ?? entry.edge,
+          displayBetAction: entry.betAction ?? 'NO BET',
+          displayBetFighter:
+            entry.betRecommendedFighter ??
+            (entry.bestBet === 'A'
+              ? entry.fighterA
+              : entry.bestBet === 'B'
+              ? entry.fighterB
+              : ''),
+          displayBetOdds: entry.betRecommendedOdds ?? '',
+        };
+      }),
+    [entries, prospectNameSet]
   );
 
   const summary = useMemo(() => {
     const graded = evaluatedEntries.filter((entry) =>
       isResolvedWinner(entry.actualWinner, entry)
     );
-    const decisive = graded.filter((entry) => entry.actualWinner !== 'NC');
+
+    const decisive = graded.filter(
+      (entry) =>
+        entry.actualWinner === entry.fighterA ||
+        entry.actualWinner === entry.fighterB
+    );
+
     const correct = decisive.filter(
       (entry) => entry.displayWinner === entry.actualWinner
     ).length;
-    const betEntries = decisive.filter((entry) =>
+
+    const betEntries = graded.filter((entry) =>
       Boolean(americanToDecimal(entry.marketOdds))
     );
+
     const profit = betEntries.reduce(
       (sum, entry) => sum + (calcTrackedProfit(entry) ?? 0),
       0
     );
-    const stake = betEntries.length * 100;
+
+    const stake = betEntries.length;
     return {
       total: entries.length,
       graded: graded.length,
@@ -5655,9 +5745,9 @@ function ROITab({ entries, onUpdateEntry, onDeleteEntry, onClearEntries }) {
             label: 'ROI',
             value: `${summary.roi >= 0 ? '+' : ''}${summary.roi.toFixed(1)}%`,
             tone: summary.roi >= 0 ? 'text-emerald-400' : 'text-red-400',
-            sub: `${summary.profit >= 0 ? '+' : ''}$${summary.profit.toFixed(
+            sub: `${summary.profit >= 0 ? '+' : ''}${summary.profit.toFixed(
               2
-            )} on ${summary.bets} bets`,
+            )}u on ${summary.bets} bets`,
           },
         ].map(({ label, value, tone, sub }) => (
           <div
@@ -5705,9 +5795,10 @@ function ROITab({ entries, onUpdateEntry, onDeleteEntry, onClearEntries }) {
                       <h3 className="text-white font-black text-lg">
                         {entry.fighterA} vs. {entry.fighterB}
                       </h3>
-                      {(entry.severeDebutHazard || entry.matchupHazard) && (
-                        <span className="text-xs font-bold px-2 py-0.5 rounded-full border bg-amber-900/30 text-amber-300 border-amber-700">
-                          DEBUT HAZARD
+                      {entry.includesProspect && (
+                        <span className="inline-flex items-center gap-1 rounded-full border border-amber-700/70 bg-amber-900/30 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-amber-300">
+                          <AlertTriangle size={12} />
+                          Debut Hazard
                         </span>
                       )}
                       <span
@@ -5716,15 +5807,15 @@ function ROITab({ entries, onUpdateEntry, onDeleteEntry, onClearEntries }) {
                             ? 'bg-slate-800 text-slate-400 border-slate-700'
                             : correct
                             ? 'bg-emerald-900/40 text-emerald-400 border-emerald-800'
-                            : entry.actualWinner === 'NC'
+                            : isPushResult(entry.actualWinner)
                             ? 'bg-slate-800 text-slate-300 border-slate-700'
                             : 'bg-red-900/40 text-red-400 border-red-800'
                         }`}
                       >
                         {!graded
                           ? 'Pending'
-                          : entry.actualWinner === 'NC'
-                          ? 'No Contest'
+                          : isPushResult(entry.actualWinner)
+                          ? 'Push'
                           : correct
                           ? 'Correct'
                           : 'Miss'}
@@ -5735,15 +5826,6 @@ function ROITab({ entries, onUpdateEntry, onDeleteEntry, onClearEntries }) {
                       {entry.eventName ? ` · ${entry.eventName}` : ''}
                       {entry.eventDate ? ` · ${entry.eventDate}` : ''}
                     </p>
-                    {(entry.severeDebutHazard || entry.matchupHazard) && (
-                      <p className="text-amber-300/90 text-xs mt-1">
-                        {entry.fighterA}: {entry.debutTierA || 'Established'} ({(
-                          entry.debutRiskA ?? 0
-                        ).toFixed(2)}) · {entry.fighterB}: {entry.debutTierB || 'Established'} ({(
-                          entry.debutRiskB ?? 0
-                        ).toFixed(2)})
-                      </p>
-                    )}
                   </div>
                   <button
                     onClick={() => onDeleteEntry(entry.id)}
@@ -5764,12 +5846,32 @@ function ROITab({ entries, onUpdateEntry, onDeleteEntry, onClearEntries }) {
                     </p>
                   </div>
                   <div className="bg-slate-800/40 rounded-lg p-3">
-                    <p className="text-slate-500 text-xs">Tracked side</p>
-                    <p className="text-white font-bold text-sm mt-1">
-                      {entry.trackedSide}
+                    <p className="text-slate-500 text-xs uppercase tracking-wider">
+                      Bet Rec
                     </p>
+
+                    <div className="mt-2">
+                      <span
+                        className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-black ${
+                          entry.displayBetAction === 'STRONG BET'
+                            ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                            : entry.displayBetAction === 'BET'
+                            ? 'bg-emerald-900/30 text-emerald-400 border border-emerald-800'
+                            : entry.displayBetAction === 'LEAN'
+                            ? 'bg-yellow-900/30 text-yellow-400 border border-yellow-800'
+                            : 'bg-slate-800 text-slate-400 border border-slate-700'
+                        }`}
+                      >
+                        {entry.displayBetAction}
+                      </span>
+                    </div>
+
+                    <p className="text-white font-bold text-sm mt-3">
+                      {entry.displayBetFighter || 'No bet side'}
+                    </p>
+
                     <p className="text-slate-600 text-xs mt-1">
-                      {((trackedProb ?? 0) * 100).toFixed(1)}%
+                      {entry.displayBetOdds || 'No saved line'}
                     </p>
                   </div>
                   <div className="bg-slate-800/40 rounded-lg p-3">
@@ -5786,7 +5888,7 @@ function ROITab({ entries, onUpdateEntry, onDeleteEntry, onClearEntries }) {
                     </p>
                   </div>
                   <div className="bg-slate-800/40 rounded-lg p-3">
-                    <p className="text-slate-500 text-xs">Flat Profit</p>
+                      <p className="text-slate-500 text-xs">Units</p>
                     <p
                       className={`font-bold text-sm mt-1 ${
                         profit == null
@@ -5798,10 +5900,14 @@ function ROITab({ entries, onUpdateEntry, onDeleteEntry, onClearEntries }) {
                     >
                       {profit == null
                         ? 'Pending'
-                        : `${profit >= 0 ? '+' : ''}$${profit.toFixed(2)}`}
+                        : `${profit >= 0 ? '+' : ''}${profit.toFixed(2)}u`}
                     </p>
                     <p className="text-slate-600 text-xs mt-1">
-                      {entry.actualWinner || 'Awaiting result'}
+                      {entry.actualWinner === 'NC'
+                        ? 'No Contest'
+                        : entry.actualWinner === 'DRAW'
+                        ? 'Draw'
+                        : entry.actualWinner || 'Awaiting result'}
                     </p>
                   </div>
                 </div>
@@ -5887,6 +5993,7 @@ function ROITab({ entries, onUpdateEntry, onDeleteEntry, onClearEntries }) {
                       <option value={entry.fighterA}>{entry.fighterA}</option>
                       <option value={entry.fighterB}>{entry.fighterB}</option>
                       <option value="NC">No Contest</option>
+                      <option value="DRAW">Draw</option>
                     </select>
                   </div>
                 </div>
