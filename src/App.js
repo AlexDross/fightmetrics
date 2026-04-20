@@ -1106,12 +1106,13 @@ const calcTrackedProfit = (entry) => {
   return entry.actualWinner === entry.trackedSide ? (dec - 1) * 100 : -100;
 };
 
-const sortHistoryDesc = (history) =>
-  [...(history || [])].sort((a, b) => {
+function sortHistoryDesc(history) {
+  return [...(history || [])].sort((a, b) => {
     const aTime = a?.dt ? new Date(a.dt).getTime() : 0;
     const bTime = b?.dt ? new Date(b.dt).getTime() : 0;
     return bTime - aTime;
   });
+}
 
 function getResultStreak(history, target) {
   let streak = 0;
@@ -2975,6 +2976,7 @@ function MatchupSimulator({ allFighters, onSavePrediction, onOpenROI }) {
 
   const savePrediction = (openROI = false) => {
     if (!fA || !fB || !result) return;
+    const debutAnalytics = result.debutAnalytics ?? EMPTY_DEBUT_ANALYTICS;
 
     const predictedWinner = result.pA >= result.pB ? fA.FIGHTER : fB.FIGHTER;
     // Always track the model pick — not the value side.
