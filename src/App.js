@@ -35,7 +35,7 @@ import {
   AlertTriangle,
 } from 'lucide-react';
 import { _D2 } from './fightersData';
-import { _P } from './prospectsData';
+import { getActiveProspects } from './prospectsData';
 import { ELO_RATINGS } from './eloModule';
 import { CARDIO_RATIOS } from './cardioModule';
 import { FIGHT_HISTORY } from './fightHistory';
@@ -687,7 +687,12 @@ const getProspectTrustProfile = (d, totalRounds) => {
   };
 };
 
-const FIGHTERS = [..._D2, ..._P].map((d) => {
+const activeProspects = (() => {
+  const existingFighterNames = new Set(_D2.map((fighter) => fighter.n));
+  return getActiveProspects().filter((prospect) => !existingFighterNames.has(prospect.n));
+})();
+
+const FIGHTERS = [..._D2, ...activeProspects].map((d) => {
   const isProspect = d._p_source !== undefined;
   const eloRec = ELO_RATINGS[d.n] ?? null;
   const fightHistory = sortHistoryDesc(FIGHT_HISTORY[d.n] ?? []);
