@@ -3369,9 +3369,40 @@ function MatchupSimulator({ allFighters, onSavePrediction, onOpenROI }) {
     return signed ? (v >= 0 ? `+${s}` : `-${s}`) : s;
   };
 
-  const formatComparisonValue = (fighter, item) => {
-    const v = fighter?.[item.key];
+  const comparisonAuditMap = useMemo(() => {
+    const map = new Map();
+    (result?.auditRows ?? []).forEach((row) => {
+      map.set(`${row.group}::${row.label}`, row);
+    });
+    return map;
+  }, [result]);
+
+  const comparisonAuditGroup = (title) => {
+    if (title.startsWith('Striking')) return 'Striking';
+    if (title.startsWith('Grappling')) return 'Grappling';
+    if (title.startsWith('Physical')) return 'Physical';
+    if (title.startsWith('Form')) return 'Form';
+    if (title.startsWith('Experience')) return 'Experience';
+    if (title.startsWith('Finishing')) return 'Finishing';
+    if (title.startsWith('Context')) return 'Analytics';
+    return title;
+  };
+
+  const getComparisonAuditRow = (groupTitle, itemLabel) =>
+    comparisonAuditMap.get(
+      `${comparisonAuditGroup(groupTitle)}::${itemLabel}`
+    ) ?? null;
+
+  const getComparisonValue = (fighter, groupTitle, item, side) => {
+    const auditRow = getComparisonAuditRow(groupTitle, item.label);
+    if (auditRow) return side === 'A' ? auditRow.aValue : auditRow.bValue;
+    return fighter?.[item.key];
+  };
+
+  const formatComparisonValue = (fighter, groupTitle, item, side) => {
+    const v = getComparisonValue(fighter, groupTitle, item, side);
     if (v == null) return '—';
+    if (typeof v === 'string') return v;
     if (item.format) return item.format(v);
     const base = `${Math.abs(Number(v)).toFixed(item.decimals ?? 1)}${item.pct ? '%' : ''}`;
     if (item.signed) return Number(v) > 0 ? `+${base}` : Number(v) < 0 ? `-${base}` : base;
@@ -3379,6 +3410,7 @@ function MatchupSimulator({ allFighters, onSavePrediction, onOpenROI }) {
   };
 
   const formatDelta = (a, b, item) => {
+    if (typeof a === 'string' || typeof b === 'string') return 'Adj';
     if (a == null || b == null) return '—';
     const tieThreshold =
       item.tieThreshold ?? Math.pow(10, -((item.decimals ?? 1) + 1));
@@ -3390,8 +3422,13 @@ function MatchupSimulator({ allFighters, onSavePrediction, onOpenROI }) {
     return value;
   };
 
-  const getComparisonOutcome = (a, b, item) => {
+  const getComparisonOutcome = (a, b, item, auditRow = null) => {
+    if (auditRow) {
+      if (Math.abs(auditRow.clamped ?? 0) < 1e-9) return 'even';
+      return (auditRow.clamped ?? 0) > 0 ? 'A' : 'B';
+    }
     if (a == null || b == null) return 'even';
+    if (typeof a === 'string' || typeof b === 'string') return 'even';
     const tieThreshold =
       item.tieThreshold ?? Math.pow(10, -((item.decimals ?? 1) + 1));
     if (Math.abs(a - b) < tieThreshold) return 'even';
@@ -4308,9 +4345,13 @@ function MatchupSimulator({ allFighters, onSavePrediction, onOpenROI }) {
                   </div>
                   <div className="divide-y divide-slate-800">
                     {group.items.map((item) => {
-                      const a = fA[item.key];
-                      const b = fB[item.key];
-                      const outcome = getComparisonOutcome(a, b, item);
+                      const auditRow = getComparisonAuditRow(
+                        group.title,
+                        item.label
+                      );
+                      const a = getComparisonValue(fA, group.title, item, 'A');
+                      const b = getComparisonValue(fB, group.title, item, 'B');
+                      const outcome = getComparisonOutcome(a, b, item, auditRow);
                       const delta = formatDelta(a, b, item);
                       const deltaLabel =
                         outcome === 'even'
@@ -4343,7 +4384,7 @@ function MatchupSimulator({ allFighters, onSavePrediction, onOpenROI }) {
                                   : 'text-slate-300'
                               }`}
                             >
-                              {formatComparisonValue(fA, item)}
+                              {formatComparisonValue(fA, group.title, item, 'A')}
                             </p>
                           </div>
                           <div className="text-center">
@@ -4367,7 +4408,7 @@ function MatchupSimulator({ allFighters, onSavePrediction, onOpenROI }) {
                                   : 'text-slate-300'
                               }`}
                             >
-                              {formatComparisonValue(fB, item)}
+                              {formatComparisonValue(fB, group.title, item, 'B')}
                             </p>
                           </div>
                         </div>
