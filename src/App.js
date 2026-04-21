@@ -5012,30 +5012,34 @@ function ScoutProfile({ allFighters }) {
                         dec: 2,
                         color: 'from-purple-600 to-purple-400',
                       },
-                    ].map(({ label, sub, val, max, dec, color, suf = '' }) => (
-                      <div key={label}>
-                        <div className="flex justify-between items-end mb-1.5">
-                          <div>
-                            <p className="text-slate-200 font-semibold text-sm">
-                              {label}
+                    ].map(({ label, sub, val, max, dec, color, suf = '' }) => {
+                      const hasValue = Number.isFinite(val);
+                      const displayVal = hasValue ? val : 0;
+                      return (
+                        <div key={label}>
+                          <div className="flex justify-between items-end mb-1.5">
+                            <div>
+                              <p className="text-slate-200 font-semibold text-sm">
+                                {label}
+                              </p>
+                              <p className="text-slate-500 text-xs">{sub}</p>
+                            </div>
+                            <p className="text-xl font-black text-white">
+                              {hasValue ? displayVal.toFixed(dec) : 'N/A'}
+                              {hasValue ? suf : ''}
                             </p>
-                            <p className="text-slate-500 text-xs">{sub}</p>
                           </div>
-                          <p className="text-xl font-black text-white">
-                            {val.toFixed(dec)}
-                            {suf}
-                          </p>
+                          <div className="h-2.5 bg-slate-800 rounded-full overflow-hidden">
+                            <div
+                              className={`h-full bg-gradient-to-r ${color} rounded-full`}
+                              style={{
+                                width: `${Math.min((displayVal / max) * 100, 100)}%`,
+                              }}
+                            />
+                          </div>
                         </div>
-                        <div className="h-2.5 bg-slate-800 rounded-full overflow-hidden">
-                          <div
-                            className={`h-full bg-gradient-to-r ${color} rounded-full`}
-                            style={{
-                              width: `${Math.min((val / max) * 100, 100)}%`,
-                            }}
-                          />
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               </div>
