@@ -171,38 +171,40 @@ with open(JS_PATH, 'w') as f:
     f.write(new_js)
 print(f"  Patched {len(new_lines)} fighters")
 
-# ─── Patch fightHistory.js ────────────────────────────────────────────────────
-print("\nPatching fightHistory.js...")
-fh_content = open(FH_PATH).read()
-json_m = re.search(r'export\s+const\s+FIGHT_HISTORY\s*=\s*(\{.+\})\s*;?\s*$', fh_content, re.DOTALL)
-fight_history = json.loads(json_m.group(1))
-updated_fh = 0; added_fights = 0
+# ─── Rebuild fightHistory.js from source CSVs ─────────────────────────────────
+print("\nRebuilding fightHistory.js from source CSVs...")
+rebuilt_history = {}
 
-for fighter_name, history in fight_history.items():
-    if fighter_name not in fights_by_fighter: continue
-    latest_dt = max((f.get('dt','1900-01-01') for f in history), default='1900-01-01')
-    new_entries = []
-    for fight in fights_by_fighter[fighter_name]:
-        fight_dt = fight.get('date','')
-        if not fight_dt or fight_dt <= latest_dt: continue
-        if fight['result'] not in ('W','L','NC'): continue
+for fighter_name, fights in fights_by_fighter.items():
+    entries = []
+    for fight in fights:
+        fight_dt = fight.get('date', '')
+        if not fight_dt or fight['result'] not in ('W', 'L', 'NC'):
+            continue
         wc = fight['wc'] or wc_lookup.get(fighter_name, 'Unknown')
         tb = 'title' in wc.lower() or 'title' in fight['event'].lower()
-        if tb and 'title' not in wc.lower(): wc = wc + ' Title'
-        new_entries.append({
-            'dt': fight_dt, 'op': fight['opponent'], 're': fight['result'],
-            'me': fight['method_d'], 'rn': fight['rn'] if fight['rn'] > 0 else 3,
-            'ti': fight['ti'] or '5:00', 'wc': wc, 'tb': tb, 'ev': fight['event'],
+        if tb and 'title' not in wc.lower():
+            wc = wc + ' Title'
+        entries.append({
+            'dt': fight_dt,
+            'op': fight['opponent'],
+            're': fight['result'],
+            'me': fight['method_d'],
+            # Preserve unknown round data instead of fabricating a round 3 finish.
+            'rn': fight['rn'] if fight['rn'] > 0 else None,
+            'ti': fight['ti'] or '5:00',
+            'wc': wc,
+            'tb': tb,
+            'ev': fight['event'],
         })
-    if new_entries:
-        new_entries.sort(key=lambda x: x['dt'], reverse=True)
-        fight_history[fighter_name] = new_entries + history
-        updated_fh += 1; added_fights += len(new_entries)
+    if entries:
+        entries.sort(key=lambda x: x['dt'], reverse=True)
+        rebuilt_history[fighter_name] = entries
 
-fh_json = json.dumps(fight_history, indent=2, ensure_ascii=False)
+fh_json = json.dumps(rebuilt_history, indent=2, ensure_ascii=False)
 with open(FH_PATH, 'w') as f:
     f.write(f"export const FIGHT_HISTORY = {fh_json};\n")
-print(f"  Updated {updated_fh} fighters, added {added_fights} new fight entries")
+print(f"  Rebuilt {len(rebuilt_history)} fighter histories")
 
 # ─── Sanity check ─────────────────────────────────────────────────────────────
 print(f"\n✅  Done — {TODAY}")
