@@ -1363,6 +1363,68 @@ const stanceColor = (s) =>
     : s === 'Switch'
     ? 'text-purple-400'
     : 'text-slate-300';
+
+const getDebutProspectAdjustment = (fighter, opponent) => {
+  const isDebutProspect =
+    !!fighter?.IS_PROSPECT && (fighter?.MODEL_UFC_FIGHT_COUNT ?? fighter?.UFC_FIGHT_COUNT ?? 0) <= 0;
+  if (!isDebutProspect) {
+    return {
+      isDebutProspect: false,
+      severeVeteranSpot: false,
+      translationRisk: 0,
+      resumeTrust: 1,
+      finishTrust: 1,
+      analyticsTrust: 1,
+      ageTrust: 1,
+      qualityPenalty: 0,
+      directPenalty: 0,
+    };
+  }
+
+  const prospectConfidence = clampNum(
+    fighter?.PROSPECT_CONFIDENCE ?? 0.18,
+    0.08,
+    0.72
+  );
+  const opponentFightCount =
+    opponent?.MODEL_UFC_FIGHT_COUNT ?? opponent?.UFC_FIGHT_COUNT ?? 0;
+  const opponentDeepRounds =
+    opponent?.MODEL_DEEP_ROUNDS ?? opponent?.DEEP_ROUNDS ?? 0;
+  const opponentCredibility = clampNum(
+    (opponent?.CREDIBILITY ?? 50) / 100,
+    0,
+    1
+  );
+
+  const translationRisk = clampNum(
+    (1 - prospectConfidence) * 0.42 +
+      clampNum(opponentFightCount / 15, 0, 1) * 0.38 +
+      clampNum(opponentDeepRounds / 12, 0, 1) * 0.12 +
+      opponentCredibility * 0.08,
+    0,
+    0.95
+  );
+
+  const severeVeteranSpot =
+    opponentFightCount >= 8 || (opponentFightCount >= 5 && opponentDeepRounds >= 5);
+
+  return {
+    isDebutProspect: true,
+    severeVeteranSpot,
+    translationRisk,
+    resumeTrust: clampNum(1 - translationRisk * 0.72, 0.18, 1),
+    finishTrust: clampNum(1 - translationRisk * 0.78, 0.14, 1),
+    analyticsTrust: clampNum(1 - translationRisk * 0.56, 0.32, 1),
+    ageTrust: clampNum(1 - translationRisk * 0.62, 0.24, 1),
+    qualityPenalty: parseFloat(
+      (0.2 + translationRisk * (severeVeteranSpot ? 1.1 : 0.75)).toFixed(2)
+    ),
+    directPenalty: parseFloat(
+      (translationRisk * (severeVeteranSpot ? 0.52 : 0.3)).toFixed(3)
+    ),
+  };
+};
+
 const ageDecayPenalty = (f) => {
   const age = f.AGE;
   if (!age || age < 35) return 0;
@@ -1490,6 +1552,8 @@ const MODEL = {
 
 const computeMatchupEdges = (fA, fB, oddsA = null, oddsB = null) => {
   const S = MODEL.SCALES;
+  const debutAdjA = getDebutProspectAdjustment(fA, fB);
+  const debutAdjB = getDebutProspectAdjustment(fB, fA);
 
   // Discount striking stats for fighters on losing streaks so high-volume
   // output in losses does not overstate current offensive strength.
@@ -1498,10 +1562,22 @@ const computeMatchupEdges = (fA, fB, oddsA = null, oddsB = null) => {
   const loseStreakB = fB.MODEL_UFC_LOSE_STREAK ?? fB.LOSE_STREAK ?? 0;
   const winStreakA = fA.MODEL_UFC_WIN_STREAK ?? fA.WIN_STREAK ?? 0;
   const winStreakB = fB.MODEL_UFC_WIN_STREAK ?? fB.WIN_STREAK ?? 0;
-  const aslA = (fA.ASL ?? 0) * formDecay(loseStreakA);
-  const aslB = (fB.ASL ?? 0) * formDecay(loseStreakB);
-  const aspA = (fA.ASP ?? 0) * (0.6 + 0.4 * formDecay(loseStreakA));
-  const aspB = (fB.ASP ?? 0) * (0.6 + 0.4 * formDecay(loseStreakB));
+  const aslA =
+    (fA.ASL ?? 0) *
+    formDecay(loseStreakA) *
+    (debutAdjA.isDebutProspect ? debutAdjA.analyticsTrust : 1);
+  const aslB =
+    (fB.ASL ?? 0) *
+    formDecay(loseStreakB) *
+    (debutAdjB.isDebutProspect ? debutAdjB.analyticsTrust : 1);
+  const aspA =
+    (fA.ASP ?? 0) *
+    (0.6 + 0.4 * formDecay(loseStreakA)) *
+    (debutAdjA.isDebutProspect ? (0.82 + debutAdjA.analyticsTrust * 0.18) : 1);
+  const aspB =
+    (fB.ASP ?? 0) *
+    (0.6 + 0.4 * formDecay(loseStreakB)) *
+    (debutAdjB.isDebutProspect ? (0.82 + debutAdjB.analyticsTrust * 0.18) : 1);
   const winsA = fA.MODEL_UFC_WINS ?? fA.WINS ?? 0;
   const winsB = fB.MODEL_UFC_WINS ?? fB.WINS ?? 0;
   const lossesA = fA.MODEL_UFC_LOSSES ?? fA.LOSSES ?? 0;
@@ -1518,6 +1594,29 @@ const computeMatchupEdges = (fA, fB, oddsA = null, oddsB = null) => {
   const subWinsB = fB.MODEL_SUB_WINS ?? fB.SUB_WINS ?? 0;
   const ufcFightCountA = fA.MODEL_UFC_FIGHT_COUNT ?? fA.UFC_FIGHT_COUNT ?? 0;
   const ufcFightCountB = fB.MODEL_UFC_FIGHT_COUNT ?? fB.UFC_FIGHT_COUNT ?? 0;
+  const neutralLosses = debutAdjA.isDebutProspect || debutAdjB.isDebutProspect;
+  const effectiveLossesA = neutralLosses ? 0 : lossesA;
+  const effectiveLossesB = neutralLosses ? 0 : lossesB;
+  const effectiveKoWinsA = koWinsA * debutAdjA.finishTrust;
+  const effectiveKoWinsB = koWinsB * debutAdjB.finishTrust;
+  const effectiveSubWinsA = subWinsA * debutAdjA.finishTrust;
+  const effectiveSubWinsB = subWinsB * debutAdjB.finishTrust;
+  const effectiveEloA =
+    1500 + ((fA.ELO ?? 1500) - 1500) * debutAdjA.analyticsTrust;
+  const effectiveEloB =
+    1500 + ((fB.ELO ?? 1500) - 1500) * debutAdjB.analyticsTrust;
+  const effectiveCardioA =
+    1 + ((fA.CARDIO_RATIO ?? 1) - 1) * debutAdjA.analyticsTrust;
+  const effectiveCardioB =
+    1 + ((fB.CARDIO_RATIO ?? 1) - 1) * debutAdjB.analyticsTrust;
+  const effectiveQualMomA =
+    (fA.QUALITY_MOMENTUM ?? 0) - debutAdjA.qualityPenalty;
+  const effectiveQualMomB =
+    (fB.QUALITY_MOMENTUM ?? 0) - debutAdjB.qualityPenalty;
+  let ageDiff =
+    ((fB.AGE ?? 30) - (fA.AGE ?? 30)) / S.age_dif;
+  if (debutAdjA.isDebutProspect && ageDiff > 0) ageDiff *= debutAdjA.ageTrust;
+  if (debutAdjB.isDebutProspect && ageDiff < 0) ageDiff *= debutAdjB.ageTrust;
 
   // ── Compute each raw differential ──────────────────────────────────────────
   const feats = {
@@ -1531,23 +1630,23 @@ const computeMatchupEdges = (fA, fB, oddsA = null, oddsB = null) => {
       S.control_time_dif,
     reach_dif: ((fA.REACH_IN ?? 0) - (fB.REACH_IN ?? 0)) / S.reach_dif,
     height_dif: ((fA.HEIGHT_IN ?? 0) - (fB.HEIGHT_IN ?? 0)) / S.height_dif,
-    age_dif: ((fB.AGE ?? 30) - (fA.AGE ?? 30)) / S.age_dif, // reversed: younger is better
+    age_dif: ageDiff, // reversed: younger is better, capped in debut-vs-veteran spots
     win_streak_dif: (winStreakA - winStreakB) / S.win_streak_dif,
     lose_streak_dif: (loseStreakB - loseStreakA) / S.lose_streak_dif, // reversed
     win_dif: (winsA - winsB) / S.win_dif,
-    loss_dif: (lossesB - lossesA) / S.loss_dif, // reversed
+    loss_dif: (effectiveLossesB - effectiveLossesA) / S.loss_dif, // reversed; debutants do not get free credit for 0 UFC losses
     total_round_dif: (roundsA - roundsB) / S.total_round_dif,
     deep_round_dif: (deepRoundsA - deepRoundsB) / S.total_round_dif,
     total_title_bout_dif:
       (titleBoutsA - titleBoutsB) / S.total_title_bout_dif,
-    ko_dif: (koWinsA - koWinsB) / S.ko_dif,
-    sub_dif: (subWinsA - subWinsB) / S.sub_dif,
-    elo_dif: ((fA.ELO ?? 1500) - (fB.ELO ?? 1500)) / S.elo_dif,
+    ko_dif: (effectiveKoWinsA - effectiveKoWinsB) / S.ko_dif,
+    sub_dif: (effectiveSubWinsA - effectiveSubWinsB) / S.sub_dif,
+    elo_dif: (effectiveEloA - effectiveEloB) / S.elo_dif,
     layoff_dif:
       ((fB.DAYS_SINCE_LAST ?? 180) - (fA.DAYS_SINCE_LAST ?? 180)) /
       S.layoff_dif, // reversed
     cardio_dif:
-      ((fA.CARDIO_RATIO ?? 1) - (fB.CARDIO_RATIO ?? 1)) / S.cardio_dif,
+      (effectiveCardioA - effectiveCardioB) / S.cardio_dif,
     peak_elo_dif:
       ((fA.ELO_PEAK ?? fA.ELO ?? 1500) - (fB.ELO_PEAK ?? fB.ELO ?? 1500)) /
       S.peak_elo_dif,
@@ -1666,9 +1765,11 @@ const computeMatchupEdges = (fA, fB, oddsA = null, oddsB = null) => {
 
   const oddsScore = useOdds ? clamp(oddsEdge) * (W.odds_edge ?? 0) : 0;
   const QUALITY_MOM_W = 0.055;
-  const qualMomDiff =
-    (fA.QUALITY_MOMENTUM ?? 0) - (fB.QUALITY_MOMENTUM ?? 0);
+  const qualMomDiff = effectiveQualMomA - effectiveQualMomB;
   const qualMomScore = clamp(qualMomDiff / 2) * QUALITY_MOM_W;
+  const debutPenaltyScore =
+    -debutAdjA.directPenalty + debutAdjB.directPenalty;
+  const DEBUT_TRANSLATION_W = 0.085;
 
   const auditRows = [
     auditRow({
@@ -1810,8 +1911,8 @@ const computeMatchupEdges = (fA, fB, oddsA = null, oddsB = null) => {
       label: 'UFC Losses',
       aLabel: 'LOSSES',
       bLabel: 'LOSSES',
-      aValue: lossesA,
-      bValue: lossesB,
+      aValue: neutralLosses ? 'Neutralized' : lossesA,
+      bValue: neutralLosses ? 'Neutralized' : lossesB,
       diff: feats.loss_dif,
       scale: S.loss_dif,
       weight: W.loss_dif,
@@ -1844,8 +1945,8 @@ const computeMatchupEdges = (fA, fB, oddsA = null, oddsB = null) => {
       label: 'KO Wins',
       aLabel: 'KO_WINS',
       bLabel: 'KO_WINS',
-      aValue: fA.KO_WINS ?? 0,
-      bValue: fB.KO_WINS ?? 0,
+      aValue: parseFloat(effectiveKoWinsA.toFixed(2)),
+      bValue: parseFloat(effectiveKoWinsB.toFixed(2)),
       diff: feats.ko_dif,
       scale: S.ko_dif,
       weight: W.ko_dif,
@@ -1855,8 +1956,8 @@ const computeMatchupEdges = (fA, fB, oddsA = null, oddsB = null) => {
       label: 'Submission Wins',
       aLabel: 'SUB_WINS',
       bLabel: 'SUB_WINS',
-      aValue: fA.SUB_WINS ?? 0,
-      bValue: fB.SUB_WINS ?? 0,
+      aValue: parseFloat(effectiveSubWinsA.toFixed(2)),
+      bValue: parseFloat(effectiveSubWinsB.toFixed(2)),
       diff: feats.sub_dif,
       scale: S.sub_dif,
       weight: W.sub_dif,
@@ -1866,8 +1967,8 @@ const computeMatchupEdges = (fA, fB, oddsA = null, oddsB = null) => {
       label: 'ELO',
       aLabel: 'ELO',
       bLabel: 'ELO',
-      aValue: fA.ELO ?? 1500,
-      bValue: fB.ELO ?? 1500,
+      aValue: parseFloat(effectiveEloA.toFixed(1)),
+      bValue: parseFloat(effectiveEloB.toFixed(1)),
       diff: feats.elo_dif,
       scale: S.elo_dif,
       weight: W.elo_dif,
@@ -1889,8 +1990,8 @@ const computeMatchupEdges = (fA, fB, oddsA = null, oddsB = null) => {
       label: 'Cardio Ratio',
       aLabel: 'CARDIO_RATIO',
       bLabel: 'CARDIO_RATIO',
-      aValue: fA.CARDIO_RATIO ?? 1,
-      bValue: fB.CARDIO_RATIO ?? 1,
+      aValue: parseFloat(effectiveCardioA.toFixed(2)),
+      bValue: parseFloat(effectiveCardioB.toFixed(2)),
       diff: feats.cardio_dif,
       scale: S.cardio_dif,
       weight: W.cardio_dif,
@@ -1900,8 +2001,8 @@ const computeMatchupEdges = (fA, fB, oddsA = null, oddsB = null) => {
       label: 'Quality Momentum',
       aLabel: 'QUALITY_MOMENTUM',
       bLabel: 'QUALITY_MOMENTUM',
-      aValue: fA.QUALITY_MOMENTUM ?? 0,
-      bValue: fB.QUALITY_MOMENTUM ?? 0,
+      aValue: parseFloat(effectiveQualMomA.toFixed(2)),
+      bValue: parseFloat(effectiveQualMomB.toFixed(2)),
       diff: qualMomDiff / 2,
       scale: 2,
       weight: QUALITY_MOM_W,
@@ -1933,7 +2034,8 @@ const computeMatchupEdges = (fA, fB, oddsA = null, oddsB = null) => {
     expScore +
     analyticsScore +
     oddsScore +
-    qualMomScore;
+    qualMomScore +
+    clamp(debutPenaltyScore) * DEBUT_TRANSLATION_W;
 
   // ── Platt calibration ─────────────────────────────────────────────────────
   const P = useOdds ? MODEL.PLATT_OD : MODEL.PLATT_NO;
