@@ -387,6 +387,24 @@ def build_new_fighter_entry(name, record, fights):
     )
     return entry
 
+def compute_stat_updates(name, fights):
+    rows = stats_by_fighter.get(name, [])
+    total_duration = sum(r['round_secs'] for r in rows)
+    total_sig_landed = sum(r['sig_landed'] for r in rows)
+    total_sig_attempted = sum(r['sig_attempted'] for r in rows)
+    total_td_landed = sum(r['td_landed'] for r in rows)
+    total_td_attempted = sum(r['td_attempted'] for r in rows)
+    total_sub_att = sum(r['sub_att'] for r in rows)
+    return {
+        'tr': compute_total_rounds(fights),
+        'tb': sum(1 for f in fights if 'title' in (f.get('wc') or '').lower() or 'title' in (f.get('event') or '').lower()),
+        'asl': round2(total_sig_landed / (total_duration / 60)) if total_duration > 0 else None,
+        'asp': round2(total_sig_landed / total_sig_attempted) if total_sig_attempted > 0 else None,
+        'asa': round2((total_sub_att / total_duration) * 900) if total_duration > 0 else None,
+        'atl': round2((total_td_landed / total_duration) * 900) if total_duration > 0 else None,
+        'atp': round2(total_td_landed / total_td_attempted) if total_td_attempted > 0 else None,
+    }
+
 # ─── Patch fightersData.js ────────────────────────────────────────────────────
 print("\nPatching fightersData.js...")
 js_content = open(JS_PATH).read()
@@ -402,13 +420,17 @@ for name, entry_str in existing.items():
     if wc_m: wc_lookup[name] = wc_m.group(1)
 
 RECORD_FIELDS = ['wi','lo','ws','ls','kow','sbw','dcw','dsl']
+STAT_FIELDS = ['tr', 'tb', 'asl', 'asp', 'asa', 'atl', 'atp']
 new_lines = []
 
 for name, entry_str in existing.items():
     if name in record_updates:
         u = record_updates[name]
+        stat_updates = compute_stat_updates(name, fights_by_fighter.get(name, []))
         for field in RECORD_FIELDS:
             entry_str = patch_field(entry_str, field, u[field])
+        for field in STAT_FIELDS:
+            entry_str = patch_field(entry_str, field, stat_updates[field])
         if u['lfd']:
             entry_str = re.sub(r",lfd:'[^']*'", f",lfd:'{u['lfd']}'", entry_str)
             entry_str = re.sub(r",lfd:null",     f",lfd:'{u['lfd']}'", entry_str)
