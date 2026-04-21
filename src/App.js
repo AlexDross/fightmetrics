@@ -39,6 +39,7 @@ import { _P } from './prospectsData';
 import { ELO_RATINGS } from './eloModule';
 import { CARDIO_RATIOS } from './cardioModule';
 import { FIGHT_HISTORY } from './fightHistory';
+import { getHistoricalTier } from './rankHistory';
 import { ROI_ENTRIES } from './roiData';
 
 // _D2 imported from fightersData.js
@@ -235,8 +236,12 @@ const UFC_RANKINGS = {
 
 const getOpponentTier = (opponentName, fightEntry) => {
   if (fightEntry && fightEntry.ot != null) return fightEntry.ot;
-  // Historical tier lookup removed in v5 (rankHistory.js deprecated)
-  // Fall back to current rankings (for upcoming fights with no history)
+  // Use point-in-time rankings for completed fights so opponent quality
+  // reflects what the opponent was at the time, not what they are today.
+  if (fightEntry?.dt) {
+    return getHistoricalTier(opponentName, fightEntry.dt);
+  }
+  // Fall back to current rankings for upcoming fights or undated entries.
   const r = UFC_RANKINGS[opponentName];
   if (!r) return 0.12;
   if (r.rank === 'C') return 1.0;
