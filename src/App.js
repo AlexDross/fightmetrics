@@ -6029,10 +6029,6 @@ function ROITab({
                     <p className="text-white font-bold text-sm mt-3">
                       {entry.displayBetFighter || 'No bet side'}
                     </p>
-
-                    <p className="text-slate-600 text-xs mt-1">
-                      {entry.displayBetOdds || 'No saved line'}
-                    </p>
                   </div>
                   <div className="bg-slate-800/40 rounded-lg p-3">
                     <p className="text-slate-500 text-xs">Market odds</p>
