@@ -5993,24 +5993,24 @@ function ROITab({
                 </div>
 
                 <div className="grid grid-cols-4 gap-3 mb-4">
-                  <div className="bg-gradient-to-br from-slate-800/70 to-slate-800/30 rounded-lg p-4 border border-slate-700/60 shadow-[inset_0_1px_0_rgba(255,255,255,0.02)]">
+                  <div className="bg-slate-800/40 rounded-lg p-3">
                     <p className="text-slate-400 text-xs uppercase tracking-[0.18em] font-semibold">
                       Displayed pick
                     </p>
-                    <p className="text-white font-black text-xl leading-tight mt-2">
+                    <p className="text-white font-bold text-sm mt-2">
                       {entry.displayWinner}
                     </p>
-                    <div className="mt-3 flex items-end gap-3 flex-wrap">
-                      <p className="text-slate-100 font-black text-3xl leading-none">
+                    <div className="mt-2 flex items-center gap-2 flex-wrap">
+                      <p className="text-slate-200 font-bold text-sm">
                         {((entry.displayProb ?? 0) * 100).toFixed(1)}
-                        <span className="text-slate-400 text-xl ml-1">%</span>
+                        <span className="text-slate-500 ml-0.5">%</span>
                       </p>
-                      <span className="inline-flex items-center rounded-full border border-red-500/25 bg-red-500/10 px-2.5 py-1 font-mono text-sm font-bold text-red-300">
+                      <span className="inline-flex items-center rounded-full border border-slate-700 bg-slate-800 px-2 py-0.5 font-mono text-xs font-semibold text-slate-300">
                         {americanOdds(entry.displayProb ?? 0)}
                       </span>
                     </div>
-                    <p className="text-slate-500 text-xs mt-2">
-                      Model probability · implied American line
+                    <p className="text-slate-600 text-xs mt-1">
+                      Implied line from model pick
                     </p>
                   </div>
                   <div className="bg-slate-800/40 rounded-lg p-3">
