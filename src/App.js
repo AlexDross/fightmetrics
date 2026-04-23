@@ -5993,32 +5993,32 @@ function ROITab({
                 </div>
 
                 <div className="grid grid-cols-4 gap-3 mb-4">
-                  <div className="bg-slate-800/40 rounded-lg p-3">
-                    <p className="text-slate-400 text-xs uppercase tracking-[0.18em] font-semibold">
+                  <div className="bg-slate-800/40 border border-slate-700/40 rounded-lg p-4 min-h-[132px] flex flex-col">
+                    <p className="text-slate-500 text-xs uppercase tracking-[0.18em] font-semibold">
                       Displayed pick
                     </p>
-                    <p className="text-white font-bold text-sm mt-2">
+                    <p className="text-white font-bold text-base mt-3 leading-tight">
                       {entry.displayWinner}
                     </p>
-                    <div className="mt-2 flex items-center gap-2 flex-wrap">
-                      <p className="text-slate-200 font-bold text-sm">
+                    <div className="mt-3 flex items-center gap-2 flex-wrap">
+                      <p className="text-slate-100 font-black text-2xl leading-none">
                         {((entry.displayProb ?? 0) * 100).toFixed(1)}
-                        <span className="text-slate-500 ml-0.5">%</span>
+                        <span className="text-slate-400 text-xl ml-0.5">%</span>
                       </p>
                       <span className="inline-flex items-center rounded-full border border-slate-700 bg-slate-800 px-2 py-0.5 font-mono text-xs font-semibold text-slate-300">
                         {americanOdds(entry.displayProb ?? 0)}
                       </span>
                     </div>
-                    <p className="text-slate-600 text-xs mt-1">
+                    <p className="text-slate-600 text-xs mt-auto pt-3">
                       Implied line from model pick
                     </p>
                   </div>
-                  <div className="bg-slate-800/40 rounded-lg p-3">
-                    <p className="text-slate-500 text-xs uppercase tracking-wider">
+                  <div className="bg-slate-800/40 border border-slate-700/40 rounded-lg p-4 min-h-[132px] flex flex-col">
+                    <p className="text-slate-500 text-xs uppercase tracking-[0.18em] font-semibold">
                       Bet Rec
                     </p>
 
-                    <div className="mt-2">
+                    <div className="mt-3">
                       <span
                         className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-black ${
                           entry.displayBetAction === 'STRONG BET'
@@ -6034,20 +6034,22 @@ function ROITab({
                       </span>
                     </div>
 
-                    <p className="text-white font-bold text-sm mt-3">
+                    <p className="text-white font-bold text-base mt-6 leading-tight">
                       {entry.displayBetFighter || 'No bet side'}
                     </p>
 
-                    <p className="text-slate-600 text-xs mt-1">
+                    <p className="text-slate-600 text-xs mt-auto pt-3">
                       {entry.displayBetOdds || 'No saved line'}
                     </p>
                   </div>
-                  <div className="bg-slate-800/40 rounded-lg p-3">
-                    <p className="text-slate-500 text-xs">Market odds</p>
-                    <p className="text-white font-bold text-sm mt-1">
+                  <div className="bg-slate-800/40 border border-slate-700/40 rounded-lg p-4 min-h-[132px] flex flex-col">
+                    <p className="text-slate-500 text-xs uppercase tracking-[0.18em] font-semibold">
+                      Market odds
+                    </p>
+                    <p className="text-white font-black text-2xl mt-3 leading-none">
                       {entry.marketOdds || '—'}
                     </p>
-                    <p className="text-slate-600 text-xs mt-1">
+                    <p className="text-slate-600 text-xs mt-auto pt-3">
                       {trackedEdge != null
                         ? `${trackedEdge > 0 ? '+' : ''}${(
                             trackedEdge * 100
@@ -6055,10 +6057,10 @@ function ROITab({
                         : 'No saved market edge'}
                     </p>
                   </div>
-                  <div className="bg-slate-800/40 rounded-lg p-3">
-                      <p className="text-slate-500 text-xs">Units</p>
+                  <div className="bg-slate-800/40 border border-slate-700/40 rounded-lg p-4 min-h-[132px] flex flex-col">
+                      <p className="text-slate-500 text-xs uppercase tracking-[0.18em] font-semibold">Units</p>
                     <p
-                      className={`font-bold text-sm mt-1 ${
+                      className={`font-black text-2xl mt-3 leading-none ${
                         profit == null
                           ? 'text-slate-300'
                           : profit >= 0
@@ -6070,7 +6072,7 @@ function ROITab({
                         ? 'Pending'
                         : `${profit >= 0 ? '+' : ''}${profit.toFixed(2)}u`}
                     </p>
-                    <p className="text-slate-600 text-xs mt-1">
+                    <p className="text-slate-600 text-xs mt-auto pt-3">
                       {entry.actualWinner === 'NC'
                         ? 'No Contest'
                         : entry.actualWinner === 'DRAW'
