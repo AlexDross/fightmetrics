@@ -2044,7 +2044,7 @@ const computeMatchupEdges = (fA, fB, oddsA = null, oddsB = null) => {
 
   // ── Platt calibration ─────────────────────────────────────────────────────
   const P = useOdds ? MODEL.PLATT_OD : MODEL.PLATT_NO;
-  const pA = 1 / (1 + Math.exp(-(P.a * composite + P.b)));
+  const pA = 1 / (1 + Math.exp(-(P.a * composite)));
 
   const clampE = (v) => Math.max(-1.5, Math.min(1.5, v));
   const mkEdge = (raw, label, icon, weight) => ({
