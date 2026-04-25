@@ -743,10 +743,10 @@ const FIGHTERS = [..._D2, ...activeProspects].map((d) => {
     fightHistory.length > 0
       ? historyWins.filter((fight) => isDecisionMethod(fight.me || '')).length
       : d.dcw ?? 0;
-  const rawTitleBouts =
-    fightHistory.length > 0
-      ? fightHistory.filter((fight) => fight.tb).length
-      : d.tb ?? 0;
+  const rawTitleBouts = Math.max(
+    fightHistory.length > 0 ? fightHistory.filter((fight) => fight.tb).length : 0,
+    d.tb ?? 0,
+  );
   const winStreak =
     fightHistory.length > 0 ? getResultStreak(fightHistory, 'W') : d.ws ?? 0;
   const loseStreak =
@@ -985,11 +985,16 @@ const computeBacktestAccuracy = () => {
   let correct = 0,
     total = 0,
     details = [];
+  const seen = new Set();
   FIGHTERS.forEach((fighter) => {
     (fighter.FIGHT_HISTORY || []).forEach((fight) => {
       if (fight.re !== 'W' && fight.re !== 'L') return; // skip NC/Draw
       const opponent = FIGHTERS.find((f) => f.FIGHTER === fight.op);
       if (!opponent) return; // opponent not in our dataset
+      // Deduplicate: each bout is stored under both fighters; only count once
+      const key = [fighter.FIGHTER, fight.op].sort().join('|||') + '|||' + (fight.ev ?? '');
+      if (seen.has(key)) return;
+      seen.add(key);
       // fighter is always fA; if re=W we expect pA > 0.5
       const result = computeMatchupEdges(fighter, opponent);
       const predictedWin = result.pA > 0.5;
@@ -6280,7 +6285,10 @@ function InfoTab() {
           <span className="text-red-400 font-bold">
             {backtest.accuracy.toFixed(1)}%
           </span>
-          .
+          .{' '}
+          <span className="text-slate-500">
+            Uses current career stats — reflects model ceiling, not true out-of-sample accuracy. Reliable benchmark: 62.9% Python CV.
+          </span>
         </p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {sections.map(({ title, icon, finding }) => (
