@@ -3119,6 +3119,12 @@ function MatchupSimulator({ allFighters, onSavePrediction, onOpenROI }) {
       return 'LEAN';
     })();
 
+    const lowCredCap = (fA.CREDIBILITY ?? 0) < 30 || (fB.CREDIBILITY ?? 0) < 30;
+    const cappedBetAction =
+      lowCredCap && (betAction === 'STRONG BET' || betAction === 'BET')
+        ? 'LEAN'
+        : betAction;
+
     // ── Step 5: No-bet / lean reason for UI display ───────────────────────────
     const noBetReason = (() => {
       if (conflictingSignals) {
@@ -3179,7 +3185,7 @@ function MatchupSimulator({ allFighters, onSavePrediction, onOpenROI }) {
       fairLineA,
       fairLineB,
       betConfidence,
-      betAction,
+      betAction: cappedBetAction,
       betSide,
       alignedDomains,
       gradeA:
@@ -3205,7 +3211,7 @@ function MatchupSimulator({ allFighters, onSavePrediction, onOpenROI }) {
                   : 'bg-slate-800/40 border-slate-700',
             },
       // bestBet fires only when model pick and market value align
-      bestBet: betAction !== 'NO BET' ? pickSide : null,
+      bestBet: cappedBetAction !== 'NO BET' ? pickSide : null,
       pickSide,
       pickProb,
       lowConviction,
