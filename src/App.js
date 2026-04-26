@@ -874,6 +874,7 @@ const momentumScore = Math.max(
     ASA: modelAsa,
     ATL: modelAtl,
     ATP: modelAtp,
+    ATD: d.atd ?? 0.60,
     ELO: modelElo,
     ELO_PEAK: modelPeakElo,
     UFC_FIGHT_COUNT: modelUfcFightCount,
@@ -1540,6 +1541,7 @@ const MODEL = {
     peak_elo_dif: 55,
     ufc_fight_count_dif: 8,
     rank_tier_dif: 0.25,
+    atd_dif: 0.15,
     odds_edge: 0.3,
   },
 };
@@ -1629,6 +1631,7 @@ const computeMatchupEdges = (fA, fB, oddsA = null, oddsB = null) => {
     avg_sig_str_pct_dif: (aspA - aspB) / S.avg_sig_str_pct_dif,
     avg_td_dif: ((fA.ATL ?? 0) - (fB.ATL ?? 0)) / S.avg_td_dif,
     avg_td_pct_dif: ((fA.ATP ?? 0) - (fB.ATP ?? 0)) / S.avg_td_pct_dif,
+    atd_dif: ((fA.ATD ?? 0.60) - (fB.ATD ?? 0.60)) / S.atd_dif,
     avg_sub_att_dif: ((fA.ASA ?? 0) - (fB.ASA ?? 0)) / S.avg_sub_att_dif,
     control_time_dif:
       ((fA.CONTROL_TIME_PCT ?? 0) - (fB.CONTROL_TIME_PCT ?? 0)) /
@@ -1692,12 +1695,14 @@ const computeMatchupEdges = (fA, fB, oddsA = null, oddsB = null) => {
   const accCombinedW = W.R_avg_SIG_STR_pct + W.B_avg_SIG_STR_pct;
   const tdCombinedW = W.R_avg_TD_pct + W.B_avg_TD_pct;
   const grapplingWeightPool = W.avg_td_dif + tdCombinedW + W.avg_sub_att_dif;
-  const controlWeight = grapplingWeightPool * 0.22;
-  const tdOffenseWeight = W.avg_td_dif * 0.82;
-  const tdDefenseWeight = tdCombinedW * 0.82;
+  const ATD_DEF_W = 0.04;
+  const grapplingScale = (grapplingWeightPool - ATD_DEF_W) / grapplingWeightPool;
+  const controlWeight = grapplingWeightPool * 0.22 * grapplingScale;
+  const tdOffenseWeight = W.avg_td_dif * 0.82 * grapplingScale;
+  const tdDefenseWeight = tdCombinedW * 0.82 * grapplingScale;
   const subThreatWeight = Math.max(
     0,
-    grapplingWeightPool - tdOffenseWeight - tdDefenseWeight - controlWeight
+    grapplingWeightPool * grapplingScale - tdOffenseWeight - tdDefenseWeight - controlWeight
   );
   const experienceWeightPool = W.total_round_dif + W.total_title_bout_dif;
   const fightCountWeight = experienceWeightPool * 0.58;
@@ -1739,7 +1744,8 @@ const computeMatchupEdges = (fA, fB, oddsA = null, oddsB = null) => {
     clamp(feats.avg_td_dif) * tdOffenseWeight +
     clamp(feats.avg_td_pct_dif) * tdDefenseWeight +
     clamp(feats.avg_sub_att_dif) * subThreatWeight +
-    clamp(feats.control_time_dif) * controlWeight;
+    clamp(feats.control_time_dif) * controlWeight +
+    clamp(feats.atd_dif) * ATD_DEF_W;
 
   const physicalScore =
     clamp(feats.reach_dif) * W.reach_dif +
