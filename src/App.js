@@ -3104,18 +3104,27 @@ function MatchupSimulator({ allFighters, onSavePrediction, onOpenROI }) {
 
     const betAction = (() => {
       if (conflictingSignals) return 'NO BET';
-      if (!hasPickEdge)       return 'NO BET';
-      // Coin-flip zone: never escalate beyond LEAN regardless of edge size
-      if (lowConviction)      return 'LEAN';
-      // Moderate conviction: require larger edge for BET
-      if (midConviction) {
-        if (pickEdge >= 0.15 && betConfidence >= 60) return 'STRONG BET';
-        if (pickEdge >= 0.10 && betConfidence >= 45) return 'BET';
-        return 'LEAN';
+      if (!hasPickEdge) return 'NO BET';
+
+      // Hard floor — model unproven below 60%
+      if (pickProb < 0.60) return 'NO BET';
+
+      // Low conviction tier (60-64%) — cap at LEAN regardless of edge
+      if (pickProb < 0.65) {
+        if (pickEdge >= 0.10) return 'LEAN';
+        return 'NO BET';
       }
-      // Full conviction (≥60%): standard tiers
-      if (pickEdge >= 0.12 && betConfidence >= 60) return 'STRONG BET';
-      if (pickEdge >= 0.07 && betConfidence >= 45) return 'BET';
+
+      // Mid conviction tier (65-69%)
+      if (pickProb < 0.70) {
+        if (pickEdge >= 0.20) return 'BET';
+        if (pickEdge >= 0.10) return 'LEAN';
+        return 'NO BET';
+      }
+
+      // High conviction tier (70%+)
+      if (pickEdge >= 0.20) return 'STRONG BET';
+      if (pickEdge >= 0.10) return 'BET';
       return 'LEAN';
     })();
 
