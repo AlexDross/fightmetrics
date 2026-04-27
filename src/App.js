@@ -1513,7 +1513,7 @@ const MODEL = {
     sub_dif: 0.031265,
   },
   // Platt calibration: p = logistic(platt_a * composite + platt_b)
-  PLATT_NO: { a: 1.7225631998412525, b: -0.18753374136521064 },
+  PLATT_NO: { a: 1.609621, b: -0.18753374136521064 },
   PLATT_OD: { a: 1.4008053209780686, b: -0.09263130924926194 },
   // Normalization scales (1 std of each differential feature)
   // Used to put all features on the same scale before weighting
