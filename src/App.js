@@ -1387,8 +1387,20 @@ const getDebutProspectAdjustment = (fighter, opponent) => {
     };
   }
 
+  const tierBase =
+    fighter.PROSPECT_TIER === 'tier1' ? 0.35 :
+    fighter.PROSPECT_TIER === 'tier2' ? 0.28 :
+    0.13;
+  const winPctBonus  = (fighter.WIN_PCT     ?? 0) / 100 * 0.10;
+  const finishBonus  = (fighter.FINISH_RATE ?? 0) / 100 * 0.10;
+  const winsBonus    = Math.min(fighter.WINS ?? 0, 15) / 15 * 0.07;
+  const sourceBonus  =
+    fighter.PROSPECT_SOURCE === 'dwcs' ? 0.08 :
+    fighter.PROSPECT_SOURCE === 'tuf'  ? 0.04 :
+    0;
+  const sampleTrust = fighter.PROSPECT_CONFIDENCE ?? 0.30;
   const prospectConfidence = clampNum(
-    fighter?.PROSPECT_CONFIDENCE ?? 0.18,
+    tierBase + (winPctBonus + finishBonus + winsBonus + sourceBonus) * sampleTrust,
     0.08,
     0.72
   );
