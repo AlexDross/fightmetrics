@@ -6023,7 +6023,10 @@ function ROITab({
                         {entry.fighterA} vs. {entry.fighterB}
                       </h3>
                       {entry.includesProspect && (
-                        <span className="inline-flex items-center gap-1 rounded-full border border-amber-700/70 bg-amber-900/30 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-amber-300">
+                        <span
+                          title="Includes a debuting prospect — prediction confidence reduced based on tier and record quality"
+                          className="inline-flex items-center gap-1 rounded-full border border-amber-700/70 bg-amber-900/30 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-amber-300"
+                        >
                           <AlertTriangle size={12} />
                           Debut Hazard
                         </span>
@@ -6261,7 +6264,7 @@ function InfoTab() {
       title: 'Combined Stats Win',
       icon: '🎯',
       finding:
-        'The full combined model reached ~71% accuracy vs ~68% for physical-only models. Blending striking, grappling, and physical data produces the sharpest predictive picture.',
+        'The full combined model reached ~63% accuracy (time-series cross-validation) vs ~59% for physical-only models. Blending striking, grappling, and physical data produces the sharpest predictive picture.',
     },
   ];
   const stats = [
