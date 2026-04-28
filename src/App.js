@@ -1725,6 +1725,7 @@ const computeMatchupEdges = (fA, fB, oddsA = null, oddsB = null) => {
   const deepRoundsWeight = experienceWeightPool * 0.42;
   const AGE_DECAY_W = 0.03;
   const KD_DIF_W = 0.03;
+  const SOUTHPAW_W = 0.035;
 
   const clamp = (v) => Math.max(-2, Math.min(2, v));
   const auditRow = ({
@@ -1768,7 +1769,7 @@ const computeMatchupEdges = (fA, fB, oddsA = null, oddsB = null) => {
 
   const physicalScore =
     clamp(feats.reach_dif) * W.reach_dif +
-    clamp(feats.height_dif) * W.height_dif +
+    clamp(feats.height_dif) * (W.height_dif - SOUTHPAW_W) +
     clamp(feats.age_dif) * (W.age_dif - AGE_DECAY_W);
 
   const formScore =
@@ -1801,6 +1802,10 @@ const computeMatchupEdges = (fA, fB, oddsA = null, oddsB = null) => {
     -debutAdjA.directPenalty + debutAdjB.directPenalty;
   const DEBUT_TRANSLATION_W = 0.085;
   const agePenaltyScore = -agePenA + agePenB;
+  const stanceScore =
+    (fA.STANCE === 'Southpaw' && fB.STANCE === 'Orthodox') ?  SOUTHPAW_W :
+    (fA.STANCE === 'Orthodox' && fB.STANCE === 'Southpaw') ? -SOUTHPAW_W :
+    0;
 
   const auditRows = [
     auditRow({
@@ -2067,7 +2072,8 @@ const computeMatchupEdges = (fA, fB, oddsA = null, oddsB = null) => {
     oddsScore +
     qualMomScore +
     clamp(debutPenaltyScore) * DEBUT_TRANSLATION_W +
-    clamp(agePenaltyScore / 0.12) * AGE_DECAY_W;
+    clamp(agePenaltyScore / 0.12) * AGE_DECAY_W +
+    stanceScore;
 
   // ── Platt calibration ─────────────────────────────────────────────────────
   const P = useOdds ? MODEL.PLATT_OD : MODEL.PLATT_NO;
@@ -2154,7 +2160,7 @@ const computeMatchupEdges = (fA, fB, oddsA = null, oddsB = null) => {
     layA: 0,
     layB: 0,
     stanceMismatch: fA.STANCE !== fB.STANCE,
-    southpawBonus: 0,
+    southpawBonus: stanceScore,
     grapplerBonus: 0,
     cardioStrikerBonus: 0,
     reachEdge: (fA.REACH_IN ?? 0) - (fB.REACH_IN ?? 0),
