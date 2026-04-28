@@ -4341,7 +4341,7 @@ function MatchupSimulator({ allFighters, onSavePrediction, onOpenROI }) {
                   rows: [
                     { label: 'Strikes Landed/min', aRaw: fA.ASL ?? 0, bRaw: fB.ASL ?? 0, aVal: (fA.ASL ?? 0).toFixed(2), bVal: (fB.ASL ?? 0).toFixed(2) },
                     { label: 'Striking Accuracy %', aRaw: fA.ASP ?? 0, bRaw: fB.ASP ?? 0, aVal: ((fA.ASP ?? 0) * 100).toFixed(1) + '%', bVal: ((fB.ASP ?? 0) * 100).toFixed(1) + '%' },
-                    { label: 'KDs per 100 min', aRaw: fA.KD_PER_MIN ?? 0, bRaw: fB.KD_PER_MIN ?? 0, aVal: ((fA.KD_PER_MIN ?? 0) * 100).toFixed(2), bVal: ((fB.KD_PER_MIN ?? 0) * 100).toFixed(2) },
+                    { label: 'KD Rate/min', aRaw: fA.KD_PER_MIN ?? 0, bRaw: fB.KD_PER_MIN ?? 0, aVal: (fA.KD_PER_MIN ?? 0).toFixed(3), bVal: (fB.KD_PER_MIN ?? 0).toFixed(3) },
                   ],
                 },
                 {
@@ -4390,17 +4390,17 @@ function MatchupSimulator({ allFighters, onSavePrediction, onOpenROI }) {
                       />
                       <div className="h-full bg-red-500 flex-1" />
                     </div>
-                    <div className="space-y-1">
+                    <div className="divide-y divide-slate-700/30">
                       {rows.map(({ label, aRaw, bRaw, aVal, bVal, lowerBetter }) => {
                         const aEdge = lowerBetter ? aRaw < bRaw : aRaw > bRaw;
                         const bEdge = lowerBetter ? bRaw < aRaw : bRaw > aRaw;
                         return (
-                          <div key={label} className="grid grid-cols-3 gap-1 text-xs">
-                            <span className={`font-mono text-right ${aEdge ? 'text-blue-400 font-bold' : 'text-slate-400'}`}>
+                          <div key={label} className="flex items-center text-xs py-1.5">
+                            <span className={`w-1/3 font-mono text-right pr-2 ${aEdge ? 'text-blue-400 font-bold' : 'text-slate-400'}`}>
                               {aVal}
                             </span>
-                            <span className="text-slate-500 text-center leading-tight">{label}</span>
-                            <span className={`font-mono text-left ${bEdge ? 'text-red-400 font-bold' : 'text-slate-400'}`}>
+                            <span className="w-1/3 text-slate-500 text-center leading-tight px-1">{label}</span>
+                            <span className={`w-1/3 font-mono text-left pl-2 ${bEdge ? 'text-red-400 font-bold' : 'text-slate-400'}`}>
                               {bVal}
                             </span>
                           </div>
@@ -4440,6 +4440,10 @@ function MatchupSimulator({ allFighters, onSavePrediction, onOpenROI }) {
                           style={{ width: `${Math.max(5, Math.min(95, pctA))}%` }}
                         />
                         <div className="h-full bg-red-500 flex-1" />
+                      </div>
+                      <div className="flex justify-between mt-1.5">
+                        <span className="text-blue-400/70 text-xs">{fA.FIGHTER.split(' ').pop()}</span>
+                        <span className="text-red-400/70 text-xs">{fB.FIGHTER.split(' ').pop()}</span>
                       </div>
                     </div>
                   );
