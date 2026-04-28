@@ -1876,6 +1876,17 @@ const computeMatchupEdges = (fA, fB, oddsA = null, oddsB = null) => {
       weight: controlWeight,
     }),
     auditRow({
+      group: 'Grappling',
+      label: 'TD Defense %',
+      aLabel: 'ATD',
+      bLabel: 'ATD',
+      aValue: fA.ATD ?? 0.60,
+      bValue: fB.ATD ?? 0.60,
+      diff: feats.atd_dif,
+      scale: S.atd_dif,
+      weight: ATD_DEF_W,
+    }),
+    auditRow({
       group: 'Physical',
       label: 'Reach',
       aLabel: 'REACH_IN',
