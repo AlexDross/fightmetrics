@@ -1114,7 +1114,7 @@ const TABLE_COLS = [
     group: 'Grappling',
     signed: false,
     dec: 1,
-    tip: 'Takedown defense %',
+    tip: 'Takedown accuracy % (offensive)',
   },
   {
     key: 'FACTOR_POSITION',
