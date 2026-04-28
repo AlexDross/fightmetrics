@@ -875,6 +875,7 @@ const momentumScore = Math.max(
     ATL: modelAtl,
     ATP: modelAtp,
     ATD: d.atd ?? 0.60,
+    ATD_PCT: parseFloat(((d.atd ?? 0.60) * 100).toFixed(1)),
     ELO: modelElo,
     ELO_PEAK: modelPeakElo,
     UFC_FIGHT_COUNT: modelUfcFightCount,
@@ -3400,6 +3401,13 @@ function MatchupSimulator({ allFighters, onSavePrediction, onOpenROI }) {
       pct: true,
     },
     {
+      key: 'ATD_PCT',
+      label: 'TD Defense %',
+      hb: true,
+      dec: 1,
+      pct: true,
+    },
+    {
       key: 'CONTROL_TIME_PCT',
       label: 'Control Time %',
       hb: true,
@@ -3570,7 +3578,7 @@ function MatchupSimulator({ allFighters, onSavePrediction, onOpenROI }) {
               </div>
             )}
             <div className="space-y-1.5">
-              {TAPE.slice(0, 6).map((stat) => {
+              {TAPE.slice(0, 7).map((stat) => {
                 const va = fA ? fA[stat.key] : null;
                 const vb = fB ? fB[stat.key] : null;
                 const v = f[stat.key];
