@@ -1554,6 +1554,7 @@ const MODEL = {
     ufc_fight_count_dif: 8,
     rank_tier_dif: 0.25,
     atd_dif: 0.15,
+    kd_dif: 0.025,
     odds_edge: 0.3,
   },
 };
@@ -1647,6 +1648,7 @@ const computeMatchupEdges = (fA, fB, oddsA = null, oddsB = null) => {
     avg_td_pct_dif: ((fA.ATP ?? 0) - (fB.ATP ?? 0)) / S.avg_td_pct_dif,
     atd_dif: ((fA.ATD ?? 0.60) - (fB.ATD ?? 0.60)) / S.atd_dif,
     avg_sub_att_dif: ((fA.ASA ?? 0) - (fB.ASA ?? 0)) / S.avg_sub_att_dif,
+    kd_dif: ((fA.KD_PER_MIN ?? 0) - (fB.KD_PER_MIN ?? 0)) / S.kd_dif,
     control_time_dif:
       ((fA.CONTROL_TIME_PCT ?? 0) - (fB.CONTROL_TIME_PCT ?? 0)) /
       S.control_time_dif,
@@ -1722,6 +1724,7 @@ const computeMatchupEdges = (fA, fB, oddsA = null, oddsB = null) => {
   const fightCountWeight = experienceWeightPool * 0.58;
   const deepRoundsWeight = experienceWeightPool * 0.42;
   const AGE_DECAY_W = 0.03;
+  const KD_DIF_W = 0.03;
 
   const clamp = (v) => Math.max(-2, Math.min(2, v));
   const auditRow = ({
@@ -1752,8 +1755,9 @@ const computeMatchupEdges = (fA, fB, oddsA = null, oddsB = null) => {
 
   // ── Group into display edges ───────────────────────────────────────────────
   const strikingScore =
-    clamp(feats.sig_str_dif) * W.sig_str_dif +
-    clamp(feats.avg_sig_str_pct_dif) * accCombinedW;
+    clamp(feats.sig_str_dif) * (W.sig_str_dif - KD_DIF_W) +
+    clamp(feats.avg_sig_str_pct_dif) * accCombinedW +
+    clamp(feats.kd_dif) * KD_DIF_W;
 
   const grapplingScore =
     clamp(feats.avg_td_dif) * tdOffenseWeight +
