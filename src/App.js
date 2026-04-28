@@ -3264,6 +3264,7 @@ function MatchupSimulator({ allFighters, onSavePrediction, onOpenROI }) {
       hasPickEdge,
       conflictingSignals,
       noBetReason,
+      lowCredCap,
     };
   }, [oddsA, oddsB, result, fA, fB]);
 
@@ -3978,6 +3979,9 @@ function MatchupSimulator({ allFighters, onSavePrediction, onOpenROI }) {
                           <>
                             <p className={`font-black text-sm ${s.text}`}>{pickFighter.FIGHTER}</p>
                             <p className="text-white font-bold text-sm">{pickOdds}</p>
+                            {isLean && market.lowCredCap && (
+                              <p className="text-amber-500 text-xs mt-1.5 leading-snug">Capped from BET — low sample size (CRED &lt; 30%)</p>
+                            )}
                           </>
                         )}
                       </div>
