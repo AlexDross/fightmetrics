@@ -3126,15 +3126,9 @@ function MatchupSimulator({ allFighters, onSavePrediction, onOpenROI }) {
     const betConfidence = Math.round(Math.max(0, edgeScore + credScore + alignScore));
 
     // ── Step 4: Conviction gate + bet action ─────────────────────────────────
-    // Backtested on 13,870 fights: picks at 50–55% win only 52.8% of the time.
-    // Applying a conviction floor raises win rate from 70.3% → 75.3% (+5pp).
-    // Gate rules:
-    //   < 55% pick prob → max LEAN (coin-flip zone, large edge is misleading)
-    //   55–60% pick prob → BET requires larger edge (15pp), STRONG BET same
-    //   ≥ 60% pick prob → standard tiers apply
     const pickProb = pickSide === 'A' ? result.pA : result.pB;
-    const lowConviction  = pickProb < 0.55;  // coin-flip zone
-    const midConviction  = pickProb < 0.60;  // moderate conviction
+    const lowConviction  = pickProb < 0.60;  // below hard floor — no bet zone
+    const midConviction  = pickProb < 0.65;  // low conviction tier
 
     const betAction = (() => {
       if (conflictingSignals) return 'NO BET';
@@ -3176,7 +3170,7 @@ function MatchupSimulator({ allFighters, onSavePrediction, onOpenROI }) {
         return `Market underprices ${oppFighter} (+${(oppEdge * 100).toFixed(1)}pp edge) but model picks ${pickFighter} — conflicting signals`;
       }
       if (!hasPickEdge) return `No positive edge on model pick at current lines`;
-      if (lowConviction) return `Model pick is ${(pickProb * 100).toFixed(1)}% — too close to 50/50 for a bet (capped at LEAN). Edge may be real but conviction is too low.`;
+      if (lowConviction) return `Model pick is ${(pickProb * 100).toFixed(1)}% — below the 60% floor required for any bet recommendation.`;
       return `Edge below minimum threshold`;
     })();
 
