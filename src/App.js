@@ -1573,6 +1573,8 @@ const computeMatchupEdges = (fA, fB, oddsA = null, oddsB = null) => {
   const S = MODEL.SCALES;
   const debutAdjA = getDebutProspectAdjustment(fA, fB);
   const debutAdjB = getDebutProspectAdjustment(fB, fA);
+  const agePenA = ageDecayPenalty(fA);
+  const agePenB = ageDecayPenalty(fB);
 
   // Discount striking stats for fighters on losing streaks so high-volume
   // output in losses does not overstate current offensive strength.
@@ -1719,6 +1721,7 @@ const computeMatchupEdges = (fA, fB, oddsA = null, oddsB = null) => {
   const experienceWeightPool = W.total_round_dif + W.total_title_bout_dif;
   const fightCountWeight = experienceWeightPool * 0.58;
   const deepRoundsWeight = experienceWeightPool * 0.42;
+  const AGE_DECAY_W = 0.03;
 
   const clamp = (v) => Math.max(-2, Math.min(2, v));
   const auditRow = ({
@@ -1762,7 +1765,7 @@ const computeMatchupEdges = (fA, fB, oddsA = null, oddsB = null) => {
   const physicalScore =
     clamp(feats.reach_dif) * W.reach_dif +
     clamp(feats.height_dif) * W.height_dif +
-    clamp(feats.age_dif) * W.age_dif;
+    clamp(feats.age_dif) * (W.age_dif - AGE_DECAY_W);
 
   const formScore =
     clamp(feats.win_streak_dif) * W.win_streak_dif +
@@ -1793,6 +1796,7 @@ const computeMatchupEdges = (fA, fB, oddsA = null, oddsB = null) => {
   const debutPenaltyScore =
     -debutAdjA.directPenalty + debutAdjB.directPenalty;
   const DEBUT_TRANSLATION_W = 0.085;
+  const agePenaltyScore = -agePenA + agePenB;
 
   const auditRows = [
     auditRow({
@@ -2058,7 +2062,8 @@ const computeMatchupEdges = (fA, fB, oddsA = null, oddsB = null) => {
     analyticsScore +
     oddsScore +
     qualMomScore +
-    clamp(debutPenaltyScore) * DEBUT_TRANSLATION_W;
+    clamp(debutPenaltyScore) * DEBUT_TRANSLATION_W +
+    clamp(agePenaltyScore / 0.12) * AGE_DECAY_W;
 
   // ── Platt calibration ─────────────────────────────────────────────────────
   const P = useOdds ? MODEL.PLATT_OD : MODEL.PLATT_NO;
