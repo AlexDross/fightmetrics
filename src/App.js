@@ -4333,15 +4333,36 @@ function MatchupSimulator({ allFighters, onSavePrediction, onOpenROI }) {
             <p className="text-slate-400 text-xs font-semibold uppercase tracking-widest mb-4">
               Domain Breakdown
             </p>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-3">
+              {/* Detailed cards: Striking, Grappling, Physical */}
               {[
-                { edgeKey: 'striking', desc: 'NSM + accuracy interaction' },
-                { edgeKey: 'grappling', desc: 'TD offense vs TDD + control' },
-                { edgeKey: 'finishing', desc: 'KD rate + finish %' },
-                { edgeKey: 'physical', desc: 'Reach (75%) + height (25%)' },
-                { edgeKey: 'cardio', desc: 'Late-round output ratio' },
-                { edgeKey: 'rating', desc: 'Master RTG differential' },
-              ].map(({ edgeKey, desc }) => {
+                {
+                  edgeKey: 'striking',
+                  rows: [
+                    { label: 'Strikes Landed/min', aRaw: fA.ASL ?? 0, bRaw: fB.ASL ?? 0, aVal: (fA.ASL ?? 0).toFixed(2), bVal: (fB.ASL ?? 0).toFixed(2) },
+                    { label: 'Striking Accuracy %', aRaw: fA.ASP ?? 0, bRaw: fB.ASP ?? 0, aVal: ((fA.ASP ?? 0) * 100).toFixed(1) + '%', bVal: ((fB.ASP ?? 0) * 100).toFixed(1) + '%' },
+                    { label: 'KDs per 100 min', aRaw: fA.KD_PER_MIN ?? 0, bRaw: fB.KD_PER_MIN ?? 0, aVal: ((fA.KD_PER_MIN ?? 0) * 100).toFixed(2), bVal: ((fB.KD_PER_MIN ?? 0) * 100).toFixed(2) },
+                  ],
+                },
+                {
+                  edgeKey: 'grappling',
+                  rows: [
+                    { label: 'Takedowns Landed/15m', aRaw: fA.ATL ?? 0, bRaw: fB.ATL ?? 0, aVal: (fA.ATL ?? 0).toFixed(2), bVal: (fB.ATL ?? 0).toFixed(2) },
+                    { label: 'Takedown Accuracy %', aRaw: fA.ATP ?? 0, bRaw: fB.ATP ?? 0, aVal: ((fA.ATP ?? 0) * 100).toFixed(1) + '%', bVal: ((fB.ATP ?? 0) * 100).toFixed(1) + '%' },
+                    { label: 'TD Defense %', aRaw: fA.ATD_PCT ?? 60, bRaw: fB.ATD_PCT ?? 60, aVal: (fA.ATD_PCT ?? 60).toFixed(1) + '%', bVal: (fB.ATD_PCT ?? 60).toFixed(1) + '%' },
+                    { label: 'Sub Attempts/15m', aRaw: fA.ASA ?? 0, bRaw: fB.ASA ?? 0, aVal: (fA.ASA ?? 0).toFixed(2), bVal: (fB.ASA ?? 0).toFixed(2) },
+                    { label: 'Control Time %', aRaw: fA.CONTROL_TIME_PCT ?? 0, bRaw: fB.CONTROL_TIME_PCT ?? 0, aVal: (fA.CONTROL_TIME_PCT ?? 0).toFixed(1) + '%', bVal: (fB.CONTROL_TIME_PCT ?? 0).toFixed(1) + '%' },
+                  ],
+                },
+                {
+                  edgeKey: 'physical',
+                  rows: [
+                    { label: 'Reach', aRaw: fA.REACH_IN ?? 0, bRaw: fB.REACH_IN ?? 0, aVal: (fA.REACH_IN ?? 0) + '"', bVal: (fB.REACH_IN ?? 0) + '"' },
+                    { label: 'Height', aRaw: fA.HEIGHT_IN ?? 0, bRaw: fB.HEIGHT_IN ?? 0, aVal: fmtHeight(fA.HEIGHT_IN), bVal: fmtHeight(fB.HEIGHT_IN) },
+                    { label: 'Age', aRaw: fA.AGE ?? 0, bRaw: fB.AGE ?? 0, aVal: (fA.AGE ?? 0).toFixed(1), bVal: (fB.AGE ?? 0).toFixed(1), lowerBetter: true },
+                  ],
+                },
+              ].map(({ edgeKey, rows }) => {
                 const e = result.edges[edgeKey];
                 const favorsA = e.clamped > 0;
                 const neutral = Math.abs(e.clamped) < 0.05;
@@ -4362,17 +4383,68 @@ function MatchupSimulator({ allFighters, onSavePrediction, onOpenROI }) {
                         <span className="text-xs text-slate-500">Even</span>
                       )}
                     </div>
-                    <div className="h-2 bg-slate-700 rounded-full overflow-hidden flex">
+                    <div className="h-2 bg-slate-700 rounded-full overflow-hidden flex mb-3">
                       <div
                         className="h-full bg-blue-500 rounded-full transition-all"
                         style={{ width: `${Math.max(5, Math.min(95, pctA))}%` }}
                       />
                       <div className="h-full bg-red-500 flex-1" />
                     </div>
-                    <p className="text-slate-600 text-xs mt-1.5">{desc}</p>
+                    <div className="space-y-1">
+                      {rows.map(({ label, aRaw, bRaw, aVal, bVal, lowerBetter }) => {
+                        const aEdge = lowerBetter ? aRaw < bRaw : aRaw > bRaw;
+                        const bEdge = lowerBetter ? bRaw < aRaw : bRaw > aRaw;
+                        return (
+                          <div key={label} className="grid grid-cols-3 gap-1 text-xs">
+                            <span className={`font-mono text-right ${aEdge ? 'text-blue-400 font-bold' : 'text-slate-400'}`}>
+                              {aVal}
+                            </span>
+                            <span className="text-slate-500 text-center leading-tight">{label}</span>
+                            <span className={`font-mono text-left ${bEdge ? 'text-red-400 font-bold' : 'text-slate-400'}`}>
+                              {bVal}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
                 );
               })}
+
+              {/* Summary bars: Form, Experience, Analytics */}
+              <div className="grid grid-cols-3 gap-3">
+                {['form', 'experience', 'analytics'].map((edgeKey) => {
+                  const e = result.edges[edgeKey];
+                  const favorsA = e.clamped > 0;
+                  const neutral = Math.abs(e.clamped) < 0.05;
+                  const winner = neutral ? null : favorsA ? fA : fB;
+                  const winColor = favorsA ? 'text-blue-400' : 'text-red-400';
+                  const pctA = 50 + e.clamped * 33;
+                  return (
+                    <div key={edgeKey} className="bg-slate-800/40 rounded-xl p-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-xs text-slate-400 font-semibold">
+                          {e.icon} {e.label}
+                        </span>
+                        {winner ? (
+                          <span className={`text-xs font-black ${winColor}`}>
+                            {winner.FIGHTER.split(' ').pop()} ▲
+                          </span>
+                        ) : (
+                          <span className="text-xs text-slate-500">Even</span>
+                        )}
+                      </div>
+                      <div className="h-2 bg-slate-700 rounded-full overflow-hidden flex">
+                        <div
+                          className="h-full bg-blue-500 rounded-full transition-all"
+                          style={{ width: `${Math.max(5, Math.min(95, pctA))}%` }}
+                        />
+                        <div className="h-full bg-red-500 flex-1" />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </div>
 
