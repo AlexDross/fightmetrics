@@ -385,6 +385,35 @@ export const _P = [
     _p_archived: false,
   },
 
+  // ─── Ben Johnston vs Wes Schultz (Middleweight, Prospect) ────────────────
+  {
+    n: 'Ben Johnston',
+    w: 'Middleweight',
+    ag: 29, ht: 73.0, rh: 77.0, st: 'Orthodox',
+    wi: 5, lo: 1, ws: 4, ls: 0,
+    tr: 12, tb: 0,
+    kow: 0, sbw: 4, dcw: 1,
+    asl: 2.88,
+    asp: 0.32,
+    asa: 0.83,
+    atl: 1.44,
+    atp: 0.37,
+    elo: 1497,
+    crd: 0.96,
+    lfd: '2024-03-16',
+    dsl: 412,
+    dr: null,
+    p4p: null,
+    wlb: 185,
+    _p_source: 'regional',
+    _p_tier: 'tier2',
+    _p_signed: '2026-01-01',
+    _p_debut: '2026-05-02',
+    _p_opponent: 'Wes Schultz',
+    _p_fights_with_stats: 2,
+    _p_notes: 'Former Eternal MMA MW Champion, 2x WBC Muay Thai World Champion, comeback from retirement, striking base with developed grappling',
+    _p_archived: false,
+  },
 
 ];
 
