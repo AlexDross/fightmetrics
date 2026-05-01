@@ -415,6 +415,36 @@ export const _P = [
     _p_archived: false,
   },
 
+  // ─── Ollie Schmid (Featherweight, Prospect) ──────────────────────────────
+  {
+    n: 'Ollie Schmid',
+    w: 'Featherweight',
+    ag: 25, ht: 71.0, rh: 70.0, st: 'Orthodox',
+    wi: 4, lo: 2, ws: 3, ls: 0,
+    tr: 8, tb: 0,
+    kow: 3, sbw: 0, dcw: 1,
+    asl: 4.50,
+    asp: 0.44,
+    asa: 0.10,
+    atl: 0.60,
+    atp: 0.28,
+    elo: 1454,
+    crd: 0.95,
+    lfd: '2026-03-07',
+    dsl: 56,
+    dr: null,
+    p4p: null,
+    wlb: 145,
+    _p_source: 'short_notice',
+    _p_tier: 'tier3',
+    _p_signed: '2026-04-29',
+    _p_debut: '2026-05-02',
+    _p_opponent: 'Marwan Rahiki',
+    _p_fights_with_stats: 0,
+    _p_notes: 'City Kickboxing trained (trains with Adesanya camp), Taekwondo black belt, spinning backfist KO specialist, short notice debut',
+    _p_archived: false,
+  },
+
 ];
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
