@@ -625,6 +625,11 @@ const computeProspectSeededElo = (d) => {
     d._p_tier === 'tier1' ? 50 : d._p_tier === 'tier2' ? 25 : 0;
   const undefeatedLast5 = losses === 0 && wins >= 5 ? 30 : 0;
 
+  const tierCap =
+    d._p_tier === 'tier1' ? 1520 :
+    d._p_tier === 'tier2' ? 1490 :
+    1450;
+  const shortNoticePenalty = d._p_source === 'short_notice' ? 30 : 0;
   return clampNum(
     1400 +
       (wins - losses) * 8 +
@@ -632,7 +637,7 @@ const computeProspectSeededElo = (d) => {
       tierBonus +
       undefeatedLast5,
     1370,
-    1520
+    tierCap - shortNoticePenalty
   );
 };
 
