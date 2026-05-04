@@ -1590,22 +1590,39 @@ const computeMatchupEdges = (fA, fB, oddsA = null, oddsB = null) => {
   const loseStreakB = fB.MODEL_UFC_LOSE_STREAK ?? fB.LOSE_STREAK ?? 0;
   const winStreakA = fA.MODEL_UFC_WIN_STREAK ?? fA.WIN_STREAK ?? 0;
   const winStreakB = fB.MODEL_UFC_WIN_STREAK ?? fB.WIN_STREAK ?? 0;
+  const divA = DIVISION_UFC_AVERAGES[fA.WEIGHT_CLASS] ?? {};
+  const divB = DIVISION_UFC_AVERAGES[fB.WEIGHT_CLASS] ?? {};
+  const totalMinA = fA.TOTAL_MIN ?? 0;
+  const totalMinB = fB.TOTAL_MIN ?? 0;
+  // Blend a fighter's observed stat toward the division mean when sample is small
+  const sampleBlend = (stat, divMean, totalMin) => {
+    const w = Math.min(1.0, totalMin / 75);
+    return w * stat + (1 - w) * divMean;
+  };
   const aslA =
-    (fA.ASL ?? 0) *
+    sampleBlend(fA.ASL ?? 0, divA.asl ?? 3.5, totalMinA) *
     formDecay(loseStreakA) *
     (debutAdjA.isDebutProspect ? debutAdjA.analyticsTrust : 1);
   const aslB =
-    (fB.ASL ?? 0) *
+    sampleBlend(fB.ASL ?? 0, divB.asl ?? 3.5, totalMinB) *
     formDecay(loseStreakB) *
     (debutAdjB.isDebutProspect ? debutAdjB.analyticsTrust : 1);
   const aspA =
-    (fA.ASP ?? 0) *
+    sampleBlend(fA.ASP ?? 0, divA.asp ?? 0.44, totalMinA) *
     (0.6 + 0.4 * formDecay(loseStreakA)) *
     (debutAdjA.isDebutProspect ? (0.82 + debutAdjA.analyticsTrust * 0.18) : 1);
   const aspB =
-    (fB.ASP ?? 0) *
+    sampleBlend(fB.ASP ?? 0, divB.asp ?? 0.44, totalMinB) *
     (0.6 + 0.4 * formDecay(loseStreakB)) *
     (debutAdjB.isDebutProspect ? (0.82 + debutAdjB.analyticsTrust * 0.18) : 1);
+  const atlA = sampleBlend(fA.ATL ?? 0, divA.atl ?? 1.0, totalMinA);
+  const atlB = sampleBlend(fB.ATL ?? 0, divB.atl ?? 1.0, totalMinB);
+  const atpA = sampleBlend(fA.ATP ?? 0, divA.atp ?? 0.35, totalMinA);
+  const atpB = sampleBlend(fB.ATP ?? 0, divB.atp ?? 0.35, totalMinB);
+  const atdA = sampleBlend(fA.ATD ?? 0.60, 0.60, totalMinA);
+  const atdB = sampleBlend(fB.ATD ?? 0.60, 0.60, totalMinB);
+  const asaA = sampleBlend(fA.ASA ?? 0, divA.asa ?? 0.25, totalMinA);
+  const asaB = sampleBlend(fB.ASA ?? 0, divB.asa ?? 0.25, totalMinB);
   const winsA = fA.MODEL_UFC_WINS ?? fA.WINS ?? 0;
   const winsB = fB.MODEL_UFC_WINS ?? fB.WINS ?? 0;
   const lossesA = fA.MODEL_UFC_LOSSES ?? fA.LOSSES ?? 0;
@@ -1650,10 +1667,10 @@ const computeMatchupEdges = (fA, fB, oddsA = null, oddsB = null) => {
   const feats = {
     sig_str_dif: (aslA - aslB) / S.sig_str_dif,
     avg_sig_str_pct_dif: (aspA - aspB) / S.avg_sig_str_pct_dif,
-    avg_td_dif: ((fA.ATL ?? 0) - (fB.ATL ?? 0)) / S.avg_td_dif,
-    avg_td_pct_dif: ((fA.ATP ?? 0) - (fB.ATP ?? 0)) / S.avg_td_pct_dif,
-    atd_dif: ((fA.ATD ?? 0.60) - (fB.ATD ?? 0.60)) / S.atd_dif,
-    avg_sub_att_dif: ((fA.ASA ?? 0) - (fB.ASA ?? 0)) / S.avg_sub_att_dif,
+    avg_td_dif: (atlA - atlB) / S.avg_td_dif,
+    avg_td_pct_dif: (atpA - atpB) / S.avg_td_pct_dif,
+    atd_dif: (atdA - atdB) / S.atd_dif,
+    avg_sub_att_dif: (asaA - asaB) / S.avg_sub_att_dif,
     kd_dif: ((fA.KD_PER_MIN ?? 0) - (fB.KD_PER_MIN ?? 0)) / S.kd_dif,
     control_time_dif:
       ((fA.CONTROL_TIME_PCT ?? 0) - (fB.CONTROL_TIME_PCT ?? 0)) /
