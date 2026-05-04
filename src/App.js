@@ -1824,6 +1824,11 @@ const computeMatchupEdges = (fA, fB, oddsA = null, oddsB = null) => {
   const debutPenaltyScore =
     -debutAdjA.directPenalty + debutAdjB.directPenalty;
   const DEBUT_TRANSLATION_W = 0.085;
+  // Extra composite penalty for streaks of 2+; streak=1 is already captured by
+  // lose_streak_dif weight and formDecay, so only increment beyond the first loss.
+  const lossStreakPenaltyA = loseStreakA >= 2 ? Math.min((loseStreakA - 1) * 0.04, 0.10) : 0;
+  const lossStreakPenaltyB = loseStreakB >= 2 ? Math.min((loseStreakB - 1) * 0.04, 0.10) : 0;
+  const lossStreakScore = lossStreakPenaltyB - lossStreakPenaltyA;
   const agePenaltyScore = -agePenA + agePenB;
   const stanceScore =
     (fA.STANCE === 'Southpaw' && fB.STANCE === 'Orthodox') ?  SOUTHPAW_W :
@@ -2107,7 +2112,8 @@ const computeMatchupEdges = (fA, fB, oddsA = null, oddsB = null) => {
     qualMomScore +
     clamp(debutPenaltyScore) * DEBUT_TRANSLATION_W +
     clamp(agePenaltyScore / 0.12) * AGE_DECAY_W +
-    stanceScore;
+    stanceScore +
+    lossStreakScore;
 
   // ── Platt calibration ─────────────────────────────────────────────────────
   const P = useOdds ? MODEL.PLATT_OD : MODEL.PLATT_NO;
