@@ -5999,7 +5999,10 @@ function ROITab({
       isResolvedWinner(entry.actualWinner, entry)
     );
 
-    const decisive = graded.filter(
+    // Debut fights remain visible in the list but are excluded from all stats
+    const gradedStats = graded.filter((entry) => !entry.includesProspect);
+
+    const decisive = gradedStats.filter(
       (entry) =>
         entry.actualWinner === entry.fighterA ||
         entry.actualWinner === entry.fighterB
@@ -6009,7 +6012,7 @@ function ROITab({
       (entry) => entry.displayWinner === entry.actualWinner
     ).length;
 
-    const betEntries = graded.filter((entry) =>
+    const betEntries = gradedStats.filter((entry) =>
       Boolean(americanToDecimal(entry.marketOdds))
     );
 
@@ -6021,7 +6024,7 @@ function ROITab({
     const stake = betEntries.length;
     return {
       total: entries.length,
-      graded: graded.length,
+      graded: gradedStats.length,
       correct,
       accuracy: decisive.length ? (correct / decisive.length) * 100 : 0,
       bets: betEntries.length,
@@ -6242,6 +6245,9 @@ function ROITab({
                         ? 'Draw'
                         : entry.actualWinner || 'Awaiting result'}
                     </p>
+                    {entry.includesProspect && graded && (
+                      <p className="text-amber-600 text-xs mt-0.5 font-semibold">Excl. stats</p>
+                    )}
                   </div>
                 </div>
 
