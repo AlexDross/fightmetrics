@@ -3184,14 +3184,14 @@ function MatchupSimulator({ allFighters, onSavePrediction, onOpenROI }) {
 
       // Mid conviction tier (65-69%)
       if (pickProb < 0.70) {
-        if (pickEdge >= 0.20) return 'BET';
+        if (pickEdge >= 0.30) return 'BET';
         if (pickEdge >= 0.10) return 'LEAN';
         return 'NO BET';
       }
 
       // High conviction tier (70%+)
-      if (pickEdge >= 0.20) return 'STRONG BET';
-      if (pickEdge >= 0.10) return 'BET';
+      if (pickEdge >= 0.25) return 'STRONG BET';
+      if (pickEdge >= 0.15) return 'BET';
       return 'LEAN';
     })();
 
