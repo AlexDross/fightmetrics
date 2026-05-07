@@ -912,7 +912,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "2:47",
-      "wc": "Unknown",
+      "wc": "Featherweight",
       "tb": false,
       "ev": "UFC Fight Night: Della Maddalena vs. Prates"
     }
@@ -2005,7 +2005,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 3,
       "ti": "1:50",
-      "wc": "Unknown",
+      "wc": "Middleweight",
       "tb": false,
       "ev": "UFC Fight Night: Della Maddalena vs. Prates"
     }
