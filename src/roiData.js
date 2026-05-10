@@ -35,7 +35,7 @@ export const ROI_ENTRIES = [
     "fairLineB": "+171",
     "oddsA": "-500",
     "oddsB": "+380",
-    "actualWinner": "",
+    "actualWinner": "Sean Strickland",
     "notes": ""
   },
   {
@@ -74,7 +74,7 @@ export const ROI_ENTRIES = [
     "fairLineB": "-120",
     "oddsA": "+136",
     "oddsB": "-162",
-    "actualWinner": "",
+    "actualWinner": "Joshua Van",
     "notes": ""
   },
   {
@@ -113,7 +113,7 @@ export const ROI_ENTRIES = [
     "fairLineB": "-126",
     "oddsA": "-125",
     "oddsB": "+105",
-    "actualWinner": "",
+    "actualWinner": "Alexander Volkov",
     "notes": ""
   },
   {
@@ -152,7 +152,7 @@ export const ROI_ENTRIES = [
     "fairLineB": "+120",
     "oddsA": "+185",
     "oddsB": "-225",
-    "actualWinner": "",
+    "actualWinner": "Sean Brady",
     "notes": ""
   },
   {
@@ -191,7 +191,7 @@ export const ROI_ENTRIES = [
     "fairLineB": "+224",
     "oddsA": "-410",
     "oddsB": "+320",
-    "actualWinner": "",
+    "actualWinner": "King Green",
     "notes": ""
   },
   {
@@ -230,7 +230,7 @@ export const ROI_ENTRIES = [
     "fairLineB": "+198",
     "oddsA": "-1050",
     "oddsB": "+675",
-    "actualWinner": "",
+    "actualWinner": "Ateba Gautier",
     "notes": ""
   },
   {
@@ -269,7 +269,7 @@ export const ROI_ENTRIES = [
     "fairLineB": "+187",
     "oddsA": "+160",
     "oddsB": "-192",
-    "actualWinner": "",
+    "actualWinner": "Yaroslav Amosov",
     "notes": ""
   },
   {
@@ -308,7 +308,7 @@ export const ROI_ENTRIES = [
     "fairLineB": "+226",
     "oddsA": "-148",
     "oddsB": "+124",
-    "actualWinner": "",
+    "actualWinner": "Grant Dawson",
     "notes": ""
   },
   {
@@ -347,7 +347,7 @@ export const ROI_ENTRIES = [
     "fairLineB": "+108",
     "oddsA": "+210",
     "oddsB": "-258",
-    "actualWinner": "",
+    "actualWinner": "Jim Miller",
     "notes": ""
   },
   {
@@ -386,7 +386,7 @@ export const ROI_ENTRIES = [
     "fairLineB": "+100",
     "oddsA": "+160",
     "oddsB": "-192",
-    "actualWinner": "",
+    "actualWinner": "Roman Kopylov",
     "notes": ""
   },
   {
@@ -425,7 +425,7 @@ export const ROI_ENTRIES = [
     "fairLineB": "+130",
     "oddsA": "-166",
     "oddsB": "+140",
-    "actualWinner": "",
+    "actualWinner": "Pat Sabatini",
     "notes": ""
   },
   {
@@ -464,7 +464,7 @@ export const ROI_ENTRIES = [
     "fairLineB": "+146",
     "oddsA": "-800",
     "oddsB": "+550",
-    "actualWinner": "",
+    "actualWinner": "Baisangur Susurkaev",
     "notes": ""
   },
   {
@@ -503,7 +503,7 @@ export const ROI_ENTRIES = [
     "fairLineB": "-107",
     "oddsA": "+145",
     "oddsB": "-175",
-    "actualWinner": "",
+    "actualWinner": "Jose Ochoa",
     "notes": ""
   },
   {
