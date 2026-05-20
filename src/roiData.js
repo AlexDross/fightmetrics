@@ -35,7 +35,7 @@ export const ROI_ENTRIES = [
     "fairLineB": "-198",
     "oddsA": "-165",
     "oddsB": "+135",
-    "actualWinner": "",
+    "actualWinner": "Arnold Allen",
     "notes": ""
   },
   {
@@ -74,7 +74,7 @@ export const ROI_ENTRIES = [
     "fairLineB": "+108",
     "oddsA": "+145",
     "oddsB": "-175",
-    "actualWinner": "",
+    "actualWinner": "Dooho Choi",
     "notes": ""
   },
   {
@@ -113,7 +113,7 @@ export const ROI_ENTRIES = [
     "fairLineB": "-113",
     "oddsA": "+140",
     "oddsB": "-170",
-    "actualWinner": "",
+    "actualWinner": "Benardo Sopaj",
     "notes": ""
   },
   {
@@ -152,7 +152,7 @@ export const ROI_ENTRIES = [
     "fairLineB": "+127",
     "oddsA": "+105",
     "oddsB": "-125",
-    "actualWinner": "",
+    "actualWinner": "Khaos Williams",
     "notes": ""
   },
   {
@@ -191,7 +191,7 @@ export const ROI_ENTRIES = [
     "fairLineB": "+160",
     "oddsA": "+150",
     "oddsB": "-180",
-    "actualWinner": "",
+    "actualWinner": "Ivan Erslan",
     "notes": ""
   },
   {
@@ -230,7 +230,7 @@ export const ROI_ENTRIES = [
     "fairLineB": "-153",
     "oddsA": "+140",
     "oddsB": "-170",
-    "actualWinner": "",
+    "actualWinner": "Ketlen Vieira",
     "notes": ""
   },
   {
@@ -269,7 +269,7 @@ export const ROI_ENTRIES = [
     "fairLineB": "-185",
     "oddsA": "+170",
     "oddsB": "-205",
-    "actualWinner": "",
+    "actualWinner": "Cody Brundage",
     "notes": ""
   },
   {
@@ -308,7 +308,7 @@ export const ROI_ENTRIES = [
     "fairLineB": "+125",
     "oddsA": "-210",
     "oddsB": "+175",
-    "actualWinner": "",
+    "actualWinner": "Alice Ardelean",
     "notes": ""
   },
   {
@@ -347,7 +347,7 @@ export const ROI_ENTRIES = [
     "fairLineB": "-104",
     "oddsA": "-105",
     "oddsB": "-115",
-    "actualWinner": "",
+    "actualWinner": "Luis Gurule",
     "notes": ""
   },
   {
@@ -386,7 +386,7 @@ export const ROI_ENTRIES = [
     "fairLineB": "+123",
     "oddsA": "+195",
     "oddsB": "-240",
-    "actualWinner": "",
+    "actualWinner": "Nicolle Caliari",
     "notes": ""
   },
   {
