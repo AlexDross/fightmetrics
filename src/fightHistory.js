@@ -512,7 +512,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "4:08",
-      "wc": "Unknown",
+      "wc": "Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Allen vs. Costa"
     }
@@ -670,7 +670,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Unknown",
+      "wc": "Catch Weight",
       "tb": false,
       "ev": "UFC Fight Night: Allen vs. Costa"
     }
@@ -1058,7 +1058,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "2:51",
-      "wc": "Unknown",
+      "wc": "Lightweight",
       "tb": false,
       "ev": "UFC Fight Night: Allen vs. Costa"
     }
@@ -1071,7 +1071,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "2:51",
-      "wc": "Unknown",
+      "wc": "Lightweight",
       "tb": false,
       "ev": "UFC Fight Night: Allen vs. Costa"
     }
