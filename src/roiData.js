@@ -35,7 +35,7 @@ export const ROI_ENTRIES = [
     "fairLineB": "-240",
     "oddsA": "-115",
     "oddsB": "-105",
-    "actualWinner": "",
+    "actualWinner": "Gabriel Bonfim",
     "notes": ""
   },
   {
@@ -74,7 +74,7 @@ export const ROI_ENTRIES = [
     "fairLineB": "+128",
     "oddsA": "-185",
     "oddsB": "+155",
-    "actualWinner": "",
+    "actualWinner": "Brendan Allen",
     "notes": ""
   },
   {
@@ -113,7 +113,7 @@ export const ROI_ENTRIES = [
     "fairLineB": "+132",
     "oddsA": "-310",
     "oddsB": "+245",
-    "actualWinner": "",
+    "actualWinner": "Tom Nolan",
     "notes": ""
   },
   {
@@ -152,7 +152,7 @@ export const ROI_ENTRIES = [
     "fairLineB": "-121",
     "oddsA": "-130",
     "oddsB": "+110",
-    "actualWinner": "",
+    "actualWinner": "Bryce Mitchell",
     "notes": ""
   },
   {
@@ -191,7 +191,7 @@ export const ROI_ENTRIES = [
     "fairLineB": "+132",
     "oddsA": "-400",
     "oddsB": "+300",
-    "actualWinner": "",
+    "actualWinner": "Iwo Baraniewski",
     "notes": ""
   },
   {
@@ -230,7 +230,7 @@ export const ROI_ENTRIES = [
     "fairLineB": "-165",
     "oddsA": "+390",
     "oddsB": "-525",
-    "actualWinner": "",
+    "actualWinner": "Alessandro Costa",
     "notes": ""
   },
   {
@@ -269,7 +269,7 @@ export const ROI_ENTRIES = [
     "fairLineB": "-131",
     "oddsA": "-450",
     "oddsB": "+350",
-    "actualWinner": "",
+    "actualWinner": "Marcus McGhee",
     "notes": ""
   },
   {
@@ -308,7 +308,7 @@ export const ROI_ENTRIES = [
     "fairLineB": "-130",
     "oddsA": "-125",
     "oddsB": "+105",
-    "actualWinner": "",
+    "actualWinner": "Edgar Chairez",
     "notes": ""
   },
   {
@@ -347,7 +347,7 @@ export const ROI_ENTRIES = [
     "fairLineB": "+105",
     "oddsA": "+100",
     "oddsB": "-120",
-    "actualWinner": "",
+    "actualWinner": "Chelsea Chandler",
     "notes": ""
   },
   {
@@ -386,7 +386,7 @@ export const ROI_ENTRIES = [
     "fairLineB": "-157",
     "oddsA": "+155",
     "oddsB": "-185",
-    "actualWinner": "",
+    "actualWinner": "Joanderson Brito",
     "notes": ""
   },
   {
@@ -425,7 +425,7 @@ export const ROI_ENTRIES = [
     "fairLineB": "+147",
     "oddsA": "-310",
     "oddsB": "+250",
-    "actualWinner": "",
+    "actualWinner": "Ketlen Souza",
     "notes": ""
   },
   {
