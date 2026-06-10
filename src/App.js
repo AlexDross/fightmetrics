@@ -7,11 +7,6 @@ import {
   Radar,
   ResponsiveContainer,
   Tooltip,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Cell,
 } from 'recharts';
 import {
   BarChart2,
@@ -26,11 +21,8 @@ import {
   Wind,
   Filter,
   Info,
-  TrendingDown,
   Ruler,
   Trophy,
-  Clock,
-  ChevronRight,
   Calendar,
   AlertTriangle,
 } from 'lucide-react';
@@ -349,6 +341,17 @@ const computeMomentum = (fh) => {
     den += w;
   });
   return den > 0 ? Math.max(-2, Math.min(2, (num / den) * 2)) : 0;
+};
+
+// ─── STRENGTH OF SCHEDULE ────────────────────────────────────────────────────
+// Mean opponent tier over the last 5 fights via point-in-time getOpponentTier.
+// Returns 0.12 (unranked floor) when history is absent — backtest-validated at
+// SOS@0.10 + Mom@0.03 = +0.89 pp over ELO baseline (name-only YYYYMMDD tiers).
+const computeSOS = (fh) => {
+  if (!fh || fh.length === 0) return 0.12;
+  const last5 = fh.slice(0, 5);
+  const tiers = last5.map((fight) => getOpponentTier(fight.op, fight));
+  return tiers.reduce((a, b) => a + b, 0) / tiers.length;
 };
 
 // ─── LAYOFF PENALTY ──────────────────────────────────────────────────────────
@@ -1772,9 +1775,13 @@ const computeMatchupEdges = (fA, fB) => {
   // the composite. ufc_fight_count_dif is folded into the experience bucket as a
   // proxy for total rounds (better handles early-finisher inflation).
 
-  // Context variables retained for UI warnings/display — NOT added to composite:
+  // Context variables retained for UI warnings/display:
   const QUALITY_MOM_W = 0.055; // kept for display weight reference only
   const qualMomDiff = effectiveQualMomA - effectiveQualMomB;
+
+  const sosA = computeSOS(fA.FIGHT_HISTORY || []);
+  const sosB = computeSOS(fB.FIGHT_HISTORY || []);
+  const sosDiff = sosA - sosB;
   const lossStreakPenaltyA = loseStreakA >= 2 ? Math.min((loseStreakA - 1) * 0.04, 0.10) : 0;
   const lossStreakPenaltyB = loseStreakB >= 2 ? Math.min((loseStreakB - 1) * 0.04, 0.10) : 0;
   const southpawMismatch =
@@ -2013,14 +2020,21 @@ const computeMatchupEdges = (fA, fB) => {
 
 
 
-  // DrossPom Composite v1.0: six clean domain scores, no additive heuristics.
+  // DrossPom Composite v1.0: six domain scores plus age-decay and schedule terms.
+  // agePenAdj: 1.5× magnitude (backtest: +0.33 pp, monotonic sweep).
+  // sosDiff/qualMomDiff: backtest-validated SOS@0.10 + Mom@0.03 = +0.89 pp
+  //   over ELO baseline (name-only YYYYMMDD tiers, 3380 fights, 0 contamination).
+  const agePenAdj = 1.5 * (agePenB - agePenA);
   const composite =
     strikingScore +
     grapplingScore +
     physicalScore +
     formScore +
     expScore +
-    analyticsScore;
+    analyticsScore +
+    agePenAdj +
+    clamp(sosDiff) * 0.10 +
+    clamp(qualMomDiff) * 0.03;
 
   // ── Sigmoid probability mapping ───────────────────────────────────────────
   // p(A wins) = sigmoid(a * composite + b)
@@ -2122,6 +2136,9 @@ const computeMatchupEdges = (fA, fB) => {
     qualMomDiff,
     agePenaltyA,
     agePenaltyB,
+    sosDiff,
+    sosA,
+    sosB,
   };
 };
 // ─── HEADER ───────────────────────────────────────────────────────────────────
@@ -3004,6 +3021,185 @@ const SIMULATOR_COMPARISON_GROUPS = [
   },
 ];
 
+const TAPE = [
+  { key: 'ADJUSTED_RATING', label: 'Master Rating', hb: true, dec: 1 },
+  {
+    key: 'CREDIBILITY',
+    label: 'Sample Confidence',
+    hb: true,
+    dec: 1,
+    pct: true,
+  },
+  {
+    key: 'NET_STRIKE_MARGIN',
+    label: 'Net Strike Margin',
+    hb: true,
+    dec: 2,
+    signed: true,
+  },
+  {
+    key: 'SIG_STR_ACC',
+    label: 'Strike Accuracy %',
+    hb: true,
+    dec: 1,
+    pct: true,
+  },
+  { key: 'TDE', label: 'Takedowns / 15 min', hb: true, dec: 2 },
+  {
+    key: 'TD_ACC',
+    label: 'Takedown Accuracy %',
+    hb: true,
+    dec: 1,
+    pct: true,
+  },
+  {
+    key: 'ATD_PCT',
+    label: 'TD Defense %',
+    hb: true,
+    dec: 1,
+    pct: true,
+  },
+  {
+    key: 'CONTROL_TIME_PCT',
+    label: 'Control Time %',
+    hb: true,
+    dec: 1,
+    pct: true,
+  },
+  { key: 'FINISH_RATE', label: 'Finish Rate %', hb: true, dec: 1, pct: true },
+  { key: 'KD_PER_MIN', label: 'KO Wins / min', hb: true, dec: 4 },
+  { key: 'CARDIO_DECAY', label: 'Cardio (R3/R1)', hb: true, dec: 2 },
+  { key: 'OQI', label: 'Opp. Quality Index', hb: true, dec: 2 },
+  { key: 'FACTOR_DAMAGE', label: 'Damage Factor', hb: true, dec: 1 },
+  { key: 'FACTOR_POSITION', label: 'Position Factor', hb: true, dec: 1 },
+  { key: 'FACTOR_FINISH', label: 'Finish Factor', hb: true, dec: 1 },
+];
+
+const fmtT = (f, { key, dec, signed, pct }) => {
+  const v = f[key];
+  if (v == null) return '—';
+  const s = Math.abs(v).toFixed(dec) + (pct ? '%' : '');
+  return signed ? (v >= 0 ? `+${s}` : `-${s}`) : s;
+};
+
+// Hoisted to module scope so its identity is stable across MatchupSimulator
+// renders — defining it inline remounted the subtree (and reset FighterSearch
+// state) on every keystroke in the odds/event inputs.
+const FighterPanel = ({ f, setF, color, ph, allFighters, fA, fB }) => {
+  const tc = color === 'blue' ? 'text-blue-400' : 'text-red-400';
+  const bc =
+    color === 'blue'
+      ? 'border-blue-800 bg-blue-950/20'
+      : 'border-red-800 bg-red-950/20';
+  const pen = f ? ageDecayPenalty(f) : 0;
+  const adjTE = f ? f.TOTAL_EFFICIENCY * (1 - pen) : null;
+  const form = f ? recentForm(f.FIGHT_HISTORY) : [];
+  return (
+    <div>
+      <FighterSearch
+        allFighters={allFighters}
+        value={f}
+        onChange={setF}
+        placeholder={ph}
+        accent={color}
+      />
+      {f && (
+        <div className={`mt-2 border ${bc} rounded-xl p-4`}>
+          <p className={`text-xs font-bold mb-3 ${tc}`}>
+            {color === 'blue' ? 'Fighter A' : 'Fighter B'}
+          </p>
+          <div className="grid grid-cols-3 gap-2 mb-3">
+            {[
+              ['Div', f.WEIGHT_CLASS],
+              ['UFC Rank', ufcRankLabel(f.FIGHTER) ?? 'NR'],
+              ['RTG', f.ADJUSTED_RATING.toFixed(1)],
+              ['Base EFF', (f.TOTAL_EFFICIENCY ?? 0).toFixed(1)],
+              [
+                'Qual Adj',
+                `${(f.QUALITY_ADJUSTMENT ?? 0) >= 0 ? '+' : ''}${(
+                  f.QUALITY_ADJUSTMENT ?? 0
+                ).toFixed(1)}`,
+              ],
+              [
+                'Age Adj RTG',
+                pen > 0
+                  ? `${(adjTE ?? 0).toFixed(1)} (-${(pen * 100).toFixed(0)}%)`
+                  : (adjTE ?? 0).toFixed(1),
+              ],
+              ['Record', f.RECORD],
+              [
+                'Age',
+                f.AGE ? (f.AGE >= 35 ? `${f.AGE} ⚠️` : String(f.AGE)) : '—',
+              ],
+              ['Height', fmtHeight(f.HEIGHT_IN)],
+              ['Reach', fmtReach(f.REACH_IN)],
+              ['Stance', f.STANCE || '—'],
+              ['Cred', `${(f.CREDIBILITY ?? 0).toFixed(0)}%`],
+            ].map(([k, v]) => (
+              <div key={k} className="bg-slate-800/60 rounded-lg px-2 py-1.5">
+                <p className="text-slate-500 text-xs">{k}</p>
+                <p
+                  className={`font-bold text-xs mt-0.5 truncate ${
+                    k === 'Div' ? 'text-slate-300' : tc
+                  }`}
+                >
+                  {v}
+                </p>
+              </div>
+            ))}
+          </div>
+          {form.length > 0 && (
+            <div className="flex items-center gap-1.5 mb-3">
+              <span className="text-slate-600 text-xs">Form</span>
+              {form.map((r, i) => (
+                <span
+                  key={i}
+                  className={`text-xs font-black px-1.5 py-0.5 rounded ${
+                    r === 'W'
+                      ? 'bg-emerald-900/50 text-emerald-400'
+                      : 'bg-red-900/50 text-red-400'
+                  }`}
+                >
+                  {r}
+                </span>
+              ))}
+            </div>
+          )}
+          <div className="space-y-1.5">
+            {TAPE.slice(0, 7).map((stat) => {
+              const va = fA ? fA[stat.key] : null;
+              const vb = fB ? fB[stat.key] : null;
+              const v = f[stat.key];
+              const isBetter =
+                stat.hb &&
+                va != null &&
+                vb != null &&
+                (color === 'blue' ? va > vb : vb > va);
+              return (
+                <div
+                  key={stat.key}
+                  className="flex items-center justify-between gap-2"
+                >
+                  <span className="text-slate-600 text-xs truncate">
+                    {stat.label}
+                  </span>
+                  <span
+                    className={`font-mono text-xs font-semibold shrink-0 ${
+                      isBetter ? tc : 'text-slate-400'
+                    }`}
+                  >
+                    {fmtT(f, stat)}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 // ─── MATCHUP SIMULATOR ────────────────────────────────────────────────────────
 function MatchupSimulator({ allFighters, onSavePrediction, onOpenROI }) {
   const [fA, setFA] = useState(null);
@@ -3118,6 +3314,15 @@ function MatchupSimulator({ allFighters, onSavePrediction, onOpenROI }) {
         ? 'LEAN'
         : betAction;
 
+    // Heavy-favourite ceiling: if market implies >66.7% (odds shorter than -200),
+    // require edge >25pp or suppress to NO BET.
+    const pickRawOdds = pickSide === 'A' ? rawA : rawB;
+    const heavyFavSuppressed =
+      pickRawOdds > (2 / 3) &&
+      pickEdge < 0.25 &&
+      cappedBetAction !== 'NO BET';
+    const finalBetAction = heavyFavSuppressed ? 'NO BET' : cappedBetAction;
+
     // ── Step 5: No-bet / lean reason for UI display ───────────────────────────
     const noBetReason = (() => {
       if (conflictingSignals) {
@@ -3127,6 +3332,10 @@ function MatchupSimulator({ allFighters, onSavePrediction, onOpenROI }) {
       }
       if (!hasPickEdge) return `No positive edge on model pick at current lines`;
       if (lowConviction) return `Model pick is ${(pickProb * 100).toFixed(1)}% — below the 60% floor required for any bet recommendation.`;
+      if (heavyFavSuppressed) {
+        const pickFighter = pickSide === 'A' ? fA.FIGHTER : fB.FIGHTER;
+        return `${pickFighter} priced at ${Math.round(pickRawOdds * 100)}% implied — heavy-favourite ceiling requires edge >25pp (current: ${(pickEdge * 100).toFixed(1)}pp)`;
+      }
       return `Edge below minimum threshold`;
     })();
 
@@ -3178,7 +3387,7 @@ function MatchupSimulator({ allFighters, onSavePrediction, onOpenROI }) {
       fairLineA,
       fairLineB,
       betConfidence,
-      betAction: cappedBetAction,
+      betAction: finalBetAction,
       betSide,
       alignedDomains,
       gradeA:
@@ -3320,67 +3529,6 @@ function MatchupSimulator({ allFighters, onSavePrediction, onOpenROI }) {
     if (openROI) onOpenROI?.();
   };
 
-  const TAPE = [
-    { key: 'ADJUSTED_RATING', label: 'Master Rating', hb: true, dec: 1 },
-    {
-      key: 'CREDIBILITY',
-      label: 'Sample Confidence',
-      hb: true,
-      dec: 1,
-      pct: true,
-    },
-    {
-      key: 'NET_STRIKE_MARGIN',
-      label: 'Net Strike Margin',
-      hb: true,
-      dec: 2,
-      signed: true,
-    },
-    {
-      key: 'SIG_STR_ACC',
-      label: 'Strike Accuracy %',
-      hb: true,
-      dec: 1,
-      pct: true,
-    },
-    { key: 'TDE', label: 'Takedowns / 15 min', hb: true, dec: 2 },
-    {
-      key: 'TD_ACC',
-      label: 'Takedown Accuracy %',
-      hb: true,
-      dec: 1,
-      pct: true,
-    },
-    {
-      key: 'ATD_PCT',
-      label: 'TD Defense %',
-      hb: true,
-      dec: 1,
-      pct: true,
-    },
-    {
-      key: 'CONTROL_TIME_PCT',
-      label: 'Control Time %',
-      hb: true,
-      dec: 1,
-      pct: true,
-    },
-    { key: 'FINISH_RATE', label: 'Finish Rate %', hb: true, dec: 1, pct: true },
-    { key: 'KD_PER_MIN', label: 'Knockdowns / min', hb: true, dec: 4 },
-    { key: 'CARDIO_DECAY', label: 'Cardio (R3/R1)', hb: true, dec: 2 },
-    { key: 'OQI', label: 'Opp. Quality Index', hb: true, dec: 2 },
-    { key: 'FACTOR_DAMAGE', label: 'Damage Factor', hb: true, dec: 1 },
-    { key: 'FACTOR_POSITION', label: 'Position Factor', hb: true, dec: 1 },
-    { key: 'FACTOR_FINISH', label: 'Finish Factor', hb: true, dec: 1 },
-  ];
-
-  const fmtT = (f, { key, dec, signed, pct }) => {
-    const v = f[key];
-    if (v == null) return '—';
-    const s = Math.abs(v).toFixed(dec) + (pct ? '%' : '');
-    return signed ? (v >= 0 ? `+${s}` : `-${s}`) : s;
-  };
-
   const comparisonAuditMap = useMemo(() => {
     const map = new Map();
     (result?.auditRows ?? []).forEach((row) => {
@@ -3448,121 +3596,6 @@ function MatchupSimulator({ allFighters, onSavePrediction, onOpenROI }) {
     return a < b ? 'A' : 'B';
   };
 
-  const FighterPanel = ({ f, setF, color, ph }) => {
-    const tc = color === 'blue' ? 'text-blue-400' : 'text-red-400';
-    const bc =
-      color === 'blue'
-        ? 'border-blue-800 bg-blue-950/20'
-        : 'border-red-800 bg-red-950/20';
-    const pen = f ? ageDecayPenalty(f) : 0;
-    const adjTE = f ? f.TOTAL_EFFICIENCY * (1 - pen) : null;
-    const form = f ? recentForm(f.FIGHT_HISTORY) : [];
-    return (
-      <div>
-        <FighterSearch
-          allFighters={allFighters}
-          value={f}
-          onChange={setF}
-          placeholder={ph}
-          accent={color}
-        />
-        {f && (
-          <div className={`mt-2 border ${bc} rounded-xl p-4`}>
-            <p className={`text-xs font-bold mb-3 ${tc}`}>
-              {color === 'blue' ? 'Fighter A' : 'Fighter B'}
-            </p>
-            <div className="grid grid-cols-3 gap-2 mb-3">
-              {[
-                ['Div', f.WEIGHT_CLASS],
-                ['UFC Rank', ufcRankLabel(f.FIGHTER) ?? 'NR'],
-                ['RTG', f.ADJUSTED_RATING.toFixed(1)],
-                ['Base EFF', (f.TOTAL_EFFICIENCY ?? 0).toFixed(1)],
-                [
-                  'Qual Adj',
-                  `${(f.QUALITY_ADJUSTMENT ?? 0) >= 0 ? '+' : ''}${(
-                    f.QUALITY_ADJUSTMENT ?? 0
-                  ).toFixed(1)}`,
-                ],
-                [
-                  'Age Adj RTG',
-                  pen > 0
-                    ? `${(adjTE ?? 0).toFixed(1)} (-${(pen * 100).toFixed(0)}%)`
-                    : (adjTE ?? 0).toFixed(1),
-                ],
-                ['Record', f.RECORD],
-                [
-                  'Age',
-                  f.AGE ? (f.AGE >= 35 ? `${f.AGE} ⚠️` : String(f.AGE)) : '—',
-                ],
-                ['Height', fmtHeight(f.HEIGHT_IN)],
-                ['Reach', fmtReach(f.REACH_IN)],
-                ['Stance', f.STANCE || '—'],
-                ['Cred', `${(f.CREDIBILITY ?? 0).toFixed(0)}%`],
-              ].map(([k, v]) => (
-                <div key={k} className="bg-slate-800/60 rounded-lg px-2 py-1.5">
-                  <p className="text-slate-500 text-xs">{k}</p>
-                  <p
-                    className={`font-bold text-xs mt-0.5 truncate ${
-                      k === 'Div' ? 'text-slate-300' : tc
-                    }`}
-                  >
-                    {v}
-                  </p>
-                </div>
-              ))}
-            </div>
-            {form.length > 0 && (
-              <div className="flex items-center gap-1.5 mb-3">
-                <span className="text-slate-600 text-xs">Form</span>
-                {form.map((r, i) => (
-                  <span
-                    key={i}
-                    className={`text-xs font-black px-1.5 py-0.5 rounded ${
-                      r === 'W'
-                        ? 'bg-emerald-900/50 text-emerald-400'
-                        : 'bg-red-900/50 text-red-400'
-                    }`}
-                  >
-                    {r}
-                  </span>
-                ))}
-              </div>
-            )}
-            <div className="space-y-1.5">
-              {TAPE.slice(0, 7).map((stat) => {
-                const va = fA ? fA[stat.key] : null;
-                const vb = fB ? fB[stat.key] : null;
-                const v = f[stat.key];
-                const isBetter =
-                  stat.hb &&
-                  va != null &&
-                  vb != null &&
-                  (color === 'blue' ? va > vb : vb > va);
-                return (
-                  <div
-                    key={stat.key}
-                    className="flex items-center justify-between gap-2"
-                  >
-                    <span className="text-slate-600 text-xs truncate">
-                      {stat.label}
-                    </span>
-                    <span
-                      className={`font-mono text-xs font-semibold shrink-0 ${
-                        isBetter ? tc : 'text-slate-400'
-                      }`}
-                    >
-                      {fmtT(f, stat)}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
-      </div>
-    );
-  };
-
   return (
     <div className="max-w-5xl mx-auto px-5 py-8">
       <div className="mb-6">
@@ -3575,8 +3608,24 @@ function MatchupSimulator({ allFighters, onSavePrediction, onOpenROI }) {
       </div>
 
       <div className="grid grid-cols-2 gap-4 mb-6">
-        <FighterPanel f={fA} setF={setFA} color="blue" ph="Search Fighter A…" />
-        <FighterPanel f={fB} setF={setFB} color="red" ph="Search Fighter B…" />
+        <FighterPanel
+          f={fA}
+          setF={setFA}
+          color="blue"
+          ph="Search Fighter A…"
+          allFighters={allFighters}
+          fA={fA}
+          fB={fB}
+        />
+        <FighterPanel
+          f={fB}
+          setF={setFB}
+          color="red"
+          ph="Search Fighter B…"
+          allFighters={allFighters}
+          fA={fA}
+          fB={fB}
+        />
       </div>
 
       {result && fA && fB ? (
@@ -3790,7 +3839,7 @@ function MatchupSimulator({ allFighters, onSavePrediction, onOpenROI }) {
                 />
               </div>
             </div>
-            <div clclassName="grid grid-cols-3 gap-3 mb-4">
+            <div className="grid grid-cols-3 gap-3 mb-4">
               <div className="bg-slate-800/40 rounded-lg p-3">
                 <p className="text-slate-500 text-xs">Model pick</p>
                 <p className="text-white font-bold text-sm mt-1">
@@ -4330,7 +4379,7 @@ function MatchupSimulator({ allFighters, onSavePrediction, onOpenROI }) {
                   rows: [
                     { label: 'Strikes Landed/min', aRaw: fA.ASL ?? 0, bRaw: fB.ASL ?? 0, aVal: (fA.ASL ?? 0).toFixed(2), bVal: (fB.ASL ?? 0).toFixed(2) },
                     { label: 'Striking Accuracy %', aRaw: fA.ASP ?? 0, bRaw: fB.ASP ?? 0, aVal: ((fA.ASP ?? 0) * 100).toFixed(1) + '%', bVal: ((fB.ASP ?? 0) * 100).toFixed(1) + '%' },
-                    { label: 'KD Rate/min', aRaw: fA.KD_PER_MIN ?? 0, bRaw: fB.KD_PER_MIN ?? 0, aVal: (fA.KD_PER_MIN ?? 0).toFixed(3), bVal: (fB.KD_PER_MIN ?? 0).toFixed(3) },
+                    { label: 'KO Wins/min', aRaw: fA.KD_PER_MIN ?? 0, bRaw: fB.KD_PER_MIN ?? 0, aVal: (fA.KD_PER_MIN ?? 0).toFixed(3), bVal: (fB.KD_PER_MIN ?? 0).toFixed(3) },
                   ],
                 },
                 {
@@ -4667,7 +4716,7 @@ function MatchupSimulator({ allFighters, onSavePrediction, onOpenROI }) {
                   (f.KD_PER_MIN ?? 0) > (opp.KD_PER_MIN ?? 0) &&
                   (f.KD_PER_MIN ?? 0) > 0.01
                 )
-                  paths.push('Knockdown power — can end fight standing');
+                  paths.push('Knockout power — can end fight standing');
                 if ((f.CONTROL_TIME_PCT ?? 0) > (opp.CONTROL_TIME_PCT ?? 0))
                   paths.push(
                     "Ground control — limits opponent's offense from bottom"
@@ -4944,7 +4993,7 @@ function ScoutProfile({ allFighters }) {
           signed: true,
         },
         { key: 'SIG_STR_ACC', label: 'Strike Accuracy', dec: 1, pct: true },
-        { key: 'KD_PER_MIN', label: 'Knockdowns/min', dec: 4 },
+        { key: 'KD_PER_MIN', label: 'KO Wins/min', dec: 4 },
       ],
     },
     {
