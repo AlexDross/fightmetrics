@@ -3851,13 +3851,22 @@ function MatchupSimulator({ allFighters, onSavePrediction, onOpenROI }) {
               </div>
               <div className="bg-slate-800/40 rounded-lg p-3">
                 <p className="text-slate-500 text-xs">Bet recommendation</p>
-                <p className={`font-bold text-sm mt-1 ${!market || market.betAction === 'NO BET' ? 'text-slate-500' : 'text-emerald-400'}`}>
-                  {market?.betAction ?? 'Enter odds'}
-                </p>
-                {market && market.betAction !== 'NO BET' && market.bestBet && (
-                  <p className="text-slate-400 text-xs mt-0.5">
-                    {market.bestBet === 'A' ? fA.FIGHTER : fB.FIGHTER}
-                  </p>
+                {market &&
+                (market.betAction === 'LEAN' ||
+                  market.betAction === 'BET' ||
+                  market.betAction === 'STRONG BET') ? (
+                  <>
+                    <p className="font-bold text-sm mt-1 text-emerald-400">
+                      {market.betAction}
+                    </p>
+                    {market.bestBet && (
+                      <p className="text-slate-400 text-xs mt-0.5">
+                        {market.bestBet === 'A' ? fA.FIGHTER : fB.FIGHTER}
+                      </p>
+                    )}
+                  </>
+                ) : (
+                  <p className="font-bold text-sm mt-1 text-slate-600">—</p>
                 )}
               </div>
               <div className="bg-slate-800/40 rounded-lg p-3">
@@ -3950,6 +3959,7 @@ function MatchupSimulator({ allFighters, onSavePrediction, onOpenROI }) {
                 const isBet = market.betAction === 'STRONG BET' || market.betAction === 'BET';
                 const isLean = market.betAction === 'LEAN';
                 const isNoBet = market.betAction === 'NO BET';
+                const actionable = isBet || isLean;
 
                 const actionStyles = {
                   'STRONG BET': { bg: 'bg-emerald-950/40 border-emerald-600', badge: 'bg-emerald-500 text-emerald-950', text: 'text-emerald-400' },
@@ -3962,8 +3972,8 @@ function MatchupSimulator({ allFighters, onSavePrediction, onOpenROI }) {
                 return (
                   <div className="space-y-3">
 
-                    {/* ── ROW 1: Three-column signal summary ── */}
-                    <div className="grid grid-cols-3 gap-3">
+                    {/* ── ROW 1: Signal summary (Bet Rec column only when actionable) ── */}
+                    <div className={`grid ${actionable ? 'grid-cols-3' : 'grid-cols-2'} gap-3`}>
 
                       {/* Model Pick — always shown */}
                       <div className={`border rounded-xl p-4 ${market.lowConviction ? 'bg-orange-950/10 border-orange-900' : 'bg-slate-900 border-slate-700'}`}>
@@ -4010,24 +4020,20 @@ function MatchupSimulator({ allFighters, onSavePrediction, onOpenROI }) {
                         )}
                       </div>
 
-                      {/* Bet Recommendation */}
-                      <div className={`border rounded-xl p-4 ${s.bg}`}>
-                        <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider mb-2">Bet Rec</p>
-                        <span className={`inline-block text-xs font-black px-2 py-0.5 rounded-full mb-2 ${s.badge}`}>
-                          {market.betAction}
-                        </span>
-                        {isNoBet ? (
-                          <p className="text-slate-500 text-xs leading-snug">{market.noBetReason}</p>
-                        ) : (
-                          <>
-                            <p className={`font-black text-sm ${s.text}`}>{pickFighter.FIGHTER}</p>
-                            <p className="text-white font-bold text-sm">{pickOdds}</p>
-                            {isLean && market.lowCredCap && (
-                              <p className="text-amber-500 text-xs mt-1.5 leading-snug">Capped from BET — low sample size (CRED &lt; 30%)</p>
-                            )}
-                          </>
-                        )}
-                      </div>
+                      {/* Bet Recommendation — only when actionable (LEAN/BET/STRONG BET) */}
+                      {actionable && (
+                        <div className={`border rounded-xl p-4 ${s.bg}`}>
+                          <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider mb-2">Bet Rec</p>
+                          <span className={`inline-block text-xs font-black px-2 py-0.5 rounded-full mb-2 ${s.badge}`}>
+                            {market.betAction}
+                          </span>
+                          <p className={`font-black text-sm ${s.text}`}>{pickFighter.FIGHTER}</p>
+                          <p className="text-white font-bold text-sm">{pickOdds}</p>
+                          {isLean && market.lowCredCap && (
+                            <p className="text-amber-500 text-xs mt-1.5 leading-snug">Capped from BET — low sample size (CRED &lt; 30%)</p>
+                          )}
+                        </div>
+                      )}
                     </div>
 
                     {/* ── ROW 2: Full bet details (only when actionable) ── */}
@@ -4095,28 +4101,6 @@ function MatchupSimulator({ allFighters, onSavePrediction, onOpenROI }) {
                       </div>
                     )}
 
-                    {/* ── ROW 3: NO BET explanation panel ── */}
-                    {isNoBet && (
-                      <div className="bg-slate-900 border border-slate-700 rounded-xl p-5">
-                        <p className="text-slate-400 text-xs font-semibold uppercase tracking-wider mb-3">Why No Bet</p>
-                        {market.conflictingSignals ? (
-                          <div className="space-y-2">
-                            <p className="text-orange-400 font-bold text-sm">⚠ Conflicting signals — pick and value on opposite sides</p>
-                            <p className="text-slate-400 text-sm">
-                              The model picks <span className="text-white font-bold">{pickFighter.FIGHTER}</span> to win ({market.pickSide === 'A' ? (result.pA * 100).toFixed(1) : (result.pB * 100).toFixed(1)}%),
-                              but the market underprices{' '}
-                              <span className="text-white font-bold">{market.pickSide === 'A' ? fB.FIGHTER : fA.FIGHTER}</span>{' '}
-                              by +{(market.oppEdge * 100).toFixed(1)}pp.
-                            </p>
-                            <p className="text-slate-500 text-xs">
-                              Betting the value side means betting against your own model's winner. Pass this fight — wait for a line move or skip.
-                            </p>
-                          </div>
-                        ) : (
-                          <p className="text-slate-400 text-sm">{market.noBetReason}</p>
-                        )}
-                      </div>
-                    )}
                   </div>
                 );
               })()}
@@ -6127,6 +6111,10 @@ function ROITab({
             const profit = calcTrackedProfit(entry);
             const trackedProb = entry.displayTrackedProb;
             const trackedEdge = entry.displayEdge;
+            const actionableBet =
+              entry.displayBetAction === 'LEAN' ||
+              entry.displayBetAction === 'BET' ||
+              entry.displayBetAction === 'STRONG BET';
 
             return (
               <div
@@ -6182,43 +6170,53 @@ function ROITab({
                   </button>
                 </div>
 
-                <div className="grid grid-cols-4 gap-3 mb-4">
-                  <div className="bg-slate-800/40 rounded-lg p-3">
-                    <p className="text-slate-500 text-xs">Displayed pick</p>
-                    <p className="text-white font-bold text-sm mt-1">
+                {/* Model pick — promoted headline for the entry */}
+                <div className="bg-slate-800/40 rounded-lg p-4 mb-3 flex items-baseline justify-between gap-3">
+                  <div>
+                    <p className="text-slate-500 text-xs uppercase tracking-wider">
+                      Model Pick
+                    </p>
+                    <p className="text-white font-black text-xl mt-1">
                       {entry.displayWinner}
                     </p>
-                    <p className="text-slate-600 text-xs mt-1">
+                  </div>
+                  <div className="text-right">
+                    <p className="text-emerald-400 font-black text-lg">
                       {((entry.displayProb ?? 0) * 100).toFixed(1)}%
                     </p>
-                    <p className="text-slate-600 text-xs mt-1">
-                      {americanOdds(entry.displayProb ?? 0)}
+                    <p className="text-slate-500 text-xs mt-0.5">
+                      win prob · {americanOdds(entry.displayProb ?? 0)}
                     </p>
                   </div>
+                </div>
+
+                <div className="grid grid-cols-3 gap-3 mb-4">
                   <div className="bg-slate-800/40 rounded-lg p-3">
                     <p className="text-slate-500 text-xs uppercase tracking-wider">
                       Bet Rec
                     </p>
-
-                    <div className="mt-2">
-                      <span
-                        className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-black ${
-                          entry.displayBetAction === 'STRONG BET'
-                            ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
-                            : entry.displayBetAction === 'BET'
-                            ? 'bg-emerald-900/30 text-emerald-400 border border-emerald-800'
-                            : entry.displayBetAction === 'LEAN'
-                            ? 'bg-yellow-900/30 text-yellow-400 border border-yellow-800'
-                            : 'bg-slate-800 text-slate-400 border border-slate-700'
-                        }`}
-                      >
-                        {entry.displayBetAction}
-                      </span>
-                    </div>
-
-                    <p className="text-white font-bold text-sm mt-3">
-                      {entry.displayBetFighter || 'No bet side'}
-                    </p>
+                    {actionableBet ? (
+                      <>
+                        <div className="mt-2">
+                          <span
+                            className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-black ${
+                              entry.displayBetAction === 'STRONG BET'
+                                ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                                : entry.displayBetAction === 'BET'
+                                ? 'bg-emerald-900/30 text-emerald-400 border border-emerald-800'
+                                : 'bg-yellow-900/30 text-yellow-400 border border-yellow-800'
+                            }`}
+                          >
+                            {entry.displayBetAction}
+                          </span>
+                        </div>
+                        <p className="text-white font-bold text-sm mt-3">
+                          {entry.displayBetFighter || 'No bet side'}
+                        </p>
+                      </>
+                    ) : (
+                      <p className="text-slate-600 font-bold text-sm mt-2">—</p>
+                    )}
                   </div>
                   <div className="bg-slate-800/40 rounded-lg p-3">
                     <p className="text-slate-500 text-xs">Market odds</p>
