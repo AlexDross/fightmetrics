@@ -2146,10 +2146,9 @@ const computeMatchupEdges = (fA, fB) => {
 // ─── HEADER ───────────────────────────────────────────────────────────────────
 function Header({ view, setView }) {
   const tabs = [
-    { id: 'table', label: 'Database', Icon: BarChart2 },
     { id: 'simulator', label: 'Simulator', Icon: Swords },
-    { id: 'scout', label: 'Scout', Icon: User },
     { id: 'roi', label: 'ROI', Icon: Calendar },
+    { id: 'explore', label: 'Explore', Icon: Search },
     { id: 'info', label: 'Info', Icon: Info },
   ];
   return (
@@ -2165,7 +2164,7 @@ function Header({ view, setView }) {
             FightMetrics
           </h1>
           <p className="text-slate-500 text-xs mt-0.5">
-            MMA Analytics · {FIGHTERS.length} active fighters · v7
+            Fight Prediction Engine · {FIGHTERS.length} fighters · v7
           </p>
         </div>
       </div>
@@ -5856,22 +5855,8 @@ function ScoutProfile({ allFighters }) {
 }
 
 export default function App() {
-  const [view, setView] = useState('table');
-  const [wc, setWC] = useState('All Divisions');
-  const [minMin, setMinMin] = useState(0);
+  const [view, setView] = useState('simulator');
   const [roiEntries, setRoiEntries] = useState(ROI_ENTRIES);
-
-  const filtered = useMemo(
-    () =>
-      FIGHTERS.filter(
-        (f) =>
-          (wc === 'All Divisions' ||
-            wc === 'Pound-for-Pound' ||
-            f.WEIGHT_CLASS === wc) &&
-          (f.TOTAL_ROUNDS ?? 0) >= minMin
-      ),
-    [wc, minMin]
-  );
 
   const fightersWithProspectsFiltered = useMemo(() => FIGHTERS, []);
 
@@ -5896,16 +5881,6 @@ export default function App() {
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 font-sans">
       <Header view={view} setView={setView} />
-      {view === 'table' && (
-        <Filters
-          wc={wc}
-          setWC={setWC}
-          minMin={minMin}
-          setMinMin={setMinMin}
-          count={filtered.length}
-        />
-      )}
-      {view === 'table' && <DataTable fighters={filtered} />}
       {view === 'simulator' && (
         <MatchupSimulator
           allFighters={fightersWithProspectsFiltered}
@@ -5913,7 +5888,7 @@ export default function App() {
           onOpenROI={() => setView('roi')}
         />
       )}
-      {view === 'scout' && <ScoutProfile allFighters={fightersWithProspectsFiltered} />}
+      {view === 'explore' && <ExploreTab allFighters={fightersWithProspectsFiltered} />}
       {view === 'roi' && (
         <ROITab
           entries={roiEntries}
@@ -5924,6 +5899,58 @@ export default function App() {
         />
       )}
       {view === 'info' && <InfoTab />}
+    </div>
+  );
+}
+
+function ExploreTab({ allFighters }) {
+  const [exploreTab, setExploreTab] = useState('table');
+  const [wc, setWC] = useState('All Divisions');
+  const [minMin, setMinMin] = useState(0);
+
+  const filtered = useMemo(
+    () =>
+      FIGHTERS.filter(
+        (f) =>
+          (wc === 'All Divisions' ||
+            wc === 'Pound-for-Pound' ||
+            f.WEIGHT_CLASS === wc) &&
+          (f.TOTAL_ROUNDS ?? 0) >= minMin
+      ),
+    [wc, minMin]
+  );
+
+  return (
+    <div>
+      <div className="bg-slate-900/80 border-b border-slate-800 px-5 py-2 flex gap-1">
+        {[
+          { id: 'table', label: 'Database' },
+          { id: 'scout', label: 'Scout' },
+        ].map(({ id, label }) => (
+          <button
+            key={id}
+            onClick={() => setExploreTab(id)}
+            className={`px-4 py-1.5 rounded-lg text-sm font-semibold transition-all ${
+              exploreTab === id
+                ? 'bg-slate-700 text-white'
+                : 'text-slate-500 hover:text-slate-300'
+            }`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+      {exploreTab === 'table' && (
+        <Filters
+          wc={wc}
+          setWC={setWC}
+          minMin={minMin}
+          setMinMin={setMinMin}
+          count={filtered.length}
+        />
+      )}
+      {exploreTab === 'table' && <DataTable fighters={filtered} />}
+      {exploreTab === 'scout' && <ScoutProfile allFighters={allFighters} />}
     </div>
   );
 }
