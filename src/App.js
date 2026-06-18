@@ -1286,7 +1286,7 @@ function computeROISummary(entries, prospectNameSet) {
   const profit = betEntries.reduce((sum, e) => sum + (calcTrackedProfit(e) ?? 0), 0);
   const stake = betEntries.length;
   return {
-    total: entries.length,
+    total: entries.filter((e) => !resolveProspect(e)).length,
     graded: gradedStats.length,
     correct,
     accuracy: decisive.length ? (correct / decisive.length) * 100 : 0,
