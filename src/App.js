@@ -5940,6 +5940,7 @@ function ROITab({
     null,
     2
   )};\n`;
+  const [showProspects, setShowProspects] = useState(false);
   const prospectNameSet = useMemo(
     () =>
       new Set(
@@ -6029,6 +6030,11 @@ function ROITab({
     };
   }, [evaluatedEntries]);
 
+  const prospectCount = evaluatedEntries.filter((e) => e.includesProspect).length;
+  const displayedEntries = showProspects
+    ? evaluatedEntries
+    : evaluatedEntries.filter((e) => !e.includesProspect);
+
   return (
     <div className="max-w-5xl mx-auto px-5 py-8">
       <div className="flex items-start justify-between gap-4 mb-6">
@@ -6047,6 +6053,16 @@ function ROITab({
             >
               Copy Updated roiData.js
             </button>
+            {prospectCount > 0 && (
+              <button
+                onClick={() => setShowProspects((v) => !v)}
+                className="px-3 py-2 rounded-lg border border-slate-700 text-slate-300 text-xs font-semibold hover:text-white hover:border-slate-600 transition-colors"
+              >
+                {showProspects
+                  ? 'Hide prospect entries'
+                  : `Show prospect entries (${prospectCount})`}
+              </button>
+            )}
             <button
               onClick={onClearEntries}
               className="px-3 py-2 rounded-lg border border-slate-700 text-slate-400 text-xs font-semibold hover:text-white hover:border-slate-600 transition-colors"
@@ -6103,7 +6119,7 @@ function ROITab({
         </div>
       ) : (
         <div className="space-y-4">
-          {evaluatedEntries.map((entry) => {
+          {displayedEntries.map((entry) => {
             const graded = isResolvedWinner(entry.actualWinner, entry);
             const decisive =
               entry.actualWinner === entry.fighterA ||
