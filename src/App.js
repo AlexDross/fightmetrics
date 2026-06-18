@@ -5954,6 +5954,16 @@ export default function App() {
   );
 }
 
+const betTier = (action) => {
+  if (action === 'STRONG BET')
+    return { label: 'STRONG BET', cls: 'text-emerald-300 font-bold', border: 'border-emerald-600/60' };
+  if (action === 'BET')
+    return { label: 'BET', cls: 'text-emerald-400', border: 'border-emerald-700/50' };
+  if (action === 'LEAN')
+    return { label: 'LEAN', cls: 'text-yellow-400', border: 'border-yellow-700/50' };
+  return { label: '', cls: 'text-slate-500', border: 'border-slate-800' };
+};
+
 function HomeTab({ summary, entries, onNavigate }) {
   const sortedNonProspect = useMemo(
     () =>
@@ -5990,12 +6000,6 @@ function HomeTab({ summary, entries, onNavigate }) {
     return 'pending';
   };
 
-  const betTier = (action) => {
-    if (action === 'STRONG BET') return { label: 'STRONG BET', cls: 'text-emerald-300 font-bold' };
-    if (action === 'BET') return { label: 'BET', cls: 'text-emerald-400' };
-    if (action === 'LEAN') return { label: 'LEAN', cls: 'text-yellow-400' };
-    return { label: 'NO BET', cls: 'text-slate-500' };
-  };
 
   return (
     <div className="max-w-3xl mx-auto px-5 py-10">
@@ -6049,21 +6053,21 @@ function HomeTab({ summary, entries, onNavigate }) {
       <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider mb-3">
         Recent Results
       </p>
-      <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden mb-6">
+      <div className="space-y-2 mb-6">
         {gradedPicks.length === 0 ? (
-          <p className="text-slate-600 text-sm px-5 py-6 text-center">
-            No graded picks yet — results appear here after fights are scored.
-          </p>
+          <div className="bg-slate-900 border border-slate-800 rounded-xl px-5 py-6 text-center">
+            <p className="text-slate-600 text-sm">
+              No graded picks yet — results appear here after fights are scored.
+            </p>
+          </div>
         ) : (
-          gradedPicks.map((e, i) => {
+          gradedPicks.map((e) => {
             const outcome = getOutcome(e);
             const tier = betTier(e.betAction ?? 'NO BET');
             return (
               <div
                 key={e.id}
-                className={`px-5 py-4 flex items-center justify-between gap-4 ${
-                  i < gradedPicks.length - 1 ? 'border-b border-slate-800' : ''
-                }`}
+                className={`bg-slate-900 border ${tier.border} rounded-xl px-5 py-4 flex items-center justify-between gap-4`}
               >
                 <div className="min-w-0">
                   <p className="text-white font-semibold text-sm truncate">
@@ -6077,8 +6081,9 @@ function HomeTab({ summary, entries, onNavigate }) {
                     Pick:{' '}
                     <span className="text-white font-semibold">{e.predictedWinner}</span>
                     {' '}{(e.predictedProb * 100).toFixed(1)}%
-                    {' · '}
-                    <span className={tier.cls}>{tier.label}</span>
+                    {tier.label && (
+                      <>{' · '}<span className={tier.cls}>{tier.label}</span></>
+                    )}
                   </p>
                 </div>
                 <div className="shrink-0 text-right">
@@ -6116,7 +6121,7 @@ function HomeTab({ summary, entries, onNavigate }) {
               return (
                 <div
                   key={e.id}
-                  className="px-4 py-3 bg-slate-900/60 border border-slate-800/60 rounded-lg flex items-center justify-between gap-4"
+                  className={`px-4 py-3 bg-slate-900/60 border ${tier.border} rounded-lg flex items-center justify-between gap-4`}
                 >
                   <div className="min-w-0">
                     <p className="text-slate-300 text-xs font-semibold truncate">
@@ -6126,8 +6131,9 @@ function HomeTab({ summary, entries, onNavigate }) {
                       {e.eventName} · Pick:{' '}
                       <span className="text-slate-400">{e.predictedWinner}</span>
                       {' '}{(e.predictedProb * 100).toFixed(1)}%
-                      {' · '}
-                      <span className={tier.cls}>{tier.label}</span>
+                      {tier.label && (
+                        <>{' · '}<span className={tier.cls}>{tier.label}</span></>
+                      )}
                     </p>
                   </div>
                   <span className="shrink-0 text-slate-600 text-xs font-semibold">
@@ -6373,7 +6379,7 @@ function ROITab({
             return (
               <div
                 key={entry.id}
-                className="bg-slate-900 border border-slate-800 rounded-xl p-5"
+                className={`bg-slate-900 border ${betTier(entry.displayBetAction).border} rounded-xl p-5`}
               >
                 <div className="flex items-start justify-between gap-4 mb-4">
                   <div>
