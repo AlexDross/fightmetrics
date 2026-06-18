@@ -1265,6 +1265,37 @@ const calcTrackedProfit = (entry) => {
   return entry.actualWinner === entry.trackedSide ? dec - 1 : -1;
 };
 
+// Single source of truth for ROI summary math.
+// Called once in App() via useMemo; result passed as prop to HomeTab and ROITab.
+function computeROISummary(entries, prospectNameSet) {
+  const resolveProspect = (e) =>
+    e.includesProspect != null
+      ? e.includesProspect
+      : e.fighterAIsProspect != null
+      ? e.fighterAIsProspect
+      : e.fighterBIsProspect != null
+      ? e.fighterBIsProspect
+      : prospectNameSet.has(e.fighterA) || prospectNameSet.has(e.fighterB);
+  const graded = entries.filter((e) => isResolvedWinner(e.actualWinner, e));
+  const gradedStats = graded.filter((e) => !resolveProspect(e));
+  const decisive = gradedStats.filter(
+    (e) => e.actualWinner === e.fighterA || e.actualWinner === e.fighterB
+  );
+  const correct = decisive.filter((e) => e.predictedWinner === e.actualWinner).length;
+  const betEntries = gradedStats.filter((e) => Boolean(americanToDecimal(e.marketOdds)));
+  const profit = betEntries.reduce((sum, e) => sum + (calcTrackedProfit(e) ?? 0), 0);
+  const stake = betEntries.length;
+  return {
+    total: entries.length,
+    graded: gradedStats.length,
+    correct,
+    accuracy: decisive.length ? (correct / decisive.length) * 100 : 0,
+    bets: stake,
+    profit,
+    roi: stake > 0 ? (profit / stake) * 100 : 0,
+  };
+}
+
 function sortHistoryDesc(history) {
   return [...(history || [])].sort((a, b) => {
     const aTime = a?.dt ? new Date(a.dt).getTime() : 0;
@@ -2146,6 +2177,7 @@ const computeMatchupEdges = (fA, fB) => {
 // ─── HEADER ───────────────────────────────────────────────────────────────────
 function Header({ view, setView }) {
   const tabs = [
+    { id: 'home', label: 'Home', Icon: Trophy },
     { id: 'simulator', label: 'Simulator', Icon: Swords },
     { id: 'roi', label: 'ROI', Icon: Calendar },
     { id: 'explore', label: 'Explore', Icon: Search },
@@ -5855,10 +5887,25 @@ function ScoutProfile({ allFighters }) {
 }
 
 export default function App() {
-  const [view, setView] = useState('simulator');
+  const [view, setView] = useState('home');
   const [roiEntries, setRoiEntries] = useState(ROI_ENTRIES);
 
   const fightersWithProspectsFiltered = useMemo(() => FIGHTERS, []);
+
+  const prospectNameSet = useMemo(
+    () =>
+      new Set(
+        fightersWithProspectsFiltered
+          .filter((f) => f.IS_PROSPECT)
+          .map((f) => f.FIGHTER)
+      ),
+    [fightersWithProspectsFiltered]
+  );
+
+  const roiSummary = useMemo(
+    () => computeROISummary(roiEntries, prospectNameSet),
+    [roiEntries, prospectNameSet]
+  );
 
   const handleSavePrediction = (entry) => {
     setRoiEntries((prev) => [entry, ...prev]);
@@ -5881,6 +5928,9 @@ export default function App() {
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 font-sans">
       <Header view={view} setView={setView} />
+      {view === 'home' && (
+        <HomeTab summary={roiSummary} entries={roiEntries} onNavigate={setView} />
+      )}
       {view === 'simulator' && (
         <MatchupSimulator
           allFighters={fightersWithProspectsFiltered}
@@ -5892,13 +5942,219 @@ export default function App() {
       {view === 'roi' && (
         <ROITab
           entries={roiEntries}
-          allFighters={fightersWithProspectsFiltered}
+          summary={roiSummary}
+          prospectNameSet={prospectNameSet}
           onUpdateEntry={handleUpdateROIEntry}
           onDeleteEntry={handleDeleteROIEntry}
           onClearEntries={handleClearROI}
         />
       )}
       {view === 'info' && <InfoTab />}
+    </div>
+  );
+}
+
+function HomeTab({ summary, entries, onNavigate }) {
+  const sortedNonProspect = useMemo(
+    () =>
+      [...entries]
+        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+        .filter((e) => !e.includesProspect),
+    [entries]
+  );
+
+  const gradedPicks = useMemo(
+    () =>
+      sortedNonProspect
+        .filter(
+          (e) =>
+            e.actualWinner === e.fighterA || e.actualWinner === e.fighterB
+        )
+        .slice(0, 5),
+    [sortedNonProspect]
+  );
+
+  const upcomingPicks = useMemo(
+    () =>
+      sortedNonProspect
+        .filter((e) => !e.actualWinner || e.actualWinner === '')
+        .slice(0, 3),
+    [sortedNonProspect]
+  );
+
+  const getOutcome = (e) => {
+    if (!e.actualWinner || e.actualWinner === '') return 'pending';
+    if (isPushResult(e.actualWinner)) return 'push';
+    if (e.actualWinner === e.fighterA || e.actualWinner === e.fighterB)
+      return e.actualWinner === e.predictedWinner ? 'correct' : 'incorrect';
+    return 'pending';
+  };
+
+  const betTier = (action) => {
+    if (action === 'STRONG BET') return { label: 'STRONG BET', cls: 'text-emerald-300 font-bold' };
+    if (action === 'BET') return { label: 'BET', cls: 'text-emerald-400' };
+    if (action === 'LEAN') return { label: 'LEAN', cls: 'text-yellow-400' };
+    return { label: 'NO BET', cls: 'text-slate-500' };
+  };
+
+  return (
+    <div className="max-w-3xl mx-auto px-5 py-10">
+      {/* Identity */}
+      <div className="mb-8">
+        <h2 className="text-white font-black text-3xl tracking-tight mb-1">
+          FightMetrics
+        </h2>
+        <p className="text-slate-400 text-base">
+          UFC fight prediction engine — {MODEL_VERSION}
+        </p>
+      </div>
+
+      {/* Track record tiles */}
+      <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider mb-3">
+        Model Track Record
+      </p>
+      <div className="grid grid-cols-3 gap-4 mb-8">
+        <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
+          <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold mb-2">
+            Pick Accuracy
+          </p>
+          <p className={`font-black text-3xl ${summary.accuracy >= 60 ? 'text-emerald-400' : 'text-yellow-400'}`}>
+            {summary.accuracy.toFixed(1)}%
+          </p>
+          <p className="text-slate-600 text-xs mt-1">
+            {summary.correct} / {summary.graded} picks
+          </p>
+        </div>
+        <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
+          <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold mb-2">
+            Flat-Stake ROI
+          </p>
+          <p className={`font-black text-3xl ${summary.roi >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+            {summary.roi >= 0 ? '+' : ''}{summary.roi.toFixed(1)}%
+          </p>
+          <p className="text-slate-600 text-xs mt-1">
+            {summary.profit >= 0 ? '+' : ''}{summary.profit.toFixed(2)}u on {summary.bets} bets
+          </p>
+        </div>
+        <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
+          <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold mb-2">
+            Tracked Fights
+          </p>
+          <p className="font-black text-3xl text-white">{summary.total}</p>
+          <p className="text-slate-600 text-xs mt-1">{summary.graded} graded</p>
+        </div>
+      </div>
+
+      {/* Recent graded results */}
+      <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider mb-3">
+        Recent Results
+      </p>
+      <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden mb-6">
+        {gradedPicks.length === 0 ? (
+          <p className="text-slate-600 text-sm px-5 py-6 text-center">
+            No graded picks yet — results appear here after fights are scored.
+          </p>
+        ) : (
+          gradedPicks.map((e, i) => {
+            const outcome = getOutcome(e);
+            const tier = betTier(e.betAction ?? 'NO BET');
+            return (
+              <div
+                key={e.id}
+                className={`px-5 py-4 flex items-center justify-between gap-4 ${
+                  i < gradedPicks.length - 1 ? 'border-b border-slate-800' : ''
+                }`}
+              >
+                <div className="min-w-0">
+                  <p className="text-white font-semibold text-sm truncate">
+                    {e.fighterA} vs {e.fighterB}
+                  </p>
+                  <p className="text-slate-500 text-xs mt-0.5">
+                    {e.eventName}
+                    {e.division ? ` · ${e.division}` : ''}
+                  </p>
+                  <p className="text-slate-400 text-xs mt-1">
+                    Pick:{' '}
+                    <span className="text-white font-semibold">{e.predictedWinner}</span>
+                    {' '}{(e.predictedProb * 100).toFixed(1)}%
+                    {' · '}
+                    <span className={tier.cls}>{tier.label}</span>
+                  </p>
+                </div>
+                <div className="shrink-0 text-right">
+                  {outcome === 'correct' && (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-900/40 text-emerald-400 text-xs font-bold">
+                      ✓ CORRECT
+                    </span>
+                  )}
+                  {outcome === 'incorrect' && (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-red-900/40 text-red-400 text-xs font-bold">
+                      ✗ INCORRECT
+                    </span>
+                  )}
+                  {outcome === 'push' && (
+                    <span className="px-2.5 py-1 rounded-lg bg-slate-800 text-slate-400 text-xs font-semibold">
+                      — NC/DRAW
+                    </span>
+                  )}
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+
+      {/* Upcoming picks — secondary, muted */}
+      {upcomingPicks.length > 0 && (
+        <div className="mb-8">
+          <p className="text-slate-600 text-xs font-semibold uppercase tracking-wider mb-2">
+            Upcoming Picks
+          </p>
+          <div className="space-y-1">
+            {upcomingPicks.map((e) => {
+              const tier = betTier(e.betAction ?? 'NO BET');
+              return (
+                <div
+                  key={e.id}
+                  className="px-4 py-3 bg-slate-900/60 border border-slate-800/60 rounded-lg flex items-center justify-between gap-4"
+                >
+                  <div className="min-w-0">
+                    <p className="text-slate-300 text-xs font-semibold truncate">
+                      {e.fighterA} vs {e.fighterB}
+                    </p>
+                    <p className="text-slate-600 text-xs mt-0.5">
+                      {e.eventName} · Pick:{' '}
+                      <span className="text-slate-400">{e.predictedWinner}</span>
+                      {' '}{(e.predictedProb * 100).toFixed(1)}%
+                      {' · '}
+                      <span className={tier.cls}>{tier.label}</span>
+                    </p>
+                  </div>
+                  <span className="shrink-0 text-slate-600 text-xs font-semibold">
+                    PENDING
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* CTAs */}
+      <div className="flex gap-3">
+        <button
+          onClick={() => onNavigate('simulator')}
+          className="flex-1 py-3 rounded-xl bg-red-600 text-white font-bold text-sm hover:bg-red-500 transition-colors shadow-lg shadow-red-900/30"
+        >
+          Build a Matchup →
+        </button>
+        <button
+          onClick={() => onNavigate('roi')}
+          className="flex-1 py-3 rounded-xl border border-slate-700 text-slate-300 font-semibold text-sm hover:text-white hover:border-slate-500 transition-colors"
+        >
+          Full Track Record →
+        </button>
+      </div>
     </div>
   );
 }
@@ -5957,7 +6213,8 @@ function ExploreTab({ allFighters }) {
 
 function ROITab({
   entries,
-  allFighters,
+  summary,
+  prospectNameSet,
   onUpdateEntry,
   onDeleteEntry,
   onClearEntries,
@@ -5968,15 +6225,6 @@ function ROITab({
     2
   )};\n`;
   const [showProspects, setShowProspects] = useState(false);
-  const prospectNameSet = useMemo(
-    () =>
-      new Set(
-        (allFighters ?? [])
-          .filter((fighter) => fighter.IS_PROSPECT)
-          .map((fighter) => fighter.FIGHTER)
-      ),
-    [allFighters]
-  );
   const evaluatedEntries = useMemo(
     () =>
       entries.map((entry) => {
@@ -6017,45 +6265,6 @@ function ROITab({
       }),
     [entries, prospectNameSet]
   );
-
-  const summary = useMemo(() => {
-    const graded = evaluatedEntries.filter((entry) =>
-      isResolvedWinner(entry.actualWinner, entry)
-    );
-
-    // Debut fights remain visible in the list but are excluded from all stats
-    const gradedStats = graded.filter((entry) => !entry.includesProspect);
-
-    const decisive = gradedStats.filter(
-      (entry) =>
-        entry.actualWinner === entry.fighterA ||
-        entry.actualWinner === entry.fighterB
-    );
-
-    const correct = decisive.filter(
-      (entry) => entry.displayWinner === entry.actualWinner
-    ).length;
-
-    const betEntries = gradedStats.filter((entry) =>
-      Boolean(americanToDecimal(entry.marketOdds))
-    );
-
-    const profit = betEntries.reduce(
-      (sum, entry) => sum + (calcTrackedProfit(entry) ?? 0),
-      0
-    );
-
-    const stake = betEntries.length;
-    return {
-      total: entries.length,
-      graded: gradedStats.length,
-      correct,
-      accuracy: decisive.length ? (correct / decisive.length) * 100 : 0,
-      bets: betEntries.length,
-      profit,
-      roi: stake > 0 ? (profit / stake) * 100 : 0,
-    };
-  }, [evaluatedEntries]);
 
   const prospectCount = evaluatedEntries.filter((e) => e.includesProspect).length;
   const displayedEntries = showProspects
