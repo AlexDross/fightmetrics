@@ -6230,7 +6230,6 @@ function ROITab({
     null,
     2
   )};\n`;
-  const [showProspects, setShowProspects] = useState(false);
   const evaluatedEntries = useMemo(
     () =>
       entries.map((entry) => {
@@ -6272,10 +6271,7 @@ function ROITab({
     [entries, prospectNameSet]
   );
 
-  const prospectCount = evaluatedEntries.filter((e) => e.includesProspect).length;
-  const displayedEntries = showProspects
-    ? evaluatedEntries
-    : evaluatedEntries.filter((e) => !e.includesProspect);
+  const displayedEntries = evaluatedEntries.filter((e) => !e.includesProspect);
 
   return (
     <div className="max-w-5xl mx-auto px-5 py-8">
@@ -6295,16 +6291,7 @@ function ROITab({
             >
               Copy Updated roiData.js
             </button>
-            {prospectCount > 0 && (
-              <button
-                onClick={() => setShowProspects((v) => !v)}
-                className="px-3 py-2 rounded-lg border border-slate-700 text-slate-300 text-xs font-semibold hover:text-white hover:border-slate-600 transition-colors"
-              >
-                {showProspects
-                  ? 'Hide prospect entries'
-                  : `Show prospect entries (${prospectCount})`}
-              </button>
-            )}
+
             <button
               onClick={onClearEntries}
               className="px-3 py-2 rounded-lg border border-slate-700 text-slate-400 text-xs font-semibold hover:text-white hover:border-slate-600 transition-colors"
