@@ -319,6 +319,10 @@ if has_stats:
         round_secs = time_secs if end_round and round_num == end_round and time_secs else 300
         sig_landed, sig_attempted = parse_of_stat(row.get('SIG.STR.', ''))
         td_landed, td_attempted = parse_of_stat(row.get('TD', ''))
+        head_landed, _ = parse_of_stat(row.get('HEAD', ''))
+        body_landed, _ = parse_of_stat(row.get('BODY', ''))
+        leg_landed, _  = parse_of_stat(row.get('LEG', ''))
+        _kd = str(row.get('KD', '0') or '0').strip()
         stats_by_fighter.setdefault(fighter, []).append({
             'event': event,
             'bout': bout,
@@ -330,8 +334,19 @@ if has_stats:
             'td_attempted': td_attempted,
             'sub_att': parse_int_like(row.get('SUB.ATT', '0')),
             'ctrl_sec': parse_ctrl(row.get('CTRL', '0:00')),
+            'kd': int(float(_kd)) if _kd and _kd.lower() != 'nan' else 0,
+            'head_landed': head_landed,
+            'body_landed': body_landed,
+            'leg_landed': leg_landed,
             'weight_class': bout_meta.get('weight_class'),
         })
+
+stats_by_bout = {}
+if has_stats:
+    for _fighter_name, _rows in stats_by_fighter.items():
+        for _r in _rows:
+            _key = (_r['event'], _r['bout'], _r['round_num'])
+            stats_by_bout.setdefault(_key, []).append((_fighter_name, _r))
 
 def compute_total_rounds(fights):
     total = 0
@@ -346,6 +361,21 @@ def compute_total_rounds(fights):
 def round2(v):
     return round(v + 1e-9, 2)
 
+def compute_opponent_stats(name):
+    rows = stats_by_fighter.get(name, [])
+    total_duration = sum(r['round_secs'] for r in rows)
+    opp_sig_landed = 0
+    opp_sig_attempted = 0
+    for r in rows:
+        key = (r['event'], r['bout'], r['round_num'])
+        for opp_name, opp_row in stats_by_bout.get(key, []):
+            if opp_name != name:
+                opp_sig_landed += opp_row['sig_landed']
+                opp_sig_attempted += opp_row['sig_attempted']
+    sapm = round2(opp_sig_landed / (total_duration / 60)) if total_duration > 0 else None
+    sdef = round2(1 - opp_sig_landed / opp_sig_attempted) if opp_sig_attempted > 0 else None
+    return sapm, sdef
+
 def build_new_fighter_entry(name, record, fights):
     rows = stats_by_fighter.get(name, [])
     fallback = prospect_fallbacks.get(name, {})
@@ -355,6 +385,11 @@ def build_new_fighter_entry(name, record, fights):
     total_td_landed = sum(r['td_landed'] for r in rows)
     total_td_attempted = sum(r['td_attempted'] for r in rows)
     total_sub_att = sum(r['sub_att'] for r in rows)
+    total_ctrl = sum(r['ctrl_sec'] for r in rows)
+    total_kd = sum(r['kd'] for r in rows)
+    total_head_landed = sum(r['head_landed'] for r in rows)
+    total_leg_landed = sum(r['leg_landed'] for r in rows)
+    n_fights_stats = len(set((r['event'], r['bout']) for r in rows))
 
     weight_class = fallback.get('w')
     if not weight_class and fights:
@@ -368,6 +403,11 @@ def build_new_fighter_entry(name, record, fights):
     asa = round2((total_sub_att / total_duration) * 900) if total_duration > 0 else None
     atl = round2((total_td_landed / total_duration) * 900) if total_duration > 0 else None
     atp = round2(total_td_landed / total_td_attempted) if total_td_attempted > 0 else None
+    sapm_val, sdef_val = compute_opponent_stats(name)
+    kd_val = total_kd if rows else None
+    ctrl_val = round2(total_ctrl / n_fights_stats) if n_fights_stats > 0 else None
+    hdpct_val = round2(total_head_landed / total_sig_landed) if total_sig_landed > 0 else None
+    lgpct_val = round2(total_leg_landed / total_sig_landed) if total_sig_landed > 0 else None
 
     entry = (
         "{"
@@ -381,6 +421,7 @@ def build_new_fighter_entry(name, record, fights):
         f"tr:{compute_total_rounds(fights)},tb:{sum(1 for f in fights if 'title' in (f.get('wc') or '').lower() or 'title' in (f.get('event') or '').lower())},"
         f"kow:{record['kow']},sbw:{record['sbw']},dcw:{record['dcw']},"
         f"asl:{fmt(asl)},asp:{fmt(asp)},asa:{fmt(asa)},atl:{fmt(atl)},atp:{fmt(atp)},"
+        f"kd:{fmt(kd_val)},sapm:{fmt(sapm_val)},sdef:{fmt(sdef_val)},ctrl:{fmt(ctrl_val)},hdpct:{fmt(hdpct_val)},lgpct:{fmt(lgpct_val)},"
         f"elo:null,crd:1.0,"
         f"lfd:{fmt(record['lfd'])},dsl:{fmt(record['dsl'])},"
         f"dr:null,p4p:null,wlb:{fmt(fallback.get('wlb') or WEIGHT_LIMITS.get(weight_class))}"
@@ -396,6 +437,12 @@ def compute_stat_updates(name, fights):
     total_td_landed = sum(r['td_landed'] for r in rows)
     total_td_attempted = sum(r['td_attempted'] for r in rows)
     total_sub_att = sum(r['sub_att'] for r in rows)
+    total_ctrl = sum(r['ctrl_sec'] for r in rows)
+    total_kd = sum(r['kd'] for r in rows)
+    total_head_landed = sum(r['head_landed'] for r in rows)
+    total_leg_landed = sum(r['leg_landed'] for r in rows)
+    n_fights_stats = len(set((r['event'], r['bout']) for r in rows))
+    sapm, sdef = compute_opponent_stats(name)
     return {
         'tr': compute_total_rounds(fights),
         'tb': sum(1 for f in fights if 'title' in (f.get('wc') or '').lower() or 'title' in (f.get('event') or '').lower()),
@@ -404,6 +451,12 @@ def compute_stat_updates(name, fights):
         'asa': round2((total_sub_att / total_duration) * 900) if total_duration > 0 else None,
         'atl': round2((total_td_landed / total_duration) * 900) if total_duration > 0 else None,
         'atp': round2(total_td_landed / total_td_attempted) if total_td_attempted > 0 else None,
+        'kd': total_kd if rows else None,
+        'sapm': sapm,
+        'sdef': sdef,
+        'ctrl': round2(total_ctrl / n_fights_stats) if n_fights_stats > 0 else None,
+        'hdpct': round2(total_head_landed / total_sig_landed) if total_sig_landed > 0 else None,
+        'lgpct': round2(total_leg_landed / total_sig_landed) if total_sig_landed > 0 else None,
     }
 
 # ─── Patch fightersData.js ────────────────────────────────────────────────────
@@ -421,7 +474,16 @@ for name, entry_str in existing.items():
     if wc_m: wc_lookup[name] = wc_m.group(1)
 
 RECORD_FIELDS = ['wi','lo','ws','ls','kow','sbw','dcw','dsl']
-STAT_FIELDS = ['tr', 'tb', 'asl', 'asp', 'asa', 'atl', 'atp']
+STAT_FIELDS = ['tr', 'tb', 'asl', 'asp', 'asa', 'atl', 'atp', 'kd', 'sapm', 'sdef', 'ctrl', 'hdpct', 'lgpct']
+
+_NEW_FIELDS = ['kd', 'sapm', 'sdef', 'ctrl', 'hdpct', 'lgpct']
+for _name in list(existing):
+    _entry = existing[_name]
+    for _f in _NEW_FIELDS:
+        if f',{_f}:' not in _entry:
+            _entry = _entry[:-1] + f',{_f}:null' + '}'
+    existing[_name] = _entry
+
 new_lines = []
 
 for name, entry_str in existing.items():
