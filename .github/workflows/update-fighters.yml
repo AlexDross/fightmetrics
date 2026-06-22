@@ -41,6 +41,9 @@ jobs:
       - name: Run update_fighters.py
         run: python update_fighters.py
 
+      - name: Regenerate eloModule.js
+        run: python regen_elo.py
+
       - name: Commit and push if changed
         run: |
           git config user.name  "github-actions[bot]"
