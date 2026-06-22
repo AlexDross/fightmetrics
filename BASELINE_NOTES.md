@@ -86,3 +86,62 @@ The generator that produces any validated baseline must be committed to the
 repo alongside its output. A baseline whose generator lives outside version
 control is one `rm` away from being a number nobody can ever check again —
 which is exactly what happened here.
+
+## §7 — New Authoritative Baseline (June 2026)
+
+**Established:** June 22, 2026  
+**Generator:** `generate_baseline.py` (committed alongside this file)  
+**Self-verification:** Reproduces the ≥75-min recoverable core bit-exactly (max|diff| = 4.995e-7 ≤ 1e-6 tolerance). Locked definition: `{units: per_fight, hr_units: inches, ko_doc: False}`.
+
+### Baseline numbers (full chain)
+
+| Stage | Correct / 3380 | Accuracy | Δ |
+|---|---|---|---|
+| Base composite (no ELO/SOS/Mom) | 1954 | 57.81% | — |
+| + point-in-time ELO | 2001 | 59.20% | +1.39pp |
+| + SOS@0.10 + Mom@0.03 | 2004 | **59.29%** | +0.09pp |
+
+**59.29% is the new authoritative baseline.** The old documented 61.1% is not reproducible — it came from a lost generator with an unrecoverable low-sample blend rule and is no longer referenced for validation purposes.
+
+### Key implementation choices (locked)
+
+- **Division means:** frozen CONST_MEANS `{asl:3.5, asp:0.44, atl:1.0, atp:0.35, asa:0.25}` — not current-roster means. Reproducible and point-in-time-safe.
+- **Low-sample blend:** `w = min(1.0, totalMin / 75)` — App.js-faithful, explicitly specified.
+- **ATD:** neutralized (both fighters blend to 0.60 → differential = 0). Reflects real data state.
+- **Cutoff:** hard-asserted `date >= 2019-06-22` on every scored row. 3,789 pre-cutoff rows excluded.
+- **Contamination:** 0 violations across 46,202 tier lookups.
+
+### Sigmoid note
+
+The harness (`backtest_elo.py` + `backtest_combo_v2.py`) uses the old sigmoid `a=1.609621, b=−0.18753`. The live app uses symmetric `a=2.0, b=0`. The baseline number is produced under the harness sigmoid. These are not directly comparable — the live model's actual performance on the same fights would differ slightly near the decision threshold.
+
+---
+
+## §8 — Stage 3 New-Field Test (June 2026)
+
+**Instrument:** `test_new_fields.py` (committed)  
+**Method:** Non-destructive in-memory test. Each field reconstructed point-in-time from Greco `ufc_fight_stats.csv` (strictly prior bouts only), blended with `min(1, totalMin/75)`, added as `clamp(diff/S)·W` to `composite_elo` before SOS/Mom + harness sigmoid. No committed file touched.  
+**Coverage:** 2,644/3,380 fights (78.2%) had prior Greco data for both fighters.
+
+### Results
+
+| Field | Signal | Best Δ | Verdict |
+|---|---|---|---|
+| `ctrl` (control time/fight) | Positive at all 4 weights | +0.38pp | Candidate for composite — validate separately |
+| `sapm` (strikes absorbed/min) | Monotonic, negligible | +0.12pp | Stored-only |
+| `sdef` (striking defense %) | Sign-flips across weights | +0.36pp (unstable) | Stored-only — noise |
+| `kd` (knockdowns landed) | Sign-flips across weights | +0.15pp (unstable) | Stored-only — noise |
+
+Combined (all four fields): +0.30pp @ W=0.04 — worse than `ctrl` alone, because `kd` and `sdef` inject noise that partially cancels `ctrl`'s contribution.
+
+### Interpretation
+
+`ctrl` is the only field with a genuine signal — positive at every tested weight is the meaningful indicator, not the magnitude. +0.38pp = 13 fights on 3,380, modest but consistent. Not yet promoted to composite — requires walk-forward validation under the live sigmoid (`a=2.0`) with a principled weight derived from data rather than a grid search.
+
+`sapm` and `sdef` are directionally correct (lower absorption and higher defense should help) but the signal is too weak to survive backtest scrutiny at this sample size. They remain stored in `fightersData.js` for analytics and will be re-tested after the feature set is expanded further.
+
+`kd` behavior suggests the current scale/normalization needs refinement before it carries predictive weight. Real knockdowns (vs the previous KO-wins-per-minute proxy) are stored correctly — the feature just doesn't yet have a validated path into the composite.
+
+### What this unlocks
+
+The re-baseline instrument now exists. Future model changes — feature additions, weight adjustments, sigmoid tuning — can be validated against the 59.29% baseline using `generate_baseline.py` + the unmodified chain. This is the foundation all future model improvement work builds on.
