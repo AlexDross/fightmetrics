@@ -727,7 +727,10 @@ const FIGHTERS = [..._D2, ...activeProspects].map((d) => {
     : d.crd ?? 1.0;
   const liveEloBase = eloRec?.elo ?? seededProspectElo;
   const peakEloBase = eloRec?.peak ?? liveEloBase;
-  const cardioBase = CARDIO_RATIOS[d.n] ?? seededProspectCardio;
+  const rawCardio = CARDIO_RATIOS[d.n];
+  const cardioBase = (rawCardio !== undefined && rawCardio !== 0.5)
+    ? rawCardio
+    : seededProspectCardio;
   const rankTier = currentRankTier(mergedRank);
   const historyWins = fightHistory.filter((fight) => fight.re === 'W');
   const historyLosses = fightHistory.filter((fight) => fight.re === 'L');
