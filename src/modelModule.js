@@ -19,17 +19,23 @@
 // accuracy signal, weaker outcome correlation +0.128 vs +0.210 for acc).
 // Budget (0.063872) redistributed to R_avg_SIG_STR_pct and B_avg_SIG_STR_pct
 // proportionally. Backtest result: 2049/3380 = 60.62% (+0.21pp vs 60.41%).
+//
+// W_NO_v5 (2026-06-23): zeroed total_title_bout_dif (near-zero outcome correlation
+// −0.001, weak signal). Budget (0.036427) redistributed proportionally to
+// R_avg_SIG_STR_pct, B_avg_SIG_STR_pct, win_streak_dif, elo_dif.
+// Backtest result: 2052/3380 = 60.71% (+0.09pp vs 60.62%).
+// sub_dif tested and reverted (−0.18pp, 46.3% flip rate — carries real signal).
 
 const MODEL = {
   // Feature weights (normalized, sum to 1)
   W_NO: {
-    "win_streak_dif": 0.137023,
+    "win_streak_dif": 0.147973,
     "avg_td_dif": 0.068343,
     "sig_str_dif": 0,
-    "R_avg_SIG_STR_pct": 0.144772,
+    "R_avg_SIG_STR_pct": 0.156341,
     "total_round_dif": 0,
-    "elo_dif": 0.097545,
-    "B_avg_SIG_STR_pct": 0.076491,
+    "elo_dif": 0.105340,
+    "B_avg_SIG_STR_pct": 0.082604,
     "loss_dif": 0.04606,
     "height_dif": 0.044978,
     "cardio_dif": 0.044775,
@@ -42,7 +48,7 @@ const MODEL = {
     "B_avg_TD_pct": 0.039716,
     "ko_dif": 0,
     "win_dif": 0,
-    "total_title_bout_dif": 0.036427,
+    "total_title_bout_dif": 0,
     "sub_dif": 0.031623
 },
   W_OD: {
