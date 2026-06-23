@@ -6,27 +6,31 @@
 // using time-series cross-validation. Platt calibration applied.
 //
 // W_NO_v2 (2026-06-23): zeroed win_dif, ko_dif, total_round_dif — all three had
-// inverted outcome correlations (−0.082, −0.063, −0.124) in 3,380-fight post-2019
-// backtest audit. Freed budget (0.133875) redistributed proportionally to
-// win_streak_dif, R_avg_SIG_STR_pct, elo_dif, age_dif by existing weight shares.
-// Backtest result: 2039/3380 = 60.33% (+1.12pp vs prior baseline of 59.20%).
+// inverted outcome correlations in 3,380-fight post-2019 backtest audit. Budget
+// redistributed proportionally to win_streak_dif, R_avg_SIG_STR_pct, elo_dif,
+// age_dif. Result: 2039/3380 = 60.33% (+1.12pp vs 59.20%).
+//
+// W_NO_v3 (2026-06-23): zeroed avg_sub_att_dif (near-neutral ablation, rewards
+// volume grapplers over finishers). Budget (0.041950) redistributed proportionally
+// to R_avg_SIG_STR_pct, B_avg_SIG_STR_pct, win_streak_dif, elo_dif.
+// Backtest result: 2042/3380 = 60.41% (+0.09pp vs 60.33%).
 
 const MODEL = {
   // Feature weights (normalized, sum to 1)
   W_NO: {
-    "win_streak_dif": 0.122358,
+    "win_streak_dif": 0.137023,
     "avg_td_dif": 0.068343,
     "sig_str_dif": 0.063872,
-    "R_avg_SIG_STR_pct": 0.091959,
+    "R_avg_SIG_STR_pct": 0.102981,
     "total_round_dif": 0,
-    "elo_dif": 0.087105,
-    "B_avg_SIG_STR_pct": 0.048587,
+    "elo_dif": 0.097545,
+    "B_avg_SIG_STR_pct": 0.054410,
     "loss_dif": 0.04606,
     "height_dif": 0.044978,
     "cardio_dif": 0.044775,
     "R_avg_TD_pct": 0.043259,
     "lose_streak_dif": 0.042474,
-    "avg_sub_att_dif": 0.04195,
+    "avg_sub_att_dif": 0,
     "age_dif": 0.065349,
     "layoff_dif": 0.041283,
     "reach_dif": 0.03988,
