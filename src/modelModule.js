@@ -14,17 +14,22 @@
 // volume grapplers over finishers). Budget (0.041950) redistributed proportionally
 // to R_avg_SIG_STR_pct, B_avg_SIG_STR_pct, win_streak_dif, elo_dif.
 // Backtest result: 2042/3380 = 60.41% (+0.09pp vs 60.33%).
+//
+// W_NO_v4 (2026-06-23): zeroed sig_str_dif (raw volume, r=0.309 overlap with
+// accuracy signal, weaker outcome correlation +0.128 vs +0.210 for acc).
+// Budget (0.063872) redistributed to R_avg_SIG_STR_pct and B_avg_SIG_STR_pct
+// proportionally. Backtest result: 2049/3380 = 60.62% (+0.21pp vs 60.41%).
 
 const MODEL = {
   // Feature weights (normalized, sum to 1)
   W_NO: {
     "win_streak_dif": 0.137023,
     "avg_td_dif": 0.068343,
-    "sig_str_dif": 0.063872,
-    "R_avg_SIG_STR_pct": 0.102981,
+    "sig_str_dif": 0,
+    "R_avg_SIG_STR_pct": 0.144772,
     "total_round_dif": 0,
     "elo_dif": 0.097545,
-    "B_avg_SIG_STR_pct": 0.054410,
+    "B_avg_SIG_STR_pct": 0.076491,
     "loss_dif": 0.04606,
     "height_dif": 0.044978,
     "cardio_dif": 0.044775,
