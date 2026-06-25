@@ -169,6 +169,20 @@ def filter_by_date(events, days=14):
     return kept
 
 
+def earliest_event_only(events):
+    """Keep only events within 2 days of the earliest commence date."""
+    dts = [parse_commence(e.get("commence_time")) for e in events]
+    dts = [dt for dt in dts if dt is not None]
+    if not dts:
+        return events
+    min_dt = min(dts)
+    cutoff = min_dt + timedelta(days=2)
+    return [
+        e for e in events
+        if (dt := parse_commence(e.get("commence_time"))) is not None and dt <= cutoff
+    ]
+
+
 def build_card(events, roster_names):
     card = []
     for event in events:
@@ -290,6 +304,9 @@ def main():
 
     events = filter_by_date(events, days=14)
     print(f"{len(events)} events within the 14-day window")
+
+    events = earliest_event_only(events)
+    print(f"{len(events)} events on the earliest weekend card")
 
     card = build_card(events, roster_names)
     deduped = dedupe_card(card)
