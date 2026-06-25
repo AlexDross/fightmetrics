@@ -33,7 +33,6 @@ import { CARDIO_RATIOS } from './cardioModule';
 import { FIGHT_HISTORY } from './fightHistory';
 import { getHistoricalTier } from './rankHistory';
 import { ROI_ENTRIES } from './roiData';
-import { UPCOMING_CARD } from './upcomingCard';
 
 // _D2 imported from fightersData.js
 
@@ -5910,126 +5909,6 @@ export default function App() {
     () => computeROISummary(roiEntries, prospectNameSet),
     [roiEntries, prospectNameSet]
   );
-
-  useEffect(() => {
-    if (!UPCOMING_CARD || UPCOMING_CARD.length === 0) return;
-    setRoiEntries((prev) => {
-      const toAdd = [];
-      for (const upEntry of UPCOMING_CARD) {
-        if (upEntry.debutFighter) {
-          console.log(`[Auto] Skipping debut: ${upEntry.fighterA} vs ${upEntry.fighterB}`);
-          continue;
-        }
-        if (prev.some(
-          (e) => e.fighterA === upEntry.fighterA && e.fighterB === upEntry.fighterB && e.eventDate === upEntry.date
-        )) continue;
-        const fA = FIGHTERS.find((f) => f.FIGHTER === upEntry.fighterA);
-        const fB = FIGHTERS.find((f) => f.FIGHTER === upEntry.fighterB);
-        if (!fA || !fB) {
-          console.log(`[Auto] Fighter not found: ${upEntry.fighterA} vs ${upEntry.fighterB}`);
-          continue;
-        }
-        const result = computeMatchupEdges(fA, fB);
-        const predictedWinner = result.pA >= result.pB ? fA.FIGHTER : fB.FIGHTER;
-        const trackedSide = predictedWinner;
-        const trackedProb = trackedSide === fA.FIGHTER ? result.pA : result.pB;
-
-        const rawA = parseAmericanOdds(upEntry.oddsA);
-        const rawB = parseAmericanOdds(upEntry.oddsB);
-        let edgeA = null, edgeB = null, evA = null, evB = null;
-        let kellyA = null, kellyB = null, fairLineA = null, fairLineB = null;
-        let betAction = 'NO BET', bestBet = null;
-
-        if (rawA && rawB) {
-          const { noVigA, noVigB } = stripVig(rawA, rawB);
-          const decA = americanToDecimal(upEntry.oddsA);
-          const decB = americanToDecimal(upEntry.oddsB);
-          edgeA = result.pA - noVigA;
-          edgeB = result.pB - noVigB;
-          evA = decA ? calcExpectedValue(result.pA, decA) : 0;
-          evB = decB ? calcExpectedValue(result.pB, decB) : 0;
-          kellyA = decA ? kellyFraction(result.pA, decA) : 0;
-          kellyB = decB ? kellyFraction(result.pB, decB) : 0;
-          fairLineA = americanOdds(result.pA);
-          fairLineB = americanOdds(result.pB);
-          const pickSide = result.pA >= 0.5 ? 'A' : 'B';
-          const pickEdge = pickSide === 'A' ? edgeA : edgeB;
-          const oppEdge = pickSide === 'A' ? edgeB : edgeA;
-          const hasPickEdge = pickEdge >= 0.03;
-          const conflictingSignals = !hasPickEdge && oppEdge >= 0.03;
-          const pickProb = pickSide === 'A' ? result.pA : result.pB;
-          const rawBetAction = (() => {
-            if (conflictingSignals || !hasPickEdge) return 'NO BET';
-            if (pickProb < 0.60) return 'NO BET';
-            if (pickProb < 0.65) return pickEdge >= 0.10 ? 'LEAN' : 'NO BET';
-            if (pickProb < 0.70) {
-              if (pickEdge >= 0.30) return 'BET';
-              if (pickEdge >= 0.10) return 'LEAN';
-              return 'NO BET';
-            }
-            if (pickEdge >= 0.25) return 'STRONG BET';
-            if (pickEdge >= 0.15) return 'BET';
-            return 'LEAN';
-          })();
-          const lowCredCap = (fA.CREDIBILITY ?? 0) < 30 || (fB.CREDIBILITY ?? 0) < 30;
-          const capped = lowCredCap && (rawBetAction === 'STRONG BET' || rawBetAction === 'BET') ? 'LEAN' : rawBetAction;
-          const pickRawOdds = pickSide === 'A' ? rawA : rawB;
-          const heavyFavSuppressed = pickRawOdds > (2 / 3) && pickEdge < 0.25 && capped !== 'NO BET';
-          betAction = heavyFavSuppressed ? 'NO BET' : capped;
-          bestBet = capped !== 'NO BET' ? pickSide : null;
-        }
-
-        const trackedOdds = trackedSide === fA.FIGHTER ? upEntry.oddsA : upEntry.oddsB;
-        const trackedEdge = trackedSide === fA.FIGHTER ? edgeA : edgeB;
-        const betRecommendedFighter = bestBet === 'A' ? fA.FIGHTER : bestBet === 'B' ? fB.FIGHTER : '';
-        const betRecommendedOdds = bestBet === 'A' ? upEntry.oddsA : bestBet === 'B' ? upEntry.oddsB : '';
-
-        toAdd.push({
-          id: createPredictionId(),
-          createdAt: new Date().toISOString(),
-          eventName: '',
-          eventDate: upEntry.date,
-          fighterA: fA.FIGHTER,
-          fighterB: fB.FIGHTER,
-          fighterAIsProspect: !!fA.IS_PROSPECT,
-          fighterBIsProspect: !!fB.IS_PROSPECT,
-          includesProspect: !!fA.IS_PROSPECT || !!fB.IS_PROSPECT,
-          division: upEntry.division,
-          fighterAProb: result.pA,
-          fighterBProb: result.pB,
-          predictedWinner,
-          predictedProb: predictedWinner === fA.FIGHTER ? result.pA : result.pB,
-          trackedSide,
-          trackedProb,
-          betAction,
-          bestBet,
-          betRecommendedFighter,
-          betRecommendedOdds,
-          marketOdds: trackedOdds,
-          edge: trackedEdge,
-          edgeA,
-          edgeB,
-          ev: trackedSide === fA.FIGHTER ? evA : evB,
-          evA,
-          evB,
-          kelly: trackedSide === fA.FIGHTER ? kellyA : kellyB,
-          kellyA,
-          kellyB,
-          fairLine: trackedSide === fA.FIGHTER ? fairLineA : fairLineB,
-          fairLineA,
-          fairLineB,
-          oddsA: upEntry.oddsA,
-          oddsB: upEntry.oddsB,
-          actualWinner: '',
-          notes: '',
-          autoGenerated: true,
-          confirmedByUser: false,
-        });
-      }
-      if (toAdd.length === 0) return prev;
-      return [...toAdd, ...prev];
-    });
-  }, []);
 
   const handleSavePrediction = (entry) => {
     setRoiEntries((prev) => [entry, ...prev]);
