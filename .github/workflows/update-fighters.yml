@@ -24,7 +24,7 @@ jobs:
           python-version: '3.11'
 
       - name: Install Python dependencies
-        run: pip install pandas
+        run: pip install pandas requests
 
       - name: Download Greco1899 UFC stats CSVs
         run: |
@@ -40,6 +40,11 @@ jobs:
 
       - name: Run update_fighters.py
         run: python update_fighters.py
+
+      - name: Generate upcoming card from The Odds API
+        run: python generate_upcoming_card.py
+        env:
+          ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
 
       - name: Regenerate eloModule.js
         run: python regen_elo.py

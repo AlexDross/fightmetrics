@@ -1,1 +1,18 @@
-export const UPCOMING_CARD = [];
+export const UPCOMING_CARD = [
+  { fighterA: "Abdul Rakhman Yakhyaev", fighterB: "Julius Walker", oddsA: "-600", oddsB: "+425", date: "2026-06-27", debutFighter: false },
+  { fighterA: "Abus Magomedov", fighterB: "Michal Oleksiejczuk", oddsA: "-115", oddsB: "-105", date: "2026-06-27", debutFighter: false },
+  { fighterA: "Nursulton Ruziboev", fighterB: "Andrey Pulyaev", oddsA: "-210", oddsB: "+180", date: "2026-06-27", debutFighter: false },
+  { fighterA: "Asu Almabayev", fighterB: "Charles Johnson", oddsA: "-255", oddsB: "+215", date: "2026-06-27", debutFighter: false },
+  { fighterA: "Bekzat Almakhan", fighterB: "Jean Matsumoto", oddsA: "+132", oddsB: "-152", date: "2026-06-27", debutFighter: false },
+  { fighterA: "Ikram Aliskerov", fighterB: "Brunno Ferreira", oddsA: "-275", oddsB: "+235", date: "2026-06-27", debutFighter: false },
+  { fighterA: "Nazim Sadykhov", fighterB: "Matheus Camilo", oddsA: "-220", oddsB: "+185", date: "2026-06-27", debutFighter: false },
+  { fighterA: "Shara Magomedov", fighterB: "Michel Pereira", oddsA: "-400", oddsB: "+300", date: "2026-06-27", debutFighter: false },
+  { fighterA: "Valentina Shevchenko", fighterB: "Natalia Silva", oddsA: "-250", oddsB: "+210", date: "2026-06-27", debutFighter: false },
+  { fighterA: "Liz Carmouche", fighterB: "Viviane Araujo", oddsA: "-245", oddsB: "+195", date: "2026-06-27", debutFighter: false },
+  { fighterA: "Rafael Fiziev", fighterB: "Manuel Torres", oddsA: "-115", oddsB: "-105", date: "2026-06-27", debutFighter: false },
+  { fighterA: "Alexandre Pantoja", fighterB: "Joshua Van", oddsA: "-175", oddsB: "+150", date: "2026-06-28", debutFighter: false },
+  { fighterA: "Tom Aspinall", fighterB: "Ciryl Gane", oddsA: "-110", oddsB: "-110", date: "2026-06-28", debutFighter: false },
+  { fighterA: "Islam Makhachev", fighterB: "Michael Morales", oddsA: "-335", oddsB: "+275", date: "2026-06-28", debutFighter: false },
+  { fighterA: "Zhang Weili", fighterB: "Mackenzie Dern", oddsA: "-450", oddsB: "+350", date: "2026-06-28", debutFighter: false },
+  { fighterA: "Merab Dvalishvili", fighterB: "Petr Yan", oddsA: "+150", oddsB: "-175", date: "2026-06-28", debutFighter: false },
+];
