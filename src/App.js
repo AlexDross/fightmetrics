@@ -1604,7 +1604,7 @@ const MODEL_V2 = {
     rounds: 23.105, title_bouts: 1.749, ko_wins: 2.446, sub_wins: 2.101,
     height: 6.257, reach: 8.941, younger: 5.256, sig_str_landed: 2.137,
     sig_str_accuracy: 0.128, sub_attempts: 1.036, td_landed: 1.974,
-    td_accuracy: 0.312, elo: 1.072
+    td_accuracy: 0.312, elo: 107.2
   },
   coef: {
     younger: 0.274, elo: 0.246, sig_str_landed: 0.243, td_landed: 0.224,
@@ -1615,38 +1615,12 @@ const MODEL_V2 = {
   }
 };
 
-const computeLogisticProb = (fA, fB) => {
-  // Raw feature differentials (impute null/undefined as 0). Reversed features
-  // (lose_streak, losses, younger) are oriented so that higher = better for fA.
-  const diffs = {
-    win_streak:       (fA.WIN_STREAK ?? 0) - (fB.WIN_STREAK ?? 0),
-    lose_streak:      (fB.LOSE_STREAK ?? 0) - (fA.LOSE_STREAK ?? 0),
-    wins:             (fA.WINS ?? 0) - (fB.WINS ?? 0),
-    losses:           (fB.LOSSES ?? 0) - (fA.LOSSES ?? 0),
-    rounds:           (fA.TOTAL_ROUNDS ?? 0) - (fB.TOTAL_ROUNDS ?? 0),
-    title_bouts:      (fA.TITLE_BOUTS ?? 0) - (fB.TITLE_BOUTS ?? 0),
-    ko_wins:          (fA.KO_WINS ?? 0) - (fB.KO_WINS ?? 0),
-    sub_wins:         (fA.SUB_WINS ?? 0) - (fB.SUB_WINS ?? 0),
-    height:           (fA.HEIGHT_IN ?? 0) - (fB.HEIGHT_IN ?? 0),
-    reach:            (fA.REACH_IN ?? 0) - (fB.REACH_IN ?? 0),
-    younger:          (fB.AGE ?? 0) - (fA.AGE ?? 0),
-    sig_str_landed:   (fA.ASL ?? 0) - (fB.ASL ?? 0),
-    sig_str_accuracy: (fA.ASP ?? 0) - (fB.ASP ?? 0),
-    sub_attempts:     (fA.ASA ?? 0) - (fB.ASA ?? 0),
-    td_landed:        (fA.ATL ?? 0) - (fB.ATL ?? 0),
-    td_accuracy:      (fA.ATP ?? 0) - (fB.ATP ?? 0),
-    elo:              (fA.ELO ?? 0) - (fB.ELO ?? 0),
-  };
-  // logit = Σ coef_k * (sign * diff_k / scale_k)
-  const logitForSign = (sign) =>
-    MODEL_V2.features.reduce((sum, k) => {
-      const scaled = (sign * diffs[k]) / MODEL_V2.scales[k];
-      return sum + scaled * MODEL_V2.coef[k];
-    }, 0);
-  const logitForward = logitForSign(1);
-  const logitFlipped = logitForSign(-1);
-  const logitAvg = (logitForward - logitFlipped) / 2; // orientation-symmetric
-  const pA = 1 / (1 + Math.exp(-logitAvg));
+const computeLogisticProb = (featsV2) => {
+  const logit = MODEL_V2.features.reduce(
+    (sum, k) => sum + (featsV2[k] / MODEL_V2.scales[k]) * MODEL_V2.coef[k],
+    0
+  );
+  const pA = 1 / (1 + Math.exp(-logit));
   return { pA, pB: 1 - pA };
 };
 
@@ -2146,9 +2120,47 @@ const computeMatchupEdges = (fA, fB) => {
     2;
 
   // ── MODEL_V2 parallel run (verification-only; does NOT affect returned pA/pB)
-  const v2 = computeLogisticProb(fA, fB);
+  const featsV2 = {
+    win_streak:       winStreakA - winStreakB,
+    lose_streak:      loseStreakB - loseStreakA,
+    wins:             winsA - winsB,
+    losses:           lossesB - lossesA,
+    rounds:           roundsA - roundsB,
+    title_bouts:      titleBoutsA - titleBoutsB,
+    ko_wins:          koWinsA - koWinsB,
+    sub_wins:         subWinsA - subWinsB,
+    height:           (fA.HEIGHT_IN ?? 0) - (fB.HEIGHT_IN ?? 0),
+    reach:            (fA.REACH_IN ?? 0) - (fB.REACH_IN ?? 0),
+    younger:          (fB.AGE ?? 0) - (fA.AGE ?? 0),
+    sig_str_landed:   aslA - aslB,
+    sig_str_accuracy: aspA - aspB,
+    sub_attempts:     asaA - asaB,
+    td_landed:        atlA - atlB,
+    td_accuracy:      atpA - atpB,
+    elo:              (effectiveEloA - effectiveEloB) / 100,
+  };
+  const v2 = computeLogisticProb(featsV2);
   console.log('[MODEL_V2]', fA.FIGHTER, 'vs', fB.FIGHTER, '| v1:', (pA * 100).toFixed(1) + '%', '| v2:', (v2.pA * 100).toFixed(1) + '%');
-  const v2flip = computeLogisticProb(fB, fA);
+  const featsV2flip = {
+    win_streak:       winStreakB - winStreakA,
+    lose_streak:      loseStreakA - loseStreakB,
+    wins:             winsB - winsA,
+    losses:           lossesA - lossesB,
+    rounds:           roundsB - roundsA,
+    title_bouts:      titleBoutsB - titleBoutsA,
+    ko_wins:          koWinsB - koWinsA,
+    sub_wins:         subWinsB - subWinsA,
+    height:           (fB.HEIGHT_IN ?? 0) - (fA.HEIGHT_IN ?? 0),
+    reach:            (fB.REACH_IN ?? 0) - (fA.REACH_IN ?? 0),
+    younger:          (fA.AGE ?? 0) - (fB.AGE ?? 0),
+    sig_str_landed:   aslB - aslA,
+    sig_str_accuracy: aspB - aspA,
+    sub_attempts:     asaB - asaA,
+    td_landed:        atlB - atlA,
+    td_accuracy:      atpB - atpA,
+    elo:              (effectiveEloB - effectiveEloA) / 100,
+  };
+  const v2flip = computeLogisticProb(featsV2flip);
   console.assert(Math.abs(v2.pA + v2flip.pA - 1) < 0.001, 'MODEL_V2 symmetry violation');
 
   const clampE = (v) => Math.max(-1.5, Math.min(1.5, v));
