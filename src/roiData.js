@@ -4418,5 +4418,3 @@ export const ROI_ENTRIES = [
     "notes": ""
   }
 ];
-
-export const DISMISSED_AUTO_ENTRIES = [];

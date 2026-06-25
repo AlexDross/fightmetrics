@@ -32,7 +32,7 @@ import { ELO_RATINGS } from './eloModule';
 import { CARDIO_RATIOS } from './cardioModule';
 import { FIGHT_HISTORY } from './fightHistory';
 import { getHistoricalTier } from './rankHistory';
-import { ROI_ENTRIES, DISMISSED_AUTO_ENTRIES } from './roiData';
+import { ROI_ENTRIES } from './roiData';
 import { UPCOMING_CARD } from './upcomingCard';
 
 // _D2 imported from fightersData.js
@@ -5893,7 +5893,6 @@ function ScoutProfile({ allFighters }) {
 export default function App() {
   const [view, setView] = useState('home');
   const [roiEntries, setRoiEntries] = useState(ROI_ENTRIES);
-  const [dismissedKeys, setDismissedKeys] = useState(() => new Set(DISMISSED_AUTO_ENTRIES));
 
   const fightersWithProspectsFiltered = useMemo(() => FIGHTERS, []);
 
@@ -5921,8 +5920,6 @@ export default function App() {
           console.log(`[Auto] Skipping debut: ${upEntry.fighterA} vs ${upEntry.fighterB}`);
           continue;
         }
-        const dismissKey = `${upEntry.fighterA}|${upEntry.fighterB}|${upEntry.date}`;
-        if (dismissedKeys.has(dismissKey)) continue;
         if (prev.some(
           (e) => e.fighterA === upEntry.fighterA && e.fighterB === upEntry.fighterB && e.eventDate === upEntry.date
         )) continue;
@@ -6032,7 +6029,7 @@ export default function App() {
       if (toAdd.length === 0) return prev;
       return [...toAdd, ...prev];
     });
-  }, [dismissedKeys]);
+  }, []);
 
   const handleSavePrediction = (entry) => {
     setRoiEntries((prev) => [entry, ...prev]);
@@ -6045,14 +6042,7 @@ export default function App() {
   };
 
   const handleDeleteROIEntry = (id) => {
-    setRoiEntries((prev) => {
-      const entry = prev.find((e) => e.id === id);
-      if (UPCOMING_CARD.some((u) => u.fighterA === entry?.fighterA && u.fighterB === entry?.fighterB)) {
-        const key = `${entry.fighterA}|${entry.fighterB}|${entry.eventDate}`;
-        setDismissedKeys((dk) => new Set([...dk, key]));
-      }
-      return prev.filter((e) => e.id !== id);
-    });
+    setRoiEntries((prev) => prev.filter((entry) => entry.id !== id));
   };
 
   const handleClearROI = () => {
@@ -6081,7 +6071,6 @@ export default function App() {
           onUpdateEntry={handleUpdateROIEntry}
           onDeleteEntry={handleDeleteROIEntry}
           onClearEntries={handleClearROI}
-          dismissedKeys={dismissedKeys}
         />
       )}
       {view === 'info' && <InfoTab />}
@@ -6359,14 +6348,9 @@ function ROITab({
   onUpdateEntry,
   onDeleteEntry,
   onClearEntries,
-  dismissedKeys,
 }) {
   const exportedCode = `export const ROI_ENTRIES = ${JSON.stringify(
     entries,
-    null,
-    2
-  )};\n\nexport const DISMISSED_AUTO_ENTRIES = ${JSON.stringify(
-    [...(dismissedKeys ?? [])],
     null,
     2
   )};\n`;
