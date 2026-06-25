@@ -2254,6 +2254,8 @@ const computeMatchupEdges = (fA, fB) => {
     sosDiff,
     sosA,
     sosB,
+    v2pA: v2.pA,
+    v2pB: v2.pB,
   };
 };
 // ─── HEADER ───────────────────────────────────────────────────────────────────
@@ -6029,6 +6031,7 @@ export default function App() {
           onUpdateEntry={handleUpdateROIEntry}
           onDeleteEntry={handleDeleteROIEntry}
           onClearEntries={handleClearROI}
+          allFighters={fightersWithProspectsFiltered}
         />
       )}
       {view === 'info' && <InfoTab />}
@@ -6306,6 +6309,7 @@ function ROITab({
   onUpdateEntry,
   onDeleteEntry,
   onClearEntries,
+  allFighters,
 }) {
   const exportedCode = `export const ROI_ENTRIES = ${JSON.stringify(
     entries,
@@ -6355,6 +6359,101 @@ function ROITab({
 
   const displayedEntries = evaluatedEntries.filter((e) => !e.includesProspect);
 
+  const [compareAll, setCompareAll] = useState(false);
+  const [localCompare, setLocalCompare] = useState(new Set());
+
+  const toggleLocalCompare = (id) => {
+    setLocalCompare((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const fighterMap = useMemo(() => {
+    const m = new Map();
+    (allFighters ?? []).forEach((f) => m.set(f.FIGHTER, f));
+    return m;
+  }, [allFighters]);
+
+  const v2DataMap = useMemo(() => {
+    const map = new Map();
+    evaluatedEntries
+      .filter((e) => !e.includesProspect)
+      .forEach((entry) => {
+        if (!compareAll && !localCompare.has(entry.id)) return;
+        const fA = fighterMap.get(entry.fighterA);
+        const fB = fighterMap.get(entry.fighterB);
+        if (!fA || !fB) return;
+
+        const res = computeMatchupEdges(fA, fB);
+        const v2pA = res.v2pA;
+        const v2pB = res.v2pB;
+        const v2Winner = v2pA >= v2pB ? entry.fighterA : entry.fighterB;
+        const v2WinProb = Math.max(v2pA, v2pB);
+        const v2FairLine = americanOdds(v2pA >= v2pB ? v2pA : v2pB);
+
+        const rawA = parseAmericanOdds(entry.oddsA);
+        const rawB = parseAmericanOdds(entry.oddsB);
+        let v2Edge = null;
+        let v2BetAction = 'NO BET';
+        let v2BetFighter = '';
+
+        if (rawA && rawB) {
+          const { noVigA, noVigB } = stripVig(rawA, rawB);
+          const edgeA = v2pA - noVigA;
+          const edgeB = v2pB - noVigB;
+          const pickSide = v2pA >= 0.5 ? 'A' : 'B';
+          const pickEdge = pickSide === 'A' ? edgeA : edgeB;
+          const oppEdge = pickSide === 'A' ? edgeB : edgeA;
+          const pickProb = pickSide === 'A' ? v2pA : v2pB;
+          const pickRawOdds = pickSide === 'A' ? rawA : rawB;
+          v2Edge = pickEdge;
+
+          const hasPickEdge = pickEdge >= 0.03;
+          const conflictingSignals = !hasPickEdge && oppEdge >= 0.03;
+          let action = 'NO BET';
+          if (!conflictingSignals && hasPickEdge) {
+            if (pickProb >= 0.70) {
+              if (pickEdge >= 0.25) action = 'STRONG BET';
+              else if (pickEdge >= 0.15) action = 'BET';
+              else action = 'LEAN';
+            } else if (pickProb >= 0.65) {
+              if (pickEdge >= 0.30) action = 'BET';
+              else if (pickEdge >= 0.10) action = 'LEAN';
+            } else if (pickProb >= 0.60) {
+              if (pickEdge >= 0.10) action = 'LEAN';
+            }
+          }
+          const lowCredCap =
+            (fA.CREDIBILITY ?? 0) < 30 || (fB.CREDIBILITY ?? 0) < 30;
+          if (lowCredCap && (action === 'STRONG BET' || action === 'BET'))
+            action = 'LEAN';
+          if (pickRawOdds > 2 / 3 && pickEdge < 0.25 && action !== 'NO BET')
+            action = 'NO BET';
+
+          v2BetAction = action;
+          v2BetFighter =
+            action !== 'NO BET'
+              ? pickSide === 'A'
+                ? entry.fighterA
+                : entry.fighterB
+              : '';
+        }
+
+        map.set(entry.id, {
+          v2Winner,
+          v2WinProb,
+          v2FairLine,
+          v2Edge,
+          v2BetAction,
+          v2BetFighter,
+        });
+      });
+    return map;
+  }, [evaluatedEntries, compareAll, localCompare, fighterMap]);
+
   return (
     <div className="max-w-5xl mx-auto px-5 py-8">
       <div className="flex items-start justify-between gap-4 mb-6">
@@ -6386,6 +6485,17 @@ function ROITab({
                 Confirm All
               </button>
             )}
+
+            <button
+              onClick={() => setCompareAll((v) => !v)}
+              className={`px-3 py-2 rounded-lg border text-xs font-semibold transition-colors ${
+                compareAll
+                  ? 'border-violet-500 text-violet-300 bg-violet-900/30'
+                  : 'border-slate-700 text-slate-300 hover:text-white hover:border-slate-600'
+              }`}
+            >
+              {compareAll ? 'Hide v2' : 'Compare Models'}
+            </button>
 
             <button
               onClick={onClearEntries}
@@ -6457,6 +6567,9 @@ function ROITab({
               entry.displayBetAction === 'LEAN' ||
               entry.displayBetAction === 'BET' ||
               entry.displayBetAction === 'STRONG BET';
+            const inCompareMode = compareAll || localCompare.has(entry.id);
+            const v2Data = inCompareMode ? (v2DataMap.get(entry.id) ?? null) : null;
+            const v2Differs = v2Data != null && v2Data.v2Winner !== entry.displayWinner;
 
             return (
               <div
@@ -6519,6 +6632,19 @@ function ROITab({
                       </button>
                     )}
                     <button
+                      onClick={() => toggleLocalCompare(entry.id)}
+                      className={`px-3 py-1.5 rounded-lg border text-xs font-semibold transition-colors ${
+                        inCompareMode && !compareAll
+                          ? 'border-violet-500 text-violet-300 bg-violet-900/20'
+                          : compareAll
+                          ? 'border-slate-600 text-slate-500 cursor-default'
+                          : 'border-slate-700 text-slate-500 hover:text-slate-300 hover:border-slate-600'
+                      }`}
+                      title={compareAll ? 'Global compare active' : 'Toggle v1 vs v2 comparison'}
+                    >
+                      v1 | v2
+                    </button>
+                    <button
                       onClick={() => onDeleteEntry(entry.id)}
                       className="px-3 py-1.5 rounded-lg border border-slate-700 text-slate-500 text-xs font-semibold hover:text-white hover:border-slate-600 transition-colors"
                     >
@@ -6527,25 +6653,139 @@ function ROITab({
                   </div>
                 </div>
 
-                {/* Model pick — promoted headline for the entry */}
-                <div className="bg-slate-800/40 rounded-lg p-4 mb-3 flex items-baseline justify-between gap-3">
-                  <div>
-                    <p className="text-slate-500 text-xs uppercase tracking-wider">
-                      Model Pick
-                    </p>
-                    <p className="text-white font-black text-xl mt-1">
-                      {entry.displayWinner}
-                    </p>
+                {/* Model pick — single or side-by-side comparison */}
+                {inCompareMode ? (
+                  <div className="mb-3 grid grid-cols-2 gap-3">
+                    {/* V1 column */}
+                    <div className="bg-slate-800/40 rounded-lg p-4">
+                      <p className="text-slate-500 text-[10px] font-semibold uppercase tracking-wider mb-2">
+                        v1 · Current
+                      </p>
+                      <p className="text-white font-black text-lg">{entry.displayWinner}</p>
+                      <p className="text-emerald-400 font-bold text-sm mt-1">
+                        {((entry.displayProb ?? 0) * 100).toFixed(1)}%
+                        <span className="text-slate-500 text-xs font-normal ml-1">
+                          · {americanOdds(entry.displayProb ?? 0)}
+                        </span>
+                      </p>
+                      {trackedEdge != null && (
+                        <p className="text-slate-400 text-xs mt-1">
+                          Edge: {trackedEdge > 0 ? '+' : ''}
+                          {(trackedEdge * 100).toFixed(1)}pp
+                        </p>
+                      )}
+                      <div className="mt-2">
+                        {entry.displayBetAction !== 'NO BET' ? (
+                          <span
+                            className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-black ${
+                              entry.displayBetAction === 'STRONG BET'
+                                ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                                : entry.displayBetAction === 'BET'
+                                ? 'bg-emerald-900/30 text-emerald-400 border border-emerald-800'
+                                : 'bg-yellow-900/30 text-yellow-400 border border-yellow-800'
+                            }`}
+                          >
+                            {entry.displayBetAction}
+                          </span>
+                        ) : (
+                          <span className="text-slate-600 text-xs">NO BET</span>
+                        )}
+                        {entry.displayBetFighter && entry.displayBetAction !== 'NO BET' && (
+                          <p className="text-white text-xs font-semibold mt-1">
+                            {entry.displayBetFighter}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* V2 column */}
+                    {v2Data ? (
+                      <div
+                        className={`rounded-lg p-4 ${
+                          v2Differs
+                            ? 'bg-amber-900/20 border border-amber-700/40'
+                            : 'bg-slate-800/40'
+                        }`}
+                      >
+                        <p
+                          className={`text-[10px] font-semibold uppercase tracking-wider mb-2 ${
+                            v2Differs ? 'text-amber-400' : 'text-slate-500'
+                          }`}
+                        >
+                          v2 · Logistic{v2Differs ? ' · Disagrees' : ''}
+                        </p>
+                        <p
+                          className={`font-black text-lg ${
+                            v2Differs ? 'text-amber-300' : 'text-white'
+                          }`}
+                        >
+                          {v2Data.v2Winner}
+                        </p>
+                        <p className="text-emerald-400 font-bold text-sm mt-1">
+                          {(v2Data.v2WinProb * 100).toFixed(1)}%
+                          <span className="text-slate-500 text-xs font-normal ml-1">
+                            · {v2Data.v2FairLine}
+                          </span>
+                        </p>
+                        {v2Data.v2Edge != null && (
+                          <p className="text-slate-400 text-xs mt-1">
+                            Edge: {v2Data.v2Edge > 0 ? '+' : ''}
+                            {(v2Data.v2Edge * 100).toFixed(1)}pp
+                          </p>
+                        )}
+                        <div className="mt-2">
+                          {v2Data.v2BetAction !== 'NO BET' ? (
+                            <span
+                              className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-black ${
+                                v2Data.v2BetAction === 'STRONG BET'
+                                  ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                                  : v2Data.v2BetAction === 'BET'
+                                  ? 'bg-emerald-900/30 text-emerald-400 border border-emerald-800'
+                                  : 'bg-yellow-900/30 text-yellow-400 border border-yellow-800'
+                              }`}
+                            >
+                              {v2Data.v2BetAction}
+                            </span>
+                          ) : (
+                            <span className="text-slate-600 text-xs">NO BET</span>
+                          )}
+                          {v2Data.v2BetFighter && v2Data.v2BetAction !== 'NO BET' && (
+                            <p
+                              className={`text-xs font-semibold mt-1 ${
+                                v2Differs ? 'text-amber-300' : 'text-white'
+                              }`}
+                            >
+                              {v2Data.v2BetFighter}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="bg-slate-800/40 rounded-lg p-4 flex items-center justify-center">
+                        <p className="text-slate-600 text-xs">Fighter data unavailable</p>
+                      </div>
+                    )}
                   </div>
-                  <div className="text-right">
-                    <p className="text-emerald-400 font-black text-lg">
-                      {((entry.displayProb ?? 0) * 100).toFixed(1)}%
-                    </p>
-                    <p className="text-slate-500 text-xs mt-0.5">
-                      win prob · {americanOdds(entry.displayProb ?? 0)}
-                    </p>
+                ) : (
+                  <div className="bg-slate-800/40 rounded-lg p-4 mb-3 flex items-baseline justify-between gap-3">
+                    <div>
+                      <p className="text-slate-500 text-xs uppercase tracking-wider">
+                        Model Pick
+                      </p>
+                      <p className="text-white font-black text-xl mt-1">
+                        {entry.displayWinner}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-emerald-400 font-black text-lg">
+                        {((entry.displayProb ?? 0) * 100).toFixed(1)}%
+                      </p>
+                      <p className="text-slate-500 text-xs mt-0.5">
+                        win prob · {americanOdds(entry.displayProb ?? 0)}
+                      </p>
+                    </div>
                   </div>
-                </div>
+                )}
 
                 <div className="grid grid-cols-3 gap-3 mb-4">
                   <div className="bg-slate-800/40 rounded-lg p-3">
