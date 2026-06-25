@@ -1589,6 +1589,67 @@ const MODEL = {
   },
 };
 
+// ─── MODEL_V2: learned logistic (parallel, verification-only) ──────────────────
+// Standardized coefficients from model_artifact.json (logistic_v1_20260625).
+// Imputer medians and scaler means are all 0 (symmetric training), so the only
+// transform needed is: scaled = rawDiff / scale, then dot with standardized coef.
+// NOTE: the artifact's 18th feature `longest_streak` is omitted — it is not stored
+// in fightersData.js — so this 17-feature port will diverge slightly from the
+// artifact's 70.15% test accuracy. This model is NOT live; it only logs for now.
+const MODEL_V2 = {
+  version: "logistic_v1_20260625",
+  features: ["win_streak","lose_streak","wins","losses","rounds","title_bouts","ko_wins","sub_wins","height","reach","younger","sig_str_landed","sig_str_accuracy","sub_attempts","td_landed","td_accuracy","elo"],
+  scales: {
+    win_streak: 2.143, lose_streak: 1.107, wins: 5.105, losses: 3.721,
+    rounds: 23.105, title_bouts: 1.749, ko_wins: 2.446, sub_wins: 2.101,
+    height: 6.257, reach: 8.941, younger: 5.256, sig_str_landed: 2.137,
+    sig_str_accuracy: 0.128, sub_attempts: 1.036, td_landed: 1.974,
+    td_accuracy: 0.312, elo: 1.072
+  },
+  coef: {
+    younger: 0.274, elo: 0.246, sig_str_landed: 0.243, td_landed: 0.224,
+    wins: -0.203, sig_str_accuracy: 0.193, win_streak: 0.167,
+    sub_attempts: 0.155, losses: -0.153, rounds: 0.105,
+    title_bouts: 0.096, sub_wins: -0.090, reach: 0.073,
+    ko_wins: -0.065, height: 0.060, td_accuracy: 0.049, lose_streak: 0.008
+  }
+};
+
+const computeLogisticProb = (fA, fB) => {
+  // Raw feature differentials (impute null/undefined as 0). Reversed features
+  // (lose_streak, losses, younger) are oriented so that higher = better for fA.
+  const diffs = {
+    win_streak:       (fA.WIN_STREAK ?? 0) - (fB.WIN_STREAK ?? 0),
+    lose_streak:      (fB.LOSE_STREAK ?? 0) - (fA.LOSE_STREAK ?? 0),
+    wins:             (fA.WINS ?? 0) - (fB.WINS ?? 0),
+    losses:           (fB.LOSSES ?? 0) - (fA.LOSSES ?? 0),
+    rounds:           (fA.TOTAL_ROUNDS ?? 0) - (fB.TOTAL_ROUNDS ?? 0),
+    title_bouts:      (fA.TITLE_BOUTS ?? 0) - (fB.TITLE_BOUTS ?? 0),
+    ko_wins:          (fA.KO_WINS ?? 0) - (fB.KO_WINS ?? 0),
+    sub_wins:         (fA.SUB_WINS ?? 0) - (fB.SUB_WINS ?? 0),
+    height:           (fA.HEIGHT_IN ?? 0) - (fB.HEIGHT_IN ?? 0),
+    reach:            (fA.REACH_IN ?? 0) - (fB.REACH_IN ?? 0),
+    younger:          (fB.AGE ?? 0) - (fA.AGE ?? 0),
+    sig_str_landed:   (fA.ASL ?? 0) - (fB.ASL ?? 0),
+    sig_str_accuracy: (fA.ASP ?? 0) - (fB.ASP ?? 0),
+    sub_attempts:     (fA.ASA ?? 0) - (fB.ASA ?? 0),
+    td_landed:        (fA.ATL ?? 0) - (fB.ATL ?? 0),
+    td_accuracy:      (fA.ATP ?? 0) - (fB.ATP ?? 0),
+    elo:              (fA.ELO ?? 0) - (fB.ELO ?? 0),
+  };
+  // logit = Σ coef_k * (sign * diff_k / scale_k)
+  const logitForSign = (sign) =>
+    MODEL_V2.features.reduce((sum, k) => {
+      const scaled = (sign * diffs[k]) / MODEL_V2.scales[k];
+      return sum + scaled * MODEL_V2.coef[k];
+    }, 0);
+  const logitForward = logitForSign(1);
+  const logitFlipped = logitForSign(-1);
+  const logitAvg = (logitForward - logitFlipped) / 2; // orientation-symmetric
+  const pA = 1 / (1 + Math.exp(-logitAvg));
+  return { pA, pB: 1 - pA };
+};
+
 // ─── PREDICTION ENGINE ────────────────────────────────────────────────────────
 // DrossPom Composite v1.0 — transparent linear scoring model.
 // Computes win probability for fA vs fB using domain-engineered feature
@@ -2083,6 +2144,12 @@ const computeMatchupEdges = (fA, fB) => {
     (1 / (1 + Math.exp(-(P.a * composite + P.b))) +
       1 / (1 + Math.exp(-(P.a * composite - P.b)))) /
     2;
+
+  // ── MODEL_V2 parallel run (verification-only; does NOT affect returned pA/pB)
+  const v2 = computeLogisticProb(fA, fB);
+  console.log('[MODEL_V2]', fA.FIGHTER, 'vs', fB.FIGHTER, '| v1:', (pA * 100).toFixed(1) + '%', '| v2:', (v2.pA * 100).toFixed(1) + '%');
+  const v2flip = computeLogisticProb(fB, fA);
+  console.assert(Math.abs(v2.pA + v2flip.pA - 1) < 0.001, 'MODEL_V2 symmetry violation');
 
   const clampE = (v) => Math.max(-1.5, Math.min(1.5, v));
   const mkEdge = (raw, label, icon, weight) => ({
