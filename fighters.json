@@ -38322,7 +38322,7 @@
       {
         "event": "UFC Fight Night: Tsarukyan vs. Hooker",
         "date": "2025-11-22",
-        "opponent": "Ian Machado Garry",
+        "opponent": "Ian Garry",
         "result": "L",
         "method": "Decision - Unanimous",
         "end_round": "3",
@@ -59973,7 +59973,7 @@
       {
         "event": "UFC Fight Night: Machado Garry vs. Prates",
         "date": "2025-04-26",
-        "opponent": "Ian Machado Garry",
+        "opponent": "Ian Garry",
         "result": "L",
         "method": "Decision - Unanimous",
         "end_round": "5",
@@ -94531,7 +94531,7 @@
       {
         "event": "UFC Fight Night: Rozenstruik vs. Almeida",
         "date": "2023-05-13",
-        "opponent": "Ian Machado Garry",
+        "opponent": "Ian Garry",
         "result": "L",
         "method": "KO/TKO",
         "end_round": "1",
@@ -97652,7 +97652,7 @@
       {
         "event": "UFC 273: Volkanovski vs. The Korean Zombie",
         "date": "2022-04-09",
-        "opponent": "Ian Machado Garry",
+        "opponent": "Ian Garry",
         "result": "L",
         "method": "Decision - Unanimous",
         "end_round": "3",
@@ -139617,7 +139617,7 @@
       {
         "event": "UFC 276: Adesanya vs. Cannonier",
         "date": "2022-07-02",
-        "opponent": "Ian Machado Garry",
+        "opponent": "Ian Garry",
         "result": "L",
         "method": "Decision - Unanimous",
         "end_round": "3",
@@ -143711,7 +143711,7 @@
       {
         "event": "UFC 298: Volkanovski vs. Topuria",
         "date": "2024-02-17",
-        "opponent": "Ian Machado Garry",
+        "opponent": "Ian Garry",
         "result": "L",
         "method": "Decision - Split",
         "end_round": "3",
@@ -159268,7 +159268,7 @@
     "dec_wins": 1
   },
   {
-    "name": "Ian Machado Garry",
+    "name": "Ian Garry",
     "weight_class": "Welterweight",
     "record": "10-1",
     "wins": 10,
@@ -206617,7 +206617,7 @@
       {
         "event": "UFC 268: Usman vs. Covington 2",
         "date": "2021-11-06",
-        "opponent": "Ian Machado Garry",
+        "opponent": "Ian Garry",
         "result": "L",
         "method": "KO/TKO",
         "end_round": "1",
@@ -283072,7 +283072,7 @@
       {
         "event": "UFC 303: Pereira vs. Prochazka 2",
         "date": "2024-06-29",
-        "opponent": "Ian Machado Garry",
+        "opponent": "Ian Garry",
         "result": "L",
         "method": "Decision - Unanimous",
         "end_round": "3",
@@ -301755,7 +301755,7 @@
       {
         "event": "UFC 292: Sterling vs. O'Malley",
         "date": "2023-08-19",
-        "opponent": "Ian Machado Garry",
+        "opponent": "Ian Garry",
         "result": "L",
         "method": "Decision - Unanimous",
         "end_round": "3",
@@ -368088,7 +368088,7 @@
       {
         "event": "UFC 310: Pantoja vs. Asakura",
         "date": "2024-12-07",
-        "opponent": "Ian Machado Garry",
+        "opponent": "Ian Garry",
         "result": "W",
         "method": "Decision - Unanimous",
         "end_round": "5",
@@ -370853,7 +370853,7 @@
       {
         "event": "UFC 285: Jones vs. Gane",
         "date": "2023-03-04",
-        "opponent": "Ian Machado Garry",
+        "opponent": "Ian Garry",
         "result": "L",
         "method": "KO/TKO",
         "end_round": "3",

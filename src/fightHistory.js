@@ -5949,7 +5949,7 @@ export const FIGHT_HISTORY = {
     },
     {
       "dt": "2025-04-26",
-      "op": "Ian Machado Garry",
+      "op": "Ian Garry",
       "re": "L",
       "me": "Decision - Unanimous",
       "rn": 5,
@@ -21065,7 +21065,7 @@ export const FIGHT_HISTORY = {
     },
     {
       "dt": "2024-06-29",
-      "op": "Ian Machado Garry",
+      "op": "Ian Garry",
       "re": "L",
       "me": "Decision - Unanimous",
       "rn": 3,
@@ -29611,7 +29611,7 @@ export const FIGHT_HISTORY = {
     },
     {
       "dt": "2024-02-17",
-      "op": "Ian Machado Garry",
+      "op": "Ian Garry",
       "re": "L",
       "me": "Decision - Split",
       "rn": 3,
@@ -38028,7 +38028,7 @@ export const FIGHT_HISTORY = {
     },
     {
       "dt": "2023-08-19",
-      "op": "Ian Machado Garry",
+      "op": "Ian Garry",
       "re": "L",
       "me": "Decision - Unanimous",
       "rn": 3,
@@ -41024,7 +41024,7 @@ export const FIGHT_HISTORY = {
   "Belal Muhammad": [
     {
       "dt": "2025-11-22",
-      "op": "Ian Machado Garry",
+      "op": "Ian Garry",
       "re": "L",
       "me": "Decision - Unanimous",
       "rn": 3,
@@ -41254,7 +41254,7 @@ export const FIGHT_HISTORY = {
       "ev": "UFC Fight Night: Dos Anjos vs. Alvarez"
     }
   ],
-  "Ian Machado Garry": [
+  "Ian Garry": [
     {
       "dt": "2025-11-22",
       "op": "Belal Muhammad",
@@ -56965,7 +56965,7 @@ export const FIGHT_HISTORY = {
     },
     {
       "dt": "2023-05-13",
-      "op": "Ian Machado Garry",
+      "op": "Ian Garry",
       "re": "L",
       "me": "KO/TKO",
       "rn": 1,
@@ -60405,7 +60405,7 @@ export const FIGHT_HISTORY = {
     },
     {
       "dt": "2022-07-02",
-      "op": "Ian Machado Garry",
+      "op": "Ian Garry",
       "re": "L",
       "me": "Decision - Unanimous",
       "rn": 3,
@@ -67198,7 +67198,7 @@ export const FIGHT_HISTORY = {
   "Shavkat Rakhmonov": [
     {
       "dt": "2024-12-07",
-      "op": "Ian Machado Garry",
+      "op": "Ian Garry",
       "re": "W",
       "me": "Decision - Unanimous",
       "rn": 5,
@@ -68099,7 +68099,7 @@ export const FIGHT_HISTORY = {
     },
     {
       "dt": "2023-03-04",
-      "op": "Ian Machado Garry",
+      "op": "Ian Garry",
       "re": "L",
       "me": "KO/TKO",
       "rn": 3,
@@ -92977,7 +92977,7 @@ export const FIGHT_HISTORY = {
     },
     {
       "dt": "2022-04-09",
-      "op": "Ian Machado Garry",
+      "op": "Ian Garry",
       "re": "L",
       "me": "Decision - Unanimous",
       "rn": 3,
@@ -101518,7 +101518,7 @@ export const FIGHT_HISTORY = {
   "Jordan Williams": [
     {
       "dt": "2021-11-06",
-      "op": "Ian Machado Garry",
+      "op": "Ian Garry",
       "re": "L",
       "me": "KO/TKO",
       "rn": 1,
