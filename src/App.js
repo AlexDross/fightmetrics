@@ -3636,6 +3636,8 @@ function MatchupSimulator({ allFighters, onSavePrediction, onOpenROI }) {
       fairLineB: market?.fairLineB ?? null,
       oddsA,
       oddsB,
+      v2pA: result.v2pA ?? null,
+      v2pB: result.v2pB ?? null,
       actualWinner: '',
       notes: '',
     });
