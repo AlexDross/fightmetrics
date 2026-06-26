@@ -1,13 +1,14 @@
 """
 Validate the App.js Projected Finish Method formula against actual UFC outcomes.
-Limitation: KD_PER_MIN is not available in this CSV, so it is set to 0 for all fights.
-This likely underestimates rawKO for heavy-handed strikers.
+KD_PER_MIN is loaded from fighters.json (stats.kd_per_min). Unmatched fighters use 0.
 """
 
+import json
 import pandas as pd
 import numpy as np
 
-CSV = '/Users/alexdrossman/Downloads/UltimateUFCDatabase/ufc-master.csv'
+CSV          = '/Users/alexdrossman/Downloads/UltimateUFCDatabase/ufc-master.csv'
+FIGHTERS_JSON = '/Users/alexdrossman/fightmetrics/fighters.json'
 
 # ── Load & filter ─────────────────────────────────────────────────────────────
 df = pd.read_csv(CSV, low_memory=False)
@@ -59,9 +60,19 @@ df['B_finish_rate'] = np.where(
 df['R_sub_threat'] = df['R_avg_SUB_ATT'].fillna(0)
 df['B_sub_threat'] = df['B_avg_SUB_ATT'].fillna(0)
 
-# KD_PER_MIN: not in CSV — set to 0 (see limitation note at top)
-df['R_kd_per_min'] = 0.0
-df['B_kd_per_min'] = 0.0
+# KD_PER_MIN: loaded from fighters.json, matched by name; unmatched → 0
+with open(FIGHTERS_JSON) as _f:
+    _fighters = json.load(_f)
+kd_lookup = {f['name']: (f.get('stats') or {}).get('kd_per_min', 0) or 0 for f in _fighters}
+
+df['R_kd_per_min'] = df['R_fighter'].map(kd_lookup).fillna(0)
+df['B_kd_per_min'] = df['B_fighter'].map(kd_lookup).fillna(0)
+
+r_matched = df['R_fighter'].isin(kd_lookup).sum()
+b_matched = df['B_fighter'].isin(kd_lookup).sum()
+total_rows = len(df)
+print(f"KD_PER_MIN match rate — R: {r_matched}/{total_rows} ({r_matched/total_rows:.1%}), B: {b_matched}/{total_rows} ({b_matched/total_rows:.1%})")
+print(f"KD_PER_MIN stats — mean R: {df['R_kd_per_min'].mean():.4f}, mean B: {df['B_kd_per_min'].mean():.4f}, max: {max(df['R_kd_per_min'].max(), df['B_kd_per_min'].max()):.4f}")
 
 # ── Apply formula variants ────────────────────────────────────────────────────
 # App.js uses the App-level FINISH_RATE which is stored as a percentage (0-100).
@@ -72,8 +83,8 @@ avg_finish      = ((df['R_finish_rate'] + df['B_finish_rate'])  / 2) * 100
 avg_kd_rate     = (df['R_kd_per_min']  + df['B_kd_per_min'])   / 2
 avg_sub_threat  = (df['R_sub_threat']  + df['B_sub_threat'])    / 2
 
-def compute_probs(sub_threat_weight, sub_win_pct_weight):
-    raw_ko  = np.minimum(avg_ko_win_pct * 0.55 + avg_kd_rate * 700 + avg_finish * 0.18, 60)
+def compute_probs(sub_threat_weight, sub_win_pct_weight, kd_weight=700):
+    raw_ko  = np.minimum(avg_ko_win_pct * 0.55 + avg_kd_rate * kd_weight + avg_finish * 0.18, 60)
     raw_sub = np.minimum(avg_sub_win_pct * sub_win_pct_weight + avg_sub_threat * sub_threat_weight + avg_finish * 0.12, 60)
     raw_dec = np.maximum(100 - raw_ko - raw_sub, 18)
     total   = raw_ko + raw_sub + raw_dec
@@ -208,12 +219,22 @@ for wc_name, row in wc2.iterrows():
         f"{row['best_sub']:>9.3f}  {row['sub_diff_best']:>+6.3f}"
     )
 
+# ── 4c. KD weight sweep (sub_threat_w=4, sub_win_pct_w=0.40 fixed) ───────────
+print(f"\n── 4c. KD Weight Sweep (stw=4, swp=0.40) ────────────────────────")
+print(f"  {'kd_weight':>10}  {'Brier':>7}  {'vs base':>8}  {'KO pred':>8}  {'KO act':>7}  {'KO diff':>8}")
+for kdw in [700, 200, 100, 50, 30]:
+    p_ko_kd, p_sub_kd, p_dec_kd = compute_probs(sub_threat_weight=4, sub_win_pct_weight=0.40, kd_weight=kdw)
+    b = brier_multi(df['y_ko'], df['y_sub'], df['y_dec'], p_ko_kd, p_sub_kd, p_dec_kd)
+    ko_pred = p_ko_kd.mean()
+    ko_act  = df['y_ko'].mean()
+    print(f"  {kdw:>10}  {b:>7.4f}  {b-brier_base:>+8.4f}  {ko_pred:>8.3f}  {ko_act:>7.3f}  {ko_pred-ko_act:>+8.3f}")
+
 # ── 5. Summary ────────────────────────────────────────────────────────────────
 print("\n── 5. Summary ────────────────────────────────────────────────────")
 print(f"  n = {len(df)} fights")
 print(f"  Actual rates  — KO: {base_ko:.1%}  SUB: {base_sub:.1%}  DEC: {base_dec:.1%}")
 print(f"  Predicted avg — KO: {df['p_ko'].mean():.1%}  SUB: {df['p_sub'].mean():.1%}  DEC: {df['p_dec'].mean():.1%}")
-print(f"  KD_PER_MIN set to 0 for all fights (not in CSV) — KO scores are underestimated")
+print(f"  KD_PER_MIN loaded from fighters.json (unmatched fighters use 0)")
 if brier_formula >= brier_base:
     print("  ⚠ Base-rate predictor beats the formula. The formula adds no predictive value over priors.")
 else:

@@ -4902,7 +4902,7 @@ function MatchupSimulator({ allFighters, onSavePrediction, onOpenROI }) {
                 ((fA.SUB_THREAT_RATE ?? 0) + (fB.SUB_THREAT_RATE ?? 0)) / 2;
 
               const rawKO = Math.min(
-                avgKoWinPct * 0.55 + avgKdRate * 700 + avgFinish * 0.18,
+                avgKoWinPct * 0.55 + avgKdRate * 200 + avgFinish * 0.18,
                 60
               );
               const rawSub = Math.min(
