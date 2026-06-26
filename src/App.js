@@ -3222,49 +3222,66 @@ const FighterPanel = ({ f, setF, color, ph, allFighters, fA, fB }) => {
       />
       {f && (
         <div className={`mt-2 border ${bc} rounded-xl p-4`}>
-          <p className={`text-xs font-bold mb-3 ${tc}`}>
-            {color === 'blue' ? 'Fighter A' : 'Fighter B'}
-          </p>
-          <div className="grid grid-cols-3 gap-2 mb-3">
+          {/* Header tier: weight class eyebrow + label + record */}
+          <div className="mb-3 pb-3 border-b border-slate-700/50">
+            <p className="text-slate-500 text-xs mb-1">{f.WEIGHT_CLASS}</p>
+            <div className="flex items-baseline justify-between">
+              <p className={`text-xs font-bold ${tc}`}>
+                {color === 'blue' ? 'Fighter A' : 'Fighter B'}
+              </p>
+              <p className="text-white font-black text-lg">{f.RECORD}</p>
+            </div>
+          </div>
+          {/* Primary stats: RTG, Reach, Age */}
+          <div className="grid grid-cols-3 gap-2 mb-3 pb-3 border-b border-slate-700/50">
             {[
-              ['Div', f.WEIGHT_CLASS],
-              ['UFC Rank', ufcRankLabel(f.FIGHTER) ?? 'NR'],
               ['RTG', f.ADJUSTED_RATING.toFixed(1)],
-              ['Base EFF', (f.TOTAL_EFFICIENCY ?? 0).toFixed(1)],
-              [
-                'Qual Adj',
-                `${(f.QUALITY_ADJUSTMENT ?? 0) >= 0 ? '+' : ''}${(
-                  f.QUALITY_ADJUSTMENT ?? 0
-                ).toFixed(1)}`,
-              ],
-              [
-                'Age Adj RTG',
-                pen > 0
-                  ? `${(adjTE ?? 0).toFixed(1)} (-${(pen * 100).toFixed(0)}%)`
-                  : (adjTE ?? 0).toFixed(1),
-              ],
-              ['Record', f.RECORD],
+              ['Reach', fmtReach(f.REACH_IN)],
               [
                 'Age',
                 f.AGE ? (f.AGE >= 35 ? `${f.AGE} ⚠️` : String(f.AGE)) : '—',
               ],
-              ['Height', fmtHeight(f.HEIGHT_IN)],
-              ['Reach', fmtReach(f.REACH_IN)],
-              ['Stance', f.STANCE || '—'],
-              ['Cred', `${(f.CREDIBILITY ?? 0).toFixed(0)}%`],
             ].map(([k, v]) => (
-              <div key={k} className="bg-slate-800/60 rounded-lg px-2 py-1.5">
+              <div key={k} className="text-center">
                 <p className="text-slate-500 text-xs">{k}</p>
-                <p
-                  className={`font-bold text-xs mt-0.5 truncate ${
-                    k === 'Div' ? 'text-slate-300' : tc
-                  }`}
-                >
-                  {v}
-                </p>
+                <p className={`font-black text-base mt-0.5 ${tc}`}>{v}</p>
               </div>
             ))}
           </div>
+          {/* Secondary stats: Rank, Height, Stance */}
+          <div className="grid grid-cols-3 gap-2 mb-3 pb-3 border-b border-slate-700/50">
+            {[
+              ['Rank', ufcRankLabel(f.FIGHTER) ?? 'NR'],
+              ['Height', fmtHeight(f.HEIGHT_IN)],
+              ['Stance', f.STANCE || '—'],
+            ].map(([k, v]) => (
+              <div key={k} className="text-center">
+                <p className="text-slate-500 text-xs">{k}</p>
+                <p className="text-slate-300 font-semibold text-xs mt-0.5 truncate">{v}</p>
+              </div>
+            ))}
+          </div>
+          {/* Tertiary: dot-separated inline analytics */}
+          <p className="text-xs mb-3">
+            <span className="text-slate-500">Base </span>
+            <span className={`font-semibold ${tc}`}>{(f.TOTAL_EFFICIENCY ?? 0).toFixed(1)}</span>
+            <span className="text-slate-600"> · </span>
+            <span className="text-slate-500">Qual </span>
+            <span className={`font-semibold ${tc}`}>
+              {(f.QUALITY_ADJUSTMENT ?? 0) >= 0 ? '+' : ''}
+              {(f.QUALITY_ADJUSTMENT ?? 0).toFixed(1)}
+            </span>
+            <span className="text-slate-600"> · </span>
+            <span className="text-slate-500">Adj RTG </span>
+            <span className={`font-semibold ${tc}`}>
+              {pen > 0
+                ? `${(adjTE ?? 0).toFixed(1)} (-${(pen * 100).toFixed(0)}%)`
+                : (adjTE ?? 0).toFixed(1)}
+            </span>
+            <span className="text-slate-600"> · </span>
+            <span className="text-slate-500">Cred </span>
+            <span className={`font-semibold ${tc}`}>{(f.CREDIBILITY ?? 0).toFixed(0)}%</span>
+          </p>
           {form.length > 0 && (
             <div className="flex items-center gap-1.5 mb-3">
               <span className="text-slate-600 text-xs">Form</span>
@@ -3279,6 +3296,30 @@ const FighterPanel = ({ f, setF, color, ph, allFighters, fA, fB }) => {
                 >
                   {r}
                 </span>
+              ))}
+            </div>
+          )}
+          {f.FIGHT_HISTORY?.length > 0 && (
+            <div className="mb-3">
+              <p className="text-slate-600 text-[10px] uppercase tracking-wider mb-1.5">Recent</p>
+              {f.FIGHT_HISTORY.slice(0, 5).map((fight, i) => (
+                <div key={i} className="flex items-center gap-1.5 mb-1">
+                  <span
+                    className={`text-[10px] font-black px-1 py-0.5 rounded leading-none shrink-0 ${
+                      fight.re === 'W'
+                        ? 'bg-emerald-900/50 text-emerald-400'
+                        : fight.re === 'L'
+                        ? 'bg-red-900/50 text-red-400'
+                        : 'bg-slate-800 text-slate-400'
+                    }`}
+                  >
+                    {fight.re}
+                  </span>
+                  <span className="text-xs text-slate-300 font-medium truncate">{fight.op}</span>
+                  {fight.me && (
+                    <span className="text-[10px] text-slate-500 shrink-0">{fight.me}</span>
+                  )}
+                </div>
               ))}
             </div>
           )}
@@ -3326,6 +3367,8 @@ function MatchupSimulator({ allFighters, onSavePrediction, onOpenROI }) {
   const [eventName, setEventName] = useState('');
   const [eventDate, setEventDate] = useState('');
   const [saveFeedback, setSaveFeedback] = useState('');
+  const [modelToggle, setModelToggle] = useState('v1');
+  const [showDetails, setShowDetails] = useState(false);
 
   const result = useMemo(() => {
     if (!fA || !fB) return null;
@@ -3749,20 +3792,55 @@ function MatchupSimulator({ allFighters, onSavePrediction, onOpenROI }) {
 
       {result && fA && fB ? (
         <div className="space-y-4">
-          {/* ── WIN PROBABILITY ── */}
+          {/* ── SECTION 1: THE VERDICT ── */}
           {(() => {
-            const pctA = (result.pA * 100).toFixed(1);
-            const pctB = (result.pB * 100).toFixed(1);
-            const favA = result.pA > result.pB;
+            const activePA = modelToggle === 'v2' && result.v2pA != null ? result.v2pA : result.pA;
+            const activePB = modelToggle === 'v2' && result.v2pB != null ? result.v2pB : result.pB;
+            const pctA = (activePA * 100).toFixed(1);
+            const pctB = (activePB * 100).toFixed(1);
+            const favA = activePA > activePB;
+            const winner = favA ? fA : fB;
+            const allDomainKeys = ['striking', 'grappling', 'physical', 'form', 'experience', 'analytics'];
+            const topDomains = allDomainKeys
+              .map((k) => result.edges[k])
+              .filter((e) => (favA ? e.clamped > 0 : e.clamped < 0))
+              .sort((a, b) => Math.abs(b.weighted) - Math.abs(a.weighted))
+              .slice(0, 2);
+            const reasoningLine =
+              topDomains.length >= 2
+                ? `${winner.FIGHTER.split(' ').pop()} wins on ${topDomains[0].label.toLowerCase()} and ${topDomains[1].label.toLowerCase()}`
+                : topDomains.length === 1
+                ? `${winner.FIGHTER.split(' ').pop()} wins on ${topDomains[0].label.toLowerCase()}`
+                : `${winner.FIGHTER.split(' ').pop()} has the overall edge`;
             return (
               <div className="bg-slate-900 border border-slate-700 rounded-xl p-5">
                 <div className="flex items-center justify-between mb-4">
-                  <p className="text-slate-400 text-xs font-semibold uppercase tracking-widest">
-                    Win Probability
-                  </p>
-                  <p className="text-slate-600 text-xs font-mono">
-                    {MODEL_VERSION}
-                  </p>
+                  <div className="flex items-center gap-3">
+                    <p className="text-slate-400 text-xs font-semibold uppercase tracking-widest">
+                      Win Probability
+                    </p>
+                    <p className="text-slate-600 text-xs font-mono">{MODEL_VERSION}</p>
+                  </div>
+                  {result.v2pA != null && (
+                    <div className="flex items-center gap-1 bg-slate-800 rounded-lg p-1">
+                      <button
+                        onClick={() => setModelToggle('v1')}
+                        className={`px-3 py-1 text-xs font-bold rounded-md transition-colors ${
+                          modelToggle === 'v1' ? 'bg-red-600 text-white' : 'text-slate-400 hover:text-white'
+                        }`}
+                      >
+                        v1
+                      </button>
+                      <button
+                        onClick={() => setModelToggle('v2')}
+                        className={`px-3 py-1 text-xs font-bold rounded-md transition-colors ${
+                          modelToggle === 'v2' ? 'bg-red-600 text-white' : 'text-slate-400 hover:text-white'
+                        }`}
+                      >
+                        v2
+                      </button>
+                    </div>
+                  )}
                 </div>
                 <div className="flex items-center gap-3 mb-3">
                   <span className="text-blue-400 font-bold text-sm w-28 truncate">
@@ -3771,7 +3849,7 @@ function MatchupSimulator({ allFighters, onSavePrediction, onOpenROI }) {
                   <div className="flex-1 h-3 bg-slate-800 rounded-full overflow-hidden flex">
                     <div
                       className="h-full bg-blue-500 rounded-l-full transition-all"
-                      style={{ width: `${result.pA * 100}%` }}
+                      style={{ width: `${activePA * 100}%` }}
                     />
                     <div className="h-full bg-red-500 flex-1 rounded-r-full" />
                   </div>
@@ -3779,14 +3857,13 @@ function MatchupSimulator({ allFighters, onSavePrediction, onOpenROI }) {
                     {fB.FIGHTER}
                   </span>
                 </div>
-                <div className="flex justify-between px-1 mb-4">
-                  <span className="text-white font-black text-2xl">
-                    {pctA}%
-                  </span>
-                  <span className="text-white font-black text-2xl">
-                    {pctB}%
-                  </span>
+                <div className="flex justify-between px-1 mb-2">
+                  <span className="text-white font-black text-2xl">{pctA}%</span>
+                  <span className="text-white font-black text-2xl">{pctB}%</span>
                 </div>
+                <p className="text-slate-500 text-xs text-center italic mb-4">
+                  {reasoningLine}
+                </p>
                 <div className="grid grid-cols-3 gap-3">
                   <div className="bg-slate-800/40 rounded-lg p-3 text-center">
                     <p className="text-slate-500 text-xs">Model Favorite</p>
@@ -3869,52 +3946,74 @@ function MatchupSimulator({ allFighters, onSavePrediction, onOpenROI }) {
             );
           })()}
 
-          {/* ── MODEL IMPLIED LINES ── */}
-          <div className="bg-slate-900 border border-slate-700 rounded-xl p-5">
-            <p className="text-slate-400 text-xs font-semibold uppercase tracking-widest mb-3">
-              Model Implied Moneylines
-            </p>
-            <div className="grid grid-cols-2 gap-4">
-              {[
-                { f: fA, p: result.pA, color: 'blue' },
-                { f: fB, p: result.pB, color: 'red' },
-              ].map(({ f, p, color }) => (
-                <div
-                  key={f.FIGHTER}
-                  className={`border ${
-                    color === 'blue'
-                      ? 'border-blue-800/50'
-                      : 'border-red-800/50'
-                  } rounded-xl p-4`}
-                >
-                  <p
-                    className={`font-bold text-sm mb-2 ${
-                      color === 'blue' ? 'text-blue-400' : 'text-red-400'
-                    }`}
-                  >
-                    {f.FIGHTER}
-                  </p>
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-white font-black text-2xl">
-                      {americanOdds(p)}
-                    </span>
-                    <span className="text-slate-500 text-xs">
-                      ({(p * 100).toFixed(1)}%)
-                    </span>
-                  </div>
-                  <p className="text-slate-500 text-xs mt-1">
-                    {p > 0.7
-                      ? 'Heavy Favorite'
-                      : p > 0.58
-                      ? 'Moderate Favorite'
-                      : p > 0.5
-                      ? 'Slight Favorite'
-                      : 'Underdog'}
-                  </p>
+          {/* ── SECTION 2: KEY ADVANTAGES ── */}
+          {(() => {
+            const domainStatConfig = {
+              striking:   { fmt: (f) => `${(f.ASL ?? 0).toFixed(2)} sl/min` },
+              grappling:  { fmt: (f) => `${(f.ATL ?? 0).toFixed(2)} td/15m` },
+              physical:   { fmt: (f) => (f.REACH_IN ? `${f.REACH_IN}"` : '—') },
+              form:       { fmt: (f) => `${f.MODEL_UFC_WIN_STREAK ?? 0}-win streak` },
+              experience: { fmt: (f) => `${f.TOTAL_ROUNDS ?? 0} rounds` },
+              analytics:  { fmt: (f) => `ELO ${(f.ELO ?? 0).toFixed(0)}` },
+            };
+            const allDomainKeys = ['striking', 'grappling', 'physical', 'form', 'experience', 'analytics'];
+            const topEdges = allDomainKeys
+              .map((k) => ({ key: k, edge: result.edges[k] }))
+              .sort((a, b) => Math.abs(b.edge.weighted) - Math.abs(a.edge.weighted))
+              .slice(0, 3);
+            return (
+              <div className="bg-slate-900 border border-slate-700 rounded-xl p-5">
+                <p className="text-slate-400 text-xs font-semibold uppercase tracking-widest mb-4">
+                  Key Advantages
+                </p>
+                <div className="space-y-3">
+                  {topEdges.map(({ key, edge }) => {
+                    const favA = edge.clamped > 0;
+                    const advFighter = favA ? fA : fB;
+                    const disFighter = favA ? fB : fA;
+                    const pctA = Math.max(5, Math.min(95, 50 + edge.clamped * 33));
+                    const config = domainStatConfig[key];
+                    const advStat = config ? config.fmt(advFighter) : '';
+                    const disStat = config ? config.fmt(disFighter) : '';
+                    return (
+                      <div
+                        key={key}
+                        className={`rounded-xl border p-4 flex items-center gap-4 ${
+                          favA
+                            ? 'border-blue-800/40 bg-blue-950/10'
+                            : 'border-red-800/40 bg-red-950/10'
+                        }`}
+                      >
+                        <div className="w-36 shrink-0">
+                          <p className={`font-black text-sm ${favA ? 'text-blue-400' : 'text-red-400'}`}>
+                            {advFighter.FIGHTER.split(' ').pop()}
+                          </p>
+                          <p className="text-slate-500 text-xs mt-0.5">
+                            {edge.icon} {edge.label}
+                          </p>
+                        </div>
+                        <div className="flex-1">
+                          <div className="h-2 bg-slate-700 rounded-full overflow-hidden flex">
+                            <div
+                              className="h-full bg-blue-500 rounded-full transition-all"
+                              style={{ width: `${pctA}%` }}
+                            />
+                            <div className="h-full bg-red-500 flex-1" />
+                          </div>
+                        </div>
+                        <div className="w-44 shrink-0 text-right">
+                          <p className={`font-mono text-sm font-bold ${favA ? 'text-blue-400' : 'text-red-400'}`}>
+                            {advStat}
+                          </p>
+                          <p className="text-slate-500 text-xs">vs {disStat}</p>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
-              ))}
-            </div>
-          </div>
+              </div>
+            );
+          })()}
 
           <div className="bg-slate-900 border border-slate-700 rounded-xl p-5">
             <div className="flex items-center justify-between gap-4 mb-4">
@@ -4224,6 +4323,59 @@ function MatchupSimulator({ allFighters, onSavePrediction, onOpenROI }) {
                 );
               })()}
 
+              {/* ── V2 BET RECOMMENDATION (only when modelToggle is v2) ── */}
+              {result?.v2pA != null && modelToggle === 'v2' && (() => {
+                const v2pA = result.v2pA;
+                const v2pB = result.v2pB;
+                const { noVigA, noVigB, rawA, rawB } = market;
+                const edgeA = v2pA - noVigA;
+                const edgeB = v2pB - noVigB;
+                const pickSide = v2pA >= 0.5 ? 'A' : 'B';
+                const pickEdge = pickSide === 'A' ? edgeA : edgeB;
+                const oppEdge  = pickSide === 'A' ? edgeB : edgeA;
+                const pickProb = pickSide === 'A' ? v2pA : v2pB;
+                const pickRawOdds = pickSide === 'A' ? rawA : rawB;
+                const hasPickEdge = pickEdge >= 0.03;
+                const conflictingSignals = !hasPickEdge && oppEdge >= 0.03;
+                let action = 'NO BET';
+                if (!conflictingSignals && hasPickEdge) {
+                  if (pickProb >= 0.70) {
+                    if (pickEdge >= 0.25) action = 'STRONG BET';
+                    else if (pickEdge >= 0.15) action = 'BET';
+                    else action = 'LEAN';
+                  } else if (pickProb >= 0.65) {
+                    if (pickEdge >= 0.30) action = 'BET';
+                    else if (pickEdge >= 0.10) action = 'LEAN';
+                  } else if (pickProb >= 0.60) {
+                    if (pickEdge >= 0.10) action = 'LEAN';
+                  }
+                }
+                const lowCredCap = (fA.CREDIBILITY ?? 0) < 30 || (fB.CREDIBILITY ?? 0) < 30;
+                if (lowCredCap && (action === 'STRONG BET' || action === 'BET')) action = 'LEAN';
+                if (pickRawOdds > 2 / 3 && pickEdge < 0.25 && action !== 'NO BET') action = 'NO BET';
+                const v2Fighter = action !== 'NO BET' ? (pickSide === 'A' ? fA.FIGHTER : fB.FIGHTER) : null;
+                const v1Action = market.betAction;
+                const v1Fighter = market.bestBet === 'A' ? fA.FIGHTER : market.bestBet === 'B' ? fB.FIGHTER : null;
+                const disagrees = action !== v1Action || v2Fighter !== v1Fighter;
+                const badgeStyle =
+                  action === 'STRONG BET' ? 'bg-emerald-500 text-emerald-950' :
+                  action === 'BET'        ? 'bg-emerald-700 text-emerald-100' :
+                  action === 'LEAN'       ? 'bg-yellow-700 text-yellow-100'   :
+                                            'bg-slate-600 text-slate-200';
+                return (
+                  <div className={`flex items-center gap-3 rounded-xl border px-4 py-3 ${disagrees ? 'border-amber-700/50 bg-amber-950/10' : 'border-slate-700 bg-slate-800/40'}`}>
+                    <span className="text-slate-500 text-xs shrink-0">v2 Logistic:</span>
+                    <span className={`text-xs font-black px-2 py-0.5 rounded-full ${badgeStyle}`}>{action}</span>
+                    {v2Fighter && (
+                      <span className={`text-xs font-semibold ${disagrees ? 'text-amber-400' : 'text-slate-300'}`}>
+                        {v2Fighter}
+                      </span>
+                    )}
+                    {disagrees && <span className="text-amber-500 text-xs ml-auto">⚠ differs from v1</span>}
+                  </div>
+                );
+              })()}
+
               {/* VIG + SIDE-BY-SIDE CARDS */}
               <div className="bg-slate-900 border border-slate-700 rounded-xl p-5">
                 <div className="flex items-center justify-between mb-3">
@@ -4331,22 +4483,35 @@ function MatchupSimulator({ allFighters, onSavePrediction, onOpenROI }) {
                         <div
                           key={f.FIGHTER}
                           className={`border rounded-xl p-4 ${grade.bg} ${
-                            isBest ? 'ring-1 ring-emerald-500/40' : ''
+                            color === 'blue' ? 'border-l-4 border-l-blue-600' : 'border-l-4 border-l-red-600'
+                          } ${
+                            isBest
+                              ? color === 'blue'
+                                ? 'ring-1 ring-blue-500/30'
+                                : 'ring-1 ring-red-500/30'
+                              : ''
                           }`}
                         >
                           <div className="flex items-center justify-between mb-3">
                             <p
-                              className={`font-bold text-sm ${
+                              className={`font-bold text-base ${
                                 color === 'blue'
                                   ? 'text-blue-400'
                                   : 'text-red-400'
                               }`}
                             >
-                              {' '}
                               {f.FIGHTER}
                             </p>
                             <span
-                              className={`text-xs font-black px-2 py-0.5 rounded-full ${grade.color} bg-slate-900/60`}
+                              className={`text-xs font-black px-2.5 py-1 rounded-full border ${
+                                grade.label === 'STRONG VALUE' || grade.label === 'VALUE'
+                                  ? 'bg-emerald-900/40 text-emerald-400 border-emerald-700/50'
+                                  : grade.label === 'LEAN'
+                                  ? 'bg-yellow-900/40 text-yellow-400 border-yellow-700/50'
+                                  : grade.label === 'FADE'
+                                  ? 'bg-red-900/40 text-red-400 border-red-700/50'
+                                  : 'bg-slate-700 text-slate-400 border-slate-600'
+                              }`}
                             >
                               {grade.label}
                             </span>
@@ -4378,7 +4543,7 @@ function MatchupSimulator({ allFighters, onSavePrediction, onOpenROI }) {
                                 </span>,
                               ],
                               [
-                                'Break-even %',
+                                'Break-even',
                                 <span className="text-slate-300 font-mono">
                                   {((breakEven ?? 0) * 100).toFixed(1)}%
                                 </span>,
@@ -4397,12 +4562,12 @@ function MatchupSimulator({ allFighters, onSavePrediction, onOpenROI }) {
                               [
                                 'Edge (model − market)',
                                 <span
-                                  className={`font-black text-base ${
+                                  className={`font-black ${
                                     (edge ?? 0) > 0.03
-                                      ? 'text-emerald-400'
+                                      ? 'text-xl text-emerald-400'
                                       : (edge ?? 0) < -0.03
-                                      ? 'text-red-400'
-                                      : 'text-slate-400'
+                                      ? 'text-xl text-red-400'
+                                      : 'text-sm text-slate-400'
                                   }`}
                                 >
                                   {(edge ?? 0) > 0 ? '+' : ''}
@@ -4469,9 +4634,22 @@ function MatchupSimulator({ allFighters, onSavePrediction, onOpenROI }) {
             </p>
           )}
 
-          {/* ── DOMAIN BREAKDOWN ── */}
-          <div className="bg-slate-900 border border-slate-700 rounded-xl p-5">
-            <p className="text-slate-400 text-xs font-semibold uppercase tracking-widest mb-4">
+          {/* ── SECTION 6 + 7: DOMAIN BREAKDOWN + MODEL INPUTS (collapsible) ── */}
+          <div className="bg-slate-900 border border-slate-700 rounded-xl overflow-hidden">
+            <button
+              onClick={() => setShowDetails((v) => !v)}
+              className="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-slate-800/30 transition-colors"
+            >
+              <p className="text-slate-400 text-xs font-semibold uppercase tracking-widest">
+                Domain Breakdown &amp; Model Inputs
+              </p>
+              <span className="text-slate-500 text-xs shrink-0 ml-4">
+                {showDetails ? 'Hide ▲' : 'Show ▼'}
+              </span>
+            </button>
+            {showDetails && (
+            <div className="border-t border-slate-800 px-5 pb-5">
+            <p className="text-slate-400 text-xs font-semibold uppercase tracking-widest mt-5 mb-4">
               Domain Breakdown
             </p>
             <div className="space-y-3">
@@ -4513,37 +4691,52 @@ function MatchupSimulator({ allFighters, onSavePrediction, onOpenROI }) {
                 return (
                   <div key={edgeKey} className="bg-slate-800/40 rounded-xl p-4">
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs text-slate-400 font-semibold">
+                      <span className="text-sm font-bold text-white">
                         {e.icon} {e.label}
                       </span>
                       {winner ? (
-                        <span className={`text-xs font-black ${winColor}`}>
+                        <span className={`text-sm font-black ${winColor}`}>
                           {winner.FIGHTER.split(' ').pop()} ▲
                         </span>
                       ) : (
                         <span className="text-xs text-slate-500">Even</span>
                       )}
                     </div>
-                    <div className="h-2 bg-slate-700 rounded-full overflow-hidden flex mb-3">
-                      <div
-                        className="h-full bg-blue-500 rounded-full transition-all"
-                        style={{ width: `${Math.max(5, Math.min(95, pctA))}%` }}
-                      />
-                      <div className="h-full bg-red-500 flex-1" />
-                    </div>
-                    <div className="divide-y divide-slate-700/30">
+                    <div className="border-b border-slate-700/30 mb-1" />
+                    <div className="divide-y divide-slate-700/20">
                       {rows.map(({ label, aRaw, bRaw, aVal, bVal, lowerBetter }) => {
                         const aEdge = lowerBetter ? aRaw < bRaw : aRaw > bRaw;
                         const bEdge = lowerBetter ? bRaw < aRaw : bRaw > aRaw;
+                        const hasEdge = aEdge || bEdge;
+                        const diff = Math.abs(aRaw - bRaw);
+                        const diffStr = typeof aRaw === 'number' && typeof bRaw === 'number'
+                          ? `+${diff.toFixed(2)}`
+                          : null;
                         return (
-                          <div key={label} className="flex items-center text-xs py-1.5">
-                            <span className={`w-1/3 font-mono text-right pr-2 ${aEdge ? 'text-blue-400 font-bold' : 'text-slate-400'}`}>
-                              {aVal}
-                            </span>
-                            <span className="w-1/3 text-slate-500 text-center leading-tight px-1">{label}</span>
-                            <span className={`w-1/3 font-mono text-left pl-2 ${bEdge ? 'text-red-400 font-bold' : 'text-slate-400'}`}>
-                              {bVal}
-                            </span>
+                          <div key={label} className="flex items-center py-2">
+                            <div className="w-1/3 text-right pr-3">
+                              {hasEdge && aEdge ? (
+                                <>
+                                  <p className="font-mono text-base font-black text-blue-400 leading-tight">{aVal}</p>
+                                  {diffStr && <p className="text-[10px] text-emerald-400 leading-tight">{diffStr}</p>}
+                                </>
+                              ) : (
+                                <p className={`font-mono ${hasEdge ? 'text-xs text-slate-500' : 'text-xs text-slate-400'}`}>{aVal}</p>
+                              )}
+                            </div>
+                            <div className="w-1/3 text-center px-1">
+                              <p className="text-[10px] text-slate-600 uppercase tracking-wider leading-tight">{label}</p>
+                            </div>
+                            <div className="w-1/3 text-left pl-3">
+                              {hasEdge && bEdge ? (
+                                <>
+                                  <p className="font-mono text-base font-black text-red-400 leading-tight">{bVal}</p>
+                                  {diffStr && <p className="text-[10px] text-emerald-400 leading-tight">{diffStr}</p>}
+                                </>
+                              ) : (
+                                <p className={`font-mono ${hasEdge ? 'text-xs text-slate-500' : 'text-xs text-slate-400'}`}>{bVal}</p>
+                              )}
+                            </div>
                           </div>
                         );
                       })}
@@ -4560,11 +4753,11 @@ function MatchupSimulator({ allFighters, onSavePrediction, onOpenROI }) {
                   const neutral = Math.abs(e.clamped) < 0.05;
                   const winner = neutral ? null : favorsA ? fA : fB;
                   const winColor = favorsA ? 'text-blue-400' : 'text-red-400';
-                  const pctA = 50 + e.clamped * 33;
+                  const pctA = 50 + e.clamped * 60;
                   return (
                     <div key={edgeKey} className="bg-slate-800/40 rounded-xl p-4">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-xs text-slate-400 font-semibold">
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="text-sm font-bold text-white">
                           {e.icon} {e.label}
                         </span>
                         {winner ? (
@@ -4575,14 +4768,14 @@ function MatchupSimulator({ allFighters, onSavePrediction, onOpenROI }) {
                           <span className="text-xs text-slate-500">Even</span>
                         )}
                       </div>
-                      <div className="h-2 bg-slate-700 rounded-full overflow-hidden flex">
+                      <div className="h-3 bg-slate-700 rounded-full overflow-hidden flex">
                         <div
                           className="h-full bg-blue-500 rounded-full transition-all"
                           style={{ width: `${Math.max(5, Math.min(95, pctA))}%` }}
                         />
-                        <div className="h-full bg-red-500 flex-1" />
+                        <div className="h-full bg-red-500 flex-1 rounded-r-full" />
                       </div>
-                      <div className="flex justify-between mt-1.5">
+                      <div className="flex justify-between mt-2">
                         <span className="text-blue-400/70 text-xs">{fA.FIGHTER.split(' ').pop()}</span>
                         <span className="text-red-400/70 text-xs">{fB.FIGHTER.split(' ').pop()}</span>
                       </div>
@@ -4591,20 +4784,16 @@ function MatchupSimulator({ allFighters, onSavePrediction, onOpenROI }) {
                 })}
               </div>
             </div>
-          </div>
 
-          <div className="bg-slate-900 border border-slate-700 rounded-xl p-5">
-            <div className="flex items-start justify-between gap-4 mb-5">
-              <div>
-                <p className="text-slate-400 text-xs font-semibold uppercase tracking-widest">
-                  Model Input Comparison
-                </p>
-                <p className="text-slate-500 text-xs mt-1">
-                  Only rows shown here feed the current matchup score directly,
-                  and the buckets now match the real scoring logic.
-                </p>
-              </div>
-              <div className="text-right text-xs text-slate-500">
+            <p className="text-slate-400 text-xs font-semibold uppercase tracking-widest mt-6 mb-4">
+              Model Input Comparison
+            </p>
+            <div className="flex items-start justify-between gap-4 mb-4">
+              <p className="text-slate-500 text-xs mt-1">
+                Only rows shown here feed the current matchup score directly,
+                and the buckets now match the real scoring logic.
+              </p>
+              <div className="text-right text-xs text-slate-500 shrink-0">
                 <p>Blue = {fA.FIGHTER.split(' ').pop()} edge</p>
                 <p>Red = {fB.FIGHTER.split(' ').pop()} edge</p>
               </div>
@@ -4649,54 +4838,41 @@ function MatchupSimulator({ allFighters, onSavePrediction, onOpenROI }) {
                       return (
                         <div
                           key={item.key}
-                          className="grid grid-cols-[1.2fr_0.9fr_0.7fr_0.9fr] gap-3 px-4 py-3 items-center"
+                          className="flex items-center py-2 border-b border-slate-700/30"
                         >
-                          <div>
-                            <p className="text-slate-200 text-sm font-semibold">
+                          <div className="w-1/3 text-right pr-3">
+                            {outcome === 'A' ? (
+                              <p className="font-mono text-base font-black text-blue-400 leading-tight">
+                                {formatComparisonValue(fA, group.title, item, 'A')}
+                              </p>
+                            ) : (
+                              <p className="font-mono text-xs text-slate-500 leading-tight">
+                                {formatComparisonValue(fA, group.title, item, 'A')}
+                              </p>
+                            )}
+                          </div>
+                          <div className="w-1/3 text-center px-1">
+                            <p className="text-[10px] text-slate-600 uppercase tracking-wider leading-tight">
                               {item.label}
                             </p>
-                            <p className="text-slate-500 text-xs mt-0.5">
+                            <p className="text-[10px] text-slate-500 leading-tight mt-0.5">
                               {outcome === 'even'
-                                ? 'No edge'
+                                ? 'Even'
                                 : outcome === 'A'
                                 ? `${fA.FIGHTER.split(' ').pop()} edge`
                                 : `${fB.FIGHTER.split(' ').pop()} edge`}
                             </p>
                           </div>
-                          <div className="text-left">
-                            <p
-                              className={`font-mono text-sm font-bold ${
-                                outcome === 'A'
-                                  ? 'text-blue-400'
-                                  : 'text-slate-300'
-                              }`}
-                            >
-                              {formatComparisonValue(fA, group.title, item, 'A')}
-                            </p>
-                          </div>
-                          <div className="text-center">
-                            <span
-                              className={`inline-flex items-center justify-center min-w-16 px-2 py-1 rounded-full text-xs font-black ${
-                                outcome === 'A'
-                                  ? 'bg-blue-950/50 text-blue-300 border border-blue-800/60'
-                                  : outcome === 'B'
-                                  ? 'bg-red-950/50 text-red-300 border border-red-800/60'
-                                  : 'bg-slate-800 text-slate-400 border border-slate-700'
-                              }`}
-                            >
-                              {deltaLabel}
-                            </span>
-                          </div>
-                          <div className="text-right">
-                            <p
-                              className={`font-mono text-sm font-bold ${
-                                outcome === 'B'
-                                  ? 'text-red-400'
-                                  : 'text-slate-300'
-                              }`}
-                            >
-                              {formatComparisonValue(fB, group.title, item, 'B')}
-                            </p>
+                          <div className="w-1/3 text-left pl-3">
+                            {outcome === 'B' ? (
+                              <p className="font-mono text-base font-black text-red-400 leading-tight">
+                                {formatComparisonValue(fB, group.title, item, 'B')}
+                              </p>
+                            ) : (
+                              <p className="font-mono text-xs text-slate-500 leading-tight">
+                                {formatComparisonValue(fB, group.title, item, 'B')}
+                              </p>
+                            )}
                           </div>
                         </div>
                       );
@@ -4705,8 +4881,10 @@ function MatchupSimulator({ allFighters, onSavePrediction, onOpenROI }) {
                 </div>
               ))}
             </div>
+            </div>
+            )}
           </div>
-          {/* ── FINISH PROBABILITY ── */}
+          {/* ── SECTION 8: FINISH PROBABILITY ── */}
           <div className="bg-slate-900 border border-slate-700 rounded-xl p-5">
             <p className="text-slate-400 text-xs font-semibold uppercase tracking-widest mb-4">
               Projected Finish Method
