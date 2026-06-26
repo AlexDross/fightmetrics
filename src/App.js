@@ -4906,7 +4906,7 @@ function MatchupSimulator({ allFighters, onSavePrediction, onOpenROI }) {
                 60
               );
               const rawSub = Math.min(
-                avgSubWinPct * 0.75 + avgSubThreat * 8 + avgFinish * 0.12,
+                avgSubWinPct * 0.40 + avgSubThreat * 4 + avgFinish * 0.12,
                 60
               );
               const rawDec = Math.max(100 - rawKO - rawSub, 18);
