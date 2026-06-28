@@ -3358,6 +3358,23 @@ const FighterPanel = ({ f, setF, color, ph, allFighters, fA, fB }) => {
   );
 };
 
+function computeFinishProbs(fA, fB) {
+  const avgFinish    = ((fA.FINISH_RATE ?? 0) + (fB.FINISH_RATE ?? 0)) / 2;
+  const avgKdRate    = ((fA.KD_PER_MIN ?? 0) + (fB.KD_PER_MIN ?? 0)) / 2;
+  const avgKoWinPct  = ((fA.KO_WIN_PCT ?? 0) + (fB.KO_WIN_PCT ?? 0)) / 2;
+  const avgSubWinPct = ((fA.SUB_WIN_PCT ?? 0) + (fB.SUB_WIN_PCT ?? 0)) / 2;
+  const avgSubThreat = ((fA.SUB_THREAT_RATE ?? 0) + (fB.SUB_THREAT_RATE ?? 0)) / 2;
+  const rawKO  = Math.min(avgKoWinPct * 0.55 + avgKdRate * 200 + avgFinish * 0.18, 60);
+  const rawSub = Math.min(avgSubWinPct * 0.40 + avgSubThreat * 4 + avgFinish * 0.12, 60);
+  const rawDec = Math.max(100 - rawKO - rawSub, 18);
+  const total  = rawKO + rawSub + rawDec;
+  return {
+    ko:  Math.round((rawKO  / total) * 100),
+    sub: Math.round((rawSub / total) * 100),
+    dec: Math.round((rawDec / total) * 100),
+  };
+}
+
 // ─── MATCHUP SIMULATOR ────────────────────────────────────────────────────────
 function MatchupSimulator({ allFighters, onSavePrediction, onOpenROI }) {
   const [fA, setFA] = useState(null);
@@ -3681,7 +3698,17 @@ function MatchupSimulator({ allFighters, onSavePrediction, onOpenROI }) {
       oddsB,
       v2pA: result.v2pA ?? null,
       v2pB: result.v2pB ?? null,
+      ...(() => {
+        const { ko, sub, dec } = computeFinishProbs(fA, fB);
+        return {
+          projectedKO: ko,
+          projectedSUB: sub,
+          projectedDEC: dec,
+          projectedFinish: ko > sub && ko > dec ? 'KO/TKO' : sub > dec ? 'SUB' : 'DEC',
+        };
+      })(),
       actualWinner: '',
+      actualFinish: '',
       notes: '',
     });
 
@@ -4886,74 +4913,97 @@ function MatchupSimulator({ allFighters, onSavePrediction, onOpenROI }) {
           </div>
           {/* ── SECTION 8: FINISH PROBABILITY ── */}
           <div className="bg-slate-900 border border-slate-700 rounded-xl p-5">
-            <p className="text-slate-400 text-xs font-semibold uppercase tracking-widest mb-4">
-              Projected Finish Method
-            </p>
             {(() => {
-              const avgFinish =
-                ((fA.FINISH_RATE ?? 0) + (fB.FINISH_RATE ?? 0)) / 2;
-              const avgKdRate =
-                ((fA.KD_PER_MIN ?? 0) + (fB.KD_PER_MIN ?? 0)) / 2;
-              const avgKoWinPct =
-                ((fA.KO_WIN_PCT ?? 0) + (fB.KO_WIN_PCT ?? 0)) / 2;
-              const avgSubWinPct =
-                ((fA.SUB_WIN_PCT ?? 0) + (fB.SUB_WIN_PCT ?? 0)) / 2;
-              const avgSubThreat =
-                ((fA.SUB_THREAT_RATE ?? 0) + (fB.SUB_THREAT_RATE ?? 0)) / 2;
+              const { ko, sub, dec } = computeFinishProbs(fA, fB);
+              const dominant = ko > sub && ko > dec ? 'KO/TKO' : sub > dec ? 'SUB' : 'DEC';
 
-              const rawKO = Math.min(
-                avgKoWinPct * 0.55 + avgKdRate * 200 + avgFinish * 0.18,
-                60
-              );
-              const rawSub = Math.min(
-                avgSubWinPct * 0.40 + avgSubThreat * 4 + avgFinish * 0.12,
-                60
-              );
-              const rawDec = Math.max(100 - rawKO - rawSub, 18);
+              const badge =
+                ko > 45
+                  ? { label: 'KO/TKO LIKELY', cls: 'bg-red-950/60 text-red-400 border border-red-800/50' }
+                  : sub > 30
+                  ? { label: 'SUBMISSION THREAT', cls: 'bg-violet-950/60 text-violet-400 border border-violet-800/50' }
+                  : { label: 'LIKELY DECISION', cls: 'bg-slate-800 text-slate-400 border border-slate-700' };
 
-              const total = rawKO + rawSub + rawDec;
-              const ko = ((rawKO / total) * 100).toFixed(0);
-              const sub = ((rawSub / total) * 100).toFixed(0);
-              const dec = ((rawDec / total) * 100).toFixed(0);
+              const koDriver    = (fA.KO_WIN_PCT ?? 0) >= (fB.KO_WIN_PCT ?? 0) ? fA : fB;
+              const subDriver   = (fA.SUB_WIN_PCT ?? 0) >= (fB.SUB_WIN_PCT ?? 0) ? fA : fB;
+              const koDriverName  = koDriver.FIGHTER.split(' ').pop();
+              const subDriverName = subDriver.FIGHTER.split(' ').pop();
+              const hasKdThreat = (fA.KD_PER_MIN ?? 0) > 0.01 || (fB.KD_PER_MIN ?? 0) > 0.01;
+              const neitherFinisher = Math.max(fA.FINISH_RATE ?? 0, fB.FINISH_RATE ?? 0) < 50;
+
+              const methods = [
+                {
+                  key: 'KO/TKO',
+                  label: 'KO / TKO',
+                  pct: ko,
+                  color: 'bg-red-500',
+                  tc: 'text-red-400',
+                  driver: hasKdThreat
+                    ? `Driven by ${koDriverName}'s KD rate`
+                    : `Driven by ${koDriverName}'s KO%`,
+                },
+                {
+                  key: 'SUB',
+                  label: 'Submission',
+                  pct: sub,
+                  color: 'bg-violet-500',
+                  tc: 'text-violet-400',
+                  driver: `Driven by ${subDriverName}'s sub threat`,
+                },
+                {
+                  key: 'DEC',
+                  label: 'Decision',
+                  pct: dec,
+                  color: 'bg-slate-600',
+                  tc: 'text-slate-300',
+                  driver: neitherFinisher
+                    ? 'Neither fighter a dominant finisher'
+                    : 'Low finish threat overall',
+                },
+              ];
 
               return (
-                <div className="grid grid-cols-3 gap-3 text-center">
-                  {[
-                    {
-                      label: 'KO / TKO',
-                      pct: ko,
-                      color: 'bg-red-500',
-                      tc: 'text-red-400',
-                      icon: '🥊',
-                    },
-                    {
-                      label: 'Submission',
-                      pct: sub,
-                      color: 'bg-purple-500',
-                      tc: 'text-purple-400',
-                      icon: '🦾',
-                    },
-                    {
-                      label: 'Decision',
-                      pct: dec,
-                      color: 'bg-slate-500',
-                      tc: 'text-slate-300',
-                      icon: '📋',
-                    },
-                  ].map(({ label, pct, color, tc, icon }) => (
-                    <div key={label} className="bg-slate-800/40 rounded-xl p-4">
-                      <p className="text-lg mb-1">{icon}</p>
-                      <p className={`font-black text-2xl ${tc}`}>{pct}%</p>
-                      <p className="text-slate-400 text-xs mt-1">{label}</p>
-                      <div className="mt-2 h-1.5 bg-slate-700 rounded-full overflow-hidden">
+                <>
+                  <div className="flex items-center justify-between mb-4">
+                    <p className="text-slate-400 text-xs font-semibold uppercase tracking-widest">
+                      Projected Finish Method
+                    </p>
+                    <span className={`text-[10px] font-black uppercase tracking-wider px-2 py-1 rounded-full ${badge.cls}`}>
+                      {badge.label}
+                    </span>
+                  </div>
+
+                  <div className="flex h-8 rounded-full overflow-hidden mb-4">
+                    {methods.map(({ key, label, pct, color }) =>
+                      pct > 0 ? (
                         <div
-                          className={`h-full ${color} rounded-full`}
+                          key={key}
+                          className={`${color} flex items-center justify-center`}
                           style={{ width: `${pct}%` }}
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                        >
+                          {pct > 15 && (
+                            <span className="text-white text-xs font-black">{pct}%</span>
+                          )}
+                        </div>
+                      ) : null
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-3 text-center">
+                    {methods.map(({ key, label, pct, tc, driver }) => {
+                      const isDominant = key === dominant;
+                      return (
+                        <div key={key} className="bg-slate-800/40 rounded-xl p-3">
+                          <p className={`font-black ${isDominant ? 'text-2xl' : 'text-lg'} ${tc}`}>
+                            {pct}%
+                          </p>
+                          <p className="text-slate-400 text-xs mt-0.5 font-semibold">{label}</p>
+                          <p className="text-slate-500 text-[10px] mt-1 leading-tight">{driver}</p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </>
               );
             })()}
           </div>
@@ -6539,7 +6589,7 @@ function ROITab({
 
   const displayedEntries = evaluatedEntries.filter((e) => !e.includesProspect);
 
-  const [compareAll, setCompareAll] = useState(false);
+  const [modelView, setModelView] = useState('v1');
   const [localCompare, setLocalCompare] = useState(new Set());
 
   const toggleLocalCompare = (id) => {
@@ -6562,7 +6612,11 @@ function ROITab({
     evaluatedEntries
       .filter((e) => !e.includesProspect)
       .forEach((entry) => {
-        if (!compareAll && !localCompare.has(entry.id)) return;
+        const needsV2 =
+          modelView === 'compare' ||
+          modelView === 'v2' ||
+          (modelView === 'v1' && localCompare.has(entry.id));
+        if (!needsV2) return;
         const fA = fighterMap.get(entry.fighterA);
         const fB = fighterMap.get(entry.fighterB);
         if (!fA || !fB) return;
@@ -6632,7 +6686,27 @@ function ROITab({
         });
       });
     return map;
-  }, [evaluatedEntries, compareAll, localCompare, fighterMap]);
+  }, [evaluatedEntries, modelView, localCompare, fighterMap]);
+
+  const v2Stats = useMemo(() => {
+    let gradedCount = 0;
+    let v2Correct = 0;
+    displayedEntries.forEach((entry) => {
+      const decisive =
+        entry.actualWinner === entry.fighterA ||
+        entry.actualWinner === entry.fighterB;
+      if (!decisive) return;
+      gradedCount++;
+      const v2Data = v2DataMap.get(entry.id);
+      const winner = v2Data ? v2Data.v2Winner : entry.displayWinner;
+      if (winner === entry.actualWinner) v2Correct++;
+    });
+    return {
+      graded: gradedCount,
+      correct: v2Correct,
+      accuracy: gradedCount > 0 ? (v2Correct / gradedCount) * 100 : 0,
+    };
+  }, [displayedEntries, v2DataMap]);
 
   return (
     <div className="max-w-5xl mx-auto px-5 py-8">
@@ -6666,16 +6740,21 @@ function ROITab({
               </button>
             )}
 
-            <button
-              onClick={() => setCompareAll((v) => !v)}
-              className={`px-3 py-2 rounded-lg border text-xs font-semibold transition-colors ${
-                compareAll
-                  ? 'border-violet-500 text-violet-300 bg-violet-900/30'
-                  : 'border-slate-700 text-slate-300 hover:text-white hover:border-slate-600'
-              }`}
-            >
-              {compareAll ? 'Hide v2' : 'Compare Models'}
-            </button>
+            <div className="flex items-center gap-1 bg-slate-800 rounded-lg p-1">
+              {['v1', 'v2', 'compare'].map((view) => (
+                <button
+                  key={view}
+                  onClick={() => setModelView(view)}
+                  className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-colors ${
+                    modelView === view
+                      ? 'bg-red-600 text-white'
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  {view === 'compare' ? 'Compare' : view}
+                </button>
+              ))}
+            </div>
 
             <button
               onClick={onClearEntries}
@@ -6688,39 +6767,52 @@ function ROITab({
       </div>
 
       <div className="grid grid-cols-4 gap-4 mb-6">
-        {[
-          { label: 'Tracked Fights', value: summary.total, tone: 'text-white' },
-          {
-            label: 'Graded Picks',
-            value: summary.graded,
-            tone: 'text-blue-400',
-          },
-          {
-            label: 'Pick Accuracy',
-            value: `${summary.accuracy.toFixed(1)}%`,
-            tone:
-              summary.accuracy >= 60 ? 'text-emerald-400' : 'text-yellow-400',
-          },
-          {
-            label: 'ROI',
-            value: `${summary.roi >= 0 ? '+' : ''}${summary.roi.toFixed(1)}%`,
-            tone: summary.roi >= 0 ? 'text-emerald-400' : 'text-red-400',
-            sub: `${summary.profit >= 0 ? '+' : ''}${summary.profit.toFixed(
-              2
-            )}u on ${summary.bets} bets`,
-          },
-        ].map(({ label, value, tone, sub }) => (
-          <div
-            key={label}
-            className="bg-slate-900 border border-slate-800 rounded-xl p-4"
-          >
-            <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold">
-              {label}
+        <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
+          <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold">Tracked Fights</p>
+          <p className="font-black text-2xl mt-2 text-white">{summary.total}</p>
+        </div>
+
+        <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
+          <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold">Graded Picks</p>
+          <p className="font-black text-2xl mt-2 text-blue-400">{summary.graded}</p>
+        </div>
+
+        <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
+          <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold">Pick Accuracy</p>
+          {modelView === 'compare' ? (
+            <p className="font-black text-lg mt-2">
+              <span className={summary.accuracy >= 60 ? 'text-emerald-400' : 'text-yellow-400'}>
+                v1: {summary.accuracy.toFixed(1)}%
+              </span>
+              <span className="text-slate-600"> · </span>
+              <span className={v2Stats.accuracy >= 60 ? 'text-emerald-400' : 'text-yellow-400'}>
+                v2: {v2Stats.accuracy.toFixed(1)}%
+              </span>
             </p>
-            <p className={`font-black text-2xl mt-2 ${tone}`}>{value}</p>
-            {sub && <p className="text-slate-600 text-xs mt-1">{sub}</p>}
-          </div>
-        ))}
+          ) : modelView === 'v2' ? (
+            <>
+              <p className={`font-black text-2xl mt-2 ${v2Stats.accuracy >= 60 ? 'text-emerald-400' : 'text-yellow-400'}`}>
+                {v2Stats.accuracy.toFixed(1)}%
+              </p>
+              <p className="text-slate-600 text-[10px] mt-1">(live recompute)</p>
+            </>
+          ) : (
+            <p className={`font-black text-2xl mt-2 ${summary.accuracy >= 60 ? 'text-emerald-400' : 'text-yellow-400'}`}>
+              {summary.accuracy.toFixed(1)}%
+            </p>
+          )}
+        </div>
+
+        <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
+          <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold">ROI</p>
+          <p className={`font-black text-2xl mt-2 ${summary.roi >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+            {summary.roi >= 0 ? '+' : ''}{summary.roi.toFixed(1)}%
+          </p>
+          <p className="text-slate-600 text-xs mt-1">
+            {summary.profit >= 0 ? '+' : ''}{summary.profit.toFixed(2)}u on {summary.bets} bets
+            {modelView !== 'v1' && ' · v1 tracked bets'}
+          </p>
+        </div>
       </div>
       {entries.length === 0 ? (
         <div className="bg-slate-900 border border-slate-800 rounded-xl p-8 text-center text-slate-600">
@@ -6738,18 +6830,22 @@ function ROITab({
             const decisive =
               entry.actualWinner === entry.fighterA ||
               entry.actualWinner === entry.fighterB;
-            const correct =
-              decisive && entry.displayWinner === entry.actualWinner;
             const profit = calcTrackedProfit(entry);
             const trackedProb = entry.displayTrackedProb;
             const trackedEdge = entry.displayEdge;
-            const actionableBet =
-              entry.displayBetAction === 'LEAN' ||
-              entry.displayBetAction === 'BET' ||
-              entry.displayBetAction === 'STRONG BET';
-            const inCompareMode = compareAll || localCompare.has(entry.id);
-            const v2Data = inCompareMode ? (v2DataMap.get(entry.id) ?? null) : null;
+            const inCompareMode = modelView === 'compare' || localCompare.has(entry.id);
+            const inV2Mode = modelView === 'v2' && !localCompare.has(entry.id);
+            const v2Data = (inCompareMode || inV2Mode) ? (v2DataMap.get(entry.id) ?? null) : null;
+            const effectiveWinnerForBadge = (inV2Mode && v2Data) ? v2Data.v2Winner : entry.displayWinner;
+            const correct = decisive && effectiveWinnerForBadge === entry.actualWinner;
             const v2Differs = v2Data != null && v2Data.v2Winner !== entry.displayWinner;
+            const effWinner = (inV2Mode && v2Data) ? v2Data.v2Winner : entry.displayWinner;
+            const effProb = (inV2Mode && v2Data) ? v2Data.v2WinProb : (entry.displayProb ?? 0);
+            const effFairLine = (inV2Mode && v2Data) ? v2Data.v2FairLine : americanOdds(entry.displayProb ?? 0);
+            const effEdge = (inV2Mode && v2Data && v2Data.v2Edge != null) ? v2Data.v2Edge : trackedEdge;
+            const effBetAction = (inV2Mode && v2Data) ? v2Data.v2BetAction : entry.displayBetAction;
+            const effBetFighter = (inV2Mode && v2Data) ? v2Data.v2BetFighter : entry.displayBetFighter;
+            const actionableBetEff = effBetAction === 'LEAN' || effBetAction === 'BET' || effBetAction === 'STRONG BET';
 
             return (
               <div
@@ -6814,13 +6910,23 @@ function ROITab({
                     <button
                       onClick={() => toggleLocalCompare(entry.id)}
                       className={`px-3 py-1.5 rounded-lg border text-xs font-semibold transition-colors ${
-                        inCompareMode && !compareAll
-                          ? 'border-violet-500 text-violet-300 bg-violet-900/20'
-                          : compareAll
+                        modelView === 'compare'
                           ? 'border-slate-600 text-slate-500 cursor-default'
+                          : localCompare.has(entry.id)
+                          ? 'border-violet-500 text-violet-300 bg-violet-900/20'
                           : 'border-slate-700 text-slate-500 hover:text-slate-300 hover:border-slate-600'
                       }`}
-                      title={compareAll ? 'Global compare active' : 'Toggle v1 vs v2 comparison'}
+                      title={
+                        modelView === 'compare'
+                          ? 'Global compare active'
+                          : modelView === 'v2'
+                          ? localCompare.has(entry.id)
+                            ? 'Showing v1 for this entry · click to restore v2'
+                            : 'Click to show v1 for this entry'
+                          : localCompare.has(entry.id)
+                          ? 'Showing compare for this entry · click to revert'
+                          : 'Toggle v1 vs v2 comparison'
+                      }
                     >
                       v1 | v2
                     </button>
@@ -6833,7 +6939,7 @@ function ROITab({
                   </div>
                 </div>
 
-                {/* Model pick — single or side-by-side comparison */}
+                {/* Model pick — single, v2-only, or side-by-side comparison */}
                 {inCompareMode ? (
                   <div className="mb-3 grid grid-cols-2 gap-3">
                     {/* V1 column */}
@@ -6946,6 +7052,30 @@ function ROITab({
                       </div>
                     )}
                   </div>
+                ) : inV2Mode ? (
+                  <div className="bg-slate-800/40 rounded-lg p-4 mb-3 flex items-baseline justify-between gap-3">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <p className="text-slate-500 text-xs uppercase tracking-wider">
+                          Model Pick
+                        </p>
+                        <span className="text-[10px] font-bold text-violet-400 bg-violet-900/30 border border-violet-700/40 px-1.5 py-0.5 rounded uppercase">
+                          v2
+                        </span>
+                      </div>
+                      <p className="text-white font-black text-xl mt-1">
+                        {effWinner}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-emerald-400 font-black text-lg">
+                        {(effProb * 100).toFixed(1)}%
+                      </p>
+                      <p className="text-slate-500 text-xs mt-0.5">
+                        win prob · {effFairLine}
+                      </p>
+                    </div>
+                  </div>
                 ) : (
                   <div className="bg-slate-800/40 rounded-lg p-4 mb-3 flex items-baseline justify-between gap-3">
                     <div>
@@ -6972,23 +7102,23 @@ function ROITab({
                     <p className="text-slate-500 text-xs uppercase tracking-wider">
                       Bet Rec
                     </p>
-                    {actionableBet ? (
+                    {actionableBetEff ? (
                       <>
                         <div className="mt-2">
                           <span
                             className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-black ${
-                              entry.displayBetAction === 'STRONG BET'
+                              effBetAction === 'STRONG BET'
                                 ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
-                                : entry.displayBetAction === 'BET'
+                                : effBetAction === 'BET'
                                 ? 'bg-emerald-900/30 text-emerald-400 border border-emerald-800'
                                 : 'bg-yellow-900/30 text-yellow-400 border border-yellow-800'
                             }`}
                           >
-                            {entry.displayBetAction}
+                            {effBetAction}
                           </span>
                         </div>
                         <p className="text-white font-bold text-sm mt-3">
-                          {entry.displayBetFighter || 'No bet side'}
+                          {effBetFighter || 'No bet side'}
                         </p>
                       </>
                     ) : (
@@ -7001,9 +7131,9 @@ function ROITab({
                       {entry.marketOdds || '—'}
                     </p>
                     <p className="text-slate-600 text-xs mt-1">
-                      {trackedEdge != null
-                        ? `${trackedEdge > 0 ? '+' : ''}${(
-                            trackedEdge * 100
+                      {effEdge != null
+                        ? `${effEdge > 0 ? '+' : ''}${(
+                            effEdge * 100
                           ).toFixed(1)}% edge`
                         : 'No saved market edge'}
                     </p>
@@ -7118,6 +7248,25 @@ function ROITab({
                       <option value={entry.fighterB}>{entry.fighterB}</option>
                       <option value="NC">No Contest</option>
                       <option value="DRAW">Draw</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-slate-500 text-xs font-semibold uppercase tracking-wider block mb-1.5">
+                      Finish Method
+                    </label>
+                    <select
+                      value={entry.actualFinish || ''}
+                      onChange={(e) =>
+                        onUpdateEntry(entry.id, {
+                          actualFinish: e.target.value,
+                        })
+                      }
+                      className="w-full bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-red-500"
+                    >
+                      <option value="">Pending</option>
+                      <option value="KO/TKO">KO / TKO</option>
+                      <option value="SUB">Submission</option>
+                      <option value="DEC">Decision</option>
                     </select>
                   </div>
                 </div>
