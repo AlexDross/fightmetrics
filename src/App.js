@@ -3384,7 +3384,7 @@ function MatchupSimulator({ allFighters, onSavePrediction, onOpenROI }) {
   const [eventName, setEventName] = useState('');
   const [eventDate, setEventDate] = useState('');
   const [saveFeedback, setSaveFeedback] = useState('');
-  const [modelToggle, setModelToggle] = useState('v1');
+  const [modelToggle, setModelToggle] = useState('v2');
   const [showDetails, setShowDetails] = useState(false);
 
   const result = useMemo(() => {
@@ -6589,7 +6589,7 @@ function ROITab({
 
   const displayedEntries = evaluatedEntries.filter((e) => !e.includesProspect);
 
-  const [modelView, setModelView] = useState('v1');
+  const [modelView, setModelView] = useState('v2');
   const [localCompare, setLocalCompare] = useState(new Set());
 
   const toggleLocalCompare = (id) => {
