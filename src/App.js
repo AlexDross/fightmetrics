@@ -6243,7 +6243,7 @@ export default function App() {
     <div className="min-h-screen bg-slate-950 text-slate-100 font-sans">
       <Header view={view} setView={setView} />
       {view === 'home' && (
-        <HomeTab summary={roiSummary} entries={roiEntries} onNavigate={setView} />
+        <HomeTab summary={roiSummary} entries={roiEntries} onNavigate={setView} allFighters={fightersWithProspectsFiltered} />
       )}
       {view === 'simulator' && (
         <MatchupSimulator
@@ -6279,7 +6279,28 @@ const betTier = (action) => {
   return { label: '', cls: 'text-slate-500', border: 'border-slate-800' };
 };
 
-function HomeTab({ summary, entries, onNavigate }) {
+function HomeTab({ summary, entries, onNavigate, allFighters }) {
+  const fighterMap = useMemo(() => {
+    const m = new Map();
+    (allFighters ?? []).forEach((f) => m.set(f.FIGHTER, f));
+    return m;
+  }, [allFighters]);
+
+  const v2PickMap = useMemo(() => {
+    const map = new Map();
+    entries.forEach((entry) => {
+      const fA = fighterMap.get(entry.fighterA);
+      const fB = fighterMap.get(entry.fighterB);
+      if (!fA || !fB) return;
+      const res = computeMatchupEdges(fA, fB);
+      map.set(entry.id, {
+        winner: res.v2pA >= res.v2pB ? entry.fighterA : entry.fighterB,
+        prob: Math.max(res.v2pA, res.v2pB),
+      });
+    });
+    return map;
+  }, [entries, fighterMap]);
+
   const sortedNonProspect = useMemo(
     () =>
       [...entries]
@@ -6307,11 +6328,27 @@ function HomeTab({ summary, entries, onNavigate }) {
     [sortedNonProspect]
   );
 
+  const v2Accuracy = useMemo(() => {
+    const graded = sortedNonProspect.filter(
+      (e) => e.actualWinner === e.fighterA || e.actualWinner === e.fighterB
+    );
+    if (graded.length === 0) return null;
+    const correct = graded.filter((e) => {
+      const v2 = v2PickMap.get(e.id);
+      const winner = v2 ? v2.winner : e.predictedWinner;
+      return winner === e.actualWinner;
+    }).length;
+    return (correct / graded.length) * 100;
+  }, [sortedNonProspect, v2PickMap]);
+
   const getOutcome = (e) => {
     if (!e.actualWinner || e.actualWinner === '') return 'pending';
     if (isPushResult(e.actualWinner)) return 'push';
-    if (e.actualWinner === e.fighterA || e.actualWinner === e.fighterB)
-      return e.actualWinner === e.predictedWinner ? 'correct' : 'incorrect';
+    if (e.actualWinner === e.fighterA || e.actualWinner === e.fighterB) {
+      const v2 = v2PickMap.get(e.id);
+      const effectiveWinner = v2 ? v2.winner : e.predictedWinner;
+      return effectiveWinner === e.actualWinner ? 'correct' : 'incorrect';
+    }
     return 'pending';
   };
 
@@ -6337,12 +6374,25 @@ function HomeTab({ summary, entries, onNavigate }) {
           <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold mb-2">
             Pick Accuracy
           </p>
-          <p className={`font-black text-3xl ${summary.accuracy >= 60 ? 'text-emerald-400' : 'text-yellow-400'}`}>
-            {summary.accuracy.toFixed(1)}%
-          </p>
-          <p className="text-slate-600 text-xs mt-1">
-            {summary.correct} / {summary.graded} picks
-          </p>
+          {v2Accuracy != null ? (
+            <>
+              <p className={`font-black text-3xl ${v2Accuracy >= 60 ? 'text-emerald-400' : 'text-yellow-400'}`}>
+                {v2Accuracy.toFixed(1)}%
+              </p>
+              <p className="text-slate-500 text-xs mt-1">
+                v1: {summary.accuracy.toFixed(1)}%
+              </p>
+            </>
+          ) : (
+            <>
+              <p className={`font-black text-3xl ${summary.accuracy >= 60 ? 'text-emerald-400' : 'text-yellow-400'}`}>
+                {summary.accuracy.toFixed(1)}%
+              </p>
+              <p className="text-slate-600 text-xs mt-1">
+                {summary.correct} / {summary.graded} picks
+              </p>
+            </>
+          )}
         </div>
         <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
           <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold mb-2">
@@ -6354,6 +6404,7 @@ function HomeTab({ summary, entries, onNavigate }) {
           <p className="text-slate-600 text-xs mt-1">
             {summary.profit >= 0 ? '+' : ''}{summary.profit.toFixed(2)}u on {summary.bets} bets
           </p>
+          <p className="text-slate-600 text-[10px] mt-1">v1 tracked bets only</p>
         </div>
         <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
           <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold mb-2">
@@ -6379,45 +6430,61 @@ function HomeTab({ summary, entries, onNavigate }) {
           gradedPicks.map((e) => {
             const outcome = getOutcome(e);
             const tier = betTier(e.betAction ?? 'NO BET');
+            const v2Pick = v2PickMap.get(e.id);
+            const v2Differs = v2Pick && v2Pick.winner !== e.predictedWinner;
+            const accentBorder =
+              outcome === 'correct' ? 'border-l-emerald-600' :
+              outcome === 'incorrect' ? 'border-l-red-700' :
+              'border-l-slate-700';
             return (
               <div
                 key={e.id}
-                className={`bg-slate-900 border ${tier.border} rounded-xl px-5 py-4 flex items-center justify-between gap-4`}
+                className={`bg-slate-900 border ${tier.border} border-l-4 ${accentBorder} rounded-xl px-5 py-4`}
               >
-                <div className="min-w-0">
-                  <p className="text-white font-semibold text-sm truncate">
-                    {e.fighterA} vs {e.fighterB}
-                  </p>
-                  <p className="text-slate-500 text-xs mt-0.5">
-                    {e.eventName}
-                    {e.division ? ` · ${e.division}` : ''}
-                  </p>
-                  <p className="text-slate-400 text-xs mt-1">
-                    Pick:{' '}
-                    <span className="text-white font-semibold">{e.predictedWinner}</span>
-                    {' '}{(e.predictedProb * 100).toFixed(1)}%
-                    {tier.label && (
-                      <>{' · '}<span className={tier.cls}>{tier.label}</span></>
+                <div className="flex items-start justify-between gap-4 mb-2">
+                  <div className="min-w-0">
+                    <p className="text-white font-semibold text-sm truncate">
+                      {e.fighterA} vs {e.fighterB}
+                    </p>
+                    <p className="text-slate-500 text-xs mt-0.5">
+                      {e.eventName}
+                      {e.division ? ` · ${e.division}` : ''}
+                    </p>
+                  </div>
+                  <div className="shrink-0">
+                    {outcome === 'correct' && (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-900/40 text-emerald-400 text-xs font-bold">
+                        ✓ CORRECT
+                      </span>
                     )}
+                    {outcome === 'incorrect' && (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-red-900/40 text-red-400 text-xs font-bold">
+                        ✗ INCORRECT
+                      </span>
+                    )}
+                    {outcome === 'push' && (
+                      <span className="px-2.5 py-1 rounded-lg bg-slate-800 text-slate-400 text-xs font-semibold">
+                        — NC/DRAW
+                      </span>
+                    )}
+                  </div>
+                </div>
+                {v2Pick && (
+                  <p className="text-xs mt-1">
+                    <span className="text-violet-400 font-bold text-[10px] mr-1.5">v2</span>
+                    <span className={`text-sm font-semibold ${v2Differs ? 'text-amber-400' : 'text-white'}`}>
+                      {v2Pick.winner}
+                    </span>
+                    <span className="text-slate-500 text-xs ml-1.5">{(v2Pick.prob * 100).toFixed(1)}%</span>
+                    {tier.label && <span className={`${tier.cls} ml-1.5`}>{tier.label}</span>}
                   </p>
-                </div>
-                <div className="shrink-0 text-right">
-                  {outcome === 'correct' && (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-900/40 text-emerald-400 text-xs font-bold">
-                      ✓ CORRECT
-                    </span>
+                )}
+                <p className="text-xs text-slate-600 mt-0.5">
+                  was: {e.predictedWinner} {(e.predictedProb * 100).toFixed(1)}%
+                  {!v2Pick && tier.label && (
+                    <>{' · '}<span className={tier.cls}>{tier.label}</span></>
                   )}
-                  {outcome === 'incorrect' && (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-red-900/40 text-red-400 text-xs font-bold">
-                      ✗ INCORRECT
-                    </span>
-                  )}
-                  {outcome === 'push' && (
-                    <span className="px-2.5 py-1 rounded-lg bg-slate-800 text-slate-400 text-xs font-semibold">
-                      — NC/DRAW
-                    </span>
-                  )}
-                </div>
+                </p>
               </div>
             );
           })
@@ -6433,20 +6500,30 @@ function HomeTab({ summary, entries, onNavigate }) {
           <div className="space-y-1">
             {upcomingPicks.map((e) => {
               const tier = betTier(e.betAction ?? 'NO BET');
+              const v2Pick = v2PickMap.get(e.id);
+              const v2Differs = v2Pick && v2Pick.winner !== e.predictedWinner;
               return (
                 <div
                   key={e.id}
-                  className={`px-4 py-3 bg-slate-900/60 border ${tier.border} rounded-lg flex items-center justify-between gap-4`}
+                  className={`px-4 py-3 bg-slate-900/60 border ${tier.border} border-l-4 border-l-slate-700 rounded-lg flex items-center justify-between gap-4`}
                 >
                   <div className="min-w-0">
                     <p className="text-slate-300 text-xs font-semibold truncate">
                       {e.fighterA} vs {e.fighterB}
                     </p>
-                    <p className="text-slate-600 text-xs mt-0.5">
-                      {e.eventName} · Pick:{' '}
-                      <span className="text-slate-400">{e.predictedWinner}</span>
-                      {' '}{(e.predictedProb * 100).toFixed(1)}%
-                      {tier.label && (
+                    {v2Pick && (
+                      <p className="text-xs mt-0.5 flex items-center gap-2">
+                        <span className="inline-block text-[9px] font-black bg-violet-900/40 border border-violet-700/40 text-violet-400 px-1.5 py-0.5 rounded-full">v2</span>
+                        <span className={`text-sm font-bold ${v2Differs ? 'text-amber-400' : 'text-slate-300'}`}>
+                          {v2Pick.winner}
+                        </span>
+                        <span className="text-slate-500 text-xs">{(v2Pick.prob * 100).toFixed(1)}%</span>
+                        {tier.label && <span className={tier.cls}>{tier.label}</span>}
+                      </p>
+                    )}
+                    <p className="text-[11px] text-slate-600 mt-0.5">
+                      {e.eventName ? `${e.eventName} · ` : ''}was: {e.predictedWinner} {(e.predictedProb * 100).toFixed(1)}%
+                      {!v2Pick && tier.label && (
                         <>{' · '}<span className={tier.cls}>{tier.label}</span></>
                       )}
                     </p>
