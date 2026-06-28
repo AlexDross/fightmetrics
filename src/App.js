@@ -549,10 +549,12 @@ const sumDeepRounds = (history) =>
 const DIV_ELO_STATS = (() => {
   const stats = {};
   for (const d of _D2) {
-    if (!d.w || !d.elo) continue;
+    if (!d.w) continue;
+    const elo = ELO_RATINGS[d.n]?.elo ?? d.elo;
+    if (!elo) continue;
     if (!stats[d.w]) stats[d.w] = { min: Infinity, max: -Infinity };
-    if (d.elo < stats[d.w].min) stats[d.w].min = d.elo;
-    if (d.elo > stats[d.w].max) stats[d.w].max = d.elo;
+    if (elo < stats[d.w].min) stats[d.w].min = elo;
+    if (elo > stats[d.w].max) stats[d.w].max = elo;
   }
   return stats;
 })();
