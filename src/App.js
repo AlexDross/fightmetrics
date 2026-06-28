@@ -1522,7 +1522,7 @@ const recentForm = (fh) => {
 // NOTE: The in-app backtest uses current career stats, not point-in-time
 // pre-fight snapshots. Results are diagnostic only — not validated accuracy.
 
-export const MODEL_VERSION = 'DrossPom Composite v1.0';
+export const MODEL_VERSION = 'DrossPom Composite v1.0 · Logistic v2.0';
 
 const MODEL = {
   // Feature weights (normalized, sum to 1)
@@ -7358,101 +7358,90 @@ function ROITab({
   );
 }
 function InfoTab() {
-  const sections = [
-    {
-      title: 'Striking Output',
-      icon: '⚔️',
-      finding:
-        'The strongest predictor of winning across all divisions. Outstriking an opponent — measured by significant strikes landed per minute — was the most reliable composite signal, regardless of weight class.',
-    },
-    {
-      title: 'Takedown Defense > Offense',
-      icon: '🛡️',
-      finding:
-        'Takedown defense outperformed takedown offense as a win indicator. Fighters who neutralize wrestling and maintain positional control consistently outperform those who rely solely on offensive wrestling volume.',
-    },
-    {
-      title: 'Physical Traits by Division',
-      icon: '📏',
-      finding:
-        "Heavier men's divisions show stronger correlations with reach and size differentials. Lighter divisions and women's classes rely more on technique, tempo, and fight IQ than physical attributes.",
-    },
-    {
-      title: 'Age Has Negative Impact',
-      icon: '📉',
-      finding:
-        'Older fighters show lower win probabilities across the composite. This is a linear effect from the age differential feature — not a nonlinear decay curve. Fighters 38+ are flagged separately in Matchup Context.',
-    },
-    {
-      title: 'DrossPom Composite v1.0',
-      icon: '🎯',
-      finding:
-        'The live simulator runs a transparent domain-engineered linear composite, not an exported XGBoost model. Weights are informed by historical UFC modeling. Probabilities are sigmoid-transformed structured estimates — not externally validated forecasts.',
-    },
-  ];
   const stats = [
+    {
+      term: 'RTG',
+      full: '0–90 Fighter Rating',
+      formula:
+        "Normalized ELO within each weight class. 100 = division's highest-rated fighter. 50 = division average. Updates every Monday and Thursday after fight results are processed.",
+      color: 'text-red-400',
+    },
+    {
+      term: 'ELO',
+      full: 'ELO Rating',
+      formula:
+        'Elo-based skill rating updated after every UFC fight. Base: 1500. K-factor scales by finish type (KO/Sub ×1.5), round (R1 ×1.3), and experience (<5 fights ×1.5). Elite fighters typically range 1700–1900.',
+      color: 'text-orange-400',
+    },
     {
       term: 'OQI',
       full: 'Overall Quality Index',
       formula:
         "Composite of efficiency, credibility, and output metrics — the primary ranking stat, analogous to KenPom's overall rating.",
-      color: 'text-red-400',
+      color: 'text-yellow-400',
     },
     {
       term: 'EFF',
       full: 'Efficiency Rating',
       formula:
-        'EFF = (Strike Accuracy × NSM) + (TD% × TDE) + (Control Time per 15min × 0.5). Each component is normalized to the division mean, then weighted and summed. A fighter with high accuracy who also lands more than they absorb, defends takedowns, and controls position will score highest. The result is scaled 0–100 per division.',
-      color: 'text-orange-400',
+        'EFF = (Strike Accuracy × NSM) + (TD% × TDE) + (Control Time per 15min × 0.5). Each component is normalized to the division mean, then weighted and summed. Scaled 0–100 per division.',
+      color: 'text-green-400',
     },
     {
       term: 'CRED%',
       full: 'Credibility Percentage',
       formula:
         'Bayesian confidence weight. Shrinks EFF toward the division mean based on sample size. More fights = higher credibility = EFF closer to raw value.',
-      color: 'text-yellow-400',
+      color: 'text-cyan-400',
+    },
+    {
+      term: 'QM',
+      full: 'Quality Momentum',
+      formula:
+        'Opponent-quality-adjusted win/loss momentum. Rewards beating highly-rated opponents and penalizes losing to lower-rated ones.',
+      color: 'text-blue-400',
     },
     {
       term: 'NSM',
       full: 'Net Strike Margin',
       formula:
         'Significant strikes landed minus significant strikes absorbed per minute. Positive = net striker, negative = net absorber.',
-      color: 'text-green-400',
+      color: 'text-indigo-400',
     },
     {
       term: 'TDE',
       full: 'Takedown Efficiency',
       formula:
         'Takedowns landed per 15 minutes, weighted by takedown accuracy. Measures offensive wrestling output.',
-      color: 'text-cyan-400',
+      color: 'text-purple-400',
     },
     {
       term: 'TD%',
       full: 'Takedown Defense %',
       formula:
         'Percentage of opponent takedown attempts successfully defended. Higher is better — this proved more predictive than TDE.',
-      color: 'text-blue-400',
+      color: 'text-pink-400',
     },
     {
       term: 'CRDY',
       full: 'Cardio / Late-Round Ratio',
       formula:
         "Compares a fighter's output in rounds 3–5 vs rounds 1–2. Values above 1.0 indicate fighters who finish stronger.",
-      color: 'text-purple-400',
+      color: 'text-rose-400',
     },
     {
       term: 'FIN%',
       full: 'Finish Rate',
       formula:
         'Percentage of wins by KO/TKO or submission. High values indicate fight-ending power rather than decision-reliance.',
-      color: 'text-pink-400',
+      color: 'text-red-300',
     },
     {
       term: 'DMG',
       full: 'Damage Output Index',
       formula:
         'Combines significant strikes landed, knockdowns, and finish rate into a single damage-dealing composite score.',
-      color: 'text-red-300',
+      color: 'text-orange-300',
     },
     {
       term: 'POS',
@@ -7466,64 +7455,120 @@ function InfoTab() {
 
   return (
     <div className="max-w-5xl mx-auto px-5 py-8 space-y-10">
-      {/* Key Findings */}
+
+      {/* Section 1 — How FightMetrics Works */}
       <div>
-        <h2 className="text-white font-black text-xl mb-1">Model Insights</h2>
-        <p className="text-slate-400 text-sm mb-5">
-          Key findings from DrossPom Composite v1.0 across striking, grappling, physical, form, experience, and analytics domains. Diagnostic accuracy ({backtest.correct}/{backtest.total} fights in dataset):{' '}
-          <span className="text-red-400 font-bold">
-            {backtest.accuracy.toFixed(1)}%
-          </span>
-          .{' '}
-          <span className="text-slate-500">
-            Uses current career stats, not point-in-time pre-fight snapshots. This is a diagnostic ceiling estimate, not validated out-of-sample accuracy.
-          </span>
-        </p>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {sections.map(({ title, icon, finding }) => (
-            <div
-              key={title}
-              className="bg-slate-900 border border-slate-800 rounded-xl p-4 hover:border-slate-700 transition-colors"
-            >
-              <div className="flex items-center gap-2 mb-2">
-                <span className="text-lg">{icon}</span>
-                <h3 className="text-white font-bold text-sm">{title}</h3>
-              </div>
-              <p className="text-slate-400 text-xs leading-relaxed">
-                {finding}
-              </p>
+        <h2 className="text-white font-black text-xl mb-0.5">How FightMetrics Works</h2>
+        <p className="text-slate-500 text-xs mb-5 font-mono">DrossPom Composite v1.0 · Learned Logistic v2.0 (parallel)</p>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* Card 1 — Prediction Engine */}
+          <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 hover:border-slate-700 transition-colors">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-base">🧠</span>
+              <h3 className="text-white font-bold text-sm">Prediction Engine</h3>
             </div>
-          ))}
+            <p className="text-slate-400 text-xs leading-relaxed">
+              Two models run in parallel. <span className="text-slate-200">v1 (DrossPom Composite)</span> is a domain-engineered linear composite — weighted sum of 6 domains (Striking, Grappling, Physical, Form, Experience, Analytics) through a sigmoid function. <span className="text-slate-200">v2 (Logistic)</span> is a learned logistic regression trained on 7,177 historical UFC fights using 17 features including ELO, streaks, and striking efficiency. Win probabilities are Platt-calibrated.
+            </p>
+          </div>
+          {/* Card 2 — Key Predictors */}
+          <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 hover:border-slate-700 transition-colors">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-base">📊</span>
+              <h3 className="text-white font-bold text-sm">Key Predictors</h3>
+            </div>
+            <ul className="space-y-1.5">
+              <li className="text-slate-400 text-xs leading-relaxed flex gap-2"><span>⚔️</span><span>Striking output is the strongest single predictor across all divisions</span></li>
+              <li className="text-slate-400 text-xs leading-relaxed flex gap-2"><span>🛡️</span><span>Takedown defense outperforms takedown offense as a win signal</span></li>
+              <li className="text-slate-400 text-xs leading-relaxed flex gap-2"><span>📈</span><span>ELO accounts for opponent quality — a win over a top-ranked fighter carries more weight</span></li>
+              <li className="text-slate-400 text-xs leading-relaxed flex gap-2"><span>📉</span><span>Age penalizes fighters 35+ with a linear decay; 38+ triggers a matchup flag</span></li>
+              <li className="text-slate-400 text-xs leading-relaxed flex gap-2"><span>📏</span><span>Physical traits (reach, size) matter more in heavier divisions</span></li>
+            </ul>
+          </div>
+          {/* Card 3 — Projected Finish Method */}
+          <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 hover:border-slate-700 transition-colors">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-base">🥊</span>
+              <h3 className="text-white font-bold text-sm">Projected Finish Method</h3>
+            </div>
+            <p className="text-slate-400 text-xs leading-relaxed">
+              A separate calibrated model predicts KO/TKO, Submission, or Decision probability for each matchup. Validated against 1,516 historical fights post-2019. Calibration: KO ±0.9pp, SUB ±0.6pp vs actual UFC rates. Inputs: KO win %, KD rate, sub threat rate, finish rate.
+            </p>
+          </div>
         </div>
       </div>
-      {/* Stat Glossary */}
+
+      {/* Section 2 — Rating & ELO Explained */}
+      <div>
+        <h2 className="text-white font-black text-xl mb-1">Rating &amp; ELO Explained</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 hover:border-slate-700 transition-colors">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-base">🏅</span>
+              <h3 className="text-white font-bold text-sm">0–100 Fighter Rating</h3>
+            </div>
+            <p className="text-slate-400 text-xs leading-relaxed">
+              Normalized ELO score within each weight class. <span className="text-slate-200">100 = division’s highest-rated fighter.</span> 50 = division average. Updates every Monday and Thursday after fight results are processed. Not the same as UFC rankings — based entirely on performance data.
+            </p>
+          </div>
+          <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 hover:border-slate-700 transition-colors">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-base">📡</span>
+              <h3 className="text-white font-bold text-sm">ELO Rating</h3>
+            </div>
+            <p className="text-slate-400 text-xs leading-relaxed">
+              Elo-based skill rating updated after every UFC fight. <span className="text-slate-200">Base: 1500.</span> K-factor scales by finish type (KO/Sub ×1.5), round (R1 ×1.3), and experience (&lt;5 fights ×1.5). Elite fighters typically range 1700–1900. Quality Momentum (QM) adjusts for recent opponent strength.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Section 3 — Stat Glossary */}
       <div>
         <h2 className="text-white font-black text-xl mb-1">Stat Glossary</h2>
-        <p className="text-slate-400 text-sm mb-5">
-          Every column in the Database tab explained — what it measures, how it
-          was derived, and why it matters.
+        <p className="text-slate-400 text-sm mb-4">
+          Every metric in FightMetrics explained — what it measures, how it was derived, and why it matters.
         </p>
-        <div className="space-y-2">
-          {stats.map(({ term, full, formula, color }) => (
-            <div
-              key={term}
-              className="bg-slate-900 border border-slate-800 rounded-xl px-5 py-4 flex gap-4 items-start hover:border-slate-700 transition-colors"
-            >
-              <span
-                className={`font-black text-sm font-mono w-16 shrink-0 ${color}`}
-              >
-                {term}
-              </span>
-              <div>
-                <p className="text-white text-sm font-semibold">{full}</p>
-                <p className="text-slate-400 text-xs leading-relaxed mt-0.5">
-                  {formula}
-                </p>
+        <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+          <div className="divide-y divide-slate-800">
+            {stats.map(({ term, full, formula, color }) => (
+              <div key={term} className="grid grid-cols-[9rem_1fr] gap-4 px-5 py-3 hover:bg-slate-800/40 transition-colors">
+                <div>
+                  <span className={`font-black text-sm font-mono ${color}`}>{term}</span>
+                  <p className="text-slate-300 text-xs font-semibold mt-0.5 leading-tight">{full}</p>
+                </div>
+                <p className="text-slate-400 text-xs leading-relaxed self-center">{formula}</p>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </div>
+
+      {/* Section 4 — Data & Limitations */}
+      <div>
+        <h2 className="text-white font-black text-xl mb-1">Data &amp; Limitations</h2>
+        <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
+          <ul className="space-y-3">
+            <li className="flex gap-3 text-xs text-slate-400 leading-relaxed">
+              <span className="text-slate-500 shrink-0 mt-0.5">▸</span>
+              <span>Stats sourced from ufcstats.com via automated pipeline — updates Mon/Thu after fight cards. Diagnostic accuracy ({backtest.correct}/{backtest.total} fights): <span className="text-red-400 font-bold">{backtest.accuracy.toFixed(1)}%</span> <span className="text-slate-500">(ceiling estimate using current career stats, not point-in-time snapshots)</span></span>
+            </li>
+            <li className="flex gap-3 text-xs text-slate-400 leading-relaxed">
+              <span className="text-slate-500 shrink-0 mt-0.5">▸</span>
+              <span>Point-in-time pre-fight stats used for all predictions — no look-ahead bias</span>
+            </li>
+            <li className="flex gap-3 text-xs text-slate-400 leading-relaxed">
+              <span className="text-slate-500 shrink-0 mt-0.5">▸</span>
+              <span>Low sample fighters (&lt;75 min fight time) are blended toward division averages — flagged as low credibility</span>
+            </li>
+            <li className="flex gap-3 text-xs text-slate-400 leading-relaxed">
+              <span className="text-slate-500 shrink-0 mt-0.5">▸</span>
+              <span>Cross-division matchups (e.g. LHW vs HW) are noted but physical domain weights are not adjusted</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+
     </div>
   );
 }
