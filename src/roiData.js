@@ -37,7 +37,7 @@ export const ROI_ENTRIES = [
     "oddsB": "-112",
     "v2pA": 0.44052515994552305,
     "v2pB": 0.5594748400544769,
-    "actualWinner": "",
+    "actualWinner": "Rafael Fiziev",
     "notes": ""
   },
   {
@@ -78,7 +78,7 @@ export const ROI_ENTRIES = [
     "oddsB": "+310",
     "v2pA": 0.5354727856578033,
     "v2pB": 0.4645272143421967,
-    "actualWinner": "",
+    "actualWinner": "Shara Magomedov",
     "notes": ""
   },
   {
@@ -119,7 +119,7 @@ export const ROI_ENTRIES = [
     "oddsB": "+170",
     "v2pA": 0.34649212824588355,
     "v2pB": 0.6535078717541165,
-    "actualWinner": "",
+    "actualWinner": "Matheus Camilo",
     "notes": ""
   },
   {
@@ -160,7 +160,7 @@ export const ROI_ENTRIES = [
     "oddsB": "+220",
     "v2pA": 0.595342723496204,
     "v2pB": 0.404657276503796,
-    "actualWinner": "",
+    "actualWinner": "Asu Almabayev",
     "notes": ""
   },
   {
@@ -201,7 +201,7 @@ export const ROI_ENTRIES = [
     "oddsB": "+250",
     "v2pA": 0.6711939374253979,
     "v2pB": 0.3288060625746021,
-    "actualWinner": "",
+    "actualWinner": "Ikram Aliskerov",
     "notes": ""
   },
   {
@@ -242,7 +242,7 @@ export const ROI_ENTRIES = [
     "oddsB": "-120",
     "v2pA": 0.3900212750933434,
     "v2pB": 0.6099787249066566,
-    "actualWinner": "",
+    "actualWinner": "Abus Magomedov",
     "notes": ""
   },
   {
@@ -283,7 +283,7 @@ export const ROI_ENTRIES = [
     "oddsB": "+440",
     "v2pA": 0.5578756530680461,
     "v2pB": 0.4421243469319539,
-    "actualWinner": "",
+    "actualWinner": "Abdul Rakhman Yakhyaev",
     "notes": ""
   },
   {
@@ -324,7 +324,7 @@ export const ROI_ENTRIES = [
     "oddsB": "+190",
     "v2pA": 0.474097182352722,
     "v2pB": 0.525902817647278,
-    "actualWinner": "",
+    "actualWinner": "Nursulton Ruziboev",
     "notes": ""
   },
   {
@@ -365,7 +365,7 @@ export const ROI_ENTRIES = [
     "oddsB": "-225",
     "v2pA": 0.4515457897900572,
     "v2pB": 0.5484542102099428,
-    "actualWinner": "",
+    "actualWinner": "Kaan Ofli",
     "notes": ""
   },
   {
@@ -406,7 +406,7 @@ export const ROI_ENTRIES = [
     "oddsB": "-175",
     "v2pA": 0.3244603389761124,
     "v2pB": 0.6755396610238876,
-    "actualWinner": "",
+    "actualWinner": "Jean Matsumoto",
     "notes": ""
   },
   {
