@@ -1402,7 +1402,7 @@ export const FIGHT_HISTORY = {
     },
     {
       "dt": "2023-12-02",
-      "op": "Zach Reese",
+      "op": "Zachary Reese",
       "re": "W",
       "me": "KO/TKO",
       "rn": 1,
@@ -5949,7 +5949,7 @@ export const FIGHT_HISTORY = {
     },
     {
       "dt": "2025-04-26",
-      "op": "Ian Garry",
+      "op": "Ian Machado Garry",
       "re": "L",
       "me": "Decision - Unanimous",
       "rn": 5,
@@ -9910,7 +9910,7 @@ export const FIGHT_HISTORY = {
     },
     {
       "dt": "2025-11-08",
-      "op": "Zach Reese",
+      "op": "Zachary Reese",
       "re": "L",
       "me": "Submission",
       "rn": 2,
@@ -9956,7 +9956,7 @@ export const FIGHT_HISTORY = {
     },
     {
       "dt": "2025-09-13",
-      "op": "Zach Reese",
+      "op": "Zachary Reese",
       "re": "NC",
       "me": "Could Not Continue",
       "rn": 1,
@@ -17583,7 +17583,7 @@ export const FIGHT_HISTORY = {
     },
     {
       "dt": "2025-01-18",
-      "op": "Zach Reese",
+      "op": "Zachary Reese",
       "re": "W",
       "me": "KO/TKO",
       "rn": 1,
@@ -21065,7 +21065,7 @@ export const FIGHT_HISTORY = {
     },
     {
       "dt": "2024-06-29",
-      "op": "Ian Garry",
+      "op": "Ian Machado Garry",
       "re": "L",
       "me": "Decision - Unanimous",
       "rn": 3,
@@ -28839,7 +28839,7 @@ export const FIGHT_HISTORY = {
     },
     {
       "dt": "2024-08-24",
-      "op": "Zach Reese",
+      "op": "Zachary Reese",
       "re": "L",
       "me": "Decision - Unanimous",
       "rn": 3,
@@ -29611,7 +29611,7 @@ export const FIGHT_HISTORY = {
     },
     {
       "dt": "2024-02-17",
-      "op": "Ian Garry",
+      "op": "Ian Machado Garry",
       "re": "L",
       "me": "Decision - Split",
       "rn": 3,
@@ -30326,7 +30326,7 @@ export const FIGHT_HISTORY = {
       "ev": "UFC Fight Night: Strickland vs. Hernandez"
     }
   ],
-  "Zach Reese": [
+  "Zachary Reese": [
     {
       "dt": "2026-02-21",
       "op": "Michel Pereira",
@@ -30419,7 +30419,7 @@ export const FIGHT_HISTORY = {
   "Michel Pereira": [
     {
       "dt": "2026-02-21",
-      "op": "Zach Reese",
+      "op": "Zachary Reese",
       "re": "W",
       "me": "Decision - Split",
       "rn": 3,
@@ -38028,7 +38028,7 @@ export const FIGHT_HISTORY = {
     },
     {
       "dt": "2023-08-19",
-      "op": "Ian Garry",
+      "op": "Ian Machado Garry",
       "re": "L",
       "me": "Decision - Unanimous",
       "rn": 3,
@@ -41024,7 +41024,7 @@ export const FIGHT_HISTORY = {
   "Belal Muhammad": [
     {
       "dt": "2025-11-22",
-      "op": "Ian Garry",
+      "op": "Ian Machado Garry",
       "re": "L",
       "me": "Decision - Unanimous",
       "rn": 3,
@@ -41254,7 +41254,7 @@ export const FIGHT_HISTORY = {
       "ev": "UFC Fight Night: Dos Anjos vs. Alvarez"
     }
   ],
-  "Ian Garry": [
+  "Ian Machado Garry": [
     {
       "dt": "2025-11-22",
       "op": "Belal Muhammad",
@@ -41262,7 +41262,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Welterweight",
+      "wc": "Unknown",
       "tb": false,
       "ev": "UFC Fight Night: Tsarukyan vs. Hooker"
     },
@@ -41273,7 +41273,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 5,
       "ti": "5:00",
-      "wc": "Welterweight",
+      "wc": "Unknown",
       "tb": false,
       "ev": "UFC Fight Night: Machado Garry vs. Prates"
     },
@@ -41284,7 +41284,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 5,
       "ti": "5:00",
-      "wc": "Welterweight",
+      "wc": "Unknown",
       "tb": false,
       "ev": "UFC 310: Pantoja vs. Asakura"
     },
@@ -41295,7 +41295,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Welterweight",
+      "wc": "Unknown",
       "tb": false,
       "ev": "UFC 303: Pereira vs. Prochazka 2"
     },
@@ -41306,7 +41306,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Welterweight",
+      "wc": "Unknown",
       "tb": false,
       "ev": "UFC 298: Volkanovski vs. Topuria"
     },
@@ -41317,7 +41317,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Welterweight",
+      "wc": "Unknown",
       "tb": false,
       "ev": "UFC 292: Sterling vs. O'Malley"
     },
@@ -41328,7 +41328,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "2:57",
-      "wc": "Welterweight",
+      "wc": "Unknown",
       "tb": false,
       "ev": "UFC Fight Night: Rozenstruik vs. Almeida"
     },
@@ -41339,7 +41339,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 3,
       "ti": "4:22",
-      "wc": "Welterweight",
+      "wc": "Unknown",
       "tb": false,
       "ev": "UFC 285: Jones vs. Gane"
     },
@@ -41350,7 +41350,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Welterweight",
+      "wc": "Unknown",
       "tb": false,
       "ev": "UFC 276: Adesanya vs. Cannonier"
     },
@@ -41361,7 +41361,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Welterweight",
+      "wc": "Unknown",
       "tb": false,
       "ev": "UFC 273: Volkanovski vs. The Korean Zombie"
     },
@@ -41372,7 +41372,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "4:59",
-      "wc": "Welterweight",
+      "wc": "Unknown",
       "tb": false,
       "ev": "UFC 268: Usman vs. Covington 2"
     }
@@ -52034,7 +52034,7 @@ export const FIGHT_HISTORY = {
     },
     {
       "dt": "2025-05-31",
-      "op": "Zach Reese",
+      "op": "Zachary Reese",
       "re": "L",
       "me": "Decision - Unanimous",
       "rn": 3,
@@ -56965,7 +56965,7 @@ export const FIGHT_HISTORY = {
     },
     {
       "dt": "2023-05-13",
-      "op": "Ian Garry",
+      "op": "Ian Machado Garry",
       "re": "L",
       "me": "KO/TKO",
       "rn": 1,
@@ -60405,7 +60405,7 @@ export const FIGHT_HISTORY = {
     },
     {
       "dt": "2022-07-02",
-      "op": "Ian Garry",
+      "op": "Ian Machado Garry",
       "re": "L",
       "me": "Decision - Unanimous",
       "rn": 3,
@@ -65030,7 +65030,7 @@ export const FIGHT_HISTORY = {
     },
     {
       "dt": "2024-06-08",
-      "op": "Zach Reese",
+      "op": "Zachary Reese",
       "re": "L",
       "me": "KO/TKO",
       "rn": 1,
@@ -67198,7 +67198,7 @@ export const FIGHT_HISTORY = {
   "Shavkat Rakhmonov": [
     {
       "dt": "2024-12-07",
-      "op": "Ian Garry",
+      "op": "Ian Machado Garry",
       "re": "W",
       "me": "Decision - Unanimous",
       "rn": 5,
@@ -68099,7 +68099,7 @@ export const FIGHT_HISTORY = {
     },
     {
       "dt": "2023-03-04",
-      "op": "Ian Garry",
+      "op": "Ian Machado Garry",
       "re": "L",
       "me": "KO/TKO",
       "rn": 3,
@@ -92977,7 +92977,7 @@ export const FIGHT_HISTORY = {
     },
     {
       "dt": "2022-04-09",
-      "op": "Ian Garry",
+      "op": "Ian Machado Garry",
       "re": "L",
       "me": "Decision - Unanimous",
       "rn": 3,
@@ -101518,7 +101518,7 @@ export const FIGHT_HISTORY = {
   "Jordan Williams": [
     {
       "dt": "2021-11-06",
-      "op": "Ian Garry",
+      "op": "Ian Machado Garry",
       "re": "L",
       "me": "KO/TKO",
       "rn": 1,
