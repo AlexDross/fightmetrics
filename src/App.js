@@ -6219,6 +6219,7 @@ function ScoutProfile({ allFighters }) {
 
 export default function App() {
   const [view, setView] = useState('home');
+  const [filterSince, setFilterSince] = useState('2026-05-23');
   const [roiEntries, setRoiEntries] = useState(() => {
     const fightersByName = Object.fromEntries(FIGHTERS.map((f) => [f.FIGHTER, f]));
     return ROI_ENTRIES.map((entry) => {
@@ -6277,7 +6278,7 @@ export default function App() {
     <div className="min-h-screen bg-slate-950 text-slate-100 font-sans">
       <Header view={view} setView={setView} />
       {view === 'home' && (
-        <HomeTab summary={roiSummary} entries={roiEntries} onNavigate={setView} allFighters={fightersWithProspectsFiltered} />
+        <HomeTab summary={roiSummary} entries={roiEntries} onNavigate={setView} allFighters={fightersWithProspectsFiltered} filterSince={filterSince} />
       )}
       {view === 'simulator' && (
         <MatchupSimulator
@@ -6296,6 +6297,8 @@ export default function App() {
           onDeleteEntry={handleDeleteROIEntry}
           onClearEntries={handleClearROI}
           allFighters={fightersWithProspectsFiltered}
+          filterSince={filterSince}
+          setFilterSince={setFilterSince}
         />
       )}
       {view === 'info' && <InfoTab />}
@@ -6313,7 +6316,7 @@ const betTier = (action) => {
   return { label: '', cls: 'text-slate-500', border: 'border-slate-800' };
 };
 
-function HomeTab({ summary, entries, onNavigate, allFighters }) {
+function HomeTab({ summary, entries, onNavigate, allFighters, filterSince }) {
   const fighterMap = useMemo(() => {
     const m = new Map();
     (allFighters ?? []).forEach((f) => m.set(f.FIGHTER, f));
@@ -6376,8 +6379,8 @@ function HomeTab({ summary, entries, onNavigate, allFighters }) {
   }, [sortedNonProspect, v2PickMap]);
 
   const may23Entries = useMemo(
-    () => sortedNonProspect.filter((e) => (e.eventDate || '') >= '2026-05-23'),
-    [sortedNonProspect]
+    () => sortedNonProspect.filter((e) => (e.eventDate || '') >= (filterSince || '2026-05-23')),
+    [sortedNonProspect, filterSince]
   );
 
   const may23Summary = useMemo(() => {
@@ -6451,7 +6454,7 @@ function HomeTab({ summary, entries, onNavigate, allFighters }) {
               <p className={`font-black text-3xl ${may23Summary.v2Acc >= 60 ? 'text-emerald-400' : 'text-yellow-400'}`}>
                 {may23Summary.v2Acc.toFixed(1)}%
               </p>
-              <p className="text-slate-500 text-xs mt-1">v2 · since May 23</p>
+              <p className="text-slate-500 text-xs mt-1">v2 · {filterSince ? `since ${filterSince}` : 'all time'}</p>
               {may23Summary.v1Acc != null && (
                 <p className="text-slate-600 text-xs mt-0.5">v1: {may23Summary.v1Acc.toFixed(1)}%</p>
               )}
@@ -6470,14 +6473,14 @@ function HomeTab({ summary, entries, onNavigate, allFighters }) {
           <p className="text-slate-600 text-xs mt-1">
             {may23Summary.profit >= 0 ? '+' : ''}{may23Summary.profit.toFixed(2)}u on {may23Summary.bets} bets
           </p>
-          <p className="text-slate-600 text-[10px] mt-1">v2 · since May 23 · live recompute</p>
+          <p className="text-slate-600 text-[10px] mt-1">v2 · {filterSince ? `since ${filterSince}` : 'all time'} · live recompute</p>
         </div>
         <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
           <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold mb-2">
             Tracked Fights
           </p>
           <p className="font-black text-3xl text-white">{may23Summary.count}</p>
-          <p className="text-slate-600 text-xs mt-1">since May 23</p>
+          <p className="text-slate-600 text-xs mt-1">{filterSince ? `since ${filterSince}` : 'all time'}</p>
         </div>
       </div>
 
@@ -6683,6 +6686,8 @@ function ROITab({
   onDeleteEntry,
   onClearEntries,
   allFighters,
+  filterSince,
+  setFilterSince,
 }) {
   const exportedCode = `export const ROI_ENTRIES = ${JSON.stringify(
     entries,
@@ -6729,8 +6734,6 @@ function ROITab({
       }),
     [entries, prospectNameSet]
   );
-
-  const [filterSince, setFilterSince] = useState('2026-05-23');
 
   const displayedEntries = useMemo(() => {
     let entries = evaluatedEntries.filter((e) => !e.includesProspect);
