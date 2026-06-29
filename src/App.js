@@ -6698,7 +6698,15 @@ function ROITab({
     [entries, prospectNameSet]
   );
 
-  const displayedEntries = evaluatedEntries.filter((e) => !e.includesProspect);
+  const [filterSince, setFilterSince] = useState('2026-05-23');
+
+  const displayedEntries = useMemo(() => {
+    let entries = evaluatedEntries.filter((e) => !e.includesProspect);
+    if (filterSince) {
+      entries = entries.filter((e) => (e.eventDate || '') >= filterSince);
+    }
+    return entries;
+  }, [evaluatedEntries, filterSince]);
 
   const [modelView, setModelView] = useState('v2');
   const [localCompare, setLocalCompare] = useState(new Set());
@@ -6835,6 +6843,40 @@ function ROITab({
     };
   }, [displayedEntries]);
 
+  const localSummary = useMemo(
+    () => computeROISummary(displayedEntries, new Set()),
+    [displayedEntries]
+  );
+
+  const v2ROISummary = useMemo(() => {
+    let bets = 0, profit = 0, correct = 0;
+    displayedEntries.forEach((entry) => {
+      if (!isResolvedWinner(entry.actualWinner, entry)) return;
+      if (isPushResult(entry.actualWinner)) return;
+      if (!americanToDecimal(entry.marketOdds)) return;
+      if (entry.confirmedByUser === false) return;
+      const fA = fighterMap.get(entry.fighterA);
+      const fB = fighterMap.get(entry.fighterB);
+      if (!fA || !fB) return;
+      const res = computeMatchupEdges(fA, fB);
+      const v2pA = res.v2pA;
+      const v2pB = res.v2pB;
+      if (v2pA == null || v2pB == null) return;
+      const v2pick = v2pA >= v2pB ? entry.fighterA : entry.fighterB;
+      const v2prob = v2pA >= v2pB ? v2pA : v2pB;
+      if (v2pick !== entry.trackedSide) return;
+      const isCleanSample = (entry.eventDate || '') >= '2026-05-23';
+      if (!isCleanSample && v2prob < 0.55) return;
+      const p = calcTrackedProfit(entry);
+      if (p === null) return;
+      bets++;
+      profit += p;
+      if (entry.actualWinner === entry.trackedSide) correct++;
+    });
+    const roi = bets > 0 ? (profit / bets) * 100 : 0;
+    return { bets, profit, roi, correct };
+  }, [displayedEntries, fighterMap]);
+
   return (
     <div className="max-w-5xl mx-auto px-5 py-8">
       <div className="flex items-start justify-between gap-4 mb-6">
@@ -6893,23 +6935,48 @@ function ROITab({
         )}
       </div>
 
+      {entries.length > 0 && (
+        <div className="flex items-center gap-3 mb-4">
+          <span className="text-slate-500 text-xs uppercase tracking-wider font-semibold">Since</span>
+          <input
+            type="date"
+            value={filterSince}
+            onChange={e => setFilterSince(e.target.value)}
+            className="bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-1.5 focus:outline-none focus:border-red-500"
+          />
+          {filterSince && (
+            <button
+              onClick={() => setFilterSince('')}
+              className="text-slate-500 hover:text-slate-300 text-xs underline"
+            >
+              Clear
+            </button>
+          )}
+          {filterSince && (
+            <span className="text-slate-600 text-xs">
+              {displayedEntries.length} fights
+            </span>
+          )}
+        </div>
+      )}
+
       <div className="grid grid-cols-5 gap-4 mb-6">
         <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
           <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold">Tracked Fights</p>
-          <p className="font-black text-2xl mt-2 text-white">{summary.total}</p>
+          <p className="font-black text-2xl mt-2 text-white">{localSummary.total}</p>
         </div>
 
         <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
           <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold">Graded Picks</p>
-          <p className="font-black text-2xl mt-2 text-blue-400">{summary.graded}</p>
+          <p className="font-black text-2xl mt-2 text-blue-400">{localSummary.graded}</p>
         </div>
 
         <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
           <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold">Pick Accuracy</p>
           {modelView === 'compare' ? (
             <p className="font-black text-lg mt-2">
-              <span className={summary.accuracy >= 60 ? 'text-emerald-400' : 'text-yellow-400'}>
-                v1: {summary.accuracy.toFixed(1)}%
+              <span className={localSummary.accuracy >= 60 ? 'text-emerald-400' : 'text-yellow-400'}>
+                v1: {localSummary.accuracy.toFixed(1)}%
               </span>
               <span className="text-slate-600"> · </span>
               <span className={v2Stats.accuracy >= 60 ? 'text-emerald-400' : 'text-yellow-400'}>
@@ -6924,21 +6991,54 @@ function ROITab({
               <p className="text-slate-600 text-[10px] mt-1">(live recompute)</p>
             </>
           ) : (
-            <p className={`font-black text-2xl mt-2 ${summary.accuracy >= 60 ? 'text-emerald-400' : 'text-yellow-400'}`}>
-              {summary.accuracy.toFixed(1)}%
+            <p className={`font-black text-2xl mt-2 ${localSummary.accuracy >= 60 ? 'text-emerald-400' : 'text-yellow-400'}`}>
+              {localSummary.accuracy.toFixed(1)}%
             </p>
           )}
         </div>
 
         <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
           <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold">ROI</p>
-          <p className={`font-black text-2xl mt-2 ${summary.roi >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-            {summary.roi >= 0 ? '+' : ''}{summary.roi.toFixed(1)}%
-          </p>
-          <p className="text-slate-600 text-xs mt-1">
-            {summary.profit >= 0 ? '+' : ''}{summary.profit.toFixed(2)}u on {summary.bets} bets
-            {modelView !== 'v1' && ' · v1 tracked bets'}
-          </p>
+          {modelView === 'compare' ? (
+            <p className="font-black text-lg mt-2">
+              <span className={localSummary.roi >= 0 ? 'text-emerald-400' : 'text-red-400'}>
+                v1: {localSummary.roi >= 0 ? '+' : ''}{localSummary.roi.toFixed(1)}%
+              </span>
+              <span className="text-slate-600"> · </span>
+              <span className={v2ROISummary.roi >= 0 ? 'text-emerald-400' : 'text-red-400'}>
+                v2: {v2ROISummary.roi >= 0 ? '+' : ''}{v2ROISummary.roi.toFixed(1)}%
+              </span>
+            </p>
+          ) : modelView === 'v2' ? (
+            <>
+              <p className={`font-black text-2xl mt-2 ${v2ROISummary.roi >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                {v2ROISummary.roi >= 0 ? '+' : ''}{v2ROISummary.roi.toFixed(1)}%
+              </p>
+              <p className="text-slate-600 text-[10px] mt-1">(live recompute)</p>
+            </>
+          ) : (
+            <p className={`font-black text-2xl mt-2 ${localSummary.roi >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+              {localSummary.roi >= 0 ? '+' : ''}{localSummary.roi.toFixed(1)}%
+            </p>
+          )}
+          {modelView === 'compare' ? (
+            <>
+              <p className="text-slate-600 text-xs mt-1">
+                {localSummary.profit >= 0 ? '+' : ''}{localSummary.profit.toFixed(2)}u on {localSummary.bets} bets · v1
+              </p>
+              <p className="text-slate-600 text-xs">
+                {v2ROISummary.profit >= 0 ? '+' : ''}{v2ROISummary.profit.toFixed(2)}u on {v2ROISummary.bets} bets · v2 live
+              </p>
+            </>
+          ) : modelView === 'v2' ? (
+            <p className="text-slate-600 text-xs mt-1">
+              {v2ROISummary.profit >= 0 ? '+' : ''}{v2ROISummary.profit.toFixed(2)}u on {v2ROISummary.bets} bets · v2 live recompute
+            </p>
+          ) : (
+            <p className="text-slate-600 text-xs mt-1">
+              {localSummary.profit >= 0 ? '+' : ''}{localSummary.profit.toFixed(2)}u on {localSummary.bets} bets · v1 tracked bets
+            </p>
+          )}
         </div>
 
         <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
