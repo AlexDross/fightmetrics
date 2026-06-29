@@ -99,37 +99,104 @@ def is_debut(roster_name, matched, roster_by_name):
 # Part A — Wikipedia scrape
 # ---------------------------------------------------------------------------
 
+WIKIPEDIA_EVENTS_LIST = "https://en.wikipedia.org/wiki/List_of_UFC_events"
+WIKIPEDIA_FALLBACK_EVENT = "https://en.wikipedia.org/wiki/UFC_329"  # temporary fallback
+
+
 def find_next_ufc_event_url():
-    """Scrape the UFC Wikipedia index page to find the next upcoming event link."""
+    """
+    Scrape https://en.wikipedia.org/wiki/List_of_UFC_events to find the next
+    upcoming event: the first table row in the 'Upcoming events' section whose
+    date is >= today.
+    Falls back to WIKIPEDIA_FALLBACK_EVENT if the list page fails.
+    """
     headers = {"User-Agent": "Mozilla/5.0 (compatible; fightmetrics-bot/1.0)"}
+    today_str = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+
     try:
-        resp = requests.get(WIKIPEDIA_UFC_INDEX, headers=headers, timeout=15)
+        resp = requests.get(WIKIPEDIA_EVENTS_LIST, headers=headers, timeout=15)
         resp.raise_for_status()
     except requests.RequestException as exc:
-        print(f"[WIKI] Failed to fetch UFC index: {exc}")
-        return None
+        print(f"[WIKI] Failed to fetch events list: {exc}")
+        print(f"[WIKI] Falling back to {WIKIPEDIA_FALLBACK_EVENT}")
+        return WIKIPEDIA_FALLBACK_EVENT
 
     soup = BeautifulSoup(resp.text, "html.parser")
 
-    # Look for the "Upcoming events" section and grab the first event link
-    upcoming_header = soup.find(id="Upcoming_events") or soup.find(
-        string=re.compile(r"Upcoming events", re.I)
+    # Find the "Upcoming events" section by its heading anchor
+    upcoming_anchor = (
+        soup.find(id="Upcoming_events")
+        or soup.find(id="Upcoming")
+        or soup.find("span", id=re.compile(r"upcoming", re.I))
     )
-    if upcoming_header:
-        section = upcoming_header.find_parent()
-        # Walk forward siblings to find a table or list with event links
-        for sibling in section.find_next_siblings():
-            link = sibling.find("a", href=re.compile(r"/wiki/UFC_\d+|/wiki/UFC_Fight_Night"))
-            if link:
-                return WIKIPEDIA_BASE + link["href"]
+    if upcoming_anchor is None:
+        # Try finding by heading text
+        for heading in soup.find_all(["h2", "h3"]):
+            if re.search(r"upcoming", heading.get_text(), re.I):
+                upcoming_anchor = heading
+                break
 
-    # Fallback: scan all links on the page for "UFC_329" pattern (current year)
-    for a in soup.find_all("a", href=True):
-        href = a["href"]
-        if re.match(r"/wiki/UFC_\d{3,4}$", href) or re.match(r"/wiki/UFC_Fight_Night_\d+$", href):
-            return WIKIPEDIA_BASE + href
+    if upcoming_anchor is None:
+        print("[WIKI] Could not find 'Upcoming events' section on events list page.")
+        print(f"[WIKI] Falling back to {WIKIPEDIA_FALLBACK_EVENT}")
+        return WIKIPEDIA_FALLBACK_EVENT
 
-    return None
+    # Walk forward from the heading to find the first table
+    section_start = upcoming_anchor.find_parent() or upcoming_anchor
+    upcoming_table = None
+    for sibling in section_start.find_next_siblings():
+        tag = sibling.name
+        if tag in ("h2", "h3") and sibling != section_start:
+            break  # left the upcoming section
+        if tag == "table":
+            upcoming_table = sibling
+            break
+
+    if upcoming_table is None:
+        print("[WIKI] No table found in 'Upcoming events' section.")
+        print(f"[WIKI] Falling back to {WIKIPEDIA_FALLBACK_EVENT}")
+        return WIKIPEDIA_FALLBACK_EVENT
+
+    # Scan table rows for the first row whose date >= today
+    for row in upcoming_table.find_all("tr"):
+        cells = row.find_all(["td", "th"])
+        if not cells:
+            continue
+        row_text = " ".join(c.get_text(separator=" ", strip=True) for c in cells)
+
+        # Look for a date pattern YYYY-MM-DD or "Month DD, YYYY"
+        date_match = re.search(r"(\d{4}-\d{2}-\d{2})", row_text)
+        if not date_match:
+            # Try "July 12, 2026" etc.
+            m2 = re.search(
+                r"(January|February|March|April|May|June|July|August|September|October|November|December)\s+\d+,?\s+\d{4}",
+                row_text,
+            )
+            if m2:
+                try:
+                    date_match_str = re.sub(r",", "", m2.group(0))
+                    parsed = datetime.strptime(date_match_str, "%B %d %Y")
+                    row_date = parsed.strftime("%Y-%m-%d")
+                except ValueError:
+                    continue
+            else:
+                continue
+        else:
+            row_date = date_match.group(1)
+
+        if row_date < today_str:
+            continue  # past event
+
+        # Found a future event — grab the first UFC event link in this row
+        link = row.find("a", href=re.compile(r"/wiki/UFC"))
+        if link:
+            url = WIKIPEDIA_BASE + link["href"]
+            print(f"[WIKI] Next event row: date={row_date}, url={url}")
+            return url
+
+    print("[WIKI] No future event rows found in upcoming table.")
+    print(f"[WIKI] Falling back to {WIKIPEDIA_FALLBACK_EVENT}")
+    return WIKIPEDIA_FALLBACK_EVENT
 
 
 def parse_wikipedia_event(url):
@@ -256,7 +323,7 @@ def fetch_events_for_date(api_key, date_str):
 
 def fetch_all_events(api_key):
     today = datetime.now(timezone.utc).date()
-    dates = [today + timedelta(days=i) for i in range(3)]
+    dates = [today + timedelta(days=i) for i in range(21)]  # 21-day lookahead
     all_events, seen_ids = [], set()
     for d in dates:
         date_str = d.strftime("%Y-%m-%d")
@@ -265,7 +332,7 @@ def fetch_all_events(api_key):
         except requests.RequestException as exc:
             print(f"  [WARN] Failed to fetch {date_str}: {exc}")
             continue
-        time.sleep(1)
+        time.sleep(1.0)
         for ev in events:
             eid = ev.get("event_id")
             if eid and eid not in seen_ids:
