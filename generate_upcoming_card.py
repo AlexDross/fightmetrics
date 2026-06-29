@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
 """
 generate_upcoming_card.py
-Fetches upcoming UFC fights + odds from The Odds API and writes src/upcomingCard.js.
+Fetches upcoming UFC fights + odds from TheRundown API and writes src/upcomingCard.js.
 
 Strategy:
-  1. Query The Odds API for upcoming MMA events (h2h, US books, American odds).
-  2. Keep only UFC events (heuristic: event looks like UFC, or both fighters
-     fuzzy-match our roster from fighters.json).
-  3. Fuzzy-match each fighter name to the roster so downstream lookups in
-     App.js (FIGHTERS.find(...)) succeed on exact names.
-  4. Write src/upcomingCard.js as `export const UPCOMING_CARD = [...]`.
+  1. Query TheRundown API (sport 7 = MMA/UFC) for events on today + next 2 days.
+  2. Deduplicate by event_id, then keep only events within 1 day of the earliest
+     event_date (same-weekend filter).
+  3. Fuzzy-match each fighter name to the roster so downstream lookups succeed.
+  4. Extract moneyline odds (market_id=1), preferring DraftKings (affiliate_id=19).
+  5. Write src/upcomingCard.js as `export const UPCOMING_CARD = [...]`.
 
 Usage:
-  ODDS_API_KEY=xxxx python generate_upcoming_card.py
+  THERUNDOWN_API_KEY=xxxx python generate_upcoming_card.py
 """
 
 import os
@@ -21,35 +21,36 @@ import json
 import difflib
 from datetime import datetime, timedelta, timezone
 
+import time
+
 import requests
 
-ODDS_API_URL = "https://api.the-odds-api.com/v4/sports/mma_mixed_martial_arts/odds/"
-SPORT_KEY = "mma_mixed_martial_arts"
+THERUNDOWN_BASE = "https://therundown.io/api/v2/sports/7/events"
 FIGHTERS_JSON = "fighters.json"
 OUTPUT_JS = "src/upcomingCard.js"
 MATCH_CUTOFF = 0.75
+PREFERRED_AFFILIATE = 19  # DraftKings
+
+EXCLUDED_FIGHTERS = {
+    "Ismail Naurdiev",
+    "Marvin Vettori",
+    "Andreas Gustafsson",
+}
 
 
 def load_roster(path=FIGHTERS_JSON):
-    """Return the list of roster fighter names (the `name` field)."""
     with open(path, "r", encoding="utf-8") as fh:
         data = json.load(fh)
     return [entry["name"] for entry in data if entry.get("name")]
 
 
 def name_variants(raw_name):
-    """Generate name variants to try against the roster.
-
-    (a) original, (b) reversed word order, (c) first + last word only
-    (drops any middle names). Order-preserving, de-duplicated.
-    """
     words = raw_name.split()
     variants = [raw_name]
     if len(words) > 1:
         variants.append(" ".join(reversed(words)))
     if len(words) > 2:
         variants.append(f"{words[0]} {words[-1]}")
-    # de-dup while preserving order
     seen = set()
     unique = []
     for v in variants:
@@ -60,14 +61,6 @@ def name_variants(raw_name):
 
 
 def match_name(raw_name, roster_names):
-    """Fuzzy-match a raw Odds API name to the roster.
-
-    Tries several name variants (original, reversed, first+last) and keeps the
-    best-scoring roster hit across all of them.
-
-    Returns (matched_name, was_matched). On no match, returns the raw name
-    unchanged so the entry is still written (and a warning is logged).
-    """
     best_match = None
     best_score = 0.0
     for variant in name_variants(raw_name):
@@ -86,10 +79,6 @@ def match_name(raw_name, roster_names):
 
 
 def format_american(price):
-    """Format an American odds integer as a string with explicit sign.
-
-    Returns None if price is missing/unparseable.
-    """
     if price is None:
         return None
     try:
@@ -99,112 +88,163 @@ def format_american(price):
     return f"+{val}" if val > 0 else str(val)
 
 
-def extract_h2h_prices(event):
-    """Return {team_name: american_price_int} from the first bookmaker that has h2h."""
-    for bookmaker in event.get("bookmakers", []):
-        for market in bookmaker.get("markets", []):
-            if market.get("key") != "h2h":
-                continue
-            prices = {}
-            for outcome in market.get("outcomes", []):
-                name = outcome.get("name")
-                if name is not None:
-                    prices[name] = outcome.get("price")
-            if prices:
-                return prices
-    return {}
-
-
-def looks_like_ufc(event, a_matched, b_matched):
-    """Heuristic: event is UFC if its description mentions UFC, or both
-    fighters are on our (UFC) roster."""
-    haystack = " ".join(
-        str(event.get(k, "")) for k in ("sport_title", "home_team", "away_team")
-    ).upper()
-    if "UFC" in haystack:
-        return True
-    return a_matched and b_matched
-
-
-def fetch_events(api_key):
-    params = {
-        "apiKey": api_key,
-        "regions": "us",
-        "markets": "h2h",
-        "oddsFormat": "american",
-        "daysFrom": 14,
-    }
-    resp = requests.get(ODDS_API_URL, params=params, timeout=30)
+def fetch_events_for_date(api_key, date_str):
+    """Fetch events from TheRundown for a single date (YYYY-MM-DD)."""
+    url = f"{THERUNDOWN_BASE}/{date_str}"
+    headers = {"X-TheRundown-Key": api_key}
+    resp = requests.get(url, headers=headers, timeout=30)
     resp.raise_for_status()
-    return resp.json()
+    data = resp.json()
+    events = data.get("events", [])
+    print(f"  {date_str}: {len(events)} event(s)")
+    return events
 
 
-def parse_commence(commence):
-    """Parse an Odds API commence_time into a UTC-aware datetime, or None."""
+def fetch_all_events(api_key):
+    today = datetime.now(timezone.utc).date()
+    dates = [today + timedelta(days=i) for i in range(3)]
+    all_events = []
+    seen_ids = set()
+    for d in dates:
+        date_str = d.strftime("%Y-%m-%d")
+        try:
+            events = fetch_events_for_date(api_key, date_str)
+        except requests.RequestException as exc:
+            print(f"  [WARN] Failed to fetch {date_str}: {exc}")
+            continue
+        time.sleep(1)
+        for ev in events:
+            eid = ev.get("event_id")
+            if eid and eid not in seen_ids:
+                seen_ids.add(eid)
+                all_events.append(ev)
+    return all_events
+
+
+def parse_event_date(event):
+    """Parse event_date from a TheRundown event into a UTC-aware datetime."""
+    raw = event.get("event_date", "")
     try:
-        return datetime.fromisoformat(commence.replace("Z", "+00:00")).astimezone(
-            timezone.utc
-        )
+        return datetime.fromisoformat(raw.replace("Z", "+00:00")).astimezone(timezone.utc)
     except (AttributeError, ValueError):
         return None
 
 
-def filter_by_date(events, days=14):
-    """Keep only events whose commence_time is within `days` from now (UTC)."""
-    cutoff = datetime.now(timezone.utc) + timedelta(days=days)
+def same_weekend_filter(events):
+    """Keep only events within 1 day of the earliest event_date."""
+    dts = [parse_event_date(ev) for ev in events]
+    valid = [(ev, dt) for ev, dt in zip(events, dts) if dt is not None]
+    if not valid:
+        return events
+    earliest = min(dt for _, dt in valid)
+    cutoff = earliest + timedelta(days=1)
+    kept = [ev for ev, dt in valid if dt <= cutoff]
+    removed = len(events) - len(kept)
+    if removed:
+        print(f"[FILTER] Dropped {removed} event(s) outside 1-day window of {earliest.strftime('%Y-%m-%d')}")
+    return kept
+
+
+def _pick_price_from_lines(lines):
+    """Given a participant's lines list, return price for preferred affiliate or any."""
+    for line in lines:
+        prices = line.get("prices", {})
+        preferred = prices.get(str(PREFERRED_AFFILIATE))
+        if preferred is not None:
+            return preferred.get("price")
+    # Fall back to first available affiliate across all lines
+    for line in lines:
+        prices = line.get("prices", {})
+        for aff_data in prices.values():
+            p = aff_data.get("price")
+            if p is not None:
+                return p
+    return None
+
+
+def extract_odds(event, team_a, team_b):
+    """Extract moneyline odds for team_a and team_b.
+
+    Structure: markets[].participants[].lines[].prices[affiliate_id_str].price
+    Prefers affiliate_id=19 (DraftKings), falls back to any available affiliate.
+    """
+    markets = event.get("markets", [])
+    moneyline = None
+    for m in markets:
+        if m.get("market_id") == 1:
+            moneyline = m
+            break
+
+    if moneyline is None:
+        return None, None
+
+    odds = {}
+    for participant in moneyline.get("participants", []):
+        name = participant.get("name", "")
+        price = _pick_price_from_lines(participant.get("lines", []))
+        if name and price is not None:
+            odds[name] = price
+
+    return odds.get(team_a), odds.get(team_b)
+
+
+def filter_ufc_only(events):
+    """Keep only events whose league_name is 'Ultimate Fighting Championship'."""
     kept = []
-    for event in events:
-        dt = parse_commence(event.get("commence_time"))
-        if dt is None:
-            print(f"[WARN] Unparseable commence_time, dropping event {event.get('id')}")
-            continue
-        if dt <= cutoff:
-            kept.append(event)
+    for ev in events:
+        league = ev.get("schedule", {}).get("league_name", "")
+        if league == "Ultimate Fighting Championship":
+            kept.append(ev)
         else:
-            print(
-                f"[FILTER] Beyond {days}d window: "
-                f"{event.get('home_team')} vs {event.get('away_team')} "
-                f"({dt.strftime('%Y-%m-%d')})"
-            )
+            teams = ev.get("teams", [])
+            names = [t.get("name", "") for t in teams]
+            print(f"[SKIP] Non-UFC ({league!r}): {' vs '.join(names)}")
+    return kept
+
+
+def filter_duplicate_fighters(events):
+    """Skip any event where either fighter already appeared in an earlier event."""
+    seen = set()
+    kept = []
+    for ev in events:
+        teams = ev.get("teams", [])
+        names = [t.get("name", "").strip() for t in teams if t.get("name")]
+        if any(n in seen for n in names):
+            print(f"[SKIP] Duplicate fighter appearance: {' vs '.join(names)}")
+            continue
+        kept.append(ev)
+        seen.update(names)
     return kept
 
 
 def build_card(events, roster_names):
     card = []
     for event in events:
-        if event.get("sport_key") != SPORT_KEY:
+        teams = event.get("teams", [])
+        if len(teams) < 2:
+            print(f"[WARN] Skipping event {event.get('event_id')} — fewer than 2 teams")
             continue
 
-        raw_a = event.get("home_team")
-        raw_b = event.get("away_team")
+        raw_a = teams[0].get("name", "").strip()  # away
+        raw_b = teams[1].get("name", "").strip()  # home
         if not raw_a or not raw_b:
-            print(f"[WARN] Skipping event with missing teams: {event.get('id')}")
+            print(f"[WARN] Missing team name in event {event.get('event_id')}")
             continue
-
-        prices = extract_h2h_prices(event)
 
         fighter_a, matched_a = match_name(raw_a, roster_names)
         fighter_b, matched_b = match_name(raw_b, roster_names)
-
-        if not looks_like_ufc(event, matched_a, matched_b):
-            print(f"[SKIP] Non-UFC event: {raw_a} vs {raw_b}")
-            continue
 
         if not matched_a:
             print(f"[WARN] No roster match for '{raw_a}' — using raw name")
         if not matched_b:
             print(f"[WARN] No roster match for '{raw_b}' — using raw name")
 
-        # Odds keyed by the raw API names.
-        odds_a = format_american(prices.get(raw_a))
-        odds_b = format_american(prices.get(raw_b))
+        raw_odds_a, raw_odds_b = extract_odds(event, raw_a, raw_b)
+        odds_a = format_american(raw_odds_a)
+        odds_b = format_american(raw_odds_b)
 
-        dt = parse_commence(event.get("commence_time"))
-        if dt is None:
-            print(f"[WARN] Bad commence_time for {raw_a} vs {raw_b}")
-            date_str = None
-        else:
-            date_str = dt.strftime("%Y-%m-%d")
+        dt = parse_event_date(event)
+        date_str = dt.strftime("%Y-%m-%d") if dt else None
 
         card.append(
             {
@@ -241,12 +281,10 @@ def dedupe_card(card):
 
 
 def js_value(v):
-    """Render a Python value as a JS literal for the output file."""
     if v is None:
         return "null"
     if isinstance(v, bool):
         return "true" if v else "false"
-    # strings
     return json.dumps(v)
 
 
@@ -272,26 +310,38 @@ def write_card_js(card, path=OUTPUT_JS):
 
 
 def main():
-    api_key = os.environ.get("ODDS_API_KEY")
+    api_key = os.environ.get("THERUNDOWN_API_KEY")
     if not api_key:
-        print("ERROR: ODDS_API_KEY environment variable not set", file=sys.stderr)
+        print("ERROR: THERUNDOWN_API_KEY environment variable not set", file=sys.stderr)
         sys.exit(1)
 
     roster_names = load_roster()
     print(f"Loaded {len(roster_names)} roster names")
 
-    try:
-        events = fetch_events(api_key)
-    except requests.RequestException as exc:
-        print(f"ERROR: Odds API request failed: {exc}", file=sys.stderr)
-        sys.exit(1)
+    print("Fetching events from TheRundown API (today + 2 days):")
+    all_events = fetch_all_events(api_key)
+    print(f"Total unique events fetched: {len(all_events)}")
 
-    print(f"Fetched {len(events)} MMA events from The Odds API")
+    filtered = same_weekend_filter(all_events)
+    print(f"{len(filtered)} event(s) after same-weekend filter")
 
-    events = filter_by_date(events, days=14)
-    print(f"{len(events)} events within the 14-day window")
+    filtered = filter_ufc_only(filtered)
+    print(f"{len(filtered)} event(s) after UFC-only filter")
 
-    card = build_card(events, roster_names)
+    filtered = filter_duplicate_fighters(filtered)
+    print(f"{len(filtered)} event(s) after duplicate-fighter filter")
+
+    filtered = [
+        ev for ev in filtered
+        if not any(
+            t.get("name", "").strip() in EXCLUDED_FIGHTERS
+            for t in ev.get("teams", [])
+        )
+    ]
+    excluded_removed = len(filtered)
+    print(f"{len(filtered)} event(s) after exclusion-list filter")
+
+    card = build_card(filtered, roster_names)
     deduped = dedupe_card(card)
     removed = len(card) - len(deduped)
     if removed:

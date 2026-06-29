@@ -7491,28 +7491,12 @@ function ROITab({
 
                 <div className="mt-4 space-y-3">
                   {entry.projectedFinish != null && (
-                    <div>
-                      <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold mb-2">
-                        Projected Finish
-                      </p>
-                      <div className="flex gap-3">
-                        {[
-                          { label: 'KO/TKO', pct: entry.projectedKO, color: 'text-red-400', bg: 'bg-red-500' },
-                          { label: 'SUB',    pct: entry.projectedSUB, color: 'text-violet-400', bg: 'bg-violet-500' },
-                          { label: 'DEC',    pct: entry.projectedDEC, color: 'text-slate-300', bg: 'bg-slate-500' },
-                        ].map(({ label, pct, color, bg }) => (
-                          <div key={label} className="flex-1 bg-slate-800/60 rounded-lg p-2 text-center">
-                            <p className={`font-bold text-base ${color}`}>{pct ?? '—'}%</p>
-                            <p className="text-slate-500 text-xs mt-0.5">{label}</p>
-                            <div className="mt-1.5 h-1 bg-slate-700 rounded-full overflow-hidden">
-                              <div className={`h-full ${bg} rounded-full`} style={{ width: `${pct ?? 0}%` }} />
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                      <p className="text-slate-500 text-xs mt-1.5">
-                        Pick: <span className="text-white font-semibold">{entry.projectedFinish ?? '—'}</span>
-                      </p>
+                    <div className="mt-3">
+                      <span className="text-slate-500 text-xs uppercase tracking-wider font-semibold">Projected Finish · </span>
+                      <span className="text-white text-sm font-bold">{entry.projectedFinish}</span>
+                      <span className="text-slate-400 text-xs ml-1">
+                        ({Math.max(entry.projectedKO ?? 0, entry.projectedSUB ?? 0, entry.projectedDEC ?? 0)}%)
+                      </span>
                     </div>
                   )}
                   <div>

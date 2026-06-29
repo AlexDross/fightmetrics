@@ -41,10 +41,10 @@ jobs:
       - name: Run update_fighters.py
         run: python update_fighters.py
 
-      - name: Generate upcoming card from The Odds API
+      - name: Generate upcoming card from TheRundown API
         run: python generate_upcoming_card.py
         env:
-          ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
+          THERUNDOWN_API_KEY: ${{ secrets.THERUNDOWN_API_KEY }}
 
       - name: Regenerate eloModule.js
         run: python regen_elo.py

@@ -2,7 +2,7 @@ export const UPCOMING_CARD = [
   { fighterA: "Alessandro Costa", fighterB: "Cody Durden", oddsA: "-235", oddsB: "+200", date: "2026-07-11", debutFighter: false },
   { fighterA: "Brandon Royval", fighterB: "Lone'er Kavanagh", oddsA: "+170", oddsB: "-200", date: "2026-07-11", debutFighter: false },
   { fighterA: "Farid Basharat", fighterB: "Ethyn Ewing", oddsA: "+102", oddsB: "-122", date: "2026-07-11", debutFighter: false },
-  { fighterA: "Ryan Bader", fighterB: "Zach Reese", oddsA: "-140", oddsB: "+120", date: "2026-07-11", debutFighter: false },
+  { fighterA: "Ryan Bader", fighterB: "Zachary Reese", oddsA: "-140", oddsB: "+120", date: "2026-07-11", debutFighter: false },
   { fighterA: "Tracy Cortez", fighterB: "Wang Cong", oddsA: "+103", oddsB: "-123", date: "2026-07-11", debutFighter: false },
   { fighterA: "Cody Garbrandt", fighterB: "Adrian Yanez", oddsA: "+330", oddsB: "-400", date: "2026-07-12", debutFighter: false },
   { fighterA: "Luke Riley", fighterB: "Kai Kamaka", oddsA: "-315", oddsB: "+265", date: "2026-07-12", debutFighter: false },

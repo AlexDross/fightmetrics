@@ -229,6 +229,84 @@ for kdw in [700, 200, 100, 50, 30]:
     ko_act  = df['y_ko'].mean()
     print(f"  {kdw:>10}  {b:>7.4f}  {b-brier_base:>+8.4f}  {ko_pred:>8.3f}  {ko_act:>7.3f}  {ko_pred-ko_act:>+8.3f}")
 
+# ── 4d. Opponent-aware formula ────────────────────────────────────────────────
+# Interaction terms: each fighter's threat scaled by opponent's vulnerability.
+# Vulnerability proxies: SIG_STR_pct absorbed (KO), TD defense (SUB).
+# Note: R_avg_SIG_STR_pct / R_avg_TD_pct are the fighter's own offensive %s,
+# so we use the *opponent's* column as the vulnerability signal.
+
+r_sig  = df['R_avg_SIG_STR_pct'].fillna(df['R_avg_SIG_STR_pct'].median())
+b_sig  = df['B_avg_SIG_STR_pct'].fillna(df['B_avg_SIG_STR_pct'].median())
+r_tdp  = df['R_avg_TD_pct'].fillna(df['R_avg_TD_pct'].median())
+b_tdp  = df['B_avg_TD_pct'].fillna(df['B_avg_TD_pct'].median())
+
+# KO interactions
+r_ko_threat = (df['R_ko_win_pct'] * 100 * 0.55 + df['R_kd_per_min'] * 200 + df['R_finish_rate'] * 100 * 0.18)
+b_ko_threat = (df['B_ko_win_pct'] * 100 * 0.55 + df['B_kd_per_min'] * 200 + df['B_finish_rate'] * 100 * 0.18)
+r_ko_vuln = 1 - (b_sig * 0.5)   # B's defensive sig str pct → R's KO opportunity
+b_ko_vuln = 1 - (r_sig * 0.5)
+
+ko_interaction_r = r_ko_threat * (1 + r_ko_vuln * 0.3)
+ko_interaction_b = b_ko_threat * (1 + b_ko_vuln * 0.3)
+raw_ko_oa = np.minimum(np.maximum(ko_interaction_r, ko_interaction_b) * 1.2, 60)
+
+# SUB interactions
+r_sub_threat = (df['R_sub_win_pct'] * 100 * 0.40 + df['R_sub_threat'] * 4 + df['R_finish_rate'] * 100 * 0.12)
+b_sub_threat = (df['B_sub_win_pct'] * 100 * 0.40 + df['B_sub_threat'] * 4 + df['B_finish_rate'] * 100 * 0.12)
+r_td_vuln = 1 - b_tdp   # B's TD defense → R's sub opportunity
+b_td_vuln = 1 - r_tdp
+
+sub_interaction_r = r_sub_threat * (1 + r_td_vuln * 0.4)
+sub_interaction_b = b_sub_threat * (1 + b_td_vuln * 0.4)
+raw_sub_oa = np.minimum(np.maximum(sub_interaction_r, sub_interaction_b) * 1.2, 60)
+
+raw_dec_oa = np.maximum(100 - raw_ko_oa - raw_sub_oa, 18)
+total_oa   = raw_ko_oa + raw_sub_oa + raw_dec_oa
+p_ko_oa  = raw_ko_oa  / total_oa
+p_sub_oa = raw_sub_oa / total_oa
+p_dec_oa = raw_dec_oa / total_oa
+
+# current_best for comparison
+p_ko_cb, p_sub_cb, p_dec_cb = compute_probs(sub_threat_weight=4, sub_win_pct_weight=0.40, kd_weight=200)
+
+brier_oa = brier_multi(df['y_ko'], df['y_sub'], df['y_dec'], p_ko_oa,  p_sub_oa,  p_dec_oa)
+brier_cb = brier_multi(df['y_ko'], df['y_sub'], df['y_dec'], p_ko_cb,  p_sub_cb,  p_dec_cb)
+
+print(f"\n── 4d. Opponent-Aware vs Current-Best vs Base-Rate ──────────────")
+print(f"  {'Formula':<20}  {'Brier':>7}  {'vs base':>8}")
+print(f"  {'base_rate':<20}  {brier_base:>7.4f}  {'—':>8}")
+print(f"  {'current_best':<20}  {brier_cb:>7.4f}  {brier_cb-brier_base:>+8.4f}")
+print(f"  {'opponent_aware':<20}  {brier_oa:>7.4f}  {brier_oa-brier_base:>+8.4f}")
+
+print(f"\n  Per-class calibration:")
+print(f"  {'Class':<6}  {'actual':>7}  {'cur_best':>9}  {'Δcb':>6}  {'opp_aware':>10}  {'Δoa':>6}")
+for cls, y, p_cb_arr, p_oa_arr in [
+    ('KO',  'y_ko',  p_ko_cb,  p_ko_oa),
+    ('SUB', 'y_sub', p_sub_cb, p_sub_oa),
+    ('DEC', 'y_dec', p_dec_cb, p_dec_oa),
+]:
+    act = df[y].mean()
+    cb  = p_cb_arr.mean()
+    oa  = p_oa_arr.mean()
+    print(f"  {cls:<6}  {act:>7.3f}  {cb:>9.3f}  {cb-act:>+6.3f}  {oa:>10.3f}  {oa-act:>+6.3f}")
+
+df['p_ko_oa']  = p_ko_oa
+df['p_ko_cb']  = p_ko_cb
+print(f"\n  KO Rate by Weight Class — current_best vs opponent_aware:")
+print(f"  {'Weight Class':<24}  {'n':>4}  {'actual':>7}  {'cb_ko':>7}  {'Δcb':>6}  {'oa_ko':>7}  {'Δoa':>6}")
+wc_oa = df.groupby('weight_class').agg(
+    n=('actual','count'),
+    actual_ko=('y_ko','mean'),
+    cb_ko=('p_ko_cb','mean'),
+    oa_ko=('p_ko_oa','mean'),
+).sort_values('actual_ko', ascending=False)
+for wc_name, row in wc_oa.iterrows():
+    print(
+        f"  {wc_name:<24}  {int(row['n']):>4}  {row['actual_ko']:>7.3f}  "
+        f"{row['cb_ko']:>7.3f}  {row['cb_ko']-row['actual_ko']:>+6.3f}  "
+        f"{row['oa_ko']:>7.3f}  {row['oa_ko']-row['actual_ko']:>+6.3f}"
+    )
+
 # ── 5. Summary ────────────────────────────────────────────────────────────────
 print("\n── 5. Summary ────────────────────────────────────────────────────")
 print(f"  n = {len(df)} fights")
