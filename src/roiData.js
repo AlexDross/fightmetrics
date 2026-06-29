@@ -38,7 +38,12 @@ export const ROI_ENTRIES = [
     "v2pA": 0.44052515994552305,
     "v2pB": 0.5594748400544769,
     "actualWinner": "Rafael Fiziev",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 60,
+    "projectedSUB": 15,
+    "projectedDEC": 25,
+    "projectedFinish": "KO/TKO",
+    "actualFinish": "KO/TKO"
   },
   {
     "id": "1782497195307-re8u3n",
@@ -79,7 +84,12 @@ export const ROI_ENTRIES = [
     "v2pA": 0.5354727856578033,
     "v2pB": 0.4645272143421967,
     "actualWinner": "Shara Magomedov",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 28,
+    "projectedSUB": 13,
+    "projectedDEC": 59,
+    "projectedFinish": "DEC",
+    "actualFinish": "DEC"
   },
   {
     "id": "1782497161068-6hpy87",
@@ -120,7 +130,12 @@ export const ROI_ENTRIES = [
     "v2pA": 0.34649212824588355,
     "v2pB": 0.6535078717541165,
     "actualWinner": "Matheus Camilo",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 34,
+    "projectedSUB": 13,
+    "projectedDEC": 53,
+    "projectedFinish": "DEC",
+    "actualFinish": "KO/TKO"
   },
   {
     "id": "1782497124415-vy6ijl",
@@ -161,7 +176,12 @@ export const ROI_ENTRIES = [
     "v2pA": 0.595342723496204,
     "v2pB": 0.404657276503796,
     "actualWinner": "Asu Almabayev",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 18,
+    "projectedSUB": 15,
+    "projectedDEC": 67,
+    "projectedFinish": "DEC",
+    "actualFinish": "SUB"
   },
   {
     "id": "1782497091682-q5qyye",
@@ -202,7 +222,12 @@ export const ROI_ENTRIES = [
     "v2pA": 0.6711939374253979,
     "v2pB": 0.3288060625746021,
     "actualWinner": "Ikram Aliskerov",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 60,
+    "projectedSUB": 18,
+    "projectedDEC": 22,
+    "projectedFinish": "KO/TKO",
+    "actualFinish": "DEC"
   },
   {
     "id": "1782497053937-arcn41",
@@ -243,7 +268,12 @@ export const ROI_ENTRIES = [
     "v2pA": 0.3900212750933434,
     "v2pB": 0.6099787249066566,
     "actualWinner": "Abus Magomedov",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 47,
+    "projectedSUB": 14,
+    "projectedDEC": 39,
+    "projectedFinish": "KO/TKO",
+    "actualFinish": "SUB"
   },
   {
     "id": "1782497018802-zj5okw",
@@ -284,7 +314,12 @@ export const ROI_ENTRIES = [
     "v2pA": 0.5578756530680461,
     "v2pB": 0.4421243469319539,
     "actualWinner": "Abdul Rakhman Yakhyaev",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 9,
+    "projectedSUB": 44,
+    "projectedDEC": 47,
+    "projectedFinish": "DEC",
+    "actualFinish": "KO/TKO"
   },
   {
     "id": "1782496991802-4svl4z",
@@ -325,7 +360,12 @@ export const ROI_ENTRIES = [
     "v2pA": 0.474097182352722,
     "v2pB": 0.525902817647278,
     "actualWinner": "Nursulton Ruziboev",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 60,
+    "projectedSUB": 11,
+    "projectedDEC": 30,
+    "projectedFinish": "KO/TKO",
+    "actualFinish": "SUB"
   },
   {
     "id": "1782496964815-tfnnzq",
@@ -366,7 +406,12 @@ export const ROI_ENTRIES = [
     "v2pA": 0.4515457897900572,
     "v2pB": 0.5484542102099428,
     "actualWinner": "Kaan Ofli",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 60,
+    "projectedSUB": 20,
+    "projectedDEC": 20,
+    "projectedFinish": "KO/TKO",
+    "actualFinish": "SUB"
   },
   {
     "id": "1782496897889-e3mvvb",
@@ -407,7 +452,12 @@ export const ROI_ENTRIES = [
     "v2pA": 0.3244603389761124,
     "v2pB": 0.6755396610238876,
     "actualWinner": "Jean Matsumoto",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 42,
+    "projectedSUB": 16,
+    "projectedDEC": 42,
+    "projectedFinish": "KO/TKO / DEC",
+    "actualFinish": "DEC"
   },
   {
     "id": "1781539992152-eoqcau",
@@ -446,7 +496,12 @@ export const ROI_ENTRIES = [
     "oddsA": "-170",
     "oddsB": "+140",
     "actualWinner": "Manel Kape",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 41,
+    "projectedSUB": 9,
+    "projectedDEC": 50,
+    "projectedFinish": "DEC",
+    "actualFinish": "KO/TKO"
   },
   {
     "id": "1781539958414-212xak",
@@ -485,7 +540,12 @@ export const ROI_ENTRIES = [
     "oddsA": "+240",
     "oddsB": "-300",
     "actualWinner": "Navajo Stirling",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 31,
+    "projectedSUB": 10,
+    "projectedDEC": 58,
+    "projectedFinish": "DEC",
+    "actualFinish": "KO/TKO"
   },
   {
     "id": "1781539926333-vbz0vr",
@@ -524,7 +584,12 @@ export const ROI_ENTRIES = [
     "oddsA": "+195",
     "oddsB": "-260",
     "actualWinner": "Vinicius Oliveira",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 23,
+    "projectedSUB": 4,
+    "projectedDEC": 73,
+    "projectedFinish": "DEC",
+    "actualFinish": "KO/TKO"
   },
   {
     "id": "1781539877397-hqer70",
@@ -563,7 +628,12 @@ export const ROI_ENTRIES = [
     "oddsA": "+135",
     "oddsB": "-160",
     "actualWinner": "Christian Rodriguez",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 30,
+    "projectedSUB": 13,
+    "projectedDEC": 57,
+    "projectedFinish": "DEC",
+    "actualFinish": "SUB"
   },
   {
     "id": "1781539831902-5qewr4",
@@ -602,7 +672,12 @@ export const ROI_ENTRIES = [
     "oddsA": "-650",
     "oddsB": "+475",
     "actualWinner": "Kevin Borjas",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 2,
+    "projectedSUB": 9,
+    "projectedDEC": 88,
+    "projectedFinish": "DEC",
+    "actualFinish": "DEC"
   },
   {
     "id": "1781539786580-pttd0a",
@@ -641,7 +716,12 @@ export const ROI_ENTRIES = [
     "oddsA": "-600",
     "oddsB": "+450",
     "actualWinner": "Bia Mesquita",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 29,
+    "projectedSUB": 35,
+    "projectedDEC": 35,
+    "projectedFinish": "SUB / DEC",
+    "actualFinish": "SUB"
   },
   {
     "id": "1781539752275-37f042",
@@ -680,7 +760,12 @@ export const ROI_ENTRIES = [
     "oddsA": "-200",
     "oddsB": "+165",
     "actualWinner": "Mitch Raposo",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 5,
+    "projectedSUB": 16,
+    "projectedDEC": 80,
+    "projectedFinish": "DEC",
+    "actualFinish": "DEC"
   },
   {
     "id": "1781539720173-4uhqpb",
@@ -719,7 +804,12 @@ export const ROI_ENTRIES = [
     "oddsA": "+300",
     "oddsB": "-400",
     "actualWinner": "Gaston Bolanos",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 39,
+    "projectedSUB": 6,
+    "projectedDEC": 55,
+    "projectedFinish": "DEC",
+    "actualFinish": "DEC"
   },
   {
     "id": "1781539673877-55t3lq",
@@ -758,7 +848,12 @@ export const ROI_ENTRIES = [
     "oddsA": "-140",
     "oddsB": "+120",
     "actualWinner": "Luana Santos",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 12,
+    "projectedSUB": 14,
+    "projectedDEC": 73,
+    "projectedFinish": "DEC",
+    "actualFinish": "DEC"
   },
   {
     "id": "1781323015803-6ai9uo",
@@ -797,7 +892,12 @@ export const ROI_ENTRIES = [
     "oddsA": "-520",
     "oddsB": "+390",
     "actualWinner": "Justin Gaethje",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 56,
+    "projectedSUB": 13,
+    "projectedDEC": 31,
+    "projectedFinish": "KO/TKO",
+    "actualFinish": "KO/TKO"
   },
   {
     "id": "1781322978615-62heuq",
@@ -836,7 +936,12 @@ export const ROI_ENTRIES = [
     "oddsA": "-105",
     "oddsB": "-115",
     "actualWinner": "Ciryl Gane",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 53,
+    "projectedSUB": 14,
+    "projectedDEC": 33,
+    "projectedFinish": "KO/TKO",
+    "actualFinish": "KO/TKO"
   },
   {
     "id": "1781322950252-5vsh14",
@@ -875,7 +980,12 @@ export const ROI_ENTRIES = [
     "oddsA": "-440",
     "oddsB": "+340",
     "actualWinner": "Sean O'Malley",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 38,
+    "projectedSUB": 6,
+    "projectedDEC": 57,
+    "projectedFinish": "DEC",
+    "actualFinish": "KO/TKO"
   },
   {
     "id": "1781322919881-itrizx",
@@ -914,7 +1024,12 @@ export const ROI_ENTRIES = [
     "oddsA": "-425",
     "oddsB": "+330",
     "actualWinner": "Josh Hokit",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 60,
+    "projectedSUB": 9,
+    "projectedDEC": 31,
+    "projectedFinish": "KO/TKO",
+    "actualFinish": "KO/TKO"
   },
   {
     "id": "1781322876775-x9ls5p",
@@ -953,7 +1068,12 @@ export const ROI_ENTRIES = [
     "oddsA": "-625",
     "oddsB": "+455",
     "actualWinner": "Mauricio Ruffy",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 60,
+    "projectedSUB": 11,
+    "projectedDEC": 29,
+    "projectedFinish": "KO/TKO",
+    "actualFinish": "KO/TKO"
   },
   {
     "id": "1781322808245-19dztk",
@@ -992,7 +1112,12 @@ export const ROI_ENTRIES = [
     "oddsA": "-310",
     "oddsB": "+250",
     "actualWinner": "Bo Nickal",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 36,
+    "projectedSUB": 34,
+    "projectedDEC": 30,
+    "projectedFinish": "KO/TKO",
+    "actualFinish": "KO/TKO"
   },
   {
     "id": "1781322774078-2heb1r",
@@ -1031,7 +1156,12 @@ export const ROI_ENTRIES = [
     "oddsA": "-148",
     "oddsB": "+124",
     "actualWinner": "Diego Lopes",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 60,
+    "projectedSUB": 16,
+    "projectedDEC": 24,
+    "projectedFinish": "KO/TKO",
+    "actualFinish": "KO/TKO"
   },
   {
     "id": "1780697367446-8himci",
@@ -1070,7 +1200,12 @@ export const ROI_ENTRIES = [
     "oddsA": "-115",
     "oddsB": "-105",
     "actualWinner": "Gabriel Bonfim",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 18,
+    "projectedSUB": 19,
+    "projectedDEC": 62,
+    "projectedFinish": "DEC",
+    "actualFinish": "DEC"
   },
   {
     "id": "1780697340661-yng16f",
@@ -1109,7 +1244,12 @@ export const ROI_ENTRIES = [
     "oddsA": "-185",
     "oddsB": "+155",
     "actualWinner": "Brendan Allen",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 40,
+    "projectedSUB": 24,
+    "projectedDEC": 36,
+    "projectedFinish": "KO/TKO",
+    "actualFinish": "DEC"
   },
   {
     "id": "1780697318257-svr1si",
@@ -1148,7 +1288,12 @@ export const ROI_ENTRIES = [
     "oddsA": "-310",
     "oddsB": "+245",
     "actualWinner": "Tom Nolan",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 24,
+    "projectedSUB": 14,
+    "projectedDEC": 62,
+    "projectedFinish": "DEC",
+    "actualFinish": "DEC"
   },
   {
     "id": "1780697297815-64f67k",
@@ -1187,7 +1332,12 @@ export const ROI_ENTRIES = [
     "oddsA": "-130",
     "oddsB": "+110",
     "actualWinner": "Bryce Mitchell",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 29,
+    "projectedSUB": 11,
+    "projectedDEC": 60,
+    "projectedFinish": "DEC",
+    "actualFinish": "SUB"
   },
   {
     "id": "1780697278363-wzwg93",
@@ -1226,7 +1376,12 @@ export const ROI_ENTRIES = [
     "oddsA": "-400",
     "oddsB": "+300",
     "actualWinner": "Iwo Baraniewski",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 60,
+    "projectedSUB": 12,
+    "projectedDEC": 28,
+    "projectedFinish": "KO/TKO",
+    "actualFinish": "KO/TKO"
   },
   {
     "id": "1780697257253-i95evr",
@@ -1265,7 +1420,12 @@ export const ROI_ENTRIES = [
     "oddsA": "+390",
     "oddsB": "-525",
     "actualWinner": "Alessandro Costa",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 44,
+    "projectedSUB": 21,
+    "projectedDEC": 35,
+    "projectedFinish": "KO/TKO",
+    "actualFinish": "KO/TKO"
   },
   {
     "id": "1780697180774-ot33kp",
@@ -1304,7 +1464,12 @@ export const ROI_ENTRIES = [
     "oddsA": "-450",
     "oddsB": "+350",
     "actualWinner": "Marcus McGhee",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 60,
+    "projectedSUB": 16,
+    "projectedDEC": 24,
+    "projectedFinish": "KO/TKO",
+    "actualFinish": "DEC"
   },
   {
     "id": "1780697156401-nmdznp",
@@ -1343,7 +1508,12 @@ export const ROI_ENTRIES = [
     "oddsA": "-125",
     "oddsB": "+105",
     "actualWinner": "Edgar Chairez",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 39,
+    "projectedSUB": 31,
+    "projectedDEC": 29,
+    "projectedFinish": "KO/TKO",
+    "actualFinish": "SUB"
   },
   {
     "id": "1780697131186-06q6rh",
@@ -1382,7 +1552,12 @@ export const ROI_ENTRIES = [
     "oddsA": "+100",
     "oddsB": "-120",
     "actualWinner": "Chelsea Chandler",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 52,
+    "projectedSUB": 8,
+    "projectedDEC": 40,
+    "projectedFinish": "KO/TKO",
+    "actualFinish": "SUB"
   },
   {
     "id": "1780697099010-k0twxl",
@@ -1421,7 +1596,12 @@ export const ROI_ENTRIES = [
     "oddsA": "+155",
     "oddsB": "-185",
     "actualWinner": "Joanderson Brito",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 42,
+    "projectedSUB": 27,
+    "projectedDEC": 31,
+    "projectedFinish": "KO/TKO",
+    "actualFinish": "SUB"
   },
   {
     "id": "1780697056671-2nt180",
@@ -1460,7 +1640,12 @@ export const ROI_ENTRIES = [
     "oddsA": "-310",
     "oddsB": "+250",
     "actualWinner": "Ketlen Souza",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 19,
+    "projectedSUB": 20,
+    "projectedDEC": 60,
+    "projectedFinish": "DEC",
+    "actualFinish": "KO/TKO"
   },
   {
     "id": "1779254147743-kv2kj4",
@@ -1499,7 +1684,12 @@ export const ROI_ENTRIES = [
     "oddsA": "-550",
     "oddsB": "+400",
     "actualWinner": "Song Yadong",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 34,
+    "projectedSUB": 17,
+    "projectedDEC": 49,
+    "projectedFinish": "DEC",
+    "actualFinish": "SUB"
   },
   {
     "id": "1779254116876-96z23v",
@@ -1538,7 +1728,12 @@ export const ROI_ENTRIES = [
     "oddsA": "-230",
     "oddsB": "+190",
     "actualWinner": "Alonzo Menifield",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 60,
+    "projectedSUB": 14,
+    "projectedDEC": 26,
+    "projectedFinish": "KO/TKO",
+    "actualFinish": "KO/TKO"
   },
   {
     "id": "1779254087539-bsc549",
@@ -1577,7 +1772,12 @@ export const ROI_ENTRIES = [
     "oddsA": "-500",
     "oddsB": "+350",
     "actualWinner": "Sergei Pavlovich",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 57,
+    "projectedSUB": 8,
+    "projectedDEC": 36,
+    "projectedFinish": "KO/TKO",
+    "actualFinish": "KO/TKO"
   },
   {
     "id": "1779254050918-12xkzt",
@@ -1616,7 +1816,12 @@ export const ROI_ENTRIES = [
     "oddsA": "-315",
     "oddsB": "+250",
     "actualWinner": "Kai Asakura",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 0,
+    "projectedSUB": 0,
+    "projectedDEC": 100,
+    "projectedFinish": "DEC",
+    "actualFinish": "KO/TKO"
   },
   {
     "id": "1779253969645-pwpgjz",
@@ -1655,7 +1860,12 @@ export const ROI_ENTRIES = [
     "oddsA": "-130",
     "oddsB": "+110",
     "actualWinner": "NC",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 31,
+    "projectedSUB": 13,
+    "projectedDEC": 57,
+    "projectedFinish": "DEC",
+    "actualFinish": ""
   },
   {
     "id": "1779253814932-7igxlf",
@@ -1694,7 +1904,12 @@ export const ROI_ENTRIES = [
     "oddsA": "-125",
     "oddsB": "+105",
     "actualWinner": "Jaqueline Amorim",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 19,
+    "projectedSUB": 32,
+    "projectedDEC": 49,
+    "projectedFinish": "DEC",
+    "actualFinish": "SUB"
   },
   {
     "id": "1778728893566-97sks1",
@@ -1733,7 +1948,12 @@ export const ROI_ENTRIES = [
     "oddsA": "-165",
     "oddsB": "+135",
     "actualWinner": "Arnold Allen",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 23,
+    "projectedSUB": 17,
+    "projectedDEC": 60,
+    "projectedFinish": "DEC",
+    "actualFinish": "DEC"
   },
   {
     "id": "1778728852337-k08kpm",
@@ -1772,7 +1992,12 @@ export const ROI_ENTRIES = [
     "oddsA": "+145",
     "oddsB": "-175",
     "actualWinner": "Dooho Choi",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 60,
+    "projectedSUB": 10,
+    "projectedDEC": 30,
+    "projectedFinish": "KO/TKO",
+    "actualFinish": "KO/TKO"
   },
   {
     "id": "1778728805840-xyjj2k",
@@ -1811,7 +2036,12 @@ export const ROI_ENTRIES = [
     "oddsA": "+140",
     "oddsB": "-170",
     "actualWinner": "Benardo Sopaj",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 24,
+    "projectedSUB": 18,
+    "projectedDEC": 58,
+    "projectedFinish": "DEC",
+    "actualFinish": "SUB"
   },
   {
     "id": "1778728756959-vdzzur",
@@ -1850,7 +2080,12 @@ export const ROI_ENTRIES = [
     "oddsA": "+105",
     "oddsB": "-125",
     "actualWinner": "Khaos Williams",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 50,
+    "projectedSUB": 8,
+    "projectedDEC": 42,
+    "projectedFinish": "KO/TKO",
+    "actualFinish": "KO/TKO"
   },
   {
     "id": "1778728708975-o85j3n",
@@ -1889,7 +2124,12 @@ export const ROI_ENTRIES = [
     "oddsA": "+150",
     "oddsB": "-180",
     "actualWinner": "Ivan Erslan",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 9,
+    "projectedSUB": 27,
+    "projectedDEC": 64,
+    "projectedFinish": "DEC",
+    "actualFinish": "DEC"
   },
   {
     "id": "1778728651097-x6oapx",
@@ -1928,7 +2168,12 @@ export const ROI_ENTRIES = [
     "oddsA": "+140",
     "oddsB": "-170",
     "actualWinner": "Ketlen Vieira",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 1,
+    "projectedSUB": 4,
+    "projectedDEC": 95,
+    "projectedFinish": "DEC",
+    "actualFinish": "DEC"
   },
   {
     "id": "1778728587106-bfadfy",
@@ -1967,7 +2212,12 @@ export const ROI_ENTRIES = [
     "oddsA": "+170",
     "oddsB": "-205",
     "actualWinner": "Cody Brundage",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 36,
+    "projectedSUB": 19,
+    "projectedDEC": 45,
+    "projectedFinish": "DEC",
+    "actualFinish": "KO/TKO"
   },
   {
     "id": "1778728526929-m19s4o",
@@ -2006,7 +2256,12 @@ export const ROI_ENTRIES = [
     "oddsA": "-210",
     "oddsB": "+175",
     "actualWinner": "Alice Ardelean",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 20,
+    "projectedSUB": 33,
+    "projectedDEC": 47,
+    "projectedFinish": "DEC",
+    "actualFinish": "SUB"
   },
   {
     "id": "1778728484873-yxxzh3",
@@ -2045,7 +2300,12 @@ export const ROI_ENTRIES = [
     "oddsA": "-105",
     "oddsB": "-115",
     "actualWinner": "Luis Gurule",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 0,
+    "projectedSUB": 1,
+    "projectedDEC": 99,
+    "projectedFinish": "DEC",
+    "actualFinish": "DEC"
   },
   {
     "id": "1778728407643-vny80t",
@@ -2084,7 +2344,12 @@ export const ROI_ENTRIES = [
     "oddsA": "+195",
     "oddsB": "-240",
     "actualWinner": "Nicolle Caliari",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 14,
+    "projectedSUB": 41,
+    "projectedDEC": 46,
+    "projectedFinish": "DEC",
+    "actualFinish": "SUB"
   },
   {
     "id": "1778359063330-u226fw",
@@ -2123,7 +2388,12 @@ export const ROI_ENTRIES = [
     "oddsA": "-500",
     "oddsB": "+380",
     "actualWinner": "Sean Strickland",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 26,
+    "projectedSUB": 19,
+    "projectedDEC": 55,
+    "projectedFinish": "DEC",
+    "actualFinish": "DEC"
   },
   {
     "id": "1778359026161-onwbnc",
@@ -2162,7 +2432,12 @@ export const ROI_ENTRIES = [
     "oddsA": "+136",
     "oddsB": "-162",
     "actualWinner": "Joshua Van",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 36,
+    "projectedSUB": 17,
+    "projectedDEC": 46,
+    "projectedFinish": "DEC",
+    "actualFinish": "KO/TKO"
   },
   {
     "id": "1778358966238-te4l35",
@@ -2201,7 +2476,12 @@ export const ROI_ENTRIES = [
     "oddsA": "-125",
     "oddsB": "+105",
     "actualWinner": "Alexander Volkov",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 40,
+    "projectedSUB": 8,
+    "projectedDEC": 52,
+    "projectedFinish": "DEC",
+    "actualFinish": "DEC"
   },
   {
     "id": "1778358798999-6e2v13",
@@ -2240,7 +2520,12 @@ export const ROI_ENTRIES = [
     "oddsA": "+185",
     "oddsB": "-225",
     "actualWinner": "Sean Brady",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 34,
+    "projectedSUB": 18,
+    "projectedDEC": 48,
+    "projectedFinish": "DEC",
+    "actualFinish": "DEC"
   },
   {
     "id": "1778358752606-h6ymtm",
@@ -2279,7 +2564,12 @@ export const ROI_ENTRIES = [
     "oddsA": "-410",
     "oddsB": "+320",
     "actualWinner": "King Green",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 33,
+    "projectedSUB": 11,
+    "projectedDEC": 56,
+    "projectedFinish": "DEC",
+    "actualFinish": "SUB"
   },
   {
     "id": "1778358565047-ohw7j0",
@@ -2318,7 +2608,12 @@ export const ROI_ENTRIES = [
     "oddsA": "-1050",
     "oddsB": "+675",
     "actualWinner": "Ateba Gautier",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 39,
+    "projectedSUB": 5,
+    "projectedDEC": 56,
+    "projectedFinish": "DEC",
+    "actualFinish": "KO/TKO"
   },
   {
     "id": "1778358488009-wsz7sz",
@@ -2357,7 +2652,12 @@ export const ROI_ENTRIES = [
     "oddsA": "+160",
     "oddsB": "-192",
     "actualWinner": "Yaroslav Amosov",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 34,
+    "projectedSUB": 47,
+    "projectedDEC": 18,
+    "projectedFinish": "SUB",
+    "actualFinish": "SUB"
   },
   {
     "id": "1778358439034-yeh5cb",
@@ -2396,7 +2696,12 @@ export const ROI_ENTRIES = [
     "oddsA": "-148",
     "oddsB": "+124",
     "actualWinner": "Grant Dawson",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 23,
+    "projectedSUB": 23,
+    "projectedDEC": 54,
+    "projectedFinish": "DEC",
+    "actualFinish": "SUB"
   },
   {
     "id": "1778358390089-geoscc",
@@ -2435,7 +2740,12 @@ export const ROI_ENTRIES = [
     "oddsA": "+210",
     "oddsB": "-258",
     "actualWinner": "Jim Miller",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 27,
+    "projectedSUB": 20,
+    "projectedDEC": 53,
+    "projectedFinish": "DEC",
+    "actualFinish": "SUB"
   },
   {
     "id": "1778358351695-f8046o",
@@ -2474,7 +2784,12 @@ export const ROI_ENTRIES = [
     "oddsA": "+160",
     "oddsB": "-192",
     "actualWinner": "Roman Kopylov",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 60,
+    "projectedSUB": 10,
+    "projectedDEC": 30,
+    "projectedFinish": "KO/TKO",
+    "actualFinish": "DEC"
   },
   {
     "id": "1778358289668-rt7xkh",
@@ -2513,7 +2828,12 @@ export const ROI_ENTRIES = [
     "oddsA": "-166",
     "oddsB": "+140",
     "actualWinner": "Pat Sabatini",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 11,
+    "projectedSUB": 13,
+    "projectedDEC": 76,
+    "projectedFinish": "DEC",
+    "actualFinish": "DEC"
   },
   {
     "id": "1778358214819-t0sy19",
@@ -2552,7 +2872,12 @@ export const ROI_ENTRIES = [
     "oddsA": "-800",
     "oddsB": "+550",
     "actualWinner": "Baisangur Susurkaev",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 21,
+    "projectedSUB": 21,
+    "projectedDEC": 58,
+    "projectedFinish": "DEC",
+    "actualFinish": "SUB"
   },
   {
     "id": "1778358179935-8lcttu",
@@ -2591,7 +2916,12 @@ export const ROI_ENTRIES = [
     "oddsA": "+145",
     "oddsB": "-175",
     "actualWinner": "Jose Ochoa",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 29,
+    "projectedSUB": 33,
+    "projectedDEC": 37,
+    "projectedFinish": "DEC",
+    "actualFinish": "DEC"
   },
   {
     "id": "1777675203620-ru967r",
@@ -2630,7 +2960,12 @@ export const ROI_ENTRIES = [
     "oddsA": "-110",
     "oddsB": "-110",
     "actualWinner": "Carlos Prates",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 60,
+    "projectedSUB": 13,
+    "projectedDEC": 27,
+    "projectedFinish": "KO/TKO",
+    "actualFinish": "KO/TKO"
   },
   {
     "id": "1777675186282-j6xsnu",
@@ -2669,7 +3004,12 @@ export const ROI_ENTRIES = [
     "oddsA": "+295",
     "oddsB": "-375",
     "actualWinner": "Quillan Salkilld",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 42,
+    "projectedSUB": 20,
+    "projectedDEC": 37,
+    "projectedFinish": "KO/TKO",
+    "actualFinish": "KO/TKO"
   },
   {
     "id": "1777675153448-0gqxlk",
@@ -2708,7 +3048,12 @@ export const ROI_ENTRIES = [
     "oddsA": "+150",
     "oddsB": "-180",
     "actualWinner": "Steve Erceg",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 11,
+    "projectedSUB": 12,
+    "projectedDEC": 77,
+    "projectedFinish": "DEC",
+    "actualFinish": "DEC"
   },
   {
     "id": "1777675125817-cifw88",
@@ -2747,7 +3092,12 @@ export const ROI_ENTRIES = [
     "oddsA": "-700",
     "oddsB": "+500",
     "actualWinner": "Marwan Rahiki",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 50,
+    "projectedSUB": 6,
+    "projectedDEC": 44,
+    "projectedFinish": "KO/TKO",
+    "actualFinish": "KO/TKO"
   },
   {
     "id": "1777674720138-vv2ts5",
@@ -2786,7 +3136,12 @@ export const ROI_ENTRIES = [
     "oddsA": "-120",
     "oddsB": "+100",
     "actualWinner": "Brando Pericic",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 60,
+    "projectedSUB": 10,
+    "projectedDEC": 30,
+    "projectedFinish": "KO/TKO",
+    "actualFinish": "KO/TKO"
   },
   {
     "id": "1777674692659-ed78nd",
@@ -2825,7 +3180,12 @@ export const ROI_ENTRIES = [
     "oddsA": "-218",
     "oddsB": "+180",
     "actualWinner": "Louie Sutherland",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 36,
+    "projectedSUB": 5,
+    "projectedDEC": 59,
+    "projectedFinish": "DEC",
+    "actualFinish": "DEC"
   },
   {
     "id": "1777674657956-buhtc9",
@@ -2864,7 +3224,12 @@ export const ROI_ENTRIES = [
     "oddsA": "-170",
     "oddsB": "+142",
     "actualWinner": "Cam Rowston",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 60,
+    "projectedSUB": 11,
+    "projectedDEC": 29,
+    "projectedFinish": "KO/TKO",
+    "actualFinish": "DEC"
   },
   {
     "id": "1777674629157-02rh3z",
@@ -2903,7 +3268,12 @@ export const ROI_ENTRIES = [
     "oddsA": "-225",
     "oddsB": "+185",
     "actualWinner": "Junior Tafa",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 41,
+    "projectedSUB": 6,
+    "projectedDEC": 53,
+    "projectedFinish": "DEC",
+    "actualFinish": "KO/TKO"
   },
   {
     "id": "1777674599440-q71jrv",
@@ -2942,7 +3312,12 @@ export const ROI_ENTRIES = [
     "oddsA": "-1600",
     "oddsB": "+900",
     "actualWinner": "Jacob Malkoun",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 19,
+    "projectedSUB": 30,
+    "projectedDEC": 51,
+    "projectedFinish": "DEC",
+    "actualFinish": "DEC"
   },
   {
     "id": "1777674574448-ferrwk",
@@ -2981,7 +3356,12 @@ export const ROI_ENTRIES = [
     "oddsA": "-142",
     "oddsB": "+120",
     "actualWinner": "Colby Thicknesse",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 13,
+    "projectedSUB": 6,
+    "projectedDEC": 81,
+    "projectedFinish": "DEC",
+    "actualFinish": "DEC"
   },
   {
     "id": "1777674549265-nz8qjw",
@@ -3020,7 +3400,12 @@ export const ROI_ENTRIES = [
     "oddsA": "-155",
     "oddsB": "+130",
     "actualWinner": "Wes Schultz",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 9,
+    "projectedSUB": 36,
+    "projectedDEC": 55,
+    "projectedFinish": "DEC",
+    "actualFinish": "SUB"
   },
   {
     "id": "1777674523032-v3f157",
@@ -3059,7 +3444,12 @@ export const ROI_ENTRIES = [
     "oddsA": "-218",
     "oddsB": "+180",
     "actualWinner": "Jonathan Micallef",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 13,
+    "projectedSUB": 12,
+    "projectedDEC": 75,
+    "projectedFinish": "DEC",
+    "actualFinish": "DEC"
   },
   {
     "id": "1777674496319-8qatun",
@@ -3098,7 +3488,12 @@ export const ROI_ENTRIES = [
     "oddsA": "+136",
     "oddsB": "-162",
     "actualWinner": "Kody Steele",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 9,
+    "projectedSUB": 28,
+    "projectedDEC": 63,
+    "projectedFinish": "DEC",
+    "actualFinish": "SUB"
   },
   {
     "id": "1777150595373-beq057",
@@ -3137,7 +3532,12 @@ export const ROI_ENTRIES = [
     "oddsA": "+114",
     "oddsB": "-135",
     "actualWinner": "Aljamain Sterling",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 11,
+    "projectedSUB": 23,
+    "projectedDEC": 66,
+    "projectedFinish": "DEC",
+    "actualFinish": "DEC"
   },
   {
     "id": "1777150572689-zxjzlb",
@@ -3176,7 +3576,12 @@ export const ROI_ENTRIES = [
     "oddsA": "-205",
     "oddsB": "+170",
     "actualWinner": "Joselyne Edwards",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 11,
+    "projectedSUB": 8,
+    "projectedDEC": 81,
+    "projectedFinish": "DEC",
+    "actualFinish": "DEC"
   },
   {
     "id": "1777150548970-s4s75j",
@@ -3215,7 +3620,12 @@ export const ROI_ENTRIES = [
     "oddsA": "-108",
     "oddsB": "-112",
     "actualWinner": "Rafa Garcia",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 28,
+    "projectedSUB": 9,
+    "projectedDEC": 64,
+    "projectedFinish": "DEC",
+    "actualFinish": "DEC"
   },
   {
     "id": "1777150522574-e25iuf",
@@ -3254,7 +3664,12 @@ export const ROI_ENTRIES = [
     "oddsA": "-120",
     "oddsB": "+100",
     "actualWinner": "Davey Grant",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 15,
+    "projectedSUB": 5,
+    "projectedDEC": 80,
+    "projectedFinish": "DEC",
+    "actualFinish": "DEC"
   },
   {
     "id": "1777150496900-vlzylw",
@@ -3293,7 +3708,12 @@ export const ROI_ENTRIES = [
     "oddsA": "-205",
     "oddsB": "+170",
     "actualWinner": "Raoni Barcelos",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 24,
+    "projectedSUB": 13,
+    "projectedDEC": 63,
+    "projectedFinish": "DEC",
+    "actualFinish": "DEC"
   },
   {
     "id": "1777150469251-3rpph7",
@@ -3332,7 +3752,12 @@ export const ROI_ENTRIES = [
     "oddsA": "-166",
     "oddsB": "+140",
     "actualWinner": "Ryan Spann",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 21,
+    "projectedSUB": 17,
+    "projectedDEC": 62,
+    "projectedFinish": "DEC",
+    "actualFinish": "KO/TKO"
   },
   {
     "id": "1777150441826-w6itea",
@@ -3371,7 +3796,12 @@ export const ROI_ENTRIES = [
     "oddsA": "-375",
     "oddsB": "+295",
     "actualWinner": "Eric McConico",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 7,
+    "projectedSUB": 23,
+    "projectedDEC": 69,
+    "projectedFinish": "DEC",
+    "actualFinish": "DEC"
   },
   {
     "id": "1777150415614-ajkcnd",
@@ -3410,7 +3840,12 @@ export const ROI_ENTRIES = [
     "oddsA": "-175",
     "oddsB": "+145",
     "actualWinner": "Jackson McVey",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 9,
+    "projectedSUB": 28,
+    "projectedDEC": 63,
+    "projectedFinish": "DEC",
+    "actualFinish": "SUB"
   },
   {
     "id": "1777150392690-538m2a",
@@ -3449,7 +3884,12 @@ export const ROI_ENTRIES = [
     "oddsA": "+340",
     "oddsB": "-440",
     "actualWinner": "Michelle Montague",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 7,
+    "projectedSUB": 23,
+    "projectedDEC": 70,
+    "projectedFinish": "DEC",
+    "actualFinish": "DEC"
   },
   {
     "id": "1777150363754-8mlmef",
@@ -3488,7 +3928,12 @@ export const ROI_ENTRIES = [
     "oddsA": "-600",
     "oddsB": "+440",
     "actualWinner": "Cody Durden",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 16,
+    "projectedSUB": 36,
+    "projectedDEC": 48,
+    "projectedFinish": "DEC",
+    "actualFinish": "DEC"
   },
   {
     "id": "1777150336781-008r57",
@@ -3527,7 +3972,12 @@ export const ROI_ENTRIES = [
     "oddsA": "-485",
     "oddsB": "+370",
     "actualWinner": "Francis Marshall",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 13,
+    "projectedSUB": 11,
+    "projectedDEC": 76,
+    "projectedFinish": "DEC",
+    "actualFinish": "DEC"
   },
   {
     "id": "1777150293961-63gt6m",
@@ -3566,7 +4016,12 @@ export const ROI_ENTRIES = [
     "oddsA": "+110",
     "oddsB": "-130",
     "actualWinner": "Victor Valenzuela",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 15,
+    "projectedSUB": 3,
+    "projectedDEC": 82,
+    "projectedFinish": "DEC",
+    "actualFinish": "DEC"
   },
   {
     "id": "1777150268259-gm39lr",
@@ -3605,7 +4060,12 @@ export const ROI_ENTRIES = [
     "oddsA": "+190",
     "oddsB": "-230",
     "actualWinner": "Talita Alencar",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 22,
+    "projectedSUB": 11,
+    "projectedDEC": 67,
+    "projectedFinish": "DEC",
+    "actualFinish": "DEC"
   },
   {
     "id": "1776538199805-962r0k",
@@ -3644,7 +4104,12 @@ export const ROI_ENTRIES = [
     "oddsA": "+220",
     "oddsB": "-270",
     "actualWinner": "Mike Malott",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 33,
+    "projectedSUB": 22,
+    "projectedDEC": 45,
+    "projectedFinish": "DEC",
+    "actualFinish": "KO/TKO"
   },
   {
     "id": "1776538179110-xhiovh",
@@ -3683,7 +4148,12 @@ export const ROI_ENTRIES = [
     "oddsA": "+110",
     "oddsB": "-130",
     "actualWinner": "Charles Jourdain",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 21,
+    "projectedSUB": 20,
+    "projectedDEC": 59,
+    "projectedFinish": "DEC",
+    "actualFinish": "DEC"
   },
   {
     "id": "1776538153429-excotq",
@@ -3722,7 +4192,12 @@ export const ROI_ENTRIES = [
     "oddsA": "-166",
     "oddsB": "+140",
     "actualWinner": "Jai Herbert",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 20,
+    "projectedSUB": 3,
+    "projectedDEC": 77,
+    "projectedFinish": "DEC",
+    "actualFinish": "KO/TKO"
   },
   {
     "id": "1776538129738-9vry6h",
@@ -3761,7 +4236,12 @@ export const ROI_ENTRIES = [
     "oddsA": "-325",
     "oddsB": "+260",
     "actualWinner": "Jasmine Jasudavicius",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 8,
+    "projectedSUB": 28,
+    "projectedDEC": 63,
+    "projectedFinish": "DEC",
+    "actualFinish": "DEC"
   },
   {
     "id": "1776538101891-h7ayjo",
@@ -3800,7 +4280,12 @@ export const ROI_ENTRIES = [
     "oddsA": "+140",
     "oddsB": "-166",
     "actualWinner": "Gauge Young",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 8,
+    "projectedSUB": 13,
+    "projectedDEC": 79,
+    "projectedFinish": "DEC",
+    "actualFinish": "DEC"
   },
   {
     "id": "1776538077982-02wveu",
@@ -3839,7 +4324,12 @@ export const ROI_ENTRIES = [
     "oddsA": "+320",
     "oddsB": "-410",
     "actualWinner": "Marcio Barbosa",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 60,
+    "projectedSUB": 12,
+    "projectedDEC": 28,
+    "projectedFinish": "KO/TKO",
+    "actualFinish": "KO/TKO"
   },
   {
     "id": "1776538045221-2fhe0i",
@@ -3878,7 +4368,12 @@ export const ROI_ENTRIES = [
     "oddsA": "+145",
     "oddsB": "-175",
     "actualWinner": "Robert Valentin",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 9,
+    "projectedSUB": 30,
+    "projectedDEC": 61,
+    "projectedFinish": "DEC",
+    "actualFinish": "SUB"
   },
   {
     "id": "1776537985357-b0xb4z",
@@ -3917,7 +4412,12 @@ export const ROI_ENTRIES = [
     "oddsA": "+124",
     "oddsB": "-148",
     "actualWinner": "Gokhan Saricam",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 60,
+    "projectedSUB": 10,
+    "projectedDEC": 30,
+    "projectedFinish": "KO/TKO",
+    "actualFinish": "KO/TKO"
   },
   {
     "id": "1776537908133-xe93x8",
@@ -3956,7 +4456,12 @@ export const ROI_ENTRIES = [
     "oddsA": "-130",
     "oddsB": "+110",
     "actualWinner": "Melissa Croden",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 20,
+    "projectedSUB": 4,
+    "projectedDEC": 76,
+    "projectedFinish": "DEC",
+    "actualFinish": "DEC"
   },
   {
     "id": "1776537882210-zov5p9",
@@ -3995,7 +4500,12 @@ export const ROI_ENTRIES = [
     "oddsA": "+150",
     "oddsB": "-180",
     "actualWinner": "JJ Aldrich",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 14,
+    "projectedSUB": 2,
+    "projectedDEC": 84,
+    "projectedFinish": "DEC",
+    "actualFinish": "DEC"
   },
   {
     "id": "1776537847262-czgomh",
@@ -4034,7 +4544,12 @@ export const ROI_ENTRIES = [
     "oddsA": "-148",
     "oddsB": "+124",
     "actualWinner": "DRAW",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 12,
+    "projectedSUB": 8,
+    "projectedDEC": 80,
+    "projectedFinish": "DEC",
+    "actualFinish": "DEC"
   },
   {
     "id": "1776537816374-kt7tl0",
@@ -4073,7 +4588,12 @@ export const ROI_ENTRIES = [
     "oddsA": "-258",
     "oddsB": "+210",
     "actualWinner": "John Yannis",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 47,
+    "projectedSUB": 6,
+    "projectedDEC": 48,
+    "projectedFinish": "DEC",
+    "actualFinish": "KO/TKO"
   },
   {
     "id": "1775921078501-6khmhp",
@@ -4109,7 +4629,12 @@ export const ROI_ENTRIES = [
     "oddsA": "-110",
     "oddsB": "-110",
     "actualWinner": "Carlos Ulberg",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 60,
+    "projectedSUB": 16,
+    "projectedDEC": 24,
+    "projectedFinish": "KO/TKO",
+    "actualFinish": "KO/TKO"
   },
   {
     "id": "1775921061486-v4ef9b",
@@ -4145,7 +4670,12 @@ export const ROI_ENTRIES = [
     "oddsA": "-230",
     "oddsB": "+190",
     "actualWinner": "Paulo Costa",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 60,
+    "projectedSUB": 9,
+    "projectedDEC": 31,
+    "projectedFinish": "KO/TKO",
+    "actualFinish": "KO/TKO"
   },
   {
     "id": "1775921012470-wrca4v",
@@ -4181,7 +4711,12 @@ export const ROI_ENTRIES = [
     "oddsA": "-108",
     "oddsB": "-112",
     "actualWinner": "Josh Hokit",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 57,
+    "projectedSUB": 7,
+    "projectedDEC": 36,
+    "projectedFinish": "KO/TKO",
+    "actualFinish": "DEC"
   },
   {
     "id": "1775920977334-um4d75",
@@ -4217,7 +4752,12 @@ export const ROI_ENTRIES = [
     "oddsA": "-162",
     "oddsB": "+136",
     "actualWinner": "Dominick Reyes",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 60,
+    "projectedSUB": 15,
+    "projectedDEC": 25,
+    "projectedFinish": "KO/TKO",
+    "actualFinish": "DEC"
   },
   {
     "id": "1775920942943-iukifl",
@@ -4253,7 +4793,12 @@ export const ROI_ENTRIES = [
     "oddsA": "-115",
     "oddsB": "-105",
     "actualWinner": "Cub Swanson",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 32,
+    "projectedSUB": 16,
+    "projectedDEC": 51,
+    "projectedFinish": "DEC",
+    "actualFinish": "KO/TKO"
   },
   {
     "id": "1775920911043-nriufs",
@@ -4289,7 +4834,12 @@ export const ROI_ENTRIES = [
     "oddsA": "+225",
     "oddsB": "-278",
     "actualWinner": "Aaron Pico",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 0,
+    "projectedSUB": 1,
+    "projectedDEC": 99,
+    "projectedFinish": "DEC",
+    "actualFinish": "DEC"
   },
   {
     "id": "1775920880650-w4uc8p",
@@ -4325,7 +4875,12 @@ export const ROI_ENTRIES = [
     "oddsA": "-115",
     "oddsB": "-105",
     "actualWinner": "Kevin Holland",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 30,
+    "projectedSUB": 21,
+    "projectedDEC": 49,
+    "projectedFinish": "DEC",
+    "actualFinish": "DEC"
   },
   {
     "id": "1775920854805-q3d29g",
@@ -4361,7 +4916,12 @@ export const ROI_ENTRIES = [
     "oddsA": "-205",
     "oddsB": "+170",
     "actualWinner": "Mateusz Gamrot",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 26,
+    "projectedSUB": 10,
+    "projectedDEC": 64,
+    "projectedFinish": "DEC",
+    "actualFinish": "SUB"
   },
   {
     "id": "1775920830653-8gtjnd",
@@ -4397,7 +4957,12 @@ export const ROI_ENTRIES = [
     "oddsA": "-148",
     "oddsB": "+124",
     "actualWinner": "Tatiana Suarez",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 12,
+    "projectedSUB": 24,
+    "projectedDEC": 64,
+    "projectedFinish": "DEC",
+    "actualFinish": "SUB"
   },
   {
     "id": "1775920799729-rxkr61",
@@ -4433,7 +4998,12 @@ export const ROI_ENTRIES = [
     "oddsA": "-162",
     "oddsB": "+136",
     "actualWinner": "NC",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 24,
+    "projectedSUB": 10,
+    "projectedDEC": 66,
+    "projectedFinish": "DEC",
+    "actualFinish": ""
   },
   {
     "id": "1775920772444-56p3k0",
@@ -4469,7 +5039,12 @@ export const ROI_ENTRIES = [
     "oddsA": "-270",
     "oddsB": "+220",
     "actualWinner": "Vicente Luque",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 34,
+    "projectedSUB": 20,
+    "projectedDEC": 46,
+    "projectedFinish": "DEC",
+    "actualFinish": "SUB"
   },
   {
     "id": "1775920752570-rw3ubi",
@@ -4505,7 +5080,12 @@ export const ROI_ENTRIES = [
     "oddsA": "-180",
     "oddsB": "+150",
     "actualWinner": "Charles Radtke",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 57,
+    "projectedSUB": 16,
+    "projectedDEC": 27,
+    "projectedFinish": "KO/TKO",
+    "actualFinish": "DEC"
   },
   {
     "id": "1775695379027-xdmojh",
@@ -4537,7 +5117,12 @@ export const ROI_ENTRIES = [
     "oddsA": "-134",
     "oddsB": "+114",
     "actualWinner": "Renato Moicano",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 16,
+    "projectedSUB": 30,
+    "projectedDEC": 54,
+    "projectedFinish": "DEC",
+    "actualFinish": "SUB"
   },
   {
     "id": "1775695354267-xa4gkg",
@@ -4569,7 +5154,12 @@ export const ROI_ENTRIES = [
     "oddsA": "-410",
     "oddsB": "+290",
     "actualWinner": "Abdul Rakhman Yakhyaev",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 14,
+    "projectedSUB": 58,
+    "projectedDEC": 29,
+    "projectedFinish": "SUB",
+    "actualFinish": "SUB"
   },
   {
     "id": "1775695314885-f1qc3w",
@@ -4601,7 +5191,12 @@ export const ROI_ENTRIES = [
     "oddsA": "+108",
     "oddsB": "-138",
     "actualWinner": "Virna Jandiroba",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 15,
+    "projectedSUB": 17,
+    "projectedDEC": 68,
+    "projectedFinish": "DEC",
+    "actualFinish": "DEC"
   },
   {
     "id": "1775695290872-6eemem",
@@ -4633,7 +5228,12 @@ export const ROI_ENTRIES = [
     "oddsA": "-142",
     "oddsB": "+112",
     "actualWinner": "Ethyn Ewing",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 22,
+    "projectedSUB": 4,
+    "projectedDEC": 75,
+    "projectedFinish": "DEC",
+    "actualFinish": "KO/TKO"
   },
   {
     "id": "1775695243724-x3u6xl",
@@ -4665,7 +5265,12 @@ export const ROI_ENTRIES = [
     "oddsA": "-164",
     "oddsB": "+128",
     "actualWinner": "Thomas Petersen",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 0,
+    "projectedSUB": 0,
+    "projectedDEC": 100,
+    "projectedFinish": "DEC",
+    "actualFinish": "DEC"
   },
   {
     "id": "1775695209756-ibg22v",
@@ -4697,7 +5302,12 @@ export const ROI_ENTRIES = [
     "oddsA": "-430",
     "oddsB": "+340",
     "actualWinner": "Alessandro Costa",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 41,
+    "projectedSUB": 7,
+    "projectedDEC": 53,
+    "projectedFinish": "DEC",
+    "actualFinish": "KO/TKO"
   },
   {
     "id": "1775695177067-j90zl2",
@@ -4729,7 +5339,12 @@ export const ROI_ENTRIES = [
     "oddsA": "+188",
     "oddsB": "-225",
     "actualWinner": "Darrius Flowers",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 51,
+    "projectedSUB": 15,
+    "projectedDEC": 34,
+    "projectedFinish": "KO/TKO",
+    "actualFinish": "KO/TKO"
   },
   {
     "id": "1775695145086-9ujvwp",
@@ -4761,7 +5376,12 @@ export const ROI_ENTRIES = [
     "oddsA": "-180",
     "oddsB": "+140",
     "actualWinner": "Alice Pereira",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 41,
+    "projectedSUB": 6,
+    "projectedDEC": 54,
+    "projectedFinish": "DEC",
+    "actualFinish": "KO/TKO"
   },
   {
     "id": "1775695121005-xvhzoy",
@@ -4793,7 +5413,12 @@ export const ROI_ENTRIES = [
     "oddsA": "-670",
     "oddsB": "+430",
     "actualWinner": "Tresean Gore",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 49,
+    "projectedSUB": 33,
+    "projectedDEC": 18,
+    "projectedFinish": "KO/TKO",
+    "actualFinish": "SUB"
   },
   {
     "id": "1775695089269-cx01gr",
@@ -4825,6 +5450,11 @@ export const ROI_ENTRIES = [
     "oddsA": "-116",
     "oddsB": "-110",
     "actualWinner": "Dione Barbosa",
-    "notes": ""
+    "notes": "",
+    "projectedKO": 43,
+    "projectedSUB": 18,
+    "projectedDEC": 39,
+    "projectedFinish": "KO/TKO",
+    "actualFinish": "DEC"
   }
 ];

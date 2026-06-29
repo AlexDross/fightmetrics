@@ -3377,6 +3377,16 @@ function computeFinishProbs(fA, fB) {
   };
 }
 
+function getProjectedFinishLabel(probs) {
+  const { ko, sub, dec } = probs;
+  const max = Math.max(ko, sub, dec);
+  const leaders = [];
+  if (ko === max) leaders.push('KO/TKO');
+  if (sub === max) leaders.push('SUB');
+  if (dec === max) leaders.push('DEC');
+  return leaders.join(' / ');
+}
+
 // ─── MATCHUP SIMULATOR ────────────────────────────────────────────────────────
 function MatchupSimulator({ allFighters, onSavePrediction, onOpenROI }) {
   const [fA, setFA] = useState(null);
@@ -3706,7 +3716,7 @@ function MatchupSimulator({ allFighters, onSavePrediction, onOpenROI }) {
           projectedKO: ko,
           projectedSUB: sub,
           projectedDEC: dec,
-          projectedFinish: ko > sub && ko > dec ? 'KO/TKO' : sub > dec ? 'SUB' : 'DEC',
+          projectedFinish: getProjectedFinishLabel({ ko, sub, dec }),
         };
       })(),
       actualWinner: '',
@@ -5005,6 +5015,11 @@ function MatchupSimulator({ allFighters, onSavePrediction, onOpenROI }) {
                       );
                     })}
                   </div>
+
+                  <div className="mt-3 text-center">
+                    <span className="text-slate-400 text-xs uppercase tracking-widest">Projected Finish · </span>
+                    <span className="text-white font-bold text-sm">{getProjectedFinishLabel({ ko, sub, dec })}</span>
+                  </div>
                 </>
               );
             })()}
@@ -6204,7 +6219,24 @@ function ScoutProfile({ allFighters }) {
 
 export default function App() {
   const [view, setView] = useState('home');
-  const [roiEntries, setRoiEntries] = useState(ROI_ENTRIES);
+  const [roiEntries, setRoiEntries] = useState(() => {
+    const fightersByName = Object.fromEntries(FIGHTERS.map((f) => [f.FIGHTER, f]));
+    return ROI_ENTRIES.map((entry) => {
+      if (entry.projectedFinish !== undefined) return entry;
+      const fA = fightersByName[entry.fighterA];
+      const fB = fightersByName[entry.fighterB];
+      if (!fA || !fB) return entry;
+      const probs = computeFinishProbs(fA, fB);
+      return {
+        ...entry,
+        projectedKO: probs.ko,
+        projectedSUB: probs.sub,
+        projectedDEC: probs.dec,
+        projectedFinish: getProjectedFinishLabel(probs),
+        actualFinish: entry.actualFinish ?? '',
+      };
+    });
+  });
 
   const fightersWithProspectsFiltered = useMemo(() => FIGHTERS, []);
 
@@ -6787,6 +6819,22 @@ function ROITab({
     };
   }, [displayedEntries, v2DataMap]);
 
+  const finishStats = useMemo(() => {
+    const graded = displayedEntries.filter((e) => e.actualFinish && e.actualFinish !== '');
+    const correct = graded.filter((e) => {
+      if (!e.projectedFinish) return false;
+      if (e.projectedFinish.includes(' / ')) {
+        return e.projectedFinish.split(' / ').includes(e.actualFinish);
+      }
+      return e.actualFinish === e.projectedFinish;
+    });
+    return {
+      graded: graded.length,
+      correct: correct.length,
+      accuracy: graded.length > 0 ? (correct.length / graded.length) * 100 : 0,
+    };
+  }, [displayedEntries]);
+
   return (
     <div className="max-w-5xl mx-auto px-5 py-8">
       <div className="flex items-start justify-between gap-4 mb-6">
@@ -6845,7 +6893,7 @@ function ROITab({
         )}
       </div>
 
-      <div className="grid grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-5 gap-4 mb-6">
         <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
           <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold">Tracked Fights</p>
           <p className="font-black text-2xl mt-2 text-white">{summary.total}</p>
@@ -6890,6 +6938,16 @@ function ROITab({
           <p className="text-slate-600 text-xs mt-1">
             {summary.profit >= 0 ? '+' : ''}{summary.profit.toFixed(2)}u on {summary.bets} bets
             {modelView !== 'v1' && ' · v1 tracked bets'}
+          </p>
+        </div>
+
+        <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
+          <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold">Finish Accuracy</p>
+          <p className={`font-black text-2xl mt-2 ${finishStats.accuracy >= 50 ? 'text-emerald-400' : 'text-yellow-400'}`}>
+            {finishStats.accuracy.toFixed(1)}%
+          </p>
+          <p className="text-slate-600 text-xs mt-1">
+            {finishStats.correct}/{finishStats.graded} graded
           </p>
         </div>
       </div>
@@ -7329,6 +7387,34 @@ function ROITab({
                       <option value="DRAW">Draw</option>
                     </select>
                   </div>
+                </div>
+
+                <div className="mt-4 space-y-3">
+                  {entry.projectedFinish != null && (
+                    <div>
+                      <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold mb-2">
+                        Projected Finish
+                      </p>
+                      <div className="flex gap-3">
+                        {[
+                          { label: 'KO/TKO', pct: entry.projectedKO, color: 'text-red-400', bg: 'bg-red-500' },
+                          { label: 'SUB',    pct: entry.projectedSUB, color: 'text-violet-400', bg: 'bg-violet-500' },
+                          { label: 'DEC',    pct: entry.projectedDEC, color: 'text-slate-300', bg: 'bg-slate-500' },
+                        ].map(({ label, pct, color, bg }) => (
+                          <div key={label} className="flex-1 bg-slate-800/60 rounded-lg p-2 text-center">
+                            <p className={`font-bold text-base ${color}`}>{pct ?? '—'}%</p>
+                            <p className="text-slate-500 text-xs mt-0.5">{label}</p>
+                            <div className="mt-1.5 h-1 bg-slate-700 rounded-full overflow-hidden">
+                              <div className={`h-full ${bg} rounded-full`} style={{ width: `${pct ?? 0}%` }} />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      <p className="text-slate-500 text-xs mt-1.5">
+                        Pick: <span className="text-white font-semibold">{entry.projectedFinish ?? '—'}</span>
+                      </p>
+                    </div>
+                  )}
                   <div>
                     <label className="text-slate-500 text-xs font-semibold uppercase tracking-wider block mb-1.5">
                       Finish Method
@@ -7343,7 +7429,7 @@ function ROITab({
                       className="w-full bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-red-500"
                     >
                       <option value="">Pending</option>
-                      <option value="KO/TKO">KO / TKO</option>
+                      <option value="KO/TKO">KO/TKO</option>
                       <option value="SUB">Submission</option>
                       <option value="DEC">Decision</option>
                     </select>
