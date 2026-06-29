@@ -143,7 +143,7 @@ Return empty arrays if no concrete evidence. Do not speculate."""
 
     try:
         response = client.messages.create(
-            model="claude-opus-4-8",
+            model="claude-haiku-4-5-20251001",
             max_tokens=1024,
             tools=[{"type": "web_search_20250305", "name": "web_search", "max_uses": 3}],
             messages=[{"role": "user", "content": prompt}],
