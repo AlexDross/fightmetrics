@@ -123,80 +123,58 @@ def find_next_ufc_event_url():
 
     soup = BeautifulSoup(resp.text, "html.parser")
 
-    # Find the "Upcoming events" section by its heading anchor
-    upcoming_anchor = (
-        soup.find(id="Upcoming_events")
-        or soup.find(id="Upcoming")
-        or soup.find("span", id=re.compile(r"upcoming", re.I))
-    )
-    if upcoming_anchor is None:
-        # Try finding by heading text
-        for heading in soup.find_all(["h2", "h3"]):
-            if re.search(r"upcoming", heading.get_text(), re.I):
-                upcoming_anchor = heading
-                break
-
-    if upcoming_anchor is None:
-        print("[WIKI] Could not find 'Upcoming events' section on events list page.")
-        print(f"[WIKI] Falling back to {WIKIPEDIA_FALLBACK_EVENT}")
-        return WIKIPEDIA_FALLBACK_EVENT
-
-    # Walk forward from the heading to find the first table
-    section_start = upcoming_anchor.find_parent() or upcoming_anchor
-    upcoming_table = None
-    for sibling in section_start.find_next_siblings():
-        tag = sibling.name
-        if tag in ("h2", "h3") and sibling != section_start:
-            break  # left the upcoming section
-        if tag == "table":
-            upcoming_table = sibling
-            break
-
-    if upcoming_table is None:
-        print("[WIKI] No table found in 'Upcoming events' section.")
-        print(f"[WIKI] Falling back to {WIKIPEDIA_FALLBACK_EVENT}")
-        return WIKIPEDIA_FALLBACK_EVENT
-
-    # Scan table rows for the first row whose date >= today
-    for row in upcoming_table.find_all("tr"):
-        cells = row.find_all(["td", "th"])
-        if not cells:
-            continue
-        row_text = " ".join(c.get_text(separator=" ", strip=True) for c in cells)
-
-        # Look for a date pattern YYYY-MM-DD or "Month DD, YYYY"
-        date_match = re.search(r"(\d{4}-\d{2}-\d{2})", row_text)
-        if not date_match:
-            # Try "July 12, 2026" etc.
-            m2 = re.search(
-                r"(January|February|March|April|May|June|July|August|September|October|November|December)\s+\d+,?\s+\d{4}",
-                row_text,
-            )
-            if m2:
+    def parse_row_date(row_text):
+        """Try multiple date formats; return YYYY-MM-DD string or None."""
+        # ISO: 2026-07-11
+        m = re.search(r"(\d{4}-\d{2}-\d{2})", row_text)
+        if m:
+            return m.group(1)
+        # Abbreviated: "Jul 11, 2026" or "Jul 11 2026"
+        m = re.search(
+            r"(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\w*\.?\s+(\d{1,2}),?\s+(\d{4})",
+            row_text,
+        )
+        if m:
+            for fmt in ("%b %d %Y", "%B %d %Y"):
                 try:
-                    date_match_str = re.sub(r",", "", m2.group(0))
-                    parsed = datetime.strptime(date_match_str, "%B %d %Y")
-                    row_date = parsed.strftime("%Y-%m-%d")
+                    clean = f"{m.group(1)} {m.group(2)} {m.group(3)}"
+                    return datetime.strptime(clean, fmt).strftime("%Y-%m-%d")
                 except ValueError:
                     continue
-            else:
+        return None
+
+    # Broad scan: collect ALL future (date, url) pairs from every table.
+    # The page lists events in descending date order, so we must sort to find
+    # the soonest upcoming event rather than taking the first match found.
+    future_events = []
+    for table in soup.find_all("table"):
+        for row in table.find_all("tr"):
+            cells = row.find_all(["td", "th"])
+            if not cells:
                 continue
-        else:
-            row_date = date_match.group(1)
+            row_text = " ".join(c.get_text(separator=" ", strip=True) for c in cells)
+            row_date = parse_row_date(row_text)
+            if not row_date or row_date < today_str:
+                continue
+            link = row.find("a", href=re.compile(r"/wiki/UFC"))
+            if link:
+                future_events.append((row_date, WIKIPEDIA_BASE + link["href"]))
 
-        if row_date < today_str:
-            continue  # past event
+    if not future_events:
+        print("[WIKI] No future event rows found in any table on events list page.")
+        print(f"[WIKI] Using fallback: {WIKIPEDIA_FALLBACK_EVENT}")
+        return [WIKIPEDIA_FALLBACK_EVENT]
 
-        # Found a future event — grab the first UFC event link in this row
-        link = row.find("a", href=re.compile(r"/wiki/UFC"))
-        if link:
-            url = WIKIPEDIA_BASE + link["href"]
-            print(f"[WIKI] Next event row: date={row_date}, url={url}")
-            return url
-
-    print("[WIKI] No future event rows found in upcoming table.")
-    print(f"[WIKI] Falling back to {WIKIPEDIA_FALLBACK_EVENT}")
-    return WIKIPEDIA_FALLBACK_EVENT
+    # Sort ascending: closest upcoming event first; deduplicate URLs
+    future_events.sort(key=lambda x: x[0])
+    seen_urls, ordered = set(), []
+    for date, url in future_events:
+        if url not in seen_urls:
+            seen_urls.add(url)
+            ordered.append((date, url))
+    print(f"[WIKI] Found {len(ordered)} upcoming events on events list; soonest: {ordered[0]}")
+    # Return ordered list of URLs so caller can try each until one has fights
+    return [url for _, url in ordered]
 
 
 def parse_wikipedia_event(url):
@@ -237,11 +215,23 @@ def parse_wikipedia_event(url):
                         except ValueError:
                             continue
 
+    # Weight class prefixes to strip from extracted fighter names
+    WEIGHT_CLASS_PREFIXES = re.compile(
+        r"^(Women's\s+)?(Super\s+|Light\s+)?"
+        r"(Strawweight|Flyweight|Bantamweight|Featherweight|Lightweight|"
+        r"Welterweight|Middleweight|Heavyweight|Catchweight|Open\s+Weight)"
+        r"\s+",
+        re.IGNORECASE,
+    )
+
+    def strip_weight_class(name):
+        return WEIGHT_CLASS_PREFIXES.sub("", name).strip()
+
     # --- Fight card from tables ---
     fights = []
     seen_pairs = set()
 
-    # Wikipedia fight card tables have headers like "Results", "Card", "Bout"
+    # Wikipedia UFC event tables: Weight class | Fighter A | vs. | Fighter B | Method...
     for table in soup.find_all("table"):
         headers_text = " ".join(
             th.get_text(strip=True) for th in table.find_all("th")
@@ -254,18 +244,29 @@ def parse_wikipedia_event(url):
             if len(cells) < 2:
                 continue
 
-            # Try to extract two fighter names from the row
-            # Common pattern: cell containing "X vs. Y" or two separate cells
-            row_text = " ".join(c.get_text(separator=" ", strip=True) for c in cells)
+            # Primary: cell-by-cell — find the "vs." cell, take adjacent cells
+            raw_a, raw_b = None, None
+            cell_texts = [c.get_text(separator=" ", strip=True) for c in cells]
+            for idx, txt in enumerate(cell_texts):
+                if txt.lower() in ("vs.", "vs"):
+                    if idx > 0 and idx < len(cell_texts) - 1:
+                        raw_a = strip_weight_class(cell_texts[idx - 1])
+                        raw_b = strip_weight_class(cell_texts[idx + 1])
+                    break
 
-            vs_match = re.search(
-                r"([A-Z][a-zA-Z'\-\.]+(?:\s+[A-Z][a-zA-Z'\-\.]+)+)\s+(?:vs\.?|v\.)\s+"
-                r"([A-Z][a-zA-Z'\-\.]+(?:\s+[A-Z][a-zA-Z'\-\.]+)+)",
-                row_text,
-            )
-            if vs_match:
-                raw_a = vs_match.group(1).strip()
-                raw_b = vs_match.group(2).strip()
+            # Fallback: regex on full row text
+            if not raw_a or not raw_b:
+                row_text = " ".join(cell_texts)
+                vs_match = re.search(
+                    r"([A-Z][a-zA-Z'\-\.]+(?:\s+[A-Z][a-zA-Z'\-\.]+)+)\s+(?:vs\.?|v\.)\s+"
+                    r"([A-Z][a-zA-Z'\-\.]+(?:\s+[A-Z][a-zA-Z'\-\.]+)+)",
+                    row_text,
+                )
+                if vs_match:
+                    raw_a = strip_weight_class(vs_match.group(1).strip())
+                    raw_b = strip_weight_class(vs_match.group(2).strip())
+
+            if raw_a and raw_b:
                 pair = tuple(sorted([raw_a.lower(), raw_b.lower()]))
                 if pair not in seen_pairs and len(raw_a) > 3 and len(raw_b) > 3:
                     seen_pairs.add(pair)
@@ -279,20 +280,19 @@ def scrape_canonical_card():
     """
     Step A: Scrape Wikipedia for the canonical fight card.
     Returns (event_name, event_date, fights) where fights = [{"rawA":..,"rawB":..}].
+    Tries upcoming events in order (soonest first) until one has fight card data.
     """
     print("[WIKI] Finding next UFC event on Wikipedia...")
-    event_url = find_next_ufc_event_url()
-    if event_url:
-        print(f"[WIKI] Found event URL: {event_url}")
+    event_urls = find_next_ufc_event_url()
+
+    for event_url in event_urls[:5]:  # try up to 5 upcoming events
+        print(f"[WIKI] Trying event URL: {event_url}")
         event_name, event_date, fights = parse_wikipedia_event(event_url)
         if fights:
             return event_name, event_date, fights
-        print("[WIKI] No fights parsed from Wikipedia page.")
-    else:
-        print("[WIKI] Could not find event URL on Wikipedia index.")
+        print(f"[WIKI] No fights on {event_url} yet — trying next upcoming event...")
 
-    # Tapology fallback: not implemented in this version — return empty
-    print("[WARN] Wikipedia scrape failed or returned no fights. Card will be built from TheRundown only.")
+    print("[WARN] Wikipedia scrape returned no fights for any upcoming event. Building card from TheRundown only.")
     return None, None, []
 
 
