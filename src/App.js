@@ -6375,6 +6375,44 @@ function HomeTab({ summary, entries, onNavigate, allFighters }) {
     return (correct / graded.length) * 100;
   }, [sortedNonProspect, v2PickMap]);
 
+  const may23Entries = useMemo(
+    () => sortedNonProspect.filter((e) => (e.eventDate || '') >= '2026-05-23'),
+    [sortedNonProspect]
+  );
+
+  const may23Summary = useMemo(() => {
+    const graded = may23Entries.filter(
+      (e) => e.actualWinner === e.fighterA || e.actualWinner === e.fighterB
+    );
+    const v2Correct = graded.filter((e) => {
+      const v2 = v2PickMap.get(e.id);
+      return v2 && v2.winner === e.actualWinner;
+    }).length;
+    const v2Acc = graded.length > 0 ? (v2Correct / graded.length) * 100 : null;
+    const v1Correct = graded.filter((e) => e.predictedWinner === e.actualWinner).length;
+    const v1Acc = graded.length > 0 ? (v1Correct / graded.length) * 100 : null;
+    let bets = 0, profit = 0;
+    may23Entries.forEach((entry) => {
+      if (entry.actualWinner !== entry.fighterA && entry.actualWinner !== entry.fighterB) return;
+      if (entry.confirmedByUser === false) return;
+      const fA = fighterMap.get(entry.fighterA);
+      const fB = fighterMap.get(entry.fighterB);
+      if (!fA || !fB) return;
+      const res = computeMatchupEdges(fA, fB);
+      if (res.v2pA == null || res.v2pB == null) return;
+      const v2pick = res.v2pA >= res.v2pB ? entry.fighterA : entry.fighterB;
+      const v2odds = v2pick === entry.fighterA
+        ? (entry.oddsA || entry.marketOdds)
+        : (entry.oddsB || entry.marketOdds);
+      const dec = americanToDecimal(v2odds);
+      if (!dec) return;
+      bets++;
+      profit += entry.actualWinner === v2pick ? dec - 1 : -1;
+    });
+    const roi = bets > 0 ? (profit / bets) * 100 : 0;
+    return { v2Acc, v1Acc, bets, profit, roi, count: may23Entries.length, graded: graded.length };
+  }, [may23Entries, v2PickMap, fighterMap]);
+
   const getOutcome = (e) => {
     if (!e.actualWinner || e.actualWinner === '') return 'pending';
     if (isPushResult(e.actualWinner)) return 'push';
@@ -6408,44 +6446,38 @@ function HomeTab({ summary, entries, onNavigate, allFighters }) {
           <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold mb-2">
             Pick Accuracy
           </p>
-          {v2Accuracy != null ? (
+          {may23Summary.v2Acc != null ? (
             <>
-              <p className={`font-black text-3xl ${v2Accuracy >= 60 ? 'text-emerald-400' : 'text-yellow-400'}`}>
-                {v2Accuracy.toFixed(1)}%
+              <p className={`font-black text-3xl ${may23Summary.v2Acc >= 60 ? 'text-emerald-400' : 'text-yellow-400'}`}>
+                {may23Summary.v2Acc.toFixed(1)}%
               </p>
-              <p className="text-slate-500 text-xs mt-1">
-                v1: {summary.accuracy.toFixed(1)}%
-              </p>
+              <p className="text-slate-500 text-xs mt-1">v2 · since May 23</p>
+              {may23Summary.v1Acc != null && (
+                <p className="text-slate-600 text-xs mt-0.5">v1: {may23Summary.v1Acc.toFixed(1)}%</p>
+              )}
             </>
           ) : (
-            <>
-              <p className={`font-black text-3xl ${summary.accuracy >= 60 ? 'text-emerald-400' : 'text-yellow-400'}`}>
-                {summary.accuracy.toFixed(1)}%
-              </p>
-              <p className="text-slate-600 text-xs mt-1">
-                {summary.correct} / {summary.graded} picks
-              </p>
-            </>
+            <p className="text-slate-600 text-sm mt-1">No graded picks</p>
           )}
         </div>
         <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
           <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold mb-2">
             Flat-Stake ROI
           </p>
-          <p className={`font-black text-3xl ${summary.roi >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-            {summary.roi >= 0 ? '+' : ''}{summary.roi.toFixed(1)}%
+          <p className={`font-black text-3xl ${may23Summary.roi >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+            {may23Summary.roi >= 0 ? '+' : ''}{may23Summary.roi.toFixed(1)}%
           </p>
           <p className="text-slate-600 text-xs mt-1">
-            {summary.profit >= 0 ? '+' : ''}{summary.profit.toFixed(2)}u on {summary.bets} bets
+            {may23Summary.profit >= 0 ? '+' : ''}{may23Summary.profit.toFixed(2)}u on {may23Summary.bets} bets
           </p>
-          <p className="text-slate-600 text-[10px] mt-1">v1 tracked bets only</p>
+          <p className="text-slate-600 text-[10px] mt-1">v2 · since May 23 · live recompute</p>
         </div>
         <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
           <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold mb-2">
             Tracked Fights
           </p>
-          <p className="font-black text-3xl text-white">{summary.total}</p>
-          <p className="text-slate-600 text-xs mt-1">{summary.graded} graded</p>
+          <p className="font-black text-3xl text-white">{may23Summary.count}</p>
+          <p className="text-slate-600 text-xs mt-1">since May 23</p>
         </div>
       </div>
 
@@ -7508,15 +7540,26 @@ function ROITab({
                 </div>
 
                 <div className="mt-4 space-y-3">
-                  {entry.projectedFinish != null && (
-                    <div className="mt-3">
-                      <span className="text-slate-500 text-xs uppercase tracking-wider font-semibold">Projected Finish · </span>
-                      <span className="text-white text-sm font-bold">{entry.projectedFinish}</span>
-                      <span className="text-slate-400 text-xs ml-1">
-                        ({Math.max(entry.projectedKO ?? 0, entry.projectedSUB ?? 0, entry.projectedDEC ?? 0)}%)
-                      </span>
-                    </div>
-                  )}
+                  {entry.projectedFinish != null && (() => {
+                    const af = entry.actualFinish;
+                    const pf = entry.projectedFinish;
+                    const finishColor = !af
+                      ? 'text-white'
+                      : (pf.includes(' / ')
+                          ? pf.split(' / ').some(s => s.trim() === af)
+                          : pf === af)
+                        ? 'text-emerald-400'
+                        : 'text-red-400';
+                    return (
+                      <div className="mt-3">
+                        <span className="text-slate-500 text-xs uppercase tracking-wider font-semibold">Projected Finish · </span>
+                        <span className={`${finishColor} text-sm font-bold`}>{pf}</span>
+                        <span className={`${finishColor} text-xs ml-1`}>
+                          ({Math.max(entry.projectedKO ?? 0, entry.projectedSUB ?? 0, entry.projectedDEC ?? 0)}%)
+                        </span>
+                      </div>
+                    );
+                  })()}
                   <div>
                     <label className="text-slate-500 text-xs font-semibold uppercase tracking-wider block mb-1.5">
                       Finish Method
