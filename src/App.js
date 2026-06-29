@@ -6863,15 +6863,17 @@ function ROITab({
       const v2pB = res.v2pB;
       if (v2pA == null || v2pB == null) return;
       const v2pick = v2pA >= v2pB ? entry.fighterA : entry.fighterB;
-      const v2prob = v2pA >= v2pB ? v2pA : v2pB;
-      if (v2pick !== entry.trackedSide) return;
-      const isCleanSample = (entry.eventDate || '') >= '2026-05-23';
-      if (!isCleanSample && v2prob < 0.55) return;
-      const p = calcTrackedProfit(entry);
-      if (p === null) return;
+      // Use correct odds for v2 pick (may differ from trackedSide)
+      const v2odds = v2pick === entry.fighterA
+        ? (entry.oddsA || entry.marketOdds)
+        : (entry.oddsB || entry.marketOdds);
+      const dec = americanToDecimal(v2odds);
+      if (!dec) return;
+      const won = entry.actualWinner === v2pick;
+      const p = won ? dec - 1 : -1;
       bets++;
       profit += p;
-      if (entry.actualWinner === entry.trackedSide) correct++;
+      if (won) correct++;
     });
     const roi = bets > 0 ? (profit / bets) * 100 : 0;
     return { bets, profit, roi, correct };
@@ -7073,8 +7075,21 @@ function ROITab({
             const inCompareMode = modelView === 'compare' || localCompare.has(entry.id);
             const inV2Mode = modelView === 'v2' && !localCompare.has(entry.id);
             const v2Data = (inCompareMode || inV2Mode) ? (v2DataMap.get(entry.id) ?? null) : null;
+            const v2pick = (inV2Mode && v2Data) ? v2Data.v2Winner : entry.trackedSide;
+            const effectiveTrackedSide = inV2Mode ? v2pick : entry.trackedSide;
+            const effectiveOdds = inV2Mode
+              ? (v2pick === entry.fighterA ? (entry.oddsA || entry.marketOdds) : (entry.oddsB || entry.marketOdds))
+              : entry.marketOdds;
+            const v2FlippedTracked = inV2Mode && v2pick !== entry.trackedSide;
+            const effectiveProfit = (() => {
+              if (!isResolvedWinner(entry.actualWinner, entry)) return null;
+              if (isPushResult(entry.actualWinner)) return 0;
+              const dec = americanToDecimal(effectiveOdds);
+              if (!dec) return null;
+              return entry.actualWinner === effectiveTrackedSide ? dec - 1 : -1;
+            })();
             const effectiveWinnerForBadge = (inV2Mode && v2Data) ? v2Data.v2Winner : entry.displayWinner;
-            const correct = decisive && effectiveWinnerForBadge === entry.actualWinner;
+            const correct = decisive && entry.actualWinner === effectiveTrackedSide;
             const v2Differs = v2Data != null && v2Data.v2Winner !== entry.displayWinner;
             const effWinner = (inV2Mode && v2Data) ? v2Data.v2Winner : entry.displayWinner;
             const effProb = (inV2Mode && v2Data) ? v2Data.v2WinProb : (entry.displayProb ?? 0);
@@ -7365,7 +7380,10 @@ function ROITab({
                   <div className="bg-slate-800/40 rounded-lg p-3">
                     <p className="text-slate-500 text-xs">Market odds</p>
                     <p className="text-white font-bold text-sm mt-1">
-                      {entry.marketOdds || '—'}
+                      {effectiveOdds || '—'}
+                      {v2FlippedTracked && (
+                        <span className="text-amber-400 text-xs ml-1">(v2 flip)</span>
+                      )}
                     </p>
                     <p className="text-slate-600 text-xs mt-1">
                       {effEdge != null
@@ -7379,16 +7397,16 @@ function ROITab({
                       <p className="text-slate-500 text-xs">Units</p>
                     <p
                       className={`font-bold text-sm mt-1 ${
-                        profit == null
+                        effectiveProfit == null
                           ? 'text-slate-300'
-                          : profit >= 0
+                          : effectiveProfit >= 0
                           ? 'text-emerald-400'
                           : 'text-red-400'
                       }`}
                     >
-                      {profit == null
+                      {effectiveProfit == null
                         ? 'Pending'
-                        : `${profit >= 0 ? '+' : ''}${profit.toFixed(2)}u`}
+                        : `${effectiveProfit >= 0 ? '+' : ''}${effectiveProfit.toFixed(2)}u`}
                     </p>
                     <p className="text-slate-600 text-xs mt-1">
                       {entry.actualWinner === 'NC'
