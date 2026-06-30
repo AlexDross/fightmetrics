@@ -34,6 +34,7 @@ import { FIGHT_HISTORY } from './fightHistory';
 import { getHistoricalTier } from './rankHistory';
 import { ROI_ENTRIES } from './roiData';
 import { CARD_INTEL } from './cardIntel';
+import { UPCOMING_CARD } from './upcomingCard';
 
 // _D2 imported from fightersData.js
 
@@ -2261,6 +2262,333 @@ const computeMatchupEdges = (fA, fB) => {
     v2pB: v2.pB,
   };
 };
+
+// Market/edge analysis for a matchup at given American odds. Returns null when
+// odds are unparseable (mirrors the manual-save path where no odds → null market).
+// Single source of truth shared by MatchupSimulator's market useMemo, the manual
+// savePrediction path, and the ROI "Sync Upcoming Card" batch import.
+const computeMarketAnalysis = (result, oddsA, oddsB, fA, fB) => {
+  const rawA = parseAmericanOdds(oddsA);
+  const rawB = parseAmericanOdds(oddsB);
+  if (!rawA || !rawB || !result) return null;
+
+  const { noVigA, noVigB, vig, overround } = stripVig(rawA, rawB);
+  const decA = americanToDecimal(oddsA);
+  const decB = americanToDecimal(oddsB);
+
+  const edgeA = result.pA - noVigA;
+  const edgeB = result.pB - noVigB;
+  const evA = decA ? calcExpectedValue(result.pA, decA) : 0;
+  const evB = decB ? calcExpectedValue(result.pB, decB) : 0;
+  const kellyA = decA ? kellyFraction(result.pA, decA) : 0;
+  const kellyB = decB ? kellyFraction(result.pB, decB) : 0;
+
+  // Break-even % at market odds
+  const breakEvenA = rawA;
+  const breakEvenB = rawB;
+
+  // Fair value line based on model probability
+  const fairLineA = americanOdds(result.pA);
+  const fairLineB = americanOdds(result.pB);
+
+  // Domain alignment: how many of the 6 real model domains favor the same fighter
+  const modelFavorsA = result.pA >= 0.5;
+  const domainKeys = [
+    'striking',
+    'grappling',
+    'physical',
+    'form',
+    'experience',
+    'analytics',
+  ];
+  const alignedDomains = domainKeys.filter((k) => {
+    const e = result.edges[k];
+    return modelFavorsA ? e.clamped > 0 : e.clamped < 0;
+  }).length;
+
+  // ── Step 1: Who does the model pick? (always the >50% fighter)
+  const pickSide = result.pA >= 0.5 ? 'A' : 'B';
+  const pickEdge = pickSide === 'A' ? edgeA : edgeB;
+  const oppEdge  = pickSide === 'A' ? edgeB : edgeA;
+
+  // ── Step 2: Classify signals
+  // CONFLICTING: model picks A but market underprices B.
+  // Betting the 'value' here means betting against your own model pick.
+  const hasPickEdge = pickEdge >= 0.03;
+  const conflictingSignals = !hasPickEdge && oppEdge >= 0.03;
+
+  // ── Step 3: Confidence — only meaningful when signals align
+  const avgCred = (fA.CREDIBILITY + fB.CREDIBILITY) / 200;
+  const edgeScore = hasPickEdge ? Math.min(40, pickEdge * 280) : 0;
+  const credScore = avgCred * 30;
+  const alignScore = alignedDomains * 5;
+  const betConfidence = Math.round(Math.max(0, edgeScore + credScore + alignScore));
+
+  // ── Step 4: Conviction gate + bet action ─────────────────────────────────
+  const pickProb = pickSide === 'A' ? result.pA : result.pB;
+  const lowConviction  = pickProb < 0.60;  // below hard floor — no bet zone
+  const midConviction  = pickProb < 0.65;  // low conviction tier
+
+  const betAction = (() => {
+    if (conflictingSignals) return 'NO BET';
+    if (!hasPickEdge) return 'NO BET';
+
+    // Hard floor — model unproven below 60%
+    if (pickProb < 0.60) return 'NO BET';
+
+    // Low conviction tier (60-64%) — cap at LEAN regardless of edge
+    if (pickProb < 0.65) {
+      if (pickEdge >= 0.10) return 'LEAN';
+      return 'NO BET';
+    }
+
+    // Mid conviction tier (65-69%)
+    if (pickProb < 0.70) {
+      if (pickEdge >= 0.30) return 'BET';
+      if (pickEdge >= 0.10) return 'LEAN';
+      return 'NO BET';
+    }
+
+    // High conviction tier (70%+)
+    if (pickEdge >= 0.25) return 'STRONG BET';
+    if (pickEdge >= 0.15) return 'BET';
+    return 'LEAN';
+  })();
+
+  const lowCredCap = (fA.CREDIBILITY ?? 0) < 30 || (fB.CREDIBILITY ?? 0) < 30;
+  const cappedBetAction =
+    lowCredCap && (betAction === 'STRONG BET' || betAction === 'BET')
+      ? 'LEAN'
+      : betAction;
+
+  // Heavy-favourite ceiling: if market implies >66.7% (odds shorter than -200),
+  // require edge >25pp or suppress to NO BET.
+  const pickRawOdds = pickSide === 'A' ? rawA : rawB;
+  const heavyFavSuppressed =
+    pickRawOdds > (2 / 3) &&
+    pickEdge < 0.25 &&
+    cappedBetAction !== 'NO BET';
+  const finalBetAction = heavyFavSuppressed ? 'NO BET' : cappedBetAction;
+
+  // ── Step 5: No-bet / lean reason for UI display ───────────────────────────
+  const noBetReason = (() => {
+    if (conflictingSignals) {
+      const oppFighter  = pickSide === 'A' ? fB.FIGHTER : fA.FIGHTER;
+      const pickFighter = pickSide === 'A' ? fA.FIGHTER : fB.FIGHTER;
+      return `Market underprices ${oppFighter} (+${(oppEdge * 100).toFixed(1)}pp edge) but model picks ${pickFighter} — conflicting signals`;
+    }
+    if (!hasPickEdge) return `No positive edge on model pick at current lines`;
+    if (lowConviction) return `Model pick is ${(pickProb * 100).toFixed(1)}% — below the 60% floor required for any bet recommendation.`;
+    if (heavyFavSuppressed) {
+      const pickFighter = pickSide === 'A' ? fA.FIGHTER : fB.FIGHTER;
+      return `${pickFighter} priced at ${Math.round(pickRawOdds * 100)}% implied — heavy-favourite ceiling requires edge >25pp (current: ${(pickEdge * 100).toFixed(1)}pp)`;
+    }
+    return `Edge below minimum threshold`;
+  })();
+
+  // betSide alias so downstream UI keeps working
+  const betSide = pickSide;
+
+  const gradeEdge = (edge) => {
+    const abs = Math.abs(edge);
+    if (abs >= 0.12)
+      return {
+        label: 'STRONG VALUE',
+        color: 'text-emerald-400',
+        bg: 'bg-emerald-900/30 border-emerald-700',
+      };
+    if (abs >= 0.06)
+      return {
+        label: 'VALUE',
+        color: 'text-emerald-400',
+        bg: 'bg-emerald-900/20 border-emerald-800',
+      };
+    if (abs >= 0.03)
+      return {
+        label: 'LEAN',
+        color: 'text-yellow-400',
+        bg: 'bg-yellow-900/20 border-yellow-800',
+      };
+    return {
+      label: 'NO EDGE',
+      color: 'text-slate-500',
+      bg: 'bg-slate-800/40 border-slate-700',
+    };
+  };
+
+  return {
+    rawA,
+    rawB,
+    noVigA,
+    noVigB,
+    vig,
+    overround,
+    edgeA,
+    edgeB,
+    evA,
+    evB,
+    kellyA,
+    kellyB,
+    breakEvenA,
+    breakEvenB,
+    fairLineA,
+    fairLineB,
+    betConfidence,
+    betAction: finalBetAction,
+    betSide,
+    alignedDomains,
+    gradeA:
+      edgeA > 0.02
+        ? gradeEdge(edgeA)
+        : {
+            label: edgeA < -0.05 ? 'FADE' : 'NO EDGE',
+            color: edgeA < -0.05 ? 'text-red-400' : 'text-slate-500',
+            bg:
+              edgeA < -0.05
+                ? 'bg-red-900/20 border-red-800'
+                : 'bg-slate-800/40 border-slate-700',
+          },
+    gradeB:
+      edgeB > 0.02
+        ? gradeEdge(edgeB)
+        : {
+            label: edgeB < -0.05 ? 'FADE' : 'NO EDGE',
+            color: edgeB < -0.05 ? 'text-red-400' : 'text-slate-500',
+            bg:
+              edgeB < -0.05
+                ? 'bg-red-900/20 border-red-800'
+                : 'bg-slate-800/40 border-slate-700',
+          },
+    // bestBet fires only when model pick and market value align
+    bestBet: cappedBetAction !== 'NO BET' ? pickSide : null,
+    pickSide,
+    pickProb,
+    lowConviction,
+    midConviction,
+    pickEdge,
+    oppEdge,
+    hasPickEdge,
+    conflictingSignals,
+    noBetReason,
+    lowCredCap,
+  };
+};
+
+// Assembles a complete ROI entry object with the exact shape consumed by the ROI
+// tab. Shared by the manual savePrediction path and the batch "Sync Upcoming Card"
+// import so auto-generated entries are field-for-field identical to manual saves.
+const buildRoiEntry = ({ fA, fB, oddsA, oddsB, eventName, eventDate }) => {
+  const result = computeMatchupEdges(fA, fB);
+  const market = computeMarketAnalysis(result, oddsA, oddsB, fA, fB);
+
+  const predictedWinner = result.pA >= result.pB ? fA.FIGHTER : fB.FIGHTER;
+  // Always track the model pick — not the value side.
+  const trackedSide = predictedWinner;
+  const trackedProb = trackedSide === fA.FIGHTER ? result.pA : result.pB;
+  const trackedOdds =
+    trackedSide === fA.FIGHTER
+      ? oddsA || ''
+      : trackedSide === fB.FIGHTER
+      ? oddsB || ''
+      : '';
+  const trackedEdge =
+    trackedSide === fA.FIGHTER
+      ? market?.edgeA ?? null
+      : trackedSide === fB.FIGHTER
+      ? market?.edgeB ?? null
+      : null;
+  const trackedEV =
+    trackedSide === fA.FIGHTER
+      ? market?.evA ?? null
+      : trackedSide === fB.FIGHTER
+      ? market?.evB ?? null
+      : null;
+  const trackedKelly =
+    trackedSide === fA.FIGHTER
+      ? market?.kellyA ?? null
+      : trackedSide === fB.FIGHTER
+      ? market?.kellyB ?? null
+      : null;
+  const trackedFairLine =
+    trackedSide === fA.FIGHTER
+      ? market?.fairLineA ?? null
+      : trackedSide === fB.FIGHTER
+      ? market?.fairLineB ?? null
+      : null;
+  const betRecommendedFighter =
+    market?.bestBet === 'A'
+      ? fA.FIGHTER
+      : market?.bestBet === 'B'
+      ? fB.FIGHTER
+      : '';
+
+  const betRecommendedOdds =
+    market?.bestBet === 'A'
+      ? oddsA || ''
+      : market?.bestBet === 'B'
+      ? oddsB || ''
+      : '';
+
+  const intelKey = [fA.FIGHTER, fB.FIGHTER].sort().join(' vs. ');
+  const intel = CARD_INTEL[intelKey] || null;
+
+  return {
+    id: createPredictionId(),
+    createdAt: new Date().toISOString(),
+    eventName,
+    eventDate,
+    fighterA: fA.FIGHTER,
+    fighterB: fB.FIGHTER,
+    fighterAIsProspect: !!fA.IS_PROSPECT,
+    fighterBIsProspect: !!fB.IS_PROSPECT,
+    includesProspect: !!fA.IS_PROSPECT || !!fB.IS_PROSPECT,
+    division:
+      fA.WEIGHT_CLASS === fB.WEIGHT_CLASS
+        ? fA.WEIGHT_CLASS
+        : `${fA.WEIGHT_CLASS} / ${fB.WEIGHT_CLASS}`,
+    fighterAProb: result.pA,
+    fighterBProb: result.pB,
+    predictedWinner,
+    predictedProb: predictedWinner === fA.FIGHTER ? result.pA : result.pB,
+    trackedSide,
+    trackedProb,
+    betAction: market?.betAction ?? 'NO BET',
+    bestBet: market?.bestBet ?? null,
+    betRecommendedFighter,
+    betRecommendedOdds,
+    marketOdds: trackedOdds,
+    edge: trackedEdge,
+    edgeA: market?.edgeA ?? null,
+    edgeB: market?.edgeB ?? null,
+    ev: trackedEV,
+    evA: market?.evA ?? null,
+    evB: market?.evB ?? null,
+    kelly: trackedKelly,
+    kellyA: market?.kellyA ?? null,
+    kellyB: market?.kellyB ?? null,
+    fairLine: trackedFairLine,
+    fairLineA: market?.fairLineA ?? null,
+    fairLineB: market?.fairLineB ?? null,
+    oddsA,
+    oddsB,
+    v2pA: result.v2pA ?? null,
+    v2pB: result.v2pB ?? null,
+    ...(() => {
+      const { ko, sub, dec } = computeFinishProbs(fA, fB);
+      return {
+        projectedKO: ko,
+        projectedSUB: sub,
+        projectedDEC: dec,
+        projectedFinish: getProjectedFinishLabel({ ko, sub, dec }),
+      };
+    })(),
+    actualWinner: '',
+    actualFinish: '',
+    notes: '',
+    intelFlags: intel ? intel.flags : [],
+    intelInjuries: intel ? intel.injuries : [],
+  };
+};
 // ─── HEADER ───────────────────────────────────────────────────────────────────
 function Header({ view, setView }) {
   const tabs = [
@@ -3410,325 +3738,24 @@ function MatchupSimulator({ allFighters, onSavePrediction, onOpenROI }) {
     return computeMatchupEdges(fA, fB);
   }, [fA, fB]);
 
-  const market = useMemo(() => {
-    const rawA = parseAmericanOdds(oddsA);
-    const rawB = parseAmericanOdds(oddsB);
-    if (!rawA || !rawB || !result) return null;
-
-    const { noVigA, noVigB, vig, overround } = stripVig(rawA, rawB);
-    const decA = americanToDecimal(oddsA);
-    const decB = americanToDecimal(oddsB);
-
-    const edgeA = result.pA - noVigA;
-    const edgeB = result.pB - noVigB;
-    const evA = decA ? calcExpectedValue(result.pA, decA) : 0;
-    const evB = decB ? calcExpectedValue(result.pB, decB) : 0;
-    const kellyA = decA ? kellyFraction(result.pA, decA) : 0;
-    const kellyB = decB ? kellyFraction(result.pB, decB) : 0;
-
-    // Break-even % at market odds
-    const breakEvenA = rawA;
-    const breakEvenB = rawB;
-
-    // Fair value line based on model probability
-    const fairLineA = americanOdds(result.pA);
-    const fairLineB = americanOdds(result.pB);
-
-    // Domain alignment: how many of the 6 real model domains favor the same fighter
-    const modelFavorsA = result.pA >= 0.5;
-    const domainKeys = [
-      'striking',
-      'grappling',
-      'physical',
-      'form',
-      'experience',
-      'analytics',
-    ];
-    const alignedDomains = domainKeys.filter((k) => {
-      const e = result.edges[k];
-      return modelFavorsA ? e.clamped > 0 : e.clamped < 0;
-    }).length;
-
-    // ── Step 1: Who does the model pick? (always the >50% fighter)
-    const pickSide = result.pA >= 0.5 ? 'A' : 'B';
-    const pickEdge = pickSide === 'A' ? edgeA : edgeB;
-    const oppEdge  = pickSide === 'A' ? edgeB : edgeA;
-
-    // ── Step 2: Classify signals
-    // CONFLICTING: model picks A but market underprices B.
-    // Betting the 'value' here means betting against your own model pick.
-    const hasPickEdge = pickEdge >= 0.03;
-    const conflictingSignals = !hasPickEdge && oppEdge >= 0.03;
-
-    // ── Step 3: Confidence — only meaningful when signals align
-    const avgCred = (fA.CREDIBILITY + fB.CREDIBILITY) / 200;
-    const edgeScore = hasPickEdge ? Math.min(40, pickEdge * 280) : 0;
-    const credScore = avgCred * 30;
-    const alignScore = alignedDomains * 5;
-    const betConfidence = Math.round(Math.max(0, edgeScore + credScore + alignScore));
-
-    // ── Step 4: Conviction gate + bet action ─────────────────────────────────
-    const pickProb = pickSide === 'A' ? result.pA : result.pB;
-    const lowConviction  = pickProb < 0.60;  // below hard floor — no bet zone
-    const midConviction  = pickProb < 0.65;  // low conviction tier
-
-    const betAction = (() => {
-      if (conflictingSignals) return 'NO BET';
-      if (!hasPickEdge) return 'NO BET';
-
-      // Hard floor — model unproven below 60%
-      if (pickProb < 0.60) return 'NO BET';
-
-      // Low conviction tier (60-64%) — cap at LEAN regardless of edge
-      if (pickProb < 0.65) {
-        if (pickEdge >= 0.10) return 'LEAN';
-        return 'NO BET';
-      }
-
-      // Mid conviction tier (65-69%)
-      if (pickProb < 0.70) {
-        if (pickEdge >= 0.30) return 'BET';
-        if (pickEdge >= 0.10) return 'LEAN';
-        return 'NO BET';
-      }
-
-      // High conviction tier (70%+)
-      if (pickEdge >= 0.25) return 'STRONG BET';
-      if (pickEdge >= 0.15) return 'BET';
-      return 'LEAN';
-    })();
-
-    const lowCredCap = (fA.CREDIBILITY ?? 0) < 30 || (fB.CREDIBILITY ?? 0) < 30;
-    const cappedBetAction =
-      lowCredCap && (betAction === 'STRONG BET' || betAction === 'BET')
-        ? 'LEAN'
-        : betAction;
-
-    // Heavy-favourite ceiling: if market implies >66.7% (odds shorter than -200),
-    // require edge >25pp or suppress to NO BET.
-    const pickRawOdds = pickSide === 'A' ? rawA : rawB;
-    const heavyFavSuppressed =
-      pickRawOdds > (2 / 3) &&
-      pickEdge < 0.25 &&
-      cappedBetAction !== 'NO BET';
-    const finalBetAction = heavyFavSuppressed ? 'NO BET' : cappedBetAction;
-
-    // ── Step 5: No-bet / lean reason for UI display ───────────────────────────
-    const noBetReason = (() => {
-      if (conflictingSignals) {
-        const oppFighter  = pickSide === 'A' ? fB.FIGHTER : fA.FIGHTER;
-        const pickFighter = pickSide === 'A' ? fA.FIGHTER : fB.FIGHTER;
-        return `Market underprices ${oppFighter} (+${(oppEdge * 100).toFixed(1)}pp edge) but model picks ${pickFighter} — conflicting signals`;
-      }
-      if (!hasPickEdge) return `No positive edge on model pick at current lines`;
-      if (lowConviction) return `Model pick is ${(pickProb * 100).toFixed(1)}% — below the 60% floor required for any bet recommendation.`;
-      if (heavyFavSuppressed) {
-        const pickFighter = pickSide === 'A' ? fA.FIGHTER : fB.FIGHTER;
-        return `${pickFighter} priced at ${Math.round(pickRawOdds * 100)}% implied — heavy-favourite ceiling requires edge >25pp (current: ${(pickEdge * 100).toFixed(1)}pp)`;
-      }
-      return `Edge below minimum threshold`;
-    })();
-
-    // betSide alias so downstream UI keeps working
-    const betSide = pickSide;
-
-    const gradeEdge = (edge) => {
-      const abs = Math.abs(edge);
-      if (abs >= 0.12)
-        return {
-          label: 'STRONG VALUE',
-          color: 'text-emerald-400',
-          bg: 'bg-emerald-900/30 border-emerald-700',
-        };
-      if (abs >= 0.06)
-        return {
-          label: 'VALUE',
-          color: 'text-emerald-400',
-          bg: 'bg-emerald-900/20 border-emerald-800',
-        };
-      if (abs >= 0.03)
-        return {
-          label: 'LEAN',
-          color: 'text-yellow-400',
-          bg: 'bg-yellow-900/20 border-yellow-800',
-        };
-      return {
-        label: 'NO EDGE',
-        color: 'text-slate-500',
-        bg: 'bg-slate-800/40 border-slate-700',
-      };
-    };
-
-    return {
-      rawA,
-      rawB,
-      noVigA,
-      noVigB,
-      vig,
-      overround,
-      edgeA,
-      edgeB,
-      evA,
-      evB,
-      kellyA,
-      kellyB,
-      breakEvenA,
-      breakEvenB,
-      fairLineA,
-      fairLineB,
-      betConfidence,
-      betAction: finalBetAction,
-      betSide,
-      alignedDomains,
-      gradeA:
-        edgeA > 0.02
-          ? gradeEdge(edgeA)
-          : {
-              label: edgeA < -0.05 ? 'FADE' : 'NO EDGE',
-              color: edgeA < -0.05 ? 'text-red-400' : 'text-slate-500',
-              bg:
-                edgeA < -0.05
-                  ? 'bg-red-900/20 border-red-800'
-                  : 'bg-slate-800/40 border-slate-700',
-            },
-      gradeB:
-        edgeB > 0.02
-          ? gradeEdge(edgeB)
-          : {
-              label: edgeB < -0.05 ? 'FADE' : 'NO EDGE',
-              color: edgeB < -0.05 ? 'text-red-400' : 'text-slate-500',
-              bg:
-                edgeB < -0.05
-                  ? 'bg-red-900/20 border-red-800'
-                  : 'bg-slate-800/40 border-slate-700',
-            },
-      // bestBet fires only when model pick and market value align
-      bestBet: cappedBetAction !== 'NO BET' ? pickSide : null,
-      pickSide,
-      pickProb,
-      lowConviction,
-      midConviction,
-      pickEdge,
-      oppEdge,
-      hasPickEdge,
-      conflictingSignals,
-      noBetReason,
-      lowCredCap,
-    };
-  }, [oddsA, oddsB, result, fA, fB]);
+  const market = useMemo(
+    () => computeMarketAnalysis(result, oddsA, oddsB, fA, fB),
+    [oddsA, oddsB, result, fA, fB]
+  );
 
   const savePrediction = (openROI = false) => {
     if (!fA || !fB || !result) return;
 
-    const predictedWinner = result.pA >= result.pB ? fA.FIGHTER : fB.FIGHTER;
-    // Always track the model pick — not the value side.
-    // 'Tracked side' answers: was the model correct? Bet recommendations
-    // are separate (only fire when pick and value agree).
-    const trackedSide = predictedWinner;
-    const trackedProb = trackedSide === fA.FIGHTER ? result.pA : result.pB;
-    const trackedOdds =
-      trackedSide === fA.FIGHTER
-        ? oddsA || ''
-        : trackedSide === fB.FIGHTER
-        ? oddsB || ''
-        : '';
-    const trackedEdge =
-      trackedSide === fA.FIGHTER
-        ? market?.edgeA ?? null
-        : trackedSide === fB.FIGHTER
-        ? market?.edgeB ?? null
-        : null;
-    const trackedEV =
-      trackedSide === fA.FIGHTER
-        ? market?.evA ?? null
-        : trackedSide === fB.FIGHTER
-        ? market?.evB ?? null
-        : null;
-    const trackedKelly =
-      trackedSide === fA.FIGHTER
-        ? market?.kellyA ?? null
-        : trackedSide === fB.FIGHTER
-        ? market?.kellyB ?? null
-        : null;
-    const trackedFairLine =
-      trackedSide === fA.FIGHTER
-        ? market?.fairLineA ?? null
-        : trackedSide === fB.FIGHTER
-        ? market?.fairLineB ?? null
-        : null;
-    const betRecommendedFighter =
-      market?.bestBet === 'A'
-        ? fA.FIGHTER
-        : market?.bestBet === 'B'
-        ? fB.FIGHTER
-        : '';
-
-    const betRecommendedOdds =
-      market?.bestBet === 'A'
-        ? oddsA || ''
-        : market?.bestBet === 'B'
-        ? oddsB || ''
-        : '';
-
-    const intelKey = [fA.FIGHTER, fB.FIGHTER].sort().join(' vs. ');
-    const intel = CARD_INTEL[intelKey] || null;
-
-    onSavePrediction?.({
-      id: createPredictionId(),
-      createdAt: new Date().toISOString(),
-      eventName: eventName.trim(),
-      eventDate,
-      fighterA: fA.FIGHTER,
-      fighterB: fB.FIGHTER,
-      fighterAIsProspect: !!fA.IS_PROSPECT,
-      fighterBIsProspect: !!fB.IS_PROSPECT,
-      includesProspect: !!fA.IS_PROSPECT || !!fB.IS_PROSPECT,
-      division:
-        fA.WEIGHT_CLASS === fB.WEIGHT_CLASS
-          ? fA.WEIGHT_CLASS
-          : `${fA.WEIGHT_CLASS} / ${fB.WEIGHT_CLASS}`,
-      fighterAProb: result.pA,
-      fighterBProb: result.pB,
-      predictedWinner,
-      predictedProb: predictedWinner === fA.FIGHTER ? result.pA : result.pB,
-      trackedSide,
-      trackedProb,
-      betAction: market?.betAction ?? 'NO BET',
-      bestBet: market?.bestBet ?? null,
-      betRecommendedFighter,
-      betRecommendedOdds,
-      marketOdds: trackedOdds,
-      edge: trackedEdge,
-      edgeA: market?.edgeA ?? null,
-      edgeB: market?.edgeB ?? null,
-      ev: trackedEV,
-      evA: market?.evA ?? null,
-      evB: market?.evB ?? null,
-      kelly: trackedKelly,
-      kellyA: market?.kellyA ?? null,
-      kellyB: market?.kellyB ?? null,
-      fairLine: trackedFairLine,
-      fairLineA: market?.fairLineA ?? null,
-      fairLineB: market?.fairLineB ?? null,
-      oddsA,
-      oddsB,
-      v2pA: result.v2pA ?? null,
-      v2pB: result.v2pB ?? null,
-      ...(() => {
-        const { ko, sub, dec } = computeFinishProbs(fA, fB);
-        return {
-          projectedKO: ko,
-          projectedSUB: sub,
-          projectedDEC: dec,
-          projectedFinish: getProjectedFinishLabel({ ko, sub, dec }),
-        };
-      })(),
-      actualWinner: '',
-      actualFinish: '',
-      notes: '',
-      intelFlags: intel ? intel.flags : [],
-      intelInjuries: intel ? intel.injuries : [],
-    });
+    onSavePrediction?.(
+      buildRoiEntry({
+        fA,
+        fB,
+        oddsA,
+        oddsB,
+        eventName: eventName.trim(),
+        eventDate,
+      })
+    );
 
     setSaveFeedback(
       openROI ? 'Saved and opened ROI tracker.' : 'Saved to ROI tracker.'
@@ -6309,6 +6336,47 @@ export default function App() {
     setRoiEntries([]);
   };
 
+  // Batch-import every non-debut fight from UPCOMING_CARD that isn't already
+  // tracked. Entries are built via the shared buildRoiEntry helper so they are
+  // field-for-field identical to manually-saved Simulator predictions.
+  const handleSyncUpcomingCard = () => {
+    const existingPairs = new Set(
+      roiEntries.map((e) => [e.fighterA, e.fighterB].sort().join('|'))
+    );
+
+    const newEntries = [];
+
+    UPCOMING_CARD.forEach((card) => {
+      if (card.debutFighter) return; // skip debuts
+
+      const pairKey = [card.fighterA, card.fighterB].sort().join('|');
+      if (existingPairs.has(pairKey)) return; // skip already-saved fights
+
+      const fA = fightersWithProspectsFiltered.find((f) => f.FIGHTER === card.fighterA);
+      const fB = fightersWithProspectsFiltered.find((f) => f.FIGHTER === card.fighterB);
+      if (!fA || !fB) {
+        console.warn(
+          `[SYNC] Could not find roster match for ${card.fighterA} or ${card.fighterB} — skipping`
+        );
+        return;
+      }
+
+      newEntries.push(
+        buildRoiEntry({
+          fA,
+          fB,
+          oddsA: card.oddsA ?? '',
+          oddsB: card.oddsB ?? '',
+          eventName: card.eventName ?? '',
+          eventDate: card.date ?? '',
+        })
+      );
+    });
+
+    setRoiEntries((prev) => [...newEntries, ...prev]);
+    return newEntries.length;
+  };
+
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 font-sans">
       <Header view={view} setView={setView} />
@@ -6331,6 +6399,7 @@ export default function App() {
           onUpdateEntry={handleUpdateROIEntry}
           onDeleteEntry={handleDeleteROIEntry}
           onClearEntries={handleClearROI}
+          onSyncUpcomingCard={handleSyncUpcomingCard}
           allFighters={fightersWithProspectsFiltered}
           filterSince={filterSince}
           setFilterSince={setFilterSince}
@@ -6720,10 +6789,12 @@ function ROITab({
   onUpdateEntry,
   onDeleteEntry,
   onClearEntries,
+  onSyncUpcomingCard,
   allFighters,
   filterSince,
   setFilterSince,
 }) {
+  const [syncFeedback, setSyncFeedback] = useState('');
   const exportedCode = `export const ROI_ENTRIES = ${JSON.stringify(
     entries,
     null,
@@ -6959,8 +7030,24 @@ function ROITab({
             stake profit plus pick accuracy.
           </p>
         </div>
-        {entries.length > 0 && (
-          <div className="flex gap-2">
+        <div className="flex items-center gap-2">
+          {syncFeedback && (
+            <span className="text-emerald-400 text-xs font-semibold">{syncFeedback}</span>
+          )}
+          <button
+            onClick={() => {
+              const n = onSyncUpcomingCard?.();
+              setSyncFeedback(
+                n > 0 ? `Added ${n} new fight${n === 1 ? '' : 's'}` : 'No new fights to add'
+              );
+              setTimeout(() => setSyncFeedback(''), 4000);
+            }}
+            className="px-3 py-2 rounded-lg border border-red-700 text-red-300 text-xs font-semibold hover:text-white hover:border-red-500 transition-colors"
+          >
+            Sync Upcoming Card
+          </button>
+          {entries.length > 0 && (
+            <>
             <button
               onClick={() => navigator.clipboard.writeText(exportedCode)}
               className="px-3 py-2 rounded-lg border border-slate-700 text-slate-300 text-xs font-semibold hover:text-white hover:border-slate-600 transition-colors"
@@ -7003,8 +7090,9 @@ function ROITab({
             >
               Clear All
             </button>
-          </div>
-        )}
+            </>
+          )}
+        </div>
       </div>
 
       {entries.length > 0 && (
