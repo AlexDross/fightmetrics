@@ -28,7 +28,7 @@ jobs:
       - name: Generate upcoming card from TheRundown API
         run: python generate_upcoming_card.py
         env:
-          THERUNDOWN_API_KEY: ${{ secrets.THERUNDOWN_API_KEY }}
+          THERUNDOWN_API_KEY: ${{ secrets.ODDS_API_KEY }}
 
       - name: Generate card intel (news, flags, odds history)
         run: python generate_card_intel.py
