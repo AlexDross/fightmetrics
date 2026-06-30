@@ -83,6 +83,29 @@ def match_name(raw_name, roster_names):
             best_match = candidates[0]
     if best_match is not None:
         return best_match, True
+
+    # Fallback: last-name exact + first-name prefix (catches "Zach" → "Zachary", etc.)
+    # without lowering the global cutoff and risking false positives on similar surnames.
+    raw_parts = raw_name.split()
+    if len(raw_parts) >= 2:
+        raw_last = raw_parts[-1].lower()
+        raw_first = " ".join(raw_parts[:-1]).lower()
+        prefix_candidates = []
+        for roster_name in roster_names:
+            r_parts = roster_name.split()
+            if len(r_parts) < 2:
+                continue
+            r_last = r_parts[-1].lower()
+            r_first = " ".join(r_parts[:-1]).lower()
+            if r_last != raw_last:
+                continue
+            if r_first.startswith(raw_first) or raw_first.startswith(r_first):
+                score = difflib.SequenceMatcher(None, raw_name.lower(), roster_name.lower()).ratio()
+                prefix_candidates.append((score, roster_name))
+        if prefix_candidates:
+            prefix_candidates.sort(reverse=True)
+            return prefix_candidates[0][1], True
+
     return raw_name, False
 
 
