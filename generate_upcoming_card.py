@@ -69,6 +69,32 @@ def name_variants(raw_name):
     return unique
 
 
+def _looks_like_false_positive(raw_name, match, score):
+    """
+    Reject weak fuzzy matches that share only a first name with a completely
+    different surname (e.g. 'Ryan Gandra' -> 'Ryan Bader'). A strong score
+    (diacritics, suffixes like 'III', reordering) is trusted; only the
+    0.75-0.85 band where the surname is unrelated is treated as a wrong person.
+    """
+    if score >= 0.85:
+        return False
+    raw_tokens = raw_name.lower().split()
+    match_tokens = match.lower().split()
+    if len(raw_tokens) < 2 or len(match_tokens) < 2:
+        return False
+    # Heuristic only applies when the first names align (the shared token).
+    if raw_tokens[0] != match_tokens[0]:
+        return False
+    # If any token beyond the first name is strongly similar, it's the same
+    # person (e.g. 'Kai Kamaka III' vs 'Kai Kamaka' share 'Kamaka').
+    for rt in raw_tokens[1:]:
+        for mt in match_tokens[1:]:
+            if difflib.SequenceMatcher(None, rt, mt).ratio() > 0.8:
+                return False
+    # Same first name, no other shared token -> almost certainly a different fighter.
+    return True
+
+
 def match_name(raw_name, roster_names):
     best_match, best_score = None, 0.0
     for variant in name_variants(raw_name):
@@ -81,7 +107,7 @@ def match_name(raw_name, roster_names):
         if score > best_score:
             best_score = score
             best_match = candidates[0]
-    if best_match is not None:
+    if best_match is not None and not _looks_like_false_positive(raw_name, best_match, best_score):
         return best_match, True
 
     # Fallback: last-name exact + first-name prefix (catches "Zach" → "Zachary", etc.)
@@ -484,6 +510,44 @@ def fuzzy_find_rundown_match(raw_a, raw_b, rundown_events):
     return best_result
 
 
+def _name_ratio(a, b):
+    """Similarity that tolerates token reordering (e.g. 'Cong Wang' vs 'Wang Cong')."""
+    a, b = a.lower().strip(), b.lower().strip()
+    direct = difflib.SequenceMatcher(None, a, b).ratio()
+    swapped = difflib.SequenceMatcher(
+        None, " ".join(sorted(a.split())), " ".join(sorted(b.split()))
+    ).ratio()
+    return max(direct, swapped)
+
+
+def fuzzy_find_canonical_match(td_a, td_b, canonical_fights):
+    """
+    Find the Wikipedia canonical fight that best matches a TheRundown pair.
+    Returns (canonical_fight_dict, wiki_name_a, wiki_name_b) aligned so wiki_name_a
+    corresponds to td_a, or None if no confident match.
+    """
+    best_score, best_result = 0.0, None
+
+    for fight in canonical_fights:
+        wa, wb = fight["rawA"], fight["rawB"]
+        for (a_cand, b_cand) in [(wa, wb), (wb, wa)]:
+            score_a = _name_ratio(td_a, a_cand)
+            score_b = _name_ratio(td_b, b_cand)
+            combined = (score_a + score_b) / 2
+            if combined > best_score and score_a > 0.5 and score_b > 0.5:
+                best_score = combined
+                best_result = (fight, a_cand, b_cand)
+
+    return best_result
+
+
+def is_placeholder_name(name):
+    """True for TBA / TBD / 'Opponent TBA' style placeholders that aren't real fighters."""
+    if not name or not name.strip():
+        return True
+    return bool(re.search(r"\b(tba|tbd|opponent\s+tba)\b", name, re.IGNORECASE))
+
+
 # ---------------------------------------------------------------------------
 # Part E — Write output
 # ---------------------------------------------------------------------------
@@ -561,20 +625,43 @@ def main():
     debut_fighters = []
 
     if wiki_ok:
-        # Two-source: canonical fights from Wikipedia, odds joined from TheRundown
-        td_matched_ids = set()
+        # UNION strategy: TheRundown is the PRIMARY candidate source (it has the full
+        # card once books post lines); Wikipedia VALIDATES naming and SUPPLEMENTS with
+        # fights the books haven't posted yet. Wikipedia incompleteness must never drop
+        # a real fight.
+        used_canonical = set()  # id() of canonical_fights consumed by a TD match
+        td_not_on_wiki = []     # TD fights with no Wikipedia match (added, not dropped)
 
-        for fight in canonical_fights:
-            raw_a, raw_b = fight["rawA"], fight["rawB"]
+        # --- Pass 1: every TheRundown fight is kept ---
+        for ev in td_filtered:
+            teams = ev.get("teams", [])
+            if len(teams) < 2:
+                continue
+            td_a = teams[0].get("name", "").strip()
+            td_b = teams[1].get("name", "").strip()
+            if not td_a or not td_b:
+                continue
+            if is_placeholder_name(td_a) or is_placeholder_name(td_b):
+                print(f"[SKIP] Placeholder fight: {td_a} vs {td_b}")
+                continue
 
-            # Step B: roster matching
-            fighter_a, matched_a = match_name(raw_a, roster_names)
-            fighter_b, matched_b = match_name(raw_b, roster_names)
+            # Cross-reference Wikipedia: prefer its spelling on a confident match
+            canon = fuzzy_find_canonical_match(td_a, td_b, canonical_fights)
+            if canon is not None:
+                cfight, wiki_a, wiki_b = canon
+                used_canonical.add(id(cfight))
+                name_a, name_b = wiki_a, wiki_b  # Wikipedia naming wins on conflict
+            else:
+                name_a, name_b = td_a, td_b
+                td_not_on_wiki.append(f"{td_a} vs {td_b}")
 
+            # Step B: roster matching (on the preferred names)
+            fighter_a, matched_a = match_name(name_a, roster_names)
+            fighter_b, matched_b = match_name(name_b, roster_names)
             if not matched_a:
-                print(f"[WARN] No roster match for '{raw_a}' — using raw name")
+                print(f"[WARN] No roster match for '{name_a}' — using raw name")
             if not matched_b:
-                print(f"[WARN] No roster match for '{raw_b}' — using raw name")
+                print(f"[WARN] No roster match for '{name_b}' — using raw name")
 
             # Step C: debut detection
             debut_a = is_debut(fighter_a, matched_a, roster_by_name)
@@ -583,17 +670,14 @@ def main():
             if debut:
                 debut_fighters.append(f"{fighter_a} vs {fighter_b}")
 
-            # Step D: join odds from TheRundown
-            td_ev, td_name_a, td_name_b = fuzzy_find_rundown_match(raw_a, raw_b, td_filtered)
-            odds_a, odds_b = None, None
-            if td_ev is not None:
-                raw_odds_a, raw_odds_b = extract_odds(td_ev, td_name_a, td_name_b)
-                odds_a = format_american(raw_odds_a)
-                odds_b = format_american(raw_odds_b)
+            # Step D: odds from this TheRundown event (extract by TD's own names)
+            raw_odds_a, raw_odds_b = extract_odds(ev, td_a, td_b)
+            odds_a = format_american(raw_odds_a)
+            odds_b = format_american(raw_odds_b)
+            if odds_a or odds_b:
                 matched_odds_count += 1
-                td_matched_ids.add(td_ev.get("event_id"))
             else:
-                unmatched_odds.append(f"{raw_a} vs {raw_b}")
+                unmatched_odds.append(f"{fighter_a} vs {fighter_b}")
 
             card.append({
                 "fighterA": fighter_a,
@@ -604,16 +688,43 @@ def main():
                 "eventName": event_name,
                 "debutFighter": debut,
             })
-            status = f"odds={odds_a}/{odds_b}" if odds_a else "no odds"
-            print(f"[OK] {fighter_a} vs {fighter_b} — {status}")
+            status = f"odds={odds_a}/{odds_b}" if (odds_a or odds_b) else "no odds"
+            src = "wiki-named" if canon is not None else "TD-only"
+            print(f"[OK] {fighter_a} vs {fighter_b} — {status} ({src})")
 
-        # Report TheRundown fights that didn't match any canonical fight
-        unmatched_td = []
-        for ev in td_filtered:
-            if ev.get("event_id") not in td_matched_ids:
-                teams = ev.get("teams", [])
-                names = [t.get("name", "") for t in teams]
-                unmatched_td.append(" vs ".join(names))
+        # --- Pass 2: Wikipedia-only fights (not in TheRundown) — add without odds ---
+        for cfight in canonical_fights:
+            if id(cfight) in used_canonical:
+                continue
+            raw_a, raw_b = cfight["rawA"], cfight["rawB"]
+            if is_placeholder_name(raw_a) or is_placeholder_name(raw_b):
+                print(f"[SKIP] Placeholder fight (wiki-only): {raw_a} vs {raw_b}")
+                continue
+
+            fighter_a, matched_a = match_name(raw_a, roster_names)
+            fighter_b, matched_b = match_name(raw_b, roster_names)
+            if not matched_a:
+                print(f"[WARN] No roster match for '{raw_a}' — using raw name")
+            if not matched_b:
+                print(f"[WARN] No roster match for '{raw_b}' — using raw name")
+
+            debut_a = is_debut(fighter_a, matched_a, roster_by_name)
+            debut_b = is_debut(fighter_b, matched_b, roster_by_name)
+            debut = debut_a or debut_b
+            if debut:
+                debut_fighters.append(f"{fighter_a} vs {fighter_b}")
+
+            unmatched_odds.append(f"{fighter_a} vs {fighter_b}")
+            card.append({
+                "fighterA": fighter_a,
+                "fighterB": fighter_b,
+                "oddsA": None,
+                "oddsB": None,
+                "date": event_date,
+                "eventName": event_name,
+                "debutFighter": debut,
+            })
+            print(f"[OK] {fighter_a} vs {fighter_b} — no odds (wiki-only, not yet on TD)")
 
     else:
         # Fallback: build card entirely from TheRundown (legacy behavior)
@@ -668,7 +779,7 @@ def main():
 
         if event_date is None:
             event_date = event_date_from_td
-        unmatched_td = []
+        td_not_on_wiki = []
 
     # Deduplicate on (fighterA, fighterB) pair
     seen_pairs, deduped = set(), []
@@ -694,9 +805,9 @@ def main():
         print(f"Missing odds ({len(unmatched_odds)}):")
         for f in unmatched_odds:
             print(f"  - {f}")
-    if wiki_ok and unmatched_td:
-        print(f"TheRundown fights NOT on canonical card ({len(unmatched_td)}) — dropped:")
-        for f in unmatched_td:
+    if wiki_ok and td_not_on_wiki:
+        print(f"TheRundown fights not found on Wikipedia ({len(td_not_on_wiki)}) — added using TheRundown names:")
+        for f in td_not_on_wiki:
             print(f"  - {f}")
     if debut_fighters:
         print(f"Debut fighters ({len(debut_fighters)}):")
