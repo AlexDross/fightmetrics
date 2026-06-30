@@ -46,6 +46,11 @@ jobs:
         env:
           THERUNDOWN_API_KEY: ${{ secrets.THERUNDOWN_API_KEY }}
 
+      - name: Generate card intel (news, flags, odds history)
+        run: python generate_card_intel.py
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+
       - name: Regenerate eloModule.js
         run: python regen_elo.py
 
@@ -53,7 +58,7 @@ jobs:
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add src/fightersData.js src/fightHistory.js src/eloModule.js src/cardioModule.js src/upcomingCard.js
+          git add src/fightersData.js src/fightHistory.js src/eloModule.js src/cardioModule.js src/upcomingCard.js src/cardIntel.js
           if git diff --staged --quiet; then
             echo "No changes — skipping commit"
           else

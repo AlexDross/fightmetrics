@@ -33,6 +33,7 @@ import { CARDIO_RATIOS } from './cardioModule';
 import { FIGHT_HISTORY } from './fightHistory';
 import { getHistoricalTier } from './rankHistory';
 import { ROI_ENTRIES } from './roiData';
+import { CARD_INTEL } from './cardIntel';
 
 // _D2 imported from fightersData.js
 
@@ -3669,6 +3670,9 @@ function MatchupSimulator({ allFighters, onSavePrediction, onOpenROI }) {
         ? oddsB || ''
         : '';
 
+    const intelKey = [fA.FIGHTER, fB.FIGHTER].sort().join(' vs. ');
+    const intel = CARD_INTEL[intelKey] || null;
+
     onSavePrediction?.({
       id: createPredictionId(),
       createdAt: new Date().toISOString(),
@@ -3722,6 +3726,8 @@ function MatchupSimulator({ allFighters, onSavePrediction, onOpenROI }) {
       actualWinner: '',
       actualFinish: '',
       notes: '',
+      intelFlags: intel ? intel.flags : [],
+      intelInjuries: intel ? intel.injuries : [],
     });
 
     setSaveFeedback(
@@ -3831,6 +3837,35 @@ function MatchupSimulator({ allFighters, onSavePrediction, onOpenROI }) {
 
       {result && fA && fB ? (
         <div className="space-y-4">
+          {/* Fight Intel Alerts */}
+          {(() => {
+            const key = [fA.FIGHTER, fB.FIGHTER].sort().join(' vs. ');
+            const intel = CARD_INTEL[key];
+            if (!intel || (intel.flags.length === 0 && intel.injuries.length === 0)) return null;
+            const severityColor = (s) => s === 'high' ? '#ef4444' : s === 'medium' ? '#f59e0b' : '#6b7280';
+            const typeIcon = (t) => ({ INJURY: '🩹', TRAVEL: '✈️', SHORT_NOTICE: '⚡', WEIGHT: '⚖️', CAMP_CHANGE: '🏋️', SUSPENSION: '🚫' })[t] || '⚠️';
+            return (
+              <div style={{ margin: '12px 0', padding: '12px', borderRadius: '8px', background: '#1a1a2e', border: '1px solid #333' }}>
+                <div style={{ fontSize: '11px', fontWeight: 600, color: '#888', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  ⚠️ Fight Week Intel
+                </div>
+                {intel.flags.map((flag, i) => (
+                  <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginBottom: '6px', fontSize: '12px' }}>
+                    <span>{typeIcon(flag.type)}</span>
+                    <span style={{ color: severityColor(flag.severity), fontWeight: 500 }}>{flag.type}</span>
+                    <span style={{ color: '#ccc' }}>{flag.text}</span>
+                  </div>
+                ))}
+                {intel.injuries.map((inj, i) => (
+                  <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginBottom: '6px', fontSize: '12px' }}>
+                    <span>🩹</span>
+                    <span style={{ color: '#f59e0b', fontWeight: 500 }}>INJURY</span>
+                    <span style={{ color: '#ccc' }}>{inj}</span>
+                  </div>
+                ))}
+              </div>
+            );
+          })()}
           {/* ── SECTION 1: THE VERDICT ── */}
           {(() => {
             const activePA = modelToggle === 'v2' && result.v2pA != null ? result.v2pA : result.pA;
