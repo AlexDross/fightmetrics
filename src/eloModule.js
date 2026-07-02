@@ -1,5 +1,5 @@
 // ─── ELO RATINGS ──────────────────────────────────────────────────────────────
-// Computed from 8,547 UFC fights (full history through Jun 2026)
+// Computed from 8,547 UFC fights (full history through Jul 2026)
 // K-factor weighted by finish method and round; early-fighter K inflated
 // Format: { fighterName: { elo, peak, n } }
 // elo = current rating · peak = highest ever · n = UFC fights processed
