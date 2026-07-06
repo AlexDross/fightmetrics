@@ -2584,7 +2584,7 @@ const buildRoiEntry = ({ fA, fB, oddsA, oddsB, eventName, eventDate }) => {
   };
 };
 // ─── UPCOMING EVENT TAB ──────────────────────────────────────────────────────
-function UpcomingEventTab({ allFighters, modelToggle, setModelToggle, gradedUpcoming, onGradeUpcoming }) {
+function UpcomingEventTab({ allFighters, modelToggle, setModelToggle, gradedUpcoming, onGradeUpcoming, onClearUpcoming }) {
   const grouped = useMemo(() => {
     const map = new Map();
     UPCOMING_CARD.forEach((card) => {
@@ -2602,18 +2602,28 @@ function UpcomingEventTab({ allFighters, modelToggle, setModelToggle, gradedUpco
           <h2 className="text-white font-black text-xl mb-1">Upcoming</h2>
           <p className="text-slate-400 text-sm">Model predictions for the next card.</p>
         </div>
-        <div className="flex items-center gap-1 bg-slate-800 rounded-lg p-1">
-          {['v1', 'v2'].map((v) => (
+        <div className="flex items-center gap-2">
+          {Object.keys(gradedUpcoming).length > 0 && (
             <button
-              key={v}
-              onClick={() => setModelToggle(v)}
-              className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-colors ${
-                modelToggle === v ? 'bg-red-600 text-white' : 'text-slate-400 hover:text-white'
-              }`}
+              onClick={onClearUpcoming}
+              className="px-3 py-2 rounded-lg border border-slate-700 text-slate-400 text-xs font-semibold hover:text-white hover:border-slate-600 transition-colors"
             >
-              {v}
+              Clear Event
             </button>
-          ))}
+          )}
+          <div className="flex items-center gap-1 bg-slate-800 rounded-lg p-1">
+            {['v1', 'v2'].map((v) => (
+              <button
+                key={v}
+                onClick={() => setModelToggle(v)}
+                className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-colors ${
+                  modelToggle === v ? 'bg-red-600 text-white' : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                {v}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -6513,6 +6523,8 @@ export default function App() {
     setRoiEntries([]);
   };
 
+  const handleClearUpcoming = () => setGradedUpcoming({});
+
   const handleGradeUpcoming = (card, fA, fB, result, market, actualWinner) => {
     const key = [card.fighterA, card.fighterB].sort().join('|');
     const entry = buildRoiEntry({
@@ -6558,6 +6570,7 @@ export default function App() {
           setModelToggle={setModelToggle}
           gradedUpcoming={gradedUpcoming}
           onGradeUpcoming={handleGradeUpcoming}
+          onClearUpcoming={handleClearUpcoming}
         />
       )}
       {view === 'explore' && <ExploreTab allFighters={fightersWithProspectsFiltered} />}
