@@ -152,6 +152,27 @@ WIKIPEDIA_EVENTS_LIST = "https://en.wikipedia.org/wiki/List_of_UFC_events"
 WIKIPEDIA_FALLBACK_EVENT = "https://en.wikipedia.org/wiki/UFC_329"  # temporary fallback
 
 
+def normalize_wiki_url(href):
+    """
+    Normalize a Wikipedia <a href> to a canonical https://en.wikipedia.org/wiki/...
+    URL. Returns None for non-English-Wikipedia links (e.g. ja./ko. interwiki).
+    Handles three observed href forms:
+      - '/wiki/UFC_329'                       (relative)
+      - '//en.wikipedia.org/wiki/UFC_329'     (protocol-relative)
+      - 'https://en.wikipedia.org/wiki/...'   (absolute; foreign langs rejected)
+    """
+    if not href:
+        return None
+    if href.startswith("//"):
+        href = "https:" + href
+    elif href.startswith("/"):
+        href = WIKIPEDIA_BASE + href
+    # Now href is absolute; only accept English Wikipedia article links.
+    if not href.startswith("https://en.wikipedia.org/wiki/"):
+        return None
+    return href
+
+
 def find_next_ufc_event_url():
     """
     Scrape https://en.wikipedia.org/wiki/List_of_UFC_events to find the next
@@ -205,9 +226,13 @@ def find_next_ufc_event_url():
             row_date = parse_row_date(row_text)
             if not row_date or row_date < today_str:
                 continue
-            link = row.find("a", href=re.compile(r"/wiki/UFC"))
-            if link:
-                future_events.append((row_date, WIKIPEDIA_BASE + link["href"]))
+            # A row may contain foreign-language / non-article links first, so
+            # scan all candidate links and take the first valid en.wikipedia URL.
+            for link in row.find_all("a", href=re.compile(r"/wiki/UFC")):
+                canonical = normalize_wiki_url(link.get("href"))
+                if canonical:
+                    future_events.append((row_date, canonical))
+                    break
 
     if not future_events:
         print("[WIKI] No future event rows found in any table on events list page.")
@@ -459,12 +484,32 @@ def extract_odds(event, team_a, team_b):
     if moneyline is None:
         return None, None
     odds = {}
+    priced = []  # ordered [(name, price)] for participants that have a price
     for participant in moneyline.get("participants", []):
         name = participant.get("name", "")
         price = _pick_price_from_lines(participant.get("lines", []))
         if name and price is not None:
             odds[name] = price
-    return odds.get(team_a), odds.get(team_b)
+            priced.append((name, price))
+
+    price_a = odds.get(team_a)
+    price_b = odds.get(team_b)
+
+    # Fallback: a moneyline market has exactly two sides. If only one side matched
+    # by name (name-format mismatch on the other), assign the remaining priced
+    # participant to the unmatched side rather than leaving it null.
+    if price_a is not None and price_b is None:
+        for name, price in priced:
+            if name != team_a:
+                price_b = price
+                break
+    elif price_b is not None and price_a is None:
+        for name, price in priced:
+            if name != team_b:
+                price_a = price
+                break
+
+    return price_a, price_b
 
 
 def build_rundown_lookup(events):
