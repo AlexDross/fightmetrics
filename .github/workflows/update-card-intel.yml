@@ -30,11 +30,6 @@ jobs:
         env:
           THERUNDOWN_API_KEY: ${{ secrets.ODDS_API_KEY }}
 
-      - name: Generate card intel (news, flags, odds history)
-        run: python generate_card_intel.py
-        env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-
       - name: Commit and push if changed
         run: |
           git config user.name  "github-actions[bot]"

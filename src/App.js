@@ -34,7 +34,6 @@ import { FIGHT_HISTORY } from './fightHistory';
 import { getHistoricalTier } from './rankHistory';
 import { ROI_ENTRIES } from './roiData';
 import { CARD_INTEL } from './cardIntel';
-import { UPCOMING_CARD } from './upcomingCard';
 
 // _D2 imported from fightersData.js
 
@@ -2529,9 +2528,6 @@ const buildRoiEntry = ({ fA, fB, oddsA, oddsB, eventName, eventDate }) => {
       ? oddsB || ''
       : '';
 
-  const intelKey = [fA.FIGHTER, fB.FIGHTER].sort().join(' vs. ');
-  const intel = CARD_INTEL[intelKey] || null;
-
   return {
     id: createPredictionId(),
     createdAt: new Date().toISOString(),
@@ -2585,8 +2581,6 @@ const buildRoiEntry = ({ fA, fB, oddsA, oddsB, eventName, eventDate }) => {
     actualWinner: '',
     actualFinish: '',
     notes: '',
-    intelFlags: intel ? intel.flags : [],
-    intelInjuries: intel ? intel.injuries : [],
   };
 };
 // ─── HEADER ───────────────────────────────────────────────────────────────────
@@ -6336,47 +6330,6 @@ export default function App() {
     setRoiEntries([]);
   };
 
-  // Batch-import every non-debut fight from UPCOMING_CARD that isn't already
-  // tracked. Entries are built via the shared buildRoiEntry helper so they are
-  // field-for-field identical to manually-saved Simulator predictions.
-  const handleSyncUpcomingCard = () => {
-    const existingPairs = new Set(
-      roiEntries.map((e) => [e.fighterA, e.fighterB].sort().join('|'))
-    );
-
-    const newEntries = [];
-
-    UPCOMING_CARD.forEach((card) => {
-      if (card.debutFighter) return; // skip debuts
-
-      const pairKey = [card.fighterA, card.fighterB].sort().join('|');
-      if (existingPairs.has(pairKey)) return; // skip already-saved fights
-
-      const fA = fightersWithProspectsFiltered.find((f) => f.FIGHTER === card.fighterA);
-      const fB = fightersWithProspectsFiltered.find((f) => f.FIGHTER === card.fighterB);
-      if (!fA || !fB) {
-        console.warn(
-          `[SYNC] Could not find roster match for ${card.fighterA} or ${card.fighterB} — skipping`
-        );
-        return;
-      }
-
-      newEntries.push(
-        buildRoiEntry({
-          fA,
-          fB,
-          oddsA: card.oddsA ?? '',
-          oddsB: card.oddsB ?? '',
-          eventName: card.eventName ?? '',
-          eventDate: card.date ?? '',
-        })
-      );
-    });
-
-    setRoiEntries((prev) => [...newEntries, ...prev]);
-    return newEntries.length;
-  };
-
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 font-sans">
       <Header view={view} setView={setView} />
@@ -6399,7 +6352,6 @@ export default function App() {
           onUpdateEntry={handleUpdateROIEntry}
           onDeleteEntry={handleDeleteROIEntry}
           onClearEntries={handleClearROI}
-          onSyncUpcomingCard={handleSyncUpcomingCard}
           allFighters={fightersWithProspectsFiltered}
           filterSince={filterSince}
           setFilterSince={setFilterSince}
@@ -6789,12 +6741,10 @@ function ROITab({
   onUpdateEntry,
   onDeleteEntry,
   onClearEntries,
-  onSyncUpcomingCard,
   allFighters,
   filterSince,
   setFilterSince,
 }) {
-  const [syncFeedback, setSyncFeedback] = useState('');
   const exportedCode = `export const ROI_ENTRIES = ${JSON.stringify(
     entries,
     null,
@@ -7031,21 +6981,6 @@ function ROITab({
           </p>
         </div>
         <div className="flex items-center gap-2">
-          {syncFeedback && (
-            <span className="text-emerald-400 text-xs font-semibold">{syncFeedback}</span>
-          )}
-          <button
-            onClick={() => {
-              const n = onSyncUpcomingCard?.();
-              setSyncFeedback(
-                n > 0 ? `Added ${n} new fight${n === 1 ? '' : 's'}` : 'No new fights to add'
-              );
-              setTimeout(() => setSyncFeedback(''), 4000);
-            }}
-            className="px-3 py-2 rounded-lg border border-red-700 text-red-300 text-xs font-semibold hover:text-white hover:border-red-500 transition-colors"
-          >
-            Sync Upcoming Card
-          </button>
           {entries.length > 0 && (
             <>
             <button
