@@ -1,16 +1,1 @@
-export const UPCOMING_CARD = [
-  { fighterA: "Farid Basharat", fighterB: "Ethyn Ewing", oddsA: "+105", oddsB: "-125", date: "2026-07-11", eventName: "UFC 329", debutFighter: false },
-  { fighterA: "Damian Pinas", fighterB: "Cesar Almeida", oddsA: "-225", oddsB: "+185", date: "2026-07-11", eventName: "UFC 329", debutFighter: true },
-  { fighterA: "Ryan Gandra", fighterB: "Zachary Reese", oddsA: "-130", oddsB: "+110", date: "2026-07-11", eventName: "UFC 329", debutFighter: true },
-  { fighterA: "Alessandro Costa", fighterB: "Cody Durden", oddsA: "-270", oddsB: "+220", date: "2026-07-11", eventName: "UFC 329", debutFighter: false },
-  { fighterA: "Tracy Cortez", fighterB: "Wang Cong", oddsA: "-108", oddsB: "-112", date: "2026-07-11", eventName: "UFC 329", debutFighter: false },
-  { fighterA: "Cody Garbrandt", fighterB: "Adrian Yanez", oddsA: "+320", oddsB: "-410", date: "2026-07-11", eventName: "UFC 329", debutFighter: false },
-  { fighterA: "Nikita Krylov", fighterB: "Robert Whittaker", oddsA: "+120", oddsB: "-142", date: "2026-07-11", eventName: "UFC 329", debutFighter: false },
-  { fighterA: "Luke Riley", fighterB: "Kai Kamaka", oddsA: "-290", oddsB: "+235", date: "2026-07-11", eventName: "UFC 329", debutFighter: false },
-  { fighterA: "Gable Steveson", fighterB: "Lisa Ellis", oddsA: "-2800", oddsB: "+1300", date: "2026-07-11", eventName: "UFC 329", debutFighter: true },
-  { fighterA: "Benoit Saint Denis", fighterB: "Paddy Pimblett", oddsA: "-135", oddsB: "+114", date: "2026-07-11", eventName: "UFC 329", debutFighter: false },
-  { fighterA: "Cory Sandhagen", fighterB: "Mario Bautista", oddsA: "-148", oddsB: "+124", date: "2026-07-11", eventName: "UFC 329", debutFighter: false },
-  { fighterA: "King Green", fighterB: "Terrance McKinney", oddsA: "+124", oddsB: "-148", date: "2026-07-11", eventName: "UFC 329", debutFighter: false },
-  { fighterA: "Conor McGregor", fighterB: "Max Holloway", oddsA: "+180", oddsB: "-218", date: "2026-07-11", eventName: "UFC 329", debutFighter: false },
-  { fighterA: "Brandon Royval", fighterB: "Lone'er Kavanagh", oddsA: "+180", oddsB: "-218", date: "2026-07-11", eventName: "UFC 329", debutFighter: false },
-];
+
