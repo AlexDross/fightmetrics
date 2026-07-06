@@ -2584,7 +2584,7 @@ const buildRoiEntry = ({ fA, fB, oddsA, oddsB, eventName, eventDate }) => {
   };
 };
 // ─── UPCOMING EVENT TAB ──────────────────────────────────────────────────────
-function UpcomingEventTab({ allFighters, modelToggle, setModelToggle }) {
+function UpcomingEventTab({ allFighters, modelToggle, setModelToggle, gradedUpcoming, onGradeUpcoming }) {
   const grouped = useMemo(() => {
     const map = new Map();
     UPCOMING_CARD.forEach((card) => {
@@ -2624,130 +2624,167 @@ function UpcomingEventTab({ allFighters, modelToggle, setModelToggle }) {
             <p className="text-slate-500 text-xs mt-0.5">{fights[0]?.date}</p>
           </div>
           <div className="space-y-4">
-            {fights.map((card, idx) => {
-              if (card.debutFighter) {
+            {(() => {
+              const gradableFights = fights.filter((c) => !c.debutFighter && allFighters.find((f) => f.FIGHTER === c.fighterA) && allFighters.find((f) => f.FIGHTER === c.fighterB));
+              const allGraded = gradableFights.length > 0 && gradableFights.every((c) => gradedUpcoming[[c.fighterA, c.fighterB].sort().join('|')]);
+              if (allGraded) {
                 return (
-                  <div key={idx} className="bg-slate-900 border border-slate-800 rounded-xl p-5">
-                    <div className="flex items-start justify-between gap-4">
-                      <h4 className="text-white font-black text-lg">
-                        {card.fighterA} vs {card.fighterB}
-                      </h4>
-                      <span className="inline-flex items-center gap-1 rounded-full border border-amber-700/70 bg-amber-900/30 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-amber-300 shrink-0">
-                        Debut — no model prediction
-                      </span>
-                    </div>
-                    {(card.oddsA || card.oddsB) && (
-                      <p className="text-slate-500 text-xs mt-2 font-mono">
-                        {card.fighterA} {card.oddsA} &nbsp;vs&nbsp; {card.fighterB} {card.oddsB}
-                      </p>
-                    )}
+                  <div className="bg-slate-900 border border-slate-800 rounded-xl p-8 text-center">
+                    <p className="text-slate-400 text-sm font-semibold">Event complete — all picks moved to ROI</p>
                   </div>
                 );
               }
-
-              const fA = allFighters.find((f) => f.FIGHTER === card.fighterA);
-              const fB = allFighters.find((f) => f.FIGHTER === card.fighterB);
-
-              if (!fA || !fB) {
-                return (
-                  <div key={idx} className="bg-slate-900 border border-slate-800 rounded-xl p-5">
-                    <div className="flex items-start justify-between gap-4">
-                      <h4 className="text-white font-black text-lg">
-                        {card.fighterA} vs {card.fighterB}
-                      </h4>
-                      <span className="inline-flex items-center rounded-full border border-slate-700 bg-slate-800/40 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-slate-400 shrink-0">
-                        Fighter not in roster
-                      </span>
-                    </div>
-                    {(card.oddsA || card.oddsB) && (
-                      <p className="text-slate-500 text-xs mt-2 font-mono">
-                        {card.fighterA} {card.oddsA} &nbsp;vs&nbsp; {card.fighterB} {card.oddsB}
-                      </p>
-                    )}
-                  </div>
-                );
-              }
-
-              const result = computeMatchupEdges(fA, fB);
-              const market = computeMarketAnalysis(result, card.oddsA || '', card.oddsB || '', fA, fB);
-              const pA = modelToggle === 'v2' && result.v2pA != null ? result.v2pA : result.pA;
-              const pB = modelToggle === 'v2' && result.v2pB != null ? result.v2pB : result.pB;
-              const predictedWinner = pA >= pB ? card.fighterA : card.fighterB;
-              const winProb = pA >= pB ? pA : pB;
-              const division =
-                fA.WEIGHT_CLASS === fB.WEIGHT_CLASS
-                  ? fA.WEIGHT_CLASS
-                  : `${fA.WEIGHT_CLASS} / ${fB.WEIGHT_CLASS}`;
-              const tier = betTier(market?.betAction);
-              const pickEdge = market
-                ? (market.pickSide === 'A' ? market.edgeA : market.edgeB)
-                : null;
-              const fairLine = market
-                ? (market.pickSide === 'A' ? market.fairLineA : market.fairLineB)
-                : null;
-              const betFighter =
-                market && market.betAction !== 'NO BET'
-                  ? market.pickSide === 'A' ? card.fighterA : card.fighterB
-                  : null;
-
-              return (
-                <div key={idx} className={`bg-slate-900 border ${tier.border} rounded-xl p-5`}>
-                  <div className="flex items-start justify-between gap-4 mb-4">
-                    <h4 className="text-white font-black text-lg">
-                      {card.fighterA} vs {card.fighterB}
-                    </h4>
-                    <p className="text-slate-500 text-xs text-right shrink-0">
-                      {division} · {card.date}
-                    </p>
-                  </div>
-
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <span className="text-slate-500 text-[10px] font-semibold uppercase tracking-wider">
-                        Model Pick
-                      </span>
-                      {result.v2pA != null && (
-                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-violet-900/40 border border-violet-700/50 text-violet-300">
-                          {modelToggle === 'v2' ? 'V2' : 'V1'}
+              return fights.map((card, idx) => {
+                if (card.debutFighter) {
+                  return (
+                    <div key={idx} className="bg-slate-900 border border-slate-800 rounded-xl p-5">
+                      <div className="flex items-start justify-between gap-4">
+                        <h4 className="text-white font-black text-lg">
+                          {card.fighterA} vs {card.fighterB}
+                        </h4>
+                        <span className="inline-flex items-center gap-1 rounded-full border border-amber-700/70 bg-amber-900/30 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-amber-300 shrink-0">
+                          Debut — no model prediction
                         </span>
+                      </div>
+                      {(card.oddsA || card.oddsB) && (
+                        <p className="text-slate-500 text-xs mt-2 font-mono">
+                          {card.fighterA} {card.oddsA} &nbsp;vs&nbsp; {card.fighterB} {card.oddsB}
+                        </p>
                       )}
                     </div>
-                    <span className="text-emerald-400 font-bold text-sm">
-                      {(winProb * 100).toFixed(1)}% win prob
-                    </span>
-                  </div>
-                  <p className="text-white font-black text-xl mb-4">{predictedWinner}</p>
+                  );
+                }
 
-                  {market && (
-                    <div className="bg-slate-800/40 rounded-lg p-3 space-y-2">
-                      <div className="flex items-center gap-2">
-                        <span className="text-slate-500 text-[10px] font-semibold uppercase tracking-wider">
-                          Bet Rec:
+                const fA = allFighters.find((f) => f.FIGHTER === card.fighterA);
+                const fB = allFighters.find((f) => f.FIGHTER === card.fighterB);
+
+                if (!fA || !fB) {
+                  return (
+                    <div key={idx} className="bg-slate-900 border border-slate-800 rounded-xl p-5">
+                      <div className="flex items-start justify-between gap-4">
+                        <h4 className="text-white font-black text-lg">
+                          {card.fighterA} vs {card.fighterB}
+                        </h4>
+                        <span className="inline-flex items-center rounded-full border border-slate-700 bg-slate-800/40 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-slate-400 shrink-0">
+                          Fighter not in roster
                         </span>
-                        <span className={`text-xs font-bold ${tier.cls}`}>
-                          {market.betAction}
-                        </span>
-                        {betFighter && (
-                          <span className="text-slate-300 text-xs font-semibold">{betFighter}</span>
-                        )}
                       </div>
-                      <p className="text-slate-400 text-xs font-mono">
-                        {card.fighterA} {card.oddsA} &nbsp;vs&nbsp; {card.fighterB} {card.oddsB}
-                      </p>
-                      <p className="text-slate-400 text-xs">
-                        Edge:{' '}
-                        <span className="text-white font-mono">
-                          {pickEdge != null ? `${(pickEdge * 100).toFixed(1)}pp` : '—'}
-                        </span>
-                        <span className="text-slate-600 mx-2">·</span>
-                        Fair line:{' '}
-                        <span className="text-white font-mono">{fairLine ?? '—'}</span>
+                      {(card.oddsA || card.oddsB) && (
+                        <p className="text-slate-500 text-xs mt-2 font-mono">
+                          {card.fighterA} {card.oddsA} &nbsp;vs&nbsp; {card.fighterB} {card.oddsB}
+                        </p>
+                      )}
+                    </div>
+                  );
+                }
+
+                const key = [card.fighterA, card.fighterB].sort().join('|');
+                if (gradedUpcoming[key]) return null;
+
+                const result = computeMatchupEdges(fA, fB);
+                const market = computeMarketAnalysis(result, card.oddsA || '', card.oddsB || '', fA, fB);
+                const pA = modelToggle === 'v2' && result.v2pA != null ? result.v2pA : result.pA;
+                const pB = modelToggle === 'v2' && result.v2pB != null ? result.v2pB : result.pB;
+                const predictedWinner = pA >= pB ? card.fighterA : card.fighterB;
+                const winProb = pA >= pB ? pA : pB;
+                const division =
+                  fA.WEIGHT_CLASS === fB.WEIGHT_CLASS
+                    ? fA.WEIGHT_CLASS
+                    : `${fA.WEIGHT_CLASS} / ${fB.WEIGHT_CLASS}`;
+                const tier = betTier(market?.betAction);
+                const pickEdge = market
+                  ? (market.pickSide === 'A' ? market.edgeA : market.edgeB)
+                  : null;
+                const fairLine = market
+                  ? (market.pickSide === 'A' ? market.fairLineA : market.fairLineB)
+                  : null;
+                const betFighter =
+                  market && market.betAction !== 'NO BET'
+                    ? market.pickSide === 'A' ? card.fighterA : card.fighterB
+                    : null;
+
+                return (
+                  <div key={idx} className={`bg-slate-900 border ${tier.border} rounded-xl p-5`}>
+                    <div className="flex items-start justify-between gap-4 mb-4">
+                      <h4 className="text-white font-black text-lg">
+                        {card.fighterA} vs {card.fighterB}
+                      </h4>
+                      <p className="text-slate-500 text-xs text-right shrink-0">
+                        {division} · {card.date}
                       </p>
                     </div>
-                  )}
-                </div>
-              );
-            })}
+
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-slate-500 text-[10px] font-semibold uppercase tracking-wider">
+                          Model Pick
+                        </span>
+                        {result.v2pA != null && (
+                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-violet-900/40 border border-violet-700/50 text-violet-300">
+                            {modelToggle === 'v2' ? 'V2' : 'V1'}
+                          </span>
+                        )}
+                      </div>
+                      <span className="text-emerald-400 font-bold text-sm">
+                        {(winProb * 100).toFixed(1)}% win prob
+                      </span>
+                    </div>
+                    <p className="text-white font-black text-xl mb-4">{predictedWinner}</p>
+
+                    {market && (
+                      <div className="bg-slate-800/40 rounded-lg p-3 space-y-2 mb-3">
+                        <div className="flex items-center gap-2">
+                          <span className="text-slate-500 text-[10px] font-semibold uppercase tracking-wider">
+                            Bet Rec:
+                          </span>
+                          <span className={`text-xs font-bold ${tier.cls}`}>
+                            {market.betAction}
+                          </span>
+                          {betFighter && (
+                            <span className="text-slate-300 text-xs font-semibold">{betFighter}</span>
+                          )}
+                        </div>
+                        <p className="text-slate-400 text-xs font-mono">
+                          {card.fighterA} {card.oddsA} &nbsp;vs&nbsp; {card.fighterB} {card.oddsB}
+                        </p>
+                        <p className="text-slate-400 text-xs">
+                          Edge:{' '}
+                          <span className="text-white font-mono">
+                            {pickEdge != null ? `${(pickEdge * 100).toFixed(1)}pp` : '—'}
+                          </span>
+                          <span className="text-slate-600 mx-2">·</span>
+                          Fair line:{' '}
+                          <span className="text-white font-mono">{fairLine ?? '—'}</span>
+                        </p>
+                      </div>
+                    )}
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: market ? '0' : '12px' }}>
+                      <span style={{ fontSize: '11px', color: '#888', textTransform: 'uppercase' }}>
+                        Actual Winner
+                      </span>
+                      <select
+                        value=""
+                        onChange={(e) => {
+                          if (e.target.value) {
+                            onGradeUpcoming(card, fA, fB, result, market, e.target.value);
+                          }
+                        }}
+                        style={{
+                          background: '#1e293b', color: '#e2e8f0', border: '1px solid #334155',
+                          borderRadius: '6px', padding: '4px 8px', fontSize: '12px', cursor: 'pointer',
+                        }}
+                      >
+                        <option value="">Pending...</option>
+                        <option value={card.fighterA}>{card.fighterA}</option>
+                        <option value={card.fighterB}>{card.fighterB}</option>
+                        <option value="NC">NC</option>
+                      </select>
+                    </div>
+                  </div>
+                );
+              });
+            })()}
           </div>
         </div>
       ))}
@@ -6421,6 +6458,7 @@ export default function App() {
   const [view, setView] = useState('home');
   const [filterSince, setFilterSince] = useState('2026-05-23');
   const [modelToggle, setModelToggle] = useState('v2');
+  const [gradedUpcoming, setGradedUpcoming] = useState({});
   const [roiEntries, setRoiEntries] = useState(() => {
     const fightersByName = Object.fromEntries(FIGHTERS.map((f) => [f.FIGHTER, f]));
     return ROI_ENTRIES.map((entry) => {
@@ -6475,6 +6513,31 @@ export default function App() {
     setRoiEntries([]);
   };
 
+  const handleGradeUpcoming = (card, fA, fB, result, market, actualWinner) => {
+    const key = [card.fighterA, card.fighterB].sort().join('|');
+    const entry = buildRoiEntry({
+      fA,
+      fB,
+      oddsA: card.oddsA ?? '',
+      oddsB: card.oddsB ?? '',
+      eventName: card.eventName ?? '',
+      eventDate: card.date ?? '',
+    });
+    const gradedEntry = { ...entry, actualWinner };
+    setRoiEntries((prev) => [gradedEntry, ...prev]);
+    setGradedUpcoming((prev) => {
+      const updatedGraded = { ...prev, [key]: actualWinner };
+      const allGraded = UPCOMING_CARD
+        .filter((c) => !c.debutFighter)
+        .every((c) => {
+          const k = [c.fighterA, c.fighterB].sort().join('|');
+          return updatedGraded[k];
+        });
+      if (allGraded) setTimeout(() => setView('roi'), 1000);
+      return updatedGraded;
+    });
+  };
+
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 font-sans">
       <Header view={view} setView={setView} />
@@ -6493,6 +6556,8 @@ export default function App() {
           allFighters={fightersWithProspectsFiltered}
           modelToggle={modelToggle}
           setModelToggle={setModelToggle}
+          gradedUpcoming={gradedUpcoming}
+          onGradeUpcoming={handleGradeUpcoming}
         />
       )}
       {view === 'explore' && <ExploreTab allFighters={fightersWithProspectsFiltered} />}
