@@ -3862,7 +3862,7 @@ function getProjectedFinishLabel(probs) {
 }
 
 // ─── MATCHUP SIMULATOR ────────────────────────────────────────────────────────
-function MatchupSimulator({ allFighters, onSavePrediction, onOpenROI, onSaveToUpcoming }) {
+function MatchupSimulator({ allFighters, onSaveToUpcoming }) {
   const [fA, setFA] = useState(null);
   const [fB, setFB] = useState(null);
   const [oddsA, setOddsA] = useState('');
@@ -3888,25 +3888,7 @@ function MatchupSimulator({ allFighters, onSavePrediction, onOpenROI, onSaveToUp
     [oddsA, oddsB, result, fA, fB]
   );
 
-  const savePrediction = (openROI = false) => {
-    if (!fA || !fB || !result) return;
 
-    onSavePrediction?.(
-      buildRoiEntry({
-        fA,
-        fB,
-        oddsA,
-        oddsB,
-        eventName: eventName.trim(),
-        eventDate,
-      })
-    );
-
-    setSaveFeedback(
-      openROI ? 'Saved and opened ROI tracker.' : 'Saved to ROI tracker.'
-    );
-    if (openROI) onOpenROI?.();
-  };
 
   const comparisonAuditMap = useMemo(() => {
     const map = new Map();
@@ -4312,18 +4294,6 @@ function MatchupSimulator({ allFighters, onSavePrediction, onOpenROI, onSaveToUp
               </div>
             </div>
             <div className="flex gap-3 flex-wrap">
-              <button
-                onClick={() => savePrediction(false)}
-                className="px-4 py-2 rounded-lg bg-slate-700 text-white text-sm font-semibold hover:bg-slate-600 transition-colors"
-              >
-                Save Prediction
-              </button>
-              <button
-                onClick={() => savePrediction(true)}
-                className="px-4 py-2 rounded-lg bg-red-600 text-white text-sm font-semibold hover:bg-red-500 transition-colors"
-              >
-                Save And Open ROI
-              </button>
               <button
                 onClick={() => {
                   if (!fA || !fB) return;
@@ -6503,8 +6473,6 @@ export default function App() {
       {view === 'simulator' && (
         <MatchupSimulator
           allFighters={fightersWithProspectsFiltered}
-          onSavePrediction={handleSavePrediction}
-          onOpenROI={() => setView('roi')}
           onSaveToUpcoming={handleSaveToUpcoming}
         />
       )}
