@@ -3911,10 +3911,17 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
     return computeMatchupEdges(fA, fB);
   }, [fA, fB]);
 
-  const market = useMemo(
-    () => computeMarketAnalysis(result, oddsA, oddsB, fA, fB),
-    [oddsA, oddsB, result, fA, fB]
-  );
+  // Active probabilities for whichever model version is toggled on — shared by
+  // the market analysis below and by the display sections further down so the
+  // MODEL PICK / VALUE SIGNAL / BET REC boxes never disagree with each other.
+  const activePA = modelToggle === 'v2' && result?.v2pA != null ? result.v2pA : result?.pA;
+  const activePB = modelToggle === 'v2' && result?.v2pB != null ? result.v2pB : result?.pB;
+
+  const market = useMemo(() => {
+    if (!result) return null;
+    const activeResult = { ...result, pA: activePA, pB: activePB };
+    return computeMarketAnalysis(activeResult, oddsA, oddsB, fA, fB);
+  }, [oddsA, oddsB, result, fA, fB, activePA, activePB]);
 
 
 
@@ -4021,8 +4028,6 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
         <div className="space-y-4">
           {/* ── SECTION 1: THE VERDICT ── */}
           {(() => {
-            const activePA = modelToggle === 'v2' && result.v2pA != null ? result.v2pA : result.pA;
-            const activePB = modelToggle === 'v2' && result.v2pB != null ? result.v2pB : result.pB;
             const pctA = (activePA * 100).toFixed(1);
             const pctB = (activePB * 100).toFixed(1);
             const favA = activePA > activePB;
@@ -4285,10 +4290,8 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
               </div>
             </div>
             {(() => {
-              const savePA = modelToggle === 'v2' && result.v2pA != null ? result.v2pA : result.pA;
-              const savePB = modelToggle === 'v2' && result.v2pB != null ? result.v2pB : result.pB;
-              const savePick = savePA >= savePB ? fA.FIGHTER : fB.FIGHTER;
-              const saveProb = Math.max(savePA, savePB);
+              const savePick = activePA >= activePB ? fA.FIGHTER : fB.FIGHTER;
+              const saveProb = Math.max(activePA, activePB);
               return (
             <div className="grid grid-cols-3 gap-3 mb-4">
               <div className="bg-slate-800/40 rounded-lg p-3">
@@ -4451,7 +4454,7 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                         <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider mb-2">Model Pick</p>
                         <p className="text-white font-black text-base leading-tight">{pickFighter.FIGHTER}</p>
                         <p className={`text-xs mt-1 ${market.lowConviction ? 'text-orange-400' : 'text-slate-400'}`}>
-                          {market.pickSide === 'A' ? (result.pA * 100).toFixed(1) : (result.pB * 100).toFixed(1)}% win prob
+                          {market.pickSide === 'A' ? (activePA * 100).toFixed(1) : (activePB * 100).toFixed(1)}% win prob
                           {market.lowConviction ? ' ⚠ low conviction' : market.midConviction ? ' · moderate' : ''}
                         </p>
                         <p className="text-slate-500 text-xs mt-0.5">Fair line: {pickFairLine}</p>
@@ -4654,8 +4657,8 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                     <div>
                       <p className="text-slate-500 text-xs">Model says</p>
                       <p className="text-white font-mono font-bold text-sm mt-1">
-                        {(result.pA * 100).toFixed(1)}% /{' '}
-                        {(result.pB * 100).toFixed(1)}%
+                        {(activePA * 100).toFixed(1)}% /{' '}
+                        {(activePB * 100).toFixed(1)}%
                       </p>
                     </div>
                     <div>
@@ -4698,7 +4701,7 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                       odds: oddsA,
                       color: 'blue',
                       noVig: market.noVigA,
-                      modelP: result.pA,
+                      modelP: activePA,
                       breakEven: market.breakEvenA,
                       fairLine: market.fairLineA,
                     },
@@ -4711,7 +4714,7 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                       odds: oddsB,
                       color: 'red',
                       noVig: market.noVigB,
-                      modelP: result.pB,
+                      modelP: activePB,
                       breakEven: market.breakEvenB,
                       fairLine: market.fairLineB,
                     },
