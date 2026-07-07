@@ -4284,14 +4284,20 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                 />
               </div>
             </div>
+            {(() => {
+              const savePA = modelToggle === 'v2' && result.v2pA != null ? result.v2pA : result.pA;
+              const savePB = modelToggle === 'v2' && result.v2pB != null ? result.v2pB : result.pB;
+              const savePick = savePA >= savePB ? fA.FIGHTER : fB.FIGHTER;
+              const saveProb = Math.max(savePA, savePB);
+              return (
             <div className="grid grid-cols-3 gap-3 mb-4">
               <div className="bg-slate-800/40 rounded-lg p-3">
                 <p className="text-slate-500 text-xs">Model pick</p>
                 <p className="text-white font-bold text-sm mt-1">
-                  {result.pA >= result.pB ? fA.FIGHTER : fB.FIGHTER}
+                  {savePick}
                 </p>
                 <p className="text-slate-500 text-xs mt-0.5">
-                  {(Math.max(result.pA, result.pB) * 100).toFixed(1)}% win prob
+                  {(saveProb * 100).toFixed(1)}% win prob
                 </p>
               </div>
               <div className="bg-slate-800/40 rounded-lg p-3">
@@ -4321,6 +4327,8 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                 </p>
               </div>
             </div>
+              );
+            })()}
             <div className="flex gap-3 flex-wrap">
               <button
                 onClick={() => {
