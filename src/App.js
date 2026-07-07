@@ -2629,15 +2629,23 @@ function UpcomingEventTab({ entries, onGrade, onDelete, modelToggle, setModelTog
             const betFighter = entry.betRecommendedFighter || null;
             const pickEdge = pA >= pB ? entry.edgeA : entry.edgeB;
             const fairLine = pA >= pB ? entry.fairLineA : entry.fairLineB;
+            const actionable = entry.betAction === 'LEAN' || entry.betAction === 'BET' || entry.betAction === 'STRONG BET';
+            const hasMarket = !!(entry.oddsA || entry.oddsB);
 
             return (
               <div key={entry.id} className={`bg-slate-900 border ${tier.border} rounded-xl p-5`}>
+                {/* Header */}
                 <div className="flex items-start justify-between gap-4 mb-4">
                   <div>
-                    <h4 className="text-white font-black text-lg">
-                      {entry.fighterA} vs {entry.fighterB}
-                    </h4>
-                    <p className="text-slate-500 text-xs mt-0.5">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h4 className="text-white font-black text-lg">
+                        {entry.fighterA} vs. {entry.fighterB}
+                      </h4>
+                      <span className="text-xs font-bold px-2 py-0.5 rounded-full border bg-slate-800 text-slate-400 border-slate-700">
+                        Pending
+                      </span>
+                    </div>
+                    <p className="text-slate-500 text-xs mt-1">
                       {entry.division}
                       {entry.eventName ? ` · ${entry.eventName}` : ''}
                       {entry.eventDate ? ` · ${entry.eventDate}` : ''}
@@ -2651,61 +2659,81 @@ function UpcomingEventTab({ entries, onGrade, onDelete, modelToggle, setModelTog
                   </button>
                 </div>
 
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2">
-                    <span className="text-slate-500 text-[10px] font-semibold uppercase tracking-wider">
-                      Model Pick
-                    </span>
-                    {hasV2 && (
-                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-violet-900/40 border border-violet-700/50 text-violet-300">
-                        {modelToggle === 'v2' ? 'V2' : 'V1'}
-                      </span>
-                    )}
-                  </div>
-                  <span className="text-emerald-400 font-bold text-sm">
-                    {(winProb * 100).toFixed(1)}% win prob
-                  </span>
-                </div>
-                <p className="text-white font-black text-xl mb-4">{predictedWinner}</p>
-
-                {(entry.betAction || entry.oddsA || entry.oddsB) && (
-                  <div className="bg-slate-800/40 rounded-lg p-3 space-y-2 mb-3">
+                {/* Model Pick */}
+                <div className="bg-slate-800/40 rounded-lg p-4 mb-3 flex items-baseline justify-between gap-3">
+                  <div>
                     <div className="flex items-center gap-2">
-                      <span className="text-slate-500 text-[10px] font-semibold uppercase tracking-wider">
-                        Bet Rec:
-                      </span>
-                      <span className={`text-xs font-bold ${tier.cls}`}>
-                        {entry.betAction || 'NO BET'}
-                      </span>
-                      {betFighter && (
-                        <span className="text-slate-300 text-xs font-semibold">{betFighter}</span>
+                      <p className="text-slate-500 text-xs uppercase tracking-wider">
+                        Model Pick
+                      </p>
+                      {hasV2 && (
+                        <span className="text-[10px] font-bold text-violet-400 bg-violet-900/30 border border-violet-700/40 px-1.5 py-0.5 rounded uppercase">
+                          {modelToggle === 'v2' ? 'v2' : 'v1'}
+                        </span>
                       )}
                     </div>
-                    {(entry.oddsA || entry.oddsB) && (
-                      <p className="text-slate-400 text-xs font-mono">
-                        {entry.fighterA} {entry.oddsA} &nbsp;vs&nbsp; {entry.fighterB} {entry.oddsB}
-                      </p>
-                    )}
-                    {pickEdge != null && (
-                      <p className="text-slate-400 text-xs">
-                        Edge:{' '}
-                        <span className="text-white font-mono">
-                          {(pickEdge * 100).toFixed(1)}pp
-                        </span>
-                        {fairLine && (
-                          <>
-                            <span className="text-slate-600 mx-2">·</span>
-                            Fair line:{' '}
-                            <span className="text-white font-mono">{fairLine}</span>
-                          </>
-                        )}
-                      </p>
+                    <p className="text-white font-black text-xl mt-1">{predictedWinner}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-emerald-400 font-black text-lg">
+                      {(winProb * 100).toFixed(1)}%
+                    </p>
+                    <p className="text-slate-500 text-xs mt-0.5">
+                      win prob{fairLine ? ` · ${fairLine}` : ''}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Bet Rec + Market Odds */}
+                <div className="grid grid-cols-2 gap-3 mb-4">
+                  <div className="bg-slate-800/40 rounded-lg p-3">
+                    <p className="text-slate-500 text-xs uppercase tracking-wider">Bet Rec</p>
+                    {actionable ? (
+                      <>
+                        <div className="mt-2">
+                          <span
+                            className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-black ${
+                              entry.betAction === 'STRONG BET'
+                                ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                                : entry.betAction === 'BET'
+                                ? 'bg-emerald-900/30 text-emerald-400 border border-emerald-800'
+                                : 'bg-yellow-900/30 text-yellow-400 border border-yellow-800'
+                            }`}
+                          >
+                            {entry.betAction}
+                          </span>
+                        </div>
+                        <p className="text-white font-bold text-sm mt-2">{betFighter || '—'}</p>
+                      </>
+                    ) : (
+                      <p className="text-slate-600 font-bold text-sm mt-2">—</p>
                     )}
                   </div>
-                )}
+                  <div className="bg-slate-800/40 rounded-lg p-3">
+                    <p className="text-slate-500 text-xs uppercase tracking-wider">Market odds</p>
+                    {hasMarket ? (
+                      <>
+                        <p className="text-white font-bold text-sm mt-1 font-mono">
+                          {entry.fighterA} {entry.oddsA}
+                        </p>
+                        <p className="text-slate-400 text-xs font-mono">
+                          {entry.fighterB} {entry.oddsB}
+                        </p>
+                        {pickEdge != null && (
+                          <p className="text-slate-600 text-xs mt-1">
+                            {pickEdge > 0 ? '+' : ''}{(pickEdge * 100).toFixed(1)}% edge
+                          </p>
+                        )}
+                      </>
+                    ) : (
+                      <p className="text-slate-600 font-bold text-sm mt-2">—</p>
+                    )}
+                  </div>
+                </div>
 
-                <div className="flex items-center gap-3 mt-3">
-                  <span className="text-slate-500 text-[11px] font-semibold uppercase tracking-wider">
+                {/* Actual Winner */}
+                <div className="border-t border-slate-800 pt-3 flex items-center gap-3">
+                  <span className="text-slate-500 text-xs font-semibold uppercase tracking-wider">
                     Actual Winner
                   </span>
                   <select
@@ -2713,12 +2741,9 @@ function UpcomingEventTab({ entries, onGrade, onDelete, modelToggle, setModelTog
                     onChange={(e) => {
                       if (e.target.value) onGrade(entry.id, e.target.value);
                     }}
-                    style={{
-                      background: '#1e293b', color: '#e2e8f0', border: '1px solid #334155',
-                      borderRadius: '6px', padding: '4px 8px', fontSize: '12px', cursor: 'pointer',
-                    }}
+                    className="bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-1.5 focus:outline-none focus:border-red-500 cursor-pointer"
                   >
-                    <option value="">Pending...</option>
+                    <option value="">Pending…</option>
                     <option value={entry.fighterA}>{entry.fighterA}</option>
                     <option value={entry.fighterB}>{entry.fighterB}</option>
                     <option value="NC">NC</option>
@@ -3862,7 +3887,7 @@ function getProjectedFinishLabel(probs) {
 }
 
 // ─── MATCHUP SIMULATOR ────────────────────────────────────────────────────────
-function MatchupSimulator({ allFighters, onSaveToUpcoming }) {
+function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOpen }) {
   const [fA, setFA] = useState(null);
   const [fB, setFB] = useState(null);
   const [oddsA, setOddsA] = useState('');
@@ -4298,10 +4323,7 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming }) {
                 onClick={() => {
                   if (!fA || !fB) return;
                   const entry = buildRoiEntry({
-                    fA,
-                    fB,
-                    oddsA,
-                    oddsB,
+                    fA, fB, oddsA, oddsB,
                     eventName: eventName.trim(),
                     eventDate,
                   });
@@ -4311,6 +4333,21 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming }) {
                 className="px-4 py-2 rounded-lg border border-blue-700 text-blue-300 text-sm font-semibold hover:text-white hover:border-blue-500 transition-colors"
               >
                 Save to Upcoming
+              </button>
+              <button
+                onClick={() => {
+                  if (!fA || !fB) return;
+                  const entry = buildRoiEntry({
+                    fA, fB, oddsA, oddsB,
+                    eventName: eventName.trim(),
+                    eventDate,
+                  });
+                  onSaveToUpcomingAndOpen?.(entry);
+                  setSaveFeedback('Saved to Upcoming.');
+                }}
+                className="px-4 py-2 rounded-lg bg-blue-700 text-white text-sm font-semibold hover:bg-blue-600 transition-colors"
+              >
+                Save and Open Upcoming
               </button>
             </div>
           </div>
@@ -6453,6 +6490,11 @@ export default function App() {
     });
   };
 
+  const handleSaveToUpcomingAndOpen = (entry) => {
+    handleSaveToUpcoming(entry);
+    setView('upcoming');
+  };
+
   const handleGradeUpcoming = (id, actualWinner) => {
     const entry = upcomingEntries.find((e) => e.id === id);
     if (!entry) return;
@@ -6474,6 +6516,7 @@ export default function App() {
         <MatchupSimulator
           allFighters={fightersWithProspectsFiltered}
           onSaveToUpcoming={handleSaveToUpcoming}
+          onSaveToUpcomingAndOpen={handleSaveToUpcomingAndOpen}
         />
       )}
       {view === 'upcoming' && (
