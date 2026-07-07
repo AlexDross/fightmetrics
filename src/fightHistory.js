@@ -17808,6 +17808,50 @@ export const FIGHT_HISTORY = {
       "wc": "Lightweight",
       "tb": false,
       "ev": "UFC Fight Night: Moicano vs. Duncan"
+    },
+    {
+      "dt": "2021-07-31",
+      "op": "Danny Chavez",
+      "re": "NC",
+      "me": "Decision - Majority",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Featherweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Hall vs. Strickland"
+    },
+    {
+      "dt": "2021-05-01",
+      "op": "TJ Brown",
+      "re": "L",
+      "me": "Decision - Split",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Featherweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Reyes vs. Prochazka"
+    },
+    {
+      "dt": "2020-11-28",
+      "op": "Jonathan Pearce",
+      "re": "L",
+      "me": "KO/TKO",
+      "rn": 2,
+      "ti": "4:28",
+      "wc": "Featherweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Smith vs. Clark"
+    },
+    {
+      "dt": "2020-08-15",
+      "op": "Tony Kelley",
+      "re": "W",
+      "me": "Decision - Unanimous",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Featherweight",
+      "tb": false,
+      "ev": "UFC 252: Miocic vs. Cormier 3"
     }
   ],
   "Dakota Hope": [
@@ -103702,52 +103746,6 @@ export const FIGHT_HISTORY = {
       "wc": "Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Santos vs. Teixeira"
-    }
-  ],
-  "Kai Kamaka": [
-    {
-      "dt": "2021-07-31",
-      "op": "Danny Chavez",
-      "re": "NC",
-      "me": "Decision - Majority",
-      "rn": 3,
-      "ti": "5:00",
-      "wc": "Featherweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Hall vs. Strickland"
-    },
-    {
-      "dt": "2021-05-01",
-      "op": "TJ Brown",
-      "re": "L",
-      "me": "Decision - Split",
-      "rn": 3,
-      "ti": "5:00",
-      "wc": "Featherweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Reyes vs. Prochazka"
-    },
-    {
-      "dt": "2020-11-28",
-      "op": "Jonathan Pearce",
-      "re": "L",
-      "me": "KO/TKO",
-      "rn": 2,
-      "ti": "4:28",
-      "wc": "Featherweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Smith vs. Clark"
-    },
-    {
-      "dt": "2020-08-15",
-      "op": "Tony Kelley",
-      "re": "W",
-      "me": "Decision - Unanimous",
-      "rn": 3,
-      "ti": "5:00",
-      "wc": "Featherweight",
-      "tb": false,
-      "ev": "UFC 252: Miocic vs. Cormier 3"
     }
   ],
   "Ryan Benoit": [
