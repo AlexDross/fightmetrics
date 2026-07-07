@@ -2630,7 +2630,7 @@ function UpcomingEventTab({ entries, onGrade, onDelete, modelToggle, setModelTog
             const pickEdge = pA >= pB ? entry.edgeA : entry.edgeB;
             const fairLine = pA >= pB ? entry.fairLineA : entry.fairLineB;
             const actionable = entry.betAction === 'LEAN' || entry.betAction === 'BET' || entry.betAction === 'STRONG BET';
-            const hasMarket = !!(entry.oddsA || entry.oddsB);
+            const effectiveMarketOdds = pA >= pB ? (entry.oddsA || '') : (entry.oddsB || '');
 
             return (
               <div key={entry.id} className={`bg-slate-900 border ${tier.border} rounded-xl p-5`}>
@@ -2638,9 +2638,9 @@ function UpcomingEventTab({ entries, onGrade, onDelete, modelToggle, setModelTog
                 <div className="flex items-start justify-between gap-4 mb-4">
                   <div>
                     <div className="flex items-center gap-2 flex-wrap">
-                      <h4 className="text-white font-black text-lg">
+                      <h3 className="text-white font-black text-lg">
                         {entry.fighterA} vs. {entry.fighterB}
-                      </h4>
+                      </h3>
                       <span className="text-xs font-bold px-2 py-0.5 rounded-full border bg-slate-800 text-slate-400 border-slate-700">
                         Pending
                       </span>
@@ -2666,9 +2666,9 @@ function UpcomingEventTab({ entries, onGrade, onDelete, modelToggle, setModelTog
                       <p className="text-slate-500 text-xs uppercase tracking-wider">
                         Model Pick
                       </p>
-                      {hasV2 && (
+                      {hasV2 && modelToggle === 'v2' && (
                         <span className="text-[10px] font-bold text-violet-400 bg-violet-900/30 border border-violet-700/40 px-1.5 py-0.5 rounded uppercase">
-                          {modelToggle === 'v2' ? 'v2' : 'v1'}
+                          v2
                         </span>
                       )}
                     </div>
@@ -2703,31 +2703,22 @@ function UpcomingEventTab({ entries, onGrade, onDelete, modelToggle, setModelTog
                             {entry.betAction}
                           </span>
                         </div>
-                        <p className="text-white font-bold text-sm mt-2">{betFighter || '—'}</p>
+                        <p className="text-white font-bold text-sm mt-3">{betFighter || 'No bet side'}</p>
                       </>
                     ) : (
                       <p className="text-slate-600 font-bold text-sm mt-2">—</p>
                     )}
                   </div>
                   <div className="bg-slate-800/40 rounded-lg p-3">
-                    <p className="text-slate-500 text-xs uppercase tracking-wider">Market odds</p>
-                    {hasMarket ? (
-                      <>
-                        <p className="text-white font-bold text-sm mt-1 font-mono">
-                          {entry.fighterA} {entry.oddsA}
-                        </p>
-                        <p className="text-slate-400 text-xs font-mono">
-                          {entry.fighterB} {entry.oddsB}
-                        </p>
-                        {pickEdge != null && (
-                          <p className="text-slate-600 text-xs mt-1">
-                            {pickEdge > 0 ? '+' : ''}{(pickEdge * 100).toFixed(1)}% edge
-                          </p>
-                        )}
-                      </>
-                    ) : (
-                      <p className="text-slate-600 font-bold text-sm mt-2">—</p>
-                    )}
+                    <p className="text-slate-500 text-xs">Market odds</p>
+                    <p className="text-white font-bold text-sm mt-1">
+                      {effectiveMarketOdds || '—'}
+                    </p>
+                    <p className="text-slate-600 text-xs mt-1">
+                      {pickEdge != null
+                        ? `${pickEdge > 0 ? '+' : ''}${(pickEdge * 100).toFixed(1)}% edge`
+                        : 'No saved market edge'}
+                    </p>
                   </div>
                 </div>
 
