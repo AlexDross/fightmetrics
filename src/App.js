@@ -7231,18 +7231,18 @@ function ROITab({
         </div>
       )}
 
-      <div className="grid grid-cols-5 gap-4 mb-6">
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
+      <div className="grid grid-cols-4 gap-4 mb-6 items-stretch">
+        <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 h-full">
           <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold">Tracked Fights</p>
           <p className="font-black text-2xl mt-2 text-white">{localSummary.total}</p>
         </div>
 
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
+        <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 h-full">
           <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold">Graded Picks</p>
           <p className="font-black text-2xl mt-2 text-blue-400">{localSummary.graded}</p>
         </div>
 
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
+        <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 h-full">
           <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold">Pick Accuracy</p>
           {modelView === 'compare' ? (
             <p className="font-black text-lg mt-2">
@@ -7268,7 +7268,7 @@ function ROITab({
           )}
         </div>
 
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
+        <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 h-full">
           <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold">ROI</p>
           {modelView === 'compare' ? (
             <p className="font-black text-lg mt-2">
