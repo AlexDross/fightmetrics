@@ -6438,7 +6438,10 @@ export default function App() {
   const [view, setView] = useState('home');
   const [filterSince, setFilterSince] = useState('2026-05-23');
   const [modelToggle, setModelToggle] = useState('v2');
-  const [upcomingEntries, setUpcomingEntries] = useState(UPCOMING_ENTRIES);
+  const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+  const [upcomingEntries, setUpcomingEntries] = useState(
+    UPCOMING_ENTRIES.filter(e => !e.eventDate || e.eventDate >= today)
+  );
   const [roiEntries, setRoiEntries] = useState(() => {
     const fightersByName = Object.fromEntries(FIGHTERS.map((f) => [f.FIGHTER, f]));
     return ROI_ENTRIES.map((entry) => {
