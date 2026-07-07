@@ -2628,7 +2628,7 @@ function UpcomingEventTab({ entries, onGrade, onDelete, modelToggle, setModelTog
             const tier = betTier(entry.betAction);
             const betFighter = entry.betRecommendedFighter || null;
             const pickEdge = pA >= pB ? entry.edgeA : entry.edgeB;
-            const fairLine = pA >= pB ? entry.fairLineA : entry.fairLineB;
+            const fairLine = americanOdds(winProb);
             const actionable = entry.betAction === 'LEAN' || entry.betAction === 'BET' || entry.betAction === 'STRONG BET';
             const effectiveMarketOdds = pA >= pB ? (entry.oddsA || '') : (entry.oddsB || '');
 
