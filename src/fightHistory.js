@@ -30326,7 +30326,7 @@ export const FIGHT_HISTORY = {
       "ev": "UFC Fight Night: Strickland vs. Hernandez"
     }
   ],
-  "Zach Reese": [
+  "Zachary Reese": [
     {
       "dt": "2026-02-21",
       "op": "Michel Pereira",
