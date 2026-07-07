@@ -7312,15 +7312,6 @@ function ROITab({
           )}
         </div>
 
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
-          <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold">Finish Accuracy</p>
-          <p className={`font-black text-2xl mt-2 ${finishStats.accuracy >= 50 ? 'text-emerald-400' : 'text-yellow-400'}`}>
-            {finishStats.accuracy.toFixed(1)}%
-          </p>
-          <p className="text-slate-600 text-xs mt-1">
-            {finishStats.correct}/{finishStats.graded} graded
-          </p>
-        </div>
       </div>
       {entries.length === 0 ? (
         <div className="bg-slate-900 border border-slate-800 rounded-xl p-8 text-center text-slate-600">
@@ -7776,47 +7767,6 @@ function ROITab({
                   </div>
                 </div>
 
-                <div className="mt-4 space-y-3">
-                  {entry.projectedFinish != null && (() => {
-                    const af = entry.actualFinish;
-                    const pf = entry.projectedFinish;
-                    const finishColor = !af
-                      ? 'text-white'
-                      : (pf.includes(' / ')
-                          ? pf.split(' / ').some(s => s.trim() === af)
-                          : pf === af)
-                        ? 'text-emerald-400'
-                        : 'text-red-400';
-                    return (
-                      <div className="mt-3">
-                        <span className="text-slate-500 text-xs uppercase tracking-wider font-semibold">Projected Finish · </span>
-                        <span className={`${finishColor} text-sm font-bold`}>{pf}</span>
-                        <span className={`${finishColor} text-xs ml-1`}>
-                          ({Math.max(entry.projectedKO ?? 0, entry.projectedSUB ?? 0, entry.projectedDEC ?? 0)}%)
-                        </span>
-                      </div>
-                    );
-                  })()}
-                  <div>
-                    <label className="text-slate-500 text-xs font-semibold uppercase tracking-wider block mb-1.5">
-                      Finish Method
-                    </label>
-                    <select
-                      value={entry.actualFinish || ''}
-                      onChange={(e) =>
-                        onUpdateEntry(entry.id, {
-                          actualFinish: e.target.value,
-                        })
-                      }
-                      className="w-full bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-red-500"
-                    >
-                      <option value="">Pending</option>
-                      <option value="KO/TKO">KO/TKO</option>
-                      <option value="SUB">Submission</option>
-                      <option value="DEC">Decision</option>
-                    </select>
-                  </div>
-                </div>
               </div>
             );
           })}
