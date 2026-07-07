@@ -33,6 +33,7 @@ import { CARDIO_RATIOS } from './cardioModule';
 import { FIGHT_HISTORY } from './fightHistory';
 import { getHistoricalTier } from './rankHistory';
 import { ROI_ENTRIES } from './roiData';
+import { UPCOMING_ENTRIES } from './upcomingData';
 
 // _D2 imported from fightersData.js
 
@@ -2584,6 +2585,7 @@ const buildRoiEntry = ({ fA, fB, oddsA, oddsB, eventName, eventDate }) => {
 };
 // ─── UPCOMING EVENT TAB ──────────────────────────────────────────────────────
 function UpcomingEventTab({ entries, onGrade, onDelete, modelToggle, setModelToggle }) {
+  const exportedCode = `export const UPCOMING_ENTRIES = ${JSON.stringify(entries, null, 2)};\n`;
 
   return (
     <div className="max-w-5xl mx-auto px-5 py-8">
@@ -2594,18 +2596,28 @@ function UpcomingEventTab({ entries, onGrade, onDelete, modelToggle, setModelTog
             Save matchups from the Simulator to track pending picks.
           </p>
         </div>
-        <div className="flex items-center gap-1 bg-slate-800 rounded-lg p-1">
-          {['v1', 'v2'].map((v) => (
+        <div className="flex items-center gap-2">
+          {entries.length > 0 && (
             <button
-              key={v}
-              onClick={() => setModelToggle(v)}
-              className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-colors ${
-                modelToggle === v ? 'bg-red-600 text-white' : 'text-slate-400 hover:text-white'
-              }`}
+              onClick={() => navigator.clipboard.writeText(exportedCode)}
+              className="px-3 py-2 rounded-lg border border-slate-700 text-slate-300 text-xs font-semibold hover:text-white hover:border-slate-600 transition-colors"
             >
-              {v}
+              Copy Updated upcomingData.js
             </button>
-          ))}
+          )}
+          <div className="flex items-center gap-1 bg-slate-800 rounded-lg p-1">
+            {['v1', 'v2'].map((v) => (
+              <button
+                key={v}
+                onClick={() => setModelToggle(v)}
+                className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-colors ${
+                  modelToggle === v ? 'bg-red-600 text-white' : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                {v}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -6415,7 +6427,7 @@ export default function App() {
   const [view, setView] = useState('home');
   const [filterSince, setFilterSince] = useState('2026-05-23');
   const [modelToggle, setModelToggle] = useState('v2');
-  const [upcomingEntries, setUpcomingEntries] = useState([]);
+  const [upcomingEntries, setUpcomingEntries] = useState(UPCOMING_ENTRIES);
   const [roiEntries, setRoiEntries] = useState(() => {
     const fightersByName = Object.fromEntries(FIGHTERS.map((f) => [f.FIGHTER, f]));
     return ROI_ENTRIES.map((entry) => {
