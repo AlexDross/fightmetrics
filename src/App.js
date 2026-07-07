@@ -33,7 +33,6 @@ import { CARDIO_RATIOS } from './cardioModule';
 import { FIGHT_HISTORY } from './fightHistory';
 import { getHistoricalTier } from './rankHistory';
 import { ROI_ENTRIES } from './roiData';
-import { UPCOMING_CARD } from './upcomingCard';
 
 // _D2 imported from fightersData.js
 
@@ -2584,220 +2583,152 @@ const buildRoiEntry = ({ fA, fB, oddsA, oddsB, eventName, eventDate }) => {
   };
 };
 // ─── UPCOMING EVENT TAB ──────────────────────────────────────────────────────
-function UpcomingEventTab({ allFighters, modelToggle, setModelToggle, gradedUpcoming, onGradeUpcoming, onClearUpcoming }) {
-  const grouped = useMemo(() => {
-    const map = new Map();
-    UPCOMING_CARD.forEach((card) => {
-      if (!map.has(card.eventName)) map.set(card.eventName, []);
-      map.get(card.eventName).push(card);
-    });
-    map.forEach((fights, name) => map.set(name, [...fights].reverse()));
-    return map;
-  }, []);
+function UpcomingEventTab({ entries, onGrade, onDelete, modelToggle, setModelToggle }) {
 
   return (
     <div className="max-w-5xl mx-auto px-5 py-8">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h2 className="text-white font-black text-xl mb-1">Upcoming</h2>
-          <p className="text-slate-400 text-sm">Model predictions for the next card.</p>
+          <p className="text-slate-400 text-sm">
+            Save matchups from the Simulator to track pending picks.
+          </p>
         </div>
-        <div className="flex items-center gap-2">
-          {Object.keys(gradedUpcoming).length > 0 && (
+        <div className="flex items-center gap-1 bg-slate-800 rounded-lg p-1">
+          {['v1', 'v2'].map((v) => (
             <button
-              onClick={onClearUpcoming}
-              className="px-3 py-2 rounded-lg border border-slate-700 text-slate-400 text-xs font-semibold hover:text-white hover:border-slate-600 transition-colors"
+              key={v}
+              onClick={() => setModelToggle(v)}
+              className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-colors ${
+                modelToggle === v ? 'bg-red-600 text-white' : 'text-slate-400 hover:text-white'
+              }`}
             >
-              Clear Event
+              {v}
             </button>
-          )}
-          <div className="flex items-center gap-1 bg-slate-800 rounded-lg p-1">
-            {['v1', 'v2'].map((v) => (
-              <button
-                key={v}
-                onClick={() => setModelToggle(v)}
-                className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-colors ${
-                  modelToggle === v ? 'bg-red-600 text-white' : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                {v}
-              </button>
-            ))}
-          </div>
+          ))}
         </div>
       </div>
 
-      {[...grouped.entries()].map(([eventName, fights]) => (
-        <div key={eventName} className="mb-8">
-          <div className="mb-4 pb-2 border-b border-slate-800">
-            <h3 className="text-white font-black text-lg">{eventName}</h3>
-            <p className="text-slate-500 text-xs mt-0.5">{fights[0]?.date}</p>
-          </div>
-          <div className="space-y-4">
-            {(() => {
-              const gradableFights = fights.filter((c) => !c.debutFighter && allFighters.find((f) => f.FIGHTER === c.fighterA) && allFighters.find((f) => f.FIGHTER === c.fighterB));
-              const allGraded = gradableFights.length > 0 && gradableFights.every((c) => gradedUpcoming[[c.fighterA, c.fighterB].sort().join('|')]);
-              if (allGraded) {
-                return (
-                  <div className="bg-slate-900 border border-slate-800 rounded-xl p-8 text-center">
-                    <p className="text-slate-400 text-sm font-semibold">Event complete — all picks moved to ROI</p>
-                  </div>
-                );
-              }
-              return fights.map((card, idx) => {
-                if (card.debutFighter) {
-                  return (
-                    <div key={idx} className="bg-slate-900 border border-slate-800 rounded-xl p-5">
-                      <div className="flex items-start justify-between gap-4">
-                        <h4 className="text-white font-black text-lg">
-                          {card.fighterA} vs {card.fighterB}
-                        </h4>
-                        <span className="inline-flex items-center gap-1 rounded-full border border-amber-700/70 bg-amber-900/30 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-amber-300 shrink-0">
-                          Debut — no model prediction
-                        </span>
-                      </div>
-                      {(card.oddsA || card.oddsB) && (
-                        <p className="text-slate-500 text-xs mt-2 font-mono">
-                          {card.fighterA} {card.oddsA} &nbsp;vs&nbsp; {card.fighterB} {card.oddsB}
-                        </p>
-                      )}
-                    </div>
-                  );
-                }
-
-                const fA = allFighters.find((f) => f.FIGHTER === card.fighterA);
-                const fB = allFighters.find((f) => f.FIGHTER === card.fighterB);
-
-                if (!fA || !fB) {
-                  return (
-                    <div key={idx} className="bg-slate-900 border border-slate-800 rounded-xl p-5">
-                      <div className="flex items-start justify-between gap-4">
-                        <h4 className="text-white font-black text-lg">
-                          {card.fighterA} vs {card.fighterB}
-                        </h4>
-                        <span className="inline-flex items-center rounded-full border border-slate-700 bg-slate-800/40 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-slate-400 shrink-0">
-                          Fighter not in roster
-                        </span>
-                      </div>
-                      {(card.oddsA || card.oddsB) && (
-                        <p className="text-slate-500 text-xs mt-2 font-mono">
-                          {card.fighterA} {card.oddsA} &nbsp;vs&nbsp; {card.fighterB} {card.oddsB}
-                        </p>
-                      )}
-                    </div>
-                  );
-                }
-
-                const key = [card.fighterA, card.fighterB].sort().join('|');
-                if (gradedUpcoming[key]) return null;
-
-                const result = computeMatchupEdges(fA, fB);
-                const market = computeMarketAnalysis(result, card.oddsA || '', card.oddsB || '', fA, fB);
-                const pA = modelToggle === 'v2' && result.v2pA != null ? result.v2pA : result.pA;
-                const pB = modelToggle === 'v2' && result.v2pB != null ? result.v2pB : result.pB;
-                const predictedWinner = pA >= pB ? card.fighterA : card.fighterB;
-                const winProb = pA >= pB ? pA : pB;
-                const division =
-                  fA.WEIGHT_CLASS === fB.WEIGHT_CLASS
-                    ? fA.WEIGHT_CLASS
-                    : `${fA.WEIGHT_CLASS} / ${fB.WEIGHT_CLASS}`;
-                const tier = betTier(market?.betAction);
-                const pickEdge = market
-                  ? (market.pickSide === 'A' ? market.edgeA : market.edgeB)
-                  : null;
-                const fairLine = market
-                  ? (market.pickSide === 'A' ? market.fairLineA : market.fairLineB)
-                  : null;
-                const betFighter =
-                  market && market.betAction !== 'NO BET'
-                    ? market.pickSide === 'A' ? card.fighterA : card.fighterB
-                    : null;
-
-                return (
-                  <div key={idx} className={`bg-slate-900 border ${tier.border} rounded-xl p-5`}>
-                    <div className="flex items-start justify-between gap-4 mb-4">
-                      <h4 className="text-white font-black text-lg">
-                        {card.fighterA} vs {card.fighterB}
-                      </h4>
-                      <p className="text-slate-500 text-xs text-right shrink-0">
-                        {division} · {card.date}
-                      </p>
-                    </div>
-
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-2">
-                        <span className="text-slate-500 text-[10px] font-semibold uppercase tracking-wider">
-                          Model Pick
-                        </span>
-                        {result.v2pA != null && (
-                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-violet-900/40 border border-violet-700/50 text-violet-300">
-                            {modelToggle === 'v2' ? 'V2' : 'V1'}
-                          </span>
-                        )}
-                      </div>
-                      <span className="text-emerald-400 font-bold text-sm">
-                        {(winProb * 100).toFixed(1)}% win prob
-                      </span>
-                    </div>
-                    <p className="text-white font-black text-xl mb-4">{predictedWinner}</p>
-
-                    {market && (
-                      <div className="bg-slate-800/40 rounded-lg p-3 space-y-2 mb-3">
-                        <div className="flex items-center gap-2">
-                          <span className="text-slate-500 text-[10px] font-semibold uppercase tracking-wider">
-                            Bet Rec:
-                          </span>
-                          <span className={`text-xs font-bold ${tier.cls}`}>
-                            {market.betAction}
-                          </span>
-                          {betFighter && (
-                            <span className="text-slate-300 text-xs font-semibold">{betFighter}</span>
-                          )}
-                        </div>
-                        <p className="text-slate-400 text-xs font-mono">
-                          {card.fighterA} {card.oddsA} &nbsp;vs&nbsp; {card.fighterB} {card.oddsB}
-                        </p>
-                        <p className="text-slate-400 text-xs">
-                          Edge:{' '}
-                          <span className="text-white font-mono">
-                            {pickEdge != null ? `${(pickEdge * 100).toFixed(1)}pp` : '—'}
-                          </span>
-                          <span className="text-slate-600 mx-2">·</span>
-                          Fair line:{' '}
-                          <span className="text-white font-mono">{fairLine ?? '—'}</span>
-                        </p>
-                      </div>
-                    )}
-
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: market ? '0' : '12px' }}>
-                      <span style={{ fontSize: '11px', color: '#888', textTransform: 'uppercase' }}>
-                        Actual Winner
-                      </span>
-                      <select
-                        value=""
-                        onChange={(e) => {
-                          if (e.target.value) {
-                            onGradeUpcoming(card, fA, fB, result, market, e.target.value);
-                          }
-                        }}
-                        style={{
-                          background: '#1e293b', color: '#e2e8f0', border: '1px solid #334155',
-                          borderRadius: '6px', padding: '4px 8px', fontSize: '12px', cursor: 'pointer',
-                        }}
-                      >
-                        <option value="">Pending...</option>
-                        <option value={card.fighterA}>{card.fighterA}</option>
-                        <option value={card.fighterB}>{card.fighterB}</option>
-                        <option value="NC">NC</option>
-                      </select>
-                    </div>
-                  </div>
-                );
-              });
-            })()}
-          </div>
+      {entries.length === 0 ? (
+        <div className="bg-slate-900 border border-slate-800 rounded-xl p-8 text-center text-slate-600">
+          <Zap size={36} className="mx-auto mb-3 opacity-20" />
+          <p className="text-sm">No upcoming picks saved.</p>
+          <p className="text-xs mt-1">
+            Run a matchup in the Simulator and click <span className="text-slate-400 font-semibold">Save to Upcoming</span>.
+          </p>
         </div>
-      ))}
+      ) : (
+        <div className="space-y-4">
+          {entries.map((entry) => {
+            const pA = modelToggle === 'v2' && entry.v2pA != null ? entry.v2pA : entry.fighterAProb;
+            const pB = modelToggle === 'v2' && entry.v2pB != null ? entry.v2pB : entry.fighterBProb;
+            const predictedWinner = pA >= pB ? entry.fighterA : entry.fighterB;
+            const winProb = Math.max(pA, pB);
+            const hasV2 = entry.v2pA != null;
+            const tier = betTier(entry.betAction);
+            const betFighter = entry.betRecommendedFighter || null;
+            const pickEdge = pA >= pB ? entry.edgeA : entry.edgeB;
+            const fairLine = pA >= pB ? entry.fairLineA : entry.fairLineB;
+
+            return (
+              <div key={entry.id} className={`bg-slate-900 border ${tier.border} rounded-xl p-5`}>
+                <div className="flex items-start justify-between gap-4 mb-4">
+                  <div>
+                    <h4 className="text-white font-black text-lg">
+                      {entry.fighterA} vs {entry.fighterB}
+                    </h4>
+                    <p className="text-slate-500 text-xs mt-0.5">
+                      {entry.division}
+                      {entry.eventName ? ` · ${entry.eventName}` : ''}
+                      {entry.eventDate ? ` · ${entry.eventDate}` : ''}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => onDelete(entry.id)}
+                    className="px-3 py-1.5 rounded-lg border border-slate-700 text-slate-500 text-xs font-semibold hover:text-white hover:border-slate-600 transition-colors shrink-0"
+                  >
+                    Delete
+                  </button>
+                </div>
+
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-slate-500 text-[10px] font-semibold uppercase tracking-wider">
+                      Model Pick
+                    </span>
+                    {hasV2 && (
+                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-violet-900/40 border border-violet-700/50 text-violet-300">
+                        {modelToggle === 'v2' ? 'V2' : 'V1'}
+                      </span>
+                    )}
+                  </div>
+                  <span className="text-emerald-400 font-bold text-sm">
+                    {(winProb * 100).toFixed(1)}% win prob
+                  </span>
+                </div>
+                <p className="text-white font-black text-xl mb-4">{predictedWinner}</p>
+
+                {(entry.betAction || entry.oddsA || entry.oddsB) && (
+                  <div className="bg-slate-800/40 rounded-lg p-3 space-y-2 mb-3">
+                    <div className="flex items-center gap-2">
+                      <span className="text-slate-500 text-[10px] font-semibold uppercase tracking-wider">
+                        Bet Rec:
+                      </span>
+                      <span className={`text-xs font-bold ${tier.cls}`}>
+                        {entry.betAction || 'NO BET'}
+                      </span>
+                      {betFighter && (
+                        <span className="text-slate-300 text-xs font-semibold">{betFighter}</span>
+                      )}
+                    </div>
+                    {(entry.oddsA || entry.oddsB) && (
+                      <p className="text-slate-400 text-xs font-mono">
+                        {entry.fighterA} {entry.oddsA} &nbsp;vs&nbsp; {entry.fighterB} {entry.oddsB}
+                      </p>
+                    )}
+                    {pickEdge != null && (
+                      <p className="text-slate-400 text-xs">
+                        Edge:{' '}
+                        <span className="text-white font-mono">
+                          {(pickEdge * 100).toFixed(1)}pp
+                        </span>
+                        {fairLine && (
+                          <>
+                            <span className="text-slate-600 mx-2">·</span>
+                            Fair line:{' '}
+                            <span className="text-white font-mono">{fairLine}</span>
+                          </>
+                        )}
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                <div className="flex items-center gap-3 mt-3">
+                  <span className="text-slate-500 text-[11px] font-semibold uppercase tracking-wider">
+                    Actual Winner
+                  </span>
+                  <select
+                    value=""
+                    onChange={(e) => {
+                      if (e.target.value) onGrade(entry.id, e.target.value);
+                    }}
+                    style={{
+                      background: '#1e293b', color: '#e2e8f0', border: '1px solid #334155',
+                      borderRadius: '6px', padding: '4px 8px', fontSize: '12px', cursor: 'pointer',
+                    }}
+                  >
+                    <option value="">Pending...</option>
+                    <option value={entry.fighterA}>{entry.fighterA}</option>
+                    <option value={entry.fighterB}>{entry.fighterB}</option>
+                    <option value="NC">NC</option>
+                  </select>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
@@ -3931,7 +3862,7 @@ function getProjectedFinishLabel(probs) {
 }
 
 // ─── MATCHUP SIMULATOR ────────────────────────────────────────────────────────
-function MatchupSimulator({ allFighters, onSavePrediction, onOpenROI }) {
+function MatchupSimulator({ allFighters, onSavePrediction, onOpenROI, onSaveToUpcoming }) {
   const [fA, setFA] = useState(null);
   const [fB, setFB] = useState(null);
   const [oddsA, setOddsA] = useState('');
@@ -4380,7 +4311,7 @@ function MatchupSimulator({ allFighters, onSavePrediction, onOpenROI }) {
                 </p>
               </div>
             </div>
-            <div className="flex gap-3">
+            <div className="flex gap-3 flex-wrap">
               <button
                 onClick={() => savePrediction(false)}
                 className="px-4 py-2 rounded-lg bg-slate-700 text-white text-sm font-semibold hover:bg-slate-600 transition-colors"
@@ -4392,6 +4323,24 @@ function MatchupSimulator({ allFighters, onSavePrediction, onOpenROI }) {
                 className="px-4 py-2 rounded-lg bg-red-600 text-white text-sm font-semibold hover:bg-red-500 transition-colors"
               >
                 Save And Open ROI
+              </button>
+              <button
+                onClick={() => {
+                  if (!fA || !fB) return;
+                  const entry = buildRoiEntry({
+                    fA,
+                    fB,
+                    oddsA,
+                    oddsB,
+                    eventName: eventName.trim(),
+                    eventDate,
+                  });
+                  onSaveToUpcoming?.(entry);
+                  setSaveFeedback('Saved to Upcoming.');
+                }}
+                className="px-4 py-2 rounded-lg border border-blue-700 text-blue-300 text-sm font-semibold hover:text-white hover:border-blue-500 transition-colors"
+              >
+                Save to Upcoming
               </button>
             </div>
           </div>
@@ -6468,7 +6417,7 @@ export default function App() {
   const [view, setView] = useState('home');
   const [filterSince, setFilterSince] = useState('2026-05-23');
   const [modelToggle, setModelToggle] = useState('v2');
-  const [gradedUpcoming, setGradedUpcoming] = useState({});
+  const [upcomingEntries, setUpcomingEntries] = useState([]);
   const [roiEntries, setRoiEntries] = useState(() => {
     const fightersByName = Object.fromEntries(FIGHTERS.map((f) => [f.FIGHTER, f]));
     return ROI_ENTRIES.map((entry) => {
@@ -6523,31 +6472,26 @@ export default function App() {
     setRoiEntries([]);
   };
 
-  const handleClearUpcoming = () => setGradedUpcoming({});
+  const handleSaveToUpcoming = (entry) => {
+    setUpcomingEntries((prev) => {
+      const key = [entry.fighterA, entry.fighterB].sort().join('|');
+      const alreadyExists = prev.some(
+        (e) => [e.fighterA, e.fighterB].sort().join('|') === key
+      );
+      if (alreadyExists) return prev;
+      return [entry, ...prev];
+    });
+  };
 
-  const handleGradeUpcoming = (card, fA, fB, result, market, actualWinner) => {
-    const key = [card.fighterA, card.fighterB].sort().join('|');
-    const entry = buildRoiEntry({
-      fA,
-      fB,
-      oddsA: card.oddsA ?? '',
-      oddsB: card.oddsB ?? '',
-      eventName: card.eventName ?? '',
-      eventDate: card.date ?? '',
-    });
-    const gradedEntry = { ...entry, actualWinner };
-    setRoiEntries((prev) => [gradedEntry, ...prev]);
-    setGradedUpcoming((prev) => {
-      const updatedGraded = { ...prev, [key]: actualWinner };
-      const allGraded = UPCOMING_CARD
-        .filter((c) => !c.debutFighter)
-        .every((c) => {
-          const k = [c.fighterA, c.fighterB].sort().join('|');
-          return updatedGraded[k];
-        });
-      if (allGraded) setTimeout(() => setView('roi'), 1000);
-      return updatedGraded;
-    });
+  const handleGradeUpcoming = (id, actualWinner) => {
+    const entry = upcomingEntries.find((e) => e.id === id);
+    if (!entry) return;
+    setRoiEntries((prev) => [{ ...entry, actualWinner }, ...prev]);
+    setUpcomingEntries((prev) => prev.filter((e) => e.id !== id));
+  };
+
+  const handleDeleteUpcoming = (id) => {
+    setUpcomingEntries((prev) => prev.filter((e) => e.id !== id));
   };
 
   return (
@@ -6561,16 +6505,16 @@ export default function App() {
           allFighters={fightersWithProspectsFiltered}
           onSavePrediction={handleSavePrediction}
           onOpenROI={() => setView('roi')}
+          onSaveToUpcoming={handleSaveToUpcoming}
         />
       )}
       {view === 'upcoming' && (
         <UpcomingEventTab
-          allFighters={fightersWithProspectsFiltered}
+          entries={upcomingEntries}
+          onGrade={handleGradeUpcoming}
+          onDelete={handleDeleteUpcoming}
           modelToggle={modelToggle}
           setModelToggle={setModelToggle}
-          gradedUpcoming={gradedUpcoming}
-          onGradeUpcoming={handleGradeUpcoming}
-          onClearUpcoming={handleClearUpcoming}
         />
       )}
       {view === 'explore' && <ExploreTab allFighters={fightersWithProspectsFiltered} />}
