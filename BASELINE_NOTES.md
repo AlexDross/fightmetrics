@@ -145,3 +145,24 @@ Combined (all four fields): +0.30pp @ W=0.04 — worse than `ctrl` alone, becaus
 ### What this unlocks
 
 The re-baseline instrument now exists. Future model changes — feature additions, weight adjustments, sigmoid tuning — can be validated against the 59.29% baseline using `generate_baseline.py` + the unmodified chain. This is the foundation all future model improvement work builds on.
+
+---
+
+# Change Log
+
+## 2026-07-07 — v2 logistic: zero 5 inverted features, fix null defaults, add NO READ threshold
+
+**Changes made (`src/App.js`):**
+- **Fix A** — zeroed 5 RED coefficients in `MODEL_V2.coef`: `wins` (−0.203→0), `losses` (−0.153→0), `ko_wins` (−0.065→0), `sub_wins` (−0.090→0), `title_bouts` (0.096→0). These are cumulative-record features with inverted outcome correlations — the same class of signal v1 already zeroed (`win_dif`) after backtest audit.
+- **Fix B** — corrected null-default bug in the v2 feature vector (`featsV2` and `featsV2flip`): age `?? 0 → ?? 30`, height `?? 0 → ?? 69`, reach `?? 0 → ?? 70` (division-average defaults). Zero produced nonsensical differentials (e.g. a fabricated 26-year age gap) for fighters with incomplete profiles.
+- **Fix C** — added a "NO READ" threshold to the Simulator bet-recommendation banner: when the active model's pick probability is < 0.53, the bet rec displays a muted-gray "NO READ" instead of any recommendation (distinct from "NO BET"). Presentational only — does not change model picks/probabilities.
+
+**Validation** — 42-fight out-of-sample set (`roiData.js` graded fights, `eventDate ≥ 2026-05-23`, excluding UFC Vegas 117 boundary card; `fightersData.js` ends May 16 → zero leakage confirmed, v2 drift = 0). Measured by executing live `computeMatchupEdges` per fight (not `backtest_combo_v2.py`, which tests the ELO/SOS/Momentum composite and is blind to `MODEL_V2`).
+
+| Model | Before | After |
+|---|---|---|
+| **v1 accuracy** | 24/42 = **57.1%** | 24/42 = **57.1%** (unchanged, as expected — v1 does not use `MODEL_V2`) |
+| **v2 accuracy** | 25/42 = **59.5%** | 27/42 = **64.3%** (+2 picks, +4.8pp) |
+| v1↔v2 disagreements | 13 (v2 right 7) | 9 (v2 right 6) |
+
+Decision gate (v2 improved AND v1 unchanged) passed → committed.

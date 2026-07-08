@@ -1610,11 +1610,14 @@ const MODEL_V2 = {
     td_accuracy: 0.312, elo: 107.2
   },
   coef: {
+    // RED features zeroed 2026-07-07: wins/losses/ko_wins/sub_wins/title_bouts
+    // had inverted outcome correlations (same issue that caused v1 to zero
+    // win_dif); out-of-sample (42 graded fights) confirmed removing them helps.
     younger: 0.274, elo: 0.246, sig_str_landed: 0.243, td_landed: 0.224,
-    wins: -0.203, sig_str_accuracy: 0.193, win_streak: 0.167,
-    sub_attempts: 0.155, losses: -0.153, rounds: 0.105,
-    title_bouts: 0.096, sub_wins: -0.090, reach: 0.073,
-    ko_wins: -0.065, height: 0.060, td_accuracy: 0.049, lose_streak: 0.008
+    wins: 0, sig_str_accuracy: 0.193, win_streak: 0.167,
+    sub_attempts: 0.155, losses: 0, rounds: 0.105,
+    title_bouts: 0, sub_wins: 0, reach: 0.073,
+    ko_wins: 0, height: 0.060, td_accuracy: 0.049, lose_streak: 0.008
   }
 };
 
@@ -2132,9 +2135,9 @@ const computeMatchupEdges = (fA, fB) => {
     title_bouts:      titleBoutsA - titleBoutsB,
     ko_wins:          koWinsA - koWinsB,
     sub_wins:         subWinsA - subWinsB,
-    height:           (fA.HEIGHT_IN ?? 0) - (fB.HEIGHT_IN ?? 0),
-    reach:            (fA.REACH_IN ?? 0) - (fB.REACH_IN ?? 0),
-    younger:          (fB.AGE ?? 0) - (fA.AGE ?? 0),
+    height:           (fA.HEIGHT_IN ?? 69) - (fB.HEIGHT_IN ?? 69),
+    reach:            (fA.REACH_IN ?? 70) - (fB.REACH_IN ?? 70),
+    younger:          (fB.AGE ?? 30) - (fA.AGE ?? 30),
     sig_str_landed:   aslA - aslB,
     sig_str_accuracy: aspA - aspB,
     sub_attempts:     asaA - asaB,
@@ -2153,9 +2156,9 @@ const computeMatchupEdges = (fA, fB) => {
     title_bouts:      titleBoutsB - titleBoutsA,
     ko_wins:          koWinsB - koWinsA,
     sub_wins:         subWinsB - subWinsA,
-    height:           (fB.HEIGHT_IN ?? 0) - (fA.HEIGHT_IN ?? 0),
-    reach:            (fB.REACH_IN ?? 0) - (fA.REACH_IN ?? 0),
-    younger:          (fA.AGE ?? 0) - (fB.AGE ?? 0),
+    height:           (fB.HEIGHT_IN ?? 69) - (fA.HEIGHT_IN ?? 69),
+    reach:            (fB.REACH_IN ?? 70) - (fA.REACH_IN ?? 70),
+    younger:          (fA.AGE ?? 30) - (fB.AGE ?? 30),
     sig_str_landed:   aslB - aslA,
     sig_str_accuracy: aspB - aspA,
     sub_attempts:     asaB - asaA,
@@ -4430,24 +4433,35 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                 const pickBreakEven = market.pickSide === 'A' ? market.breakEvenA : market.breakEvenB;
                 const pickFairLine = market.pickSide === 'A' ? market.fairLineA : market.fairLineB;
 
-                const isBet = market.betAction === 'STRONG BET' || market.betAction === 'BET';
-                const isLean = market.betAction === 'LEAN';
-                const isNoBet = market.betAction === 'NO BET';
+                // NO READ: when the ACTIVE model's pick probability is < 53%,
+                // the fight is a coin-flip and we suppress any bet read. This is
+                // distinct from NO BET (we have conviction but no market value).
+                // Uses market.pickProb, which already reflects the v1/v2 toggle.
+                const pickProbActive = market.pickProb ?? Math.max(activePA, activePB);
+                const noRead = pickProbActive < 0.53;
+                const displayAction = noRead ? 'NO READ' : market.betAction;
+
+                const isBet = !noRead && (market.betAction === 'STRONG BET' || market.betAction === 'BET');
+                const isLean = !noRead && market.betAction === 'LEAN';
+                const isNoBet = !noRead && market.betAction === 'NO BET';
                 const actionable = isBet || isLean;
+                const showBetRec = actionable || noRead;
 
                 const actionStyles = {
                   'STRONG BET': { bg: 'bg-emerald-950/40 border-emerald-600', badge: 'bg-emerald-500 text-emerald-950', text: 'text-emerald-400' },
                   'BET':        { bg: 'bg-emerald-950/20 border-emerald-800', badge: 'bg-emerald-700 text-emerald-100', text: 'text-emerald-400' },
                   'LEAN':       { bg: 'bg-yellow-950/20 border-yellow-800',   badge: 'bg-yellow-700 text-yellow-100',   text: 'text-yellow-400' },
                   'NO BET':     { bg: 'bg-slate-800/40 border-slate-700',     badge: 'bg-slate-600 text-slate-200',     text: 'text-slate-400'  },
+                  // NO READ: muted gray, deliberately dimmer than NO BET.
+                  'NO READ':    { bg: 'bg-slate-900/40 border-slate-800',     badge: 'bg-slate-700 text-slate-400',     text: 'text-slate-500'  },
                 };
-                const s = actionStyles[market.betAction] ?? actionStyles['NO BET'];
+                const s = actionStyles[displayAction] ?? actionStyles['NO BET'];
 
                 return (
                   <div className="space-y-3">
 
                     {/* ── ROW 1: Signal summary (Bet Rec column only when actionable) ── */}
-                    <div className={`grid ${actionable ? 'grid-cols-3' : 'grid-cols-2'} gap-3`}>
+                    <div className={`grid ${showBetRec ? 'grid-cols-3' : 'grid-cols-2'} gap-3`}>
 
                       {/* Model Pick — always shown */}
                       <div className={`border rounded-xl p-4 ${market.lowConviction ? 'bg-orange-950/10 border-orange-900' : 'bg-slate-900 border-slate-700'}`}>
@@ -4494,24 +4508,30 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                         )}
                       </div>
 
-                      {/* Bet Recommendation — only when actionable (LEAN/BET/STRONG BET) */}
-                      {actionable && (
+                      {/* Bet Recommendation — actionable (LEAN/BET/STRONG BET) or NO READ */}
+                      {showBetRec && (
                         <div className={`border rounded-xl p-4 ${s.bg}`}>
                           <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider mb-2">Bet Rec</p>
                           <span className={`inline-block text-xs font-black px-2 py-0.5 rounded-full mb-2 ${s.badge}`}>
-                            {market.betAction}
+                            {displayAction}
                           </span>
+                          {noRead ? (
+                            <p className="text-slate-500 text-xs leading-snug">Pick under 53% — coin-flip, insufficient confidence to read</p>
+                          ) : (
+                          <>
                           <p className={`font-black text-sm ${s.text}`}>{pickFighter.FIGHTER}</p>
                           <p className="text-white font-bold text-sm">{pickOdds}</p>
                           {isLean && market.lowCredCap && (
                             <p className="text-amber-500 text-xs mt-1.5 leading-snug">Capped from BET — low sample size (CRED &lt; 30%)</p>
                           )}
+                          </>
+                          )}
                         </div>
                       )}
                     </div>
 
-                    {/* ── ROW 2: Full bet details (only when actionable) ── */}
-                    {!isNoBet && (
+                    {/* ── ROW 2: Full bet details (only when actionable, never on NO READ) ── */}
+                    {!isNoBet && !noRead && (
                       <div className={`border rounded-xl p-5 ${s.bg}`}>
                         <div className="flex items-center justify-between mb-4">
                           <div className="flex items-baseline gap-3">
