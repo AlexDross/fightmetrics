@@ -1307,5 +1307,33 @@ Verification completed after patch:
 
 Git/worktree note:
 
-- `src/fightersData.js` is modified.
-- `CODEX_CLAUDE_HANDOFF.md` is still untracked unless the user chooses to add/commit it.
+- This local-only note was superseded by the commit/push entry below.
+
+### 2026-07-08 - Fighter Data Patch Committed and Pushed
+
+Codex committed and pushed the fighter data patch plus this Claude handoff file to GitHub.
+
+Commit:
+
+```text
+3d3d7a2 Fill missing fighter profile values
+```
+
+Repository state after push:
+
+- Branch: `main`
+- Remote: `origin/main`
+- `HEAD`, `origin/main`, and `origin/HEAD` all point to commit `3d3d7a2`.
+- GitHub push succeeded: `708d3f6..3d3d7a2 main -> main`.
+
+Files included in the commit:
+
+```text
+src/fightersData.js
+CODEX_CLAUDE_HANDOFF.md
+```
+
+Important note:
+
+- Many unrelated generated/analysis files remain untracked locally.
+- Those unrelated untracked files were intentionally not staged, committed, or pushed.
