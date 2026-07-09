@@ -187,3 +187,26 @@ One fight flipped: **Shara Magomedov vs. Michel Pereira** (2026-06-27) — v2 wa
 **Caveat:** small sample (n=42) — directionally sound and unusually robust to parameter choice, but the entire measured gain is one near-coin-flip fight (0.495→0.521), which is not individually decisive at this sample size. The real value is replacing a weak, barely-contributing feature (`lose_streak`, coef 0.008) with a better-motivated one grounded in a much larger modern-era sample (7,365 rows) — expected to compound as the OOS set grows, rather than a claim that +2.4pp itself is a stable, permanent gain.
 
 Decision gate (v2 improved AND v1 unchanged) passed → committed.
+
+## 2026-07-09 — v2 logistic: fix ELO double-scaling bug
+
+**Change made (`src/App.js`):** `MODEL_V2.scales.elo` corrected from `107.2` to `1.072` (a one-line change; `featsV2.elo`/`featsV2flip.elo` keep their `/100` unchanged, and a comment was added there to prevent regression).
+
+**The bug:** ELO was being divided by ~100 twice. `featsV2.elo` computes `(effectiveEloA − effectiveEloB) / 100`, and `computeLogisticProb` then divides again by `scales.elo`. The correct scale is the model artifact's `scaler_scales.elo = 1.0724799…` (the std of the training feature, which was ELO-diff-in-hundreds — hence ~1.07, not ~107). Commit 8cd13d8 (2026-06-25) had correctly added the `/100` to the feature but simultaneously changed the scale from 1.072 to 107.2, so the net was `(rawEloDiff/100)/107.2 = rawEloDiff/10720` instead of the intended `rawEloDiff/107.2`. This crushed ELO's contribution to ~1/100th of its intended weight — despite `elo` carrying the 2nd-highest standardized coefficient in the whole model (0.246). Verified by direct computation, not code review alone: for a 71-point ELO gap (McGregor 1719 vs Holloway 1790), the contribution to the logit went from −0.0016 (crushed, ranked 11th of 16 features) to −0.163 (proportionate, ranked 3rd — comparable to `sig_str_landed`, `younger`, `modern_form`).
+
+*Note on the task's two proposed fix options: they are NOT mathematically equivalent, contrary to how they were framed. "Remove the /100, set scale 1.072" gives `rawEloDiff/1.072` = the ORIGINAL explosion bug (contribution −16.3). Only "keep the /100, set scale 1.072" gives the correct `rawEloDiff/107.2`. Implemented the latter, which is also the artifact-faithful value and the smaller diff.*
+
+**Validation** — same 42-fight OOS set. Executed live `computeMatchupEdges` per fight, verified against the edited `src/App.js`.
+
+| Model | Before | After |
+|---|---|---|
+| **v1 accuracy** | 25/42 = **59.5%** | 25/42 = **59.5%** (unchanged, as expected — v1 does not use `MODEL_V2`) |
+| **v2 accuracy** | 28/42 = **66.7%** | 30/42 = **71.4%** (+2 picks, +4.8pp) |
+
+Two fights flipped, both wrong→right, zero regressions: **Marcus McGhee vs. John Yannis** (0.480→0.538) and **Jordan Leavitt vs. Joanderson Brito** (Leavitt 0.508 → Brito, i.e. pA 0.469).
+
+**Relationship to prior v2 changes:** this bug was present, identically, in both the before- and after-states of the 2026-07-07 (RED-feature) and 2026-07-08 (modern_form) validations. Those were internally consistent A/B tests with the bug held constant, so their relative improvements remain valid — this fix is a distinct, additional correction, not a retraction of either. What it does change is v2's *absolute* accuracy, which was understated while ELO's second-strongest signal was effectively muted.
+
+**UFC 329 impact (checked, card entered for 2026-07-11):** of 12 saved UFC 329 matchups, the fix changes exactly one live v2 pick — **Alessandro Costa vs. Cody Durden** (live v2pA 0.488 → 0.519, flipping the pick from Durden to Costa). The other 11 picks are unchanged in direction.
+
+Decision gate (v2 improved AND v1 unchanged) passed → committed.

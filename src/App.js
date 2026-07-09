@@ -1633,7 +1633,7 @@ const MODEL_V2 = {
     rounds: 23.105, title_bouts: 1.749, ko_wins: 2.446, sub_wins: 2.101,
     height: 6.257, reach: 8.941, younger: 5.256, sig_str_landed: 2.137,
     sig_str_accuracy: 0.128, sub_attempts: 1.036, td_landed: 1.974,
-    td_accuracy: 0.312, elo: 107.2
+    td_accuracy: 0.312, elo: 1.072
   },
   coef: {
     // RED features zeroed 2026-07-07: wins/losses/ko_wins/sub_wins/title_bouts
@@ -2173,6 +2173,9 @@ const computeMatchupEdges = (fA, fB) => {
     sub_attempts:     asaA - asaB,
     td_landed:        atlA - atlB,
     td_accuracy:      atpA - atpB,
+    // ELO diff is /100 to match the training feature's units (ELO in hundreds);
+    // scales.elo (1.072) is the artifact std of THAT /100 feature. Do NOT also
+    // scale by ~107 — that double-divides and crushes ELO ~100x (fixed 2026-07-09).
     elo:              (effectiveEloA - effectiveEloB) / 100,
   };
   const v2 = computeLogisticProb(featsV2);
