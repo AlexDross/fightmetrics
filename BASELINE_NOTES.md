@@ -166,3 +166,24 @@ The re-baseline instrument now exists. Future model changes — feature addition
 | v1↔v2 disagreements | 13 (v2 right 7) | 9 (v2 right 6) |
 
 Decision gate (v2 improved AND v1 unchanged) passed → committed.
+
+## 2026-07-08 — v2 logistic: replace win_streak/lose_streak with modern_form
+
+**Change made (`src/App.js`):** replaced `MODEL_V2`'s `win_streak` (coef 0.167) and `lose_streak` (coef 0.008, effectively inert) features with a single `modern_form` feature — added `computeModernForm(fh, daysSinceLast)` and wired it into `featsV2`/`featsV2flip`. `modern_form` = exp-weighted last-8 win rate (λ=0.8, most recent fight weighted heaviest) − 0.05 if the fighter's most recent fight was a loss by finish (KO/TKO or Submission) − 0.065 if days since last fight > 420, clamped to [−0.2, 0.85]. Standardized with scale 0.343 (√2 × roster std of the raw score) and coef 0.175 (= the combined weight of the two features it replaces). v1's composite (`win_streak_dif`/`lose_streak_dif` in `formScore`) is untouched — this is a v2-only change.
+
+**Source:** modern-era (2018+) statistical analysis, 7,365 fighter-fight rows. Key findings behind the recommendation: career-total wins/KO wins/sub wins are not useful standalone predictors (already addressed by the 2026-07-07 RED-feature zeroing); simple opponent-quality adjustment does not beat plain win-rate windows in the modern sample (existing ELO feature is preferred, no opponent-quality term added here); winning by finish is not a significant signal (no bonus added); losing by finish is a significant negative signal (included); layoff penalty activates at >420 days rather than saturating immediately.
+
+**Validation** — same 42-fight out-of-sample set as 2026-07-07 (`roiData.js` graded fights, `eventDate ≥ 2026-05-23`, excluding UFC Vegas 117; zero leakage — `fightHistory.js` is dated strictly before every fight in the set). Measured by executing live `computeMatchupEdges` per fight, verified directly against the edited `src/App.js` (not a reconstruction).
+
+| Model | Before | After |
+|---|---|---|
+| **v1 accuracy** | 25/42 = **59.5%** | 25/42 = **59.5%** (unchanged, as expected — v1 does not use `MODEL_V2`) |
+| **v2 accuracy** | 27/42 = **64.3%** | 28/42 = **66.7%** (+1 pick, +2.4pp) |
+
+One fight flipped: **Shara Magomedov vs. Michel Pereira** (2026-06-27) — v2 was wrong at pA=0.495, corrected to pA=0.521. Zero previously-correct picks broke. Result held across a coefficient sweep (0.10–0.40), both a "replace" and "add-alongside" integration variant, and two different layoff-window conventions.
+
+*Note: this run measured v1 at 25/42 (59.5%), one fight above the 24/42 (57.1%) recorded in the 2026-07-07 entry above — likely drift from unrelated data-file edits since that entry was written (e.g. fighter data corrections), not a discrepancy introduced by this change. Flagging for transparency rather than reconciling.*
+
+**Caveat:** small sample (n=42) — directionally sound and unusually robust to parameter choice, but the entire measured gain is one near-coin-flip fight (0.495→0.521), which is not individually decisive at this sample size. The real value is replacing a weak, barely-contributing feature (`lose_streak`, coef 0.008) with a better-motivated one grounded in a much larger modern-era sample (7,365 rows) — expected to compound as the OOS set grows, rather than a claim that +2.4pp itself is a stable, permanent gain.
+
+Decision gate (v2 improved AND v1 unchanged) passed → committed.

@@ -344,6 +344,32 @@ const computeMomentum = (fh) => {
   return den > 0 ? Math.max(-2, Math.min(2, (num / den) * 2)) : 0;
 };
 
+// ─── MODERN FORM (MODEL_V2 only) ─────────────────────────────────────────────
+// Exp-weighted last-8 win rate (λ=0.8) with finish-loss and layoff penalties.
+// Replaces raw win/lose-streak counts in the v2 feature vector. Source: modern-era
+// (2018+) statistical analysis, 7,365 fighter-fight rows. Validated 2026-07-08 on
+// the 42-fight OOS set: v2 64.3% -> 66.7%, v1 unaffected (see BASELINE_NOTES.md).
+const computeModernForm = (fh, daysSinceLast) => {
+  const s = [...(fh || [])].sort((a, b) => (a.dt < b.dt ? 1 : -1)); // most recent first
+  let num = 0,
+    den = 0;
+  s.slice(0, 8).forEach((f, i) => {
+    const w = Math.pow(0.8, i);
+    if (f.re === 'W') {
+      num += w;
+      den += w;
+    } else if (f.re === 'L') {
+      den += w; // win_i = 0; NC excluded from the window
+    }
+  });
+  const wr = den > 0 ? num / den : 0.5;
+  const mr = s[0];
+  const lastLossByFinish =
+    mr && mr.re === 'L' && (isKoMethod(mr.me || '') || isSubMethod(mr.me || '')) ? 1 : 0;
+  const layoff = (daysSinceLast ?? 180) > 420 ? 1 : 0;
+  return Math.max(-0.2, Math.min(0.85, 0.8 * wr - 0.05 * lastLossByFinish - 0.065 * layoff));
+};
+
 // ─── STRENGTH OF SCHEDULE ────────────────────────────────────────────────────
 // Mean opponent tier over the last 5 fights via point-in-time getOpponentTier.
 // Returns 0.12 (unranked floor) when history is absent — backtest-validated at
@@ -1601,9 +1627,9 @@ const MODEL = {
 // artifact's 70.15% test accuracy. This model is NOT live; it only logs for now.
 const MODEL_V2 = {
   version: "logistic_v1_20260625",
-  features: ["win_streak","lose_streak","wins","losses","rounds","title_bouts","ko_wins","sub_wins","height","reach","younger","sig_str_landed","sig_str_accuracy","sub_attempts","td_landed","td_accuracy","elo"],
+  features: ["modern_form","wins","losses","rounds","title_bouts","ko_wins","sub_wins","height","reach","younger","sig_str_landed","sig_str_accuracy","sub_attempts","td_landed","td_accuracy","elo"],
   scales: {
-    win_streak: 2.143, lose_streak: 1.107, wins: 5.105, losses: 3.721,
+    modern_form: 0.343, wins: 5.105, losses: 3.721,
     rounds: 23.105, title_bouts: 1.749, ko_wins: 2.446, sub_wins: 2.101,
     height: 6.257, reach: 8.941, younger: 5.256, sig_str_landed: 2.137,
     sig_str_accuracy: 0.128, sub_attempts: 1.036, td_landed: 1.974,
@@ -1613,11 +1639,14 @@ const MODEL_V2 = {
     // RED features zeroed 2026-07-07: wins/losses/ko_wins/sub_wins/title_bouts
     // had inverted outcome correlations (same issue that caused v1 to zero
     // win_dif); out-of-sample (42 graded fights) confirmed removing them helps.
+    // win_streak/lose_streak replaced 2026-07-08 with modern_form (exp-weighted
+    // last-8 win rate + finish-loss/layoff penalties) — 42-fight OOS confirmed
+    // v2 64.3% -> 66.7% with zero regressions; see BASELINE_NOTES.md.
     younger: 0.274, elo: 0.246, sig_str_landed: 0.243, td_landed: 0.224,
-    wins: 0, sig_str_accuracy: 0.193, win_streak: 0.167,
+    wins: 0, sig_str_accuracy: 0.193, modern_form: 0.175,
     sub_attempts: 0.155, losses: 0, rounds: 0.105,
     title_bouts: 0, sub_wins: 0, reach: 0.073,
-    ko_wins: 0, height: 0.060, td_accuracy: 0.049, lose_streak: 0.008
+    ko_wins: 0, height: 0.060, td_accuracy: 0.049
   }
 };
 
@@ -2126,9 +2155,10 @@ const computeMatchupEdges = (fA, fB) => {
     2;
 
   // ── MODEL_V2 parallel run (verification-only; does NOT affect returned pA/pB)
+  const modernFormA = computeModernForm(fA.FIGHT_HISTORY, fA.DAYS_SINCE_LAST);
+  const modernFormB = computeModernForm(fB.FIGHT_HISTORY, fB.DAYS_SINCE_LAST);
   const featsV2 = {
-    win_streak:       winStreakA - winStreakB,
-    lose_streak:      loseStreakB - loseStreakA,
+    modern_form:      modernFormA - modernFormB,
     wins:             winsA - winsB,
     losses:           lossesB - lossesA,
     rounds:           roundsA - roundsB,
@@ -2148,8 +2178,7 @@ const computeMatchupEdges = (fA, fB) => {
   const v2 = computeLogisticProb(featsV2);
   console.log('[MODEL_V2]', fA.FIGHTER, 'vs', fB.FIGHTER, '| v1:', (pA * 100).toFixed(1) + '%', '| v2:', (v2.pA * 100).toFixed(1) + '%');
   const featsV2flip = {
-    win_streak:       winStreakB - winStreakA,
-    lose_streak:      loseStreakA - loseStreakB,
+    modern_form:      modernFormB - modernFormA,
     wins:             winsB - winsA,
     losses:           lossesA - lossesB,
     rounds:           roundsB - roundsA,
