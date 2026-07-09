@@ -17808,50 +17808,6 @@ export const FIGHT_HISTORY = {
       "wc": "Lightweight",
       "tb": false,
       "ev": "UFC Fight Night: Moicano vs. Duncan"
-    },
-    {
-      "dt": "2021-07-31",
-      "op": "Danny Chavez",
-      "re": "NC",
-      "me": "Decision - Majority",
-      "rn": 3,
-      "ti": "5:00",
-      "wc": "Featherweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Hall vs. Strickland"
-    },
-    {
-      "dt": "2021-05-01",
-      "op": "TJ Brown",
-      "re": "L",
-      "me": "Decision - Split",
-      "rn": 3,
-      "ti": "5:00",
-      "wc": "Featherweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Reyes vs. Prochazka"
-    },
-    {
-      "dt": "2020-11-28",
-      "op": "Jonathan Pearce",
-      "re": "L",
-      "me": "KO/TKO",
-      "rn": 2,
-      "ti": "4:28",
-      "wc": "Featherweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Smith vs. Clark"
-    },
-    {
-      "dt": "2020-08-15",
-      "op": "Tony Kelley",
-      "re": "W",
-      "me": "Decision - Unanimous",
-      "rn": 3,
-      "ti": "5:00",
-      "wc": "Featherweight",
-      "tb": false,
-      "ev": "UFC 252: Miocic vs. Cormier 3"
     }
   ],
   "Dakota Hope": [
@@ -30370,7 +30326,7 @@ export const FIGHT_HISTORY = {
       "ev": "UFC Fight Night: Strickland vs. Hernandez"
     }
   ],
-  "Zachary Reese": [
+  "Zach Reese": [
     {
       "dt": "2026-02-21",
       "op": "Michel Pereira",
@@ -103748,6 +103704,52 @@ export const FIGHT_HISTORY = {
       "ev": "UFC Fight Night: Santos vs. Teixeira"
     }
   ],
+  "Kai Kamaka": [
+    {
+      "dt": "2021-07-31",
+      "op": "Danny Chavez",
+      "re": "NC",
+      "me": "Decision - Majority",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Unknown",
+      "tb": false,
+      "ev": "UFC Fight Night: Hall vs. Strickland"
+    },
+    {
+      "dt": "2021-05-01",
+      "op": "TJ Brown",
+      "re": "L",
+      "me": "Decision - Split",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Unknown",
+      "tb": false,
+      "ev": "UFC Fight Night: Reyes vs. Prochazka"
+    },
+    {
+      "dt": "2020-11-28",
+      "op": "Jonathan Pearce",
+      "re": "L",
+      "me": "KO/TKO",
+      "rn": 2,
+      "ti": "4:28",
+      "wc": "Unknown",
+      "tb": false,
+      "ev": "UFC Fight Night: Smith vs. Clark"
+    },
+    {
+      "dt": "2020-08-15",
+      "op": "Tony Kelley",
+      "re": "W",
+      "me": "Decision - Unanimous",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Unknown",
+      "tb": false,
+      "ev": "UFC 252: Miocic vs. Cormier 3"
+    }
+  ],
   "Ryan Benoit": [
     {
       "dt": "2021-07-31",
@@ -104081,7 +104083,7 @@ export const FIGHT_HISTORY = {
       "me": "TKO - Doctor's Stoppage",
       "rn": 1,
       "ti": "5:00",
-      "wc": "Lightweight",
+      "wc": "Welterweight",
       "tb": false,
       "ev": "UFC 264: Poirier vs. McGregor 3"
     },
@@ -104092,7 +104094,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "2:32",
-      "wc": "Lightweight",
+      "wc": "Welterweight",
       "tb": false,
       "ev": "UFC 257: Poirier vs. McGregor"
     },
@@ -104103,7 +104105,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "0:40",
-      "wc": "Lightweight",
+      "wc": "Welterweight",
       "tb": false,
       "ev": "UFC 246: McGregor vs. Cowboy"
     },
@@ -104114,7 +104116,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 4,
       "ti": "3:03",
-      "wc": "Lightweight",
+      "wc": "Welterweight",
       "tb": false,
       "ev": "UFC 229: Khabib vs. McGregor"
     },
@@ -104125,7 +104127,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "3:04",
-      "wc": "Lightweight",
+      "wc": "Welterweight",
       "tb": false,
       "ev": "UFC 205: Alvarez vs McGregor"
     },
@@ -104136,7 +104138,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Majority",
       "rn": 5,
       "ti": "5:00",
-      "wc": "Lightweight",
+      "wc": "Welterweight",
       "tb": false,
       "ev": "UFC 202: Diaz vs. McGregor 2"
     },
@@ -104147,7 +104149,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "4:12",
-      "wc": "Lightweight",
+      "wc": "Welterweight",
       "tb": false,
       "ev": "UFC 196: McGregor vs Diaz"
     },
@@ -104158,7 +104160,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "0:13",
-      "wc": "Lightweight",
+      "wc": "Welterweight",
       "tb": false,
       "ev": "UFC 194: Aldo vs McGregor"
     },
@@ -104169,7 +104171,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "4:57",
-      "wc": "Lightweight",
+      "wc": "Welterweight",
       "tb": false,
       "ev": "UFC 189: Mendes vs McGregor"
     },
@@ -104180,7 +104182,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "1:54",
-      "wc": "Lightweight",
+      "wc": "Welterweight",
       "tb": false,
       "ev": "UFC Fight Night: McGregor vs Siver"
     },
@@ -104191,7 +104193,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "1:46",
-      "wc": "Lightweight",
+      "wc": "Welterweight",
       "tb": false,
       "ev": "UFC 178: Johnson vs Cariaso"
     },
@@ -104202,7 +104204,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "4:05",
-      "wc": "Lightweight",
+      "wc": "Welterweight",
       "tb": false,
       "ev": "UFC Fight Night: McGregor vs Brandao"
     },
@@ -104213,7 +104215,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Lightweight",
+      "wc": "Welterweight",
       "tb": false,
       "ev": "UFC Fight Night: Shogun vs Sonnen"
     },
@@ -104224,7 +104226,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "1:07",
-      "wc": "Lightweight",
+      "wc": "Welterweight",
       "tb": false,
       "ev": "UFC on FUEL TV: Mousasi vs Latifi"
     }
