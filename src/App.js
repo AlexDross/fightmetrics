@@ -2299,8 +2299,8 @@ const computeMatchupEdges = (fA, fB) => {
 
 // Market/edge analysis for a matchup at given American odds. Returns null when
 // odds are unparseable (mirrors the manual-save path where no odds → null market).
-// Single source of truth shared by MatchupSimulator's market useMemo, the manual
-// savePrediction path, and the ROI "Sync Upcoming Card" batch import.
+// Single source of truth shared by MatchupSimulator's market useMemo and the
+// manual savePrediction path.
 const computeMarketAnalysis = (result, oddsA, oddsB, fA, fB) => {
   const rawA = parseAmericanOdds(oddsA);
   const rawB = parseAmericanOdds(oddsB);
@@ -2509,8 +2509,8 @@ const computeMarketAnalysis = (result, oddsA, oddsB, fA, fB) => {
 };
 
 // Assembles a complete ROI entry object with the exact shape consumed by the ROI
-// tab. Shared by the manual savePrediction path and the batch "Sync Upcoming Card"
-// import so auto-generated entries are field-for-field identical to manual saves.
+// tab. Used by the manual savePrediction path ("Save to Upcoming" / "Save and
+// Open Upcoming" in the Simulator).
 const buildRoiEntry = ({ fA, fB, oddsA, oddsB, eventName, eventDate }) => {
   const result = computeMatchupEdges(fA, fB);
   const market = computeMarketAnalysis(result, oddsA, oddsB, fA, fB);
