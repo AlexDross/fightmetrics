@@ -2511,14 +2511,24 @@ const computeMarketAnalysis = (result, oddsA, oddsB, fA, fB) => {
 // Assembles a complete ROI entry object with the exact shape consumed by the ROI
 // tab. Used by the manual savePrediction path ("Save to Upcoming" / "Save and
 // Open Upcoming" in the Simulator).
-const buildRoiEntry = ({ fA, fB, oddsA, oddsB, eventName, eventDate }) => {
+const buildRoiEntry = ({ fA, fB, oddsA, oddsB, eventName, eventDate, modelToggle = 'v2' }) => {
   const result = computeMatchupEdges(fA, fB);
-  const market = computeMarketAnalysis(result, oddsA, oddsB, fA, fB);
+  // Use whichever model the user had active at save time (v1 or v2) for every
+  // bet-decision field, mirroring the Simulator's own market useMemo. The raw
+  // per-model probabilities are still stored separately and unchanged
+  // (fighterAProb/fighterBProb = v1, v2pA/v2pB = v2) so the v1-vs-v2 accuracy
+  // snapshots stay intact; modelUsed records which model drove the bet fields.
+  const activePA = modelToggle === 'v2' && result.v2pA != null ? result.v2pA : result.pA;
+  const activePB = modelToggle === 'v2' && result.v2pB != null ? result.v2pB : result.pB;
+  const activeResult = { ...result, pA: activePA, pB: activePB };
+  const market = computeMarketAnalysis(activeResult, oddsA, oddsB, fA, fB);
 
+  // predictedWinner/predictedProb stay on the v1 snapshot (consumed by the v1
+  // accuracy stats and the "v2 differs" comparisons). trackedSide is the active
+  // model's pick — the side actually being tracked/bet.
   const predictedWinner = result.pA >= result.pB ? fA.FIGHTER : fB.FIGHTER;
-  // Always track the model pick — not the value side.
-  const trackedSide = predictedWinner;
-  const trackedProb = trackedSide === fA.FIGHTER ? result.pA : result.pB;
+  const trackedSide = activePA >= activePB ? fA.FIGHTER : fB.FIGHTER;
+  const trackedProb = trackedSide === fA.FIGHTER ? activePA : activePB;
   const trackedOdds =
     trackedSide === fA.FIGHTER
       ? oddsA || ''
@@ -2581,6 +2591,7 @@ const buildRoiEntry = ({ fA, fB, oddsA, oddsB, eventName, eventDate }) => {
     fighterBProb: result.pB,
     predictedWinner,
     predictedProb: predictedWinner === fA.FIGHTER ? result.pA : result.pB,
+    modelUsed: modelToggle,
     trackedSide,
     trackedProb,
     betAction: market?.betAction ?? 'NO BET',
@@ -2619,7 +2630,12 @@ const buildRoiEntry = ({ fA, fB, oddsA, oddsB, eventName, eventDate }) => {
   };
 };
 // ─── UPCOMING EVENT TAB ──────────────────────────────────────────────────────
-function UpcomingEventTab({ entries, onGrade, onDelete, modelToggle, setModelToggle }) {
+function UpcomingEventTab({ entries, onGrade, onDelete, modelToggle, setModelToggle, allFighters }) {
+  const fighterMap = useMemo(() => {
+    const m = new Map();
+    (allFighters ?? []).forEach((f) => m.set(f.FIGHTER, f));
+    return m;
+  }, [allFighters]);
   const exportedCode = `export const UPCOMING_ENTRIES = ${JSON.stringify(entries, null, 2)};\n`;
 
   return (
@@ -2667,16 +2683,41 @@ function UpcomingEventTab({ entries, onGrade, onDelete, modelToggle, setModelTog
       ) : (
         <div className="space-y-4">
           {entries.map((entry) => {
-            const pA = modelToggle === 'v2' && entry.v2pA != null ? entry.v2pA : entry.fighterAProb;
-            const pB = modelToggle === 'v2' && entry.v2pB != null ? entry.v2pB : entry.fighterBProb;
+            // Recompute the pick AND the bet fields live from the displayed
+            // model so the bet recommendation always matches the shown win
+            // probability. This fixes the legacy mismatch where a saved entry
+            // stored v1 bet fields (betAction/betRecommendedFighter/edge) next
+            // to a v2 probability, and works for both new and pre-fix entries
+            // regardless of the stored modelUsed. Falls back to stored fields
+            // only if a fighter is missing from the current roster.
+            const fA = fighterMap.get(entry.fighterA);
+            const fB = fighterMap.get(entry.fighterB);
+            let pA, pB, hasV2, betAction, betFighter, edgeA, edgeB;
+            if (fA && fB) {
+              const res = computeMatchupEdges(fA, fB);
+              hasV2 = res.v2pA != null;
+              pA = modelToggle === 'v2' && res.v2pA != null ? res.v2pA : res.pA;
+              pB = modelToggle === 'v2' && res.v2pB != null ? res.v2pB : res.pB;
+              const m = computeMarketAnalysis({ ...res, pA, pB }, entry.oddsA, entry.oddsB, fA, fB);
+              betAction = m?.betAction ?? 'NO BET';
+              betFighter = m?.bestBet === 'A' ? entry.fighterA : m?.bestBet === 'B' ? entry.fighterB : null;
+              edgeA = m?.edgeA ?? null;
+              edgeB = m?.edgeB ?? null;
+            } else {
+              hasV2 = entry.v2pA != null;
+              pA = modelToggle === 'v2' && entry.v2pA != null ? entry.v2pA : entry.fighterAProb;
+              pB = modelToggle === 'v2' && entry.v2pB != null ? entry.v2pB : entry.fighterBProb;
+              betAction = entry.betAction;
+              betFighter = entry.betRecommendedFighter || null;
+              edgeA = entry.edgeA;
+              edgeB = entry.edgeB;
+            }
             const predictedWinner = pA >= pB ? entry.fighterA : entry.fighterB;
             const winProb = Math.max(pA, pB);
-            const hasV2 = entry.v2pA != null;
-            const tier = betTier(entry.betAction);
-            const betFighter = entry.betRecommendedFighter || null;
-            const pickEdge = pA >= pB ? entry.edgeA : entry.edgeB;
+            const tier = betTier(betAction);
+            const pickEdge = pA >= pB ? edgeA : edgeB;
             const fairLine = americanOdds(winProb);
-            const actionable = entry.betAction === 'LEAN' || entry.betAction === 'BET' || entry.betAction === 'STRONG BET';
+            const actionable = betAction === 'LEAN' || betAction === 'BET' || betAction === 'STRONG BET';
             const effectiveMarketOdds = pA >= pB ? (entry.oddsA || '') : (entry.oddsB || '');
 
             return (
@@ -2740,14 +2781,14 @@ function UpcomingEventTab({ entries, onGrade, onDelete, modelToggle, setModelTog
                         <div className="mt-2">
                           <span
                             className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-black ${
-                              entry.betAction === 'STRONG BET'
+                              betAction === 'STRONG BET'
                                 ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
-                                : entry.betAction === 'BET'
+                                : betAction === 'BET'
                                 ? 'bg-emerald-900/30 text-emerald-400 border border-emerald-800'
                                 : 'bg-yellow-900/30 text-yellow-400 border border-yellow-800'
                             }`}
                           >
-                            {entry.betAction}
+                            {betAction}
                           </span>
                         </div>
                         <p className="text-white font-bold text-sm mt-3">{betFighter || 'No bet side'}</p>
@@ -4375,6 +4416,7 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                     fA, fB, oddsA, oddsB,
                     eventName: eventName.trim(),
                     eventDate,
+                    modelToggle,
                   });
                   onSaveToUpcoming?.(entry);
                   setSaveFeedback('Saved to Upcoming.');
@@ -4390,6 +4432,7 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                     fA, fB, oddsA, oddsB,
                     eventName: eventName.trim(),
                     eventDate,
+                    modelToggle,
                   });
                   onSaveToUpcomingAndOpen?.(entry);
                   setSaveFeedback('Saved to Upcoming.');
@@ -6595,6 +6638,7 @@ export default function App() {
           onDelete={handleDeleteUpcoming}
           modelToggle={modelToggle}
           setModelToggle={setModelToggle}
+          allFighters={fightersWithProspectsFiltered}
         />
       )}
       {view === 'explore' && <ExploreTab allFighters={fightersWithProspectsFiltered} />}
