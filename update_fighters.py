@@ -25,6 +25,27 @@ JS_PATH      = os.path.join(SRC, 'src', 'fightersData.js')
 FH_PATH      = os.path.join(SRC, 'src', 'fightHistory.js')
 UPCOMING_PATH = os.path.join(SRC, 'src', 'upcomingCard.js')
 PROSPECT_PATH = os.path.join(SRC, 'src', 'prospectsData.js')
+NAME_ALIASES_PATH = os.path.join(SRC, 'name_aliases.json')
+
+# Greco1899's source CSVs spell some fighters differently than our authoritative
+# roster (src/fightersData.js) — e.g. "Zach Reese" vs "Zachary Reese". Without
+# normalization, a raw CSV name becomes its own dict key/lookup miss on every
+# rebuild, silently breaking fight-history lookups and record-field sync for
+# that fighter (even after a one-off manual fix, since the next scheduled CI
+# run re-downloads the same Greco spelling and reintroduces it). Add an entry
+# here — keyed by the raw/Greco spelling, valued with the canonical
+# fightersData.js name — whenever this pattern recurs.
+try:
+    with open(NAME_ALIASES_PATH) as _f:
+        NAME_ALIASES = json.load(_f)
+except FileNotFoundError:
+    NAME_ALIASES = {}
+
+def normalize_name(name):
+    if not isinstance(name, str):
+        return name
+    name = name.strip()
+    return NAME_ALIASES.get(name, name)
 
 WEIGHT_LIMITS = {
     'Flyweight': 125,
@@ -208,7 +229,7 @@ try:
     stats_df = pd.read_csv('ufc_fight_stats.csv', dtype=str)
     stats_df['EVENT'] = stats_df['EVENT'].str.strip()
     stats_df['BOUT'] = stats_df['BOUT'].str.strip()
-    stats_df['FIGHTER'] = stats_df['FIGHTER'].str.strip()
+    stats_df['FIGHTER'] = stats_df['FIGHTER'].str.strip().map(normalize_name)
     has_stats = True
 except:
     stats_df = None
@@ -243,6 +264,7 @@ fights_by_fighter = {}
 for _, row in results_df.iterrows():
     fa, fb = split_bout(row.get('BOUT',''))
     if fa is None: continue
+    fa, fb = normalize_name(fa), normalize_name(fb)
     outcome  = str(row.get('OUTCOME','')).strip()
     winner   = fa if outcome == 'W/L' else (fb if outcome == 'L/W' else None)
     method   = str(row.get('METHOD','')).strip()
