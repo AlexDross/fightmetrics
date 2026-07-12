@@ -6533,7 +6533,13 @@ export default function App() {
   const [view, setView] = useState('home');
   const [filterSince, setFilterSince] = useState('2026-05-23');
   const [modelToggle, setModelToggle] = useState('v2');
-  const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+  // Local calendar date (YYYY-MM-DD), NOT UTC. toISOString() returns UTC, which
+  // in timezones behind UTC rolls over to "tomorrow" during evening events and
+  // wrongly filtered out the current day's still-live entries (e.g. a card on
+  // 2026-07-11 vanished once UTC hit 2026-07-12). Comparison stays `>=` so
+  // today's entries are included.
+  const now = new Date();
+  const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
   const [upcomingEntries, setUpcomingEntries] = useState(
     UPCOMING_ENTRIES.filter(e => !e.eventDate || e.eventDate >= today)
   );
