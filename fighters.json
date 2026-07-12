@@ -204989,7 +204989,7 @@
       {
         "event": "UFC Fight Night: Smith vs. Clark",
         "date": "2020-11-28",
-        "opponent": "Kai Kamaka",
+        "opponent": "Kai Kamaka III",
         "result": "W",
         "method": "KO/TKO",
         "end_round": "2",
@@ -222559,56 +222559,90 @@
   {
     "name": "Kai Kamaka III",
     "weight_class": "Featherweight",
-    "record": "1-2-1NC",
-    "wins": 1,
+    "record": "2-2-1NC",
+    "wins": 2,
     "losses": 2,
-    "true_lfd": "2021-07-31",
+    "true_lfd": "2026-04-04",
     "age": 31,
     "dob": "1995-01-05",
     "height_in": 67,
     "weight_lbs": 145,
     "reach_in": 69.0,
     "stance": "Orthodox",
-    "fights_in_db": 3,
+    "fights_in_db": 5,
     "stats": {
-      "sig_str_per_min": 5.625,
-      "sig_str_abs_per_min": 6.151,
-      "sig_str_acc": 0.561,
-      "td_per_15": 2.66,
-      "td_acc": 0.778,
-      "ctrl_pct": 0.287,
-      "kd_per_min": 0.0253,
-      "sub_att_per_min": 0.0253,
+      "sig_str_per_min": 5.398,
+      "sig_str_abs_per_min": 5.672,
+      "sig_str_acc": 0.593,
+      "td_per_15": 1.512,
+      "td_acc": 0.538,
+      "ctrl_pct": 0.22,
+      "kd_per_min": 0.0144,
+      "sub_att_per_min": 0.0144,
       "finish_rate": 0.0,
       "ko_rate": 0.0,
       "sub_rate": 0.0,
-      "win_pct": 0.333
+      "win_pct": 0.5
     },
     "round_stats": {
       "r1": {
-        "sig_str_per_min": 6.6667,
-        "sig_str_acc": 0.5464,
-        "td_per_15": 4.0,
-        "ctrl_pct": 0.1433,
+        "sig_str_per_min": 5.4,
+        "sig_str_acc": 0.5672,
+        "td_per_15": 2.4,
+        "ctrl_pct": 0.0893,
         "kd_per_min": 0.0
       },
       "r2": {
-        "sig_str_per_min": 4.6667,
-        "sig_str_acc": 0.5645,
-        "td_per_15": 2.0,
-        "ctrl_pct": 0.2478,
-        "kd_per_min": 0.0667
+        "sig_str_per_min": 5.436,
+        "sig_str_acc": 0.6129,
+        "td_per_15": 1.2262,
+        "ctrl_pct": 0.1628,
+        "kd_per_min": 0.0409
       },
       "r3plus": {
-        "sig_str_per_min": 5.2,
-        "sig_str_acc": 0.5843,
-        "td_per_15": 1.5,
-        "ctrl_pct": 0.5467,
+        "sig_str_per_min": 5.35,
+        "sig_str_acc": 0.6045,
+        "td_per_15": 0.75,
+        "ctrl_pct": 0.4525,
         "kd_per_min": 0.0
       }
     },
-    "cardio_ratio": 0.78,
+    "cardio_ratio": 0.9981,
     "fight_history": [
+      {
+        "event": "UFC Fight Night: Moicano vs. Duncan",
+        "date": "2026-04-04",
+        "opponent": "Dakota Hope",
+        "result": "W",
+        "method": "Decision - Split",
+        "end_round": "3",
+        "time": "5:00",
+        "kd": 0,
+        "sig_str_landed": 105,
+        "sig_str_attempted": 159,
+        "td_landed": 0,
+        "td_attempted": 1,
+        "ctrl_sec": 23,
+        "sub_att": 0,
+        "duration_sec": 900
+      },
+      {
+        "event": "UFC Fight Night: Hall vs. Strickland",
+        "date": "2021-07-31",
+        "opponent": "Danny Chavez",
+        "result": "NC",
+        "method": "Decision - Majority",
+        "end_round": "3",
+        "time": "5:00",
+        "kd": 0,
+        "sig_str_landed": 48,
+        "sig_str_attempted": 77,
+        "td_landed": 0,
+        "td_attempted": 3,
+        "ctrl_sec": 213,
+        "sub_att": 0,
+        "duration_sec": 900
+      },
       {
         "event": "UFC Fight Night: Reyes vs. Prochazka",
         "date": "2021-05-01",
@@ -222661,13 +222695,13 @@
         "duration_sec": 900
       }
     ],
-    "win_streak": 0,
-    "lose_streak": 2,
-    "last_fight_date": "2021-07-31",
-    "days_since_last": 1717,
+    "win_streak": 1,
+    "lose_streak": 0,
+    "last_fight_date": "2026-04-04",
+    "days_since_last": 97,
     "ko_wins": 0,
     "sub_wins": 0,
-    "dec_wins": 1
+    "dec_wins": 2
   },
   {
     "name": "Kai Kara-France",
@@ -377363,7 +377397,7 @@
       {
         "event": "UFC Fight Night: Reyes vs. Prochazka",
         "date": "2021-05-01",
-        "opponent": "Kai Kamaka",
+        "opponent": "Kai Kamaka III",
         "result": "W",
         "method": "Decision - Split",
         "end_round": "3",
@@ -394821,7 +394855,7 @@
       {
         "event": "UFC 252: Miocic vs. Cormier 3",
         "date": "2020-08-15",
-        "opponent": "Kai Kamaka",
+        "opponent": "Kai Kamaka III",
         "result": "L",
         "method": "Decision - Unanimous",
         "end_round": "3",

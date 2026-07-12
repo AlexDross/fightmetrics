@@ -1337,3 +1337,82 @@ Important note:
 
 - Many unrelated generated/analysis files remain untracked locally.
 - Those unrelated untracked files were intentionally not staged, committed, or pushed.
+
+### 2026-07-10 - UFC 329 Matchup and Prediction-Metric Audit
+
+Codex reviewed `src/App.js`, reran the UFC 329 matchup pipeline, and audited the metrics and source data feeding the fight predictions. No application code or model data was edited during this review.
+
+Execution status:
+
+- All 12 UFC 329 matchups reran successfully.
+- All 24 fighters resolved successfully.
+- No runtime errors, failed assertions, or data-collection exceptions were observed.
+- Verification was performed against the live bundled application logic in memory.
+
+Active prediction path:
+
+- The Simulator defaults to Model v2 and uses `v2pA`/`v2pB` for the active prediction.
+- Nonzero v2 features are modern form, total rounds, height, reach, younger/age, strikes landed per minute, striking accuracy, submission attempts, takedowns landed, takedown accuracy, and ELO.
+- The v2 cumulative features `wins`, `losses`, `title_bouts`, `ko_wins`, and `sub_wins` currently have zero coefficients.
+- The v1 model remains available and uses striking, grappling, physical, form, experience, ELO, layoff, cardio, strength of schedule, quality momentum, and age adjustments.
+
+Material findings:
+
+1. `KD_PER_MIN` is not knockdowns per minute. It is calculated from KO wins divided by assumed fight minutes. The raw `kd` field in `fightersData.js` is not used. This affects projected KO probabilities and related UI/archetype logic.
+2. The finish model double-counts related signals: KO win percentage, the KO-win-derived `KD_PER_MIN`, and finish rate. The Scout tab also uses a separate finish formula, so finish projections can differ by tab.
+3. Null takedown accuracy (`ATP`) is treated as zero both in division averages and matchup blending. Current UFC 329 examples are Luke Riley, Damian Pinas, and Ryan Gandra.
+4. When any fight history exists, history-derived wins/losses/KO wins/submission wins/streaks silently override aggregate fighter data. Lone'er Kavanagh is inconsistent: `fightersData.js` reports one KO win, while her history-derived value is zero.
+5. The active v2 prediction is explained with v1 domain edges/audit rows. The code comments still describe v2 as verification-only even though the Simulator defaults to it.
+6. The in-app backtest uses current career statistics and current history against past outcomes, so it has look-ahead leakage. It also evaluates v1 `pA`, not the active v2 probability.
+7. The live v2 feature list does not exactly match `model_artifact.json`: the artifact contains 18 features while the current live list contains 16. The code comment calls this a 17-feature port.
+8. `CONTROL_TIME_PCT` is a constructed proxy from takedown/submission metrics rather than actual control time. `NET_STRIKE_MARGIN` is strikes landed per minute multiplied by accuracy, not landed minus absorbed.
+9. Finish rate is calculated as finishes divided by wins, not finishes divided by total fights.
+10. Zachary Reese has no matching `ELO_RATINGS` entry, so v2 falls back to the raw seeded ELO. This is a source-key consistency issue worth confirming.
+
+Recommended priority if fixes are authorized later:
+
+1. Correct or rename the knockdown metric and unify finish calculations.
+2. Decide how null ATP and conflicting aggregate/history records should be handled.
+3. Align v2 explanations, backtesting, saved prediction fields, and the active model.
+4. Reconcile the live v2 feature list with the model artifact and establish a point-in-time backtest.
+
+Current conclusion: the UFC 329 pipeline is operational, but the displayed and finish-related metrics should not all be treated as literal UFC statistics until the issues above are resolved.
+
+### 2026-07-10 - Sample Confidence (`CRED%`) Scale Mismatch
+
+Codex performed a read-only ROI and source audit after the Kai Kamaka III correction. This is a model-logic concern, not a fighter-data problem.
+
+Verified example:
+
+- Kai Kamaka III has 14 UFC rounds / 70 total minutes in the current canonical data.
+- The UI shows `CRED% = 23` because `src/App.js` calculates credibility as `round(totalRounds / 60 * 100)`. It therefore reaches 100 only at 60 rounds / 300 minutes.
+- The prediction engine's actual stat-reliability blend reaches full trust at 75 total minutes: `min(1, totalMin / 75)`.
+- Therefore, on the model's own stated sample-size threshold, 70 minutes corresponds to about 93% trust, not 23%.
+
+Why this matters:
+
+- `CRED%` is displayed as “Sample Confidence” and described in the glossary as a Bayesian sample-confidence weight.
+- It contributes up to 30 points to `betConfidence`.
+- If either fighter has `CRED% < 30`, the market layer downgrades `BET` and `STRONG BET` recommendations to `LEAN`.
+- It is also used in prospect-opponent translation-risk logic.
+- It does not directly control ordinary veteran v1/v2 win probabilities; those use the separate, correct 75-minute stat blend.
+
+ROI evidence (43 saved rows from 2026-05-23 through 2026-06-27; 42 decisive outcomes):
+
+- 35 of 42 fights (83%) were flagged low-credibility under the current `<30` rule.
+- Using the 75-minute sample scale, only 7 of 42 would actually be low-sample.
+- 28 fights were false low-confidence flags caused by the incompatible scale.
+- The median predicted fighter's old `CRED%` was 23; the equivalent 75-minute-scale value was 93.
+
+Read-only current-model replay with frozen pre-event dates and saved ROI market odds:
+
+- `betConfidence` is not calibrated win probability. It is a composite of market edge (up to 40 points), average CRED (up to 30), and aligned domains (up to 30).
+- Current-v2 replay: 30/42 picks correct; its `betConfidence` buckets were non-monotonic: 0-29 = 10/14, 30-44 = 13/15, 45-59 = 2/4, 60+ = 5/9.
+- High `betConfidence` can occur even when win probability is below the 60% no-bet floor, so it should be treated as a signal-quality score, not a confidence percentage.
+- Exact historical `betConfidence` cannot be fully reconstructed because older ROI rows did not save it, the CRED inputs, or `modelUsed`.
+
+Recommended future action only if the user authorizes a model-code change:
+
+- Align CRED with the same 75-minute scale used by stat blending, e.g. `min(100, round((totalRounds * 5 / 75) * 100))` for the current scheduled-round dataset.
+- Preserve prospect-specific credibility adjustments.
+- Rename or redesign `betConfidence` as a signal score, and save model version, `betConfidence`, CRED inputs, and active probability in each ROI row for future calibration audits.

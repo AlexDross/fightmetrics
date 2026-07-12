@@ -8,7 +8,7 @@ What this updates each Tuesday:
   - ws, ls        (win/loss streak)
   - lfd, dsl      (last fight date / days since last fight)
   - kow, sbw, dcw (win method counts)
-  - tr            (total fights in DB)
+  - tr            (total UFC rounds completed)
 
 What this NEVER touches:
   - asl, asp, asa, atl, atp  (stats that drive rankings)
@@ -25,6 +25,20 @@ from datetime import datetime, date
 
 ROUND_DURATION = 300
 OUTPUT_FILE    = "fighters.json"
+BASE_DIR       = os.path.dirname(os.path.abspath(__file__))
+NAME_ALIASES_PATH = os.path.join(BASE_DIR, 'name_aliases.json')
+
+try:
+    with open(NAME_ALIASES_PATH) as _f:
+        NAME_ALIASES = json.load(_f)
+except FileNotFoundError:
+    NAME_ALIASES = {}
+
+def normalize_name(name):
+    if not isinstance(name, str):
+        return name
+    name = name.strip()
+    return NAME_ALIASES.get(name, name)
 
 # ─── Parsers ──────────────────────────────────────────────────────────────────
 def parse_date(s):
@@ -43,6 +57,10 @@ def parse_ctrl(s):
     if not isinstance(s, str): return 0
     m = re.match(r'(\d+):(\d+)', s.strip())
     return int(m.group(1)) * 60 + int(m.group(2)) if m else 0
+
+def parse_round(s):
+    try: return int(float(s))
+    except (TypeError, ValueError): return 0
 
 # ─── Load existing fightersData.js ────────────────────────────────────────────
 print("Loading existing fightersData.js...")
@@ -88,6 +106,7 @@ fights_by_fighter = {}
 for _, row in results_df.iterrows():
     fa, fb = split_bout(row.get('BOUT', ''))
     if fa is None: continue
+    fa, fb = normalize_name(fa), normalize_name(fb)
     outcome = str(row.get('OUTCOME', '')).strip()
     if   outcome == 'W/L': winner = fa
     elif outcome == 'L/W': winner = fb
@@ -102,6 +121,7 @@ for _, row in results_df.iterrows():
             'result': res,
             'date':   row['DATE'],
             'method': method,
+            'round':  parse_round(row.get('ROUND', 0)),
         })
 
 for n in fights_by_fighter:
@@ -131,7 +151,7 @@ updates = {}
 for name, fights in fights_by_fighter.items():
     wi  = sum(1 for f in fights if f['result'] == 'W')
     lo  = sum(1 for f in fights if f['result'] == 'L')
-    tr  = sum(1 for f in fights if f['result'] in ('W', 'L'))
+    tr  = sum(f['round'] for f in fights if f['result'] in ('W', 'L', 'NC'))
     ws, ls = compute_streak(fights)
 
     dated = [f for f in fights if f['result'] in ('W', 'L', 'NC') and f['date']]
@@ -158,7 +178,10 @@ def fmt(v):
 
 def patch_field(entry_str, key, new_val):
     """Replace a specific field value in an entry string."""
-    pattern = rf"({key}:)([-\d.']+|null)"
+    # All patched fields are comma-delimited. Requiring the comma prevents the
+    # short key `lo` from also matching the suffix of `elo` and overwriting a
+    # fighter's rating with their loss count.
+    pattern = rf"(,{key}:)([-\d.']+|null)"
     replacement = rf"\g<1>{fmt(new_val)}"
     result = re.sub(pattern, replacement, entry_str)
     return result

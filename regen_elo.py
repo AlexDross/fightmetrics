@@ -24,8 +24,23 @@ from datetime import datetime
 RESULTS_CSV = pathlib.Path('ufc_fight_results.csv')
 EVENTS_CSV  = pathlib.Path('ufc_event_details.csv')
 OUT_JS      = pathlib.Path('src/eloModule.js')
+NAME_ALIASES_JSON = pathlib.Path('name_aliases.json')
 
 ELO_BASE = 1500.0
+
+
+def load_name_aliases() -> dict:
+    if not NAME_ALIASES_JSON.exists():
+        return {}
+    return json.loads(NAME_ALIASES_JSON.read_text(encoding='utf-8'))
+
+
+NAME_ALIASES = load_name_aliases()
+
+
+def normalize_name(name: str) -> str:
+    name = name.strip()
+    return NAME_ALIASES.get(name, name)
 
 # Sanity gate thresholds
 GATE_MIN_FIGHTERS  = 700
@@ -81,7 +96,7 @@ def parse_date(s: str) -> datetime | None:
 def split_bout(bout: str):
     if ' vs. ' in bout:
         parts = bout.split(' vs. ', 1)
-        return parts[0].strip(), parts[1].strip()
+        return normalize_name(parts[0]), normalize_name(parts[1])
     return None, None
 
 
