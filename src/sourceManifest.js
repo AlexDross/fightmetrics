@@ -9,16 +9,16 @@
 // cardioModule.js / rankHistory.js are regenerated, so the manifest stays current.
 
 export const SOURCE_MANIFEST = {
-  "manifestGeneratedAt": "2026-07-13T20:10:34Z",
+  "manifestGeneratedAt": "2026-07-13T21:22:38Z",
   "generatorScript": "generate_source_manifest.py",
   "methodologyRef": "research/source_integrity_audit.md",
   "modules": {
     "fightHistory": {
       "file": "src/fightHistory.js",
       "feedsV2": true,
-      "generatedAt": "2026-07-12",
+      "generatedAt": "2026-07-13",
       "maxObservedEventDate": "2026-05-16",
-      "contentHash": "67c3cc4a11feadd1659167e125bbabf4e55b40aa37dcac5114cc8c1328414a71",
+      "contentHash": "a7f18a27e8425c79ae121816e7846101b787cafaa19f5727ec03e32b15cd2431",
       "generatorVersion": "update_fighters.py @ 783c2c18abda4e44277c36350ee3eca3af2aae0a",
       "verificationMethod": "Parsed DATE column of ufc_event_details.csv directly (774 rows); maximum event date found = 2026-05-16. Cross-checked ufc_fight_results.csv, ufc_fight_details.csv, ufc_fight_stats.csv for window-period event names: zero matches. This value is NOT derived from any file mtime, git commit date, or in-file header comment -- see research/source_integrity_audit.md for the original manual methodology this script automates."
     },
@@ -26,9 +26,9 @@ export const SOURCE_MANIFEST = {
       "file": "src/fightersData.js",
       "feedsV2": true,
       "note": "Feeds ASL/ASP/ATL/ATP/ASA (sig_str_landed, sig_str_accuracy, sub_attempts, td_landed, td_accuracy) and TR (rounds) -- the highest-weight non-ELO v2 features.",
-      "generatedAt": "2026-07-12",
+      "generatedAt": "2026-07-13",
       "maxObservedEventDate": "2026-05-16",
-      "contentHash": "b876c9860727dfbc886479431afeed7533e7bb1a5c6fa368f5500905d5af35d2",
+      "contentHash": "0f6e7da50a4a7e8e1d2f5202b2548856b11a69ab88b56a6298e762a64a9a1329",
       "generatorVersion": "update_fighters.py @ 783c2c18abda4e44277c36350ee3eca3af2aae0a",
       "verificationMethod": "Parsed DATE column of ufc_event_details.csv directly (774 rows); maximum event date found = 2026-05-16. Cross-checked ufc_fight_results.csv, ufc_fight_details.csv, ufc_fight_stats.csv for window-period event names: zero matches. This value is NOT derived from any file mtime, git commit date, or in-file header comment -- see research/source_integrity_audit.md for the original manual methodology this script automates."
     },
