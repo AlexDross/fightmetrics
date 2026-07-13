@@ -1402,7 +1402,7 @@ export const FIGHT_HISTORY = {
     },
     {
       "dt": "2023-12-02",
-      "op": "Zach Reese",
+      "op": "Zachary Reese",
       "re": "W",
       "me": "KO/TKO",
       "rn": 1,
@@ -9910,7 +9910,7 @@ export const FIGHT_HISTORY = {
     },
     {
       "dt": "2025-11-08",
-      "op": "Zach Reese",
+      "op": "Zachary Reese",
       "re": "L",
       "me": "Submission",
       "rn": 2,
@@ -9956,7 +9956,7 @@ export const FIGHT_HISTORY = {
     },
     {
       "dt": "2025-09-13",
-      "op": "Zach Reese",
+      "op": "Zachary Reese",
       "re": "NC",
       "me": "Could Not Continue",
       "rn": 1,
@@ -17583,7 +17583,7 @@ export const FIGHT_HISTORY = {
     },
     {
       "dt": "2025-01-18",
-      "op": "Zach Reese",
+      "op": "Zachary Reese",
       "re": "W",
       "me": "KO/TKO",
       "rn": 1,
@@ -17805,7 +17805,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Lightweight",
+      "wc": "Featherweight",
       "tb": false,
       "ev": "UFC Fight Night: Moicano vs. Duncan"
     },
@@ -28883,7 +28883,7 @@ export const FIGHT_HISTORY = {
     },
     {
       "dt": "2024-08-24",
-      "op": "Zach Reese",
+      "op": "Zachary Reese",
       "re": "L",
       "me": "Decision - Unanimous",
       "rn": 3,
@@ -30378,7 +30378,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Unknown",
+      "wc": "Middleweight",
       "tb": false,
       "ev": "UFC Fight Night: Strickland vs. Hernandez"
     },
@@ -30389,7 +30389,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "1:38",
-      "wc": "Unknown",
+      "wc": "Middleweight",
       "tb": false,
       "ev": "UFC Fight Night: Bonfim vs. Brown"
     },
@@ -30400,7 +30400,7 @@ export const FIGHT_HISTORY = {
       "me": "Could Not Continue",
       "rn": 1,
       "ti": "0:51",
-      "wc": "Unknown",
+      "wc": "Middleweight",
       "tb": false,
       "ev": "UFC Fight Night: Lopes vs. Silva"
     },
@@ -30411,7 +30411,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Unknown",
+      "wc": "Middleweight",
       "tb": false,
       "ev": "UFC Fight Night: Blanchfield vs. Barber"
     },
@@ -30422,7 +30422,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "3:04",
-      "wc": "Unknown",
+      "wc": "Middleweight",
       "tb": false,
       "ev": "UFC 311: Makhachev vs. Moicano"
     },
@@ -30433,7 +30433,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Unknown",
+      "wc": "Middleweight",
       "tb": false,
       "ev": "UFC Fight Night: Cannonier vs. Borralho"
     },
@@ -30444,7 +30444,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "0:20",
-      "wc": "Unknown",
+      "wc": "Middleweight",
       "tb": false,
       "ev": "UFC Fight Night: Cannonier vs. Imavov"
     },
@@ -30455,7 +30455,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "1:49",
-      "wc": "Unknown",
+      "wc": "Middleweight",
       "tb": false,
       "ev": "UFC Fight Night: Dariush vs. Tsarukyan"
     }
@@ -30463,7 +30463,7 @@ export const FIGHT_HISTORY = {
   "Michel Pereira": [
     {
       "dt": "2026-02-21",
-      "op": "Zach Reese",
+      "op": "Zachary Reese",
       "re": "W",
       "me": "Decision - Split",
       "rn": 3,
@@ -52078,7 +52078,7 @@ export const FIGHT_HISTORY = {
     },
     {
       "dt": "2025-05-31",
-      "op": "Zach Reese",
+      "op": "Zachary Reese",
       "re": "L",
       "me": "Decision - Unanimous",
       "rn": 3,
@@ -65074,7 +65074,7 @@ export const FIGHT_HISTORY = {
     },
     {
       "dt": "2024-06-08",
-      "op": "Zach Reese",
+      "op": "Zachary Reese",
       "re": "L",
       "me": "KO/TKO",
       "rn": 1,
