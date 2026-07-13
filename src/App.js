@@ -34,6 +34,7 @@ import { FIGHT_HISTORY } from './fightHistory';
 import { getHistoricalTier } from './rankHistory';
 import { ROI_ENTRIES } from './roiData';
 import { UPCOMING_ENTRIES } from './upcomingData';
+import { SOURCE_MANIFEST } from './sourceManifest';
 
 // _D2 imported from fightersData.js
 
@@ -2294,6 +2295,10 @@ const computeMatchupEdges = (fA, fB) => {
     sosB,
     v2pA: v2.pA,
     v2pB: v2.pB,
+    // Additive only: exposes the already-computed v2 feature vector for
+    // provenance/manifest capture (buildRoiEntry's _provenance.featureVector).
+    // Does not change v2pA/v2pB or any other computation above.
+    featsV2,
   };
 };
 
@@ -2508,6 +2513,28 @@ const computeMarketAnalysis = (result, oddsA, oddsB, fA, fB) => {
   };
 };
 
+// Lightweight, synchronous, non-cryptographic checksum (djb2) — used only to
+// detect drift in MODEL_V2's coefficients between saves, not for security.
+const djb2Checksum = (str) => {
+  let h = 5381;
+  for (let i = 0; i < str.length; i++) {
+    h = (h * 33) ^ str.charCodeAt(i);
+  }
+  return (h >>> 0).toString(16);
+};
+
+// Latest 'dt' present in a fighter's FIGHT_HISTORY at computation time — used
+// only for provenance capture (_provenance.fightHistoryCutoff), not for any
+// prediction calculation.
+const latestFightHistoryDate = (fightHistory) => {
+  if (!fightHistory || fightHistory.length === 0) return null;
+  let max = null;
+  for (const f of fightHistory) {
+    if (f.dt && (max === null || f.dt > max)) max = f.dt;
+  }
+  return max;
+};
+
 // Assembles a complete ROI entry object with the exact shape consumed by the ROI
 // tab. Used by the manual savePrediction path ("Save to Upcoming" / "Save and
 // Open Upcoming" in the Simulator).
@@ -2627,6 +2654,35 @@ const buildRoiEntry = ({ fA, fB, oddsA, oddsB, eventName, eventDate, modelToggle
     actualWinner: '',
     actualFinish: '',
     notes: '',
+    // Additive metadata only — does not affect any field above. Lets future
+    // analysis answer "is this prediction authentically point-in-time or
+    // reconstructed" and "what fed it" without a manual forensic audit (see
+    // research/source_integrity_audit.md and research/daysSinceLast_live_audit.md,
+    // which this schema exists to make unnecessary going forward).
+    _provenance: (() => {
+      const todayIso = new Date().toISOString().slice(0, 10);
+      const captureMode = !eventDate
+        ? 'unknown'
+        : eventDate >= todayIso
+        ? 'live'
+        : 'reconstructed';
+      return {
+        predictionTimestamp: new Date().toISOString(),
+        targetEventDate: eventDate,
+        captureMode,
+        modelVersion: MODEL_V2.version,
+        modelCoefHash: djb2Checksum(JSON.stringify(MODEL_V2.coef)),
+        featureVector: {
+          v1: result.feats,
+          v2: result.featsV2 ?? null,
+        },
+        fightHistoryCutoff: {
+          fighterA: latestFightHistoryDate(fA.FIGHT_HISTORY),
+          fighterB: latestFightHistoryDate(fB.FIGHT_HISTORY),
+        },
+        sourceManifest: SOURCE_MANIFEST.modules,
+      };
+    })(),
   };
 };
 // ─── UPCOMING EVENT TAB ──────────────────────────────────────────────────────
