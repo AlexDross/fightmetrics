@@ -1614,15 +1614,18 @@ const MODEL = {
   },
 };
 
-// ─── MODEL_V2: learned logistic (parallel, verification-only) ──────────────────
-// Standardized coefficients from model_artifact.json (logistic_v1_20260625).
-// Imputer medians and scaler means are all 0 (symmetric training), so the only
-// transform needed is: scaled = rawDiff / scale, then dot with standardized coef.
+// ─── MODEL_V2: learned logistic (live default model) ──────────────────────────
+// Coefficients originally standardized from model_artifact.json (logistic_v1_
+// 20260625), then modified in-place — see the coef block below for the 2026-07-07
+// through 2026-07-09 changes. Imputer medians and scaler means are all 0 (symmetric
+// training), so the only transform needed is: scaled = rawDiff / scale, then dot
+// with standardized coef.
 // NOTE: the artifact's 18th feature `longest_streak` is omitted — it is not stored
-// in fightersData.js — so this 17-feature port will diverge slightly from the
-// artifact's 70.15% test accuracy. This model is NOT live; it only logs for now.
+// in fightersData.js — so this 17-feature port differs from the artifact's 70.15%
+// test accuracy. This is the LIVE DEFAULT model (MODEL_VERSION "· Logistic v2.0"):
+// its output feeds v2pA/v2pB, the active-model toggle, and the bet layer.
 const MODEL_V2 = {
-  version: "logistic_v1_20260625",
+  version: "logistic_v2.0_20260709",
   features: ["modern_form","wins","losses","rounds","title_bouts","ko_wins","sub_wins","height","reach","younger","sig_str_landed","sig_str_accuracy","sub_attempts","td_landed","td_accuracy","elo"],
   scales: {
     modern_form: 0.343, wins: 5.105, losses: 3.721,
@@ -2150,7 +2153,9 @@ const computeMatchupEdges = (fA, fB) => {
       1 / (1 + Math.exp(-(P.a * composite - P.b)))) /
     2;
 
-  // ── MODEL_V2 parallel run (verification-only; does NOT affect returned pA/pB)
+  // ── MODEL_V2 run: computed alongside v1, returned separately as v2pA/v2pB (does
+  // not overwrite v1's pA/pB). v2 is the live DEFAULT model — its output drives the
+  // active-model toggle and the bet layer downstream.
   const modernFormA = computeModernForm(fA.FIGHT_HISTORY, fA.DAYS_SINCE_LAST);
   const modernFormB = computeModernForm(fB.FIGHT_HISTORY, fB.DAYS_SINCE_LAST);
   const featsV2 = {
