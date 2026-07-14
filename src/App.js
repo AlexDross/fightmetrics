@@ -1577,16 +1577,12 @@ const MODEL = {
     total_title_bout_dif: 0.036427,
     sub_dif: 0.031623,
   },
-  // INACTIVE: W_OD is not used in the live probability path. Retained for reference.
-  W_OD: null,
   // Sigmoid probability mapping: p = [sigmoid(a·c+b) + sigmoid(a·c−b)] / 2
   // Recalibrated on stored backtest composite/outcome pairs (3,380 fights):
   // slope steepened (the prior 1.6096 was underconfident, monotonic) and the
   // red-corner intercept dropped to 0 (slot assignment is arbitrary live).
   // Validated ~0.004 full / walk-forward ~0.007 log-loss improvement.
   SIGMOID_MAP: { a: 2.0, b: 0 },
-  // INACTIVE — retained for reference only, not used in live probability path:
-  // PLATT_OD: { a: 1.4008053209780686, b: -0.09263130924926194 },
   // Normalization scales (1 std of each differential feature)
   // Used to put all features on the same scale before weighting
   SCALES: {
@@ -1615,7 +1611,6 @@ const MODEL = {
     rank_tier_dif: 0.25,
     atd_dif: 0.15,
     kd_dif: 0.025,
-    odds_edge: 0.3,
   },
 };
 
