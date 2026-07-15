@@ -38,17 +38,33 @@ jobs:
           echo "✅  CSVs downloaded"
           echo "fight_stats rows: $(wc -l < ufc_fight_stats.csv)"
 
+      # Fail-closed freshness gate: STOPS the run (non-zero exit) if the freshly
+      # downloaded CSVs are structurally broken, have gone backwards, or are
+      # implausibly stale vs. the baseline in src/sourceManifest.js. This prevents
+      # the pipeline from silently ingesting nothing and committing a misleading
+      # "successful" update (see research/scraper_staleness_and_freshness_gate.md).
+      # Sets output `new_data` (true/false) for the manifest-regen step below.
+      - name: Check data freshness (fail-closed gate)
+        id: freshness
+        run: python scripts/check_data_freshness.py
+
       - name: Run update_fighters.py
         run: python update_fighters.py
 
       - name: Regenerate eloModule.js
         run: python regen_elo.py
 
+      # Advance the freshness baseline (maxObservedEventDate + counts) only when a
+      # real refresh brought new data, so the next run compares against it.
+      - name: Regenerate source manifest (on new data)
+        if: steps.freshness.outputs.new_data == 'true'
+        run: python generate_source_manifest.py
+
       - name: Commit and push if changed
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add src/fightersData.js src/fightHistory.js src/eloModule.js src/cardioModule.js
+          git add src/fightersData.js src/fightHistory.js src/eloModule.js src/cardioModule.js src/sourceManifest.js
           if git diff --staged --quiet; then
             echo "No changes — skipping commit"
           else
