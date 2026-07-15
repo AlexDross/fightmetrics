@@ -1294,8 +1294,11 @@ const calcTrackedProfit = (entry) => {
   const dec = americanToDecimal(entry.marketOdds);
   if (!dec) return null;
 
-  // 1-unit flat staking
-  return entry.actualWinner === entry.trackedSide ? dec - 1 : -1;
+  // Stake defaults to 1u when unitsWagered is absent -- true for every entry
+  // saved before this field existed (Alex confirmed all prior entries were
+  // flat 1u). This keeps every historical entry's computed profit identical.
+  const stake = entry.unitsWagered != null ? entry.unitsWagered : 1;
+  return entry.actualWinner === entry.trackedSide ? stake * (dec - 1) : -stake;
 };
 
 // Single source of truth for ROI summary math.
@@ -1317,15 +1320,22 @@ function computeROISummary(entries, prospectNameSet) {
   const correct = decisive.filter((e) => e.predictedWinner === e.actualWinner).length;
   const betEntries = gradedStats.filter((e) => Boolean(americanToDecimal(e.marketOdds)));
   const profit = betEntries.reduce((sum, e) => sum + (calcTrackedProfit(e) ?? 0), 0);
-  const stake = betEntries.length;
+  // ROI must be scaled by units actually risked, not bet count -- those are
+  // only the same number when every bet is flat 1u. unitsWagered defaults to
+  // 1 for every entry that predates this field, so totalStaked === bets.length
+  // for all historical data (identical ROI% to before this change).
+  const totalStaked = betEntries.reduce(
+    (sum, e) => sum + (e.unitsWagered != null ? e.unitsWagered : 1),
+    0
+  );
   return {
     total: entries.filter((e) => !resolveProspect(e) && e.confirmedByUser !== false).length,
     graded: gradedStats.length,
     correct,
     accuracy: decisive.length ? (correct / decisive.length) * 100 : 0,
-    bets: stake,
+    bets: betEntries.length,
     profit,
-    roi: stake > 0 ? (profit / stake) * 100 : 0,
+    roi: totalStaked > 0 ? (profit / totalStaked) * 100 : 0,
   };
 }
 
@@ -2538,7 +2548,7 @@ const latestFightHistoryDate = (fightHistory) => {
 // Assembles a complete ROI entry object with the exact shape consumed by the ROI
 // tab. Used by the manual savePrediction path ("Save to Upcoming" / "Save and
 // Open Upcoming" in the Simulator).
-const buildRoiEntry = ({ fA, fB, oddsA, oddsB, eventName, eventDate, modelToggle = 'v2' }) => {
+const buildRoiEntry = ({ fA, fB, oddsA, oddsB, eventName, eventDate, modelToggle = 'v2', unitsWagered = 1 }) => {
   const result = computeMatchupEdges(fA, fB);
   // Use whichever model the user had active at save time (v1 or v2) for every
   // bet-decision field, mirroring the Simulator's own market useMemo. The raw
@@ -2621,6 +2631,9 @@ const buildRoiEntry = ({ fA, fB, oddsA, oddsB, eventName, eventDate, modelToggle
     modelUsed: modelToggle,
     trackedSide,
     trackedProb,
+    // Units actually staked on trackedSide at save time. Defaults to 1
+    // (matches every pre-existing entry, which was always flat 1u).
+    unitsWagered,
     betAction: market?.betAction ?? 'NO BET',
     bestBet: market?.bestBet ?? null,
     betRecommendedFighter,
@@ -4029,6 +4042,7 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
   const [oddsB, setOddsB] = useState('');
   const [eventName, setEventName] = useState('');
   const [eventDate, setEventDate] = useState('');
+  const [unitsWagered, setUnitsWagered] = useState('');
   const [saveFeedback, setSaveFeedback] = useState('');
   const [modelToggle, setModelToggle] = useState('v2');
   const [showDetails, setShowDetails] = useState(false);
@@ -4396,7 +4410,7 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                 </span>
               )}
             </div>
-            <div className="grid grid-cols-2 gap-4 mb-4">
+            <div className="grid grid-cols-3 gap-4 mb-4">
               <div>
                 <label className="text-slate-500 text-xs font-semibold uppercase tracking-wider block mb-1.5">
                   Event Name
@@ -4417,6 +4431,20 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                   type="date"
                   value={eventDate}
                   onChange={(e) => setEventDate(e.target.value)}
+                  className="w-full bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-red-500"
+                />
+              </div>
+              <div>
+                <label className="text-slate-500 text-xs font-semibold uppercase tracking-wider block mb-1.5">
+                  Units Staked
+                </label>
+                <input
+                  type="number"
+                  step="0.1"
+                  min="0"
+                  value={unitsWagered}
+                  onChange={(e) => setUnitsWagered(e.target.value)}
+                  placeholder="1"
                   className="w-full bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-red-500"
                 />
               </div>
@@ -4473,6 +4501,7 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                     eventName: eventName.trim(),
                     eventDate,
                     modelToggle,
+                    unitsWagered: unitsWagered.trim() ? Number(unitsWagered) : 1,
                   });
                   onSaveToUpcoming?.(entry);
                   setSaveFeedback('Saved to Upcoming.');
@@ -4489,6 +4518,7 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                     eventName: eventName.trim(),
                     eventDate,
                     modelToggle,
+                    unitsWagered: unitsWagered.trim() ? Number(unitsWagered) : 1,
                   });
                   onSaveToUpcomingAndOpen?.(entry);
                   setSaveFeedback('Saved to Upcoming.');
@@ -7336,8 +7366,8 @@ function ROITab({
         <div>
           <h2 className="text-white font-black text-xl mb-1">ROI</h2>
           <p className="text-slate-400 text-sm">
-            Save simulator picks, grade them after the event, and track flat
-            stake profit plus pick accuracy.
+            Save simulator picks, grade them after the event, and track
+            profit plus pick accuracy.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -7530,7 +7560,11 @@ function ROITab({
               if (isPushResult(entry.actualWinner)) return 0;
               const dec = americanToDecimal(effectiveOdds);
               if (!dec) return null;
-              return entry.actualWinner === effectiveTrackedSide ? dec - 1 : -1;
+              // Same unitsWagered-aware stake as calcTrackedProfit -- the amount
+              // actually risked on this entry doesn't change with the view mode,
+              // only which side's odds are used to price the payout.
+              const stake = entry.unitsWagered != null ? entry.unitsWagered : 1;
+              return entry.actualWinner === effectiveTrackedSide ? stake * (dec - 1) : -stake;
             })();
             const effectiveWinnerForBadge = (inV2Mode && v2Data) ? v2Data.v2Winner : entry.displayWinner;
             const correct = decisive && entry.actualWinner === effectiveTrackedSide;
