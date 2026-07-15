@@ -9,9 +9,15 @@
 // cardioModule.js / rankHistory.js are regenerated, so the manifest stays current.
 
 export const SOURCE_MANIFEST = {
-  "manifestGeneratedAt": "2026-07-13T21:22:38Z",
+  "manifestGeneratedAt": "2026-07-14T23:48:46Z",
   "generatorScript": "generate_source_manifest.py",
   "methodologyRef": "research/source_integrity_audit.md",
+  "freshnessBaseline": {
+    "source": "ufc_event_details.csv (DATE column) + ufc_fight_results.csv (row count)",
+    "maxObservedEventDate": "2026-05-16",
+    "eventCount": 774,
+    "resultRowCount": 8701
+  },
   "modules": {
     "fightHistory": {
       "file": "src/fightHistory.js",
@@ -35,9 +41,9 @@ export const SOURCE_MANIFEST = {
     "elo": {
       "file": "src/eloModule.js",
       "feedsV2": true,
-      "generatedAt": "2026-07-12",
+      "generatedAt": "2026-07-14",
       "maxObservedEventDate": "2026-05-16",
-      "contentHash": "d4d1e263ca42e7c6fd31e7c711d74b893f6684d6a71f82aeede977716e170e41",
+      "contentHash": "4d9b369cff28810d3c0e17e5ef2f55c8ecaac0e3f01fb35bd7f50fc0454dff86",
       "generatorVersion": "regen_elo.py @ d2c56b9807b020db7ccca7db333298b997dff5e0",
       "verificationMethod": "Parsed DATE column of ufc_event_details.csv directly (774 rows); maximum event date found = 2026-05-16. Cross-checked ufc_fight_results.csv, ufc_fight_details.csv, ufc_fight_stats.csv for window-period event names: zero matches. This value is NOT derived from any file mtime, git commit date, or in-file header comment -- see research/source_integrity_audit.md for the original manual methodology this script automates. NOTE: eloModule.js's own header comment claims coverage \"through Jul 2026\" -- this is misleading relative to the verified underlying data and should not be trusted; regen_elo.py reads only ufc_fight_results.csv + ufc_event_details.csv, identical to the fight-history/fighter-aggregate sources above."
     },

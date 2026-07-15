@@ -110,6 +110,15 @@ def max_event_date_in_csv(csv_path):
     return (max_dt.date().isoformat() if max_dt else None), n_rows
 
 
+def count_csv_rows(csv_path):
+    """Counts data rows (excluding header) in a CSV, or 0 if unreadable."""
+    p = REPO_ROOT / csv_path
+    if not p.exists():
+        return 0
+    with p.open() as f:
+        return sum(1 for _ in csv.DictReader(f))
+
+
 def max_embedded_yyyymmdd(js_path):
     """Extracts the maximum 8-digit YYYYMMDD literal embedded in the artifact's
     own content (fallback when the raw source CSV isn't available on disk)."""
@@ -137,6 +146,7 @@ def build_manifest():
     now_iso = datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
 
     max_event_date, n_event_rows = max_event_date_in_csv('ufc_event_details.csv')
+    n_result_rows = count_csv_rows('ufc_fight_results.csv')
 
     # Cross-check: confirm zero window-period event names leak into the raw
     # fight-level CSVs even though they lack their own date column (mirrors
@@ -260,6 +270,17 @@ def build_manifest():
         'manifestGeneratedAt': now_iso,
         'generatorScript': 'generate_source_manifest.py',
         'methodologyRef': 'research/source_integrity_audit.md',
+        # Structured baseline consumed by scripts/check_data_freshness.py (the
+        # workflow freshness gate). These are the last-known-good counts/date of
+        # the Greco source CSVs; the gate compares each incoming refresh against
+        # them and never hardcodes any count of its own. Regenerated on every
+        # PASS-new-data run so the baseline advances.
+        'freshnessBaseline': {
+            'source': 'ufc_event_details.csv (DATE column) + ufc_fight_results.csv (row count)',
+            'maxObservedEventDate': max_event_date,
+            'eventCount': n_event_rows,
+            'resultRowCount': n_result_rows,
+        },
         'modules': modules,
     }
 
