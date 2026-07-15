@@ -1403,14 +1403,21 @@ function roiV2GradedPopulation(entries) {
 // (matches Codex/v2_calibration_audit.md bucket convention); the plotted
 // market-probability value is DE-VIGGED (matches that report's "Market
 // columns scored with de-vig probability" choice).
-function computeModelVsMarketByBand(entries) {
+//
+// basis='v1' reads the frozen fighterAProb/fighterBProb pair instead of
+// v2pA/v2pB, on the exact same population (buildRoiEntry stores both pairs
+// unconditionally in the same save, so there's no population mismatch).
+// Default ('v2') is byte-identical to this function's original behavior.
+function computeModelVsMarketByBand(entries, basis = 'v2') {
   const pop = roiV2GradedPopulation(entries);
   const buckets = ROI_MARKET_BANDS.map((b) => ({ ...b, rows: [] }));
   pop.forEach((e) => {
     const rawA = parseAmericanOdds(e.oddsA);
     const rawB = parseAmericanOdds(e.oddsB);
     if (rawA == null || rawB == null) return;
-    const pickA = e.v2pA >= e.v2pB;
+    const pA = basis === 'v1' ? e.fighterAProb : e.v2pA;
+    const pB = basis === 'v1' ? e.fighterBProb : e.v2pB;
+    const pickA = pA >= pB;
     const pickName = pickA ? e.fighterA : e.fighterB;
     const { noVigA, noVigB } = stripVig(rawA, rawB);
     const rawPick = pickA ? rawA : rawB;
@@ -1442,13 +1449,17 @@ function computeModelVsMarketByBand(entries) {
 // (mean of V2's actual predictions within the bucket, not the bucket's
 // nominal midpoint) doubles as the "perfect calibration" reference series --
 // connecting it across buckets is the bucketed equivalent of a y=x diagonal.
-function computeCalibrationReliability(entries) {
+// basis='v1' reads frozen fighterAProb/fighterBProb instead of v2pA/v2pB, same
+// population and shape as the v2 default. Default is byte-identical to before.
+function computeCalibrationReliability(entries, basis = 'v2') {
   const pop = roiV2GradedPopulation(entries);
   const buckets = ROI_V2_PROB_BUCKETS.map((b) => ({ ...b, rows: [] }));
   pop.forEach((e) => {
-    const pickA = e.v2pA >= e.v2pB;
+    const pA = basis === 'v1' ? e.fighterAProb : e.v2pA;
+    const pB = basis === 'v1' ? e.fighterBProb : e.v2pB;
+    const pickA = pA >= pB;
     const pickName = pickA ? e.fighterA : e.fighterB;
-    const pickProb = Math.max(e.v2pA, e.v2pB);
+    const pickProb = Math.max(pA, pB);
     const name = bandOf(ROI_V2_PROB_BUCKETS, pickProb);
     if (!name) return;
     buckets
@@ -1657,6 +1668,159 @@ function computeMonthlyPerformance(entries) {
   });
 }
 
+// ─── V2-BASIS VARIANTS (for the Statistics tab's v1/v2 toggle) ────────────
+// These mirror ROITab's OWN "v2" mode exactly: a LIVE recompute via
+// computeMatchupEdges(fA, fB) against CURRENT fighter stats, not any frozen
+// field -- the same mechanism already used for the held-back tier charts,
+// transcribed verbatim from ROITab's v2ROISummary (flat 1u, skips pushes
+// entirely rather than counting them as 0-profit bets -- this asymmetry
+// with the v1/calcTrackedProfit path already exists in ROITab itself and is
+// preserved here, not "fixed"). Requires fighterMap for live resolution.
+function computeV2LiveRows(entries, fighterMap) {
+  const rows = [];
+  entries.forEach((entry) => {
+    if (!isResolvedWinner(entry.actualWinner, entry)) return;
+    if (isPushResult(entry.actualWinner)) return;
+    if (!americanToDecimal(entry.marketOdds)) return;
+    if (entry.confirmedByUser === false) return;
+    const fA = fighterMap.get(entry.fighterA);
+    const fB = fighterMap.get(entry.fighterB);
+    if (!fA || !fB) return;
+    const res = computeMatchupEdges(fA, fB);
+    const v2pA = res.v2pA;
+    const v2pB = res.v2pB;
+    if (v2pA == null || v2pB == null) return;
+    const v2pick = v2pA >= v2pB ? entry.fighterA : entry.fighterB;
+    const v2odds = v2pick === entry.fighterA
+      ? (entry.oddsA || entry.marketOdds)
+      : (entry.oddsB || entry.marketOdds);
+    const dec = americanToDecimal(v2odds);
+    if (!dec) return;
+    const won = entry.actualWinner === v2pick;
+    const profit = won ? dec - 1 : -1;
+    const rawPick = parseAmericanOdds(v2odds);
+    rows.push({
+      entry, v2pick, won, profit, rawPick,
+      eventName: entry.eventName,
+      eventDate: entry.eventDate,
+    });
+  });
+  return rows;
+}
+
+// v2-basis accuracy + ROI summary, transcribed verbatim from ROITab's
+// v2Stats (accuracy, including its v1-displayWinner fallback when a fighter
+// no longer resolves) + v2ROISummary (roi/profit/bets). Statistics tab's
+// Tracked Fights / Graded Picks cards are NOT toggle-dependent in ROITab
+// either -- only accuracy/roi/profit/bets swap with the toggle.
+function computeV2Summary(entries, fighterMap) {
+  let gradedCount = 0;
+  let v2Correct = 0;
+  entries.forEach((entry) => {
+    const decisive = entry.actualWinner === entry.fighterA || entry.actualWinner === entry.fighterB;
+    if (!decisive) return;
+    gradedCount++;
+    const fA = fighterMap.get(entry.fighterA);
+    const fB = fighterMap.get(entry.fighterB);
+    let winner = entry.predictedWinner;
+    if (fA && fB) {
+      const res = computeMatchupEdges(fA, fB);
+      if (res.v2pA != null && res.v2pB != null) {
+        winner = res.v2pA >= res.v2pB ? entry.fighterA : entry.fighterB;
+      }
+    }
+    if (winner === entry.actualWinner) v2Correct++;
+  });
+  const rows = computeV2LiveRows(entries, fighterMap);
+  const bets = rows.length;
+  const profit = rows.reduce((s, r) => s + r.profit, 0);
+  return {
+    graded: gradedCount,
+    correct: v2Correct,
+    accuracy: gradedCount > 0 ? (v2Correct / gradedCount) * 100 : 0,
+    bets,
+    profit,
+    roi: bets > 0 ? (profit / bets) * 100 : 0,
+  };
+}
+
+// v2-basis variant of Chart 1 (ROI by Market Band): same band scheme, same
+// output shape, but banded by V2's LIVE pick + its own price instead of the
+// tracked/staked side.
+function computeRoiByMarketBandV2(entries, fighterMap) {
+  const rows = computeV2LiveRows(entries, fighterMap);
+  const buckets = ROI_MARKET_BANDS.map((b) => ({ ...b, profits: [] }));
+  rows.forEach((r) => {
+    const name = bandOf(ROI_MARKET_BANDS, r.rawPick);
+    if (!name) return;
+    buckets.find((b) => b.name === name).profits.push(r.profit);
+  });
+  return buckets.map((b) => {
+    const n = b.profits.length;
+    return {
+      band: b.name,
+      n,
+      roi: n ? (b.profits.reduce((s, p) => s + p, 0) / n) * 100 : null,
+      lowN: n > 0 && n < ROI_ANALYTICS_LOW_N,
+    };
+  });
+}
+
+// v2-basis variant of the cumulative P&L chart: same per-event grouping,
+// same output shape, banded on V2's live pick's own profit per entry.
+function computeCumulativePnlV2(entries, fighterMap) {
+  const rows = computeV2LiveRows(entries, fighterMap);
+  const byEvent = new Map();
+  rows.forEach((r) => {
+    const key = `${r.eventDate || ''}__${r.eventName || 'Unknown Event'}`;
+    if (!byEvent.has(key)) {
+      byEvent.set(key, { eventDate: r.eventDate || '', eventName: r.eventName || 'Unknown Event', profits: [] });
+    }
+    byEvent.get(key).profits.push(r.profit);
+  });
+  const events = Array.from(byEvent.values()).sort((a, b) =>
+    a.eventDate < b.eventDate ? -1 : a.eventDate > b.eventDate ? 1 : 0
+  );
+  let cumulative = 0;
+  return events.map((ev) => {
+    const eventProfit = ev.profits.reduce((s, p) => s + p, 0);
+    cumulative += eventProfit;
+    return {
+      eventName: ev.eventName,
+      eventDate: ev.eventDate,
+      n: ev.profits.length,
+      eventProfit,
+      cumulative,
+    };
+  });
+}
+
+// v2-basis variant of the monthly performance table: same per-month
+// grouping, same output shape, using V2's live pick's own outcome/profit.
+function computeMonthlyPerformanceV2(entries, fighterMap) {
+  const rows = computeV2LiveRows(entries, fighterMap);
+  const byMonth = new Map();
+  rows.forEach((r) => {
+    const month = (r.eventDate || '').slice(0, 7) || 'Unknown';
+    if (!byMonth.has(month)) byMonth.set(month, []);
+    byMonth.get(month).push({ profit: r.profit, won: r.won ? 1 : 0 });
+  });
+  const months = Array.from(byMonth.keys()).sort();
+  return months.map((month) => {
+    const monthRows = byMonth.get(month);
+    const n = monthRows.length;
+    const netUnits = monthRows.reduce((s, r) => s + r.profit, 0);
+    return {
+      month,
+      n,
+      winRate: n ? (monthRows.reduce((s, r) => s + r.won, 0) / n) * 100 : null,
+      staked: n,
+      netUnits,
+      roi: n ? (netUnits / n) * 100 : null,
+    };
+  });
+}
+
 // Shared XAxis tick renderer: draws the band/bucket label plus its n= count,
 // with a low-n asterisk + amber color when the chart's own data marks lowN.
 function makeBandTick(data) {
@@ -1687,14 +1851,15 @@ const roiChartTooltipStyle = {
   labelStyle: { color: '#e2e8f0', fontWeight: 600 },
 };
 
-function RoiByMarketBandChart({ data }) {
+function RoiByMarketBandChart({ data, modelLabel = 'v1' }) {
   const anySamples = data.some((d) => d.n > 0);
   return (
     <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
       <h3 className="text-white font-bold text-sm mb-1">ROI by Market Band</h3>
       <p className="text-slate-500 text-xs mb-3">
-        Flat 1u ROI on the actually-staked side, grouped by that side's raw
-        market-implied probability. Dashed line = breakeven (0% ROI).
+        {modelLabel === 'v2'
+          ? "Flat 1u ROI on V2's live-recomputed pick (at that pick's own price), grouped by that pick's raw market-implied probability. Dashed line = breakeven (0% ROI)."
+          : "Flat 1u ROI on the actually-staked side, grouped by that side's raw market-implied probability. Dashed line = breakeven (0% ROI)."}
       </p>
       {!anySamples ? (
         <p className="text-slate-600 text-sm py-8 text-center">
@@ -1736,18 +1901,19 @@ function RoiByMarketBandChart({ data }) {
   );
 }
 
-function ModelVsMarketBracketChart({ data }) {
+function ModelVsMarketBracketChart({ data, modelLabel = 'v2' }) {
   const anySamples = data.some((d) => d.n > 0);
+  const ML = modelLabel.toUpperCase();
   return (
     <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
-      <h3 className="text-white font-bold text-sm mb-1">V2 Pick Win Rate vs. Market-Implied %</h3>
+      <h3 className="text-white font-bold text-sm mb-1">{ML} Pick Win Rate vs. Market-Implied %</h3>
       <p className="text-slate-500 text-xs mb-3">
-        V2's picked side, grouped by that side's raw market-implied probability band.
+        {ML}'s picked side, grouped by that side's raw market-implied probability band.
         Market % is de-vigged (stripVig).
       </p>
       {!anySamples ? (
         <p className="text-slate-600 text-sm py-8 text-center">
-          No decisive graded picks with frozen v2 fields yet in the current filter window.
+          No decisive graded picks with frozen v1/v2 fields yet in the current filter window.
         </p>
       ) : (
         <ResponsiveContainer width="100%" height={240}>
@@ -1777,18 +1943,19 @@ function ModelVsMarketBracketChart({ data }) {
   );
 }
 
-function CalibrationReliabilityChart({ data }) {
+function CalibrationReliabilityChart({ data, modelLabel = 'v2' }) {
   const anySamples = data.some((d) => d.n > 0);
+  const ML = modelLabel.toUpperCase();
   return (
     <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
       <h3 className="text-white font-bold text-sm mb-1">Calibration Reliability</h3>
       <p className="text-slate-500 text-xs mb-3">
-        V2's confidence on its picked side, bucketed, vs. actual win rate.
+        {ML}'s confidence on its picked side, bucketed, vs. actual win rate.
         Dashed line = mean predicted probability per bucket (perfect calibration reference).
       </p>
       {!anySamples ? (
         <p className="text-slate-600 text-sm py-8 text-center">
-          No decisive graded picks with frozen v2 fields yet in the current filter window.
+          No decisive graded picks with frozen v1/v2 fields yet in the current filter window.
         </p>
       ) : (
         <ResponsiveContainer width="100%" height={240}>
@@ -1944,13 +2111,14 @@ function BetTierRoiChart({ data }) {
   );
 }
 
-function CumulativePnlChart({ data }) {
+function CumulativePnlChart({ data, modelLabel = 'v1' }) {
   return (
     <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
       <h3 className="text-white font-bold text-sm mb-1">Cumulative P&amp;L by Event</h3>
       <p className="text-slate-500 text-xs mb-3">
-        Running net units on the actually-staked side, one point per event in
-        chronological order.
+        {modelLabel === 'v2'
+          ? "Running net units on V2's live-recomputed pick (at that pick's own price), one point per event in chronological order."
+          : 'Running net units on the actually-staked side, one point per event in chronological order.'}
       </p>
       {data.length === 0 ? (
         <p className="text-slate-600 text-sm py-8 text-center">
@@ -2045,6 +2213,17 @@ function MonthlyPerformanceTable({ data }) {
 // same population logic (filterRoiEntriesForStats mirrors displayedEntries),
 // same n<8 low-n convention, same de-vig/raw conventions -- this component
 // only relocates rendering, it does not recompute anything differently.
+// Small "V1"/"V2" mini-header used only in compare mode, above each half of
+// a two-column comparison panel -- keeps the single-model views (v1 or v2
+// alone) visually unchanged from before this toggle existed.
+function ModelPanelLabel({ label }) {
+  return (
+    <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-1.5">
+      {label}
+    </p>
+  );
+}
+
 function StatisticsTab({ entries, prospectNameSet, filterSince, setFilterSince, allFighters }) {
   const statsEntries = useMemo(
     () => filterRoiEntriesForStats(entries, prospectNameSet, filterSince),
@@ -2057,43 +2236,58 @@ function StatisticsTab({ entries, prospectNameSet, filterSince, setFilterSince, 
     return m;
   }, [allFighters]);
 
-  const roiByBandData = useMemo(
-    () => computeRoiByMarketBand(statsEntries),
-    [statsEntries]
-  );
-  const modelVsMarketData = useMemo(
-    () => computeModelVsMarketByBand(statsEntries),
-    [statsEntries]
-  );
-  const calibrationData = useMemo(
-    () => computeCalibrationReliability(statsEntries),
-    [statsEntries]
-  );
+  // v1/v2 toggle -- same UI pattern and default ('v2') as ROITab's own
+  // modelView. Both bases are always computed (cheap, memoized), matching
+  // ROITab's own "compute both, display one" approach; the toggle only
+  // controls which is rendered.
+  const [modelView, setModelView] = useState('v2');
+
+  const roiByBandDataV1 = useMemo(() => computeRoiByMarketBand(statsEntries), [statsEntries]);
+  const roiByBandDataV2 = useMemo(() => computeRoiByMarketBandV2(statsEntries, fighterMap), [statsEntries, fighterMap]);
+  const modelVsMarketDataV1 = useMemo(() => computeModelVsMarketByBand(statsEntries, 'v1'), [statsEntries]);
+  const modelVsMarketDataV2 = useMemo(() => computeModelVsMarketByBand(statsEntries, 'v2'), [statsEntries]);
+  const calibrationDataV1 = useMemo(() => computeCalibrationReliability(statsEntries, 'v1'), [statsEntries]);
+  const calibrationDataV2 = useMemo(() => computeCalibrationReliability(statsEntries, 'v2'), [statsEntries]);
   const betTierData = useMemo(
     () => computeBetTierBreakdown(statsEntries, fighterMap),
     [statsEntries, fighterMap]
   );
-  const summary = useMemo(
-    () => computeROISummary(statsEntries, new Set()),
-    [statsEntries]
-  );
-  const cumulativeData = useMemo(
-    () => computeCumulativePnl(statsEntries),
-    [statsEntries]
-  );
-  const monthlyData = useMemo(
-    () => computeMonthlyPerformance(statsEntries),
-    [statsEntries]
-  );
+  const summaryV1 = useMemo(() => computeROISummary(statsEntries, new Set()), [statsEntries]);
+  const summaryV2 = useMemo(() => computeV2Summary(statsEntries, fighterMap), [statsEntries, fighterMap]);
+  const cumulativeDataV1 = useMemo(() => computeCumulativePnl(statsEntries), [statsEntries]);
+  const cumulativeDataV2 = useMemo(() => computeCumulativePnlV2(statsEntries, fighterMap), [statsEntries, fighterMap]);
+  const monthlyDataV1 = useMemo(() => computeMonthlyPerformance(statsEntries), [statsEntries]);
+  const monthlyDataV2 = useMemo(() => computeMonthlyPerformanceV2(statsEntries, fighterMap), [statsEntries, fighterMap]);
+
+  const compareMode = modelView === 'compare';
 
   return (
     <div className="max-w-5xl mx-auto px-5 py-8">
-      <div className="mb-6">
-        <h2 className="text-white font-black text-xl mb-1">Statistics</h2>
-        <p className="text-slate-400 text-sm">
-          Live calibration and ROI analysis of FightMetrics' V2 model, computed
-          from graded ROI entries.
-        </p>
+      <div className="flex items-start justify-between gap-4 mb-6">
+        <div>
+          <h2 className="text-white font-black text-xl mb-1">Statistics</h2>
+          <p className="text-slate-400 text-sm">
+            Live calibration and ROI analysis of FightMetrics' models, computed
+            from graded ROI entries.
+          </p>
+        </div>
+        {entries.length > 0 && (
+          <div className="flex items-center gap-1 bg-slate-800 rounded-lg p-1">
+            {['v1', 'v2', 'compare'].map((view) => (
+              <button
+                key={view}
+                onClick={() => setModelView(view)}
+                className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-colors ${
+                  modelView === view
+                    ? 'bg-red-600 text-white'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                {view === 'compare' ? 'Compare' : view}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {entries.length > 0 && (
@@ -2135,40 +2329,132 @@ function StatisticsTab({ entries, prospectNameSet, filterSince, setFilterSince, 
           <div className="grid grid-cols-4 gap-4 mb-6 items-stretch">
             <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 h-full">
               <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold">Tracked Fights</p>
-              <p className="font-black text-2xl mt-2 text-white">{summary.total}</p>
+              <p className="font-black text-2xl mt-2 text-white">{summaryV1.total}</p>
             </div>
             <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 h-full">
               <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold">Graded Picks</p>
-              <p className="font-black text-2xl mt-2 text-blue-400">{summary.graded}</p>
+              <p className="font-black text-2xl mt-2 text-blue-400">{summaryV1.graded}</p>
             </div>
             <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 h-full">
               <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold">Pick Accuracy</p>
-              <p className={`font-black text-2xl mt-2 ${summary.accuracy >= 60 ? 'text-emerald-400' : 'text-yellow-400'}`}>
-                {summary.accuracy.toFixed(1)}%
-              </p>
+              {compareMode ? (
+                <p className="font-black text-lg mt-2">
+                  <span className={summaryV1.accuracy >= 60 ? 'text-emerald-400' : 'text-yellow-400'}>
+                    v1: {summaryV1.accuracy.toFixed(1)}%
+                  </span>
+                  <span className="text-slate-600"> · </span>
+                  <span className={summaryV2.accuracy >= 60 ? 'text-emerald-400' : 'text-yellow-400'}>
+                    v2: {summaryV2.accuracy.toFixed(1)}%
+                  </span>
+                </p>
+              ) : (
+                <p className={`font-black text-2xl mt-2 ${(modelView === 'v2' ? summaryV2 : summaryV1).accuracy >= 60 ? 'text-emerald-400' : 'text-yellow-400'}`}>
+                  {(modelView === 'v2' ? summaryV2 : summaryV1).accuracy.toFixed(1)}%
+                </p>
+              )}
             </div>
             <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 h-full">
               <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold">ROI</p>
-              <p className={`font-black text-2xl mt-2 ${summary.roi >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                {summary.roi >= 0 ? '+' : ''}{summary.roi.toFixed(1)}%
-              </p>
-              <p className="text-slate-600 text-xs mt-1">
-                {summary.profit >= 0 ? '+' : ''}{summary.profit.toFixed(2)}u on {summary.bets} bets
-              </p>
+              {compareMode ? (
+                <>
+                  <p className="font-black text-lg mt-2">
+                    <span className={summaryV1.roi >= 0 ? 'text-emerald-400' : 'text-red-400'}>
+                      v1: {summaryV1.roi >= 0 ? '+' : ''}{summaryV1.roi.toFixed(1)}%
+                    </span>
+                    <span className="text-slate-600"> · </span>
+                    <span className={summaryV2.roi >= 0 ? 'text-emerald-400' : 'text-red-400'}>
+                      v2: {summaryV2.roi >= 0 ? '+' : ''}{summaryV2.roi.toFixed(1)}%
+                    </span>
+                  </p>
+                  <p className="text-slate-600 text-xs mt-1">
+                    {summaryV1.profit >= 0 ? '+' : ''}{summaryV1.profit.toFixed(2)}u on {summaryV1.bets} bets · v1
+                  </p>
+                  <p className="text-slate-600 text-xs">
+                    {summaryV2.profit >= 0 ? '+' : ''}{summaryV2.profit.toFixed(2)}u on {summaryV2.bets} bets · v2 live
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p className={`font-black text-2xl mt-2 ${(modelView === 'v2' ? summaryV2 : summaryV1).roi >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                    {(modelView === 'v2' ? summaryV2 : summaryV1).roi >= 0 ? '+' : ''}{(modelView === 'v2' ? summaryV2 : summaryV1).roi.toFixed(1)}%
+                  </p>
+                  <p className="text-slate-600 text-xs mt-1">
+                    {(modelView === 'v2' ? summaryV2 : summaryV1).profit >= 0 ? '+' : ''}{(modelView === 'v2' ? summaryV2 : summaryV1).profit.toFixed(2)}u on {(modelView === 'v2' ? summaryV2 : summaryV1).bets} bets
+                    {modelView === 'v2' ? ' · v2 live recompute' : ''}
+                  </p>
+                </>
+              )}
             </div>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
-            <CumulativePnlChart data={cumulativeData} />
-            <MonthlyPerformanceTable data={monthlyData} />
+            {compareMode ? (
+              <>
+                <div>
+                  <ModelPanelLabel label="V1" />
+                  <CumulativePnlChart data={cumulativeDataV1} modelLabel="v1" />
+                </div>
+                <div>
+                  <ModelPanelLabel label="V2" />
+                  <CumulativePnlChart data={cumulativeDataV2} modelLabel="v2" />
+                </div>
+                <div>
+                  <ModelPanelLabel label="V1" />
+                  <MonthlyPerformanceTable data={monthlyDataV1} />
+                </div>
+                <div>
+                  <ModelPanelLabel label="V2" />
+                  <MonthlyPerformanceTable data={monthlyDataV2} />
+                </div>
+              </>
+            ) : (
+              <>
+                <CumulativePnlChart data={modelView === 'v2' ? cumulativeDataV2 : cumulativeDataV1} modelLabel={modelView === 'v2' ? 'v2' : 'v1'} />
+                <MonthlyPerformanceTable data={modelView === 'v2' ? monthlyDataV2 : monthlyDataV1} />
+              </>
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+            {compareMode ? (
+              <>
+                <div>
+                  <ModelPanelLabel label="V1" />
+                  <RoiByMarketBandChart data={roiByBandDataV1} modelLabel="v1" />
+                </div>
+                <div>
+                  <ModelPanelLabel label="V2" />
+                  <RoiByMarketBandChart data={roiByBandDataV2} modelLabel="v2" />
+                </div>
+                <div>
+                  <ModelPanelLabel label="V1" />
+                  <ModelVsMarketBracketChart data={modelVsMarketDataV1} modelLabel="v1" />
+                </div>
+                <div>
+                  <ModelPanelLabel label="V2" />
+                  <ModelVsMarketBracketChart data={modelVsMarketDataV2} modelLabel="v2" />
+                </div>
+                <div>
+                  <ModelPanelLabel label="V1" />
+                  <CalibrationReliabilityChart data={calibrationDataV1} modelLabel="v1" />
+                </div>
+                <div>
+                  <ModelPanelLabel label="V2" />
+                  <CalibrationReliabilityChart data={calibrationDataV2} modelLabel="v2" />
+                </div>
+              </>
+            ) : (
+              <>
+                <RoiByMarketBandChart data={modelView === 'v2' ? roiByBandDataV2 : roiByBandDataV1} modelLabel={modelView === 'v2' ? 'v2' : 'v1'} />
+                <ModelVsMarketBracketChart data={modelView === 'v2' ? modelVsMarketDataV2 : modelVsMarketDataV1} modelLabel={modelView === 'v2' ? 'v2' : 'v1'} />
+                <div className="lg:col-span-2">
+                  <CalibrationReliabilityChart data={modelView === 'v2' ? calibrationDataV2 : calibrationDataV1} modelLabel={modelView === 'v2' ? 'v2' : 'v1'} />
+                </div>
+              </>
+            )}
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <RoiByMarketBandChart data={roiByBandData} />
-            <ModelVsMarketBracketChart data={modelVsMarketData} />
-            <div className="lg:col-span-2">
-              <CalibrationReliabilityChart data={calibrationData} />
-            </div>
             <BetTierWinRateChart data={betTierData} />
             <BetTierRoiChart data={betTierData} />
           </div>
