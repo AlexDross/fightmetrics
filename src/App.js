@@ -7,6 +7,16 @@ import {
   Radar,
   ResponsiveContainer,
   Tooltip,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Legend,
+  ReferenceLine,
+  ComposedChart,
+  Line,
+  Cell,
 } from 'recharts';
 import {
   BarChart2,
@@ -1300,6 +1310,446 @@ const calcTrackedProfit = (entry) => {
   const stake = entry.unitsWagered != null ? entry.unitsWagered : 1;
   return entry.actualWinner === entry.trackedSide ? stake * (dec - 1) : -stake;
 };
+
+// ─── ROI TAB ANALYTICS (read-only aggregation over graded ROI_ENTRIES) ─────────
+// Three chart datasets below reuse the existing pure helpers above
+// (isResolvedWinner, americanToDecimal, calcTrackedProfit, parseAmericanOdds,
+// stripVig) exactly as-is. They only READ entry fields already computed and
+// stored by buildRoiEntry()/the save-prediction flow -- no prediction,
+// probability, or betAction value is computed or altered here.
+//
+// Low-sample threshold: n < 8, matching the ⚠ convention already established in
+// research/v2_calibration_audit.md and research/v2_recalibration_test.md.
+const ROI_ANALYTICS_LOW_N = 8;
+
+// Market-probability bands -- identical boundaries to the "By market band" table
+// in research/v2_calibration_audit.md (raw-implied prob of the relevant side).
+const ROI_MARKET_BANDS = [
+  { name: '<55%', lo: 0, hi: 0.55 },
+  { name: '55-60%', lo: 0.55, hi: 0.60 },
+  { name: '60-65%', lo: 0.60, hi: 0.65 },
+  { name: '65-70%', lo: 0.65, hi: 0.70 },
+  { name: '70-80%', lo: 0.70, hi: 0.80 },
+  { name: '80%+', lo: 0.80, hi: 1.01 },
+];
+
+// V2 self-confidence buckets for the calibration reliability chart.
+const ROI_V2_PROB_BUCKETS = [
+  { name: '50-60%', lo: 0.50, hi: 0.60 },
+  { name: '60-70%', lo: 0.60, hi: 0.70 },
+  { name: '70-80%', lo: 0.70, hi: 0.80 },
+  { name: '80-90%', lo: 0.80, hi: 0.90 },
+  { name: '90%+', lo: 0.90, hi: 1.01 },
+];
+
+const bandOf = (bands, p) => {
+  if (p == null) return null;
+  const hit = bands.find((b) => p >= b.lo && p < b.hi);
+  return hit ? hit.name : null;
+};
+
+// Chart 1 — ROI by market band, on the entry's actual staked (tracked) side.
+// Model-agnostic: uses whatever price/side was actually recorded, same
+// population logic (marketOdds present, resolved winner, not user-rejected)
+// as computeROISummary's `betEntries`.
+function computeRoiByMarketBand(entries) {
+  const staked = entries.filter(
+    (e) =>
+      isResolvedWinner(e.actualWinner, e) &&
+      e.confirmedByUser !== false &&
+      americanToDecimal(e.marketOdds)
+  );
+  const buckets = ROI_MARKET_BANDS.map((b) => ({ ...b, profits: [] }));
+  staked.forEach((e) => {
+    const raw = parseAmericanOdds(e.marketOdds);
+    const name = bandOf(ROI_MARKET_BANDS, raw);
+    if (!name) return;
+    const bucket = buckets.find((b) => b.name === name);
+    const profit = calcTrackedProfit(e);
+    if (profit != null) bucket.profits.push(profit);
+  });
+  return buckets.map((b) => {
+    const n = b.profits.length;
+    return {
+      band: b.name,
+      n,
+      roi: n ? (b.profits.reduce((s, p) => s + p, 0) / n) * 100 : null,
+      lowN: n > 0 && n < ROI_ANALYTICS_LOW_N,
+    };
+  });
+}
+
+// Shared population for charts 2 & 3: entries carrying the FROZEN v2pA/v2pB
+// fields (not live-recomputed), decisive graded outcome only. This mirrors
+// research/v2_calibration_audit.md's basis exactly (same frozen fields, same
+// decisive-only filter) so the live chart is a direct, growing extension of
+// that report's 54-fight window, not a different methodology.
+function roiV2GradedPopulation(entries) {
+  return entries.filter(
+    (e) =>
+      e.v2pA != null &&
+      e.v2pB != null &&
+      (e.actualWinner === e.fighterA || e.actualWinner === e.fighterB)
+  );
+}
+
+// Chart 2 — V2's picked-side actual win rate vs. de-vigged market-implied
+// probability, grouped by market band. Band membership uses RAW implied prob
+// (matches Codex/v2_calibration_audit.md bucket convention); the plotted
+// market-probability value is DE-VIGGED (matches that report's "Market
+// columns scored with de-vig probability" choice).
+function computeModelVsMarketByBand(entries) {
+  const pop = roiV2GradedPopulation(entries);
+  const buckets = ROI_MARKET_BANDS.map((b) => ({ ...b, rows: [] }));
+  pop.forEach((e) => {
+    const rawA = parseAmericanOdds(e.oddsA);
+    const rawB = parseAmericanOdds(e.oddsB);
+    if (rawA == null || rawB == null) return;
+    const pickA = e.v2pA >= e.v2pB;
+    const pickName = pickA ? e.fighterA : e.fighterB;
+    const { noVigA, noVigB } = stripVig(rawA, rawB);
+    const rawPick = pickA ? rawA : rawB;
+    const noVigPick = pickA ? noVigA : noVigB;
+    const name = bandOf(ROI_MARKET_BANDS, rawPick);
+    if (!name) return;
+    buckets
+      .find((b) => b.name === name)
+      .rows.push({ won: e.actualWinner === pickName ? 1 : 0, mktProb: noVigPick });
+  });
+  return buckets.map((b) => {
+    const n = b.rows.length;
+    return {
+      band: b.name,
+      n,
+      actualWinRate: n
+        ? (b.rows.reduce((s, r) => s + r.won, 0) / n) * 100
+        : null,
+      marketImplied: n
+        ? (b.rows.reduce((s, r) => s + r.mktProb, 0) / n) * 100
+        : null,
+      lowN: n > 0 && n < ROI_ANALYTICS_LOW_N,
+    };
+  });
+}
+
+// Chart 3 — calibration reliability: V2's own predicted probability (on its
+// picked side) bucketed, vs. actual win rate in that bucket. `predictedMean`
+// (mean of V2's actual predictions within the bucket, not the bucket's
+// nominal midpoint) doubles as the "perfect calibration" reference series --
+// connecting it across buckets is the bucketed equivalent of a y=x diagonal.
+function computeCalibrationReliability(entries) {
+  const pop = roiV2GradedPopulation(entries);
+  const buckets = ROI_V2_PROB_BUCKETS.map((b) => ({ ...b, rows: [] }));
+  pop.forEach((e) => {
+    const pickA = e.v2pA >= e.v2pB;
+    const pickName = pickA ? e.fighterA : e.fighterB;
+    const pickProb = Math.max(e.v2pA, e.v2pB);
+    const name = bandOf(ROI_V2_PROB_BUCKETS, pickProb);
+    if (!name) return;
+    buckets
+      .find((b) => b.name === name)
+      .rows.push({ won: e.actualWinner === pickName ? 1 : 0, pred: pickProb });
+  });
+  return buckets.map((b) => {
+    const n = b.rows.length;
+    return {
+      bucket: b.name,
+      n,
+      predictedMean: n
+        ? (b.rows.reduce((s, r) => s + r.pred, 0) / n) * 100
+        : null,
+      actualWinRate: n
+        ? (b.rows.reduce((s, r) => s + r.won, 0) / n) * 100
+        : null,
+      lowN: n > 0 && n < ROI_ANALYTICS_LOW_N,
+    };
+  });
+}
+
+// Shared population filter for the Statistics tab charts -- mirrors ROITab's
+// own `displayedEntries` filter (prospect exclusion + Since-date cutoff)
+// without the extra display-only fields ROITab's list rendering needs. Feeds
+// the same three compute* functions above with the same inputs as before;
+// this is the "minimal wiring" the charts' relocation out of ROITab needs.
+function filterRoiEntriesForStats(entries, prospectNameSet, filterSince) {
+  return entries.filter((e) => {
+    const includesProspect =
+      e.includesProspect != null
+        ? e.includesProspect
+        : e.fighterAIsProspect != null
+        ? e.fighterAIsProspect
+        : e.fighterBIsProspect != null
+        ? e.fighterBIsProspect
+        : prospectNameSet.has(e.fighterA) || prospectNameSet.has(e.fighterB);
+    if (includesProspect) return false;
+    if (filterSince && (e.eventDate || '') < filterSince) return false;
+    return true;
+  });
+}
+
+// Shared XAxis tick renderer: draws the band/bucket label plus its n= count,
+// with a low-n asterisk + amber color when the chart's own data marks lowN.
+function makeBandTick(data) {
+  return function BandTick({ x, y, payload }) {
+    const row = data[payload?.index];
+    const lowN = row?.lowN;
+    return (
+      <g transform={`translate(${x},${y})`}>
+        <text dy={14} textAnchor="middle" fill="#94a3b8" fontSize={11} fontWeight={600}>
+          {payload.value}
+        </text>
+        <text dy={28} textAnchor="middle" fill={lowN ? '#fbbf24' : '#64748b'} fontSize={10}>
+          {row ? `n=${row.n}${lowN ? '*' : ''}` : ''}
+        </text>
+      </g>
+    );
+  };
+}
+
+const roiChartTooltipStyle = {
+  contentStyle: {
+    background: '#1e293b',
+    border: '1px solid #475569',
+    borderRadius: 8,
+    fontSize: 12,
+  },
+  itemStyle: { color: '#cbd5e1' },
+  labelStyle: { color: '#e2e8f0', fontWeight: 600 },
+};
+
+function RoiByMarketBandChart({ data }) {
+  const anySamples = data.some((d) => d.n > 0);
+  return (
+    <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
+      <h3 className="text-white font-bold text-sm mb-1">ROI by Market Band</h3>
+      <p className="text-slate-500 text-xs mb-3">
+        Flat 1u ROI on the actually-staked side, grouped by that side's raw
+        market-implied probability. Dashed line = breakeven (0% ROI).
+      </p>
+      {!anySamples ? (
+        <p className="text-slate-600 text-sm py-8 text-center">
+          No staked, graded picks yet in the current filter window.
+        </p>
+      ) : (
+        <ResponsiveContainer width="100%" height={240}>
+          <BarChart data={data} margin={{ top: 10, right: 10, bottom: 24, left: 0 }}>
+            <CartesianGrid stroke="#334155" strokeDasharray="3 3" vertical={false} />
+            <XAxis dataKey="band" interval={0} tick={makeBandTick(data)} height={40} />
+            <YAxis
+              tick={{ fill: '#94a3b8', fontSize: 11 }}
+              tickFormatter={(v) => `${v}%`}
+              axisLine={false}
+            />
+            <ReferenceLine y={0} stroke="#94a3b8" strokeDasharray="4 4" label={{ value: 'Breakeven', position: 'insideTopRight', fill: '#94a3b8', fontSize: 10 }} />
+            <Tooltip
+              {...roiChartTooltipStyle}
+              formatter={(v, name, item) =>
+                v == null ? ['—', 'ROI'] : [`${v.toFixed(1)}%`, `ROI (n=${item.payload.n}${item.payload.lowN ? ', low sample' : ''})`]
+              }
+            />
+            <Bar dataKey="roi" radius={[3, 3, 0, 0]}>
+              {data.map((d, i) => (
+                <Cell
+                  key={i}
+                  fill={d.roi == null ? '#334155' : d.roi >= 0 ? '#34d399' : '#f87171'}
+                  fillOpacity={d.lowN ? 0.45 : 0.9}
+                />
+              ))}
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
+      )}
+      <p className="text-slate-600 text-[10px] mt-2">
+        * n &lt; {ROI_ANALYTICS_LOW_N} — low sample, shown at reduced opacity. Interpret with caution.
+      </p>
+    </div>
+  );
+}
+
+function ModelVsMarketBracketChart({ data }) {
+  const anySamples = data.some((d) => d.n > 0);
+  return (
+    <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
+      <h3 className="text-white font-bold text-sm mb-1">V2 Pick Win Rate vs. Market-Implied %</h3>
+      <p className="text-slate-500 text-xs mb-3">
+        V2's picked side, grouped by that side's raw market-implied probability band.
+        Market % is de-vigged (stripVig).
+      </p>
+      {!anySamples ? (
+        <p className="text-slate-600 text-sm py-8 text-center">
+          No decisive graded picks with frozen v2 fields yet in the current filter window.
+        </p>
+      ) : (
+        <ResponsiveContainer width="100%" height={240}>
+          <BarChart data={data} margin={{ top: 10, right: 10, bottom: 24, left: 0 }}>
+            <CartesianGrid stroke="#334155" strokeDasharray="3 3" vertical={false} />
+            <XAxis dataKey="band" interval={0} tick={makeBandTick(data)} height={40} />
+            <YAxis
+              tick={{ fill: '#94a3b8', fontSize: 11 }}
+              tickFormatter={(v) => `${v}%`}
+              axisLine={false}
+              domain={[0, 100]}
+            />
+            <Tooltip
+              {...roiChartTooltipStyle}
+              formatter={(v, name) => (v == null ? ['—', name] : [`${v.toFixed(1)}%`, name])}
+            />
+            <Legend wrapperStyle={{ fontSize: 11, color: '#94a3b8' }} />
+            <Bar dataKey="actualWinRate" name="Actual Win %" fill="#f87171" radius={[3, 3, 0, 0]} />
+            <Bar dataKey="marketImplied" name="Market Implied % (de-vig)" fill="#94a3b8" radius={[3, 3, 0, 0]} />
+          </BarChart>
+        </ResponsiveContainer>
+      )}
+      <p className="text-slate-600 text-[10px] mt-2">
+        * n &lt; {ROI_ANALYTICS_LOW_N} — low sample (see x-axis labels). Interpret with caution.
+      </p>
+    </div>
+  );
+}
+
+function CalibrationReliabilityChart({ data }) {
+  const anySamples = data.some((d) => d.n > 0);
+  return (
+    <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
+      <h3 className="text-white font-bold text-sm mb-1">Calibration Reliability</h3>
+      <p className="text-slate-500 text-xs mb-3">
+        V2's confidence on its picked side, bucketed, vs. actual win rate.
+        Dashed line = mean predicted probability per bucket (perfect calibration reference).
+      </p>
+      {!anySamples ? (
+        <p className="text-slate-600 text-sm py-8 text-center">
+          No decisive graded picks with frozen v2 fields yet in the current filter window.
+        </p>
+      ) : (
+        <ResponsiveContainer width="100%" height={240}>
+          <ComposedChart data={data} margin={{ top: 10, right: 10, bottom: 24, left: 0 }}>
+            <CartesianGrid stroke="#334155" strokeDasharray="3 3" vertical={false} />
+            <XAxis dataKey="bucket" interval={0} tick={makeBandTick(data)} height={40} />
+            <YAxis
+              tick={{ fill: '#94a3b8', fontSize: 11 }}
+              tickFormatter={(v) => `${v}%`}
+              axisLine={false}
+              domain={[0, 100]}
+            />
+            <Tooltip
+              {...roiChartTooltipStyle}
+              formatter={(v, name) => (v == null ? ['—', name] : [`${v.toFixed(1)}%`, name])}
+            />
+            <Legend wrapperStyle={{ fontSize: 11, color: '#94a3b8' }} />
+            <Bar dataKey="actualWinRate" name="Actual Win %" radius={[3, 3, 0, 0]}>
+              {data.map((d, i) => (
+                <Cell
+                  key={i}
+                  fill={
+                    d.actualWinRate == null
+                      ? '#334155'
+                      : d.actualWinRate >= d.predictedMean
+                      ? '#34d399'
+                      : '#f87171'
+                  }
+                  fillOpacity={d.lowN ? 0.45 : 0.9}
+                />
+              ))}
+            </Bar>
+            <Line
+              type="monotone"
+              dataKey="predictedMean"
+              name="Predicted Mean (perfect calibration ref)"
+              stroke="#e2e8f0"
+              strokeWidth={2}
+              strokeDasharray="5 3"
+              dot={{ r: 3, fill: '#e2e8f0' }}
+            />
+          </ComposedChart>
+        </ResponsiveContainer>
+      )}
+      <p className="text-slate-600 text-[10px] mt-2">
+        * n &lt; {ROI_ANALYTICS_LOW_N} — low sample (see x-axis labels). Green = actual ≥ predicted (not overconfident); red = actual &lt; predicted (overconfident).
+      </p>
+    </div>
+  );
+}
+
+// ─── STATISTICS TAB ─────────────────────────────────────────────────────────
+// Read-only analytics view. Charts here are unchanged from the ROI-tab build:
+// same population logic (filterRoiEntriesForStats mirrors displayedEntries),
+// same n<8 low-n convention, same de-vig/raw conventions -- this component
+// only relocates rendering, it does not recompute anything differently.
+function StatisticsTab({ entries, prospectNameSet, filterSince, setFilterSince }) {
+  const statsEntries = useMemo(
+    () => filterRoiEntriesForStats(entries, prospectNameSet, filterSince),
+    [entries, prospectNameSet, filterSince]
+  );
+
+  const roiByBandData = useMemo(
+    () => computeRoiByMarketBand(statsEntries),
+    [statsEntries]
+  );
+  const modelVsMarketData = useMemo(
+    () => computeModelVsMarketByBand(statsEntries),
+    [statsEntries]
+  );
+  const calibrationData = useMemo(
+    () => computeCalibrationReliability(statsEntries),
+    [statsEntries]
+  );
+
+  return (
+    <div className="max-w-5xl mx-auto px-5 py-8">
+      <div className="mb-6">
+        <h2 className="text-white font-black text-xl mb-1">Statistics</h2>
+        <p className="text-slate-400 text-sm">
+          Live calibration and ROI analysis of FightMetrics' V2 model, computed
+          from graded ROI entries.
+        </p>
+      </div>
+
+      {entries.length > 0 && (
+        <div className="flex items-center gap-3 mb-6">
+          <span className="text-slate-500 text-xs uppercase tracking-wider font-semibold">Since</span>
+          <input
+            type="date"
+            value={filterSince}
+            onChange={e => setFilterSince(e.target.value)}
+            className="bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-1.5 focus:outline-none focus:border-red-500"
+          />
+          {filterSince && (
+            <button
+              onClick={() => setFilterSince('')}
+              className="text-slate-500 hover:text-slate-300 text-xs underline"
+            >
+              Clear
+            </button>
+          )}
+          {filterSince && (
+            <span className="text-slate-600 text-xs">
+              {statsEntries.length} fights
+            </span>
+          )}
+        </div>
+      )}
+
+      {entries.length === 0 ? (
+        <div className="bg-slate-900 border border-slate-800 rounded-xl p-8 text-center text-slate-600">
+          <BarChart2 size={36} className="mx-auto mb-3 opacity-20" />
+          <p className="text-sm">No saved predictions yet.</p>
+          <p className="text-xs mt-1">
+            Save predictions from the Simulator and grade them in the ROI tab
+            to populate these charts.
+          </p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <RoiByMarketBandChart data={roiByBandData} />
+          <ModelVsMarketBracketChart data={modelVsMarketData} />
+          <div className="lg:col-span-2">
+            <CalibrationReliabilityChart data={calibrationData} />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 // Single source of truth for ROI summary math.
 // Called once in App() via useMemo; result passed as prop to HomeTab and ROITab.
@@ -2913,6 +3363,7 @@ function Header({ view, setView }) {
     { id: 'simulator', label: 'Simulator', Icon: Swords },
     { id: 'upcoming', label: 'Upcoming', Icon: Zap },
     { id: 'roi', label: 'ROI', Icon: Calendar },
+    { id: 'statistics', label: 'Statistics', Icon: BarChart2 },
     { id: 'explore', label: 'Explore', Icon: Search },
     { id: 'info', label: 'Info', Icon: Info },
   ];
@@ -6743,6 +7194,14 @@ export default function App() {
           onDeleteEntry={handleDeleteROIEntry}
           onClearEntries={handleClearROI}
           allFighters={fightersWithProspectsFiltered}
+          filterSince={filterSince}
+          setFilterSince={setFilterSince}
+        />
+      )}
+      {view === 'statistics' && (
+        <StatisticsTab
+          entries={roiEntries}
+          prospectNameSet={prospectNameSet}
           filterSince={filterSince}
           setFilterSince={setFilterSince}
         />
