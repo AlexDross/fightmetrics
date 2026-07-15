@@ -16,6 +16,7 @@ import {
   ReferenceLine,
   ComposedChart,
   Line,
+  LineChart,
   Cell,
 } from 'recharts';
 import {
@@ -35,6 +36,7 @@ import {
   Trophy,
   Calendar,
   AlertTriangle,
+  ClipboardList,
 } from 'lucide-react';
 import { _D2 } from './fightersData';
 import { getActiveProspects } from './prospectsData';
@@ -45,6 +47,9 @@ import { getHistoricalTier } from './rankHistory';
 import { ROI_ENTRIES } from './roiData';
 import { UPCOMING_ENTRIES } from './upcomingData';
 import { SOURCE_MANIFEST } from './sourceManifest';
+// Physically separate from ROI_ENTRIES/UPCOMING_ENTRIES -- see propPicksData.js
+// header comment. Never merged with model-related arrays or computations.
+import { PROP_PICKS } from './propPicksData';
 
 // _D2 imported from fightersData.js
 
@@ -1487,6 +1492,171 @@ function filterRoiEntriesForStats(entries, prospectNameSet, filterSince) {
   });
 }
 
+const ROI_BET_TIERS = ['STRONG BET', 'BET', 'LEAN', 'NO BET'];
+
+// Chart 4 — ROI and win rate by bet-action tier (STRONG BET / BET / LEAN /
+// NO BET), including the declined (NO BET) pool.
+//
+// Tier assignment and per-entry profit are NOT re-derived here -- both are
+// verbatim transcriptions of logic that already lives inside ROITab, cited
+// by exact source so this stays traceable to one authoritative definition:
+//   - Tier gate (pickProb/edge thresholds, lowCredCap, heavy-fav suppression):
+//     ROITab's `v2DataMap` useMemo, src/App.js (search "const v2DataMap").
+//   - Per-entry profit for v2's own pick (uses the pick's own odds, which can
+//     differ from the entry's originally-tracked side/price):
+//     ROITab's `v2ROISummary` useMemo, src/App.js (search "const v2ROISummary").
+// ROITab itself is not modified or imported from; this is an independent
+// transcription so ROITab's own file region stays byte-identical to main.
+// Because it mirrors v2DataMap's LIVE recompute (computeMatchupEdges on
+// current fighter stats), a fight's tier here matches what ROITab's own
+// entry list shows in its default "v2" model view -- not the frozen v2pA/v2pB
+// basis charts 1-3 use, since v2DataMap itself doesn't use that basis either.
+function computeBetTierBreakdown(entries, fighterMap) {
+  const rows = [];
+  entries.forEach((entry) => {
+    if (!isResolvedWinner(entry.actualWinner, entry)) return;
+    if (isPushResult(entry.actualWinner)) return;
+    if (entry.confirmedByUser === false) return;
+    const fA = fighterMap.get(entry.fighterA);
+    const fB = fighterMap.get(entry.fighterB);
+    if (!fA || !fB) return;
+
+    const res = computeMatchupEdges(fA, fB);
+    const v2pA = res.v2pA;
+    const v2pB = res.v2pB;
+    if (v2pA == null || v2pB == null) return;
+
+    const rawA = parseAmericanOdds(entry.oddsA);
+    const rawB = parseAmericanOdds(entry.oddsB);
+    if (!rawA || !rawB) return;
+
+    // --- verbatim tier gate, transcribed from ROITab's v2DataMap ---
+    const { noVigA, noVigB } = stripVig(rawA, rawB);
+    const edgeA = v2pA - noVigA;
+    const edgeB = v2pB - noVigB;
+    const pickSide = v2pA >= 0.5 ? 'A' : 'B';
+    const pickEdge = pickSide === 'A' ? edgeA : edgeB;
+    const oppEdge = pickSide === 'A' ? edgeB : edgeA;
+    const pickProb = pickSide === 'A' ? v2pA : v2pB;
+    const pickRawOdds = pickSide === 'A' ? rawA : rawB;
+
+    const hasPickEdge = pickEdge >= 0.03;
+    const conflictingSignals = !hasPickEdge && oppEdge >= 0.03;
+    let tier = 'NO BET';
+    if (!conflictingSignals && hasPickEdge) {
+      if (pickProb >= 0.70) {
+        if (pickEdge >= 0.25) tier = 'STRONG BET';
+        else if (pickEdge >= 0.15) tier = 'BET';
+        else tier = 'LEAN';
+      } else if (pickProb >= 0.65) {
+        if (pickEdge >= 0.30) tier = 'BET';
+        else if (pickEdge >= 0.10) tier = 'LEAN';
+      } else if (pickProb >= 0.60) {
+        if (pickEdge >= 0.10) tier = 'LEAN';
+      }
+    }
+    const lowCredCap = (fA.CREDIBILITY ?? 0) < 30 || (fB.CREDIBILITY ?? 0) < 30;
+    if (lowCredCap && (tier === 'STRONG BET' || tier === 'BET')) tier = 'LEAN';
+    if (pickRawOdds > 2 / 3 && pickEdge < 0.25 && tier !== 'NO BET') tier = 'NO BET';
+    // --- end verbatim tier gate ---
+
+    // --- verbatim profit-for-v2's-pick, transcribed from ROITab's v2ROISummary ---
+    const v2pick = v2pA >= v2pB ? entry.fighterA : entry.fighterB;
+    const v2odds = v2pick === entry.fighterA
+      ? (entry.oddsA || entry.marketOdds)
+      : (entry.oddsB || entry.marketOdds);
+    const dec = americanToDecimal(v2odds);
+    if (!dec) return;
+    const won = entry.actualWinner === v2pick;
+    const profit = won ? dec - 1 : -1;
+    // --- end verbatim profit calc ---
+
+    rows.push({ tier, won: won ? 1 : 0, profit });
+  });
+
+  return ROI_BET_TIERS.map((tier) => {
+    const tierRows = rows.filter((r) => r.tier === tier);
+    const n = tierRows.length;
+    return {
+      tier,
+      n,
+      winRate: n ? (tierRows.reduce((s, r) => s + r.won, 0) / n) * 100 : null,
+      roi: n ? (tierRows.reduce((s, r) => s + r.profit, 0) / n) * 100 : null,
+      lowN: n > 0 && n < ROI_ANALYTICS_LOW_N,
+    };
+  });
+}
+
+// Staked/graded population shared by the cumulative P&L chart and monthly
+// table below -- same filter as computeRoiByMarketBand's `staked` (chart 1),
+// duplicated rather than extracted so that function stays untouched.
+function filterStakedGraded(entries) {
+  return entries.filter(
+    (e) =>
+      isResolvedWinner(e.actualWinner, e) &&
+      e.confirmedByUser !== false &&
+      americanToDecimal(e.marketOdds)
+  );
+}
+
+// Cumulative P&L, grouped per-event (not per-month): at current data volume
+// (~6-7 events per Since window) per-event gives a clean multi-point line;
+// per-month would collapse to 2-3 points, too coarse to show a trend.
+// Events are ordered by eventDate; ties (same date) keep ledger order.
+function computeCumulativePnl(entries) {
+  const staked = filterStakedGraded(entries);
+  const byEvent = new Map();
+  staked.forEach((e) => {
+    const key = `${e.eventDate || ''}__${e.eventName || 'Unknown Event'}`;
+    if (!byEvent.has(key)) {
+      byEvent.set(key, { eventDate: e.eventDate || '', eventName: e.eventName || 'Unknown Event', profits: [] });
+    }
+    const profit = calcTrackedProfit(e);
+    if (profit != null) byEvent.get(key).profits.push(profit);
+  });
+  const events = Array.from(byEvent.values()).sort((a, b) =>
+    a.eventDate < b.eventDate ? -1 : a.eventDate > b.eventDate ? 1 : 0
+  );
+  let cumulative = 0;
+  return events.map((ev) => {
+    const eventProfit = ev.profits.reduce((s, p) => s + p, 0);
+    cumulative += eventProfit;
+    return {
+      eventName: ev.eventName,
+      eventDate: ev.eventDate,
+      n: ev.profits.length,
+      eventProfit,
+      cumulative,
+    };
+  });
+}
+
+// Monthly performance table, grouped by event month (YYYY-MM from eventDate).
+function computeMonthlyPerformance(entries) {
+  const staked = filterStakedGraded(entries);
+  const byMonth = new Map();
+  staked.forEach((e) => {
+    const month = (e.eventDate || '').slice(0, 7) || 'Unknown';
+    if (!byMonth.has(month)) byMonth.set(month, []);
+    const profit = calcTrackedProfit(e);
+    if (profit != null) byMonth.get(month).push({ profit, won: e.actualWinner === e.trackedSide ? 1 : 0 });
+  });
+  const months = Array.from(byMonth.keys()).sort();
+  return months.map((month) => {
+    const rows = byMonth.get(month);
+    const n = rows.length;
+    const netUnits = rows.reduce((s, r) => s + r.profit, 0);
+    return {
+      month,
+      n,
+      winRate: n ? (rows.reduce((s, r) => s + r.won, 0) / n) * 100 : null,
+      staked: n,
+      netUnits,
+      roi: n ? (netUnits / n) * 100 : null,
+    };
+  });
+}
+
 // Shared XAxis tick renderer: draws the band/bucket label plus its n= count,
 // with a low-n asterisk + amber color when the chart's own data marks lowN.
 function makeBandTick(data) {
@@ -1670,16 +1840,222 @@ function CalibrationReliabilityChart({ data }) {
   );
 }
 
+// Same tier colors already used by ROITab's own betTier() label styling
+// (STRONG BET emerald-300, BET emerald-400, LEAN yellow-400, NO BET slate-500)
+// -- not a new color convention, just the existing one in hex for recharts.
+const BET_TIER_COLORS = {
+  'STRONG BET': '#6ee7b7',
+  'BET': '#34d399',
+  'LEAN': '#facc15',
+  'NO BET': '#64748b',
+};
+
+function BetTierWinRateChart({ data }) {
+  const anySamples = data.some((d) => d.n > 0);
+  return (
+    <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
+      <h3 className="text-white font-bold text-sm mb-1">Win Rate by Bet Tier</h3>
+      <p className="text-slate-500 text-xs mb-3">
+        V2's picked-side win rate, grouped by the tier its live gate would
+        currently assign (including the declined NO BET pool).
+      </p>
+      {!anySamples ? (
+        <p className="text-slate-600 text-sm py-8 text-center">
+          No decisive graded picks with resolvable fighters yet in the current filter window.
+        </p>
+      ) : (
+        <ResponsiveContainer width="100%" height={240}>
+          <BarChart data={data} margin={{ top: 10, right: 10, bottom: 24, left: 0 }}>
+            <CartesianGrid stroke="#334155" strokeDasharray="3 3" vertical={false} />
+            <XAxis dataKey="tier" interval={0} tick={makeBandTick(data)} height={40} />
+            <YAxis
+              tick={{ fill: '#94a3b8', fontSize: 11 }}
+              tickFormatter={(v) => `${v}%`}
+              axisLine={false}
+              domain={[0, 100]}
+            />
+            <Tooltip
+              {...roiChartTooltipStyle}
+              formatter={(v, name, item) =>
+                v == null ? ['—', 'Win Rate'] : [`${v.toFixed(1)}%`, `Win Rate (n=${item.payload.n}${item.payload.lowN ? ', low sample' : ''})`]
+              }
+            />
+            <Bar dataKey="winRate" radius={[3, 3, 0, 0]}>
+              {data.map((d, i) => (
+                <Cell key={i} fill={BET_TIER_COLORS[d.tier]} fillOpacity={d.lowN ? 0.45 : 0.9} />
+              ))}
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
+      )}
+      <p className="text-slate-600 text-[10px] mt-2">
+        * n &lt; {ROI_ANALYTICS_LOW_N} — low sample, shown at reduced opacity. Interpret with caution.
+      </p>
+    </div>
+  );
+}
+
+function BetTierRoiChart({ data }) {
+  const anySamples = data.some((d) => d.n > 0);
+  return (
+    <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
+      <h3 className="text-white font-bold text-sm mb-1">ROI by Bet Tier</h3>
+      <p className="text-slate-500 text-xs mb-3">
+        Flat 1u ROI on V2's picked side (at that side's own price), grouped by
+        bet-action tier. Dashed line = breakeven (0% ROI).
+      </p>
+      {!anySamples ? (
+        <p className="text-slate-600 text-sm py-8 text-center">
+          No decisive graded picks with resolvable fighters yet in the current filter window.
+        </p>
+      ) : (
+        <ResponsiveContainer width="100%" height={240}>
+          <BarChart data={data} margin={{ top: 10, right: 10, bottom: 24, left: 0 }}>
+            <CartesianGrid stroke="#334155" strokeDasharray="3 3" vertical={false} />
+            <XAxis dataKey="tier" interval={0} tick={makeBandTick(data)} height={40} />
+            <YAxis
+              tick={{ fill: '#94a3b8', fontSize: 11 }}
+              tickFormatter={(v) => `${v}%`}
+              axisLine={false}
+            />
+            <ReferenceLine y={0} stroke="#94a3b8" strokeDasharray="4 4" label={{ value: 'Breakeven', position: 'insideTopRight', fill: '#94a3b8', fontSize: 10 }} />
+            <Tooltip
+              {...roiChartTooltipStyle}
+              formatter={(v, name, item) =>
+                v == null ? ['—', 'ROI'] : [`${v.toFixed(1)}%`, `ROI (n=${item.payload.n}${item.payload.lowN ? ', low sample' : ''})`]
+              }
+            />
+            <Bar dataKey="roi" radius={[3, 3, 0, 0]}>
+              {data.map((d, i) => (
+                <Cell
+                  key={i}
+                  fill={d.roi == null ? '#334155' : d.roi >= 0 ? '#34d399' : '#f87171'}
+                  fillOpacity={d.lowN ? 0.45 : 0.9}
+                />
+              ))}
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
+      )}
+      <p className="text-slate-600 text-[10px] mt-2">
+        * n &lt; {ROI_ANALYTICS_LOW_N} — low sample, shown at reduced opacity. Interpret with caution.
+      </p>
+    </div>
+  );
+}
+
+function CumulativePnlChart({ data }) {
+  return (
+    <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
+      <h3 className="text-white font-bold text-sm mb-1">Cumulative P&amp;L by Event</h3>
+      <p className="text-slate-500 text-xs mb-3">
+        Running net units on the actually-staked side, one point per event in
+        chronological order.
+      </p>
+      {data.length === 0 ? (
+        <p className="text-slate-600 text-sm py-8 text-center">
+          No staked, graded picks yet in the current filter window.
+        </p>
+      ) : (
+        <ResponsiveContainer width="100%" height={240}>
+          <LineChart data={data} margin={{ top: 10, right: 10, bottom: 24, left: 0 }}>
+            <CartesianGrid stroke="#334155" strokeDasharray="3 3" vertical={false} />
+            <XAxis
+              dataKey="eventName"
+              tick={{ fill: '#94a3b8', fontSize: 10 }}
+              interval={0}
+              angle={-20}
+              textAnchor="end"
+              height={50}
+            />
+            <YAxis
+              tick={{ fill: '#94a3b8', fontSize: 11 }}
+              tickFormatter={(v) => `${v.toFixed(1)}u`}
+              axisLine={false}
+            />
+            <ReferenceLine y={0} stroke="#94a3b8" strokeDasharray="4 4" />
+            <Tooltip
+              {...roiChartTooltipStyle}
+              formatter={(v, name, item) => [`${v >= 0 ? '+' : ''}${v.toFixed(2)}u`, `Cumulative (n=${item.payload.n} this event)`]}
+              labelFormatter={(label, items) => `${label} · ${items?.[0]?.payload?.eventDate || ''}`}
+            />
+            <Line
+              type="monotone"
+              dataKey="cumulative"
+              name="Cumulative Units"
+              stroke="#ef4444"
+              strokeWidth={2.5}
+              dot={{ r: 4, fill: '#ef4444' }}
+            />
+          </LineChart>
+        </ResponsiveContainer>
+      )}
+    </div>
+  );
+}
+
+function MonthlyPerformanceTable({ data }) {
+  return (
+    <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
+      <h3 className="text-white font-bold text-sm mb-3">Monthly Performance</h3>
+      {data.length === 0 ? (
+        <p className="text-slate-600 text-sm py-8 text-center">
+          No staked, graded picks yet in the current filter window.
+        </p>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="text-slate-500 text-xs uppercase tracking-wider border-b border-slate-800">
+                <th className="text-left py-2 pr-4 font-semibold">Month</th>
+                <th className="text-right py-2 pr-4 font-semibold">Bets</th>
+                <th className="text-right py-2 pr-4 font-semibold">Win Rate</th>
+                <th className="text-right py-2 pr-4 font-semibold">Staked</th>
+                <th className="text-right py-2 pr-4 font-semibold">Net Units</th>
+                <th className="text-right py-2 font-semibold">ROI</th>
+              </tr>
+            </thead>
+            <tbody>
+              {data.map((row) => (
+                <tr key={row.month} className="border-b border-slate-800/60 last:border-0">
+                  <td className="py-2 pr-4 text-slate-300">{row.month}</td>
+                  <td className="py-2 pr-4 text-right text-slate-300">{row.n}</td>
+                  <td className="py-2 pr-4 text-right text-slate-300">
+                    {row.winRate == null ? '—' : `${row.winRate.toFixed(1)}%`}
+                  </td>
+                  <td className="py-2 pr-4 text-right text-slate-300">{row.staked.toFixed(2)}u</td>
+                  <td className={`py-2 pr-4 text-right font-semibold ${row.netUnits >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                    {row.netUnits >= 0 ? '+' : ''}{row.netUnits.toFixed(2)}u
+                  </td>
+                  <td className={`py-2 text-right font-semibold ${row.roi == null ? 'text-slate-600' : row.roi >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                    {row.roi == null ? '—' : `${row.roi >= 0 ? '+' : ''}${row.roi.toFixed(1)}%`}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── STATISTICS TAB ─────────────────────────────────────────────────────────
 // Read-only analytics view. Charts here are unchanged from the ROI-tab build:
 // same population logic (filterRoiEntriesForStats mirrors displayedEntries),
 // same n<8 low-n convention, same de-vig/raw conventions -- this component
 // only relocates rendering, it does not recompute anything differently.
-function StatisticsTab({ entries, prospectNameSet, filterSince, setFilterSince }) {
+function StatisticsTab({ entries, prospectNameSet, filterSince, setFilterSince, allFighters }) {
   const statsEntries = useMemo(
     () => filterRoiEntriesForStats(entries, prospectNameSet, filterSince),
     [entries, prospectNameSet, filterSince]
   );
+
+  const fighterMap = useMemo(() => {
+    const m = new Map();
+    (allFighters ?? []).forEach((f) => m.set(f.FIGHTER, f));
+    return m;
+  }, [allFighters]);
 
   const roiByBandData = useMemo(
     () => computeRoiByMarketBand(statsEntries),
@@ -1691,6 +2067,22 @@ function StatisticsTab({ entries, prospectNameSet, filterSince, setFilterSince }
   );
   const calibrationData = useMemo(
     () => computeCalibrationReliability(statsEntries),
+    [statsEntries]
+  );
+  const betTierData = useMemo(
+    () => computeBetTierBreakdown(statsEntries, fighterMap),
+    [statsEntries, fighterMap]
+  );
+  const summary = useMemo(
+    () => computeROISummary(statsEntries, new Set()),
+    [statsEntries]
+  );
+  const cumulativeData = useMemo(
+    () => computeCumulativePnl(statsEntries),
+    [statsEntries]
+  );
+  const monthlyData = useMemo(
+    () => computeMonthlyPerformance(statsEntries),
     [statsEntries]
   );
 
@@ -1739,12 +2131,396 @@ function StatisticsTab({ entries, prospectNameSet, filterSince, setFilterSince }
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <RoiByMarketBandChart data={roiByBandData} />
-          <ModelVsMarketBracketChart data={modelVsMarketData} />
-          <div className="lg:col-span-2">
-            <CalibrationReliabilityChart data={calibrationData} />
+        <>
+          <div className="grid grid-cols-4 gap-4 mb-6 items-stretch">
+            <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 h-full">
+              <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold">Tracked Fights</p>
+              <p className="font-black text-2xl mt-2 text-white">{summary.total}</p>
+            </div>
+            <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 h-full">
+              <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold">Graded Picks</p>
+              <p className="font-black text-2xl mt-2 text-blue-400">{summary.graded}</p>
+            </div>
+            <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 h-full">
+              <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold">Pick Accuracy</p>
+              <p className={`font-black text-2xl mt-2 ${summary.accuracy >= 60 ? 'text-emerald-400' : 'text-yellow-400'}`}>
+                {summary.accuracy.toFixed(1)}%
+              </p>
+            </div>
+            <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 h-full">
+              <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold">ROI</p>
+              <p className={`font-black text-2xl mt-2 ${summary.roi >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                {summary.roi >= 0 ? '+' : ''}{summary.roi.toFixed(1)}%
+              </p>
+              <p className="text-slate-600 text-xs mt-1">
+                {summary.profit >= 0 ? '+' : ''}{summary.profit.toFixed(2)}u on {summary.bets} bets
+              </p>
+            </div>
           </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+            <CumulativePnlChart data={cumulativeData} />
+            <MonthlyPerformanceTable data={monthlyData} />
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <RoiByMarketBandChart data={roiByBandData} />
+            <ModelVsMarketBracketChart data={modelVsMarketData} />
+            <div className="lg:col-span-2">
+              <CalibrationReliabilityChart data={calibrationData} />
+            </div>
+            <BetTierWinRateChart data={betTierData} />
+            <BetTierRoiChart data={betTierData} />
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+// ─── PROPS TAB — Alex's manual, discretionary picks ────────────────────────
+// HARD ISOLATION: everything below this line operates ONLY on PROP_PICKS-
+// shaped objects, imported ONLY from the standalone src/propPicksData.js.
+// Nothing here reads ROI_ENTRIES, UPCOMING_ENTRIES, FIGHTERS-derived model
+// output, v2DataMap, computeMatchupEdges, or any betAction/edge/Kelly value.
+// Reuses only pure, source-agnostic math utilities that already exist
+// (americanToDecimal for payout math) -- no new odds/EV logic invented.
+const PROP_METHOD_OPTIONS = ['KO/TKO', 'Submission', 'Decision'];
+const PROP_ROUND_OPTIONS = ['Goes the Distance', 'Round 1', 'Round 2', 'Round 3', 'Round 4', 'Round 5'];
+
+function computePropSummary(picks) {
+  const graded = picks.filter((p) => p.result === 'WON' || p.result === 'LOST' || p.result === 'PUSH');
+  const decisive = graded.filter((p) => p.result === 'WON' || p.result === 'LOST');
+  const wins = decisive.filter((p) => p.result === 'WON').length;
+  let staked = 0;
+  let netUnits = 0;
+  graded.forEach((p) => {
+    const stake = Number(p.stake) || 1;
+    if (p.result === 'PUSH') {
+      staked += stake;
+      return;
+    }
+    const dec = americanToDecimal(p.odds);
+    if (!dec) return;
+    staked += stake;
+    netUnits += p.result === 'WON' ? stake * (dec - 1) : -stake;
+  });
+  return {
+    total: picks.length,
+    graded: graded.length,
+    wins,
+    winRate: decisive.length ? (wins / decisive.length) * 100 : 0,
+    staked,
+    netUnits,
+    roi: staked > 0 ? (netUnits / staked) * 100 : 0,
+  };
+}
+
+// Same "Most Recent Event / All Results" concept as the ROI tab's toggle
+// (Part 1), independently applied here since Props has its own data.
+function filterPropPicksForView(picks, resultsView) {
+  if (resultsView !== 'recent') return picks;
+  const graded = picks.filter((p) => p.result !== 'PENDING');
+  if (!graded.length) return picks;
+  const latestEventName = graded.reduce((latest, p) =>
+    !latest || (p.eventDate || '') > (latest.eventDate || '') ? p : latest
+  , null)?.eventName ?? null;
+  if (!latestEventName) return picks;
+  return picks.filter((p) => p.eventName === latestEventName);
+}
+
+function PropsTab({ picks, onAdd, onGrade, onDelete, allFighters }) {
+  const [resultsView, setResultsView] = useState('all');
+  const [formFighter, setFormFighter] = useState(null);
+  const [formOpponent, setFormOpponent] = useState('');
+  const [formEventName, setFormEventName] = useState('');
+  const [formEventDate, setFormEventDate] = useState('');
+  const [formPropType, setFormPropType] = useState('method');
+  const [formPropValue, setFormPropValue] = useState(PROP_METHOD_OPTIONS[0]);
+  const [formOdds, setFormOdds] = useState('');
+  const [formStake, setFormStake] = useState('');
+
+  const summary = useMemo(() => computePropSummary(picks), [picks]);
+  const visiblePicks = useMemo(
+    () => filterPropPicksForView(picks, resultsView),
+    [picks, resultsView]
+  );
+
+  const propTypeOptions = formPropType === 'method' ? PROP_METHOD_OPTIONS : PROP_ROUND_OPTIONS;
+
+  const canSubmit = formFighter && formEventName.trim() && formOdds.trim();
+
+  const handleSubmit = () => {
+    if (!canSubmit) return;
+    onAdd({
+      id: createPredictionId(),
+      createdAt: new Date().toISOString(),
+      pickSource: 'human',
+      eventName: formEventName.trim(),
+      eventDate: formEventDate,
+      fighter: formFighter.FIGHTER,
+      opponent: formOpponent.trim(),
+      propType: formPropType,
+      propValue: formPropValue,
+      odds: formOdds.trim(),
+      stake: formStake.trim() ? Number(formStake) : 1,
+      result: 'PENDING',
+    });
+    setFormFighter(null);
+    setFormOpponent('');
+    setFormEventName('');
+    setFormEventDate('');
+    setFormOdds('');
+    setFormStake('');
+  };
+
+  return (
+    <div className="max-w-5xl mx-auto px-5 py-8">
+      <div className="mb-6">
+        <h2 className="text-white font-black text-xl mb-1">Props</h2>
+        <p className="text-slate-400 text-sm">
+          Manual, discretionary method-of-victory and round picks. Not model-generated
+          — you pick the fighter and outcome yourself, then log and grade it here.
+        </p>
+      </div>
+
+      <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 mb-6">
+        <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold mb-3">Log a Pick</p>
+        <div className="grid grid-cols-2 gap-4 mb-4">
+          <div>
+            <label className="text-slate-500 text-xs font-semibold uppercase tracking-wider block mb-1.5">
+              Event Name
+            </label>
+            <input
+              type="text"
+              value={formEventName}
+              onChange={(e) => setFormEventName(e.target.value)}
+              placeholder="UFC 329"
+              className="w-full bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-red-500"
+            />
+          </div>
+          <div>
+            <label className="text-slate-500 text-xs font-semibold uppercase tracking-wider block mb-1.5">
+              Event Date
+            </label>
+            <input
+              type="date"
+              value={formEventDate}
+              onChange={(e) => setFormEventDate(e.target.value)}
+              className="w-full bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-red-500"
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4 mb-4">
+          <div>
+            <label className="text-slate-500 text-xs font-semibold uppercase tracking-wider block mb-1.5">
+              Fighter
+            </label>
+            <FighterSearch
+              allFighters={allFighters}
+              value={formFighter}
+              onChange={setFormFighter}
+              placeholder="Search fighter…"
+            />
+          </div>
+          <div>
+            <label className="text-slate-500 text-xs font-semibold uppercase tracking-wider block mb-1.5">
+              Opponent (optional)
+            </label>
+            <input
+              type="text"
+              value={formOpponent}
+              onChange={(e) => setFormOpponent(e.target.value)}
+              placeholder="For display only"
+              className="w-full bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-red-500"
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-4 gap-4 mb-4">
+          <div>
+            <label className="text-slate-500 text-xs font-semibold uppercase tracking-wider block mb-1.5">
+              Prop Type
+            </label>
+            <select
+              value={formPropType}
+              onChange={(e) => {
+                const type = e.target.value;
+                setFormPropType(type);
+                setFormPropValue(type === 'method' ? PROP_METHOD_OPTIONS[0] : PROP_ROUND_OPTIONS[0]);
+              }}
+              className="w-full bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-red-500 cursor-pointer"
+            >
+              <option value="method">Method of Victory</option>
+              <option value="round">Round Prop</option>
+            </select>
+          </div>
+          <div>
+            <label className="text-slate-500 text-xs font-semibold uppercase tracking-wider block mb-1.5">
+              Pick
+            </label>
+            <select
+              value={formPropValue}
+              onChange={(e) => setFormPropValue(e.target.value)}
+              className="w-full bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-red-500 cursor-pointer"
+            >
+              {propTypeOptions.map((opt) => (
+                <option key={opt} value={opt}>{opt}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="text-slate-500 text-xs font-semibold uppercase tracking-wider block mb-1.5">
+              Odds
+            </label>
+            <input
+              type="text"
+              value={formOdds}
+              onChange={(e) => setFormOdds(e.target.value)}
+              placeholder="+250"
+              className="w-full bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-red-500"
+            />
+          </div>
+          <div>
+            <label className="text-slate-500 text-xs font-semibold uppercase tracking-wider block mb-1.5">
+              Stake (u)
+            </label>
+            <input
+              type="number"
+              step="0.1"
+              value={formStake}
+              onChange={(e) => setFormStake(e.target.value)}
+              placeholder="1"
+              className="w-full bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-red-500"
+            />
+          </div>
+        </div>
+
+        <button
+          onClick={handleSubmit}
+          disabled={!canSubmit}
+          className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
+            canSubmit
+              ? 'bg-red-600 text-white hover:bg-red-500'
+              : 'bg-slate-800 text-slate-600 cursor-not-allowed'
+          }`}
+        >
+          Log Pick
+        </button>
+      </div>
+
+      {picks.length > 0 && (
+        <>
+          <div className="grid grid-cols-4 gap-4 mb-6 items-stretch">
+            <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 h-full">
+              <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold">Total Props</p>
+              <p className="font-black text-2xl mt-2 text-white">{summary.total}</p>
+            </div>
+            <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 h-full">
+              <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold">Win Rate</p>
+              <p className="font-black text-2xl mt-2 text-blue-400">
+                {summary.graded ? `${summary.winRate.toFixed(1)}%` : '—'}
+              </p>
+              <p className="text-slate-600 text-xs mt-1">{summary.wins}W of {summary.graded} graded</p>
+            </div>
+            <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 h-full">
+              <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold">Net Units</p>
+              <p className={`font-black text-2xl mt-2 ${summary.netUnits >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                {summary.netUnits >= 0 ? '+' : ''}{summary.netUnits.toFixed(2)}u
+              </p>
+            </div>
+            <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 h-full">
+              <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold">ROI</p>
+              <p className={`font-black text-2xl mt-2 ${summary.roi >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                {summary.staked > 0 ? `${summary.roi >= 0 ? '+' : ''}${summary.roi.toFixed(1)}%` : '—'}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-1 bg-slate-800 rounded-lg p-1 mb-4 w-fit">
+            {[
+              { id: 'recent', label: 'Most Recent Event' },
+              { id: 'all', label: 'All Results' },
+            ].map(({ id, label }) => (
+              <button
+                key={id}
+                onClick={() => setResultsView(id)}
+                className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-colors ${
+                  resultsView === id
+                    ? 'bg-red-600 text-white'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+
+          <div className="space-y-3">
+            {visiblePicks.map((pick) => {
+              const dec = americanToDecimal(pick.odds);
+              const stake = Number(pick.stake) || 1;
+              const profit =
+                pick.result === 'WON' && dec ? stake * (dec - 1)
+                : pick.result === 'LOST' ? -stake
+                : 0;
+              return (
+                <div key={pick.id} className="bg-slate-900 border border-slate-800 rounded-xl p-4">
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <p className="text-white font-bold text-sm">
+                        {pick.fighter}
+                        {pick.opponent && <span className="text-slate-500 font-normal"> vs. {pick.opponent}</span>}
+                      </p>
+                      <p className="text-slate-500 text-xs mt-0.5">
+                        {pick.eventName} · {pick.eventDate || 'no date'}
+                      </p>
+                      <p className="text-slate-300 text-sm mt-2">
+                        <span className="text-slate-500">{pick.propType === 'method' ? 'Method: ' : 'Round: '}</span>
+                        {pick.propValue}
+                        <span className="text-slate-500 ml-2">@ {pick.odds}</span>
+                        <span className="text-slate-500 ml-2">· {stake}u</span>
+                      </p>
+                    </div>
+                    <div className="text-right flex flex-col items-end gap-2">
+                      {pick.result !== 'PENDING' && (
+                        <span className={`font-bold text-sm ${profit > 0 ? 'text-emerald-400' : profit < 0 ? 'text-red-400' : 'text-slate-500'}`}>
+                          {profit > 0 ? '+' : ''}{profit.toFixed(2)}u
+                        </span>
+                      )}
+                      <div className="flex items-center gap-2">
+                        <select
+                          value={pick.result}
+                          onChange={(e) => onGrade(pick.id, e.target.value)}
+                          className="bg-slate-800 border border-slate-700 text-slate-200 text-xs rounded-lg px-2 py-1.5 focus:outline-none focus:border-red-500 cursor-pointer"
+                        >
+                          <option value="PENDING">Pending</option>
+                          <option value="WON">Won</option>
+                          <option value="LOST">Lost</option>
+                          <option value="PUSH">Push/Void</option>
+                        </select>
+                        <button
+                          onClick={() => onDelete(pick.id)}
+                          className="text-slate-600 hover:text-red-400 text-xs"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </>
+      )}
+
+      {picks.length === 0 && (
+        <div className="bg-slate-900 border border-slate-800 rounded-xl p-8 text-center text-slate-600">
+          <ClipboardList size={36} className="mx-auto mb-3 opacity-20" />
+          <p className="text-sm">No prop picks logged yet.</p>
+          <p className="text-xs mt-1">Use the form above to log your first pick.</p>
         </div>
       )}
     </div>
@@ -3364,6 +4140,7 @@ function Header({ view, setView }) {
     { id: 'upcoming', label: 'Upcoming', Icon: Zap },
     { id: 'roi', label: 'ROI', Icon: Calendar },
     { id: 'statistics', label: 'Statistics', Icon: BarChart2 },
+    { id: 'props', label: 'Props', Icon: ClipboardList },
     { id: 'explore', label: 'Explore', Icon: Search },
     { id: 'info', label: 'Info', Icon: Info },
   ];
@@ -7134,6 +7911,24 @@ export default function App() {
     setRoiEntries([]);
   };
 
+  // Isolated Props state -- entirely separate from roiEntries/upcomingEntries,
+  // never read by or merged into any model-related computation.
+  const [propPicks, setPropPicks] = useState(PROP_PICKS);
+
+  const handleAddPropPick = (pick) => {
+    setPropPicks((prev) => [pick, ...prev]);
+  };
+
+  const handleGradePropPick = (id, result) => {
+    setPropPicks((prev) =>
+      prev.map((p) => (p.id === id ? { ...p, result } : p))
+    );
+  };
+
+  const handleDeletePropPick = (id) => {
+    setPropPicks((prev) => prev.filter((p) => p.id !== id));
+  };
+
   const handleSaveToUpcoming = (entry) => {
     setUpcomingEntries((prev) => {
       const key = [entry.fighterA, entry.fighterB].sort().join('|');
@@ -7204,6 +7999,16 @@ export default function App() {
           prospectNameSet={prospectNameSet}
           filterSince={filterSince}
           setFilterSince={setFilterSince}
+          allFighters={fightersWithProspectsFiltered}
+        />
+      )}
+      {view === 'props' && (
+        <PropsTab
+          picks={propPicks}
+          onAdd={handleAddPropPick}
+          onGrade={handleGradePropPick}
+          onDelete={handleDeletePropPick}
+          allFighters={fightersWithProspectsFiltered}
         />
       )}
       {view === 'info' && <InfoTab />}
@@ -7650,6 +8455,21 @@ function ROITab({
 
   const [modelView, setModelView] = useState('v2');
   const [localCompare, setLocalCompare] = useState(new Set());
+  // Display-only filter for the entry list below -- does not affect
+  // localSummary/v2ROISummary/v2Stats/finishStats or any chart; those all
+  // keep reading displayedEntries exactly as before.
+  const [resultsView, setResultsView] = useState('all');
+  const latestGradedEventName = useMemo(() => {
+    const graded = displayedEntries.filter((e) => isResolvedWinner(e.actualWinner, e));
+    if (!graded.length) return null;
+    return graded.reduce((latest, e) =>
+      !latest || (e.eventDate || '') > (latest.eventDate || '') ? e : latest
+    , null)?.eventName ?? null;
+  }, [displayedEntries]);
+  const visibleEntries = useMemo(() => {
+    if (resultsView !== 'recent' || !latestGradedEventName) return displayedEntries;
+    return displayedEntries.filter((e) => e.eventName === latestGradedEventName);
+  }, [displayedEntries, resultsView, latestGradedEventName]);
 
   const toggleLocalCompare = (id) => {
     setLocalCompare((prev) => {
@@ -7986,6 +8806,26 @@ function ROITab({
         </div>
 
       </div>
+      {entries.length > 0 && (
+        <div className="flex items-center gap-1 bg-slate-800 rounded-lg p-1 mb-4 w-fit">
+          {[
+            { id: 'recent', label: 'Most Recent Event' },
+            { id: 'all', label: 'All Results' },
+          ].map(({ id, label }) => (
+            <button
+              key={id}
+              onClick={() => setResultsView(id)}
+              className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-colors ${
+                resultsView === id
+                  ? 'bg-red-600 text-white'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      )}
       {entries.length === 0 ? (
         <div className="bg-slate-900 border border-slate-800 rounded-xl p-8 text-center text-slate-600">
           <Calendar size={36} className="mx-auto mb-3 opacity-20" />
@@ -7995,9 +8835,13 @@ function ROITab({
             here.
           </p>
         </div>
+      ) : visibleEntries.length === 0 ? (
+        <div className="bg-slate-900 border border-slate-800 rounded-xl p-8 text-center text-slate-600">
+          <p className="text-sm">No graded results yet to show as "Most Recent Event".</p>
+        </div>
       ) : (
         <div className="space-y-4">
-          {displayedEntries.map((entry) => {
+          {visibleEntries.map((entry) => {
             const graded = isResolvedWinner(entry.actualWinner, entry);
             const decisive =
               entry.actualWinner === entry.fighterA ||
