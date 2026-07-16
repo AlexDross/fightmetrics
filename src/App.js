@@ -25,6 +25,7 @@ import {
   User,
   ChevronUp,
   ChevronDown,
+  ChevronRight,
   Search,
   Shield,
   Zap,
@@ -8740,10 +8741,9 @@ function ROITab({
   }, [evaluatedEntries, filterSince]);
 
   const [modelView, setModelView] = useState('v2');
-  const [localCompare, setLocalCompare] = useState(new Set());
-  // Display-only filter for the entry list below -- does not affect
-  // localSummary/v2ROISummary/v2Stats/finishStats or any chart; those all
-  // keep reading displayedEntries exactly as before.
+  // Display-only filter for the entry list below -- does not affect any
+  // chart or the finishStats computation; the entry list keeps reading
+  // displayedEntries exactly as before.
   const [resultsView, setResultsView] = useState('all');
   const latestGradedEventName = useMemo(() => {
     const graded = displayedEntries.filter((e) => isResolvedWinner(e.actualWinner, e));
@@ -8757,11 +8757,50 @@ function ROITab({
     return displayedEntries.filter((e) => e.eventName === latestGradedEventName);
   }, [displayedEntries, resultsView, latestGradedEventName]);
 
-  const toggleLocalCompare = (id) => {
-    setLocalCompare((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
+  // Group the (already Since- and resultsView-filtered) visibleEntries by event,
+  // most recent first. Pure container/grouping over the SAME entries -- the
+  // per-fight cards inside each group are rendered unchanged.
+  const eventGroups = useMemo(() => {
+    const byKey = new Map();
+    const order = [];
+    visibleEntries.forEach((entry) => {
+      const eventName = entry.eventName || 'Untitled Event';
+      const eventDate = entry.eventDate || '';
+      const key = `${eventName}||${eventDate}`;
+      if (!byKey.has(key)) {
+        byKey.set(key, { key, eventName, eventDate, entries: [] });
+        order.push(key);
+      }
+      byKey.get(key).entries.push(entry);
+    });
+    return order
+      .map((key, i) => ({ ...byKey.get(key), _i: i }))
+      .sort((a, b) => {
+        // dated events newest-first; undated events sink to the bottom;
+        // ties broken by first-appearance order (stable).
+        if (a.eventDate && b.eventDate) {
+          if (a.eventDate !== b.eventDate) return a.eventDate < b.eventDate ? 1 : -1;
+          return a._i - b._i;
+        }
+        if (a.eventDate) return -1;
+        if (b.eventDate) return 1;
+        return a._i - b._i;
+      });
+  }, [visibleEntries]);
+
+  // Collapsible groups: default = most-recent event expanded, others collapsed.
+  // `expandedEvents` is null until the user first toggles; after that it's an
+  // explicit Set of open event keys (seeded from the default).
+  const [expandedEvents, setExpandedEvents] = useState(null);
+  const defaultOpenKey = eventGroups.length ? eventGroups[0].key : null;
+  const isEventOpen = (key) =>
+    expandedEvents ? expandedEvents.has(key) : key === defaultOpenKey;
+  const toggleEvent = (key) => {
+    setExpandedEvents((prev) => {
+      const base = prev ?? new Set(defaultOpenKey ? [defaultOpenKey] : []);
+      const next = new Set(base);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
       return next;
     });
   };
@@ -8777,10 +8816,7 @@ function ROITab({
     evaluatedEntries
       .filter((e) => !e.includesProspect)
       .forEach((entry) => {
-        const needsV2 =
-          modelView === 'compare' ||
-          modelView === 'v2' ||
-          (modelView === 'v1' && localCompare.has(entry.id));
+        const needsV2 = modelView === 'v2';
         if (!needsV2) return;
         const fA = fighterMap.get(entry.fighterA);
         const fB = fighterMap.get(entry.fighterB);
@@ -8851,27 +8887,7 @@ function ROITab({
         });
       });
     return map;
-  }, [evaluatedEntries, modelView, localCompare, fighterMap]);
-
-  const v2Stats = useMemo(() => {
-    let gradedCount = 0;
-    let v2Correct = 0;
-    displayedEntries.forEach((entry) => {
-      const decisive =
-        entry.actualWinner === entry.fighterA ||
-        entry.actualWinner === entry.fighterB;
-      if (!decisive) return;
-      gradedCount++;
-      const v2Data = v2DataMap.get(entry.id);
-      const winner = v2Data ? v2Data.v2Winner : entry.displayWinner;
-      if (winner === entry.actualWinner) v2Correct++;
-    });
-    return {
-      graded: gradedCount,
-      correct: v2Correct,
-      accuracy: gradedCount > 0 ? (v2Correct / gradedCount) * 100 : 0,
-    };
-  }, [displayedEntries, v2DataMap]);
+  }, [evaluatedEntries, modelView, fighterMap]);
 
   const finishStats = useMemo(() => {
     const graded = displayedEntries.filter((e) => e.actualFinish && e.actualFinish !== '');
@@ -8888,42 +8904,6 @@ function ROITab({
       accuracy: graded.length > 0 ? (correct.length / graded.length) * 100 : 0,
     };
   }, [displayedEntries]);
-
-  const localSummary = useMemo(
-    () => computeROISummary(displayedEntries, new Set()),
-    [displayedEntries]
-  );
-
-  const v2ROISummary = useMemo(() => {
-    let bets = 0, profit = 0, correct = 0;
-    displayedEntries.forEach((entry) => {
-      if (!isResolvedWinner(entry.actualWinner, entry)) return;
-      if (isPushResult(entry.actualWinner)) return;
-      if (!americanToDecimal(entry.marketOdds)) return;
-      if (entry.confirmedByUser === false) return;
-      const fA = fighterMap.get(entry.fighterA);
-      const fB = fighterMap.get(entry.fighterB);
-      if (!fA || !fB) return;
-      const res = computeMatchupEdges(fA, fB);
-      const v2pA = res.v2pA;
-      const v2pB = res.v2pB;
-      if (v2pA == null || v2pB == null) return;
-      const v2pick = v2pA >= v2pB ? entry.fighterA : entry.fighterB;
-      // Use correct odds for v2 pick (may differ from trackedSide)
-      const v2odds = v2pick === entry.fighterA
-        ? (entry.oddsA || entry.marketOdds)
-        : (entry.oddsB || entry.marketOdds);
-      const dec = americanToDecimal(v2odds);
-      if (!dec) return;
-      const won = entry.actualWinner === v2pick;
-      const p = won ? dec - 1 : -1;
-      bets++;
-      profit += p;
-      if (won) correct++;
-    });
-    const roi = bets > 0 ? (profit / bets) * 100 : 0;
-    return { bets, profit, roi, correct };
-  }, [displayedEntries, fighterMap]);
 
   return (
     <div className="max-w-5xl mx-auto px-5 py-8">
@@ -8959,7 +8939,7 @@ function ROITab({
             )}
 
             <div className="flex items-center gap-1 bg-slate-800 rounded-lg p-1">
-              {['v1', 'v2', 'compare'].map((view) => (
+              {['v1', 'v2'].map((view) => (
                 <button
                   key={view}
                   onClick={() => setModelView(view)}
@@ -8969,7 +8949,7 @@ function ROITab({
                       : 'text-slate-400 hover:text-white'
                   }`}
                 >
-                  {view === 'compare' ? 'Compare' : view}
+                  {view}
                 </button>
               ))}
             </div>
@@ -9010,88 +8990,6 @@ function ROITab({
         </div>
       )}
 
-      <div className="grid grid-cols-4 gap-4 mb-6 items-stretch">
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 h-full">
-          <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold">Tracked Fights</p>
-          <p className="font-black text-2xl mt-2 text-white">{localSummary.total}</p>
-        </div>
-
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 h-full">
-          <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold">Graded Picks</p>
-          <p className="font-black text-2xl mt-2 text-blue-400">{localSummary.graded}</p>
-        </div>
-
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 h-full">
-          <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold">Pick Accuracy</p>
-          {modelView === 'compare' ? (
-            <p className="font-black text-lg mt-2">
-              <span className={localSummary.accuracy >= 60 ? 'text-emerald-400' : 'text-yellow-400'}>
-                v1: {localSummary.accuracy.toFixed(1)}%
-              </span>
-              <span className="text-slate-600"> · </span>
-              <span className={v2Stats.accuracy >= 60 ? 'text-emerald-400' : 'text-yellow-400'}>
-                v2: {v2Stats.accuracy.toFixed(1)}%
-              </span>
-            </p>
-          ) : modelView === 'v2' ? (
-            <>
-              <p className={`font-black text-2xl mt-2 ${v2Stats.accuracy >= 60 ? 'text-emerald-400' : 'text-yellow-400'}`}>
-                {v2Stats.accuracy.toFixed(1)}%
-              </p>
-              <p className="text-slate-600 text-[10px] mt-1">(live recompute)</p>
-            </>
-          ) : (
-            <p className={`font-black text-2xl mt-2 ${localSummary.accuracy >= 60 ? 'text-emerald-400' : 'text-yellow-400'}`}>
-              {localSummary.accuracy.toFixed(1)}%
-            </p>
-          )}
-        </div>
-
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 h-full">
-          <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold">ROI</p>
-          {modelView === 'compare' ? (
-            <p className="font-black text-lg mt-2">
-              <span className={localSummary.roi >= 0 ? 'text-emerald-400' : 'text-red-400'}>
-                v1: {localSummary.roi >= 0 ? '+' : ''}{localSummary.roi.toFixed(1)}%
-              </span>
-              <span className="text-slate-600"> · </span>
-              <span className={v2ROISummary.roi >= 0 ? 'text-emerald-400' : 'text-red-400'}>
-                v2: {v2ROISummary.roi >= 0 ? '+' : ''}{v2ROISummary.roi.toFixed(1)}%
-              </span>
-            </p>
-          ) : modelView === 'v2' ? (
-            <>
-              <p className={`font-black text-2xl mt-2 ${v2ROISummary.roi >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                {v2ROISummary.roi >= 0 ? '+' : ''}{v2ROISummary.roi.toFixed(1)}%
-              </p>
-              <p className="text-slate-600 text-[10px] mt-1">(live recompute)</p>
-            </>
-          ) : (
-            <p className={`font-black text-2xl mt-2 ${localSummary.roi >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-              {localSummary.roi >= 0 ? '+' : ''}{localSummary.roi.toFixed(1)}%
-            </p>
-          )}
-          {modelView === 'compare' ? (
-            <>
-              <p className="text-slate-600 text-xs mt-1">
-                {localSummary.profit >= 0 ? '+' : ''}{localSummary.profit.toFixed(2)}u on {localSummary.bets} bets · v1
-              </p>
-              <p className="text-slate-600 text-xs">
-                {v2ROISummary.profit >= 0 ? '+' : ''}{v2ROISummary.profit.toFixed(2)}u on {v2ROISummary.bets} bets · v2 live
-              </p>
-            </>
-          ) : modelView === 'v2' ? (
-            <p className="text-slate-600 text-xs mt-1">
-              {v2ROISummary.profit >= 0 ? '+' : ''}{v2ROISummary.profit.toFixed(2)}u on {v2ROISummary.bets} bets · v2 live recompute
-            </p>
-          ) : (
-            <p className="text-slate-600 text-xs mt-1">
-              {localSummary.profit >= 0 ? '+' : ''}{localSummary.profit.toFixed(2)}u on {localSummary.bets} bets · v1 tracked bets
-            </p>
-          )}
-        </div>
-
-      </div>
       {entries.length > 0 && (
         <div className="flex items-center gap-1 bg-slate-800 rounded-lg p-1 mb-4 w-fit">
           {[
@@ -9127,7 +9025,37 @@ function ROITab({
         </div>
       ) : (
         <div className="space-y-4">
-          {visibleEntries.map((entry) => {
+          {eventGroups.map((group) => {
+            const open = isEventOpen(group.key);
+            return (
+              <div
+                key={group.key}
+                className="bg-slate-900/40 border border-slate-800 rounded-xl overflow-hidden"
+              >
+                <button
+                  onClick={() => toggleEvent(group.key)}
+                  className="w-full flex items-center justify-between gap-3 px-5 py-4 text-left hover:bg-slate-800/40 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    {open ? (
+                      <ChevronDown size={18} className="text-slate-500 shrink-0" />
+                    ) : (
+                      <ChevronRight size={18} className="text-slate-500 shrink-0" />
+                    )}
+                    <div>
+                      <p className="text-white font-bold text-base">{group.eventName}</p>
+                      {group.eventDate && (
+                        <p className="text-slate-500 text-xs mt-0.5">{group.eventDate}</p>
+                      )}
+                    </div>
+                  </div>
+                  <span className="text-slate-500 text-xs font-semibold uppercase tracking-wider shrink-0">
+                    {group.entries.length} {group.entries.length === 1 ? 'fight' : 'fights'}
+                  </span>
+                </button>
+                {open && (
+                  <div className="space-y-4 px-4 pb-4">
+                    {group.entries.map((entry) => {
             const graded = isResolvedWinner(entry.actualWinner, entry);
             const decisive =
               entry.actualWinner === entry.fighterA ||
@@ -9135,9 +9063,8 @@ function ROITab({
             const profit = calcTrackedProfit(entry);
             const trackedProb = entry.displayTrackedProb;
             const trackedEdge = entry.displayEdge;
-            const inCompareMode = modelView === 'compare' || localCompare.has(entry.id);
-            const inV2Mode = modelView === 'v2' && !localCompare.has(entry.id);
-            const v2Data = (inCompareMode || inV2Mode) ? (v2DataMap.get(entry.id) ?? null) : null;
+            const inV2Mode = modelView === 'v2';
+            const v2Data = inV2Mode ? (v2DataMap.get(entry.id) ?? null) : null;
             const v2pick = (inV2Mode && v2Data) ? v2Data.v2Winner : entry.trackedSide;
             const effectiveTrackedSide = inV2Mode ? v2pick : entry.trackedSide;
             const effectiveOdds = inV2Mode
@@ -9157,7 +9084,6 @@ function ROITab({
             })();
             const effectiveWinnerForBadge = (inV2Mode && v2Data) ? v2Data.v2Winner : entry.displayWinner;
             const correct = decisive && entry.actualWinner === effectiveTrackedSide;
-            const v2Differs = v2Data != null && v2Data.v2Winner !== entry.displayWinner;
             const effWinner = (inV2Mode && v2Data) ? v2Data.v2Winner : entry.displayWinner;
             const effProb = (inV2Mode && v2Data) ? v2Data.v2WinProb : (entry.displayProb ?? 0);
             const effFairLine = (inV2Mode && v2Data) ? v2Data.v2FairLine : americanOdds(entry.displayProb ?? 0);
@@ -9227,29 +9153,6 @@ function ROITab({
                       </button>
                     )}
                     <button
-                      onClick={() => toggleLocalCompare(entry.id)}
-                      className={`px-3 py-1.5 rounded-lg border text-xs font-semibold transition-colors ${
-                        modelView === 'compare'
-                          ? 'border-slate-600 text-slate-500 cursor-default'
-                          : localCompare.has(entry.id)
-                          ? 'border-violet-500 text-violet-300 bg-violet-900/20'
-                          : 'border-slate-700 text-slate-500 hover:text-slate-300 hover:border-slate-600'
-                      }`}
-                      title={
-                        modelView === 'compare'
-                          ? 'Global compare active'
-                          : modelView === 'v2'
-                          ? localCompare.has(entry.id)
-                            ? 'Showing v1 for this entry · click to restore v2'
-                            : 'Click to show v1 for this entry'
-                          : localCompare.has(entry.id)
-                          ? 'Showing compare for this entry · click to revert'
-                          : 'Toggle v1 vs v2 comparison'
-                      }
-                    >
-                      v1 | v2
-                    </button>
-                    <button
                       onClick={() => onDeleteEntry(entry.id)}
                       className="px-3 py-1.5 rounded-lg border border-slate-700 text-slate-500 text-xs font-semibold hover:text-white hover:border-slate-600 transition-colors"
                     >
@@ -9258,120 +9161,8 @@ function ROITab({
                   </div>
                 </div>
 
-                {/* Model pick — single, v2-only, or side-by-side comparison */}
-                {inCompareMode ? (
-                  <div className="mb-3 grid grid-cols-2 gap-3">
-                    {/* V1 column */}
-                    <div className="bg-slate-800/40 rounded-lg p-4">
-                      <p className="text-slate-500 text-[10px] font-semibold uppercase tracking-wider mb-2">
-                        v1 · Current
-                      </p>
-                      <p className="text-white font-black text-lg">{entry.displayWinner}</p>
-                      <p className="text-emerald-400 font-bold text-sm mt-1">
-                        {((entry.displayProb ?? 0) * 100).toFixed(1)}%
-                        <span className="text-slate-500 text-xs font-normal ml-1">
-                          · {americanOdds(entry.displayProb ?? 0)}
-                        </span>
-                      </p>
-                      {trackedEdge != null && (
-                        <p className="text-slate-400 text-xs mt-1">
-                          Edge: {trackedEdge > 0 ? '+' : ''}
-                          {(trackedEdge * 100).toFixed(1)}pp
-                        </p>
-                      )}
-                      <div className="mt-2">
-                        {entry.displayBetAction !== 'NO BET' ? (
-                          <span
-                            className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-black ${
-                              entry.displayBetAction === 'STRONG BET'
-                                ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
-                                : entry.displayBetAction === 'BET'
-                                ? 'bg-emerald-900/30 text-emerald-400 border border-emerald-800'
-                                : 'bg-yellow-900/30 text-yellow-400 border border-yellow-800'
-                            }`}
-                          >
-                            {entry.displayBetAction}
-                          </span>
-                        ) : (
-                          <span className="text-slate-600 text-xs">NO BET</span>
-                        )}
-                        {entry.displayBetFighter && entry.displayBetAction !== 'NO BET' && (
-                          <p className="text-white text-xs font-semibold mt-1">
-                            {entry.displayBetFighter}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* V2 column */}
-                    {v2Data ? (
-                      <div
-                        className={`rounded-lg p-4 ${
-                          v2Differs
-                            ? 'bg-amber-900/20 border border-amber-700/40'
-                            : 'bg-slate-800/40'
-                        }`}
-                      >
-                        <p
-                          className={`text-[10px] font-semibold uppercase tracking-wider mb-2 ${
-                            v2Differs ? 'text-amber-400' : 'text-slate-500'
-                          }`}
-                        >
-                          v2 · Logistic{v2Differs ? ' · Disagrees' : ''}
-                        </p>
-                        <p
-                          className={`font-black text-lg ${
-                            v2Differs ? 'text-amber-300' : 'text-white'
-                          }`}
-                        >
-                          {v2Data.v2Winner}
-                        </p>
-                        <p className="text-emerald-400 font-bold text-sm mt-1">
-                          {(v2Data.v2WinProb * 100).toFixed(1)}%
-                          <span className="text-slate-500 text-xs font-normal ml-1">
-                            · {v2Data.v2FairLine}
-                          </span>
-                        </p>
-                        {v2Data.v2Edge != null && (
-                          <p className="text-slate-400 text-xs mt-1">
-                            Edge: {v2Data.v2Edge > 0 ? '+' : ''}
-                            {(v2Data.v2Edge * 100).toFixed(1)}pp
-                          </p>
-                        )}
-                        <div className="mt-2">
-                          {v2Data.v2BetAction !== 'NO BET' ? (
-                            <span
-                              className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-black ${
-                                v2Data.v2BetAction === 'STRONG BET'
-                                  ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
-                                  : v2Data.v2BetAction === 'BET'
-                                  ? 'bg-emerald-900/30 text-emerald-400 border border-emerald-800'
-                                  : 'bg-yellow-900/30 text-yellow-400 border border-yellow-800'
-                              }`}
-                            >
-                              {v2Data.v2BetAction}
-                            </span>
-                          ) : (
-                            <span className="text-slate-600 text-xs">NO BET</span>
-                          )}
-                          {v2Data.v2BetFighter && v2Data.v2BetAction !== 'NO BET' && (
-                            <p
-                              className={`text-xs font-semibold mt-1 ${
-                                v2Differs ? 'text-amber-300' : 'text-white'
-                              }`}
-                            >
-                              {v2Data.v2BetFighter}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="bg-slate-800/40 rounded-lg p-4 flex items-center justify-center">
-                        <p className="text-slate-600 text-xs">Fighter data unavailable</p>
-                      </div>
-                    )}
-                  </div>
-                ) : inV2Mode ? (
+                {/* Model pick — v1 or v2 single-model view */}
+                {inV2Mode ? (
                   <div className="bg-slate-800/40 rounded-lg p-4 mb-3 flex items-baseline justify-between gap-3">
                     <div>
                       <div className="flex items-center gap-2">
@@ -9574,6 +9365,11 @@ function ROITab({
                   </div>
                 </div>
 
+              </div>
+            );
+                    })}
+                  </div>
+                )}
               </div>
             );
           })}
