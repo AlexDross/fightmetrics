@@ -1944,11 +1944,11 @@ function ModelVsMarketBracketChart({ data, modelLabel = 'v2' }) {
   );
 }
 
-function CalibrationReliabilityChart({ data, modelLabel = 'v2' }) {
+function CalibrationReliabilityChart({ data, modelLabel = 'v2', compact = false }) {
   const anySamples = data.some((d) => d.n > 0);
   const ML = modelLabel.toUpperCase();
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
+    <div className={`bg-slate-900 border border-slate-800 rounded-xl ${compact ? 'p-3' : 'p-4'}`}>
       <h3 className="text-white font-bold text-sm mb-1">Calibration Reliability</h3>
       <p className="text-slate-500 text-xs mb-3">
         {ML}'s confidence on its picked side, bucketed, vs. actual win rate.
@@ -1959,7 +1959,7 @@ function CalibrationReliabilityChart({ data, modelLabel = 'v2' }) {
           No decisive graded picks with frozen v1/v2 fields yet in the current filter window.
         </p>
       ) : (
-        <ResponsiveContainer width="100%" height={240}>
+        <ResponsiveContainer width="100%" height={compact ? 190 : 240}>
           <ComposedChart data={data} margin={{ top: 10, right: 10, bottom: 24, left: 0 }}>
             <CartesianGrid stroke="#334155" strokeDasharray="3 3" vertical={false} />
             <XAxis dataKey="bucket" interval={0} tick={makeBandTick(data)} height={40} />
@@ -2163,40 +2163,47 @@ function CumulativePnlChart({ data, modelLabel = 'v1' }) {
   );
 }
 
-function MonthlyPerformanceTable({ data }) {
+function MonthlyPerformanceTable({ data, large = false }) {
+  const cellPad = large ? 'py-3 pr-6' : 'py-2 pr-4';
+  const lastCellPad = large ? 'py-3' : 'py-2';
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
-      <h3 className="text-white font-bold text-sm mb-3">Monthly Performance</h3>
+    <div className={`bg-slate-900 border border-slate-800 rounded-xl ${large ? 'p-6' : 'p-4'}`}>
+      <h3 className={`text-white font-bold ${large ? 'text-base mb-1' : 'text-sm mb-3'}`}>Monthly Performance</h3>
+      {large && (
+        <p className="text-slate-500 text-xs mb-4">
+          Bets, win rate, and net profit for the currently selected model, grouped by calendar month.
+        </p>
+      )}
       {data.length === 0 ? (
         <p className="text-slate-600 text-sm py-8 text-center">
           No staked, graded picks yet in the current filter window.
         </p>
       ) : (
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className={`w-full ${large ? 'text-base' : 'text-sm'}`}>
             <thead>
-              <tr className="text-slate-500 text-xs uppercase tracking-wider border-b border-slate-800">
-                <th className="text-left py-2 pr-4 font-semibold">Month</th>
-                <th className="text-right py-2 pr-4 font-semibold">Bets</th>
-                <th className="text-right py-2 pr-4 font-semibold">Win Rate</th>
-                <th className="text-right py-2 pr-4 font-semibold">Staked</th>
-                <th className="text-right py-2 pr-4 font-semibold">Net Units</th>
-                <th className="text-right py-2 font-semibold">ROI</th>
+              <tr className={`text-slate-500 uppercase tracking-wider border-b border-slate-800 ${large ? 'text-sm' : 'text-xs'}`}>
+                <th className={`text-left ${cellPad} font-semibold`}>Month</th>
+                <th className={`text-right ${cellPad} font-semibold`}>Bets</th>
+                <th className={`text-right ${cellPad} font-semibold`}>Win Rate</th>
+                <th className={`text-right ${cellPad} font-semibold`}>Staked</th>
+                <th className={`text-right ${cellPad} font-semibold`}>Net Units</th>
+                <th className={`text-right ${lastCellPad} font-semibold`}>ROI</th>
               </tr>
             </thead>
             <tbody>
               {data.map((row) => (
                 <tr key={row.month} className="border-b border-slate-800/60 last:border-0">
-                  <td className="py-2 pr-4 text-slate-300">{row.month}</td>
-                  <td className="py-2 pr-4 text-right text-slate-300">{row.n}</td>
-                  <td className="py-2 pr-4 text-right text-slate-300">
+                  <td className={`${cellPad} text-slate-300`}>{row.month}</td>
+                  <td className={`${cellPad} text-right text-slate-300`}>{row.n}</td>
+                  <td className={`${cellPad} text-right text-slate-300`}>
                     {row.winRate == null ? '—' : `${row.winRate.toFixed(1)}%`}
                   </td>
-                  <td className="py-2 pr-4 text-right text-slate-300">{row.staked.toFixed(2)}u</td>
-                  <td className={`py-2 pr-4 text-right font-semibold ${row.netUnits >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                  <td className={`${cellPad} text-right text-slate-300`}>{row.staked.toFixed(2)}u</td>
+                  <td className={`${cellPad} text-right font-semibold ${row.netUnits >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                     {row.netUnits >= 0 ? '+' : ''}{row.netUnits.toFixed(2)}u
                   </td>
-                  <td className={`py-2 text-right font-semibold ${row.roi == null ? 'text-slate-600' : row.roi >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                  <td className={`${lastCellPad} text-right font-semibold ${row.roi == null ? 'text-slate-600' : row.roi >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                     {row.roi == null ? '—' : `${row.roi >= 0 ? '+' : ''}${row.roi.toFixed(1)}%`}
                   </td>
                 </tr>
@@ -2214,17 +2221,6 @@ function MonthlyPerformanceTable({ data }) {
 // same population logic (filterRoiEntriesForStats mirrors displayedEntries),
 // same n<8 low-n convention, same de-vig/raw conventions -- this component
 // only relocates rendering, it does not recompute anything differently.
-// Small "V1"/"V2" mini-header used only in compare mode, above each half of
-// a two-column comparison panel -- keeps the single-model views (v1 or v2
-// alone) visually unchanged from before this toggle existed.
-function ModelPanelLabel({ label }) {
-  return (
-    <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-1.5">
-      {label}
-    </p>
-  );
-}
-
 function StatisticsTab({ entries, prospectNameSet, filterSince, setFilterSince, allFighters }) {
   const statsEntries = useMemo(
     () => filterRoiEntriesForStats(entries, prospectNameSet, filterSince),
@@ -2260,8 +2256,6 @@ function StatisticsTab({ entries, prospectNameSet, filterSince, setFilterSince, 
   const monthlyDataV1 = useMemo(() => computeMonthlyPerformance(statsEntries), [statsEntries]);
   const monthlyDataV2 = useMemo(() => computeMonthlyPerformanceV2(statsEntries, fighterMap), [statsEntries, fighterMap]);
 
-  const compareMode = modelView === 'compare';
-
   return (
     <div className="max-w-5xl mx-auto px-5 py-8">
       <div className="flex items-start justify-between gap-4 mb-6">
@@ -2274,7 +2268,7 @@ function StatisticsTab({ entries, prospectNameSet, filterSince, setFilterSince, 
         </div>
         {entries.length > 0 && (
           <div className="flex items-center gap-1 bg-slate-800 rounded-lg p-1">
-            {['v1', 'v2', 'compare'].map((view) => (
+            {['v1', 'v2'].map((view) => (
               <button
                 key={view}
                 onClick={() => setModelView(view)}
@@ -2284,7 +2278,7 @@ function StatisticsTab({ entries, prospectNameSet, filterSince, setFilterSince, 
                     : 'text-slate-400 hover:text-white'
                 }`}
               >
-                {view === 'compare' ? 'Compare' : view}
+                {view}
               </button>
             ))}
           </div>
@@ -2338,121 +2332,34 @@ function StatisticsTab({ entries, prospectNameSet, filterSince, setFilterSince, 
             </div>
             <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 h-full">
               <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold">Pick Accuracy</p>
-              {compareMode ? (
-                <p className="font-black text-lg mt-2">
-                  <span className={summaryV1.accuracy >= 60 ? 'text-emerald-400' : 'text-yellow-400'}>
-                    v1: {summaryV1.accuracy.toFixed(1)}%
-                  </span>
-                  <span className="text-slate-600"> · </span>
-                  <span className={summaryV2.accuracy >= 60 ? 'text-emerald-400' : 'text-yellow-400'}>
-                    v2: {summaryV2.accuracy.toFixed(1)}%
-                  </span>
-                </p>
-              ) : (
-                <p className={`font-black text-2xl mt-2 ${(modelView === 'v2' ? summaryV2 : summaryV1).accuracy >= 60 ? 'text-emerald-400' : 'text-yellow-400'}`}>
-                  {(modelView === 'v2' ? summaryV2 : summaryV1).accuracy.toFixed(1)}%
-                </p>
-              )}
+              <p className={`font-black text-2xl mt-2 ${(modelView === 'v2' ? summaryV2 : summaryV1).accuracy >= 60 ? 'text-emerald-400' : 'text-yellow-400'}`}>
+                {(modelView === 'v2' ? summaryV2 : summaryV1).accuracy.toFixed(1)}%
+              </p>
             </div>
             <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 h-full">
               <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold">ROI</p>
-              {compareMode ? (
-                <>
-                  <p className="font-black text-lg mt-2">
-                    <span className={summaryV1.roi >= 0 ? 'text-emerald-400' : 'text-red-400'}>
-                      v1: {summaryV1.roi >= 0 ? '+' : ''}{summaryV1.roi.toFixed(1)}%
-                    </span>
-                    <span className="text-slate-600"> · </span>
-                    <span className={summaryV2.roi >= 0 ? 'text-emerald-400' : 'text-red-400'}>
-                      v2: {summaryV2.roi >= 0 ? '+' : ''}{summaryV2.roi.toFixed(1)}%
-                    </span>
-                  </p>
-                  <p className="text-slate-600 text-xs mt-1">
-                    {summaryV1.profit >= 0 ? '+' : ''}{summaryV1.profit.toFixed(2)}u on {summaryV1.bets} bets · v1
-                  </p>
-                  <p className="text-slate-600 text-xs">
-                    {summaryV2.profit >= 0 ? '+' : ''}{summaryV2.profit.toFixed(2)}u on {summaryV2.bets} bets · v2 live
-                  </p>
-                </>
-              ) : (
-                <>
-                  <p className={`font-black text-2xl mt-2 ${(modelView === 'v2' ? summaryV2 : summaryV1).roi >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                    {(modelView === 'v2' ? summaryV2 : summaryV1).roi >= 0 ? '+' : ''}{(modelView === 'v2' ? summaryV2 : summaryV1).roi.toFixed(1)}%
-                  </p>
-                  <p className="text-slate-600 text-xs mt-1">
-                    {(modelView === 'v2' ? summaryV2 : summaryV1).profit >= 0 ? '+' : ''}{(modelView === 'v2' ? summaryV2 : summaryV1).profit.toFixed(2)}u on {(modelView === 'v2' ? summaryV2 : summaryV1).bets} bets
-                    {modelView === 'v2' ? ' · v2 live recompute' : ''}
-                  </p>
-                </>
-              )}
+              <p className={`font-black text-2xl mt-2 ${(modelView === 'v2' ? summaryV2 : summaryV1).roi >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                {(modelView === 'v2' ? summaryV2 : summaryV1).roi >= 0 ? '+' : ''}{(modelView === 'v2' ? summaryV2 : summaryV1).roi.toFixed(1)}%
+              </p>
+              <p className="text-slate-600 text-xs mt-1">
+                {(modelView === 'v2' ? summaryV2 : summaryV1).profit >= 0 ? '+' : ''}{(modelView === 'v2' ? summaryV2 : summaryV1).profit.toFixed(2)}u on {(modelView === 'v2' ? summaryV2 : summaryV1).bets} bets
+                {modelView === 'v2' ? ' · v2 live recompute' : ''}
+              </p>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
-            {compareMode ? (
-              <>
-                <div>
-                  <ModelPanelLabel label="V1" />
-                  <CumulativePnlChart data={cumulativeDataV1} modelLabel="v1" />
-                </div>
-                <div>
-                  <ModelPanelLabel label="V2" />
-                  <CumulativePnlChart data={cumulativeDataV2} modelLabel="v2" />
-                </div>
-                <div>
-                  <ModelPanelLabel label="V1" />
-                  <MonthlyPerformanceTable data={monthlyDataV1} />
-                </div>
-                <div>
-                  <ModelPanelLabel label="V2" />
-                  <MonthlyPerformanceTable data={monthlyDataV2} />
-                </div>
-              </>
-            ) : (
-              <>
-                <CumulativePnlChart data={modelView === 'v2' ? cumulativeDataV2 : cumulativeDataV1} modelLabel={modelView === 'v2' ? 'v2' : 'v1'} />
-                <MonthlyPerformanceTable data={modelView === 'v2' ? monthlyDataV2 : monthlyDataV1} />
-              </>
-            )}
+          <div className="mb-6">
+            <MonthlyPerformanceTable data={modelView === 'v2' ? monthlyDataV2 : monthlyDataV1} large />
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
-            {compareMode ? (
-              <>
-                <div>
-                  <ModelPanelLabel label="V1" />
-                  <RoiByMarketBandChart data={roiByBandDataV1} modelLabel="v1" />
-                </div>
-                <div>
-                  <ModelPanelLabel label="V2" />
-                  <RoiByMarketBandChart data={roiByBandDataV2} modelLabel="v2" />
-                </div>
-                <div>
-                  <ModelPanelLabel label="V1" />
-                  <ModelVsMarketBracketChart data={modelVsMarketDataV1} modelLabel="v1" />
-                </div>
-                <div>
-                  <ModelPanelLabel label="V2" />
-                  <ModelVsMarketBracketChart data={modelVsMarketDataV2} modelLabel="v2" />
-                </div>
-                <div>
-                  <ModelPanelLabel label="V1" />
-                  <CalibrationReliabilityChart data={calibrationDataV1} modelLabel="v1" />
-                </div>
-                <div>
-                  <ModelPanelLabel label="V2" />
-                  <CalibrationReliabilityChart data={calibrationDataV2} modelLabel="v2" />
-                </div>
-              </>
-            ) : (
-              <>
-                <RoiByMarketBandChart data={modelView === 'v2' ? roiByBandDataV2 : roiByBandDataV1} modelLabel={modelView === 'v2' ? 'v2' : 'v1'} />
-                <ModelVsMarketBracketChart data={modelView === 'v2' ? modelVsMarketDataV2 : modelVsMarketDataV1} modelLabel={modelView === 'v2' ? 'v2' : 'v1'} />
-                <div className="lg:col-span-2">
-                  <CalibrationReliabilityChart data={modelView === 'v2' ? calibrationDataV2 : calibrationDataV1} modelLabel={modelView === 'v2' ? 'v2' : 'v1'} />
-                </div>
-              </>
-            )}
+            <CumulativePnlChart data={modelView === 'v2' ? cumulativeDataV2 : cumulativeDataV1} modelLabel={modelView === 'v2' ? 'v2' : 'v1'} />
+            <RoiByMarketBandChart data={modelView === 'v2' ? roiByBandDataV2 : roiByBandDataV1} modelLabel={modelView === 'v2' ? 'v2' : 'v1'} />
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+            <ModelVsMarketBracketChart data={modelView === 'v2' ? modelVsMarketDataV2 : modelVsMarketDataV1} modelLabel={modelView === 'v2' ? 'v2' : 'v1'} />
+            <CalibrationReliabilityChart data={modelView === 'v2' ? calibrationDataV2 : calibrationDataV1} modelLabel={modelView === 'v2' ? 'v2' : 'v1'} compact />
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
