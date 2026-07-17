@@ -2221,7 +2221,7 @@ function MonthlyPerformanceTable({ data, large = false }) {
 // same population logic (filterRoiEntriesForStats mirrors displayedEntries),
 // same n<8 low-n convention, same de-vig/raw conventions -- this component
 // only relocates rendering, it does not recompute anything differently.
-function StatisticsTab({ entries, prospectNameSet, filterSince, setFilterSince, allFighters }) {
+function StatisticsTab({ entries, prospectNameSet, filterSince, setFilterSince, allFighters, propPicks }) {
   const statsEntries = useMemo(
     () => filterRoiEntriesForStats(entries, prospectNameSet, filterSince),
     [entries, prospectNameSet, filterSince]
@@ -2368,20 +2368,62 @@ function StatisticsTab({ entries, prospectNameSet, filterSince, setFilterSince, 
           </div>
         </>
       )}
+
+      <PropStatsSection picks={propPicks} />
     </div>
   );
 }
 
-// ─── PROPS TAB — Alex's manual, discretionary picks ────────────────────────
+// ─── PROP BETS — Alex's manual, discretionary method-of-victory picks ──────
 // HARD ISOLATION: everything below this line operates ONLY on PROP_PICKS-
 // shaped objects, imported ONLY from the standalone src/propPicksData.js.
 // Nothing here reads ROI_ENTRIES, UPCOMING_ENTRIES, FIGHTERS-derived model
 // output, v2DataMap, computeMatchupEdges, or any betAction/edge/Kelly value.
 // Reuses only pure, source-agnostic math utilities that already exist
 // (americanToDecimal for payout math) -- no new odds/EV logic invented.
-const PROP_METHOD_OPTIONS = ['KO/TKO', 'Submission', 'Decision'];
-const PROP_ROUND_OPTIONS = ['Goes the Distance', 'Round 1', 'Round 2', 'Round 3', 'Round 4', 'Round 5'];
+const PROP_METHOD_SINGLE = ['KO/TKO', 'Submission', 'Decision'];
+const PROP_METHOD_DOUBLE = ['KO/TKO or Submission', 'KO/TKO or Decision', 'Submission or Decision'];
+const PROP_METHOD_OPTIONS = [...PROP_METHOD_SINGLE, ...PROP_METHOD_DOUBLE];
 
+const isDoubleChance = (method) => (method || '').includes(' or ');
+
+// Human-readable prop label from side + method (round dropped per design).
+// side: 'A' | 'B' | null (null = fight-level). Enumerated combinations:
+//   fighter + single method   -> "{Fighter} wins by {method}"
+//   fighter + double chance    -> "{Fighter} wins by {A} or {B}"
+//     (special: KO/TKO or Submission -> "{Fighter} wins inside the distance")
+//   fight-level + single       -> "Fight Goes to Decision" / "Fight Ends by KO/TKO" / "…by Submission"
+//   fight-level + double chance -> "Fight Ends Inside Distance" / "Fight Ends by {A} or {B}"
+function buildPropLabel({ side, method, fighterA, fighterB }) {
+  const fighterName = side === 'A' ? fighterA : side === 'B' ? fighterB : '';
+  if (fighterName) {
+    if (method === 'KO/TKO or Submission') return `${fighterName} wins inside the distance`;
+    return `${fighterName} wins by ${method}`;
+  }
+  if (method === 'Decision') return 'Fight Goes to Decision';
+  if (method === 'KO/TKO') return 'Fight Ends by KO/TKO';
+  if (method === 'Submission') return 'Fight Ends by Submission';
+  if (method === 'KO/TKO or Submission') return 'Fight Ends Inside Distance';
+  return `Fight Ends by ${method}`;
+}
+
+// Breakdown bucket for the Statistics by-type table. Covers every side×method
+// combination cleanly, with no combination landing somewhere misleading:
+//   fighter + single -> "Method of Victory"
+//   fighter + double -> "Double Chance"
+//   fight-level      -> "Fight Outcome"
+function propTypeOf({ side, method }) {
+  const fighterLevel = side === 'A' || side === 'B';
+  if (fighterLevel) return isDoubleChance(method) ? 'Double Chance' : 'Method of Victory';
+  return 'Fight Outcome';
+}
+
+// Mirrors isResolvedWinner's role for model stats: PENDING props are
+// excluded from every prop statistic (count, win rate, staked, ROI), not
+// just win rate/ROI's denominators. Unlike roiEntries (which reach the ROI
+// array only by being graded), propPicks now routinely holds long-lived
+// PENDING rows while they sit in the Upcoming tab, so "total" must be
+// graded-only here rather than "everything in the array".
 function computePropSummary(picks) {
   const graded = picks.filter((p) => p.result === 'WON' || p.result === 'LOST' || p.result === 'PUSH');
   const decisive = graded.filter((p) => p.result === 'WON' || p.result === 'LOST');
@@ -2400,7 +2442,7 @@ function computePropSummary(picks) {
     netUnits += p.result === 'WON' ? stake * (dec - 1) : -stake;
   });
   return {
-    total: picks.length,
+    total: graded.length,
     graded: graded.length,
     wins,
     winRate: decisive.length ? (wins / decisive.length) * 100 : 0,
@@ -2410,39 +2452,103 @@ function computePropSummary(picks) {
   };
 }
 
-// Same "Most Recent Event / All Results" concept as the ROI tab's toggle
-// (Part 1), independently applied here since Props has its own data.
-function filterPropPicksForView(picks, resultsView) {
-  if (resultsView !== 'recent') return picks;
-  const graded = picks.filter((p) => p.result !== 'PENDING');
-  if (!graded.length) return picks;
-  const latestEventName = graded.reduce((latest, p) =>
-    !latest || (p.eventDate || '') > (latest.eventDate || '') ? p : latest
-  , null)?.eventName ?? null;
-  if (!latestEventName) return picks;
-  return picks.filter((p) => p.eventName === latestEventName);
+// Per-type breakdown for the Statistics prop section: count / win rate /
+// staked / net units per prop type. PENDING props excluded entirely (same
+// reasoning as computePropSummary above) -- count reflects graded picks only.
+function computePropTypeBreakdown(picks) {
+  const byType = new Map();
+  const ensure = (type) => {
+    if (!byType.has(type)) byType.set(type, { type, count: 0, decisive: 0, wins: 0, staked: 0, netUnits: 0 });
+    return byType.get(type);
+  };
+  picks
+    .filter((p) => p.result === 'WON' || p.result === 'LOST' || p.result === 'PUSH')
+    .forEach((p) => {
+      const b = ensure(p.propType || propTypeOf(p));
+      b.count += 1;
+      const stake = Number(p.stake) || 1;
+      b.staked += stake;
+      if (p.result === 'PUSH') return;
+      b.decisive += 1;
+      if (p.result === 'WON') {
+        b.wins += 1;
+        const dec = americanToDecimal(p.odds);
+        if (dec) b.netUnits += stake * (dec - 1);
+      } else {
+        b.netUnits -= stake;
+      }
+    });
+  return [...byType.values()]
+    .map((b) => ({ ...b, winRate: b.decisive ? (b.wins / b.decisive) * 100 : 0 }))
+    .sort((a, b) => b.count - a.count);
 }
 
-function PropsTab({ picks, onAdd, onGrade, onDelete, allFighters }) {
-  const [resultsView, setResultsView] = useState('all');
-  const [formFighter, setFormFighter] = useState(null);
-  const [formOpponent, setFormOpponent] = useState('');
-  const [formEventName, setFormEventName] = useState('');
-  const [formEventDate, setFormEventDate] = useState('');
-  const [formPropType, setFormPropType] = useState('method');
-  const [formPropValue, setFormPropValue] = useState(PROP_METHOD_OPTIONS[0]);
-  const [formOdds, setFormOdds] = useState('');
-  const [formStake, setFormStake] = useState('');
+// A single prop-pick payout in units. Positive on a win, negative on a loss,
+// 0 for push/pending. Same americanToDecimal math as computePropSummary.
+function propPickProfit(pick) {
+  if (pick.result !== 'WON' && pick.result !== 'LOST') return 0;
+  const stake = Number(pick.stake) || 1;
+  if (pick.result === 'LOST') return -stake;
+  const dec = americanToDecimal(pick.odds);
+  return dec ? stake * (dec - 1) : 0;
+}
 
-  const summary = useMemo(() => computePropSummary(picks), [picks]);
-  const visiblePicks = useMemo(
-    () => filterPropPicksForView(picks, resultsView),
-    [picks, resultsView]
-  );
+const PROP_RESULT_OPTIONS = [
+  { value: 'PENDING', label: 'Pending' },
+  { value: 'WON', label: 'Won' },
+  { value: 'LOST', label: 'Lost' },
+  { value: 'PUSH', label: 'Push/Void' },
+];
 
-  const propTypeOptions = formPropType === 'method' ? PROP_METHOD_OPTIONS : PROP_ROUND_OPTIONS;
+const PROP_INPUT_CLS =
+  'w-full bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-red-500';
+const PROP_LABEL_CLS =
+  'text-slate-500 text-xs font-semibold uppercase tracking-wider block mb-1.5';
 
-  const canSubmit = formFighter && formEventName.trim() && formOdds.trim();
+// Prop entry form, reused from two entry points in the Upcoming tab:
+//   mode="fromFight" -- opened from a specific fight card's "+ Prop" button.
+//     fighterA/fighterB/eventName/eventDate/upcomingId are FIXED (passed in,
+//     read-only) -- this is the primary path, importing straight from the
+//     card that was clicked.
+//   mode="manual"    -- opened from the Props section's "+ Log a manual prop"
+//     link, for fights not tracked in Upcoming. Owns its own event/fighter
+//     fields via FighterSearch; upcomingId is always null.
+// Writes ONLY through onAdd into the isolated PROP_PICKS state -- never
+// touches upcomingEntries or roiEntries.
+function PropEntryForm({
+  mode,
+  fighterA: fixedFighterA,
+  fighterB: fixedFighterB,
+  eventName: fixedEventName,
+  eventDate: fixedEventDate,
+  upcomingId,
+  allFighters,
+  onAdd,
+  onCancel,
+}) {
+  const isManual = mode === 'manual';
+  const [manualEventName, setManualEventName] = useState('');
+  const [manualEventDate, setManualEventDate] = useState('');
+  const [manualFighterA, setManualFighterA] = useState(null);
+  const [manualFighterB, setManualFighterB] = useState(null);
+  const [side, setSide] = useState('A');
+  const [method, setMethod] = useState(PROP_METHOD_SINGLE[0]);
+  const [odds, setOdds] = useState('');
+  const [stake, setStake] = useState('');
+
+  const fighterA = isManual ? (manualFighterA?.FIGHTER || '') : (fixedFighterA || '');
+  const fighterB = isManual ? (manualFighterB?.FIGHTER || '') : (fixedFighterB || '');
+  const eventName = isManual ? manualEventName.trim() : (fixedEventName || '');
+  const eventDate = isManual ? manualEventDate : (fixedEventDate || '');
+
+  const resolvedSide = side === 'fight' ? null : side;
+  const sideFighterName = resolvedSide === 'A' ? fighterA : resolvedSide === 'B' ? fighterB : '';
+  const sideValid = resolvedSide == null || Boolean(sideFighterName);
+  const canSubmit = Boolean(method) && Boolean(eventName) && Boolean(odds.trim()) && sideValid;
+
+  const previewLabel = sideValid
+    ? buildPropLabel({ side: resolvedSide, method, fighterA, fighterB })
+    : '';
 
   const handleSubmit = () => {
     if (!canSubmit) return;
@@ -2450,165 +2556,345 @@ function PropsTab({ picks, onAdd, onGrade, onDelete, allFighters }) {
       id: createPredictionId(),
       createdAt: new Date().toISOString(),
       pickSource: 'human',
-      eventName: formEventName.trim(),
-      eventDate: formEventDate,
-      fighter: formFighter.FIGHTER,
-      opponent: formOpponent.trim(),
-      propType: formPropType,
-      propValue: formPropValue,
-      odds: formOdds.trim(),
-      stake: formStake.trim() ? Number(formStake) : 1,
+      upcomingId: isManual ? null : (upcomingId ?? null),
+      eventName,
+      eventDate,
+      fighterA,
+      fighterB,
+      side: resolvedSide,
+      method,
+      odds: odds.trim(),
+      stake: stake.trim() ? Number(stake) : 1,
       result: 'PENDING',
+      label: buildPropLabel({ side: resolvedSide, method, fighterA, fighterB }),
+      propType: propTypeOf({ side: resolvedSide, method }),
     });
-    setFormFighter(null);
-    setFormOpponent('');
-    setFormEventName('');
-    setFormEventDate('');
-    setFormOdds('');
-    setFormStake('');
   };
 
-  return (
-    <div className="max-w-5xl mx-auto px-5 py-8">
-      <div className="mb-6">
-        <h2 className="text-white font-black text-xl mb-1">Props</h2>
-        <p className="text-slate-400 text-sm">
-          Manual, discretionary method-of-victory and round picks. Not model-generated
-          — you pick the fighter and outcome yourself, then log and grade it here.
-        </p>
-      </div>
+  const sideButtons = [
+    { id: 'A', label: fighterA || 'Fighter A', disabled: !fighterA },
+    { id: 'B', label: fighterB || 'Fighter B', disabled: !fighterB },
+    { id: 'fight', label: 'Fight-level', disabled: false },
+  ];
 
-      <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 mb-6">
-        <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold mb-3">Log a Pick</p>
+  return (
+    <div>
+      {isManual ? (
         <div className="grid grid-cols-2 gap-4 mb-4">
           <div>
-            <label className="text-slate-500 text-xs font-semibold uppercase tracking-wider block mb-1.5">
-              Event Name
-            </label>
+            <label className={PROP_LABEL_CLS}>Event Name</label>
             <input
               type="text"
-              value={formEventName}
-              onChange={(e) => setFormEventName(e.target.value)}
+              value={manualEventName}
+              onChange={(e) => setManualEventName(e.target.value)}
               placeholder="UFC 329"
-              className="w-full bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-red-500"
+              className={PROP_INPUT_CLS}
             />
           </div>
           <div>
-            <label className="text-slate-500 text-xs font-semibold uppercase tracking-wider block mb-1.5">
-              Event Date
-            </label>
+            <label className={PROP_LABEL_CLS}>Event Date</label>
             <input
               type="date"
-              value={formEventDate}
-              onChange={(e) => setFormEventDate(e.target.value)}
-              className="w-full bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-red-500"
+              value={manualEventDate}
+              onChange={(e) => setManualEventDate(e.target.value)}
+              className={PROP_INPUT_CLS}
             />
           </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-4 mb-4">
           <div>
-            <label className="text-slate-500 text-xs font-semibold uppercase tracking-wider block mb-1.5">
-              Fighter
-            </label>
+            <label className={PROP_LABEL_CLS}>Fighter A</label>
             <FighterSearch
               allFighters={allFighters}
-              value={formFighter}
-              onChange={setFormFighter}
+              value={manualFighterA}
+              onChange={setManualFighterA}
               placeholder="Search fighter…"
             />
           </div>
           <div>
-            <label className="text-slate-500 text-xs font-semibold uppercase tracking-wider block mb-1.5">
-              Opponent (optional)
-            </label>
-            <input
-              type="text"
-              value={formOpponent}
-              onChange={(e) => setFormOpponent(e.target.value)}
-              placeholder="For display only"
-              className="w-full bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-red-500"
+            <label className={PROP_LABEL_CLS}>Fighter B (optional)</label>
+            <FighterSearch
+              allFighters={allFighters}
+              value={manualFighterB}
+              onChange={setManualFighterB}
+              placeholder="Search fighter…"
+              accent="blue"
             />
           </div>
         </div>
+      ) : (
+        <p className="text-sm mb-4">
+          <span className="text-white font-semibold">{fighterA} vs. {fighterB}</span>
+          <span className="text-slate-500"> · {eventName}{eventDate ? ` · ${eventDate}` : ''}</span>
+        </p>
+      )}
 
-        <div className="grid grid-cols-4 gap-4 mb-4">
-          <div>
-            <label className="text-slate-500 text-xs font-semibold uppercase tracking-wider block mb-1.5">
-              Prop Type
-            </label>
-            <select
-              value={formPropType}
-              onChange={(e) => {
-                const type = e.target.value;
-                setFormPropType(type);
-                setFormPropValue(type === 'method' ? PROP_METHOD_OPTIONS[0] : PROP_ROUND_OPTIONS[0]);
-              }}
-              className="w-full bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-red-500 cursor-pointer"
-            >
-              <option value="method">Method of Victory</option>
-              <option value="round">Round Prop</option>
-            </select>
-          </div>
-          <div>
-            <label className="text-slate-500 text-xs font-semibold uppercase tracking-wider block mb-1.5">
-              Pick
-            </label>
-            <select
-              value={formPropValue}
-              onChange={(e) => setFormPropValue(e.target.value)}
-              className="w-full bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-red-500 cursor-pointer"
-            >
-              {propTypeOptions.map((opt) => (
-                <option key={opt} value={opt}>{opt}</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="text-slate-500 text-xs font-semibold uppercase tracking-wider block mb-1.5">
-              Odds
-            </label>
-            <input
-              type="text"
-              value={formOdds}
-              onChange={(e) => setFormOdds(e.target.value)}
-              placeholder="+250"
-              className="w-full bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-red-500"
-            />
-          </div>
-          <div>
-            <label className="text-slate-500 text-xs font-semibold uppercase tracking-wider block mb-1.5">
-              Stake (u)
-            </label>
-            <input
-              type="number"
-              step="0.1"
-              value={formStake}
-              onChange={(e) => setFormStake(e.target.value)}
-              placeholder="1"
-              className="w-full bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-red-500"
-            />
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+        <div>
+          <label className={PROP_LABEL_CLS}>Prop Subject</label>
+          <div className="flex items-center gap-1 bg-slate-800 rounded-lg p-1">
+            {sideButtons.map(({ id, label, disabled }) => (
+              <button
+                key={id}
+                disabled={disabled}
+                onClick={() => setSide(id)}
+                title={label}
+                className={`flex-1 min-w-0 px-2 py-1.5 rounded-md text-xs font-semibold transition-colors truncate ${
+                  side === id
+                    ? 'bg-red-600 text-white'
+                    : disabled
+                    ? 'text-slate-700 cursor-not-allowed'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
           </div>
         </div>
+        <div>
+          <label className={PROP_LABEL_CLS}>Method (required)</label>
+          <select
+            value={method}
+            onChange={(e) => setMethod(e.target.value)}
+            className={`${PROP_INPUT_CLS} cursor-pointer`}
+          >
+            <optgroup label="Single method">
+              {PROP_METHOD_SINGLE.map((m) => <option key={m} value={m}>{m}</option>)}
+            </optgroup>
+            <optgroup label="Double chance (any two)">
+              {PROP_METHOD_DOUBLE.map((m) => <option key={m} value={m}>{m}</option>)}
+            </optgroup>
+          </select>
+        </div>
+      </div>
 
+      <div className="grid grid-cols-2 gap-4 mb-4">
+        <div>
+          <label className={PROP_LABEL_CLS}>Odds</label>
+          <input
+            type="text"
+            value={odds}
+            onChange={(e) => setOdds(e.target.value)}
+            placeholder="+250"
+            className={PROP_INPUT_CLS}
+          />
+        </div>
+        <div>
+          <label className={PROP_LABEL_CLS}>Stake (u)</label>
+          <input
+            type="number"
+            step="0.1"
+            value={stake}
+            onChange={(e) => setStake(e.target.value)}
+            placeholder="1"
+            className={PROP_INPUT_CLS}
+          />
+        </div>
+      </div>
+
+      <div className="bg-slate-800/40 border border-slate-700/60 rounded-lg px-3 py-2 mb-4">
+        <span className="text-slate-500 text-xs uppercase tracking-wider font-semibold mr-2">This bet</span>
+        <span className="text-slate-200 text-sm font-semibold">{previewLabel || '—'}</span>
+      </div>
+
+      <div className="flex items-center gap-2">
         <button
           onClick={handleSubmit}
           disabled={!canSubmit}
           className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
-            canSubmit
-              ? 'bg-red-600 text-white hover:bg-red-500'
-              : 'bg-slate-800 text-slate-600 cursor-not-allowed'
+            canSubmit ? 'bg-red-600 text-white hover:bg-red-500' : 'bg-slate-800 text-slate-600 cursor-not-allowed'
           }`}
         >
-          Log Pick
+          Log Prop
+        </button>
+        <button
+          onClick={onCancel}
+          className="px-4 py-2 rounded-lg text-sm font-semibold text-slate-500 hover:text-white transition-colors"
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// Props section within the Upcoming tab: lists PENDING props (result ===
+// 'PENDING') -- the props analogue of the fight cards above it. Setting a
+// result via the select moves the prop out of this list; since PROP_PICKS is
+// a single array filtered by result (not two arrays like upcoming/roi), that
+// happens automatically as soon as the parent's state updates -- no explicit
+// migration call needed here. Manual props (no parent fight card) get their
+// own entry point via the header link, since nesting under a card isn't
+// possible for them.
+function PendingPropsSection({ picks, onGrade, onDelete, manualOpen, onToggleManual, allFighters, onAddManual }) {
+  return (
+    <div className="mt-8">
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2">
+          <ClipboardList size={16} className="text-slate-500" />
+          <h3 className="text-white font-black text-base">Props</h3>
+          <span className="text-slate-600 text-xs hidden sm:inline">pending method-of-victory picks</span>
+        </div>
+        <button
+          onClick={onToggleManual}
+          className="text-xs font-semibold text-slate-400 hover:text-white underline decoration-dotted underline-offset-2"
+        >
+          {manualOpen ? 'Cancel manual prop' : '+ Log a manual prop'}
         </button>
       </div>
 
-      {picks.length > 0 && (
+      {manualOpen && (
+        <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 mb-4">
+          <PropEntryForm mode="manual" allFighters={allFighters} onAdd={onAddManual} onCancel={onToggleManual} />
+        </div>
+      )}
+
+      {picks.length === 0 ? (
+        <div className="bg-slate-900/50 border border-slate-800 rounded-xl p-6 text-center text-slate-600">
+          <p className="text-sm">No pending props.</p>
+          <p className="text-xs mt-1">
+            Click <span className="text-slate-400 font-semibold">+ Prop</span> on a fight card above, or log one manually.
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {picks.map((pick) => {
+            const label = pick.label || buildPropLabel(pick);
+            const matchup = pick.fighterB ? `${pick.fighterA} vs. ${pick.fighterB}` : (pick.fighterA || '—');
+            const stake = Number(pick.stake) || 1;
+            return (
+              <div key={pick.id} className="bg-slate-900 border border-slate-800 rounded-xl p-4 flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-white font-bold text-sm">{label}</p>
+                  <p className="text-slate-500 text-xs mt-1">
+                    {matchup} · {pick.eventName}{pick.eventDate ? ` · ${pick.eventDate}` : ''}
+                  </p>
+                  <p className="text-slate-400 text-xs mt-1">{pick.odds} · {stake}u</p>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <select
+                    value={pick.result}
+                    onChange={(e) => onGrade(pick.id, e.target.value)}
+                    className="bg-slate-800 border border-slate-700 text-slate-200 text-xs rounded-lg px-2 py-1.5 focus:outline-none focus:border-red-500 cursor-pointer"
+                  >
+                    {PROP_RESULT_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                  </select>
+                  <button onClick={() => onDelete(pick.id)} className="text-slate-600 hover:text-red-400 text-xs">
+                    Delete
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Prop Bets sub-tab of the ROI tab. Table of the isolated PROP_PICKS with
+// inline grading + delete. Reads ONLY PROP_PICKS -- no model data, no v1/v2.
+function PropBetsPanel({ picks, onGrade, onDelete }) {
+  if (picks.length === 0) {
+    return (
+      <div className="bg-slate-900 border border-slate-800 rounded-xl p-8 text-center text-slate-600">
+        <ClipboardList size={36} className="mx-auto mb-3 opacity-20" />
+        <p className="text-sm">No graded prop bets yet.</p>
+        <p className="text-xs mt-1">
+          Log and grade props from the <span className="text-slate-400 font-semibold">Upcoming</span> tab — they land here once resolved.
+        </p>
+      </div>
+    );
+  }
+  return (
+    <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="text-slate-500 text-xs uppercase tracking-wider border-b border-slate-800">
+              <th className="text-left font-semibold px-4 py-3">Prop</th>
+              <th className="text-left font-semibold px-4 py-3">Matchup</th>
+              <th className="text-left font-semibold px-4 py-3">Result</th>
+              <th className="text-left font-semibold px-4 py-3">Bet</th>
+              <th className="text-right font-semibold px-4 py-3">P&amp;L</th>
+              <th className="text-left font-semibold px-4 py-3">Event</th>
+              <th className="px-4 py-3" />
+            </tr>
+          </thead>
+          <tbody>
+            {picks.map((pick) => {
+              const label = pick.label || buildPropLabel(pick);
+              const matchup = pick.fighterB
+                ? `${pick.fighterA} vs. ${pick.fighterB}`
+                : (pick.fighterA || '—');
+              const stake = Number(pick.stake) || 1;
+              const profit = propPickProfit(pick);
+              const graded = pick.result !== 'PENDING';
+              return (
+                <tr key={pick.id} className="border-b border-slate-800/60 last:border-0">
+                  <td className="px-4 py-3 text-slate-200 font-semibold">{label}</td>
+                  <td className="px-4 py-3 text-slate-400 whitespace-nowrap">{matchup}</td>
+                  <td className="px-4 py-3">
+                    <select
+                      value={pick.result}
+                      onChange={(e) => onGrade(pick.id, e.target.value)}
+                      className="bg-slate-800 border border-slate-700 text-slate-200 text-xs rounded-lg px-2 py-1.5 focus:outline-none focus:border-red-500 cursor-pointer"
+                    >
+                      {PROP_RESULT_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                    </select>
+                  </td>
+                  <td className="px-4 py-3 text-slate-400 whitespace-nowrap">{pick.odds} · {stake}u</td>
+                  <td className={`px-4 py-3 text-right font-bold whitespace-nowrap ${
+                    !graded ? 'text-slate-600' : profit > 0 ? 'text-emerald-400' : profit < 0 ? 'text-red-400' : 'text-slate-400'
+                  }`}>
+                    {!graded ? '—' : pick.result === 'PUSH' ? 'Push' : `${profit > 0 ? '+' : ''}${profit.toFixed(2)}u`}
+                  </td>
+                  <td className="px-4 py-3 text-slate-500 text-xs whitespace-nowrap">
+                    {pick.eventName}{pick.eventDate ? ` · ${pick.eventDate}` : ''}
+                  </td>
+                  <td className="px-4 py-3 text-right">
+                    <button onClick={() => onDelete(pick.id)} className="text-slate-600 hover:text-red-400 text-xs">
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+// Prop statistics -- a visually + computationally DISTINCT section on the
+// Statistics tab. Reads ONLY PROP_PICKS; never blended into model charts and
+// never affected by the v1/v2 model toggle. n<8 low-sample flag matches the
+// ROI_ANALYTICS_LOW_N convention used by every other chart on this tab.
+function PropStatsSection({ picks }) {
+  const summary = useMemo(() => computePropSummary(picks), [picks]);
+  const breakdown = useMemo(() => computePropTypeBreakdown(picks), [picks]);
+  const hasLowSample = breakdown.some((b) => b.decisive > 0 && b.decisive < ROI_ANALYTICS_LOW_N);
+
+  return (
+    <div className="mt-10 pt-8 border-t border-slate-800">
+      <div className="flex items-center gap-2 mb-1">
+        <ClipboardList size={18} className="text-slate-400" />
+        <h3 className="text-white font-black text-lg">Prop Bets</h3>
+      </div>
+      <p className="text-slate-500 text-sm mb-5">
+        Manual method-of-victory picks — separate from the model, and unaffected by the v1/v2 toggle above.
+      </p>
+
+      {picks.length === 0 ? (
+        <div className="bg-slate-900 border border-slate-800 rounded-xl p-8 text-center text-slate-600">
+          <p className="text-sm">No prop bets logged yet.</p>
+          <p className="text-xs mt-1">Add one from the Upcoming tab.</p>
+        </div>
+      ) : (
         <>
-          <div className="grid grid-cols-4 gap-4 mb-6 items-stretch">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6 items-stretch">
             <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 h-full">
-              <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold">Total Props</p>
+              <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold">Graded Props</p>
               <p className="font-black text-2xl mt-2 text-white">{summary.total}</p>
             </div>
             <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 h-full">
@@ -2632,90 +2918,48 @@ function PropsTab({ picks, onAdd, onGrade, onDelete, allFighters }) {
             </div>
           </div>
 
-          <div className="flex items-center gap-1 bg-slate-800 rounded-lg p-1 mb-4 w-fit">
-            {[
-              { id: 'recent', label: 'Most Recent Event' },
-              { id: 'all', label: 'All Results' },
-            ].map(({ id, label }) => (
-              <button
-                key={id}
-                onClick={() => setResultsView(id)}
-                className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-colors ${
-                  resultsView === id
-                    ? 'bg-red-600 text-white'
-                    : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                {label}
-              </button>
-            ))}
+          <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+            <div className="px-4 py-3 border-b border-slate-800">
+              <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold">By Prop Type</p>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-slate-500 text-xs uppercase tracking-wider border-b border-slate-800">
+                    <th className="text-left font-semibold px-4 py-3">Type</th>
+                    <th className="text-right font-semibold px-4 py-3">Count</th>
+                    <th className="text-right font-semibold px-4 py-3">Win Rate</th>
+                    <th className="text-right font-semibold px-4 py-3">Staked</th>
+                    <th className="text-right font-semibold px-4 py-3">Net Units</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {breakdown.map((b) => {
+                    const lowN = b.decisive > 0 && b.decisive < ROI_ANALYTICS_LOW_N;
+                    return (
+                      <tr key={b.type} className="border-b border-slate-800/60 last:border-0">
+                        <td className="px-4 py-3 text-slate-200 font-semibold">{b.type}</td>
+                        <td className="px-4 py-3 text-right text-slate-300">{b.count}</td>
+                        <td className={`px-4 py-3 text-right ${lowN ? 'text-slate-500' : 'text-slate-300'}`}>
+                          {b.decisive ? `${b.winRate.toFixed(1)}%${lowN ? ' *' : ''}` : '—'}
+                        </td>
+                        <td className="px-4 py-3 text-right text-slate-300">{b.staked.toFixed(2)}u</td>
+                        <td className={`px-4 py-3 text-right font-bold ${b.netUnits >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                          {b.netUnits >= 0 ? '+' : ''}{b.netUnits.toFixed(2)}u
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           </div>
-
-          <div className="space-y-3">
-            {visiblePicks.map((pick) => {
-              const dec = americanToDecimal(pick.odds);
-              const stake = Number(pick.stake) || 1;
-              const profit =
-                pick.result === 'WON' && dec ? stake * (dec - 1)
-                : pick.result === 'LOST' ? -stake
-                : 0;
-              return (
-                <div key={pick.id} className="bg-slate-900 border border-slate-800 rounded-xl p-4">
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <p className="text-white font-bold text-sm">
-                        {pick.fighter}
-                        {pick.opponent && <span className="text-slate-500 font-normal"> vs. {pick.opponent}</span>}
-                      </p>
-                      <p className="text-slate-500 text-xs mt-0.5">
-                        {pick.eventName} · {pick.eventDate || 'no date'}
-                      </p>
-                      <p className="text-slate-300 text-sm mt-2">
-                        <span className="text-slate-500">{pick.propType === 'method' ? 'Method: ' : 'Round: '}</span>
-                        {pick.propValue}
-                        <span className="text-slate-500 ml-2">@ {pick.odds}</span>
-                        <span className="text-slate-500 ml-2">· {stake}u</span>
-                      </p>
-                    </div>
-                    <div className="text-right flex flex-col items-end gap-2">
-                      {pick.result !== 'PENDING' && (
-                        <span className={`font-bold text-sm ${profit > 0 ? 'text-emerald-400' : profit < 0 ? 'text-red-400' : 'text-slate-500'}`}>
-                          {profit > 0 ? '+' : ''}{profit.toFixed(2)}u
-                        </span>
-                      )}
-                      <div className="flex items-center gap-2">
-                        <select
-                          value={pick.result}
-                          onChange={(e) => onGrade(pick.id, e.target.value)}
-                          className="bg-slate-800 border border-slate-700 text-slate-200 text-xs rounded-lg px-2 py-1.5 focus:outline-none focus:border-red-500 cursor-pointer"
-                        >
-                          <option value="PENDING">Pending</option>
-                          <option value="WON">Won</option>
-                          <option value="LOST">Lost</option>
-                          <option value="PUSH">Push/Void</option>
-                        </select>
-                        <button
-                          onClick={() => onDelete(pick.id)}
-                          className="text-slate-600 hover:text-red-400 text-xs"
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+          {hasLowSample && (
+            <p className="text-slate-600 text-xs mt-2">
+              * n &lt; {ROI_ANALYTICS_LOW_N} graded — low sample, interpret with caution.
+            </p>
+          )}
         </>
-      )}
-
-      {picks.length === 0 && (
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-8 text-center text-slate-600">
-          <ClipboardList size={36} className="mx-auto mb-3 opacity-20" />
-          <p className="text-sm">No prop picks logged yet.</p>
-          <p className="text-xs mt-1">Use the form above to log your first pick.</p>
-        </div>
       )}
     </div>
   );
@@ -4119,13 +4363,32 @@ const buildRoiEntry = ({ fA, fB, oddsA, oddsB, eventName, eventDate, modelToggle
   };
 };
 // ─── UPCOMING EVENT TAB ──────────────────────────────────────────────────────
-function UpcomingEventTab({ entries, onGrade, onDelete, modelToggle, setModelToggle, allFighters }) {
+function UpcomingEventTab({
+  entries,
+  onGrade,
+  onDelete,
+  modelToggle,
+  setModelToggle,
+  allFighters,
+  propPicks,
+  onAddPropPick,
+  onGradePropPick,
+  onDeletePropPick,
+}) {
   const fighterMap = useMemo(() => {
     const m = new Map();
     (allFighters ?? []).forEach((f) => m.set(f.FIGHTER, f));
     return m;
   }, [allFighters]);
   const exportedCode = `export const UPCOMING_ENTRIES = ${JSON.stringify(entries, null, 2)};\n`;
+
+  // Single-array design (see PROP_PICKS) means "pending" is just a filtered
+  // view -- grading a prop (setting result) removes it from this list on the
+  // next render with no explicit migration call, mirroring but simplifying
+  // the fight lifecycle's Upcoming->ROI array move.
+  const pendingProps = useMemo(() => propPicks.filter((p) => p.result === 'PENDING'), [propPicks]);
+  // Only one prop form open at a time: null, a fight entry id, or 'manual'.
+  const [propFormFor, setPropFormFor] = useState(null);
 
   return (
     <div className="max-w-5xl mx-auto px-5 py-8">
@@ -4228,12 +4491,24 @@ function UpcomingEventTab({ entries, onGrade, onDelete, modelToggle, setModelTog
                       {entry.eventDate ? ` · ${entry.eventDate}` : ''}
                     </p>
                   </div>
-                  <button
-                    onClick={() => onDelete(entry.id)}
-                    className="px-3 py-1.5 rounded-lg border border-slate-700 text-slate-500 text-xs font-semibold hover:text-white hover:border-slate-600 transition-colors shrink-0"
-                  >
-                    Delete
-                  </button>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      onClick={() => setPropFormFor((id) => (id === entry.id ? null : entry.id))}
+                      className={`px-3 py-1.5 rounded-lg border text-xs font-semibold transition-colors ${
+                        propFormFor === entry.id
+                          ? 'border-red-600 text-red-400'
+                          : 'border-slate-700 text-slate-500 hover:text-white hover:border-slate-600'
+                      }`}
+                    >
+                      {propFormFor === entry.id ? 'Cancel Prop' : '+ Prop'}
+                    </button>
+                    <button
+                      onClick={() => onDelete(entry.id)}
+                      className="px-3 py-1.5 rounded-lg border border-slate-700 text-slate-500 text-xs font-semibold hover:text-white hover:border-slate-600 transition-colors"
+                    >
+                      Delete
+                    </button>
+                  </div>
                 </div>
 
                 {/* Model Pick */}
@@ -4317,11 +4592,37 @@ function UpcomingEventTab({ entries, onGrade, onDelete, modelToggle, setModelTog
                     <option value="NC">NC</option>
                   </select>
                 </div>
+
+                {propFormFor === entry.id && (
+                  <div className="border-t border-slate-800 mt-3 pt-3">
+                    <PropEntryForm
+                      mode="fromFight"
+                      fighterA={entry.fighterA}
+                      fighterB={entry.fighterB}
+                      eventName={entry.eventName}
+                      eventDate={entry.eventDate}
+                      upcomingId={entry.id}
+                      allFighters={allFighters}
+                      onAdd={(pick) => { onAddPropPick(pick); setPropFormFor(null); }}
+                      onCancel={() => setPropFormFor(null)}
+                    />
+                  </div>
+                )}
               </div>
             );
           })}
         </div>
       )}
+
+      <PendingPropsSection
+        picks={pendingProps}
+        onGrade={onGradePropPick}
+        onDelete={onDeletePropPick}
+        manualOpen={propFormFor === 'manual'}
+        onToggleManual={() => setPropFormFor((f) => (f === 'manual' ? null : 'manual'))}
+        allFighters={allFighters}
+        onAddManual={(pick) => { onAddPropPick(pick); setPropFormFor(null); }}
+      />
     </div>
   );
 }
@@ -4334,7 +4635,6 @@ function Header({ view, setView }) {
     { id: 'upcoming', label: 'Upcoming', Icon: Zap },
     { id: 'roi', label: 'ROI', Icon: Calendar },
     { id: 'statistics', label: 'Statistics', Icon: BarChart2 },
-    { id: 'props', label: 'Props', Icon: ClipboardList },
     { id: 'explore', label: 'Explore', Icon: Search },
     { id: 'info', label: 'Info', Icon: Info },
   ];
@@ -8171,6 +8471,10 @@ export default function App() {
           modelToggle={modelToggle}
           setModelToggle={setModelToggle}
           allFighters={fightersWithProspectsFiltered}
+          propPicks={propPicks}
+          onAddPropPick={handleAddPropPick}
+          onGradePropPick={handleGradePropPick}
+          onDeletePropPick={handleDeletePropPick}
         />
       )}
       {view === 'explore' && <ExploreTab allFighters={fightersWithProspectsFiltered} />}
@@ -8185,6 +8489,9 @@ export default function App() {
           allFighters={fightersWithProspectsFiltered}
           filterSince={filterSince}
           setFilterSince={setFilterSince}
+          propPicks={propPicks}
+          onGradePropPick={handleGradePropPick}
+          onDeletePropPick={handleDeletePropPick}
         />
       )}
       {view === 'statistics' && (
@@ -8194,15 +8501,7 @@ export default function App() {
           filterSince={filterSince}
           setFilterSince={setFilterSince}
           allFighters={fightersWithProspectsFiltered}
-        />
-      )}
-      {view === 'props' && (
-        <PropsTab
-          picks={propPicks}
-          onAdd={handleAddPropPick}
-          onGrade={handleGradePropPick}
-          onDelete={handleDeletePropPick}
-          allFighters={fightersWithProspectsFiltered}
+          propPicks={propPicks}
         />
       )}
       {view === 'info' && <InfoTab />}
@@ -8592,6 +8891,9 @@ function ROITab({
   allFighters,
   filterSince,
   setFilterSince,
+  propPicks,
+  onGradePropPick,
+  onDeletePropPick,
 }) {
   const exportedCode = `export const ROI_ENTRIES = ${JSON.stringify(
     entries,
@@ -8648,10 +8950,15 @@ function ROITab({
   }, [evaluatedEntries, filterSince]);
 
   const [modelView, setModelView] = useState('v2');
-  // Display-only filter for the entry list below -- does not affect any
-  // chart or the finishStats computation; the entry list keeps reading
-  // displayedEntries exactly as before.
-  const [resultsView, setResultsView] = useState('all');
+  // Sub-tabs replace the former "Most Recent Event / All Results" toggle:
+  //   'all'    -> collapsible per-event groups (former "All Results")
+  //   'recent' -> most-recent-graded-event only (former "Most Recent Event")
+  //   'props'  -> the isolated Prop Bets table (PROP_PICKS; no model data)
+  // The two model sub-tabs behave exactly as the old toggle did; 'props' is a
+  // physically separate panel that never reads roiEntries/model computations.
+  const [subTab, setSubTab] = useState('all');
+  const isProps = subTab === 'props';
+  const resultsView = subTab === 'recent' ? 'recent' : 'all';
   const latestGradedEventName = useMemo(() => {
     const graded = displayedEntries.filter((e) => isResolvedWinner(e.actualWinner, e));
     if (!graded.length) return null;
@@ -8823,7 +9130,7 @@ function ROITab({
           </p>
         </div>
         <div className="flex items-center gap-2">
-          {entries.length > 0 && (
+          {entries.length > 0 && !isProps && (
             <>
             <button
               onClick={() => navigator.clipboard.writeText(exportedCode)}
@@ -8872,7 +9179,7 @@ function ROITab({
         </div>
       </div>
 
-      {entries.length > 0 && (
+      {entries.length > 0 && !isProps && (
         <div className="flex items-center gap-3 mb-4">
           <span className="text-slate-500 text-xs uppercase tracking-wider font-semibold">Since</span>
           <input
@@ -8897,27 +9204,33 @@ function ROITab({
         </div>
       )}
 
-      {entries.length > 0 && (
-        <div className="flex items-center gap-1 bg-slate-800 rounded-lg p-1 mb-4 w-fit">
-          {[
-            { id: 'recent', label: 'Most Recent Event' },
-            { id: 'all', label: 'All Results' },
-          ].map(({ id, label }) => (
-            <button
-              key={id}
-              onClick={() => setResultsView(id)}
-              className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-colors ${
-                resultsView === id
-                  ? 'bg-red-600 text-white'
-                  : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-      )}
-      {entries.length === 0 ? (
+      <div className="flex items-center gap-1 bg-slate-800 rounded-lg p-1 mb-4 w-fit">
+        {[
+          { id: 'all', label: 'All Events' },
+          { id: 'recent', label: 'Most Recent Event' },
+          { id: 'props', label: 'Prop Bets' },
+        ].map(({ id, label }) => (
+          <button
+            key={id}
+            onClick={() => setSubTab(id)}
+            className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-colors ${
+              subTab === id
+                ? 'bg-red-600 text-white'
+                : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {isProps ? (
+        <PropBetsPanel
+          picks={propPicks.filter((p) => p.result !== 'PENDING')}
+          onGrade={onGradePropPick}
+          onDelete={onDeletePropPick}
+        />
+      ) : entries.length === 0 ? (
         <div className="bg-slate-900 border border-slate-800 rounded-xl p-8 text-center text-slate-600">
           <Calendar size={36} className="mx-auto mb-3 opacity-20" />
           <p className="text-sm">No saved predictions yet.</p>

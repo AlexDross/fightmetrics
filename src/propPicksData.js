@@ -1,4 +1,4 @@
-// PROP_PICKS — Alex's manual, discretionary method-of-victory / round props.
+// PROP_PICKS — Alex's manual, discretionary method-of-victory props.
 //
 // ISOLATION: this file and array are PHYSICALLY SEPARATE from every model-
 // related data structure (roiData.js, upcomingData.js) and from every
