@@ -4363,10 +4363,34 @@ const buildRoiEntry = ({ fA, fB, oddsA, oddsB, eventName, eventDate, modelToggle
   };
 };
 // ─── UPCOMING EVENT TAB ──────────────────────────────────────────────────────
+// Local edit buffer (separate from the committed value) so a controlled
+// number input can hold an in-progress "2." without React snapping it back
+// to "2" on every keystroke -- only well-formed numbers get committed up.
+function UnitsStakedInput({ value, onCommit }) {
+  const [raw, setRaw] = useState(String(value));
+  return (
+    <input
+      type="number"
+      step="0.1"
+      min="0"
+      value={raw}
+      onChange={(e) => {
+        const next = e.target.value;
+        setRaw(next);
+        const n = Number(next);
+        if (next !== '' && !Number.isNaN(n)) onCommit(n);
+      }}
+      onBlur={() => setRaw(String(value))}
+      className="w-20 bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-1.5 focus:outline-none focus:border-red-500"
+    />
+  );
+}
+
 function UpcomingEventTab({
   entries,
   onGrade,
   onDelete,
+  onUpdateEntry,
   modelToggle,
   setModelToggle,
   allFighters,
@@ -4574,23 +4598,34 @@ function UpcomingEventTab({
                   </div>
                 </div>
 
-                {/* Actual Winner */}
-                <div className="border-t border-slate-800 pt-3 flex items-center gap-3">
-                  <span className="text-slate-500 text-xs font-semibold uppercase tracking-wider">
-                    Actual Winner
-                  </span>
-                  <select
-                    value=""
-                    onChange={(e) => {
-                      if (e.target.value) onGrade(entry.id, e.target.value);
-                    }}
-                    className="bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-1.5 focus:outline-none focus:border-red-500 cursor-pointer"
-                  >
-                    <option value="">Pending…</option>
-                    <option value={entry.fighterA}>{entry.fighterA}</option>
-                    <option value={entry.fighterB}>{entry.fighterB}</option>
-                    <option value="NC">NC</option>
-                  </select>
+                {/* Actual Winner + Units Staked */}
+                <div className="border-t border-slate-800 pt-3 flex items-center justify-between gap-3 flex-wrap">
+                  <div className="flex items-center gap-3">
+                    <span className="text-slate-500 text-xs font-semibold uppercase tracking-wider">
+                      Actual Winner
+                    </span>
+                    <select
+                      value=""
+                      onChange={(e) => {
+                        if (e.target.value) onGrade(entry.id, e.target.value);
+                      }}
+                      className="bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-1.5 focus:outline-none focus:border-red-500 cursor-pointer"
+                    >
+                      <option value="">Pending…</option>
+                      <option value={entry.fighterA}>{entry.fighterA}</option>
+                      <option value={entry.fighterB}>{entry.fighterB}</option>
+                      <option value="NC">NC</option>
+                    </select>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="text-slate-500 text-xs font-semibold uppercase tracking-wider">
+                      Units Staked
+                    </span>
+                    <UnitsStakedInput
+                      value={entry.unitsWagered != null ? entry.unitsWagered : 1}
+                      onCommit={(n) => onUpdateEntry(entry.id, { unitsWagered: n })}
+                    />
+                  </div>
                 </div>
 
                 {propFormFor === entry.id && (
@@ -8450,6 +8485,12 @@ export default function App() {
     setUpcomingEntries((prev) => prev.filter((e) => e.id !== id));
   };
 
+  const handleUpdateUpcomingEntry = (id, patch) => {
+    setUpcomingEntries((prev) =>
+      prev.map((entry) => (entry.id === id ? { ...entry, ...patch } : entry))
+    );
+  };
+
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 font-sans">
       <Header view={view} setView={setView} />
@@ -8468,6 +8509,7 @@ export default function App() {
           entries={upcomingEntries}
           onGrade={handleGradeUpcoming}
           onDelete={handleDeleteUpcoming}
+          onUpdateEntry={handleUpdateUpcomingEntry}
           modelToggle={modelToggle}
           setModelToggle={setModelToggle}
           allFighters={fightersWithProspectsFiltered}
