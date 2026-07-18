@@ -1409,8 +1409,16 @@ function roiV2GradedPopulation(entries) {
 // v2pA/v2pB, on the exact same population (buildRoiEntry stores both pairs
 // unconditionally in the same save, so there's no population mismatch).
 // Default ('v2') is byte-identical to this function's original behavior.
+// v2's basis is restricted to _provenance.captureMode === 'live', same
+// reasoning and same population as computeCalibrationReliability below --
+// this chart shares roiV2GradedPopulation with that one and reads the same
+// frozen v2pA/v2pB fields, so it has identical exposure to the 2026-07-12
+// reconstruction (see BASELINE_NOTES.md). v1's basis is untouched.
 function computeModelVsMarketByBand(entries, basis = 'v2') {
-  const pop = roiV2GradedPopulation(entries);
+  const pop =
+    basis === 'v2'
+      ? roiV2GradedPopulation(entries).filter((e) => e._provenance?.captureMode === 'live')
+      : roiV2GradedPopulation(entries);
   const buckets = ROI_MARKET_BANDS.map((b) => ({ ...b, rows: [] }));
   pop.forEach((e) => {
     const rawA = parseAmericanOdds(e.oddsA);
@@ -1452,8 +1460,17 @@ function computeModelVsMarketByBand(entries, basis = 'v2') {
 // connecting it across buckets is the bucketed equivalent of a y=x diagonal.
 // basis='v1' reads frozen fighterAProb/fighterBProb instead of v2pA/v2pB, same
 // population and shape as the v2 default. Default is byte-identical to before.
+// v2's basis is restricted to _provenance.captureMode === 'live' -- a
+// reliability curve is a claim about forecasting before the outcome was
+// known, and a meaningful fraction of stored v2pA values were computed
+// after the fact (see BASELINE_NOTES.md, "2026-07-12 reconstruction").
+// v1's fighterAProb history has no equivalent contamination and is left
+// unfiltered, unchanged from this function's original behavior.
 function computeCalibrationReliability(entries, basis = 'v2') {
-  const pop = roiV2GradedPopulation(entries);
+  const pop =
+    basis === 'v2'
+      ? roiV2GradedPopulation(entries).filter((e) => e._provenance?.captureMode === 'live')
+      : roiV2GradedPopulation(entries);
   const buckets = ROI_V2_PROB_BUCKETS.map((b) => ({ ...b, rows: [] }));
   pop.forEach((e) => {
     const pA = basis === 'v1' ? e.fighterAProb : e.v2pA;
@@ -1903,18 +1920,31 @@ function RoiByMarketBandChart({ data, modelLabel = 'v1' }) {
 }
 
 function ModelVsMarketBracketChart({ data, modelLabel = 'v2' }) {
-  const anySamples = data.some((d) => d.n > 0);
+  const totalN = data.reduce((s, d) => s + d.n, 0);
+  const anySamples = totalN > 0;
   const ML = modelLabel.toUpperCase();
+  // Same restriction and reasoning as CalibrationReliabilityChart: this
+  // chart's v2 basis reads the same frozen v2pA/v2pB population, so it is
+  // restricted to genuinely live-captured picks for the same reason.
+  const isRestrictedV2 = modelLabel === 'v2';
   return (
     <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
       <h3 className="text-white font-bold text-sm mb-1">{ML} Pick Win Rate vs. Market-Implied %</h3>
       <p className="text-slate-500 text-xs mb-3">
         {ML}'s picked side, grouped by that side's raw market-implied probability band.
         Market % is de-vigged (stripVig).
+        {isRestrictedV2 && ' A win rate scored against picks made after the outcome was known is not a fair test — restricted to live-captured v2 picks only.'}
       </p>
+      {isRestrictedV2 && (
+        <p className="text-slate-600 text-xs mb-3">
+          {totalN} live v2 {totalN === 1 ? 'prediction' : 'predictions'} available in the current filter window.
+        </p>
+      )}
       {!anySamples ? (
         <p className="text-slate-600 text-sm py-8 text-center">
-          No decisive graded picks with frozen v1/v2 fields yet in the current filter window.
+          {isRestrictedV2
+            ? 'No live-captured v2 predictions in the current filter window — most saved picks were computed after the event and cannot be used for a fair win-rate comparison.'
+            : 'No decisive graded picks with frozen v1/v2 fields yet in the current filter window.'}
         </p>
       ) : (
         <ResponsiveContainer width="100%" height={240}>
@@ -1945,18 +1975,32 @@ function ModelVsMarketBracketChart({ data, modelLabel = 'v2' }) {
 }
 
 function CalibrationReliabilityChart({ data, modelLabel = 'v2', compact = false }) {
-  const anySamples = data.some((d) => d.n > 0);
+  const totalN = data.reduce((s, d) => s + d.n, 0);
+  const anySamples = totalN > 0;
   const ML = modelLabel.toUpperCase();
+  // v2's basis here is restricted to genuinely live predictions (see
+  // computeCalibrationReliability) -- most saved v2 picks were computed
+  // after their event, which a reliability curve can't honestly use. v1 has
+  // no such restriction, so it gets the original, unqualified message.
+  const isRestrictedV2 = modelLabel === 'v2';
   return (
     <div className={`bg-slate-900 border border-slate-800 rounded-xl ${compact ? 'p-3' : 'p-4'}`}>
       <h3 className="text-white font-bold text-sm mb-1">Calibration Reliability</h3>
       <p className="text-slate-500 text-xs mb-3">
         {ML}'s confidence on its picked side, bucketed, vs. actual win rate.
         Dashed line = mean predicted probability per bucket (perfect calibration reference).
+        {isRestrictedV2 && ' Calibration requires predictions made before the outcome was known — restricted to live-captured v2 picks only.'}
       </p>
+      {isRestrictedV2 && (
+        <p className="text-slate-600 text-xs mb-3">
+          {totalN} live v2 {totalN === 1 ? 'prediction' : 'predictions'} available in the current filter window.
+        </p>
+      )}
       {!anySamples ? (
         <p className="text-slate-600 text-sm py-8 text-center">
-          No decisive graded picks with frozen v1/v2 fields yet in the current filter window.
+          {isRestrictedV2
+            ? 'No live-captured v2 predictions in the current filter window — most saved picks were computed after the event and can’t be used for calibration.'
+            : 'No decisive graded picks with frozen v1/v2 fields yet in the current filter window.'}
         </p>
       ) : (
         <ResponsiveContainer width="100%" height={compact ? 190 : 240}>
