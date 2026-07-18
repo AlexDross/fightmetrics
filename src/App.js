@@ -4209,6 +4209,40 @@ const latestFightHistoryDate = (fightHistory) => {
   return max;
 };
 
+// Builds the _provenance block attached to every saved ROI/Upcoming entry.
+// This is the ONLY supported way to produce that block — any script that
+// programmatically writes fighterAProb/v2pA/v2pB to roiData.js or
+// upcomingData.js should call this rather than hand-constructing the shape,
+// so a future bulk recompute can't silently skip provenance the way commit
+// 9343523 (2026-07-12) did. See BASELINE_NOTES.md.
+//
+// predictionTimestamp/captureMode default to "derive from right now" (the
+// normal live-save path) but accept overrides — used only for backfilling
+// provenance onto entries whose real capture time is a known historical
+// moment, not "when this function happened to run."
+export const buildProvenance = ({ eventDate, result, fA, fB, predictionTimestamp, captureMode }) => {
+  const todayIso = new Date().toISOString().slice(0, 10);
+  const resolvedCaptureMode =
+    captureMode ??
+    (!eventDate ? 'unknown' : eventDate >= todayIso ? 'live' : 'reconstructed');
+  return {
+    predictionTimestamp: predictionTimestamp ?? new Date().toISOString(),
+    targetEventDate: eventDate,
+    captureMode: resolvedCaptureMode,
+    modelVersion: MODEL_V2.version,
+    modelCoefHash: djb2Checksum(JSON.stringify(MODEL_V2.coef)),
+    featureVector: {
+      v1: result.feats,
+      v2: result.featsV2 ?? null,
+    },
+    fightHistoryCutoff: {
+      fighterA: latestFightHistoryDate(fA.FIGHT_HISTORY),
+      fighterB: latestFightHistoryDate(fB.FIGHT_HISTORY),
+    },
+    sourceManifest: SOURCE_MANIFEST.modules,
+  };
+};
+
 // Assembles a complete ROI entry object with the exact shape consumed by the ROI
 // tab. Used by the manual savePrediction path ("Save to Upcoming" / "Save and
 // Open Upcoming" in the Simulator).
@@ -4336,30 +4370,7 @@ const buildRoiEntry = ({ fA, fB, oddsA, oddsB, eventName, eventDate, modelToggle
     // reconstructed" and "what fed it" without a manual forensic audit (see
     // research/source_integrity_audit.md and research/daysSinceLast_live_audit.md,
     // which this schema exists to make unnecessary going forward).
-    _provenance: (() => {
-      const todayIso = new Date().toISOString().slice(0, 10);
-      const captureMode = !eventDate
-        ? 'unknown'
-        : eventDate >= todayIso
-        ? 'live'
-        : 'reconstructed';
-      return {
-        predictionTimestamp: new Date().toISOString(),
-        targetEventDate: eventDate,
-        captureMode,
-        modelVersion: MODEL_V2.version,
-        modelCoefHash: djb2Checksum(JSON.stringify(MODEL_V2.coef)),
-        featureVector: {
-          v1: result.feats,
-          v2: result.featsV2 ?? null,
-        },
-        fightHistoryCutoff: {
-          fighterA: latestFightHistoryDate(fA.FIGHT_HISTORY),
-          fighterB: latestFightHistoryDate(fB.FIGHT_HISTORY),
-        },
-        sourceManifest: SOURCE_MANIFEST.modules,
-      };
-    })(),
+    _provenance: buildProvenance({ eventDate, result, fA, fB }),
   };
 };
 // ─── UPCOMING EVENT TAB ──────────────────────────────────────────────────────
