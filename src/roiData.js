@@ -44,7 +44,14 @@ export const ROI_ENTRIES = [
     "projectedFinish": "KO/TKO",
     "actualWinner": "Max Holloway",
     "actualFinish": "",
-    "notes": ""
+    "notes": "",
+    "_provenance": {
+      "predictionTimestamp": "2026-07-10T16:54:34.337Z",
+      "targetEventDate": "2026-07-11",
+      "captureMode": "live",
+      "modelVersion": "logistic_v2.0_20260709",
+      "modelCoefHash": "256f866e"
+    }
   },
   {
     "id": "1783702455429-zae0xy",
@@ -91,7 +98,14 @@ export const ROI_ENTRIES = [
     "projectedFinish": "KO/TKO",
     "actualWinner": "Paddy Pimblett",
     "actualFinish": "",
-    "notes": ""
+    "notes": "",
+    "_provenance": {
+      "predictionTimestamp": "2026-07-10T16:54:15.429Z",
+      "targetEventDate": "2026-07-11",
+      "captureMode": "live",
+      "modelVersion": "logistic_v2.0_20260709",
+      "modelCoefHash": "256f866e"
+    }
   },
   {
     "id": "1783702431568-wl8pag",
@@ -138,7 +152,14 @@ export const ROI_ENTRIES = [
     "projectedFinish": "DEC",
     "actualWinner": "Mario Bautista",
     "actualFinish": "",
-    "notes": ""
+    "notes": "",
+    "_provenance": {
+      "predictionTimestamp": "2026-07-10T16:53:51.568Z",
+      "targetEventDate": "2026-07-11",
+      "captureMode": "live",
+      "modelVersion": "logistic_v2.0_20260709",
+      "modelCoefHash": "256f866e"
+    }
   },
   {
     "id": "1783702387990-6rzgta",
@@ -185,7 +206,14 @@ export const ROI_ENTRIES = [
     "projectedFinish": "DEC",
     "actualWinner": "Brandon Royval",
     "actualFinish": "",
-    "notes": ""
+    "notes": "",
+    "_provenance": {
+      "predictionTimestamp": "2026-07-10T16:53:07.990Z",
+      "targetEventDate": "2026-07-11",
+      "captureMode": "live",
+      "modelVersion": "logistic_v2.0_20260709",
+      "modelCoefHash": "256f866e"
+    }
   },
   {
     "id": "1783702352158-j9c5w4",
@@ -232,7 +260,14 @@ export const ROI_ENTRIES = [
     "projectedFinish": "KO/TKO",
     "actualWinner": "King Green",
     "actualFinish": "",
-    "notes": ""
+    "notes": "",
+    "_provenance": {
+      "predictionTimestamp": "2026-07-10T16:52:32.158Z",
+      "targetEventDate": "2026-07-11",
+      "captureMode": "live",
+      "modelVersion": "logistic_v2.0_20260709",
+      "modelCoefHash": "256f866e"
+    }
   },
   {
     "id": "1783702326909-wsw7t9",
@@ -279,7 +314,14 @@ export const ROI_ENTRIES = [
     "projectedFinish": "DEC",
     "actualWinner": "Robert Whittaker",
     "actualFinish": "",
-    "notes": ""
+    "notes": "",
+    "_provenance": {
+      "predictionTimestamp": "2026-07-10T16:52:06.909Z",
+      "targetEventDate": "2026-07-11",
+      "captureMode": "live",
+      "modelVersion": "logistic_v2.0_20260709",
+      "modelCoefHash": "256f866e"
+    }
   },
   {
     "id": "1783702302131-ivlb99",
@@ -326,7 +368,14 @@ export const ROI_ENTRIES = [
     "projectedFinish": "KO/TKO",
     "actualWinner": "Adrian Yanez",
     "actualFinish": "",
-    "notes": ""
+    "notes": "",
+    "_provenance": {
+      "predictionTimestamp": "2026-07-10T16:51:42.131Z",
+      "targetEventDate": "2026-07-11",
+      "captureMode": "live",
+      "modelVersion": "logistic_v2.0_20260709",
+      "modelCoefHash": "256f866e"
+    }
   },
   {
     "id": "1783702275719-jronc5",
@@ -373,7 +422,14 @@ export const ROI_ENTRIES = [
     "projectedFinish": "DEC",
     "actualWinner": "Luke Riley",
     "actualFinish": "",
-    "notes": ""
+    "notes": "",
+    "_provenance": {
+      "predictionTimestamp": "2026-07-10T16:51:15.719Z",
+      "targetEventDate": "2026-07-11",
+      "captureMode": "live",
+      "modelVersion": "logistic_v2.0_20260709",
+      "modelCoefHash": "256f866e"
+    }
   },
   {
     "id": "1783702251684-hirx4e",
@@ -420,7 +476,14 @@ export const ROI_ENTRIES = [
     "projectedFinish": "DEC",
     "actualWinner": "Wang Cong",
     "actualFinish": "",
-    "notes": ""
+    "notes": "",
+    "_provenance": {
+      "predictionTimestamp": "2026-07-10T16:50:51.684Z",
+      "targetEventDate": "2026-07-11",
+      "captureMode": "live",
+      "modelVersion": "logistic_v2.0_20260709",
+      "modelCoefHash": "256f866e"
+    }
   },
   {
     "id": "1783702220518-xsdzib",
@@ -467,7 +530,14 @@ export const ROI_ENTRIES = [
     "projectedFinish": "KO/TKO",
     "actualWinner": "Damian Pinas",
     "actualFinish": "",
-    "notes": ""
+    "notes": "",
+    "_provenance": {
+      "predictionTimestamp": "2026-07-10T16:50:20.518Z",
+      "targetEventDate": "2026-07-11",
+      "captureMode": "live",
+      "modelVersion": "logistic_v2.0_20260709",
+      "modelCoefHash": "256f866e"
+    }
   },
   {
     "id": "1783702190218-xp59mo",
@@ -514,7 +584,14 @@ export const ROI_ENTRIES = [
     "projectedFinish": "KO/TKO",
     "actualWinner": "Ryan Gandra",
     "actualFinish": "",
-    "notes": ""
+    "notes": "",
+    "_provenance": {
+      "predictionTimestamp": "2026-07-10T16:49:50.218Z",
+      "targetEventDate": "2026-07-11",
+      "captureMode": "live",
+      "modelVersion": "logistic_v2.0_20260709",
+      "modelCoefHash": "256f866e"
+    }
   },
   {
     "id": "1783702134279-08rkra",
@@ -561,7 +638,14 @@ export const ROI_ENTRIES = [
     "projectedFinish": "KO/TKO",
     "actualWinner": "Alessandro Costa",
     "actualFinish": "",
-    "notes": ""
+    "notes": "",
+    "_provenance": {
+      "predictionTimestamp": "2026-07-10T16:48:54.279Z",
+      "targetEventDate": "2026-07-11",
+      "captureMode": "live",
+      "modelVersion": "logistic_v2.0_20260709",
+      "modelCoefHash": "256f866e"
+    }
   },
   {
     "id": "1782497216900-kmlovq",
@@ -607,7 +691,20 @@ export const ROI_ENTRIES = [
     "projectedSUB": 15,
     "projectedDEC": 25,
     "projectedFinish": "KO/TKO",
-    "actualFinish": "KO/TKO"
+    "actualFinish": "KO/TKO",
+    "_provenance": {
+      "predictionTimestamp": "2026-07-12T17:36:22.000Z",
+      "targetEventDate": "2026-06-27",
+      "captureMode": "reconstructed",
+      "reconstructionType": "rewritten",
+      "priorV2": {
+        "v2pA": 0.44052515994552305,
+        "v2pB": 0.5594748400544769
+      },
+      "modelVersion": "logistic_v2.0_20260709",
+      "modelCoefHash": "256f866e",
+      "sourceCommit": "93435237a98012ae09eea71c5cc05205ec2ba9d3"
+    }
   },
   {
     "id": "1782497195307-re8u3n",
@@ -653,7 +750,20 @@ export const ROI_ENTRIES = [
     "projectedSUB": 13,
     "projectedDEC": 59,
     "projectedFinish": "DEC",
-    "actualFinish": "DEC"
+    "actualFinish": "DEC",
+    "_provenance": {
+      "predictionTimestamp": "2026-07-12T17:36:22.000Z",
+      "targetEventDate": "2026-06-27",
+      "captureMode": "reconstructed",
+      "reconstructionType": "rewritten",
+      "priorV2": {
+        "v2pA": 0.5354727856578033,
+        "v2pB": 0.4645272143421967
+      },
+      "modelVersion": "logistic_v2.0_20260709",
+      "modelCoefHash": "256f866e",
+      "sourceCommit": "93435237a98012ae09eea71c5cc05205ec2ba9d3"
+    }
   },
   {
     "id": "1782497161068-6hpy87",
@@ -699,7 +809,20 @@ export const ROI_ENTRIES = [
     "projectedSUB": 13,
     "projectedDEC": 53,
     "projectedFinish": "DEC",
-    "actualFinish": "KO/TKO"
+    "actualFinish": "KO/TKO",
+    "_provenance": {
+      "predictionTimestamp": "2026-07-12T17:36:22.000Z",
+      "targetEventDate": "2026-06-27",
+      "captureMode": "reconstructed",
+      "reconstructionType": "rewritten",
+      "priorV2": {
+        "v2pA": 0.34649212824588355,
+        "v2pB": 0.6535078717541165
+      },
+      "modelVersion": "logistic_v2.0_20260709",
+      "modelCoefHash": "256f866e",
+      "sourceCommit": "93435237a98012ae09eea71c5cc05205ec2ba9d3"
+    }
   },
   {
     "id": "1782497124415-vy6ijl",
@@ -745,7 +868,20 @@ export const ROI_ENTRIES = [
     "projectedSUB": 15,
     "projectedDEC": 67,
     "projectedFinish": "DEC",
-    "actualFinish": "SUB"
+    "actualFinish": "SUB",
+    "_provenance": {
+      "predictionTimestamp": "2026-07-12T17:36:22.000Z",
+      "targetEventDate": "2026-06-27",
+      "captureMode": "reconstructed",
+      "reconstructionType": "rewritten",
+      "priorV2": {
+        "v2pA": 0.595342723496204,
+        "v2pB": 0.404657276503796
+      },
+      "modelVersion": "logistic_v2.0_20260709",
+      "modelCoefHash": "256f866e",
+      "sourceCommit": "93435237a98012ae09eea71c5cc05205ec2ba9d3"
+    }
   },
   {
     "id": "1782497091682-q5qyye",
@@ -791,7 +927,20 @@ export const ROI_ENTRIES = [
     "projectedSUB": 18,
     "projectedDEC": 22,
     "projectedFinish": "KO/TKO",
-    "actualFinish": "DEC"
+    "actualFinish": "DEC",
+    "_provenance": {
+      "predictionTimestamp": "2026-07-12T17:36:22.000Z",
+      "targetEventDate": "2026-06-27",
+      "captureMode": "reconstructed",
+      "reconstructionType": "rewritten",
+      "priorV2": {
+        "v2pA": 0.6711939374253979,
+        "v2pB": 0.3288060625746021
+      },
+      "modelVersion": "logistic_v2.0_20260709",
+      "modelCoefHash": "256f866e",
+      "sourceCommit": "93435237a98012ae09eea71c5cc05205ec2ba9d3"
+    }
   },
   {
     "id": "1782497053937-arcn41",
@@ -837,7 +986,20 @@ export const ROI_ENTRIES = [
     "projectedSUB": 14,
     "projectedDEC": 39,
     "projectedFinish": "KO/TKO",
-    "actualFinish": "SUB"
+    "actualFinish": "SUB",
+    "_provenance": {
+      "predictionTimestamp": "2026-07-12T17:36:22.000Z",
+      "targetEventDate": "2026-06-27",
+      "captureMode": "reconstructed",
+      "reconstructionType": "rewritten",
+      "priorV2": {
+        "v2pA": 0.3900212750933434,
+        "v2pB": 0.6099787249066566
+      },
+      "modelVersion": "logistic_v2.0_20260709",
+      "modelCoefHash": "256f866e",
+      "sourceCommit": "93435237a98012ae09eea71c5cc05205ec2ba9d3"
+    }
   },
   {
     "id": "1782497018802-zj5okw",
@@ -883,7 +1045,20 @@ export const ROI_ENTRIES = [
     "projectedSUB": 44,
     "projectedDEC": 47,
     "projectedFinish": "DEC",
-    "actualFinish": "KO/TKO"
+    "actualFinish": "KO/TKO",
+    "_provenance": {
+      "predictionTimestamp": "2026-07-12T17:36:22.000Z",
+      "targetEventDate": "2026-06-27",
+      "captureMode": "reconstructed",
+      "reconstructionType": "rewritten",
+      "priorV2": {
+        "v2pA": 0.5578756530680461,
+        "v2pB": 0.4421243469319539
+      },
+      "modelVersion": "logistic_v2.0_20260709",
+      "modelCoefHash": "256f866e",
+      "sourceCommit": "93435237a98012ae09eea71c5cc05205ec2ba9d3"
+    }
   },
   {
     "id": "1782496991802-4svl4z",
@@ -929,7 +1104,20 @@ export const ROI_ENTRIES = [
     "projectedSUB": 11,
     "projectedDEC": 30,
     "projectedFinish": "KO/TKO",
-    "actualFinish": "SUB"
+    "actualFinish": "SUB",
+    "_provenance": {
+      "predictionTimestamp": "2026-07-12T17:36:22.000Z",
+      "targetEventDate": "2026-06-27",
+      "captureMode": "reconstructed",
+      "reconstructionType": "rewritten",
+      "priorV2": {
+        "v2pA": 0.474097182352722,
+        "v2pB": 0.525902817647278
+      },
+      "modelVersion": "logistic_v2.0_20260709",
+      "modelCoefHash": "256f866e",
+      "sourceCommit": "93435237a98012ae09eea71c5cc05205ec2ba9d3"
+    }
   },
   {
     "id": "1782496964815-tfnnzq",
@@ -975,7 +1163,20 @@ export const ROI_ENTRIES = [
     "projectedSUB": 20,
     "projectedDEC": 20,
     "projectedFinish": "KO/TKO",
-    "actualFinish": "SUB"
+    "actualFinish": "SUB",
+    "_provenance": {
+      "predictionTimestamp": "2026-07-12T17:36:22.000Z",
+      "targetEventDate": "2026-06-27",
+      "captureMode": "reconstructed",
+      "reconstructionType": "rewritten",
+      "priorV2": {
+        "v2pA": 0.4515457897900572,
+        "v2pB": 0.5484542102099428
+      },
+      "modelVersion": "logistic_v2.0_20260709",
+      "modelCoefHash": "256f866e",
+      "sourceCommit": "93435237a98012ae09eea71c5cc05205ec2ba9d3"
+    }
   },
   {
     "id": "1782496897889-e3mvvb",
@@ -1021,7 +1222,20 @@ export const ROI_ENTRIES = [
     "projectedSUB": 16,
     "projectedDEC": 42,
     "projectedFinish": "KO/TKO / DEC",
-    "actualFinish": "DEC"
+    "actualFinish": "DEC",
+    "_provenance": {
+      "predictionTimestamp": "2026-07-12T17:36:22.000Z",
+      "targetEventDate": "2026-06-27",
+      "captureMode": "reconstructed",
+      "reconstructionType": "rewritten",
+      "priorV2": {
+        "v2pA": 0.3244603389761124,
+        "v2pB": 0.6755396610238876
+      },
+      "modelVersion": "logistic_v2.0_20260709",
+      "modelCoefHash": "256f866e",
+      "sourceCommit": "93435237a98012ae09eea71c5cc05205ec2ba9d3"
+    }
   },
   {
     "id": "1781539992152-eoqcau",
@@ -1067,7 +1281,17 @@ export const ROI_ENTRIES = [
     "projectedSUB": 9,
     "projectedDEC": 50,
     "projectedFinish": "DEC",
-    "actualFinish": "KO/TKO"
+    "actualFinish": "KO/TKO",
+    "_provenance": {
+      "predictionTimestamp": "2026-07-12T17:36:22.000Z",
+      "targetEventDate": "2026-06-20",
+      "captureMode": "reconstructed",
+      "reconstructionType": "backfilled",
+      "priorV2": null,
+      "modelVersion": "logistic_v2.0_20260709",
+      "modelCoefHash": "256f866e",
+      "sourceCommit": "93435237a98012ae09eea71c5cc05205ec2ba9d3"
+    }
   },
   {
     "id": "1781539958414-212xak",
@@ -1113,7 +1337,17 @@ export const ROI_ENTRIES = [
     "projectedSUB": 10,
     "projectedDEC": 58,
     "projectedFinish": "DEC",
-    "actualFinish": "KO/TKO"
+    "actualFinish": "KO/TKO",
+    "_provenance": {
+      "predictionTimestamp": "2026-07-12T17:36:22.000Z",
+      "targetEventDate": "2026-06-20",
+      "captureMode": "reconstructed",
+      "reconstructionType": "backfilled",
+      "priorV2": null,
+      "modelVersion": "logistic_v2.0_20260709",
+      "modelCoefHash": "256f866e",
+      "sourceCommit": "93435237a98012ae09eea71c5cc05205ec2ba9d3"
+    }
   },
   {
     "id": "1781539926333-vbz0vr",
@@ -1159,7 +1393,17 @@ export const ROI_ENTRIES = [
     "projectedSUB": 4,
     "projectedDEC": 73,
     "projectedFinish": "DEC",
-    "actualFinish": "KO/TKO"
+    "actualFinish": "KO/TKO",
+    "_provenance": {
+      "predictionTimestamp": "2026-07-12T17:36:22.000Z",
+      "targetEventDate": "2026-06-20",
+      "captureMode": "reconstructed",
+      "reconstructionType": "backfilled",
+      "priorV2": null,
+      "modelVersion": "logistic_v2.0_20260709",
+      "modelCoefHash": "256f866e",
+      "sourceCommit": "93435237a98012ae09eea71c5cc05205ec2ba9d3"
+    }
   },
   {
     "id": "1781539877397-hqer70",
@@ -1205,7 +1449,17 @@ export const ROI_ENTRIES = [
     "projectedSUB": 13,
     "projectedDEC": 57,
     "projectedFinish": "DEC",
-    "actualFinish": "SUB"
+    "actualFinish": "SUB",
+    "_provenance": {
+      "predictionTimestamp": "2026-07-12T17:36:22.000Z",
+      "targetEventDate": "2026-06-20",
+      "captureMode": "reconstructed",
+      "reconstructionType": "backfilled",
+      "priorV2": null,
+      "modelVersion": "logistic_v2.0_20260709",
+      "modelCoefHash": "256f866e",
+      "sourceCommit": "93435237a98012ae09eea71c5cc05205ec2ba9d3"
+    }
   },
   {
     "id": "1781539831902-5qewr4",
@@ -1251,7 +1505,17 @@ export const ROI_ENTRIES = [
     "projectedSUB": 9,
     "projectedDEC": 88,
     "projectedFinish": "DEC",
-    "actualFinish": "DEC"
+    "actualFinish": "DEC",
+    "_provenance": {
+      "predictionTimestamp": "2026-07-12T17:36:22.000Z",
+      "targetEventDate": "2026-06-20",
+      "captureMode": "reconstructed",
+      "reconstructionType": "backfilled",
+      "priorV2": null,
+      "modelVersion": "logistic_v2.0_20260709",
+      "modelCoefHash": "256f866e",
+      "sourceCommit": "93435237a98012ae09eea71c5cc05205ec2ba9d3"
+    }
   },
   {
     "id": "1781539786580-pttd0a",
@@ -1297,7 +1561,17 @@ export const ROI_ENTRIES = [
     "projectedSUB": 35,
     "projectedDEC": 35,
     "projectedFinish": "SUB / DEC",
-    "actualFinish": "SUB"
+    "actualFinish": "SUB",
+    "_provenance": {
+      "predictionTimestamp": "2026-07-12T17:36:22.000Z",
+      "targetEventDate": "2026-06-20",
+      "captureMode": "reconstructed",
+      "reconstructionType": "backfilled",
+      "priorV2": null,
+      "modelVersion": "logistic_v2.0_20260709",
+      "modelCoefHash": "256f866e",
+      "sourceCommit": "93435237a98012ae09eea71c5cc05205ec2ba9d3"
+    }
   },
   {
     "id": "1781539752275-37f042",
@@ -1343,7 +1617,17 @@ export const ROI_ENTRIES = [
     "projectedSUB": 16,
     "projectedDEC": 80,
     "projectedFinish": "DEC",
-    "actualFinish": "DEC"
+    "actualFinish": "DEC",
+    "_provenance": {
+      "predictionTimestamp": "2026-07-12T17:36:22.000Z",
+      "targetEventDate": "2026-06-20",
+      "captureMode": "reconstructed",
+      "reconstructionType": "backfilled",
+      "priorV2": null,
+      "modelVersion": "logistic_v2.0_20260709",
+      "modelCoefHash": "256f866e",
+      "sourceCommit": "93435237a98012ae09eea71c5cc05205ec2ba9d3"
+    }
   },
   {
     "id": "1781539720173-4uhqpb",
@@ -1389,7 +1673,17 @@ export const ROI_ENTRIES = [
     "projectedSUB": 6,
     "projectedDEC": 55,
     "projectedFinish": "DEC",
-    "actualFinish": "DEC"
+    "actualFinish": "DEC",
+    "_provenance": {
+      "predictionTimestamp": "2026-07-12T17:36:22.000Z",
+      "targetEventDate": "2026-06-20",
+      "captureMode": "reconstructed",
+      "reconstructionType": "backfilled",
+      "priorV2": null,
+      "modelVersion": "logistic_v2.0_20260709",
+      "modelCoefHash": "256f866e",
+      "sourceCommit": "93435237a98012ae09eea71c5cc05205ec2ba9d3"
+    }
   },
   {
     "id": "1781539673877-55t3lq",
@@ -1435,7 +1729,17 @@ export const ROI_ENTRIES = [
     "projectedSUB": 14,
     "projectedDEC": 73,
     "projectedFinish": "DEC",
-    "actualFinish": "DEC"
+    "actualFinish": "DEC",
+    "_provenance": {
+      "predictionTimestamp": "2026-07-12T17:36:22.000Z",
+      "targetEventDate": "2026-06-20",
+      "captureMode": "reconstructed",
+      "reconstructionType": "backfilled",
+      "priorV2": null,
+      "modelVersion": "logistic_v2.0_20260709",
+      "modelCoefHash": "256f866e",
+      "sourceCommit": "93435237a98012ae09eea71c5cc05205ec2ba9d3"
+    }
   },
   {
     "id": "1781323015803-6ai9uo",
@@ -1481,7 +1785,17 @@ export const ROI_ENTRIES = [
     "projectedSUB": 13,
     "projectedDEC": 31,
     "projectedFinish": "KO/TKO",
-    "actualFinish": "KO/TKO"
+    "actualFinish": "KO/TKO",
+    "_provenance": {
+      "predictionTimestamp": "2026-07-12T17:36:22.000Z",
+      "targetEventDate": "2026-06-14",
+      "captureMode": "reconstructed",
+      "reconstructionType": "backfilled",
+      "priorV2": null,
+      "modelVersion": "logistic_v2.0_20260709",
+      "modelCoefHash": "256f866e",
+      "sourceCommit": "93435237a98012ae09eea71c5cc05205ec2ba9d3"
+    }
   },
   {
     "id": "1781322978615-62heuq",
@@ -1527,7 +1841,17 @@ export const ROI_ENTRIES = [
     "projectedSUB": 14,
     "projectedDEC": 33,
     "projectedFinish": "KO/TKO",
-    "actualFinish": "KO/TKO"
+    "actualFinish": "KO/TKO",
+    "_provenance": {
+      "predictionTimestamp": "2026-07-12T17:36:22.000Z",
+      "targetEventDate": "2026-06-14",
+      "captureMode": "reconstructed",
+      "reconstructionType": "backfilled",
+      "priorV2": null,
+      "modelVersion": "logistic_v2.0_20260709",
+      "modelCoefHash": "256f866e",
+      "sourceCommit": "93435237a98012ae09eea71c5cc05205ec2ba9d3"
+    }
   },
   {
     "id": "1781322950252-5vsh14",
@@ -1573,7 +1897,17 @@ export const ROI_ENTRIES = [
     "projectedSUB": 6,
     "projectedDEC": 57,
     "projectedFinish": "DEC",
-    "actualFinish": "KO/TKO"
+    "actualFinish": "KO/TKO",
+    "_provenance": {
+      "predictionTimestamp": "2026-07-12T17:36:22.000Z",
+      "targetEventDate": "2026-06-14",
+      "captureMode": "reconstructed",
+      "reconstructionType": "backfilled",
+      "priorV2": null,
+      "modelVersion": "logistic_v2.0_20260709",
+      "modelCoefHash": "256f866e",
+      "sourceCommit": "93435237a98012ae09eea71c5cc05205ec2ba9d3"
+    }
   },
   {
     "id": "1781322919881-itrizx",
@@ -1619,7 +1953,17 @@ export const ROI_ENTRIES = [
     "projectedSUB": 9,
     "projectedDEC": 31,
     "projectedFinish": "KO/TKO",
-    "actualFinish": "KO/TKO"
+    "actualFinish": "KO/TKO",
+    "_provenance": {
+      "predictionTimestamp": "2026-07-12T17:36:22.000Z",
+      "targetEventDate": "2026-06-14",
+      "captureMode": "reconstructed",
+      "reconstructionType": "backfilled",
+      "priorV2": null,
+      "modelVersion": "logistic_v2.0_20260709",
+      "modelCoefHash": "256f866e",
+      "sourceCommit": "93435237a98012ae09eea71c5cc05205ec2ba9d3"
+    }
   },
   {
     "id": "1781322876775-x9ls5p",
@@ -1665,7 +2009,17 @@ export const ROI_ENTRIES = [
     "projectedSUB": 11,
     "projectedDEC": 29,
     "projectedFinish": "KO/TKO",
-    "actualFinish": "KO/TKO"
+    "actualFinish": "KO/TKO",
+    "_provenance": {
+      "predictionTimestamp": "2026-07-12T17:36:22.000Z",
+      "targetEventDate": "2026-06-14",
+      "captureMode": "reconstructed",
+      "reconstructionType": "backfilled",
+      "priorV2": null,
+      "modelVersion": "logistic_v2.0_20260709",
+      "modelCoefHash": "256f866e",
+      "sourceCommit": "93435237a98012ae09eea71c5cc05205ec2ba9d3"
+    }
   },
   {
     "id": "1781322808245-19dztk",
@@ -1711,7 +2065,17 @@ export const ROI_ENTRIES = [
     "projectedSUB": 34,
     "projectedDEC": 30,
     "projectedFinish": "KO/TKO",
-    "actualFinish": "KO/TKO"
+    "actualFinish": "KO/TKO",
+    "_provenance": {
+      "predictionTimestamp": "2026-07-12T17:36:22.000Z",
+      "targetEventDate": "2026-06-14",
+      "captureMode": "reconstructed",
+      "reconstructionType": "backfilled",
+      "priorV2": null,
+      "modelVersion": "logistic_v2.0_20260709",
+      "modelCoefHash": "256f866e",
+      "sourceCommit": "93435237a98012ae09eea71c5cc05205ec2ba9d3"
+    }
   },
   {
     "id": "1781322774078-2heb1r",
@@ -1757,7 +2121,17 @@ export const ROI_ENTRIES = [
     "projectedSUB": 16,
     "projectedDEC": 24,
     "projectedFinish": "KO/TKO",
-    "actualFinish": "KO/TKO"
+    "actualFinish": "KO/TKO",
+    "_provenance": {
+      "predictionTimestamp": "2026-07-12T17:36:22.000Z",
+      "targetEventDate": "2026-06-14",
+      "captureMode": "reconstructed",
+      "reconstructionType": "backfilled",
+      "priorV2": null,
+      "modelVersion": "logistic_v2.0_20260709",
+      "modelCoefHash": "256f866e",
+      "sourceCommit": "93435237a98012ae09eea71c5cc05205ec2ba9d3"
+    }
   },
   {
     "id": "1780697367446-8himci",
@@ -1803,7 +2177,17 @@ export const ROI_ENTRIES = [
     "projectedSUB": 19,
     "projectedDEC": 62,
     "projectedFinish": "DEC",
-    "actualFinish": "DEC"
+    "actualFinish": "DEC",
+    "_provenance": {
+      "predictionTimestamp": "2026-07-12T17:36:22.000Z",
+      "targetEventDate": "2026-06-06",
+      "captureMode": "reconstructed",
+      "reconstructionType": "backfilled",
+      "priorV2": null,
+      "modelVersion": "logistic_v2.0_20260709",
+      "modelCoefHash": "256f866e",
+      "sourceCommit": "93435237a98012ae09eea71c5cc05205ec2ba9d3"
+    }
   },
   {
     "id": "1780697340661-yng16f",
@@ -1849,7 +2233,17 @@ export const ROI_ENTRIES = [
     "projectedSUB": 24,
     "projectedDEC": 36,
     "projectedFinish": "KO/TKO",
-    "actualFinish": "DEC"
+    "actualFinish": "DEC",
+    "_provenance": {
+      "predictionTimestamp": "2026-07-12T17:36:22.000Z",
+      "targetEventDate": "2026-06-06",
+      "captureMode": "reconstructed",
+      "reconstructionType": "backfilled",
+      "priorV2": null,
+      "modelVersion": "logistic_v2.0_20260709",
+      "modelCoefHash": "256f866e",
+      "sourceCommit": "93435237a98012ae09eea71c5cc05205ec2ba9d3"
+    }
   },
   {
     "id": "1780697318257-svr1si",
@@ -1895,7 +2289,17 @@ export const ROI_ENTRIES = [
     "projectedSUB": 14,
     "projectedDEC": 62,
     "projectedFinish": "DEC",
-    "actualFinish": "DEC"
+    "actualFinish": "DEC",
+    "_provenance": {
+      "predictionTimestamp": "2026-07-12T17:36:22.000Z",
+      "targetEventDate": "2026-06-06",
+      "captureMode": "reconstructed",
+      "reconstructionType": "backfilled",
+      "priorV2": null,
+      "modelVersion": "logistic_v2.0_20260709",
+      "modelCoefHash": "256f866e",
+      "sourceCommit": "93435237a98012ae09eea71c5cc05205ec2ba9d3"
+    }
   },
   {
     "id": "1780697297815-64f67k",
@@ -1941,7 +2345,17 @@ export const ROI_ENTRIES = [
     "projectedSUB": 11,
     "projectedDEC": 60,
     "projectedFinish": "DEC",
-    "actualFinish": "SUB"
+    "actualFinish": "SUB",
+    "_provenance": {
+      "predictionTimestamp": "2026-07-12T17:36:22.000Z",
+      "targetEventDate": "2026-06-06",
+      "captureMode": "reconstructed",
+      "reconstructionType": "backfilled",
+      "priorV2": null,
+      "modelVersion": "logistic_v2.0_20260709",
+      "modelCoefHash": "256f866e",
+      "sourceCommit": "93435237a98012ae09eea71c5cc05205ec2ba9d3"
+    }
   },
   {
     "id": "1780697278363-wzwg93",
@@ -1987,7 +2401,17 @@ export const ROI_ENTRIES = [
     "projectedSUB": 12,
     "projectedDEC": 28,
     "projectedFinish": "KO/TKO",
-    "actualFinish": "KO/TKO"
+    "actualFinish": "KO/TKO",
+    "_provenance": {
+      "predictionTimestamp": "2026-07-12T17:36:22.000Z",
+      "targetEventDate": "2026-06-06",
+      "captureMode": "reconstructed",
+      "reconstructionType": "backfilled",
+      "priorV2": null,
+      "modelVersion": "logistic_v2.0_20260709",
+      "modelCoefHash": "256f866e",
+      "sourceCommit": "93435237a98012ae09eea71c5cc05205ec2ba9d3"
+    }
   },
   {
     "id": "1780697257253-i95evr",
@@ -2033,7 +2457,17 @@ export const ROI_ENTRIES = [
     "projectedSUB": 21,
     "projectedDEC": 35,
     "projectedFinish": "KO/TKO",
-    "actualFinish": "KO/TKO"
+    "actualFinish": "KO/TKO",
+    "_provenance": {
+      "predictionTimestamp": "2026-07-12T17:36:22.000Z",
+      "targetEventDate": "2026-06-06",
+      "captureMode": "reconstructed",
+      "reconstructionType": "backfilled",
+      "priorV2": null,
+      "modelVersion": "logistic_v2.0_20260709",
+      "modelCoefHash": "256f866e",
+      "sourceCommit": "93435237a98012ae09eea71c5cc05205ec2ba9d3"
+    }
   },
   {
     "id": "1780697180774-ot33kp",
@@ -2079,7 +2513,17 @@ export const ROI_ENTRIES = [
     "projectedSUB": 16,
     "projectedDEC": 24,
     "projectedFinish": "KO/TKO",
-    "actualFinish": "DEC"
+    "actualFinish": "DEC",
+    "_provenance": {
+      "predictionTimestamp": "2026-07-12T17:36:22.000Z",
+      "targetEventDate": "2026-06-06",
+      "captureMode": "reconstructed",
+      "reconstructionType": "backfilled",
+      "priorV2": null,
+      "modelVersion": "logistic_v2.0_20260709",
+      "modelCoefHash": "256f866e",
+      "sourceCommit": "93435237a98012ae09eea71c5cc05205ec2ba9d3"
+    }
   },
   {
     "id": "1780697156401-nmdznp",
@@ -2125,7 +2569,17 @@ export const ROI_ENTRIES = [
     "projectedSUB": 31,
     "projectedDEC": 29,
     "projectedFinish": "KO/TKO",
-    "actualFinish": "SUB"
+    "actualFinish": "SUB",
+    "_provenance": {
+      "predictionTimestamp": "2026-07-12T17:36:22.000Z",
+      "targetEventDate": "2026-06-06",
+      "captureMode": "reconstructed",
+      "reconstructionType": "backfilled",
+      "priorV2": null,
+      "modelVersion": "logistic_v2.0_20260709",
+      "modelCoefHash": "256f866e",
+      "sourceCommit": "93435237a98012ae09eea71c5cc05205ec2ba9d3"
+    }
   },
   {
     "id": "1780697131186-06q6rh",
@@ -2171,7 +2625,17 @@ export const ROI_ENTRIES = [
     "projectedSUB": 8,
     "projectedDEC": 40,
     "projectedFinish": "KO/TKO",
-    "actualFinish": "SUB"
+    "actualFinish": "SUB",
+    "_provenance": {
+      "predictionTimestamp": "2026-07-12T17:36:22.000Z",
+      "targetEventDate": "2026-06-06",
+      "captureMode": "reconstructed",
+      "reconstructionType": "backfilled",
+      "priorV2": null,
+      "modelVersion": "logistic_v2.0_20260709",
+      "modelCoefHash": "256f866e",
+      "sourceCommit": "93435237a98012ae09eea71c5cc05205ec2ba9d3"
+    }
   },
   {
     "id": "1780697099010-k0twxl",
@@ -2217,7 +2681,17 @@ export const ROI_ENTRIES = [
     "projectedSUB": 27,
     "projectedDEC": 31,
     "projectedFinish": "KO/TKO",
-    "actualFinish": "SUB"
+    "actualFinish": "SUB",
+    "_provenance": {
+      "predictionTimestamp": "2026-07-12T17:36:22.000Z",
+      "targetEventDate": "2026-06-06",
+      "captureMode": "reconstructed",
+      "reconstructionType": "backfilled",
+      "priorV2": null,
+      "modelVersion": "logistic_v2.0_20260709",
+      "modelCoefHash": "256f866e",
+      "sourceCommit": "93435237a98012ae09eea71c5cc05205ec2ba9d3"
+    }
   },
   {
     "id": "1780697056671-2nt180",
@@ -2263,7 +2737,17 @@ export const ROI_ENTRIES = [
     "projectedSUB": 20,
     "projectedDEC": 60,
     "projectedFinish": "DEC",
-    "actualFinish": "KO/TKO"
+    "actualFinish": "KO/TKO",
+    "_provenance": {
+      "predictionTimestamp": "2026-07-12T17:36:22.000Z",
+      "targetEventDate": "2026-06-06",
+      "captureMode": "reconstructed",
+      "reconstructionType": "backfilled",
+      "priorV2": null,
+      "modelVersion": "logistic_v2.0_20260709",
+      "modelCoefHash": "256f866e",
+      "sourceCommit": "93435237a98012ae09eea71c5cc05205ec2ba9d3"
+    }
   },
   {
     "id": "1779254147743-kv2kj4",
@@ -2309,7 +2793,17 @@ export const ROI_ENTRIES = [
     "projectedSUB": 17,
     "projectedDEC": 49,
     "projectedFinish": "DEC",
-    "actualFinish": "SUB"
+    "actualFinish": "SUB",
+    "_provenance": {
+      "predictionTimestamp": "2026-07-12T17:36:22.000Z",
+      "targetEventDate": "2026-05-23",
+      "captureMode": "reconstructed",
+      "reconstructionType": "backfilled",
+      "priorV2": null,
+      "modelVersion": "logistic_v2.0_20260709",
+      "modelCoefHash": "256f866e",
+      "sourceCommit": "93435237a98012ae09eea71c5cc05205ec2ba9d3"
+    }
   },
   {
     "id": "1779254116876-96z23v",
@@ -2355,7 +2849,17 @@ export const ROI_ENTRIES = [
     "projectedSUB": 14,
     "projectedDEC": 26,
     "projectedFinish": "KO/TKO",
-    "actualFinish": "KO/TKO"
+    "actualFinish": "KO/TKO",
+    "_provenance": {
+      "predictionTimestamp": "2026-07-12T17:36:22.000Z",
+      "targetEventDate": "2026-05-23",
+      "captureMode": "reconstructed",
+      "reconstructionType": "backfilled",
+      "priorV2": null,
+      "modelVersion": "logistic_v2.0_20260709",
+      "modelCoefHash": "256f866e",
+      "sourceCommit": "93435237a98012ae09eea71c5cc05205ec2ba9d3"
+    }
   },
   {
     "id": "1779254087539-bsc549",
@@ -2401,7 +2905,17 @@ export const ROI_ENTRIES = [
     "projectedSUB": 8,
     "projectedDEC": 36,
     "projectedFinish": "KO/TKO",
-    "actualFinish": "KO/TKO"
+    "actualFinish": "KO/TKO",
+    "_provenance": {
+      "predictionTimestamp": "2026-07-12T17:36:22.000Z",
+      "targetEventDate": "2026-05-23",
+      "captureMode": "reconstructed",
+      "reconstructionType": "backfilled",
+      "priorV2": null,
+      "modelVersion": "logistic_v2.0_20260709",
+      "modelCoefHash": "256f866e",
+      "sourceCommit": "93435237a98012ae09eea71c5cc05205ec2ba9d3"
+    }
   },
   {
     "id": "1779254050918-12xkzt",
@@ -2447,7 +2961,17 @@ export const ROI_ENTRIES = [
     "projectedSUB": 0,
     "projectedDEC": 100,
     "projectedFinish": "DEC",
-    "actualFinish": "KO/TKO"
+    "actualFinish": "KO/TKO",
+    "_provenance": {
+      "predictionTimestamp": "2026-07-12T17:36:22.000Z",
+      "targetEventDate": "2026-05-23",
+      "captureMode": "reconstructed",
+      "reconstructionType": "backfilled",
+      "priorV2": null,
+      "modelVersion": "logistic_v2.0_20260709",
+      "modelCoefHash": "256f866e",
+      "sourceCommit": "93435237a98012ae09eea71c5cc05205ec2ba9d3"
+    }
   },
   {
     "id": "1779253969645-pwpgjz",
@@ -2493,7 +3017,17 @@ export const ROI_ENTRIES = [
     "projectedSUB": 13,
     "projectedDEC": 57,
     "projectedFinish": "DEC",
-    "actualFinish": ""
+    "actualFinish": "",
+    "_provenance": {
+      "predictionTimestamp": "2026-07-12T17:36:22.000Z",
+      "targetEventDate": "2026-05-23",
+      "captureMode": "reconstructed",
+      "reconstructionType": "backfilled",
+      "priorV2": null,
+      "modelVersion": "logistic_v2.0_20260709",
+      "modelCoefHash": "256f866e",
+      "sourceCommit": "93435237a98012ae09eea71c5cc05205ec2ba9d3"
+    }
   },
   {
     "id": "1779253814932-7igxlf",
@@ -2539,7 +3073,17 @@ export const ROI_ENTRIES = [
     "projectedSUB": 32,
     "projectedDEC": 49,
     "projectedFinish": "DEC",
-    "actualFinish": "SUB"
+    "actualFinish": "SUB",
+    "_provenance": {
+      "predictionTimestamp": "2026-07-12T17:36:22.000Z",
+      "targetEventDate": "2026-05-23",
+      "captureMode": "reconstructed",
+      "reconstructionType": "backfilled",
+      "priorV2": null,
+      "modelVersion": "logistic_v2.0_20260709",
+      "modelCoefHash": "256f866e",
+      "sourceCommit": "93435237a98012ae09eea71c5cc05205ec2ba9d3"
+    }
   },
   {
     "id": "1778728893566-97sks1",
