@@ -6321,6 +6321,22 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
               flags.push({ label: 'Active Loss Streak', color: 'text-red-400 bg-red-900/20 border-red-800/40' });
             if (Math.abs(result.qualMomDiff ?? 0) > 0.5)
               flags.push({ label: `Form Edge: ${(result.qualMomDiff ?? 0) > 0 ? fA.FIGHTER.split(' ').pop() : fB.FIGHTER.split(' ').pop()}`, color: 'text-emerald-400 bg-emerald-900/20 border-emerald-800/40' });
+            // Flag only when v2's pick clears the app's own existing NO READ
+            // boundary (App.js: market.pickProb < 0.53 => NO READ) -- a
+            // 49.8/50.2 split is noise, not a real disagreement.
+            if (result.v2pA != null) {
+              const v1FavorsA = result.pA > 0.5;
+              const v2FavorsA = result.v2pA > 0.5;
+              const v2PickProb = Math.max(result.v2pA, result.v2pB);
+              if (v1FavorsA !== v2FavorsA && v2PickProb >= 0.53) {
+                const v1Favors = (v1FavorsA ? fA : fB).FIGHTER.split(' ').pop();
+                const v2Favors = (v2FavorsA ? fA : fB).FIGHTER.split(' ').pop();
+                flags.push({
+                  label: `Model Disagreement — v1 favors ${v1Favors}, v2 favors ${v2Favors}`,
+                  color: 'text-amber-400 bg-amber-900/20 border-amber-800/40',
+                });
+              }
+            }
             if (flags.length === 0) return null;
             return (
               <div className="bg-slate-900 border border-slate-700 rounded-xl p-4">
