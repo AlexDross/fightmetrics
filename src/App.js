@@ -5444,6 +5444,132 @@ function FightCard({ fight, index }) {
   );
 }
 
+// Authoritative domain mapping for the Simulator's unified contribution
+// panel. Maps each of the 6 scoring domains to its v1 inputs (referenced by
+// the exact {group, label} pairs used in computeMatchupEdges' auditRows,
+// App.js:3617-3841) and its v2 inputs (MODEL_V2.features keys). Every one
+// of MODEL_V2's 16 features appears in exactly one domain below --
+// Striking 2, Grappling 3, Physical 3, Form 3, Experience 4, Analytics 1 =
+// 16, verified by summing the v2 arrays.
+//
+// v1-only features with no v2 analog at all (not zeroed -- absent as a
+// feature key): atd_dif (Grappling, "TD Defense %"), layoff_dif and
+// cardio_dif (Analytics, "Days Since Last Fight" / "Cardio Ratio" --
+// layoff information resurfaces inside v2's modern_form instead, App.js
+// computeModernForm).
+//
+// Global is v1-only in full: agePenAdj, the SOS term, and the Quality
+// Momentum term feed v1's composite directly (App.js:3850-3860) but belong
+// to none of the 6 domains and have no auditRow at all -- referenced here
+// by the result-object field names Step 1 added, not by {group, label}.
+// v2 has no equivalent for any of the three; the Global group is genuinely
+// empty under v2, not merely small.
+const SIMULATOR_DOMAIN_MAP = {
+  striking: {
+    label: 'Striking',
+    icon: '⚔️',
+    v1: [
+      { group: 'Striking', label: 'Sig Strikes Landed / Min' },
+      { group: 'Striking', label: 'Strike Accuracy' },
+    ],
+    v2: ['sig_str_landed', 'sig_str_accuracy'],
+  },
+  grappling: {
+    label: 'Grappling',
+    icon: '🤼',
+    v1: [
+      { group: 'Grappling', label: 'Takedowns / 15 Min' },
+      { group: 'Grappling', label: 'Takedown Accuracy' },
+      { group: 'Grappling', label: 'Sub Attempts / 15 Min' },
+      { group: 'Grappling', label: 'TD Defense %' },
+    ],
+    v2: ['td_landed', 'td_accuracy', 'sub_attempts'],
+  },
+  physical: {
+    label: 'Physical',
+    icon: '📏',
+    v1: [
+      { group: 'Physical', label: 'Reach' },
+      { group: 'Physical', label: 'Height' },
+      { group: 'Physical', label: 'Age' },
+    ],
+    v2: ['reach', 'height', 'younger'],
+  },
+  form: {
+    label: 'Form',
+    icon: '📈',
+    v1: [
+      { group: 'Form', label: 'Win Streak' },
+      { group: 'Form', label: 'Loss Streak' },
+      { group: 'Form', label: 'UFC Wins' },
+      { group: 'Form', label: 'UFC Losses' },
+    ],
+    v2: ['modern_form', 'wins', 'losses'],
+  },
+  experience: {
+    label: 'Experience',
+    icon: '🎖️',
+    // "Finishing" is the auditRows' own group tag for these two (App.js:
+    // 3786-3807) but their weight (ko_dif/sub_dif) feeds expScore, i.e. the
+    // Experience domain -- not a separate domain of its own.
+    v1: [
+      { group: 'Experience', label: 'UFC Fight Count' },
+      { group: 'Experience', label: 'Fights Reaching R3+' },
+      { group: 'Finishing', label: 'KO Wins' },
+      { group: 'Finishing', label: 'Submission Wins' },
+    ],
+    v2: ['rounds', 'title_bouts', 'ko_wins', 'sub_wins'],
+  },
+  analytics: {
+    label: 'Analytics',
+    icon: '📊',
+    v1: [
+      { group: 'Analytics', label: 'ELO' },
+      { group: 'Analytics', label: 'Days Since Last Fight' },
+      { group: 'Analytics', label: 'Cardio Ratio' },
+    ],
+    v2: ['elo'],
+  },
+};
+
+// Not part of the 6-domain loop above -- rendered as its own, always-last
+// group. resultFields reference the Step-1-added scalar fields on
+// computeMatchupEdges' return object, not auditRows.
+const SIMULATOR_GLOBAL_GROUP = {
+  label: 'Global',
+  icon: '🌐',
+  v1ResultFields: [
+    { field: 'agePenAdj', label: 'Age-Decay Adjustment' },
+    { field: 'sosContribution', label: 'Strength of Schedule' },
+    { field: 'qualMomContribution', label: 'Quality Momentum' },
+  ],
+  v2: [],
+};
+
+// Anchors for the contribution panel's bar fill (simulatorBarPct below).
+// Each is the 99th percentile of |contribution|, pooled across all 6
+// domains (not per-domain -- pooling preserves the fact that some domains
+// carry structurally more weight than others), over every same-division
+// real fighter pair with both fighters at CREDIBILITY >= 50. v1's
+// contribution is edge.weighted; v2's is a domain's summed per-feature
+// logit contribution (SIMULATOR_DOMAIN_MAP). As of 2026-07-17, computed
+// from the live roster.
+//
+// Regenerate with: node scripts/regen_simulator_bar_anchors.js
+// If the printed values drift from these constants, paste the new ones in.
+const V1_BAR_ANCHOR = 0.05926015365523809;
+const V2_BAR_ANCHOR = 0.667623002310482;
+
+// One bar-fill formula, used for every domain, both models. `value` is
+// signed (positive favors fighter A); magnitude is scaled against the
+// model's own anchor and clamped to [5, 95] so no domain can ever render
+// fully saturated or fully empty. Deliberately NOT anchored to per-domain
+// max/p99 -- see V1_BAR_ANCHOR/V2_BAR_ANCHOR comment above.
+const simulatorBarPct = (value, anchor) => {
+  const frac = anchor > 0 ? Math.min(1, Math.abs(value) / anchor) : 0;
+  return 50 + Math.sign(value) * frac * 45;
+};
+
 const SIMULATOR_COMPARISON_GROUPS = [
   {
     title: 'Striking Inputs',
