@@ -3848,6 +3848,11 @@ const computeMatchupEdges = (fA, fB) => {
   // sosDiff/qualMomDiff: backtest-validated SOS@0.10 + Mom@0.03 = +0.89 pp
   //   over ELO baseline (name-only YYYYMMDD tiers, 3380 fights, 0 contamination).
   const agePenAdj = 1.5 * (agePenB - agePenA);
+  // Named so they can be returned below (Global group contribution display)
+  // without changing the composite arithmetic -- same expressions, just no
+  // longer inlined.
+  const sosContribution = clamp(sosDiff) * 0.10;
+  const qualMomContribution = clamp(qualMomDiff) * 0.03;
   const composite =
     strikingScore +
     grapplingScore +
@@ -3856,8 +3861,8 @@ const computeMatchupEdges = (fA, fB) => {
     expScore +
     analyticsScore +
     agePenAdj +
-    clamp(sosDiff) * 0.10 +
-    clamp(qualMomDiff) * 0.03;
+    sosContribution +
+    qualMomContribution;
 
   // ── Sigmoid probability mapping ───────────────────────────────────────────
   // p(A wins) = sigmoid(a * composite + b)
@@ -4017,6 +4022,18 @@ const computeMatchupEdges = (fA, fB) => {
     // provenance/manifest capture (buildRoiEntry's _provenance.featureVector).
     // Does not change v2pA/v2pB or any other computation above.
     featsV2,
+    // Additive only: per-feature signed contributions to v2's logit, keyed
+    // by MODEL_V2 feature name (see computeLogisticProb). Does not change
+    // v2pA/v2pB -- v2.pA/v2.pB are still derived from the same summed logit.
+    v2Contributions: v2.contributions,
+    // Additive only: the three v1 composite contributors that belong to no
+    // domain (App.js:3846-3860's agePenAdj/sosContribution/
+    // qualMomContribution feed `composite` directly). Exposed for the
+    // Simulator's Global contribution group -- does not change composite,
+    // pA/pB, edges, or auditRows above.
+    agePenAdj,
+    sosContribution,
+    qualMomContribution,
   };
 };
 
