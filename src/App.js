@@ -6173,6 +6173,14 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
             const pctB = (activePB * 100).toFixed(1);
             const favA = activePA > activePB;
             const winner = favA ? fA : fB;
+            // Low-sample de-emphasis: same underlying signal as the existing
+            // "Low Credibility" Matchup Context pill (App.js CREDIBILITY < 30
+            // check), applied here to the headline number's own visual
+            // certainty instead of a separate pill only. Does not change
+            // activePA/pctA/pctB themselves -- purely a style branch.
+            const avgCredibility = ((fA.CREDIBILITY ?? 100) + (fB.CREDIBILITY ?? 100)) / 2;
+            const lowSample = avgCredibility < 50;
+            const minTracked = Math.min(fA.TOTAL_MIN ?? 0, fB.TOTAL_MIN ?? 0);
             const allDomainKeys = ['striking', 'grappling', 'physical', 'form', 'experience', 'analytics'];
             const topDomains = allDomainKeys
               .map((k) => result.edges[k])
@@ -6231,51 +6239,62 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                   </span>
                 </div>
                 <div className="flex justify-between px-1 mb-2">
-                  <span className="text-white font-black text-2xl">{pctA}%</span>
-                  <span className="text-white font-black text-2xl">{pctB}%</span>
+                  <span className={lowSample ? 'text-slate-300 font-semibold text-2xl' : 'text-white font-black text-2xl'}>
+                    {pctA}%
+                  </span>
+                  <span className={lowSample ? 'text-slate-300 font-semibold text-2xl' : 'text-white font-black text-2xl'}>
+                    {pctB}%
+                  </span>
                 </div>
+                {lowSample && (
+                  <p className="text-amber-500 text-xs text-center mb-1">
+                    low sample — {minTracked} min tracked
+                  </p>
+                )}
                 <p className="text-slate-500 text-xs text-center italic mb-4">
                   {reasoningLine}
                 </p>
-                <div className="grid grid-cols-3 gap-3">
-                  <div className="bg-slate-800/40 rounded-lg p-3 text-center">
-                    <p className="text-slate-500 text-xs">Model Favorite</p>
-                    <p
-                      className={`font-bold text-sm mt-1 ${
-                        favA ? 'text-blue-400' : 'text-red-400'
-                      }`}
-                    >
-                      {favA
-                        ? fA.FIGHTER.split(' ').pop()
-                        : fB.FIGHTER.split(' ').pop()}
-                    </p>
-                  </div>
-                  <div className="bg-slate-800/40 rounded-lg p-3 text-center">
-                    <p className="text-slate-500 text-xs">RTG Diff</p>
-                    <p
-                      className={`font-black text-lg mt-1 ${
-                        Math.abs(result.diff) > 5
-                          ? 'text-emerald-400'
-                          : Math.abs(result.diff) > 2
-                          ? 'text-yellow-400'
-                          : 'text-slate-300'
-                      }`}
-                    >
-                      {result.diff > 0 ? '+' : ''}
-                      {result.diff.toFixed(1)}
-                    </p>
-                  </div>
-                  <div className="bg-slate-800/40 rounded-lg p-3 text-center">
-                    <p className="text-slate-500 text-xs">Confidence</p>
-                    <p className="text-slate-300 font-bold text-sm mt-1">
-                      {Math.abs(result.diff) > 5
-                        ? 'Clear edge'
-                        : Math.abs(result.diff) > 2
-                        ? 'Moderate'
-                        : 'Coin flip'}
-                    </p>
-                  </div>
-                </div>
+                {(() => {
+                  // Confidence derives from the DISPLAYED model's own probability
+                  // spread (activePA/activePB, already toggle-aware), not the raw
+                  // ELO gap (result.diff -- its own comment calls it legacy) which
+                  // was decoupled from whatever probability was actually on screen.
+                  // Display-derived only: reads activePA, writes nothing back.
+                  // Thresholds match the app's existing NO READ/LEAN precedent
+                  // (App.js: market.pickProb < 0.53 => NO READ; v2 bet-rec bands
+                  // at 0.60/0.65/0.70) rather than inventing new numbers.
+                  const spread = Math.abs(activePA - 0.5) * 2;
+                  const confidenceLabel =
+                    spread >= 0.30 ? 'Clear edge' : spread >= 0.06 ? 'Moderate' : 'Coin flip';
+                  const confidenceColor =
+                    spread >= 0.30
+                      ? 'text-emerald-400'
+                      : spread >= 0.06
+                      ? 'text-yellow-400'
+                      : 'text-slate-300';
+                  return (
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="bg-slate-800/40 rounded-lg p-3 text-center">
+                        <p className="text-slate-500 text-xs">Model Favorite</p>
+                        <p
+                          className={`font-bold text-sm mt-1 ${
+                            favA ? 'text-blue-400' : 'text-red-400'
+                          }`}
+                        >
+                          {favA
+                            ? fA.FIGHTER.split(' ').pop()
+                            : fB.FIGHTER.split(' ').pop()}
+                        </p>
+                      </div>
+                      <div className="bg-slate-800/40 rounded-lg p-3 text-center">
+                        <p className="text-slate-500 text-xs">Confidence</p>
+                        <p className={`font-black text-lg mt-1 ${confidenceColor}`}>
+                          {confidenceLabel}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
             );
           })()}
