@@ -6000,6 +6000,288 @@ function getProjectedFinishLabel(probs) {
 }
 
 // ─── MATCHUP SIMULATOR ────────────────────────────────────────────────────────
+// Display-only decode of v2's modern_form (App.js:369-388) into plain
+// language -- last-8 W-L record plus the two penalty flags, sorted most
+// recent first exactly as computeModernForm does. Does not compute or
+// alter modern_form's actual score; reads the same FIGHT_HISTORY/
+// DAYS_SINCE_LAST inputs purely to describe it.
+const describeModernForm = (fighter) => {
+  const fh = fighter?.FIGHT_HISTORY || [];
+  const sorted = [...fh].sort((a, b) => (a.dt < b.dt ? 1 : -1));
+  const last8 = sorted.slice(0, 8);
+  let w = 0, l = 0;
+  last8.forEach((f) => {
+    if (f.re === 'W') w++;
+    else if (f.re === 'L') l++;
+  });
+  const mostRecent = sorted[0];
+  const finishLoss =
+    mostRecent &&
+    mostRecent.re === 'L' &&
+    (isKoMethod(mostRecent.me || '') || isSubMethod(mostRecent.me || ''));
+  const layoff = (fighter?.DAYS_SINCE_LAST ?? 180) > 420;
+  const qualifiers = [];
+  if (finishLoss) qualifiers.push('last loss by finish');
+  if (layoff) qualifiers.push('>420d layoff');
+  return `${w}-${l} last 8${qualifiers.length ? ' · ' + qualifiers.join(', ') : ''}`;
+};
+
+// Headline stat(s) per domain, per displayed model -- must be a real driver
+// of that domain's score in the model being shown (see SIMULATOR_DOMAIN_MAP
+// comment for which raw inputs actually feed which model). Order matters:
+// the larger-weighted stat is listed first.
+const getSimulatorHeadlineStats = (domainKey, modelToggle, fA, fB) => {
+  const v2 = modelToggle === 'v2';
+  switch (domainKey) {
+    case 'striking':
+      return v2
+        ? [
+            { label: 'Sig Str Landed/min', a: (fA.ASL ?? 0).toFixed(2), b: (fB.ASL ?? 0).toFixed(2) },
+            { label: 'Strike Acc %', a: `${((fA.ASP ?? 0) * 100).toFixed(1)}%`, b: `${((fB.ASP ?? 0) * 100).toFixed(1)}%` },
+          ]
+        : [
+            { label: 'Strike Acc %', a: `${((fA.ASP ?? 0) * 100).toFixed(1)}%`, b: `${((fB.ASP ?? 0) * 100).toFixed(1)}%` },
+            { label: 'Sig Str Landed/min', a: (fA.ASL ?? 0).toFixed(2), b: (fB.ASL ?? 0).toFixed(2) },
+          ];
+    case 'grappling':
+      return v2
+        ? [
+            { label: 'TD Landed/15m', a: (fA.ATL ?? 0).toFixed(2), b: (fB.ATL ?? 0).toFixed(2) },
+            { label: 'Sub Att/15m', a: (fA.ASA ?? 0).toFixed(2), b: (fB.ASA ?? 0).toFixed(2) },
+          ]
+        : [
+            { label: 'TD Acc %', a: `${((fA.ATP ?? 0) * 100).toFixed(1)}%`, b: `${((fB.ATP ?? 0) * 100).toFixed(1)}%` },
+            { label: 'TD Landed/15m', a: (fA.ATL ?? 0).toFixed(2), b: (fB.ATL ?? 0).toFixed(2) },
+          ];
+    case 'physical':
+      return v2
+        ? [{ label: 'Age', a: (fA.AGE ?? 0).toFixed(1), b: (fB.AGE ?? 0).toFixed(1) }]
+        : [
+            { label: 'Height', a: fmtHeight(fA.HEIGHT_IN), b: fmtHeight(fB.HEIGHT_IN) },
+            { label: 'Reach', a: fmtReach(fA.REACH_IN), b: fmtReach(fB.REACH_IN) },
+            { label: 'Age', a: (fA.AGE ?? 0).toFixed(1), b: (fB.AGE ?? 0).toFixed(1) },
+          ];
+    case 'form':
+      return v2
+        ? [{ label: 'Modern Form', a: describeModernForm(fA), b: describeModernForm(fB) }]
+        : [{ label: 'Win Streak', a: `${fA.MODEL_UFC_WIN_STREAK ?? 0}`, b: `${fB.MODEL_UFC_WIN_STREAK ?? 0}` }];
+    case 'experience':
+      return v2
+        ? [{ label: 'Total Rounds', a: `${fA.TOTAL_ROUNDS ?? 0}`, b: `${fB.TOTAL_ROUNDS ?? 0}` }]
+        : [{ label: 'UFC Fight Count', a: `${fA.UFC_FIGHT_COUNT ?? 0}`, b: `${fB.UFC_FIGHT_COUNT ?? 0}` }];
+    case 'analytics':
+      return [{ label: 'ELO', a: `${(fA.ELO ?? 0).toFixed(0)}`, b: `${(fB.ELO ?? 0).toFixed(0)}` }];
+    default:
+      return [];
+  }
+};
+
+// Near-empty copy for domains/groups a model assigns little or no weight to
+// -- shown, not hidden, per the spec's "show, don't hide" requirement.
+const SIMULATOR_NEAR_EMPTY_COPY = {
+  experience_v2:
+    'v2 assigns almost no weight here — total rounds carries a small signal; UFC fight count, title bouts, KO wins, and submission wins are all excluded.',
+  global_v2:
+    'v1 adds strength-of-schedule and an extra age-decay term outside these six domains; v2 has no equivalent — nothing to show.',
+};
+
+// Builds one row per domain (+ Global) for the currently displayed model.
+// v1: sums auditRow.contribution (App.js:3571) for each domain's mapped
+// {group,label} pairs, plus the three Global result fields from Step 1.
+// v2: sums result.v2Contributions (App.js computeLogisticProb) for each
+// domain's mapped MODEL_V2 feature keys; Global is always empty (no v2
+// analog for any of its three v1-only terms).
+const buildSimulatorDomainRows = (result, modelToggle) => {
+  if (!result) return [];
+  const auditByKey = new Map();
+  (result.auditRows ?? []).forEach((row) => auditByKey.set(`${row.group}::${row.label}`, row));
+
+  const domainRows = Object.entries(SIMULATOR_DOMAIN_MAP).map(([key, domain]) => {
+    let features;
+    if (modelToggle === 'v1') {
+      features = domain.v1
+        .map((ref) => {
+          const row = auditByKey.get(`${ref.group}::${ref.label}`);
+          if (!row) return null;
+          const rawA = row.aLabel ? row.aLabel : null;
+          const rawB = row.bLabel ? row.bLabel : null;
+          return {
+            label: row.label,
+            aValue: row.aValue,
+            bValue: row.bValue,
+            aRawLabel: rawA,
+            bRawLabel: rawB,
+            contribution: row.contribution,
+          };
+        })
+        .filter(Boolean);
+    } else {
+      features = domain.v2.map((featKey) => ({
+        label: featKey,
+        contribution: result.v2Contributions?.[featKey] ?? 0,
+        featsV2Value: result.featsV2?.[featKey] ?? null,
+      }));
+    }
+    const totalContribution = features.reduce((s, f) => s + (f.contribution ?? 0), 0);
+    return { key, label: domain.label, icon: domain.icon, features, totalContribution };
+  });
+
+  const globalFeatures =
+    modelToggle === 'v1'
+      ? SIMULATOR_GLOBAL_GROUP.v1ResultFields.map((ref) => ({
+          label: ref.label,
+          contribution: result[ref.field] ?? 0,
+        }))
+      : [];
+  const globalTotal = globalFeatures.reduce((s, f) => s + (f.contribution ?? 0), 0);
+  domainRows.push({
+    key: 'global',
+    label: SIMULATOR_GLOBAL_GROUP.label,
+    icon: SIMULATOR_GLOBAL_GROUP.icon,
+    features: globalFeatures,
+    totalContribution: globalTotal,
+    isGlobal: true,
+  });
+
+  return domainRows;
+};
+
+// The unified contribution panel. Replaces Key Advantages, Domain
+// Breakdown, and Model Input Comparison (see MatchupSimulator, Step 6):
+// one section, branching on modelToggle, showing the reasoning for
+// whichever model's probability is actually displayed above it -- fixing
+// the disconnect where the old three sections (always v1-derived) argued
+// the opposite model's pick from the headline number.
+//
+// Built and exported standalone so it can be rendered in isolation before
+// being wired into MatchupSimulator's render tree.
+function SimulatorContributionPanel({ fA, fB, result, modelToggle }) {
+  const [expanded, setExpanded] = useState(() => new Set());
+  if (!fA || !fB || !result) return null;
+
+  const rows = buildSimulatorDomainRows(result, modelToggle);
+  const anchor = modelToggle === 'v2' ? V2_BAR_ANCHOR : V1_BAR_ANCHOR;
+
+  const toggleExpanded = (key) => {
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  };
+
+  return (
+    <div className="bg-slate-900 border border-slate-700 rounded-xl p-5">
+      <div className="flex items-center justify-between mb-4">
+        <p className="text-slate-400 text-xs font-semibold uppercase tracking-widest">
+          Contribution Breakdown
+        </p>
+        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">
+          {modelToggle === 'v2' ? 'v2 logistic' : 'v1 composite'}
+        </span>
+      </div>
+      <div className="space-y-2">
+        {rows.map((row) => {
+          const isOpen = expanded.has(row.key);
+          const favA = row.totalContribution > 0;
+          const pctA = simulatorBarPct(row.totalContribution, anchor);
+          const nearEmptyKey = `${row.key}_${modelToggle}`;
+          const nearEmptyCopy = SIMULATOR_NEAR_EMPTY_COPY[nearEmptyKey];
+          const headlineStats = row.isGlobal ? [] : getSimulatorHeadlineStats(row.key, modelToggle, fA, fB);
+          const hasFeatures = row.features.length > 0;
+          return (
+            <div key={row.key} className="bg-slate-800/40 rounded-xl overflow-hidden">
+              <button
+                onClick={() => hasFeatures && toggleExpanded(row.key)}
+                className="w-full text-left p-4"
+              >
+                <div className="flex items-center justify-between gap-3 mb-2">
+                  <span className="text-sm font-bold text-white">
+                    {row.icon} {row.label}
+                  </span>
+                  {hasFeatures && (
+                    <span className="text-slate-500 text-xs shrink-0">
+                      {isOpen ? 'Hide ▲' : 'Details ▼'}
+                    </span>
+                  )}
+                </div>
+                {nearEmptyCopy ? (
+                  <p className="text-slate-500 text-xs leading-snug">{nearEmptyCopy}</p>
+                ) : (
+                  <>
+                    <div className="h-2 bg-slate-700 rounded-full overflow-hidden flex mb-2">
+                      <div
+                        className="h-full bg-blue-500 rounded-full transition-all"
+                        style={{ width: `${pctA}%` }}
+                      />
+                      <div className="h-full bg-red-500 flex-1" />
+                    </div>
+                    {headlineStats.length > 0 && (
+                      <div className="flex flex-wrap gap-x-4 gap-y-0.5">
+                        {headlineStats.map((stat) => (
+                          <p key={stat.label} className="text-slate-500 text-xs">
+                            {stat.label}:{' '}
+                            <span className={favA ? 'text-blue-400' : 'text-slate-400'}>{stat.a}</span>
+                            {' / '}
+                            <span className={!favA ? 'text-red-400' : 'text-slate-400'}>{stat.b}</span>
+                          </p>
+                        ))}
+                      </div>
+                    )}
+                  </>
+                )}
+              </button>
+              {isOpen && hasFeatures && (
+                <div className="border-t border-slate-700/50 px-4 pb-3 pt-2 space-y-1.5">
+                  {row.features.map((f) => {
+                    const rawA = f.aRawLabel ? fA[f.aRawLabel] : null;
+                    const rawB = f.bRawLabel ? fB[f.bRawLabel] : null;
+                    const adjustedDiffersA =
+                      typeof rawA === 'number' && typeof f.aValue === 'number' && Math.abs(rawA - f.aValue) > 1e-9;
+                    const adjustedDiffersB =
+                      typeof rawB === 'number' && typeof f.bValue === 'number' && Math.abs(rawB - f.bValue) > 1e-9;
+                    return (
+                      <div key={f.label} className="flex items-center justify-between text-xs gap-2">
+                        <span className="text-slate-500 flex-1">{f.label}</span>
+                        {modelToggle === 'v1' ? (
+                          <span className="text-slate-400 font-mono">
+                            {typeof f.aValue === 'number' ? f.aValue.toFixed(2) : f.aValue}
+                            {adjustedDiffersA && typeof rawA === 'number' && (
+                              <span className="text-slate-600"> (raw {rawA.toFixed(2)})</span>
+                            )}
+                            {' / '}
+                            {typeof f.bValue === 'number' ? f.bValue.toFixed(2) : f.bValue}
+                            {adjustedDiffersB && typeof rawB === 'number' && (
+                              <span className="text-slate-600"> (raw {rawB.toFixed(2)})</span>
+                            )}
+                          </span>
+                        ) : null}
+                        <span
+                          className={`font-mono font-bold ${
+                            f.contribution > 0
+                              ? 'text-blue-400'
+                              : f.contribution < 0
+                              ? 'text-red-400'
+                              : 'text-slate-500'
+                          }`}
+                        >
+                          {f.contribution > 0 ? '+' : ''}
+                          {f.contribution.toFixed(4)}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOpen }) {
   const [fA, setFA] = useState(null);
   const [fB, setFB] = useState(null);
