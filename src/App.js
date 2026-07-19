@@ -8839,6 +8839,14 @@ function ROITab({
     null,
     2
   )};\n`;
+  // Mirrors exportedCode above, but serializes the live propPicks state (the
+  // same state onGradePropPick/onAddPropPick mutate) rather than roiEntries --
+  // props stay isolated from ROI_ENTRIES even in the export path.
+  const propsExportedCode = `export const PROP_PICKS = ${JSON.stringify(
+    propPicks,
+    null,
+    2
+  )};\n`;
   const evaluatedEntries = useMemo(
     () =>
       entries.map((entry) => {
@@ -9114,6 +9122,14 @@ function ROITab({
               Clear All
             </button>
             </>
+          )}
+          {isProps && propPicks.length > 0 && (
+            <button
+              onClick={() => navigator.clipboard.writeText(propsExportedCode)}
+              className="px-3 py-2 rounded-lg border border-slate-700 text-slate-300 text-xs font-semibold hover:text-white hover:border-slate-600 transition-colors"
+            >
+              Copy Updated propPicksData.js
+            </button>
           )}
         </div>
       </div>
