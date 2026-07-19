@@ -8235,6 +8235,40 @@ function ScoutProfile({ allFighters }) {
   );
 }
 
+// Upcoming-tab visibility window: an entry stays visible through the first
+// Tuesday that falls at least 7 days after its event date (not just until
+// the event date itself), so there's about a week of post-event runway to
+// grade it regardless of what weekday the event landed on. Pure string/date
+// math, no side effects -- never touches upcomingData.js; only decides what
+// UPCOMING_ENTRIES.filter keeps in initial render state (App.js, search
+// "isUpcomingVisible").
+//
+// Parses eventDate's y/m/d manually into new Date(y, m-1, d) -- the local-
+// time constructor overload -- rather than new Date(eventDate), which for a
+// date-only ISO string parses as UTC midnight and can land on the wrong
+// local day (the same class of bug the `today` construction below already
+// works around). Fails open (keeps the entry visible) on anything that
+// doesn't cleanly parse as YYYY-MM-DD, exactly like the pre-existing
+// !e.eventDate check already did for missing dates -- extended here to also
+// cover a malformed-but-present string, which the old plain string
+// comparison never actually validated.
+const isUpcomingVisible = (eventDate, todayStr) => {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(eventDate ?? '')) return true;
+  const [y, m, d] = eventDate.split('-').map(Number);
+  const eventLocal = new Date(y, m - 1, d);
+  if (isNaN(eventLocal.getTime())) return true;
+  const plus7 = new Date(eventLocal);
+  plus7.setDate(plus7.getDate() + 7);
+  const daysUntilTuesday = (2 - plus7.getDay() + 7) % 7; // getDay(): 0=Sun..2=Tue..6=Sat
+  const cutoff = new Date(plus7);
+  cutoff.setDate(cutoff.getDate() + daysUntilTuesday);
+  const cutoffStr = `${cutoff.getFullYear()}-${String(cutoff.getMonth() + 1).padStart(2, '0')}-${String(cutoff.getDate()).padStart(2, '0')}`;
+  // Inclusive: still visible ON the cutoff Tuesday itself, hidden the day
+  // after. Matches the pre-existing lower-bound `>=` convention below
+  // (inclusive of today) rather than introducing a stricter boundary style.
+  return todayStr <= cutoffStr;
+};
+
 export default function App() {
   const [view, setView] = useState('home');
   const [filterSince, setFilterSince] = useState('2026-05-23');
@@ -8247,7 +8281,7 @@ export default function App() {
   const now = new Date();
   const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
   const [upcomingEntries, setUpcomingEntries] = useState(
-    UPCOMING_ENTRIES.filter(e => !e.eventDate || e.eventDate >= today)
+    UPCOMING_ENTRIES.filter(e => isUpcomingVisible(e.eventDate, today))
   );
   const [roiEntries, setRoiEntries] = useState(() => {
     const fightersByName = Object.fromEntries(FIGHTERS.map((f) => [f.FIGHTER, f]));
