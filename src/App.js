@@ -4327,7 +4327,16 @@ const latestFightHistoryDate = (fightHistory) => {
 // normal live-save path) but accept overrides — used only for backfilling
 // provenance onto entries whose real capture time is a known historical
 // moment, not "when this function happened to run."
-export const buildProvenance = ({ eventDate, result, fA, fB, predictionTimestamp, captureMode }) => {
+//
+// frozenTier: forward-only, no retrofit onto historical entries. Records the
+// bet-action tier the gate assigned AT THIS EXACT CALL, alongside the probs
+// it was derived from -- an unambiguous prediction-time tier, unlike the
+// top-level `betAction` field, whose provenance turned out to be mixed for
+// older entries (verified directly: for reconstructed rows, `betAction` is
+// the original v1-era capture tier, never touched by the later v2pA/v2pB
+// backfill). Optional and undefined for any caller that doesn't pass it, so
+// this is purely additive.
+export const buildProvenance = ({ eventDate, result, fA, fB, predictionTimestamp, captureMode, frozenTier }) => {
   const todayIso = new Date().toISOString().slice(0, 10);
   const resolvedCaptureMode =
     captureMode ??
@@ -4338,6 +4347,7 @@ export const buildProvenance = ({ eventDate, result, fA, fB, predictionTimestamp
     captureMode: resolvedCaptureMode,
     modelVersion: MODEL_V2.version,
     modelCoefHash: djb2Checksum(JSON.stringify(MODEL_V2.coef)),
+    ...(frozenTier !== undefined ? { frozenTier } : {}),
     featureVector: {
       v1: result.feats,
       v2: result.featsV2 ?? null,
@@ -4477,7 +4487,7 @@ const buildRoiEntry = ({ fA, fB, oddsA, oddsB, eventName, eventDate, modelToggle
     // reconstructed" and "what fed it" without a manual forensic audit (see
     // research/source_integrity_audit.md and research/daysSinceLast_live_audit.md,
     // which this schema exists to make unnecessary going forward).
-    _provenance: buildProvenance({ eventDate, result, fA, fB }),
+    _provenance: buildProvenance({ eventDate, result, fA, fB, frozenTier: market?.betAction ?? 'NO BET' }),
   };
 };
 // ─── UPCOMING EVENT TAB ──────────────────────────────────────────────────────
