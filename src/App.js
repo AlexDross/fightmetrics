@@ -1526,71 +1526,33 @@ const ROI_BET_TIERS = ['STRONG BET', 'BET', 'LEAN', 'NO BET'];
 // Chart 4 — ROI and win rate by bet-action tier (STRONG BET / BET / LEAN /
 // NO BET), including the declined (NO BET) pool.
 //
-// Tier assignment and per-entry profit are NOT re-derived here -- both are
-// verbatim transcriptions of logic that already lives inside ROITab, cited
-// by exact source so this stays traceable to one authoritative definition:
-//   - Tier gate (pickProb/edge thresholds, lowCredCap, heavy-fav suppression):
-//     ROITab's `v2DataMap` useMemo, src/App.js (search "const v2DataMap").
-//   - Per-entry profit for v2's own pick (uses the pick's own odds, which can
-//     differ from the entry's originally-tracked side/price):
-//     ROITab's `v2ROISummary` useMemo, src/App.js (search "const v2ROISummary").
-// ROITab itself is not modified or imported from; this is an independent
-// transcription so ROITab's own file region stays byte-identical to main.
-// Because it mirrors v2DataMap's LIVE recompute (computeMatchupEdges on
-// current fighter stats), a fight's tier here matches what ROITab's own
-// entry list shows in its default "v2" model view -- not the frozen v2pA/v2pB
-// basis charts 1-3 use, since v2DataMap itself doesn't use that basis either.
-function computeBetTierBreakdown(entries, fighterMap) {
+// FROZEN: reads each entry's own STORED `betAction` -- the tier is never
+// re-derived from current fighter data (no computeMatchupEdges call, no
+// fighterMap). This makes the chart invariant to how far fighter data has
+// drifted past the fight, at the cost of tier-provenance being mixed:
+// - Live-captured entries (`_provenance.captureMode === 'live'`): `betAction`
+//   was set by the gate at save time, for whichever model (v1/v2) was active
+//   then -- a genuine prediction-time tier.
+// - Reconstructed entries: verified directly against the data (not assumed)
+//   that `betAction`/`trackedSide`/`edge` on these rows equal the ORIGINAL
+//   v1-basis capture (predictedWinner/predictedProb), untouched by the
+//   2026-07-12 v2pA/v2pB backfill -- i.e. this is a v1-era tier, not a
+//   v2-specific gate decision, despite the entry now also carrying v2 fields.
+// See BetTierWinRateChart/BetTierRoiChart captions for the user-facing
+// version of this caveat. Per-entry profit still uses v2's own pick (v2pA/
+// v2pB, frozen, read directly -- not recomputed) at that pick's own price,
+// stake-weighted by unitsWagered, matching every other frozen v2 chart below.
+function computeBetTierBreakdown(entries) {
   const rows = [];
   entries.forEach((entry) => {
     if (!isResolvedWinner(entry.actualWinner, entry)) return;
     if (isPushResult(entry.actualWinner)) return;
     if (entry.confirmedByUser === false) return;
-    const fA = fighterMap.get(entry.fighterA);
-    const fB = fighterMap.get(entry.fighterB);
-    if (!fA || !fB) return;
+    if (entry.v2pA == null || entry.v2pB == null) return;
+    const tier = entry.betAction;
+    if (!tier) return;
 
-    const res = computeMatchupEdges(fA, fB);
-    const v2pA = res.v2pA;
-    const v2pB = res.v2pB;
-    if (v2pA == null || v2pB == null) return;
-
-    const rawA = parseAmericanOdds(entry.oddsA);
-    const rawB = parseAmericanOdds(entry.oddsB);
-    if (!rawA || !rawB) return;
-
-    // --- verbatim tier gate, transcribed from ROITab's v2DataMap ---
-    const { noVigA, noVigB } = stripVig(rawA, rawB);
-    const edgeA = v2pA - noVigA;
-    const edgeB = v2pB - noVigB;
-    const pickSide = v2pA >= 0.5 ? 'A' : 'B';
-    const pickEdge = pickSide === 'A' ? edgeA : edgeB;
-    const oppEdge = pickSide === 'A' ? edgeB : edgeA;
-    const pickProb = pickSide === 'A' ? v2pA : v2pB;
-    const pickRawOdds = pickSide === 'A' ? rawA : rawB;
-
-    const hasPickEdge = pickEdge >= 0.03;
-    const conflictingSignals = !hasPickEdge && oppEdge >= 0.03;
-    let tier = 'NO BET';
-    if (!conflictingSignals && hasPickEdge) {
-      if (pickProb >= 0.70) {
-        if (pickEdge >= 0.25) tier = 'STRONG BET';
-        else if (pickEdge >= 0.15) tier = 'BET';
-        else tier = 'LEAN';
-      } else if (pickProb >= 0.65) {
-        if (pickEdge >= 0.30) tier = 'BET';
-        else if (pickEdge >= 0.10) tier = 'LEAN';
-      } else if (pickProb >= 0.60) {
-        if (pickEdge >= 0.10) tier = 'LEAN';
-      }
-    }
-    const lowCredCap = (fA.CREDIBILITY ?? 0) < 30 || (fB.CREDIBILITY ?? 0) < 30;
-    if (lowCredCap && (tier === 'STRONG BET' || tier === 'BET')) tier = 'LEAN';
-    if (pickRawOdds > 2 / 3 && pickEdge < 0.25 && tier !== 'NO BET') tier = 'NO BET';
-    // --- end verbatim tier gate ---
-
-    // --- verbatim profit-for-v2's-pick, transcribed from ROITab's v2ROISummary ---
-    const v2pick = v2pA >= v2pB ? entry.fighterA : entry.fighterB;
+    const v2pick = entry.v2pA >= entry.v2pB ? entry.fighterA : entry.fighterB;
     const v2odds = v2pick === entry.fighterA
       ? (entry.oddsA || entry.marketOdds)
       : (entry.oddsB || entry.marketOdds);
@@ -1599,7 +1561,6 @@ function computeBetTierBreakdown(entries, fighterMap) {
     const won = entry.actualWinner === v2pick;
     const stake = entry.unitsWagered != null ? entry.unitsWagered : 1;
     const profit = (won ? dec - 1 : -1) * stake;
-    // --- end verbatim profit calc ---
 
     rows.push({ tier, won: won ? 1 : 0, profit, stake });
   });
@@ -1699,26 +1660,33 @@ function computeMonthlyPerformance(entries) {
 }
 
 // ─── V2-BASIS VARIANTS (for the Statistics tab's v1/v2 toggle) ────────────
-// These mirror ROITab's OWN "v2" mode exactly: a LIVE recompute via
-// computeMatchupEdges(fA, fB) against CURRENT fighter stats, not any frozen
-// field -- the same mechanism already used for the held-back tier charts,
-// transcribed verbatim from ROITab's v2ROISummary (flat 1u, skips pushes
-// entirely rather than counting them as 0-profit bets -- this asymmetry
-// with the v1/calcTrackedProfit path already exists in ROITab itself and is
-// preserved here, not "fixed"). Requires fighterMap for live resolution.
-function computeV2LiveRows(entries, fighterMap) {
+// FROZEN: every function below reads each entry's own STORED v2pA/v2pB and
+// odds fields. ZERO calls to computeMatchupEdges, ZERO reads of fighterMap/
+// FIGHT_HISTORY/eloModule anywhere in this block. This is a deliberate
+// invariance property, not an optimization: these functions used to LIVE-
+// RECOMPUTE every pick against current fighter data, which was leakage-clean
+// while Greco's scraper lagged every window fight (through 2026-05-16) and
+// silently became contaminated once it caught up (through 2026-07-18) --
+// each fight's own outcome ends up in the ELO/form/record inputs used to
+// "predict" it. See research/source_integrity_audit.md's retired-verdict
+// addendum. Frozen scoring can't drift the same way: the probability used to
+// grade a pick is fixed at whatever was stored for it, never re-derived from
+// whatever fighter data happens to exist at render time.
+//
+// Population note: these functions operate on whatever `entries` they're
+// given -- callers decide whether that's the full window (mixed live +
+// reconstructed, NOT a track record) or the live-only subset (the genuine
+// prospective track record). See StatisticsTab's `summaryV2Live` vs
+// `summaryV2All` split.
+function computeV2FrozenRows(entries) {
   const rows = [];
   entries.forEach((entry) => {
     if (!isResolvedWinner(entry.actualWinner, entry)) return;
     if (isPushResult(entry.actualWinner)) return;
     if (!americanToDecimal(entry.marketOdds)) return;
     if (entry.confirmedByUser === false) return;
-    const fA = fighterMap.get(entry.fighterA);
-    const fB = fighterMap.get(entry.fighterB);
-    if (!fA || !fB) return;
-    const res = computeMatchupEdges(fA, fB);
-    const v2pA = res.v2pA;
-    const v2pB = res.v2pB;
+    const v2pA = entry.v2pA;
+    const v2pB = entry.v2pB;
     if (v2pA == null || v2pB == null) return;
     const v2pick = v2pA >= v2pB ? entry.fighterA : entry.fighterB;
     const v2odds = v2pick === entry.fighterA
@@ -1739,30 +1707,26 @@ function computeV2LiveRows(entries, fighterMap) {
   return rows;
 }
 
-// v2-basis accuracy + ROI summary, transcribed verbatim from ROITab's
-// v2Stats (accuracy, including its v1-displayWinner fallback when a fighter
-// no longer resolves) + v2ROISummary (roi/profit/bets). Statistics tab's
-// Tracked Fights / Graded Picks cards are NOT toggle-dependent in ROITab
-// either -- only accuracy/roi/profit/bets swap with the toggle.
-function computeV2Summary(entries, fighterMap) {
+// v2-basis accuracy + ROI summary. FROZEN: pick = argmax(stored v2pA, v2pB),
+// never entry.trackedSide (trackedSide is v1's tracked pick -- for 9 of the
+// 42 reconstructed entries in the default window, v1 and v2 disagree on the
+// pick, so scoring trackedSide would silently grade v1's call on those rows;
+// verified directly against committed data, not assumed). Falls back to
+// entry.predictedWinner only when an entry has no stored v2pA/v2pB at all.
+function computeV2Summary(entries) {
   let gradedCount = 0;
   let v2Correct = 0;
   entries.forEach((entry) => {
     const decisive = entry.actualWinner === entry.fighterA || entry.actualWinner === entry.fighterB;
     if (!decisive) return;
     gradedCount++;
-    const fA = fighterMap.get(entry.fighterA);
-    const fB = fighterMap.get(entry.fighterB);
     let winner = entry.predictedWinner;
-    if (fA && fB) {
-      const res = computeMatchupEdges(fA, fB);
-      if (res.v2pA != null && res.v2pB != null) {
-        winner = res.v2pA >= res.v2pB ? entry.fighterA : entry.fighterB;
-      }
+    if (entry.v2pA != null && entry.v2pB != null) {
+      winner = entry.v2pA >= entry.v2pB ? entry.fighterA : entry.fighterB;
     }
     if (winner === entry.actualWinner) v2Correct++;
   });
-  const rows = computeV2LiveRows(entries, fighterMap);
+  const rows = computeV2FrozenRows(entries);
   const bets = rows.length;
   const profit = rows.reduce((s, r) => s + r.profit, 0);
   // ROI must be scaled by units actually risked, not bet count -- those are
@@ -1780,10 +1744,10 @@ function computeV2Summary(entries, fighterMap) {
 }
 
 // v2-basis variant of Chart 1 (ROI by Market Band): same band scheme, same
-// output shape, but banded by V2's LIVE pick + its own price instead of the
-// tracked/staked side.
-function computeRoiByMarketBandV2(entries, fighterMap) {
-  const rows = computeV2LiveRows(entries, fighterMap);
+// output shape, but banded by V2's FROZEN pick + its own stored price instead
+// of the tracked/staked side.
+function computeRoiByMarketBandV2(entries) {
+  const rows = computeV2FrozenRows(entries);
   const buckets = ROI_MARKET_BANDS.map((b) => ({ ...b, profits: [], stakes: [] }));
   rows.forEach((r) => {
     const name = bandOf(ROI_MARKET_BANDS, r.rawPick);
@@ -1807,9 +1771,9 @@ function computeRoiByMarketBandV2(entries, fighterMap) {
 }
 
 // v2-basis variant of the cumulative P&L chart: same per-event grouping,
-// same output shape, banded on V2's live pick's own profit per entry.
-function computeCumulativePnlV2(entries, fighterMap) {
-  const rows = computeV2LiveRows(entries, fighterMap);
+// same output shape, banded on V2's frozen pick's own profit per entry.
+function computeCumulativePnlV2(entries) {
+  const rows = computeV2FrozenRows(entries);
   const byEvent = new Map();
   rows.forEach((r) => {
     const key = `${r.eventDate || ''}__${r.eventName || 'Unknown Event'}`;
@@ -1836,9 +1800,9 @@ function computeCumulativePnlV2(entries, fighterMap) {
 }
 
 // v2-basis variant of the monthly performance table: same per-month
-// grouping, same output shape, using V2's live pick's own outcome/profit.
-function computeMonthlyPerformanceV2(entries, fighterMap) {
-  const rows = computeV2LiveRows(entries, fighterMap);
+// grouping, same output shape, using V2's frozen pick's own outcome/profit.
+function computeMonthlyPerformanceV2(entries) {
+  const rows = computeV2FrozenRows(entries);
   const byMonth = new Map();
   rows.forEach((r) => {
     const month = (r.eventDate || '').slice(0, 7) || 'Unknown';
@@ -1902,7 +1866,7 @@ function RoiByMarketBandChart({ data, modelLabel = 'v1' }) {
       <h3 className="text-white font-bold text-sm mb-1">ROI by Market Band</h3>
       <p className="text-slate-500 text-xs mb-3">
         {modelLabel === 'v2'
-          ? "Flat 1u ROI on V2's live-recomputed pick (at that pick's own price), grouped by that pick's raw market-implied probability. Dashed line = breakeven (0% ROI)."
+          ? "Stake-weighted ROI on V2's FROZEN pick (the probability stored at prediction/reconstruction time, at that pick's own price), grouped by that pick's raw market-implied probability. 20 live-captured + 42 reconstructed picks -- not a track record. Dashed line = breakeven (0% ROI)."
           : "Flat 1u ROI on the actually-staked side, grouped by that side's raw market-implied probability. Dashed line = breakeven (0% ROI)."}
       </p>
       {!anySamples ? (
@@ -2094,8 +2058,11 @@ function BetTierWinRateChart({ data }) {
     <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
       <h3 className="text-white font-bold text-sm mb-1">Win Rate by Bet Tier</h3>
       <p className="text-slate-500 text-xs mb-3">
-        V2's picked-side win rate, grouped by the tier its live gate would
-        currently assign (including the declined NO BET pool).
+        V2's picked-side win rate, grouped by the tier STORED on each entry
+        (including the declined NO BET pool) -- not re-gated against current
+        data. For live-captured picks this is a genuine prediction-time tier;
+        for reconstructed picks it's the original v1-era capture tier, carried
+        over unchanged (verified 0 STRONG BET / 0 BET in this window either way).
       </p>
       {!anySamples ? (
         <p className="text-slate-600 text-sm py-8 text-center">
@@ -2139,8 +2106,10 @@ function BetTierRoiChart({ data }) {
     <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
       <h3 className="text-white font-bold text-sm mb-1">ROI by Bet Tier</h3>
       <p className="text-slate-500 text-xs mb-3">
-        Flat 1u ROI on V2's picked side (at that side's own price), grouped by
-        bet-action tier. Dashed line = breakeven (0% ROI).
+        Stake-weighted ROI on V2's frozen picked side (at that side's own
+        stored price), grouped by the tier STORED on each entry at capture/
+        reconstruction time -- not re-gated against current data. Dashed line
+        = breakeven (0% ROI).
       </p>
       {!anySamples ? (
         <p className="text-slate-600 text-sm py-8 text-center">
@@ -2188,7 +2157,7 @@ function CumulativePnlChart({ data, modelLabel = 'v1' }) {
       <h3 className="text-white font-bold text-sm mb-1">Cumulative P&amp;L by Event</h3>
       <p className="text-slate-500 text-xs mb-3">
         {modelLabel === 'v2'
-          ? "Running net units on V2's live-recomputed pick (at that pick's own price), one point per event in chronological order."
+          ? "Running net units on V2's FROZEN pick (stake-weighted, at that pick's own stored price), one point per event in chronological order. 20 live-captured + 42 reconstructed picks -- not a track record."
           : 'Running net units on the actually-staked side, one point per event in chronological order.'}
       </p>
       {data.length === 0 ? (
@@ -2233,7 +2202,7 @@ function CumulativePnlChart({ data, modelLabel = 'v1' }) {
   );
 }
 
-function MonthlyPerformanceTable({ data, large = false }) {
+function MonthlyPerformanceTable({ data, large = false, modelLabel = 'v1' }) {
   const cellPad = large ? 'py-3 pr-6' : 'py-2 pr-4';
   const lastCellPad = large ? 'py-3' : 'py-2';
   return (
@@ -2241,7 +2210,9 @@ function MonthlyPerformanceTable({ data, large = false }) {
       <h3 className={`text-white font-bold ${large ? 'text-base mb-1' : 'text-sm mb-3'}`}>Monthly Performance</h3>
       {large && (
         <p className="text-slate-500 text-xs mb-4">
-          Bets, win rate, and net profit for the currently selected model, grouped by calendar month.
+          {modelLabel === 'v2'
+            ? "Bets, win rate, and net profit on V2's FROZEN pick (stake-weighted), grouped by calendar month. 20 live-captured + 42 reconstructed picks -- not a track record."
+            : 'Bets, win rate, and net profit for the currently selected model, grouped by calendar month.'}
         </p>
       )}
       {data.length === 0 ? (
@@ -2291,17 +2262,20 @@ function MonthlyPerformanceTable({ data, large = false }) {
 // same population logic (filterRoiEntriesForStats mirrors displayedEntries),
 // same n<8 low-n convention, same de-vig/raw conventions -- this component
 // only relocates rendering, it does not recompute anything differently.
-function StatisticsTab({ entries, prospectNameSet, filterSince, setFilterSince, allFighters, propPicks }) {
+function StatisticsTab({ entries, prospectNameSet, filterSince, setFilterSince, propPicks }) {
   const statsEntries = useMemo(
     () => filterRoiEntriesForStats(entries, prospectNameSet, filterSince),
     [entries, prospectNameSet, filterSince]
   );
 
-  const fighterMap = useMemo(() => {
-    const m = new Map();
-    (allFighters ?? []).forEach((f) => m.set(f.FIGHTER, f));
-    return m;
-  }, [allFighters]);
+  // v2's genuinely prospective subset -- captureMode==='live' means the
+  // prediction was saved before its event happened, so its frozen v2pA/v2pB
+  // was never touched by the fight's own outcome. This is the population for
+  // "Live-tracked performance," the one number that's an actual track record.
+  const liveOnlyEntries = useMemo(
+    () => statsEntries.filter((e) => e._provenance?.captureMode === 'live'),
+    [statsEntries]
+  );
 
   // v1/v2 toggle -- same UI pattern and default ('v2') as ROITab's own
   // modelView. Both bases are always computed (cheap, memoized), matching
@@ -2310,21 +2284,24 @@ function StatisticsTab({ entries, prospectNameSet, filterSince, setFilterSince, 
   const [modelView, setModelView] = useState('v2');
 
   const roiByBandDataV1 = useMemo(() => computeRoiByMarketBand(statsEntries), [statsEntries]);
-  const roiByBandDataV2 = useMemo(() => computeRoiByMarketBandV2(statsEntries, fighterMap), [statsEntries, fighterMap]);
+  const roiByBandDataV2 = useMemo(() => computeRoiByMarketBandV2(statsEntries), [statsEntries]);
   const modelVsMarketDataV1 = useMemo(() => computeModelVsMarketByBand(statsEntries, 'v1'), [statsEntries]);
   const modelVsMarketDataV2 = useMemo(() => computeModelVsMarketByBand(statsEntries, 'v2'), [statsEntries]);
   const calibrationDataV1 = useMemo(() => computeCalibrationReliability(statsEntries, 'v1'), [statsEntries]);
   const calibrationDataV2 = useMemo(() => computeCalibrationReliability(statsEntries, 'v2'), [statsEntries]);
-  const betTierData = useMemo(
-    () => computeBetTierBreakdown(statsEntries, fighterMap),
-    [statsEntries, fighterMap]
-  );
+  const betTierData = useMemo(() => computeBetTierBreakdown(statsEntries), [statsEntries]);
   const summaryV1 = useMemo(() => computeROISummary(statsEntries, new Set()), [statsEntries]);
-  const summaryV2 = useMemo(() => computeV2Summary(statsEntries, fighterMap), [statsEntries, fighterMap]);
+  // Two frozen v2 numbers, not one: `summaryV2Live` (n=20, genuinely
+  // prospective -- THE official track record) and `summaryV2All` (n=62,
+  // frozen-scored but 42 of those rows are reconstructed picks whose probs
+  // were computed at one static 2026-07-12 snapshot, not per-fight
+  // pre-fight -- exposed in its own label, never called a track record).
+  const summaryV2Live = useMemo(() => computeV2Summary(liveOnlyEntries), [liveOnlyEntries]);
+  const summaryV2All = useMemo(() => computeV2Summary(statsEntries), [statsEntries]);
   const cumulativeDataV1 = useMemo(() => computeCumulativePnl(statsEntries), [statsEntries]);
-  const cumulativeDataV2 = useMemo(() => computeCumulativePnlV2(statsEntries, fighterMap), [statsEntries, fighterMap]);
+  const cumulativeDataV2 = useMemo(() => computeCumulativePnlV2(statsEntries), [statsEntries]);
   const monthlyDataV1 = useMemo(() => computeMonthlyPerformance(statsEntries), [statsEntries]);
-  const monthlyDataV2 = useMemo(() => computeMonthlyPerformanceV2(statsEntries, fighterMap), [statsEntries, fighterMap]);
+  const monthlyDataV2 = useMemo(() => computeMonthlyPerformanceV2(statsEntries), [statsEntries]);
 
   return (
     <div className="max-w-5xl mx-auto px-5 py-8">
@@ -2402,24 +2379,57 @@ function StatisticsTab({ entries, prospectNameSet, filterSince, setFilterSince, 
             </div>
             <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 h-full">
               <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold">Pick Accuracy</p>
-              <p className={`font-black text-2xl mt-2 ${(modelView === 'v2' ? summaryV2 : summaryV1).accuracy >= 60 ? 'text-emerald-400' : 'text-yellow-400'}`}>
-                {(modelView === 'v2' ? summaryV2 : summaryV1).accuracy.toFixed(1)}%
-              </p>
+              {modelView === 'v2' ? (
+                <>
+                  <p className={`font-black text-2xl mt-2 ${summaryV2Live.accuracy >= 60 ? 'text-emerald-400' : 'text-yellow-400'}`}>
+                    {summaryV2Live.accuracy.toFixed(1)}%
+                  </p>
+                  <p className="text-slate-600 text-[10px] mt-1">
+                    live-tracked, frozen (n={summaryV2Live.graded})
+                  </p>
+                  <p className="text-slate-600 text-[10px] mt-1">
+                    {summaryV2All.accuracy.toFixed(1)}% frozen eval — 20 live + 42 reconstructed (n={summaryV2All.graded})
+                  </p>
+                </>
+              ) : (
+                <p className={`font-black text-2xl mt-2 ${summaryV1.accuracy >= 60 ? 'text-emerald-400' : 'text-yellow-400'}`}>
+                  {summaryV1.accuracy.toFixed(1)}%
+                </p>
+              )}
             </div>
             <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 h-full">
               <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold">ROI</p>
-              <p className={`font-black text-2xl mt-2 ${(modelView === 'v2' ? summaryV2 : summaryV1).roi >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                {(modelView === 'v2' ? summaryV2 : summaryV1).roi >= 0 ? '+' : ''}{(modelView === 'v2' ? summaryV2 : summaryV1).roi.toFixed(1)}%
-              </p>
-              <p className="text-slate-600 text-xs mt-1">
-                {(modelView === 'v2' ? summaryV2 : summaryV1).profit >= 0 ? '+' : ''}{(modelView === 'v2' ? summaryV2 : summaryV1).profit.toFixed(2)}u on {(modelView === 'v2' ? summaryV2 : summaryV1).bets} bets
-                {modelView === 'v2' ? ' · v2 live recompute' : ''}
-              </p>
+              {modelView === 'v2' ? (
+                <>
+                  <p className={`font-black text-2xl mt-2 ${summaryV2Live.roi >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                    {summaryV2Live.roi >= 0 ? '+' : ''}{summaryV2Live.roi.toFixed(1)}%
+                  </p>
+                  <p className="text-slate-600 text-xs mt-1">
+                    {summaryV2Live.profit >= 0 ? '+' : ''}{summaryV2Live.profit.toFixed(2)}u on {summaryV2Live.bets} bets · live-tracked, frozen (n=20)
+                  </p>
+                  <p className="text-slate-600 text-[10px] mt-1">
+                    Frozen v2 evaluation — 20 live + 42 reconstructed: {summaryV2All.roi >= 0 ? '+' : ''}{summaryV2All.roi.toFixed(1)}% ROI, {summaryV2All.accuracy.toFixed(1)}% accuracy (n={summaryV2All.graded}) — not a track record
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p className={`font-black text-2xl mt-2 ${summaryV1.roi >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                    {summaryV1.roi >= 0 ? '+' : ''}{summaryV1.roi.toFixed(1)}%
+                  </p>
+                  <p className="text-slate-600 text-xs mt-1">
+                    {summaryV1.profit >= 0 ? '+' : ''}{summaryV1.profit.toFixed(2)}u on {summaryV1.bets} bets
+                  </p>
+                </>
+              )}
             </div>
           </div>
 
           <div className="mb-6">
-            <MonthlyPerformanceTable data={modelView === 'v2' ? monthlyDataV2 : monthlyDataV1} large />
+            <MonthlyPerformanceTable
+              data={modelView === 'v2' ? monthlyDataV2 : monthlyDataV1}
+              large
+              modelLabel={modelView === 'v2' ? 'v2' : 'v1'}
+            />
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
@@ -8465,7 +8475,6 @@ export default function App() {
           prospectNameSet={prospectNameSet}
           filterSince={filterSince}
           setFilterSince={setFilterSince}
-          allFighters={fightersWithProspectsFiltered}
           propPicks={propPicks}
         />
       )}
