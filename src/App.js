@@ -1673,20 +1673,27 @@ function computeMonthlyPerformance(entries) {
     const month = (e.eventDate || '').slice(0, 7) || 'Unknown';
     if (!byMonth.has(month)) byMonth.set(month, []);
     const profit = calcTrackedProfit(e);
-    if (profit != null) byMonth.get(month).push({ profit, won: e.actualWinner === e.trackedSide ? 1 : 0 });
+    const stake = e.unitsWagered != null ? e.unitsWagered : 1;
+    if (profit != null) byMonth.get(month).push({ profit, won: e.actualWinner === e.trackedSide ? 1 : 0, stake });
   });
   const months = Array.from(byMonth.keys()).sort();
   return months.map((month) => {
     const rows = byMonth.get(month);
     const n = rows.length;
     const netUnits = rows.reduce((s, r) => s + r.profit, 0);
+    // ROI must be scaled by units actually risked, not bet count -- `n`
+    // stays the row count (winRate denom, Bets column); `staked` and the
+    // roi denominator use the summed stake. netUnits was already
+    // stake-aware via calcTrackedProfit; only the denominator here was
+    // still a row count.
+    const totalStaked = rows.reduce((s, r) => s + r.stake, 0);
     return {
       month,
       n,
       winRate: n ? (rows.reduce((s, r) => s + r.won, 0) / n) * 100 : null,
-      staked: n,
+      staked: totalStaked,
       netUnits,
-      roi: n ? (netUnits / n) * 100 : null,
+      roi: totalStaked ? (netUnits / totalStaked) * 100 : null,
     };
   });
 }
