@@ -51,6 +51,10 @@ import { SOURCE_MANIFEST } from './sourceManifest';
 // Physically separate from ROI_ENTRIES/UPCOMING_ENTRIES -- see propPicksData.js
 // header comment. Never merged with model-related arrays or computations.
 import { PROP_PICKS } from './propPicksData';
+// Physically separate from ROI_ENTRIES/UPCOMING_ENTRIES/PROP_PICKS -- see
+// parlayData.js header comment. Never merged with model-related arrays or
+// computations.
+import { PARLAY_ENTRIES } from './parlayData';
 
 // _D2 imported from fightersData.js
 
@@ -8432,6 +8436,27 @@ export default function App() {
 
   const handleDeletePropPick = (id) => {
     setPropPicks((prev) => prev.filter((p) => p.id !== id));
+  };
+
+  // Isolated Parlay state -- entirely separate from roiEntries/upcomingEntries/
+  // propPicks, never read by or merged into any model-related computation.
+  // Grading (added in a later commit) will read roiEntries read-only to
+  // resolve each leg's actual winner; it will never write parlay data back
+  // into roiEntries/upcomingEntries.
+  const [parlayEntries, setParlayEntries] = useState(PARLAY_ENTRIES);
+
+  const handleAddParlay = (parlay) => {
+    setParlayEntries((prev) => [parlay, ...prev]);
+  };
+
+  const handleUpdateParlay = (id, patch) => {
+    setParlayEntries((prev) =>
+      prev.map((p) => (p.id === id ? { ...p, ...patch } : p))
+    );
+  };
+
+  const handleDeleteParlay = (id) => {
+    setParlayEntries((prev) => prev.filter((p) => p.id !== id));
   };
 
   const handleSaveToUpcoming = (entry) => {
