@@ -4551,6 +4551,141 @@ function UnitsStakedInput({ value, onCommit }) {
   );
 }
 
+// Build Parlay modal -- sibling to PropEntryForm, not a shared refactor.
+// legInputs are the ALREADY-computed per-fight values from
+// UpcomingEventTab's modelPickByEntryId (v2DefaultFighter/v2WinProb) --
+// this component never calls computeMatchupEdges itself, so a pre-filled
+// leg can never drift from what modelPickByEntryId already resolved.
+// pickedFighter defaults to v2DefaultFighter; the override buttons below
+// mirror PropEntryForm's side-select pattern (App.js:2746-2764).
+function BuildParlayPanel({ legInputs, onConfirm, onCancel }) {
+  const [picks, setPicks] = useState(() =>
+    legInputs.map((l) => ({ ...l, pickedFighter: l.v2DefaultFighter, overridden: false }))
+  );
+  const [combinedOdds, setCombinedOdds] = useState('');
+  const [stake, setStake] = useState(1);
+
+  const setPick = (fightId, fighter) => {
+    setPicks((prev) =>
+      prev.map((p) =>
+        p.fightId === fightId
+          ? { ...p, pickedFighter: fighter, overridden: fighter !== p.v2DefaultFighter }
+          : p
+      )
+    );
+  };
+
+  const canSubmit = combinedOdds.trim().length > 0;
+
+  const handleConfirm = () => {
+    if (!canSubmit) return;
+    const legs = picks.map((p) => ({
+      fightId: p.fightId,
+      fighterA: p.fighterA,
+      fighterB: p.fighterB,
+      eventName: p.eventName,
+      eventDate: p.eventDate,
+      pickedFighter: p.pickedFighter,
+      v2DefaultFighter: p.v2DefaultFighter,
+      // v2's probability for the PICKED (post-override) side -- not always
+      // v2's own favorite's prob. Well-defined since pA+pB=1 for a two-way
+      // fight: the non-favored side's prob is just 1 - the favorite's.
+      v2ProbAtBuild: p.overridden ? 1 - p.v2WinProb : p.v2WinProb,
+      overridden: p.overridden,
+    }));
+    onConfirm({
+      id: createPredictionId(),
+      createdAt: new Date().toISOString(),
+      pickSource: 'human',
+      eventName: legs[0]?.eventName || '',
+      eventDate: legs[0]?.eventDate || '',
+      legs,
+      combinedOdds: combinedOdds.trim(),
+      unitsWagered: stake,
+      status: 'PENDING',
+      result: null,
+    });
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+      <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 max-w-lg w-full max-h-[85vh] overflow-y-auto">
+        <h3 className="text-white font-black text-lg mb-4">Build Parlay</h3>
+
+        <div className="space-y-3 mb-4">
+          {picks.map((p) => (
+            <div key={p.fightId} className="bg-slate-800/40 rounded-lg p-3">
+              <p className="text-slate-500 text-xs mb-2">{p.fighterA} vs. {p.fighterB}</p>
+              <div className="flex items-center gap-1 bg-slate-800 rounded-lg p-1">
+                {[p.fighterA, p.fighterB].map((fighter) => (
+                  <button
+                    key={fighter}
+                    onClick={() => setPick(p.fightId, fighter)}
+                    className={`flex-1 min-w-0 px-2 py-1.5 rounded-md text-xs font-semibold transition-colors truncate ${
+                      p.pickedFighter === fighter
+                        ? 'bg-red-600 text-white'
+                        : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    {fighter}
+                  </button>
+                ))}
+              </div>
+              <p className="text-slate-600 text-xs mt-1.5 flex items-center gap-1.5 flex-wrap">
+                <span className="text-[10px] font-bold text-violet-400 bg-violet-900/30 border border-violet-700/40 px-1.5 py-0.5 rounded uppercase">
+                  v2
+                </span>
+                <span>
+                  {p.v2DefaultFighter} · {((p.v2WinProb ?? 0) * 100).toFixed(1)}%
+                  {p.overridden ? ' · overridden' : ''}
+                </span>
+              </p>
+              {p.hasV1 && p.v1Winner && p.v1Winner !== p.v2DefaultFighter && (
+                <p className="text-slate-600 text-xs mt-1">v1 favors {p.v1Winner}.</p>
+              )}
+            </div>
+          ))}
+        </div>
+
+        <div className="grid grid-cols-2 gap-4 mb-4">
+          <div>
+            <label className={PROP_LABEL_CLS}>Combined Odds</label>
+            <input
+              type="text"
+              value={combinedOdds}
+              onChange={(e) => setCombinedOdds(e.target.value)}
+              placeholder="+615"
+              className={PROP_INPUT_CLS}
+            />
+          </div>
+          <div>
+            <label className={PROP_LABEL_CLS}>Stake (u)</label>
+            <UnitsStakedInput value={stake} onCommit={setStake} />
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleConfirm}
+            disabled={!canSubmit}
+            className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
+              canSubmit ? 'bg-red-600 text-white hover:bg-red-500' : 'bg-slate-800 text-slate-600 cursor-not-allowed'
+            }`}
+          >
+            Confirm Parlay
+          </button>
+          <button
+            onClick={onCancel}
+            className="px-4 py-2 rounded-lg text-sm font-semibold text-slate-500 hover:text-white transition-colors"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function UpcomingEventTab({
   entries,
   onGrade,
@@ -4563,6 +4698,7 @@ function UpcomingEventTab({
   onAddPropPick,
   onGradePropPick,
   onDeletePropPick,
+  onAddParlay,
 }) {
   const fighterMap = useMemo(() => {
     const m = new Map();
@@ -4578,6 +4714,114 @@ function UpcomingEventTab({
   const pendingProps = useMemo(() => propPicks.filter((p) => p.result === 'PENDING'), [propPicks]);
   // Only one prop form open at a time: null, a fight entry id, or 'manual'.
   const [propFormFor, setPropFormFor] = useState(null);
+
+  // Per-entry model computation, hoisted out of the card render loop so the
+  // Build Parlay modal can read the SAME already-computed values the card
+  // shows -- never a second computeMatchupEdges call. Card-displayed
+  // predictedWinner/winProb still follow modelToggle (v1/v2), exactly as
+  // before; v2Winner/v2WinProb below are v2's OWN argmax pick (read off the
+  // same computeMatchupEdges result / stored entry.v2pA/v2pB the branch
+  // already had), independent of modelToggle, since a parlay leg's frozen
+  // "v2 default" must mean v2 specifically, not whichever model is toggled.
+  const modelPickByEntryId = useMemo(() => {
+    const map = new Map();
+    entries.forEach((entry) => {
+      const fA = fighterMap.get(entry.fighterA);
+      const fB = fighterMap.get(entry.fighterB);
+      let pA, pB, hasV2, betAction, betFighter, edgeA, edgeB, v2pAOut, v2pBOut, hasV1, v1pAOut, v1pBOut;
+      if (fA && fB) {
+        const res = computeMatchupEdges(fA, fB);
+        hasV2 = res.v2pA != null;
+        v2pAOut = res.v2pA;
+        v2pBOut = res.v2pB;
+        hasV1 = true;
+        v1pAOut = res.pA;
+        v1pBOut = res.pB;
+        pA = modelToggle === 'v2' && res.v2pA != null ? res.v2pA : res.pA;
+        pB = modelToggle === 'v2' && res.v2pB != null ? res.v2pB : res.pB;
+        const m = computeMarketAnalysis({ ...res, pA, pB }, entry.oddsA, entry.oddsB, fA, fB);
+        betAction = m?.betAction ?? 'NO BET';
+        betFighter = m?.bestBet === 'A' ? entry.fighterA : m?.bestBet === 'B' ? entry.fighterB : null;
+        edgeA = m?.edgeA ?? null;
+        edgeB = m?.edgeB ?? null;
+      } else {
+        hasV2 = entry.v2pA != null;
+        v2pAOut = entry.v2pA;
+        v2pBOut = entry.v2pB;
+        hasV1 = entry.fighterAProb != null && entry.fighterBProb != null;
+        v1pAOut = entry.fighterAProb;
+        v1pBOut = entry.fighterBProb;
+        pA = modelToggle === 'v2' && entry.v2pA != null ? entry.v2pA : entry.fighterAProb;
+        pB = modelToggle === 'v2' && entry.v2pB != null ? entry.v2pB : entry.fighterBProb;
+        betAction = entry.betAction;
+        betFighter = entry.betRecommendedFighter || null;
+        edgeA = entry.edgeA;
+        edgeB = entry.edgeB;
+      }
+      const predictedWinner = pA >= pB ? entry.fighterA : entry.fighterB;
+      const winProb = Math.max(pA, pB);
+      const tier = betTier(betAction);
+      const pickEdge = pA >= pB ? edgeA : edgeB;
+      const fairLine = americanOdds(winProb);
+      const actionable = betAction === 'LEAN' || betAction === 'BET' || betAction === 'STRONG BET';
+      const effectiveMarketOdds = pA >= pB ? (entry.oddsA || '') : (entry.oddsB || '');
+      const v2Winner = hasV2 ? (v2pAOut >= v2pBOut ? entry.fighterA : entry.fighterB) : predictedWinner;
+      const v2WinProb = hasV2 ? Math.max(v2pAOut, v2pBOut) : winProb;
+      const v1Winner = hasV1 ? (v1pAOut >= v1pBOut ? entry.fighterA : entry.fighterB) : null;
+      map.set(entry.id, {
+        pA, pB, hasV2, betAction, betFighter, edgeA, edgeB,
+        predictedWinner, winProb, tier, pickEdge, fairLine, actionable, effectiveMarketOdds,
+        v2Winner, v2WinProb, hasV1, v1Winner,
+      });
+    });
+    return map;
+  }, [entries, fighterMap, modelToggle]);
+
+  // Parlay leg selection -- Set of entry ids. Single-event enforcement is
+  // derived (not separate state): once any entry is selected, its eventName
+  // is the lock, computed fresh from the current selection + entries so it
+  // can never go stale.
+  const [selectedLegIds, setSelectedLegIds] = useState(() => new Set());
+  const [showBuildParlay, setShowBuildParlay] = useState(false);
+  const lockedEventName = useMemo(() => {
+    if (selectedLegIds.size === 0) return null;
+    const firstId = selectedLegIds.values().next().value;
+    return entries.find((e) => e.id === firstId)?.eventName ?? null;
+  }, [selectedLegIds, entries]);
+  const toggleLeg = (entryId) => {
+    setSelectedLegIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(entryId)) next.delete(entryId);
+      else next.add(entryId);
+      return next;
+    });
+  };
+  const clearLegSelection = () => setSelectedLegIds(new Set());
+  const selectedLegInputs = useMemo(
+    () =>
+      entries
+        .filter((e) => selectedLegIds.has(e.id))
+        .map((entry) => {
+          const mp = modelPickByEntryId.get(entry.id);
+          return {
+            fightId: entry.id,
+            fighterA: entry.fighterA,
+            fighterB: entry.fighterB,
+            eventName: entry.eventName,
+            eventDate: entry.eventDate,
+            v2DefaultFighter: mp?.v2Winner,
+            v2WinProb: mp?.v2WinProb,
+            hasV1: mp?.hasV1,
+            v1Winner: mp?.v1Winner,
+          };
+        }),
+    [entries, selectedLegIds, modelPickByEntryId]
+  );
+  const handleConfirmParlay = (parlay) => {
+    onAddParlay(parlay);
+    clearLegSelection();
+    setShowBuildParlay(false);
+  };
 
   return (
     <div className="max-w-5xl mx-auto px-5 py-8">
@@ -4613,6 +4857,31 @@ function UpcomingEventTab({
         </div>
       </div>
 
+      {selectedLegIds.size > 0 && (
+        <div className="flex items-center justify-between bg-slate-900 border border-red-800/60 rounded-xl px-4 py-3 mb-4">
+          <p className="text-slate-400 text-sm">
+            {selectedLegIds.size} leg{selectedLegIds.size === 1 ? '' : 's'} selected
+            {lockedEventName ? ` · ${lockedEventName}` : ''}
+          </p>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={clearLegSelection}
+              className="text-slate-500 hover:text-white text-xs font-semibold"
+            >
+              Clear
+            </button>
+            {selectedLegIds.size >= 2 && (
+              <button
+                onClick={() => setShowBuildParlay(true)}
+                className="px-3 py-1.5 rounded-lg bg-red-600 text-white text-xs font-semibold hover:bg-red-500 transition-colors"
+              >
+                Build Parlay
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
       {entries.length === 0 ? (
         <div className="bg-slate-900 border border-slate-800 rounded-xl p-8 text-center text-slate-600">
           <Zap size={36} className="mx-auto mb-3 opacity-20" />
@@ -4624,61 +4893,42 @@ function UpcomingEventTab({
       ) : (
         <div className="space-y-4">
           {entries.map((entry) => {
-            // Recompute the pick AND the bet fields live from the displayed
-            // model so the bet recommendation always matches the shown win
-            // probability. This fixes the legacy mismatch where a saved entry
-            // stored v1 bet fields (betAction/betRecommendedFighter/edge) next
-            // to a v2 probability, and works for both new and pre-fix entries
-            // regardless of the stored modelUsed. Falls back to stored fields
-            // only if a fighter is missing from the current roster.
-            const fA = fighterMap.get(entry.fighterA);
-            const fB = fighterMap.get(entry.fighterB);
-            let pA, pB, hasV2, betAction, betFighter, edgeA, edgeB;
-            if (fA && fB) {
-              const res = computeMatchupEdges(fA, fB);
-              hasV2 = res.v2pA != null;
-              pA = modelToggle === 'v2' && res.v2pA != null ? res.v2pA : res.pA;
-              pB = modelToggle === 'v2' && res.v2pB != null ? res.v2pB : res.pB;
-              const m = computeMarketAnalysis({ ...res, pA, pB }, entry.oddsA, entry.oddsB, fA, fB);
-              betAction = m?.betAction ?? 'NO BET';
-              betFighter = m?.bestBet === 'A' ? entry.fighterA : m?.bestBet === 'B' ? entry.fighterB : null;
-              edgeA = m?.edgeA ?? null;
-              edgeB = m?.edgeB ?? null;
-            } else {
-              hasV2 = entry.v2pA != null;
-              pA = modelToggle === 'v2' && entry.v2pA != null ? entry.v2pA : entry.fighterAProb;
-              pB = modelToggle === 'v2' && entry.v2pB != null ? entry.v2pB : entry.fighterBProb;
-              betAction = entry.betAction;
-              betFighter = entry.betRecommendedFighter || null;
-              edgeA = entry.edgeA;
-              edgeB = entry.edgeB;
-            }
-            const predictedWinner = pA >= pB ? entry.fighterA : entry.fighterB;
-            const winProb = Math.max(pA, pB);
-            const tier = betTier(betAction);
-            const pickEdge = pA >= pB ? edgeA : edgeB;
-            const fairLine = americanOdds(winProb);
-            const actionable = betAction === 'LEAN' || betAction === 'BET' || betAction === 'STRONG BET';
-            const effectiveMarketOdds = pA >= pB ? (entry.oddsA || '') : (entry.oddsB || '');
+            const mp = modelPickByEntryId.get(entry.id);
+            const {
+              hasV2, betAction, betFighter, predictedWinner, winProb,
+              tier, pickEdge, fairLine, actionable, effectiveMarketOdds,
+            } = mp;
+            const isSelected = selectedLegIds.has(entry.id);
+            const isOtherEvent = lockedEventName != null && entry.eventName !== lockedEventName;
 
             return (
               <div key={entry.id} className={`bg-slate-900 border ${tier.border} rounded-xl p-5`}>
                 {/* Header */}
                 <div className="flex items-start justify-between gap-4 mb-4">
-                  <div>
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <h3 className="text-white font-black text-lg">
-                        {entry.fighterA} vs. {entry.fighterB}
-                      </h3>
-                      <span className="text-xs font-bold px-2 py-0.5 rounded-full border bg-slate-800 text-slate-400 border-slate-700">
-                        Pending
-                      </span>
+                  <div className="flex items-start gap-3">
+                    <input
+                      type="checkbox"
+                      checked={isSelected}
+                      disabled={isOtherEvent && !isSelected}
+                      onChange={() => toggleLeg(entry.id)}
+                      title={isOtherEvent && !isSelected ? `Parlay locked to ${lockedEventName}` : 'Select for parlay'}
+                      className="mt-1.5 w-4 h-4 accent-red-600 cursor-pointer disabled:cursor-not-allowed disabled:opacity-30"
+                    />
+                    <div>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h3 className="text-white font-black text-lg">
+                          {entry.fighterA} vs. {entry.fighterB}
+                        </h3>
+                        <span className="text-xs font-bold px-2 py-0.5 rounded-full border bg-slate-800 text-slate-400 border-slate-700">
+                          Pending
+                        </span>
+                      </div>
+                      <p className="text-slate-500 text-xs mt-1">
+                        {entry.division}
+                        {entry.eventName ? ` · ${entry.eventName}` : ''}
+                        {entry.eventDate ? ` · ${entry.eventDate}` : ''}
+                      </p>
                     </div>
-                    <p className="text-slate-500 text-xs mt-1">
-                      {entry.division}
-                      {entry.eventName ? ` · ${entry.eventName}` : ''}
-                      {entry.eventDate ? ` · ${entry.eventDate}` : ''}
-                    </p>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
                     <button
@@ -4823,6 +5073,14 @@ function UpcomingEventTab({
         allFighters={allFighters}
         onAddManual={(pick) => { onAddPropPick(pick); setPropFormFor(null); }}
       />
+
+      {showBuildParlay && (
+        <BuildParlayPanel
+          legInputs={selectedLegInputs}
+          onConfirm={handleConfirmParlay}
+          onCancel={() => setShowBuildParlay(false)}
+        />
+      )}
     </div>
   );
 }
@@ -8518,6 +8776,7 @@ export default function App() {
           onAddPropPick={handleAddPropPick}
           onGradePropPick={handleGradePropPick}
           onDeletePropPick={handleDeletePropPick}
+          onAddParlay={handleAddParlay}
         />
       )}
       {view === 'explore' && <ExploreTab allFighters={fightersWithProspectsFiltered} />}
