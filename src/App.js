@@ -1711,19 +1711,20 @@ function computeV2FrozenRows(entries) {
 // never entry.trackedSide (trackedSide is v1's tracked pick -- for 9 of the
 // 42 reconstructed entries in the default window, v1 and v2 disagree on the
 // pick, so scoring trackedSide would silently grade v1's call on those rows;
-// verified directly against committed data, not assumed). Falls back to
-// entry.predictedWinner only when an entry has no stored v2pA/v2pB at all.
+// verified directly against committed data, not assumed). Accuracy is gated
+// to v2-scored entries only (v2pA/v2pB both present) -- the SAME gate
+// computeV2FrozenRows applies for ROI's `bets` population below -- so the two
+// hero numbers share one population and move together under the Since filter
+// instead of accuracy silently grading v1's pick on pre-v2-backfill fights.
 function computeV2Summary(entries) {
   let gradedCount = 0;
   let v2Correct = 0;
   entries.forEach((entry) => {
     const decisive = entry.actualWinner === entry.fighterA || entry.actualWinner === entry.fighterB;
     if (!decisive) return;
+    if (entry.v2pA == null || entry.v2pB == null) return;
     gradedCount++;
-    let winner = entry.predictedWinner;
-    if (entry.v2pA != null && entry.v2pB != null) {
-      winner = entry.v2pA >= entry.v2pB ? entry.fighterA : entry.fighterB;
-    }
+    const winner = entry.v2pA >= entry.v2pB ? entry.fighterA : entry.fighterB;
     if (winner === entry.actualWinner) v2Correct++;
   });
   const rows = computeV2FrozenRows(entries);
@@ -2268,6 +2269,18 @@ function StatisticsTab({ entries, prospectNameSet, filterSince, setFilterSince, 
     [entries, prospectNameSet, filterSince]
   );
 
+  // Earliest eventDate with a stored v2 score, independent of the current
+  // Since filter -- derived from data (not hardcoded) so it stays correct if
+  // older fights ever get v2-backfilled. Both hero cards are gated to
+  // v2-scored fights (see computeV2Summary), so dragging Since to or before
+  // this date can't change either number -- there's no v2 data back there.
+  const v2ScoredFloorDate = useMemo(() => {
+    const prospectFree = filterRoiEntriesForStats(entries, prospectNameSet, '');
+    const scored = prospectFree.filter((e) => e.v2pA != null && e.v2pB != null && e.eventDate);
+    if (scored.length === 0) return null;
+    return scored.reduce((min, e) => (e.eventDate < min ? e.eventDate : min), scored[0].eventDate);
+  }, [entries, prospectNameSet]);
+
   // v2's genuinely prospective subset -- captureMode==='live' means the
   // prediction was saved before its event happened, so its frozen v2pA/v2pB
   // was never touched by the fight's own outcome. This is the population for
@@ -2342,6 +2355,11 @@ function StatisticsTab({ entries, prospectNameSet, filterSince, setFilterSince, 
           {filterSince && (
             <span className="text-slate-600 text-xs">
               {statsEntries.length} fights
+            </span>
+          )}
+          {v2ScoredFloorDate && (!filterSince || filterSince <= v2ScoredFloorDate) && (
+            <span className="text-slate-600 text-xs">
+              Earliest v2-scored fight: {v2ScoredFloorDate}. Dates before this don't change the stats — v2 hadn't scored fights yet.
             </span>
           )}
         </div>
