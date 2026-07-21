@@ -1597,20 +1597,25 @@ function computeBetTierBreakdown(entries, fighterMap) {
     const dec = americanToDecimal(v2odds);
     if (!dec) return;
     const won = entry.actualWinner === v2pick;
-    const profit = won ? dec - 1 : -1;
+    const stake = entry.unitsWagered != null ? entry.unitsWagered : 1;
+    const profit = (won ? dec - 1 : -1) * stake;
     // --- end verbatim profit calc ---
 
-    rows.push({ tier, won: won ? 1 : 0, profit });
+    rows.push({ tier, won: won ? 1 : 0, profit, stake });
   });
 
   return ROI_BET_TIERS.map((tier) => {
     const tierRows = rows.filter((r) => r.tier === tier);
     const n = tierRows.length;
+    // ROI must be scaled by units actually risked, not row count -- `n`
+    // stays the displayed tier count, only the roi denominator uses staked
+    // units.
+    const totalStaked = tierRows.reduce((s, r) => s + r.stake, 0);
     return {
       tier,
       n,
       winRate: n ? (tierRows.reduce((s, r) => s + r.won, 0) / n) * 100 : null,
-      roi: n ? (tierRows.reduce((s, r) => s + r.profit, 0) / n) * 100 : null,
+      roi: totalStaked ? (tierRows.reduce((s, r) => s + r.profit, 0) / totalStaked) * 100 : null,
       lowN: n > 0 && n < ROI_ANALYTICS_LOW_N,
     };
   });
@@ -1668,20 +1673,27 @@ function computeMonthlyPerformance(entries) {
     const month = (e.eventDate || '').slice(0, 7) || 'Unknown';
     if (!byMonth.has(month)) byMonth.set(month, []);
     const profit = calcTrackedProfit(e);
-    if (profit != null) byMonth.get(month).push({ profit, won: e.actualWinner === e.trackedSide ? 1 : 0 });
+    const stake = e.unitsWagered != null ? e.unitsWagered : 1;
+    if (profit != null) byMonth.get(month).push({ profit, won: e.actualWinner === e.trackedSide ? 1 : 0, stake });
   });
   const months = Array.from(byMonth.keys()).sort();
   return months.map((month) => {
     const rows = byMonth.get(month);
     const n = rows.length;
     const netUnits = rows.reduce((s, r) => s + r.profit, 0);
+    // ROI must be scaled by units actually risked, not bet count -- `n`
+    // stays the row count (winRate denom, Bets column); `staked` and the
+    // roi denominator use the summed stake. netUnits was already
+    // stake-aware via calcTrackedProfit; only the denominator here was
+    // still a row count.
+    const totalStaked = rows.reduce((s, r) => s + r.stake, 0);
     return {
       month,
       n,
       winRate: n ? (rows.reduce((s, r) => s + r.won, 0) / n) * 100 : null,
-      staked: n,
+      staked: totalStaked,
       netUnits,
-      roi: n ? (netUnits / n) * 100 : null,
+      roi: totalStaked ? (netUnits / totalStaked) * 100 : null,
     };
   });
 }
@@ -1715,10 +1727,11 @@ function computeV2LiveRows(entries, fighterMap) {
     const dec = americanToDecimal(v2odds);
     if (!dec) return;
     const won = entry.actualWinner === v2pick;
-    const profit = won ? dec - 1 : -1;
+    const stake = entry.unitsWagered != null ? entry.unitsWagered : 1;
+    const profit = (won ? dec - 1 : -1) * stake;
     const rawPick = parseAmericanOdds(v2odds);
     rows.push({
-      entry, v2pick, won, profit, rawPick,
+      entry, v2pick, won, profit, rawPick, stake,
       eventName: entry.eventName,
       eventDate: entry.eventDate,
     });
@@ -1752,13 +1765,17 @@ function computeV2Summary(entries, fighterMap) {
   const rows = computeV2LiveRows(entries, fighterMap);
   const bets = rows.length;
   const profit = rows.reduce((s, r) => s + r.profit, 0);
+  // ROI must be scaled by units actually risked, not bet count -- those are
+  // only the same number when every bet is flat 1u. `bets` stays a row count
+  // (displayed as "on N bets"); only the roi denominator uses totalStaked.
+  const totalStaked = rows.reduce((s, r) => s + r.stake, 0);
   return {
     graded: gradedCount,
     correct: v2Correct,
     accuracy: gradedCount > 0 ? (v2Correct / gradedCount) * 100 : 0,
     bets,
     profit,
-    roi: bets > 0 ? (profit / bets) * 100 : 0,
+    roi: totalStaked > 0 ? (profit / totalStaked) * 100 : 0,
   };
 }
 
@@ -1767,18 +1784,23 @@ function computeV2Summary(entries, fighterMap) {
 // tracked/staked side.
 function computeRoiByMarketBandV2(entries, fighterMap) {
   const rows = computeV2LiveRows(entries, fighterMap);
-  const buckets = ROI_MARKET_BANDS.map((b) => ({ ...b, profits: [] }));
+  const buckets = ROI_MARKET_BANDS.map((b) => ({ ...b, profits: [], stakes: [] }));
   rows.forEach((r) => {
     const name = bandOf(ROI_MARKET_BANDS, r.rawPick);
     if (!name) return;
-    buckets.find((b) => b.name === name).profits.push(r.profit);
+    const bucket = buckets.find((b) => b.name === name);
+    bucket.profits.push(r.profit);
+    bucket.stakes.push(r.stake);
   });
   return buckets.map((b) => {
     const n = b.profits.length;
+    // ROI must be scaled by units actually risked, not row count -- `n` stays
+    // the displayed band count, only the roi denominator uses staked units.
+    const totalStaked = b.stakes.reduce((s, st) => s + st, 0);
     return {
       band: b.name,
       n,
-      roi: n ? (b.profits.reduce((s, p) => s + p, 0) / n) * 100 : null,
+      roi: totalStaked ? (b.profits.reduce((s, p) => s + p, 0) / totalStaked) * 100 : null,
       lowN: n > 0 && n < ROI_ANALYTICS_LOW_N,
     };
   });
@@ -1821,20 +1843,24 @@ function computeMonthlyPerformanceV2(entries, fighterMap) {
   rows.forEach((r) => {
     const month = (r.eventDate || '').slice(0, 7) || 'Unknown';
     if (!byMonth.has(month)) byMonth.set(month, []);
-    byMonth.get(month).push({ profit: r.profit, won: r.won ? 1 : 0 });
+    byMonth.get(month).push({ profit: r.profit, won: r.won ? 1 : 0, stake: r.stake });
   });
   const months = Array.from(byMonth.keys()).sort();
   return months.map((month) => {
     const monthRows = byMonth.get(month);
     const n = monthRows.length;
     const netUnits = monthRows.reduce((s, r) => s + r.profit, 0);
+    // ROI must be scaled by units actually risked, not bet count -- `n` stays
+    // the row count (winRate denom, Bets column); `staked` and the roi
+    // denominator use the summed stake.
+    const totalStaked = monthRows.reduce((s, r) => s + r.stake, 0);
     return {
       month,
       n,
       winRate: n ? (monthRows.reduce((s, r) => s + r.won, 0) / n) * 100 : null,
-      staked: n,
+      staked: totalStaked,
       netUnits,
-      roi: n ? (netUnits / n) * 100 : null,
+      roi: totalStaked ? (netUnits / totalStaked) * 100 : null,
     };
   });
 }
