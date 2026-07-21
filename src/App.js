@@ -1707,6 +1707,16 @@ function computeV2FrozenRows(entries) {
   return rows;
 }
 
+// Window composition of the v2-scored population -- same rows as
+// computeV2FrozenRows, split by capture provenance. Feeds chart captions so
+// they state the real live/reconstructed makeup of whatever SINCE window is
+// active instead of a number baked in at write time.
+function computeV2WindowComposition(entries) {
+  const rows = computeV2FrozenRows(entries);
+  const liveN = rows.filter((r) => r.entry._provenance?.captureMode === 'live').length;
+  return { n: rows.length, liveN, reconN: rows.length - liveN };
+}
+
 // v2-basis accuracy + ROI summary. FROZEN: pick = argmax(stored v2pA, v2pB),
 // never entry.trackedSide (trackedSide is v1's tracked pick -- for 9 of the
 // 42 reconstructed entries in the default window, v1 and v2 disagree on the
@@ -1860,14 +1870,19 @@ const roiChartTooltipStyle = {
   labelStyle: { color: '#e2e8f0', fontWeight: 600 },
 };
 
-function RoiByMarketBandChart({ data, modelLabel = 'v1' }) {
+function RoiByMarketBandChart({ data, modelLabel = 'v1', windowComposition }) {
   const anySamples = data.some((d) => d.n > 0);
+  const compositionText = windowComposition
+    ? windowComposition.reconN > 0
+      ? `${windowComposition.n} v2-scored fights in window (${windowComposition.liveN} live-captured, ${windowComposition.reconN} reconstructed)`
+      : `${windowComposition.n} v2-scored fights in window (all live-captured)`
+    : '';
   return (
     <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
       <h3 className="text-white font-bold text-sm mb-1">ROI by Market Band</h3>
       <p className="text-slate-500 text-xs mb-3">
         {modelLabel === 'v2'
-          ? "Stake-weighted ROI on V2's FROZEN pick (the probability stored at prediction/reconstruction time, at that pick's own price), grouped by that pick's raw market-implied probability. 20 live-captured + 42 reconstructed picks -- not a track record. Dashed line = breakeven (0% ROI)."
+          ? `Stake-weighted ROI on V2's FROZEN pick (the probability stored at prediction/reconstruction time, at that pick's own price), grouped by that pick's raw market-implied probability. Same v2-scored population as the headline -- ${compositionText}. Dashed line = breakeven (0% ROI).`
           : "Flat 1u ROI on the actually-staked side, grouped by that side's raw market-implied probability. Dashed line = breakeven (0% ROI)."}
       </p>
       {!anySamples ? (
@@ -2055,6 +2070,7 @@ const BET_TIER_COLORS = {
 
 function BetTierWinRateChart({ data }) {
   const anySamples = data.some((d) => d.n > 0);
+  const emptyTiers = data.filter((d) => d.n === 0).map((d) => d.tier);
   return (
     <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
       <h3 className="text-white font-bold text-sm mb-1">Win Rate by Bet Tier</h3>
@@ -2063,7 +2079,8 @@ function BetTierWinRateChart({ data }) {
         (including the declined NO BET pool) -- not re-gated against current
         data. For live-captured picks this is a genuine prediction-time tier;
         for reconstructed picks it's the original v1-era capture tier, carried
-        over unchanged (verified 0 STRONG BET / 0 BET in this window either way).
+        over unchanged.
+        {emptyTiers.length > 0 && ` No graded picks in ${emptyTiers.join('/')} this window.`}
       </p>
       {!anySamples ? (
         <p className="text-slate-600 text-sm py-8 text-center">
@@ -2103,6 +2120,7 @@ function BetTierWinRateChart({ data }) {
 
 function BetTierRoiChart({ data }) {
   const anySamples = data.some((d) => d.n > 0);
+  const emptyTiers = data.filter((d) => d.n === 0).map((d) => d.tier);
   return (
     <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
       <h3 className="text-white font-bold text-sm mb-1">ROI by Bet Tier</h3>
@@ -2111,6 +2129,7 @@ function BetTierRoiChart({ data }) {
         stored price), grouped by the tier STORED on each entry at capture/
         reconstruction time -- not re-gated against current data. Dashed line
         = breakeven (0% ROI).
+        {emptyTiers.length > 0 && ` No graded picks in ${emptyTiers.join('/')} this window.`}
       </p>
       {!anySamples ? (
         <p className="text-slate-600 text-sm py-8 text-center">
@@ -2152,13 +2171,18 @@ function BetTierRoiChart({ data }) {
   );
 }
 
-function CumulativePnlChart({ data, modelLabel = 'v1' }) {
+function CumulativePnlChart({ data, modelLabel = 'v1', windowComposition }) {
+  const compositionText = windowComposition
+    ? windowComposition.reconN > 0
+      ? `${windowComposition.n} v2-scored fights in window (${windowComposition.liveN} live-captured, ${windowComposition.reconN} reconstructed)`
+      : `${windowComposition.n} v2-scored fights in window (all live-captured)`
+    : '';
   return (
     <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
       <h3 className="text-white font-bold text-sm mb-1">Cumulative P&amp;L by Event</h3>
       <p className="text-slate-500 text-xs mb-3">
         {modelLabel === 'v2'
-          ? "Running net units on V2's FROZEN pick (stake-weighted, at that pick's own stored price), one point per event in chronological order. 20 live-captured + 42 reconstructed picks -- not a track record."
+          ? `Running net units on V2's FROZEN pick (stake-weighted, at that pick's own stored price), one point per event in chronological order. Same v2-scored population as the headline -- ${compositionText}.`
           : 'Running net units on the actually-staked side, one point per event in chronological order.'}
       </p>
       {data.length === 0 ? (
@@ -2203,16 +2227,21 @@ function CumulativePnlChart({ data, modelLabel = 'v1' }) {
   );
 }
 
-function MonthlyPerformanceTable({ data, large = false, modelLabel = 'v1' }) {
+function MonthlyPerformanceTable({ data, large = false, modelLabel = 'v1', windowComposition }) {
   const cellPad = large ? 'py-3 pr-6' : 'py-2 pr-4';
   const lastCellPad = large ? 'py-3' : 'py-2';
+  const compositionText = windowComposition
+    ? windowComposition.reconN > 0
+      ? `${windowComposition.n} v2-scored fights in window (${windowComposition.liveN} live-captured, ${windowComposition.reconN} reconstructed)`
+      : `${windowComposition.n} v2-scored fights in window (all live-captured)`
+    : '';
   return (
     <div className={`bg-slate-900 border border-slate-800 rounded-xl ${large ? 'p-6' : 'p-4'}`}>
       <h3 className={`text-white font-bold ${large ? 'text-base mb-1' : 'text-sm mb-3'}`}>Monthly Performance</h3>
       {large && (
         <p className="text-slate-500 text-xs mb-4">
           {modelLabel === 'v2'
-            ? "Bets, win rate, and net profit on V2's FROZEN pick (stake-weighted), grouped by calendar month. 20 live-captured + 42 reconstructed picks -- not a track record."
+            ? `Bets, win rate, and net profit on V2's FROZEN pick (stake-weighted), grouped by calendar month. Same v2-scored population as the headline -- ${compositionText}.`
             : 'Bets, win rate, and net profit for the currently selected model, grouped by calendar month.'}
         </p>
       )}
@@ -2303,6 +2332,7 @@ function StatisticsTab({ entries, prospectNameSet, filterSince, setFilterSince, 
   const calibrationDataV1 = useMemo(() => computeCalibrationReliability(statsEntries, 'v1'), [statsEntries]);
   const calibrationDataV2 = useMemo(() => computeCalibrationReliability(statsEntries, 'v2'), [statsEntries]);
   const betTierData = useMemo(() => computeBetTierBreakdown(statsEntries), [statsEntries]);
+  const v2WindowComposition = useMemo(() => computeV2WindowComposition(statsEntries), [statsEntries]);
   const summaryV1 = useMemo(() => computeROISummary(statsEntries, new Set()), [statsEntries]);
   // Single v2 hero (2026-07-21): `summaryV2All`, frozen scoring across every
   // graded fight in the filtered window (20 live-captured + reconstructed),
@@ -2431,12 +2461,13 @@ function StatisticsTab({ entries, prospectNameSet, filterSince, setFilterSince, 
               data={modelView === 'v2' ? monthlyDataV2 : monthlyDataV1}
               large
               modelLabel={modelView === 'v2' ? 'v2' : 'v1'}
+              windowComposition={v2WindowComposition}
             />
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
-            <CumulativePnlChart data={modelView === 'v2' ? cumulativeDataV2 : cumulativeDataV1} modelLabel={modelView === 'v2' ? 'v2' : 'v1'} />
-            <RoiByMarketBandChart data={modelView === 'v2' ? roiByBandDataV2 : roiByBandDataV1} modelLabel={modelView === 'v2' ? 'v2' : 'v1'} />
+            <CumulativePnlChart data={modelView === 'v2' ? cumulativeDataV2 : cumulativeDataV1} modelLabel={modelView === 'v2' ? 'v2' : 'v1'} windowComposition={v2WindowComposition} />
+            <RoiByMarketBandChart data={modelView === 'v2' ? roiByBandDataV2 : roiByBandDataV1} modelLabel={modelView === 'v2' ? 'v2' : 'v1'} windowComposition={v2WindowComposition} />
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
