@@ -2610,6 +2610,62 @@ function propPickProfit(pick) {
   return dec ? stake * (dec - 1) : 0;
 }
 
+// ─── PARLAYS -- Alex's manual, multi-fight bet grading ────────────────────
+// Derived, read-only grading: computeParlayResult never mutates parlayEntries
+// or roiEntries. It reads roiEntries ONLY to resolve each leg's actual winner
+// (the one-directional read the isolation design allows -- see the
+// parlayData.js header comment) and returns a plain result object; nothing
+// here writes back into roiEntries, and no model/Statistics function
+// (computeV2Summary, computeV2FrozenRows, filterRoiEntriesForStats,
+// computeROISummary) is ever called with parlay data.
+//
+// Mirrors props' "grading is a filtered view" design: a parlay's current
+// grading state is recomputed fresh every time it's needed (the Parlays
+// sub-tab, added in a later commit), the same way PROP_PICKS's "pending"
+// list is just `picks.filter(p => p.result === 'PENDING')` rather than a
+// migrated array -- no useEffect writes the derived result back onto
+// parlayEntries. The parlay object's OWN `status`/`result` fields (set to
+// 'PENDING'/null at build time in the Build Parlay modal) exist for the
+// exported parlayData.js file -- what "Copy Updated parlayData.js" snapshots
+// so a re-imported file still displays something sane without roiEntries to
+// derive against between sessions. At runtime this function's return value
+// is authoritative and the stored fields are never overwritten by it; a
+// future commit could push a fresh status/result onto the entry right before
+// export (mirroring how ROI/Upcoming entries get real fields written on
+// grade), but that's an explicit, user-triggered write, never a render-time
+// side effect.
+function computeParlayResult(parlay, roiEntries) {
+  const roiById = new Map(roiEntries.map((e) => [e.id, e]));
+  const legResults = parlay.legs.map((leg) => {
+    const roiEntry = roiById.get(leg.fightId);
+    if (!roiEntry || !isResolvedWinner(roiEntry.actualWinner, roiEntry)) {
+      return { fightId: leg.fightId, resolved: false, pushed: false, correct: null };
+    }
+    const pushed = isPushResult(roiEntry.actualWinner);
+    const correct = pushed ? null : roiEntry.actualWinner === leg.pickedFighter;
+    return { fightId: leg.fightId, resolved: true, pushed, correct };
+  });
+
+  const totalLegs = legResults.length;
+  const resolvedLegs = legResults.filter((l) => l.resolved).length;
+  if (resolvedLegs !== totalLegs) {
+    return { status: 'PENDING', result: null, resolvedLegs, totalLegs, legResults };
+  }
+
+  if (legResults.some((l) => l.pushed)) {
+    return { status: 'GRADED', result: 'NEEDS_REVIEW', resolvedLegs, totalLegs, legResults };
+  }
+
+  const allCorrect = legResults.every((l) => l.correct === true);
+  return {
+    status: 'GRADED',
+    result: allCorrect ? 'WIN' : 'LOSS',
+    resolvedLegs,
+    totalLegs,
+    legResults,
+  };
+}
+
 const PROP_RESULT_OPTIONS = [
   { value: 'PENDING', label: 'Pending' },
   { value: 'WON', label: 'Won' },
