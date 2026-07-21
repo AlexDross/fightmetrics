@@ -2296,7 +2296,7 @@ function MonthlyPerformanceTable({ data, large = false, modelLabel = 'v1', windo
 // same population logic (filterRoiEntriesForStats mirrors displayedEntries),
 // same n<8 low-n convention, same de-vig/raw conventions -- this component
 // only relocates rendering, it does not recompute anything differently.
-function StatisticsTab({ entries, prospectNameSet, filterSince, setFilterSince, propPicks }) {
+function StatisticsTab({ entries, prospectNameSet, filterSince, setFilterSince, propPicks, parlayEntries }) {
   const statsEntries = useMemo(
     () => filterRoiEntriesForStats(entries, prospectNameSet, filterSince),
     [entries, prospectNameSet, filterSince]
@@ -2487,6 +2487,7 @@ function StatisticsTab({ entries, prospectNameSet, filterSince, setFilterSince, 
       )}
 
       <PropStatsSection picks={propPicks} />
+      <ParlayStatsSection parlayEntries={parlayEntries} roiEntries={entries} />
     </div>
   );
 }
@@ -3088,7 +3089,13 @@ const PARLAY_STATUS_BADGE_CLS = {
   NEEDS_REVIEW: 'bg-amber-900/30 text-amber-400 border-amber-800',
 };
 
-function ParlaysPanel({ parlayEntries, roiEntries, onDelete }) {
+// showSummary: the Graded/Win Rate/Net Units/ROI banner is a performance-
+// tracking aggregate (computeParlaySummary), not a bet-management view --
+// it belongs on Statistics (ParlayStatsSection, mirroring PropStatsSection),
+// not on Upcoming's Parlays sub-tab where the same component renders the
+// pending-bet list. Default true so ROI's Parlays sub-tab (still an
+// aggregate/performance view) is unaffected; Upcoming passes false.
+function ParlaysPanel({ parlayEntries, roiEntries, onDelete, showSummary = true }) {
   const summary = useMemo(
     () => computeParlaySummary(parlayEntries, roiEntries),
     [parlayEntries, roiEntries]
@@ -3108,34 +3115,38 @@ function ParlaysPanel({ parlayEntries, roiEntries, onDelete }) {
 
   return (
     <div>
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-3 items-stretch">
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 h-full">
-          <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold">Graded Parlays</p>
-          <p className="font-black text-2xl mt-2 text-white">{summary.graded}</p>
-        </div>
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 h-full">
-          <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold">Win Rate</p>
-          <p className="font-black text-2xl mt-2 text-blue-400">
-            {summary.graded ? `${summary.winRate.toFixed(1)}%` : '—'}
+      {showSummary && (
+        <>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-3 items-stretch">
+            <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 h-full">
+              <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold">Graded Parlays</p>
+              <p className="font-black text-2xl mt-2 text-white">{summary.graded}</p>
+            </div>
+            <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 h-full">
+              <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold">Win Rate</p>
+              <p className="font-black text-2xl mt-2 text-blue-400">
+                {summary.graded ? `${summary.winRate.toFixed(1)}%` : '—'}
+              </p>
+              <p className="text-slate-600 text-xs mt-1">{summary.wins}W of {summary.graded} graded</p>
+            </div>
+            <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 h-full">
+              <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold">Net Units</p>
+              <p className={`font-black text-2xl mt-2 ${summary.netUnits >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                {summary.netUnits >= 0 ? '+' : ''}{summary.netUnits.toFixed(2)}u
+              </p>
+            </div>
+            <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 h-full">
+              <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold">ROI</p>
+              <p className={`font-black text-2xl mt-2 ${summary.roi >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                {summary.staked > 0 ? `${summary.roi >= 0 ? '+' : ''}${summary.roi.toFixed(1)}%` : '—'}
+              </p>
+            </div>
+          </div>
+          <p className="text-slate-600 text-xs mb-4">
+            Win rate, net units, and ROI count only graded WIN/LOSS parlays — pending and needs-review parlays are excluded.
           </p>
-          <p className="text-slate-600 text-xs mt-1">{summary.wins}W of {summary.graded} graded</p>
-        </div>
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 h-full">
-          <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold">Net Units</p>
-          <p className={`font-black text-2xl mt-2 ${summary.netUnits >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-            {summary.netUnits >= 0 ? '+' : ''}{summary.netUnits.toFixed(2)}u
-          </p>
-        </div>
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 h-full">
-          <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold">ROI</p>
-          <p className={`font-black text-2xl mt-2 ${summary.roi >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-            {summary.staked > 0 ? `${summary.roi >= 0 ? '+' : ''}${summary.roi.toFixed(1)}%` : '—'}
-          </p>
-        </div>
-      </div>
-      <p className="text-slate-600 text-xs mb-4">
-        Win rate, net units, and ROI count only graded WIN/LOSS parlays — pending and needs-review parlays are excluded.
-      </p>
+        </>
+      )}
 
       <div className="space-y-3">
         {parlayEntries.map((parlay) => {
@@ -3324,6 +3335,75 @@ function PropStatsSection({ picks }) {
               * n &lt; {ROI_ANALYTICS_LOW_N} graded — low sample, interpret with caution.
             </p>
           )}
+        </>
+      )}
+    </div>
+  );
+}
+
+// Parlay statistics -- a visually + computationally DISTINCT section on the
+// Statistics tab, mirroring PropStatsSection immediately above it. Reads
+// ONLY parlayEntries + a READ-ONLY roiEntries (passed through solely so
+// computeParlaySummary/computeParlayResult can look up each leg's actual
+// winner) -- never blended into model charts, never calls
+// computeV2Summary/computeV2FrozenRows/filterRoiEntriesForStats/
+// computeROISummary, and never affected by the v1/v2 model toggle. Same as
+// PropStatsSection, this ignores the Since filter entirely -- StatisticsTab
+// passes PropStatsSection the raw unfiltered propPicks (not gated by
+// filterSince), so ParlayStatsSection is fed the raw unfiltered `entries`
+// (roiEntries) too, not the Since-filtered `statsEntries`, for the same
+// all-time-performance framing.
+function ParlayStatsSection({ parlayEntries, roiEntries }) {
+  const summary = useMemo(
+    () => computeParlaySummary(parlayEntries, roiEntries),
+    [parlayEntries, roiEntries]
+  );
+
+  return (
+    <div className="mt-10 pt-8 border-t border-slate-800">
+      <div className="flex items-center gap-2 mb-1">
+        <ClipboardList size={18} className="text-slate-400" />
+        <h3 className="text-white font-black text-lg">Parlays</h3>
+      </div>
+      <p className="text-slate-500 text-sm mb-5">
+        Manual multi-fight parlay bets — separate from the model, and unaffected by the v1/v2 toggle above.
+      </p>
+
+      {parlayEntries.length === 0 ? (
+        <div className="bg-slate-900 border border-slate-800 rounded-xl p-8 text-center text-slate-600">
+          <p className="text-sm">No parlays logged yet.</p>
+          <p className="text-xs mt-1">Build one from the Upcoming tab.</p>
+        </div>
+      ) : (
+        <>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-2 items-stretch">
+            <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 h-full">
+              <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold">Graded Parlays</p>
+              <p className="font-black text-2xl mt-2 text-white">{summary.graded}</p>
+            </div>
+            <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 h-full">
+              <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold">Win Rate</p>
+              <p className="font-black text-2xl mt-2 text-blue-400">
+                {summary.graded ? `${summary.winRate.toFixed(1)}%` : '—'}
+              </p>
+              <p className="text-slate-600 text-xs mt-1">{summary.wins}W of {summary.graded} graded</p>
+            </div>
+            <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 h-full">
+              <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold">Net Units</p>
+              <p className={`font-black text-2xl mt-2 ${summary.netUnits >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                {summary.netUnits >= 0 ? '+' : ''}{summary.netUnits.toFixed(2)}u
+              </p>
+            </div>
+            <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 h-full">
+              <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold">ROI</p>
+              <p className={`font-black text-2xl mt-2 ${summary.roi >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                {summary.staked > 0 ? `${summary.roi >= 0 ? '+' : ''}${summary.roi.toFixed(1)}%` : '—'}
+              </p>
+            </div>
+          </div>
+          <p className="text-slate-600 text-xs">
+            Win rate, net units, and ROI count only graded WIN/LOSS parlays — pending and needs-review parlays are excluded.
+          </p>
         </>
       )}
     </div>
@@ -5369,6 +5449,7 @@ function UpcomingEventTab({
           parlayEntries={pendingParlays}
           roiEntries={roiEntries ?? []}
           onDelete={onDeleteParlay}
+          showSummary={false}
         />
       )}
 
@@ -9106,6 +9187,7 @@ export default function App() {
           filterSince={filterSince}
           setFilterSince={setFilterSince}
           propPicks={propPicks}
+          parlayEntries={parlayEntries}
         />
       )}
       {view === 'info' && <InfoTab />}
