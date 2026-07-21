@@ -2291,11 +2291,14 @@ function StatisticsTab({ entries, prospectNameSet, filterSince, setFilterSince, 
   const calibrationDataV2 = useMemo(() => computeCalibrationReliability(statsEntries, 'v2'), [statsEntries]);
   const betTierData = useMemo(() => computeBetTierBreakdown(statsEntries), [statsEntries]);
   const summaryV1 = useMemo(() => computeROISummary(statsEntries, new Set()), [statsEntries]);
-  // Two frozen v2 numbers, not one: `summaryV2Live` (n=20, genuinely
-  // prospective -- THE official track record) and `summaryV2All` (n=62,
-  // frozen-scored but 42 of those rows are reconstructed picks whose probs
-  // were computed at one static 2026-07-12 snapshot, not per-fight
-  // pre-fight -- exposed in its own label, never called a track record).
+  // Single v2 hero (2026-07-21): `summaryV2All`, frozen scoring across every
+  // graded fight in the filtered window (20 live-captured + reconstructed),
+  // is the one number rendered -- it moves with the SINCE filter and
+  // reconciles with the monthly table, since both read the same population.
+  // `summaryV2Live` (the live-captured-only subset) is kept computed but no
+  // longer rendered -- restore the two-number split by re-adding it to the
+  // Pick Accuracy/ROI cards if the live-vs-reconstructed distinction is
+  // needed again.
   const summaryV2Live = useMemo(() => computeV2Summary(liveOnlyEntries), [liveOnlyEntries]);
   const summaryV2All = useMemo(() => computeV2Summary(statsEntries), [statsEntries]);
   const cumulativeDataV1 = useMemo(() => computeCumulativePnl(statsEntries), [statsEntries]);
@@ -2313,23 +2316,10 @@ function StatisticsTab({ entries, prospectNameSet, filterSince, setFilterSince, 
             from graded ROI entries.
           </p>
         </div>
-        {entries.length > 0 && (
-          <div className="flex items-center gap-1 bg-slate-800 rounded-lg p-1">
-            {['v1', 'v2'].map((view) => (
-              <button
-                key={view}
-                onClick={() => setModelView(view)}
-                className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-colors ${
-                  modelView === view
-                    ? 'bg-red-600 text-white'
-                    : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                {view}
-              </button>
-            ))}
-          </div>
-        )}
+        {/* v1 display hidden 2026-07-21 per single-model view (v2 only) --
+            restore by re-enabling this toggle block. modelView stays 'v2' by
+            default with setModelView never called, so every modelView==='v1'
+            branch below is intact but unreachable. */}
       </div>
 
       {entries.length > 0 && (
@@ -2368,11 +2358,6 @@ function StatisticsTab({ entries, prospectNameSet, filterSince, setFilterSince, 
         </div>
       ) : (
         <>
-          {modelView === 'v2' && (
-            <p className="text-slate-600 text-xs mb-3">
-              Headline (Pick Accuracy, ROI): live-captured picks only (n={summaryV2Live.graded}). Charts below include reconstructed history too (n={summaryV2All.graded}) — different populations, not the same number restated.
-            </p>
-          )}
           <div className="grid grid-cols-4 gap-4 mb-6 items-stretch">
             <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 h-full">
               <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold">Tracked Fights</p>
@@ -2386,17 +2371,11 @@ function StatisticsTab({ entries, prospectNameSet, filterSince, setFilterSince, 
               <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold">Pick Accuracy</p>
               {modelView === 'v2' ? (
                 <>
-                  <p className={`font-black text-2xl mt-2 ${summaryV2Live.accuracy >= 60 ? 'text-emerald-400' : 'text-yellow-400'}`}>
-                    {summaryV2Live.accuracy.toFixed(1)}%
+                  <p className={`font-black text-2xl mt-2 ${summaryV2All.accuracy >= 60 ? 'text-emerald-400' : 'text-yellow-400'}`}>
+                    {summaryV2All.accuracy.toFixed(1)}%
                   </p>
                   <p className="text-slate-600 text-[10px] mt-1">
-                    live-tracked, frozen (n={summaryV2Live.graded})
-                  </p>
-                  <p className="text-slate-600 text-[10px] mt-1">
-                    {summaryV2Live.graded} live-captured picks (2026-07-11 and 2026-07-18). Narrowing the date before 2026-07-11 won't change this — there are no earlier live-captured picks.
-                  </p>
-                  <p className="text-slate-600 text-[10px] mt-1">
-                    {summaryV2All.accuracy.toFixed(1)}% frozen eval — 20 live + 42 reconstructed (n={summaryV2All.graded})
+                    v2 frozen scoring across {summaryV2All.graded} graded fights (stake-weighted). Frozen at each pick's capture — no lookahead.
                   </p>
                 </>
               ) : (
@@ -2409,14 +2388,11 @@ function StatisticsTab({ entries, prospectNameSet, filterSince, setFilterSince, 
               <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold">ROI</p>
               {modelView === 'v2' ? (
                 <>
-                  <p className={`font-black text-2xl mt-2 ${summaryV2Live.roi >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                    {summaryV2Live.roi >= 0 ? '+' : ''}{summaryV2Live.roi.toFixed(1)}%
+                  <p className={`font-black text-2xl mt-2 ${summaryV2All.roi >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                    {summaryV2All.roi >= 0 ? '+' : ''}{summaryV2All.roi.toFixed(1)}%
                   </p>
                   <p className="text-slate-600 text-xs mt-1">
-                    {summaryV2Live.profit >= 0 ? '+' : ''}{summaryV2Live.profit.toFixed(2)}u on {summaryV2Live.bets} bets · live-tracked, frozen (n=20)
-                  </p>
-                  <p className="text-slate-600 text-[10px] mt-1">
-                    Frozen v2 evaluation — 20 live + 42 reconstructed: {summaryV2All.roi >= 0 ? '+' : ''}{summaryV2All.roi.toFixed(1)}% ROI, {summaryV2All.accuracy.toFixed(1)}% accuracy (n={summaryV2All.graded}) — not a track record
+                    {summaryV2All.profit >= 0 ? '+' : ''}{summaryV2All.profit.toFixed(2)}u on {summaryV2All.bets} bets (stake-weighted)
                   </p>
                 </>
               ) : (
@@ -8595,11 +8571,12 @@ function HomeTab({ summary, entries, onNavigate, allFighters, filterSince }) {
     return (v1Correct / may23Graded.length) * 100;
   }, [may23Graded]);
 
-  // Two frozen v2 numbers, reusing the same fixed computeV2Summary the
-  // Statistics tab uses -- not a third implementation. Live-tracked (n=20,
-  // captureMode==='live') is the genuine track record and headlines; the
-  // full window (n=62, 20 live + 42 reconstructed) is a labeled secondary,
-  // never presented as a track record.
+  // Single v2 hero (2026-07-21): `summaryV2All`, reusing the same
+  // computeV2Summary the Statistics tab uses, is the one number rendered --
+  // frozen scoring across every graded fight in the filtered window. Moves
+  // with the SINCE filter and reconciles with Statistics' monthly table.
+  // `summaryV2Live` (live-captured-only subset) is kept computed but no
+  // longer rendered on Home either -- restore the split if needed later.
   const may23LiveEntries = useMemo(
     () => may23Entries.filter((e) => e._provenance?.captureMode === 'live'),
     [may23Entries]
@@ -8640,25 +8617,16 @@ function HomeTab({ summary, entries, onNavigate, allFighters, filterSince }) {
           <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold mb-2">
             Pick Accuracy
           </p>
-          {summaryV2Live.graded > 0 ? (
+          {summaryV2All.graded > 0 ? (
             <>
-              <p className={`font-black text-3xl ${summaryV2Live.accuracy >= 60 ? 'text-emerald-400' : 'text-yellow-400'}`}>
-                {summaryV2Live.accuracy.toFixed(1)}%
+              <p className={`font-black text-3xl ${summaryV2All.accuracy >= 60 ? 'text-emerald-400' : 'text-yellow-400'}`}>
+                {summaryV2All.accuracy.toFixed(1)}%
               </p>
               <p className="text-slate-500 text-xs mt-1">
-                v2 live-tracked, frozen (n={summaryV2Live.graded}) · {filterSince ? `since ${filterSince}` : 'all time'}
+                v2 frozen scoring across {summaryV2All.graded} graded fights · {filterSince ? `since ${filterSince}` : 'all time'}
               </p>
-              <p className="text-slate-600 text-[10px] mt-0.5">
-                {summaryV2Live.graded} live-captured picks, all from 2026-07-11 and 2026-07-18.
-              </p>
-              {v1Acc != null && (
-                <p className="text-slate-600 text-xs mt-0.5">v1: {v1Acc.toFixed(1)}%</p>
-              )}
-              {summaryV2All.graded > 0 && (
-                <p className="text-slate-600 text-[10px] mt-1">
-                  {summaryV2All.accuracy.toFixed(1)}% frozen eval — {summaryV2Live.graded} live + {summaryV2All.graded - summaryV2Live.graded} reconstructed (n={summaryV2All.graded})
-                </p>
-              )}
+              {/* v1 display hidden 2026-07-21 per single-model view -- restore
+                  by re-adding: {v1Acc != null && <p>v1: {v1Acc.toFixed(1)}%</p>} */}
             </>
           ) : (
             <p className="text-slate-600 text-sm mt-1">No graded picks</p>
@@ -8668,17 +8636,12 @@ function HomeTab({ summary, entries, onNavigate, allFighters, filterSince }) {
           <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold mb-2">
             ROI
           </p>
-          <p className={`font-black text-3xl ${summaryV2Live.roi >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-            {summaryV2Live.roi >= 0 ? '+' : ''}{summaryV2Live.roi.toFixed(1)}%
+          <p className={`font-black text-3xl ${summaryV2All.roi >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+            {summaryV2All.roi >= 0 ? '+' : ''}{summaryV2All.roi.toFixed(1)}%
           </p>
           <p className="text-slate-600 text-xs mt-1">
-            {summaryV2Live.profit >= 0 ? '+' : ''}{summaryV2Live.profit.toFixed(2)}u on {summaryV2Live.bets} bets · live-tracked, frozen (n=20)
+            {summaryV2All.profit >= 0 ? '+' : ''}{summaryV2All.profit.toFixed(2)}u on {summaryV2All.bets} bets (stake-weighted)
           </p>
-          {summaryV2All.bets > 0 && (
-            <p className="text-slate-600 text-[10px] mt-1">
-              Frozen v2 evaluation — {summaryV2Live.graded} live + {summaryV2All.graded - summaryV2Live.graded} reconstructed: {summaryV2All.roi >= 0 ? '+' : ''}{summaryV2All.roi.toFixed(1)}% ROI (n={summaryV2All.graded}) — not a track record
-            </p>
-          )}
         </div>
         <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
           <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold mb-2">
