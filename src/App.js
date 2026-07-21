@@ -2368,6 +2368,11 @@ function StatisticsTab({ entries, prospectNameSet, filterSince, setFilterSince, 
         </div>
       ) : (
         <>
+          {modelView === 'v2' && (
+            <p className="text-slate-600 text-xs mb-3">
+              Headline (Pick Accuracy, ROI): live-captured picks only (n={summaryV2Live.graded}). Charts below include reconstructed history too (n={summaryV2All.graded}) — different populations, not the same number restated.
+            </p>
+          )}
           <div className="grid grid-cols-4 gap-4 mb-6 items-stretch">
             <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 h-full">
               <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold">Tracked Fights</p>
@@ -2386,6 +2391,9 @@ function StatisticsTab({ entries, prospectNameSet, filterSince, setFilterSince, 
                   </p>
                   <p className="text-slate-600 text-[10px] mt-1">
                     live-tracked, frozen (n={summaryV2Live.graded})
+                  </p>
+                  <p className="text-slate-600 text-[10px] mt-1">
+                    {summaryV2Live.graded} live-captured picks (2026-07-11 and 2026-07-18). Narrowing the date before 2026-07-11 won't change this — there are no earlier live-captured picks.
                   </p>
                   <p className="text-slate-600 text-[10px] mt-1">
                     {summaryV2All.accuracy.toFixed(1)}% frozen eval — 20 live + 42 reconstructed (n={summaryV2All.graded})
@@ -8510,21 +8518,6 @@ function HomeTab({ summary, entries, onNavigate, allFighters, filterSince }) {
     return m;
   }, [allFighters]);
 
-  const v2PickMap = useMemo(() => {
-    const map = new Map();
-    entries.forEach((entry) => {
-      const fA = fighterMap.get(entry.fighterA);
-      const fB = fighterMap.get(entry.fighterB);
-      if (!fA || !fB) return;
-      const res = computeMatchupEdges(fA, fB);
-      map.set(entry.id, {
-        winner: res.v2pA >= res.v2pB ? entry.fighterA : entry.fighterB,
-        prob: Math.max(res.v2pA, res.v2pB),
-      });
-    });
-    return map;
-  }, [entries, fighterMap]);
-
   const sortedNonProspect = useMemo(
     () =>
       [...entries]
@@ -8552,63 +8545,74 @@ function HomeTab({ summary, entries, onNavigate, allFighters, filterSince }) {
     [sortedNonProspect]
   );
 
-  const v2Accuracy = useMemo(() => {
-    const graded = sortedNonProspect.filter(
-      (e) => e.actualWinner === e.fighterA || e.actualWinner === e.fighterB
-    );
-    if (graded.length === 0) return null;
-    const correct = graded.filter((e) => {
-      const v2 = v2PickMap.get(e.id);
-      const winner = v2 ? v2.winner : e.predictedWinner;
-      return winner === e.actualWinner;
-    }).length;
-    return (correct / graded.length) * 100;
-  }, [sortedNonProspect, v2PickMap]);
+  // LIVE recompute -- correct here, unlike the graded path below: these fights
+  // haven't happened, so there's no outcome for current fighter data to leak.
+  // Scoped to upcomingPicks only (the 3 entries actually rendered), not the
+  // full ledger -- no reason to live-recompute historical/graded entries that
+  // are no longer looked up against this map.
+  const v2PickMap = useMemo(() => {
+    const map = new Map();
+    upcomingPicks.forEach((entry) => {
+      const fA = fighterMap.get(entry.fighterA);
+      const fB = fighterMap.get(entry.fighterB);
+      if (!fA || !fB) return;
+      const res = computeMatchupEdges(fA, fB);
+      map.set(entry.id, {
+        winner: res.v2pA >= res.v2pB ? entry.fighterA : entry.fighterB,
+        prob: Math.max(res.v2pA, res.v2pB),
+      });
+    });
+    return map;
+  }, [upcomingPicks, fighterMap]);
+
+  // FROZEN -- graded/historical entries read their own stored v2pA/v2pB,
+  // never computeMatchupEdges. Same reasoning as the Statistics tab fix:
+  // current fighter data now runs past every graded fight's own date, so a
+  // live recompute reads each fight's own outcome as an input.
+  const gradedV2Frozen = (e) => {
+    if (e.v2pA == null || e.v2pB == null) return null;
+    return {
+      winner: e.v2pA >= e.v2pB ? e.fighterA : e.fighterB,
+      prob: Math.max(e.v2pA, e.v2pB),
+    };
+  };
 
   const may23Entries = useMemo(
     () => sortedNonProspect.filter((e) => (e.eventDate || '') >= (filterSince || '2026-05-23')),
     [sortedNonProspect, filterSince]
   );
 
-  const may23Summary = useMemo(() => {
-    const graded = may23Entries.filter(
-      (e) => e.actualWinner === e.fighterA || e.actualWinner === e.fighterB
-    );
-    const v2Correct = graded.filter((e) => {
-      const v2 = v2PickMap.get(e.id);
-      return v2 && v2.winner === e.actualWinner;
-    }).length;
-    const v2Acc = graded.length > 0 ? (v2Correct / graded.length) * 100 : null;
-    const v1Correct = graded.filter((e) => e.predictedWinner === e.actualWinner).length;
-    const v1Acc = graded.length > 0 ? (v1Correct / graded.length) * 100 : null;
-    let bets = 0, profit = 0;
-    may23Entries.forEach((entry) => {
-      if (entry.actualWinner !== entry.fighterA && entry.actualWinner !== entry.fighterB) return;
-      if (entry.confirmedByUser === false) return;
-      const fA = fighterMap.get(entry.fighterA);
-      const fB = fighterMap.get(entry.fighterB);
-      if (!fA || !fB) return;
-      const res = computeMatchupEdges(fA, fB);
-      if (res.v2pA == null || res.v2pB == null) return;
-      const v2pick = res.v2pA >= res.v2pB ? entry.fighterA : entry.fighterB;
-      const v2odds = v2pick === entry.fighterA
-        ? (entry.oddsA || entry.marketOdds)
-        : (entry.oddsB || entry.marketOdds);
-      const dec = americanToDecimal(v2odds);
-      if (!dec) return;
-      bets++;
-      profit += entry.actualWinner === v2pick ? dec - 1 : -1;
-    });
-    const roi = bets > 0 ? (profit / bets) * 100 : 0;
-    return { v2Acc, v1Acc, bets, profit, roi, count: may23Entries.length, graded: graded.length };
-  }, [may23Entries, v2PickMap, fighterMap]);
+  const may23Graded = useMemo(
+    () => may23Entries.filter((e) => e.actualWinner === e.fighterA || e.actualWinner === e.fighterB),
+    [may23Entries]
+  );
+
+  // v1 is already frozen (predictedWinner is stored at save time, never
+  // recomputed) -- left byte-identical to before.
+  const v1Acc = useMemo(() => {
+    if (may23Graded.length === 0) return null;
+    const v1Correct = may23Graded.filter((e) => e.predictedWinner === e.actualWinner).length;
+    return (v1Correct / may23Graded.length) * 100;
+  }, [may23Graded]);
+
+  // Two frozen v2 numbers, reusing the same fixed computeV2Summary the
+  // Statistics tab uses -- not a third implementation. Live-tracked (n=20,
+  // captureMode==='live') is the genuine track record and headlines; the
+  // full window (n=62, 20 live + 42 reconstructed) is a labeled secondary,
+  // never presented as a track record.
+  const may23LiveEntries = useMemo(
+    () => may23Entries.filter((e) => e._provenance?.captureMode === 'live'),
+    [may23Entries]
+  );
+  const summaryV2Live = useMemo(() => computeV2Summary(may23LiveEntries), [may23LiveEntries]);
+  const summaryV2All = useMemo(() => computeV2Summary(may23Entries), [may23Entries]);
 
   const getOutcome = (e) => {
     if (!e.actualWinner || e.actualWinner === '') return 'pending';
     if (isPushResult(e.actualWinner)) return 'push';
     if (e.actualWinner === e.fighterA || e.actualWinner === e.fighterB) {
-      const v2 = v2PickMap.get(e.id);
-      const effectiveWinner = v2 ? v2.winner : e.predictedWinner;
+      const frozen = gradedV2Frozen(e);
+      const effectiveWinner = frozen ? frozen.winner : e.predictedWinner;
       return effectiveWinner === e.actualWinner ? 'correct' : 'incorrect';
     }
     return 'pending';
@@ -8636,14 +8640,24 @@ function HomeTab({ summary, entries, onNavigate, allFighters, filterSince }) {
           <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold mb-2">
             Pick Accuracy
           </p>
-          {may23Summary.v2Acc != null ? (
+          {summaryV2Live.graded > 0 ? (
             <>
-              <p className={`font-black text-3xl ${may23Summary.v2Acc >= 60 ? 'text-emerald-400' : 'text-yellow-400'}`}>
-                {may23Summary.v2Acc.toFixed(1)}%
+              <p className={`font-black text-3xl ${summaryV2Live.accuracy >= 60 ? 'text-emerald-400' : 'text-yellow-400'}`}>
+                {summaryV2Live.accuracy.toFixed(1)}%
               </p>
-              <p className="text-slate-500 text-xs mt-1">v2 · {filterSince ? `since ${filterSince}` : 'all time'}</p>
-              {may23Summary.v1Acc != null && (
-                <p className="text-slate-600 text-xs mt-0.5">v1: {may23Summary.v1Acc.toFixed(1)}%</p>
+              <p className="text-slate-500 text-xs mt-1">
+                v2 live-tracked, frozen (n={summaryV2Live.graded}) · {filterSince ? `since ${filterSince}` : 'all time'}
+              </p>
+              <p className="text-slate-600 text-[10px] mt-0.5">
+                {summaryV2Live.graded} live-captured picks, all from 2026-07-11 and 2026-07-18.
+              </p>
+              {v1Acc != null && (
+                <p className="text-slate-600 text-xs mt-0.5">v1: {v1Acc.toFixed(1)}%</p>
+              )}
+              {summaryV2All.graded > 0 && (
+                <p className="text-slate-600 text-[10px] mt-1">
+                  {summaryV2All.accuracy.toFixed(1)}% frozen eval — {summaryV2Live.graded} live + {summaryV2All.graded - summaryV2Live.graded} reconstructed (n={summaryV2All.graded})
+                </p>
               )}
             </>
           ) : (
@@ -8652,21 +8666,25 @@ function HomeTab({ summary, entries, onNavigate, allFighters, filterSince }) {
         </div>
         <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
           <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold mb-2">
-            Flat-Stake ROI
+            ROI
           </p>
-          <p className={`font-black text-3xl ${may23Summary.roi >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-            {may23Summary.roi >= 0 ? '+' : ''}{may23Summary.roi.toFixed(1)}%
+          <p className={`font-black text-3xl ${summaryV2Live.roi >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+            {summaryV2Live.roi >= 0 ? '+' : ''}{summaryV2Live.roi.toFixed(1)}%
           </p>
           <p className="text-slate-600 text-xs mt-1">
-            {may23Summary.profit >= 0 ? '+' : ''}{may23Summary.profit.toFixed(2)}u on {may23Summary.bets} bets
+            {summaryV2Live.profit >= 0 ? '+' : ''}{summaryV2Live.profit.toFixed(2)}u on {summaryV2Live.bets} bets · live-tracked, frozen (n=20)
           </p>
-          <p className="text-slate-600 text-[10px] mt-1">v2 · {filterSince ? `since ${filterSince}` : 'all time'} · live recompute</p>
+          {summaryV2All.bets > 0 && (
+            <p className="text-slate-600 text-[10px] mt-1">
+              Frozen v2 evaluation — {summaryV2Live.graded} live + {summaryV2All.graded - summaryV2Live.graded} reconstructed: {summaryV2All.roi >= 0 ? '+' : ''}{summaryV2All.roi.toFixed(1)}% ROI (n={summaryV2All.graded}) — not a track record
+            </p>
+          )}
         </div>
         <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
           <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold mb-2">
             Tracked Fights
           </p>
-          <p className="font-black text-3xl text-white">{may23Summary.count}</p>
+          <p className="font-black text-3xl text-white">{may23Entries.length}</p>
           <p className="text-slate-600 text-xs mt-1">{filterSince ? `since ${filterSince}` : 'all time'}</p>
         </div>
       </div>
@@ -8686,8 +8704,7 @@ function HomeTab({ summary, entries, onNavigate, allFighters, filterSince }) {
           gradedPicks.map((e) => {
             const outcome = getOutcome(e);
             const tier = betTier(e.betAction ?? 'NO BET');
-            const v2Pick = v2PickMap.get(e.id);
-            const v2Differs = v2Pick && v2Pick.winner !== e.predictedWinner;
+            const frozenV2 = gradedV2Frozen(e);
             const accentBorder =
               outcome === 'correct' ? 'border-l-emerald-600' :
               outcome === 'incorrect' ? 'border-l-red-700' :
@@ -8725,22 +8742,23 @@ function HomeTab({ summary, entries, onNavigate, allFighters, filterSince }) {
                     )}
                   </div>
                 </div>
-                {v2Pick && (
+                {frozenV2 ? (
                   <p className="text-xs mt-1">
                     <span className="text-violet-400 font-bold text-[10px] mr-1.5">v2</span>
-                    <span className={`text-sm font-semibold ${v2Differs ? 'text-amber-400' : 'text-white'}`}>
-                      {v2Pick.winner}
+                    <span className="text-sm font-semibold text-white">
+                      {frozenV2.winner}
                     </span>
-                    <span className="text-slate-500 text-xs ml-1.5">{(v2Pick.prob * 100).toFixed(1)}%</span>
+                    <span className="text-slate-500 text-xs ml-1.5">{(frozenV2.prob * 100).toFixed(1)}%</span>
                     {tier.label && <span className={`${tier.cls} ml-1.5`}>{tier.label}</span>}
                   </p>
+                ) : (
+                  <p className="text-xs text-slate-600 mt-1">
+                    No frozen v2 prediction recorded
+                    {tier.label && (
+                      <>{' · '}<span className={tier.cls}>{tier.label}</span></>
+                    )}
+                  </p>
                 )}
-                <p className="text-xs text-slate-600 mt-0.5">
-                  was: {e.predictedWinner} {(e.predictedProb * 100).toFixed(1)}%
-                  {!v2Pick && tier.label && (
-                    <>{' · '}<span className={tier.cls}>{tier.label}</span></>
-                  )}
-                </p>
               </div>
             );
           })
