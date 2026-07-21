@@ -4947,6 +4947,9 @@ function UpcomingEventTab({
   onGradePropPick,
   onDeletePropPick,
   onAddParlay,
+  parlayEntries,
+  roiEntries,
+  onDeleteParlay,
 }) {
   const fighterMap = useMemo(() => {
     const m = new Map();
@@ -4962,6 +4965,21 @@ function UpcomingEventTab({
   const pendingProps = useMemo(() => propPicks.filter((p) => p.result === 'PENDING'), [propPicks]);
   // Only one prop form open at a time: null, a fight entry id, or 'manual'.
   const [propFormFor, setPropFormFor] = useState(null);
+
+  // Three sub-tabs mirroring ROITab's subTab pattern (App.js ROITab's
+  // subTab state + tab-button UI is the template): 'fights' (existing cards +
+  // Build Parlay), 'props' (PendingPropsSection, relocated -- same component,
+  // same picks, just moved under a sub-tab instead of always-visible), and
+  // 'parlays' (pending parlays only). A parlay's sub-tab placement is a pure
+  // derived-status filter, not a migration -- the SAME parlayEntries array
+  // also feeds ROI's Parlays sub-tab, filtered to GRADED there. No entry ever
+  // moves; only which sub-tab renders it changes, exactly like props' single
+  // PROP_PICKS array filtered by result.
+  const [subTab, setSubTab] = useState('fights');
+  const pendingParlays = useMemo(
+    () => (parlayEntries ?? []).filter((p) => computeParlayResult(p, roiEntries ?? []).status === 'PENDING'),
+    [parlayEntries, roiEntries]
+  );
 
   // Per-entry model computation, hoisted out of the card render loop so the
   // Build Parlay modal can read the SAME already-computed values the card
@@ -5080,32 +5098,54 @@ function UpcomingEventTab({
             Save matchups from the Simulator to track pending picks.
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          {entries.length > 0 && (
-            <button
-              onClick={() => navigator.clipboard.writeText(exportedCode)}
-              className="px-3 py-2 rounded-lg border border-slate-700 text-slate-300 text-xs font-semibold hover:text-white hover:border-slate-600 transition-colors"
-            >
-              Copy Updated upcomingData.js
-            </button>
-          )}
-          <div className="flex items-center gap-1 bg-slate-800 rounded-lg p-1">
-            {['v1', 'v2'].map((v) => (
+        {subTab === 'fights' && (
+          <div className="flex items-center gap-2">
+            {entries.length > 0 && (
               <button
-                key={v}
-                onClick={() => setModelToggle(v)}
-                className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-colors ${
-                  modelToggle === v ? 'bg-red-600 text-white' : 'text-slate-400 hover:text-white'
-                }`}
+                onClick={() => navigator.clipboard.writeText(exportedCode)}
+                className="px-3 py-2 rounded-lg border border-slate-700 text-slate-300 text-xs font-semibold hover:text-white hover:border-slate-600 transition-colors"
               >
-                {v}
+                Copy Updated upcomingData.js
               </button>
-            ))}
+            )}
+            <div className="flex items-center gap-1 bg-slate-800 rounded-lg p-1">
+              {['v1', 'v2'].map((v) => (
+                <button
+                  key={v}
+                  onClick={() => setModelToggle(v)}
+                  className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-colors ${
+                    modelToggle === v ? 'bg-red-600 text-white' : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  {v}
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
-      {selectedLegIds.size > 0 && (
+      <div className="flex items-center gap-1 bg-slate-800 rounded-lg p-1 mb-4 w-fit">
+        {[
+          { id: 'fights', label: 'Upcoming Fights' },
+          { id: 'props', label: 'Props' },
+          { id: 'parlays', label: 'Parlays' },
+        ].map(({ id, label }) => (
+          <button
+            key={id}
+            onClick={() => setSubTab(id)}
+            className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-colors ${
+              subTab === id
+                ? 'bg-red-600 text-white'
+                : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {subTab === 'fights' && selectedLegIds.size > 0 && (
         <div className="flex items-center justify-between bg-slate-900 border border-red-800/60 rounded-xl px-4 py-3 mb-4">
           <p className="text-slate-400 text-sm">
             {selectedLegIds.size} leg{selectedLegIds.size === 1 ? '' : 's'} selected
@@ -5130,7 +5170,7 @@ function UpcomingEventTab({
         </div>
       )}
 
-      {entries.length === 0 ? (
+      {subTab === 'fights' && (entries.length === 0 ? (
         <div className="bg-slate-900 border border-slate-800 rounded-xl p-8 text-center text-slate-600">
           <Zap size={36} className="mx-auto mb-3 opacity-20" />
           <p className="text-sm">No upcoming picks saved.</p>
@@ -5310,17 +5350,27 @@ function UpcomingEventTab({
             );
           })}
         </div>
+      ))}
+
+      {subTab === 'props' && (
+        <PendingPropsSection
+          picks={pendingProps}
+          onGrade={onGradePropPick}
+          onDelete={onDeletePropPick}
+          manualOpen={propFormFor === 'manual'}
+          onToggleManual={() => setPropFormFor((f) => (f === 'manual' ? null : 'manual'))}
+          allFighters={allFighters}
+          onAddManual={(pick) => { onAddPropPick(pick); setPropFormFor(null); }}
+        />
       )}
 
-      <PendingPropsSection
-        picks={pendingProps}
-        onGrade={onGradePropPick}
-        onDelete={onDeletePropPick}
-        manualOpen={propFormFor === 'manual'}
-        onToggleManual={() => setPropFormFor((f) => (f === 'manual' ? null : 'manual'))}
-        allFighters={allFighters}
-        onAddManual={(pick) => { onAddPropPick(pick); setPropFormFor(null); }}
-      />
+      {subTab === 'parlays' && (
+        <ParlaysPanel
+          parlayEntries={pendingParlays}
+          roiEntries={roiEntries ?? []}
+          onDelete={onDeleteParlay}
+        />
+      )}
 
       {showBuildParlay && (
         <BuildParlayPanel
@@ -9025,6 +9075,9 @@ export default function App() {
           onGradePropPick={handleGradePropPick}
           onDeletePropPick={handleDeletePropPick}
           onAddParlay={handleAddParlay}
+          parlayEntries={parlayEntries}
+          roiEntries={roiEntries}
+          onDeleteParlay={handleDeleteParlay}
         />
       )}
       {view === 'explore' && <ExploreTab allFighters={fightersWithProspectsFiltered} />}
@@ -9805,7 +9858,7 @@ function ROITab({
         />
       ) : isParlays ? (
         <ParlaysPanel
-          parlayEntries={parlayEntries}
+          parlayEntries={parlayEntries.filter((p) => computeParlayResult(p, entries).status === 'GRADED')}
           roiEntries={entries}
           onDelete={onDeleteParlay}
         />
