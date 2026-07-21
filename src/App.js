@@ -2666,6 +2666,41 @@ function computeParlayResult(parlay, roiEntries) {
   };
 }
 
+// Parlay aggregate for the Parlays sub-tab. Mirrors computePropSummary's
+// shape/rounding, but the population is GRADED (WIN/LOSS) parlays only --
+// PENDING (via computeParlayResult) and NEEDS_REVIEW are both excluded from
+// every stat here, same as PENDING props are excluded from computePropSummary.
+// NEEDS_REVIEW must never fall into the LOSS bucket by omission -- the
+// `!= 'WIN' && != 'LOSS'` skip below is what keeps it out.
+function computeParlaySummary(parlayEntries, roiEntries) {
+  let graded = 0;
+  let wins = 0;
+  let staked = 0;
+  let netUnits = 0;
+  parlayEntries.forEach((parlay) => {
+    const derived = computeParlayResult(parlay, roiEntries);
+    if (derived.result !== 'WIN' && derived.result !== 'LOSS') return;
+    graded += 1;
+    const stake = Number(parlay.unitsWagered) || 1;
+    staked += stake;
+    if (derived.result === 'WIN') {
+      wins += 1;
+      const dec = americanToDecimal(parlay.combinedOdds);
+      if (dec) netUnits += stake * (dec - 1);
+    } else {
+      netUnits -= stake;
+    }
+  });
+  return {
+    graded,
+    wins,
+    winRate: graded ? (wins / graded) * 100 : 0,
+    staked,
+    netUnits,
+    roi: staked > 0 ? (netUnits / staked) * 100 : 0,
+  };
+}
+
 const PROP_RESULT_OPTIONS = [
   { value: 'PENDING', label: 'Pending' },
   { value: 'WON', label: 'Won' },
@@ -3034,6 +3069,163 @@ function PropBetsPanel({ picks, onGrade, onDelete }) {
             })}
           </tbody>
         </table>
+      </div>
+    </div>
+  );
+}
+
+// Parlays sub-tab of the ROI tab. Sibling to PropBetsPanel. Reads
+// parlayEntries and a READ-ONLY roiEntries (passed through only so
+// computeParlayResult can look up each leg's actual winner) -- never calls
+// computeV2Summary/computeV2FrozenRows/filterRoiEntriesForStats/
+// computeROISummary, never mutates roiEntries. Grading is derived live on
+// every render via computeParlayResult; nothing here freezes a result onto
+// the entry (that happens only at export time, a later commit).
+const PARLAY_STATUS_BADGE_CLS = {
+  PENDING: 'bg-slate-800 text-slate-400 border-slate-700',
+  WIN: 'bg-emerald-900/30 text-emerald-400 border-emerald-800',
+  LOSS: 'bg-red-900/30 text-red-400 border-red-800',
+  NEEDS_REVIEW: 'bg-amber-900/30 text-amber-400 border-amber-800',
+};
+
+function ParlaysPanel({ parlayEntries, roiEntries, onDelete }) {
+  const summary = useMemo(
+    () => computeParlaySummary(parlayEntries, roiEntries),
+    [parlayEntries, roiEntries]
+  );
+
+  if (parlayEntries.length === 0) {
+    return (
+      <div className="bg-slate-900 border border-slate-800 rounded-xl p-8 text-center text-slate-600">
+        <ClipboardList size={36} className="mx-auto mb-3 opacity-20" />
+        <p className="text-sm">No parlays yet.</p>
+        <p className="text-xs mt-1">
+          Select 2+ fights in the <span className="text-slate-400 font-semibold">Upcoming</span> tab and click Build Parlay.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-3 items-stretch">
+        <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 h-full">
+          <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold">Graded Parlays</p>
+          <p className="font-black text-2xl mt-2 text-white">{summary.graded}</p>
+        </div>
+        <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 h-full">
+          <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold">Win Rate</p>
+          <p className="font-black text-2xl mt-2 text-blue-400">
+            {summary.graded ? `${summary.winRate.toFixed(1)}%` : '—'}
+          </p>
+          <p className="text-slate-600 text-xs mt-1">{summary.wins}W of {summary.graded} graded</p>
+        </div>
+        <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 h-full">
+          <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold">Net Units</p>
+          <p className={`font-black text-2xl mt-2 ${summary.netUnits >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+            {summary.netUnits >= 0 ? '+' : ''}{summary.netUnits.toFixed(2)}u
+          </p>
+        </div>
+        <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 h-full">
+          <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold">ROI</p>
+          <p className={`font-black text-2xl mt-2 ${summary.roi >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+            {summary.staked > 0 ? `${summary.roi >= 0 ? '+' : ''}${summary.roi.toFixed(1)}%` : '—'}
+          </p>
+        </div>
+      </div>
+      <p className="text-slate-600 text-xs mb-4">
+        Win rate, net units, and ROI count only graded WIN/LOSS parlays — pending and needs-review parlays are excluded.
+      </p>
+
+      <div className="space-y-3">
+        {parlayEntries.map((parlay) => {
+          const derived = computeParlayResult(parlay, roiEntries);
+          const legResultByFightId = new Map(derived.legResults.map((l) => [l.fightId, l]));
+          const stake = Number(parlay.unitsWagered) || 1;
+          let profit = null;
+          if (derived.result === 'WIN') {
+            const dec = americanToDecimal(parlay.combinedOdds);
+            profit = dec ? stake * (dec - 1) : null;
+          } else if (derived.result === 'LOSS') {
+            profit = -stake;
+          }
+          const badgeLabel = derived.status === 'PENDING' ? 'PENDING' : derived.result;
+          return (
+            <div key={parlay.id} className="bg-slate-900 border border-slate-800 rounded-xl p-4">
+              <div className="flex items-start justify-between gap-4 mb-3">
+                <div>
+                  <p className="text-white font-bold text-sm">{parlay.eventName}</p>
+                  <p className="text-slate-500 text-xs mt-1">
+                    {parlay.combinedOdds} · {stake}u · {derived.resolvedLegs}/{derived.totalLegs} legs resolved
+                  </p>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <span
+                    className={`text-xs font-bold px-2 py-0.5 rounded-full border ${
+                      PARLAY_STATUS_BADGE_CLS[badgeLabel] || PARLAY_STATUS_BADGE_CLS.PENDING
+                    }`}
+                  >
+                    {badgeLabel === 'NEEDS_REVIEW' ? 'Needs Review' : badgeLabel}
+                  </span>
+                  {onDelete && (
+                    <button onClick={() => onDelete(parlay.id)} className="text-slate-600 hover:text-red-400 text-xs">
+                      Delete
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              <div className="space-y-1.5 mb-3">
+                {parlay.legs.map((leg) => {
+                  const legResult = legResultByFightId.get(leg.fightId);
+                  const legStatus = !legResult?.resolved
+                    ? 'pending'
+                    : legResult.pushed
+                    ? 'push'
+                    : legResult.correct
+                    ? 'correct'
+                    : 'incorrect';
+                  const legStatusCls =
+                    legStatus === 'correct'
+                      ? 'text-emerald-400 font-semibold'
+                      : legStatus === 'incorrect'
+                      ? 'text-red-400 font-semibold'
+                      : legStatus === 'push'
+                      ? 'text-amber-400 font-semibold'
+                      : 'text-slate-600';
+                  const legStatusLabel =
+                    legStatus === 'correct'
+                      ? 'Won'
+                      : legStatus === 'incorrect'
+                      ? 'Lost'
+                      : legStatus === 'push'
+                      ? 'NC/Draw'
+                      : 'Pending';
+                  return (
+                    <div
+                      key={leg.fightId}
+                      className="flex items-center justify-between text-xs bg-slate-800/40 rounded-lg px-3 py-2"
+                    >
+                      <span className="text-slate-300">
+                        {leg.pickedFighter}
+                        <span className="text-slate-600"> ({leg.fighterA} vs. {leg.fighterB})</span>
+                      </span>
+                      <span className={legStatusCls}>{legStatusLabel}</span>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <p
+                className={`text-right font-bold text-sm ${
+                  profit == null ? 'text-slate-600' : profit > 0 ? 'text-emerald-400' : profit < 0 ? 'text-red-400' : 'text-slate-400'
+                }`}
+              >
+                {profit == null ? '—' : `${profit > 0 ? '+' : ''}${profit.toFixed(2)}u`}
+              </p>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
@@ -8850,6 +9042,8 @@ export default function App() {
           propPicks={propPicks}
           onGradePropPick={handleGradePropPick}
           onDeletePropPick={handleDeletePropPick}
+          parlayEntries={parlayEntries}
+          onDeleteParlay={handleDeleteParlay}
         />
       )}
       {view === 'statistics' && (
@@ -9248,6 +9442,8 @@ function ROITab({
   propPicks,
   onGradePropPick,
   onDeletePropPick,
+  parlayEntries,
+  onDeleteParlay,
 }) {
   const exportedCode = `export const ROI_ENTRIES = ${JSON.stringify(
     entries,
@@ -9316,10 +9512,16 @@ function ROITab({
   //   'all'    -> collapsible per-event groups (former "All Results")
   //   'recent' -> most-recent-graded-event only (former "Most Recent Event")
   //   'props'  -> the isolated Prop Bets table (PROP_PICKS; no model data)
-  // The two model sub-tabs behave exactly as the old toggle did; 'props' is a
-  // physically separate panel that never reads roiEntries/model computations.
+  //   'parlays' -> the isolated Parlays panel (parlayEntries; reads roiEntries
+  //     read-only via computeParlayResult, but is otherwise physically
+  //     separate from every model/Statistics computation, same as 'props')
+  // The two model sub-tabs behave exactly as the old toggle did; 'props' and
+  // 'parlays' are physically separate panels that never call
+  // computeV2Summary/computeV2FrozenRows/filterRoiEntriesForStats/
+  // computeROISummary.
   const [subTab, setSubTab] = useState('all');
   const isProps = subTab === 'props';
+  const isParlays = subTab === 'parlays';
   const resultsView = subTab === 'recent' ? 'recent' : 'all';
   const latestGradedEventName = useMemo(() => {
     const graded = displayedEntries.filter((e) => isResolvedWinner(e.actualWinner, e));
@@ -9492,7 +9694,7 @@ function ROITab({
           </p>
         </div>
         <div className="flex items-center gap-2">
-          {entries.length > 0 && !isProps && (
+          {entries.length > 0 && !isProps && !isParlays && (
             <>
             <button
               onClick={() => navigator.clipboard.writeText(exportedCode)}
@@ -9549,7 +9751,7 @@ function ROITab({
         </div>
       </div>
 
-      {entries.length > 0 && !isProps && (
+      {entries.length > 0 && !isProps && !isParlays && (
         <div className="flex items-center gap-3 mb-4">
           <span className="text-slate-500 text-xs uppercase tracking-wider font-semibold">Since</span>
           <input
@@ -9579,6 +9781,7 @@ function ROITab({
           { id: 'all', label: 'All Events' },
           { id: 'recent', label: 'Most Recent Event' },
           { id: 'props', label: 'Prop Bets' },
+          { id: 'parlays', label: 'Parlays' },
         ].map(({ id, label }) => (
           <button
             key={id}
@@ -9599,6 +9802,12 @@ function ROITab({
           picks={propPicks.filter((p) => p.result !== 'PENDING')}
           onGrade={onGradePropPick}
           onDelete={onDeletePropPick}
+        />
+      ) : isParlays ? (
+        <ParlaysPanel
+          parlayEntries={parlayEntries}
+          roiEntries={entries}
+          onDelete={onDeleteParlay}
         />
       ) : entries.length === 0 ? (
         <div className="bg-slate-900 border border-slate-800 rounded-xl p-8 text-center text-slate-600">
