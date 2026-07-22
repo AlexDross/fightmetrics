@@ -9769,6 +9769,28 @@ function ROITab({
     return m;
   }, [allFighters]);
 
+  // FROZEN (2026-07-22 fix): primary path reads the entry's OWN stored
+  // v2pA/v2pB/betAction/edgeA/edgeB/betRecommendedFighter -- the values
+  // buildRoiEntry computed and saved at save time -- instead of recomputing
+  // via computeMatchupEdges + re-running the bet-tier gate against CURRENT
+  // odds/fighter credibility. This is the ROI tab's per-entry "v2 mode"
+  // display, which drives effectiveTrackedSide/effectiveProfit and the
+  // Correct/Incorrect badge below (~line 10060) for GRADED, historical
+  // fights -- before this fix, a graded fight's win/loss label could flip
+  // retroactively if fighter data changed after the fight. Reading the
+  // frozen pick makes that label permanent, as it should be.
+  //
+  // v2BetAction/v2Edge/v2BetFighter inherit the same mixed-provenance
+  // caveat already documented on computeBetTierBreakdown (~App.js:1533):
+  // entry.betAction/edgeA/edgeB reflect whichever model was ACTIVE at save
+  // time (v1 or v2, per that save's modelToggle), not necessarily a v2-
+  // specific gate decision on reconstructed/pre-modelUsed rows. That's an
+  // accepted, already-documented characteristic of frozen data elsewhere in
+  // this file -- not a new gap introduced here.
+  //
+  // computeMatchupEdges is called ONLY as a legacy fallback for entries
+  // saved before v2pA/v2pB existed (entry.v2pA == null); 0 of 146 current
+  // entries hit that path (freeze-at-save audit, 2026-07-21/22).
   const v2DataMap = useMemo(() => {
     const map = new Map();
     evaluatedEntries
@@ -9776,64 +9798,88 @@ function ROITab({
       .forEach((entry) => {
         const needsV2 = modelView === 'v2';
         if (!needsV2) return;
-        const fA = fighterMap.get(entry.fighterA);
-        const fB = fighterMap.get(entry.fighterB);
-        if (!fA || !fB) return;
 
-        const res = computeMatchupEdges(fA, fB);
-        const v2pA = res.v2pA;
-        const v2pB = res.v2pB;
+        if (entry.v2pA == null) {
+          // Legacy fallback only -- see FROZEN comment above.
+          const fA = fighterMap.get(entry.fighterA);
+          const fB = fighterMap.get(entry.fighterB);
+          if (!fA || !fB) return;
+
+          const res = computeMatchupEdges(fA, fB);
+          const v2pA = res.v2pA;
+          const v2pB = res.v2pB;
+          const v2Winner = v2pA >= v2pB ? entry.fighterA : entry.fighterB;
+          const v2WinProb = Math.max(v2pA, v2pB);
+          const v2FairLine = americanOdds(v2pA >= v2pB ? v2pA : v2pB);
+
+          const rawA = parseAmericanOdds(entry.oddsA);
+          const rawB = parseAmericanOdds(entry.oddsB);
+          let v2Edge = null;
+          let v2BetAction = 'NO BET';
+          let v2BetFighter = '';
+
+          if (rawA && rawB) {
+            const { noVigA, noVigB } = stripVig(rawA, rawB);
+            const edgeA = v2pA - noVigA;
+            const edgeB = v2pB - noVigB;
+            const pickSide = v2pA >= 0.5 ? 'A' : 'B';
+            const pickEdge = pickSide === 'A' ? edgeA : edgeB;
+            const oppEdge = pickSide === 'A' ? edgeB : edgeA;
+            const pickProb = pickSide === 'A' ? v2pA : v2pB;
+            const pickRawOdds = pickSide === 'A' ? rawA : rawB;
+            v2Edge = pickEdge;
+
+            const hasPickEdge = pickEdge >= 0.03;
+            const conflictingSignals = !hasPickEdge && oppEdge >= 0.03;
+            let action = 'NO BET';
+            if (!conflictingSignals && hasPickEdge) {
+              if (pickProb >= 0.70) {
+                if (pickEdge >= 0.25) action = 'STRONG BET';
+                else if (pickEdge >= 0.15) action = 'BET';
+                else action = 'LEAN';
+              } else if (pickProb >= 0.65) {
+                if (pickEdge >= 0.30) action = 'BET';
+                else if (pickEdge >= 0.10) action = 'LEAN';
+              } else if (pickProb >= 0.60) {
+                if (pickEdge >= 0.10) action = 'LEAN';
+              }
+            }
+            const lowCredCap =
+              (fA.CREDIBILITY ?? 0) < 30 || (fB.CREDIBILITY ?? 0) < 30;
+            if (lowCredCap && (action === 'STRONG BET' || action === 'BET'))
+              action = 'LEAN';
+            if (pickRawOdds > 2 / 3 && pickEdge < 0.25 && action !== 'NO BET')
+              action = 'NO BET';
+
+            v2BetAction = action;
+            v2BetFighter =
+              action !== 'NO BET'
+                ? pickSide === 'A'
+                  ? entry.fighterA
+                  : entry.fighterB
+                : '';
+          }
+
+          map.set(entry.id, {
+            v2Winner,
+            v2WinProb,
+            v2FairLine,
+            v2Edge,
+            v2BetAction,
+            v2BetFighter,
+          });
+          return;
+        }
+
+        // Primary: frozen values stored on the entry at save time.
+        const v2pA = entry.v2pA;
+        const v2pB = entry.v2pB;
         const v2Winner = v2pA >= v2pB ? entry.fighterA : entry.fighterB;
         const v2WinProb = Math.max(v2pA, v2pB);
-        const v2FairLine = americanOdds(v2pA >= v2pB ? v2pA : v2pB);
-
-        const rawA = parseAmericanOdds(entry.oddsA);
-        const rawB = parseAmericanOdds(entry.oddsB);
-        let v2Edge = null;
-        let v2BetAction = 'NO BET';
-        let v2BetFighter = '';
-
-        if (rawA && rawB) {
-          const { noVigA, noVigB } = stripVig(rawA, rawB);
-          const edgeA = v2pA - noVigA;
-          const edgeB = v2pB - noVigB;
-          const pickSide = v2pA >= 0.5 ? 'A' : 'B';
-          const pickEdge = pickSide === 'A' ? edgeA : edgeB;
-          const oppEdge = pickSide === 'A' ? edgeB : edgeA;
-          const pickProb = pickSide === 'A' ? v2pA : v2pB;
-          const pickRawOdds = pickSide === 'A' ? rawA : rawB;
-          v2Edge = pickEdge;
-
-          const hasPickEdge = pickEdge >= 0.03;
-          const conflictingSignals = !hasPickEdge && oppEdge >= 0.03;
-          let action = 'NO BET';
-          if (!conflictingSignals && hasPickEdge) {
-            if (pickProb >= 0.70) {
-              if (pickEdge >= 0.25) action = 'STRONG BET';
-              else if (pickEdge >= 0.15) action = 'BET';
-              else action = 'LEAN';
-            } else if (pickProb >= 0.65) {
-              if (pickEdge >= 0.30) action = 'BET';
-              else if (pickEdge >= 0.10) action = 'LEAN';
-            } else if (pickProb >= 0.60) {
-              if (pickEdge >= 0.10) action = 'LEAN';
-            }
-          }
-          const lowCredCap =
-            (fA.CREDIBILITY ?? 0) < 30 || (fB.CREDIBILITY ?? 0) < 30;
-          if (lowCredCap && (action === 'STRONG BET' || action === 'BET'))
-            action = 'LEAN';
-          if (pickRawOdds > 2 / 3 && pickEdge < 0.25 && action !== 'NO BET')
-            action = 'NO BET';
-
-          v2BetAction = action;
-          v2BetFighter =
-            action !== 'NO BET'
-              ? pickSide === 'A'
-                ? entry.fighterA
-                : entry.fighterB
-              : '';
-        }
+        const v2FairLine = americanOdds(v2WinProb);
+        const v2Edge = (v2pA >= v2pB ? entry.edgeA : entry.edgeB) ?? null;
+        const v2BetAction = entry.betAction ?? 'NO BET';
+        const v2BetFighter = entry.betRecommendedFighter || '';
 
         map.set(entry.id, {
           v2Winner,
