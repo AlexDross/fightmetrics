@@ -5079,19 +5079,32 @@ function UpcomingEventTab({
 
   // Per-entry model computation, hoisted out of the card render loop so the
   // Build Parlay modal can read the SAME already-computed values the card
-  // shows -- never a second computeMatchupEdges call. Card-displayed
-  // predictedWinner/winProb still follow modelToggle (v1/v2), exactly as
-  // before; v2Winner/v2WinProb below are v2's OWN argmax pick (read off the
-  // same computeMatchupEdges result / stored entry.v2pA/v2pB the branch
-  // already had), independent of modelToggle, since a parlay leg's frozen
-  // "v2 default" must mean v2 specifically, not whichever model is toggled.
+  // shows -- never a second computeMatchupEdges call.
+  //
+  // FROZEN (2026-07-22 fix): primary path reads the entry's OWN stored
+  // v2pA/v2pB/fighterAProb/fighterBProb/betAction/edgeA/edgeB -- the values
+  // buildRoiEntry computed and saved at save time -- never recomputed against
+  // current fighter data. A saved pick can no longer drift when the pipeline
+  // refreshes fighter stats. computeMatchupEdges is called ONLY as a legacy
+  // fallback for entries saved before v2pA/v2pB existed (entry.v2pA == null);
+  // 0 of 146 current entries hit that path (freeze-at-save audit,
+  // 2026-07-21/22) -- it exists purely so old exported upcomingData.js
+  // snapshots don't render blank. Card-displayed predictedWinner/winProb
+  // still follow modelToggle (v1/v2), exactly as before; v2Winner/v2WinProb
+  // below are v2's OWN argmax pick (off the same stored/fallback v2pA/v2pB),
+  // independent of modelToggle, since a parlay leg's frozen "v2 default"
+  // must mean v2 specifically, not whichever model is toggled. v1Winner is
+  // v1's own frozen pick (entry.fighterAProb/fighterBProb), read the same way
+  // in both branches -- the Build Parlay "v1 favors X" disagreement note
+  // depends on this staying populated.
   const modelPickByEntryId = useMemo(() => {
     const map = new Map();
     entries.forEach((entry) => {
       const fA = fighterMap.get(entry.fighterA);
       const fB = fighterMap.get(entry.fighterB);
       let pA, pB, hasV2, betAction, betFighter, edgeA, edgeB, v2pAOut, v2pBOut, hasV1, v1pAOut, v1pBOut;
-      if (fA && fB) {
+      if (entry.v2pA == null && fA && fB) {
+        // Legacy fallback only -- see FROZEN comment above.
         const res = computeMatchupEdges(fA, fB);
         hasV2 = res.v2pA != null;
         v2pAOut = res.v2pA;
@@ -5107,6 +5120,7 @@ function UpcomingEventTab({
         edgeA = m?.edgeA ?? null;
         edgeB = m?.edgeB ?? null;
       } else {
+        // Primary: frozen values stored on the entry at save time.
         hasV2 = entry.v2pA != null;
         v2pAOut = entry.v2pA;
         v2pBOut = entry.v2pB;
