@@ -9942,21 +9942,12 @@ function ROITab({
               </button>
             )}
 
-            <div className="flex items-center gap-1 bg-slate-800 rounded-lg p-1">
-              {['v1', 'v2'].map((view) => (
-                <button
-                  key={view}
-                  onClick={() => setModelView(view)}
-                  className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-colors ${
-                    modelView === view
-                      ? 'bg-red-600 text-white'
-                      : 'text-slate-400 hover:text-white'
-                  }`}
-                >
-                  {view}
-                </button>
-              ))}
-            </div>
+            {/* v1 toggle hidden 2026-07-22 per single-model view (v2 only) --
+                restore by re-adding the ['v1','v2'] button block that used to
+                sit here (called setModelView(view)). modelView stays 'v2' by
+                default with setModelView never called, so every
+                modelView==='v1' branch below (inV2Mode ternary, eff* derivations)
+                is intact but unreachable. */}
 
             <button
               onClick={onClearEntries}
