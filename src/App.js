@@ -5218,19 +5218,14 @@ function UpcomingEventTab({
                 Copy Updated upcomingData.js
               </button>
             )}
-            <div className="flex items-center gap-1 bg-slate-800 rounded-lg p-1">
-              {['v1', 'v2'].map((v) => (
-                <button
-                  key={v}
-                  onClick={() => setModelToggle(v)}
-                  className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-colors ${
-                    modelToggle === v ? 'bg-red-600 text-white' : 'text-slate-400 hover:text-white'
-                  }`}
-                >
-                  {v}
-                </button>
-              ))}
-            </div>
+            {/* v1 toggle hidden 2026-07-22 per single-model view (v2 only) --
+                restore by re-adding the ['v1','v2'] button block that used to
+                sit here (called setModelToggle(v)). modelToggle is App-level
+                state (App.js ~9041), still passed down as a prop and still
+                useState('v2') by default -- left wired-but-uncalled here
+                rather than unwound, so restoring is just re-adding the
+                buttons. modelPickByEntryId's pA/pB selection and the "v2"
+                badge below are now permanently on the v2 branch. */}
           </div>
         )}
         {subTab === 'props' && propPicks.length > 0 && (
