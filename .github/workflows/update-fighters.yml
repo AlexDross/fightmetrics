@@ -44,6 +44,28 @@ jobs:
       - name: Regenerate eloModule.js
         run: python regen_elo.py
 
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Validate generated JS is syntactically valid
+        run: |
+          node --input-type=module -e "
+            const files = [
+              './src/fightersData.js',
+              './src/fightHistory.js',
+              './src/eloModule.js',
+              './src/cardioModule.js',
+            ];
+            let failed = false;
+            for (const f of files) {
+              try { await import(f); console.log('OK   ' + f); }
+              catch (e) { failed = true; console.error('FAIL ' + f + ': ' + e.message); }
+            }
+            if (failed) process.exit(1);
+          "
+
       - name: Commit and push if changed
         run: |
           git config user.name  "github-actions[bot]"
