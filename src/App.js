@@ -4980,9 +4980,13 @@ function BuildParlayPanel({ legInputs, onConfirm, onCancel }) {
                   {p.overridden ? ' · overridden' : ''}
                 </span>
               </p>
-              {p.hasV1 && p.v1Winner && p.v1Winner !== p.v2DefaultFighter && (
-                <p className="text-slate-600 text-xs mt-1">v1 favors {p.v1Winner}.</p>
-              )}
+              {/* v1 disagreement note removed 2026-07-22 per v2-only betting
+                  flow -- restore by re-adding:
+                  {p.hasV1 && p.v1Winner && p.v1Winner !== p.v2DefaultFighter && (
+                    <p className="text-slate-600 text-xs mt-1">v1 favors {p.v1Winner}.</p>
+                  )}
+                  hasV1/v1Winner stay computed in modelPickByEntryId -- only
+                  this rendered note is gone. */}
             </div>
           ))}
         </div>
