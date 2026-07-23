@@ -88,7 +88,7 @@ def compute_streak(fights):
 
 def fmt(v):
     if v is None: return 'null'
-    if isinstance(v, str): return f"'{v}'"
+    if isinstance(v, str): return f"'{js_escape(v)}'"
     return str(v)
 
 def js_escape(s):
