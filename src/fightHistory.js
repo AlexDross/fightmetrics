@@ -1278,7 +1278,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "1:40",
-      "wc": "Unknown",
+      "wc": "Light Heavyweight",
       "tb": false,
       "ev": "UFC Fight Night: Du Plessis vs. Usman"
     }
@@ -1315,7 +1315,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Unknown",
+      "wc": "Featherweight",
       "tb": false,
       "ev": "UFC Fight Night: Du Plessis vs. Usman"
     }
@@ -1328,7 +1328,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Unknown",
+      "wc": "Featherweight",
       "tb": false,
       "ev": "UFC Fight Night: Du Plessis vs. Usman"
     }
@@ -1422,7 +1422,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "1:40",
-      "wc": "Unknown",
+      "wc": "Heavyweight",
       "tb": false,
       "ev": "UFC Fight Night: Du Plessis vs. Usman"
     }
@@ -1459,7 +1459,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "4:04",
-      "wc": "Unknown",
+      "wc": "Women\\",
       "tb": false,
       "ev": "UFC Fight Night: Du Plessis vs. Usman"
     }
@@ -3896,7 +3896,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "2:31",
-      "wc": "Unknown",
+      "wc": "Heavyweight",
       "tb": false,
       "ev": "UFC 329: McGregor vs. Holloway 2"
     }
@@ -4699,7 +4699,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Unknown",
+      "wc": "Bantamweight",
       "tb": false,
       "ev": "UFC 329: McGregor vs. Holloway 2"
     }
@@ -6449,7 +6449,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Unknown",
+      "wc": "Welterweight",
       "tb": false,
       "ev": "UFC Fight Night: Fiziev vs. Torres"
     }
@@ -6797,7 +6797,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "1:35",
-      "wc": "Unknown",
+      "wc": "Welterweight",
       "tb": false,
       "ev": "UFC Fight Night: Fiziev vs. Torres"
     }
@@ -6924,7 +6924,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 3,
       "ti": "4:28",
-      "wc": "Unknown",
+      "wc": "Welterweight",
       "tb": false,
       "ev": "UFC Fight Night: Fiziev vs. Torres"
     }
@@ -6937,7 +6937,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 3,
       "ti": "4:28",
-      "wc": "Unknown",
+      "wc": "Welterweight",
       "tb": false,
       "ev": "UFC Fight Night: Fiziev vs. Torres"
     }
@@ -7734,7 +7734,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "1:17",
-      "wc": "Unknown",
+      "wc": "Featherweight",
       "tb": false,
       "ev": "UFC Fight Night: Kape vs. Horiguchi"
     }
@@ -8548,7 +8548,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "0:23",
-      "wc": "Unknown",
+      "wc": "Welterweight",
       "tb": false,
       "ev": "UFC Fight Night: Kape vs. Horiguchi"
     }
@@ -8561,7 +8561,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "0:23",
-      "wc": "Unknown",
+      "wc": "Welterweight",
       "tb": false,
       "ev": "UFC Fight Night: Kape vs. Horiguchi"
     }
@@ -8798,7 +8798,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Unknown",
+      "wc": "Featherweight",
       "tb": false,
       "ev": "UFC Fight Night: Kape vs. Horiguchi"
     }
@@ -8811,7 +8811,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Unknown",
+      "wc": "Featherweight",
       "tb": false,
       "ev": "UFC Fight Night: Kape vs. Horiguchi"
     }
@@ -12993,7 +12993,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Unknown",
+      "wc": "Women\\",
       "tb": false,
       "ev": "UFC Fight Night: Muhammad vs. Bonfim"
     }
@@ -14785,7 +14785,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "3:40",
-      "wc": "Unknown",
+      "wc": "Middleweight",
       "tb": false,
       "ev": "UFC Fight Night: Song vs. Figueiredo"
     }
@@ -14798,7 +14798,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "3:40",
-      "wc": "Unknown",
+      "wc": "Middleweight",
       "tb": false,
       "ev": "UFC Fight Night: Song vs. Figueiredo"
     }
@@ -14811,7 +14811,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Unknown",
+      "wc": "Welterweight",
       "tb": false,
       "ev": "UFC Fight Night: Song vs. Figueiredo"
     }
@@ -14824,7 +14824,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Unknown",
+      "wc": "Welterweight",
       "tb": false,
       "ev": "UFC Fight Night: Song vs. Figueiredo"
     }
@@ -15397,7 +15397,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Unknown",
+      "wc": "Women\\",
       "tb": false,
       "ev": "UFC Fight Night: Song vs. Figueiredo"
     }
@@ -15410,7 +15410,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "1:50",
-      "wc": "Unknown",
+      "wc": "Featherweight",
       "tb": false,
       "ev": "UFC Fight Night: Song vs. Figueiredo"
     }
@@ -15423,7 +15423,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "1:50",
-      "wc": "Unknown",
+      "wc": "Featherweight",
       "tb": false,
       "ev": "UFC Fight Night: Song vs. Figueiredo"
     }
