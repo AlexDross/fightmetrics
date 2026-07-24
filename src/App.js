@@ -5875,7 +5875,7 @@ function DataTable({ fighters }) {
           </div>
         )}
       </div>
-      <div className="flex items-center justify-between mb-3">
+      <div className="flex items-center justify-between mb-3 flex-wrap gap-3">
         <div className="relative">
           <Search
             size={13}
@@ -5892,7 +5892,7 @@ function DataTable({ fighters }) {
             className="bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg pl-9 pr-4 py-2 w-64 focus:outline-none focus:border-red-500"
           />
         </div>
-        <div className="flex items-center gap-3 text-xs text-slate-500">
+        <div className="flex items-center gap-3 text-xs text-slate-500 flex-wrap">
           <span>
             <span className="text-slate-200 font-mono">{displayed.length}</span>{' '}
             results
