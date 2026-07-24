@@ -5567,7 +5567,7 @@ function Header({ view, setView }) {
           </p>
         </div>
       </div>
-      <nav className="flex gap-1">
+      <nav className="flex gap-1 overflow-x-auto min-w-0">
         {tabs.map(({ id, label, Icon }) => (
           <button
             key={id}
