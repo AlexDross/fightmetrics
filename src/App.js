@@ -181,7 +181,7 @@ const UFC_RANKINGS = {
   // Welterweight
   'Islam Makhachev': { division: 'Welterweight', rank: 'C' },
   'Jack Della Maddalena': { division: 'Welterweight', rank: 1 },
-  'Ian Machado Garry': { division: 'Welterweight', rank: 2 },
+  'Ian Machado Garry': { division: 'Welterweight', rank: 1 },
   'Michael Morales': { division: 'Welterweight', rank: 3 },
   'Belal Muhammad': { division: 'Welterweight', rank: 4 },
   'Carlos Prates': { division: 'Welterweight', rank: 5 },
