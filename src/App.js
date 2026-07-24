@@ -2410,7 +2410,7 @@ function StatisticsTab({ entries, prospectNameSet, filterSince, setFilterSince, 
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-4 gap-4 mb-6 items-stretch">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6 items-stretch">
             <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 h-full">
               <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold">Tracked Fights</p>
               <p className="font-black text-2xl mt-2 text-white">{summaryV1.total}</p>
