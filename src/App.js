@@ -9949,7 +9949,22 @@ function ROITab({
                 is intact but unreachable. */}
 
             <button
-              onClick={onClearEntries}
+              onClick={() => {
+                const count = entries.length;
+                const step1 = window.confirm(
+                  `Clear ALL ${count} ROI ${count === 1 ? 'entry' : 'entries'}?\n\nThis permanently deletes your entire graded bet history — every tracked pick, all P&L, everything.\n\nThis is NOT recoverable unless you've already run "Copy Updated roiData.js" and saved the result somewhere.\n\nClick OK to continue to the final confirmation.`
+                );
+                if (!step1) return;
+                const typed = window.prompt(
+                  `Type ${count} to permanently delete all ${count} ${count === 1 ? 'entry' : 'entries'}:`
+                );
+                if (typed === null) return;
+                if (typed.trim() !== String(count)) {
+                  window.alert("That didn't match — nothing was deleted.");
+                  return;
+                }
+                onClearEntries();
+              }}
               className="px-3 py-2 rounded-lg border border-slate-700 text-slate-400 text-xs font-semibold hover:text-white hover:border-slate-600 transition-colors"
             >
               Clear All
