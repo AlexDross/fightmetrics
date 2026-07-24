@@ -2999,7 +2999,15 @@ function PendingPropsSection({ picks, onGrade, onDelete, manualOpen, onToggleMan
                   >
                     {PROP_RESULT_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
                   </select>
-                  <button onClick={() => onDelete(pick.id)} className="text-slate-600 hover:text-red-400 text-xs">
+                  <button
+                    onClick={() => {
+                      const meta = [matchup, pick.eventName, pick.eventDate].filter(Boolean).join(' · ');
+                      if (window.confirm(`Delete this prop pick?\n\n${label}\n${meta}\n\nThis cannot be undone unless you've already run "Copy Updated propPicksData.js".`)) {
+                        onDelete(pick.id);
+                      }
+                    }}
+                    className="text-slate-600 hover:text-red-400 text-xs"
+                  >
                     Delete
                   </button>
                 </div>
@@ -3073,7 +3081,15 @@ function PropBetsPanel({ picks, onGrade, onDelete }) {
                     {pick.eventName}{pick.eventDate ? ` · ${pick.eventDate}` : ''}
                   </td>
                   <td className="px-4 py-3 text-right">
-                    <button onClick={() => onDelete(pick.id)} className="text-slate-600 hover:text-red-400 text-xs">
+                    <button
+                      onClick={() => {
+                        const meta = [matchup, pick.eventName, pick.eventDate].filter(Boolean).join(' · ');
+                        if (window.confirm(`Delete this graded prop?\n\n${label}\n${meta}\n\nThis cannot be undone unless you've already run "Copy Updated propPicksData.js".`)) {
+                          onDelete(pick.id);
+                        }
+                      }}
+                      className="text-slate-600 hover:text-red-400 text-xs"
+                    >
                       Delete
                     </button>
                   </td>
@@ -3191,7 +3207,15 @@ function ParlaysPanel({ parlayEntries, roiEntries, onDelete, showSummary = true 
                     {badgeLabel === 'NEEDS_REVIEW' ? 'Needs Review' : badgeLabel}
                   </span>
                   {onDelete && (
-                    <button onClick={() => onDelete(parlay.id)} className="text-slate-600 hover:text-red-400 text-xs">
+                    <button
+                      onClick={() => {
+                        const legCount = parlay.legs.length;
+                        if (window.confirm(`Delete this parlay?\n\n${parlay.eventName} · ${legCount} leg${legCount === 1 ? '' : 's'} · ${parlay.combinedOdds}\n\nThis cannot be undone unless you've already run "Copy Updated parlayData.js".`)) {
+                          onDelete(parlay.id);
+                        }
+                      }}
+                      className="text-slate-600 hover:text-red-400 text-xs"
+                    >
                       Delete
                     </button>
                   )}
@@ -5355,7 +5379,13 @@ function UpcomingEventTab({
                       {propFormFor === entry.id ? 'Cancel Prop' : '+ Prop'}
                     </button>
                     <button
-                      onClick={() => onDelete(entry.id)}
+                      onClick={() => {
+                        const label = `${entry.fighterA} vs. ${entry.fighterB}`;
+                        const meta = [entry.eventName, entry.eventDate].filter(Boolean).join(' · ');
+                        if (window.confirm(`Delete this pick?\n\n${label}${meta ? `\n${meta}` : ''}\n\nThis cannot be undone unless you've already run "Copy Updated upcomingData.js".`)) {
+                          onDelete(entry.id);
+                        }
+                      }}
                       className="px-3 py-1.5 rounded-lg border border-slate-700 text-slate-500 text-xs font-semibold hover:text-white hover:border-slate-600 transition-colors"
                     >
                       Delete
@@ -10191,7 +10221,14 @@ function ROITab({
                       </button>
                     )}
                     <button
-                      onClick={() => onDeleteEntry(entry.id)}
+                      onClick={() => {
+                        const label = `${entry.fighterA} vs. ${entry.fighterB}`;
+                        const meta = [entry.eventName, entry.eventDate].filter(Boolean).join(' · ');
+                        const result = entry.actualWinner && entry.actualWinner !== '' ? `Result: ${entry.actualWinner}` : 'Result: Pending';
+                        if (window.confirm(`Delete this graded pick?\n\n${label}${meta ? `\n${meta}` : ''}\n${result}\n\nThis cannot be undone unless you've already run "Copy Updated roiData.js".`)) {
+                          onDeleteEntry(entry.id);
+                        }
+                      }}
                       className="px-3 py-1.5 rounded-lg border border-slate-700 text-slate-500 text-xs font-semibold hover:text-white hover:border-slate-600 transition-colors"
                     >
                       Delete
