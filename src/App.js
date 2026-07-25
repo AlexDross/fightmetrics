@@ -7096,6 +7096,10 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
             );
           })()}
 
+          <p className="sm:hidden text-slate-600 text-xs text-center">
+            Saving is available on desktop.
+          </p>
+
           {/* ── MATCHUP CONTEXT FLAGS ── */}
           {(() => {
             if (!fA || !fB || !result) return null;
@@ -7154,7 +7158,7 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
           {/* ── CONTRIBUTION BREAKDOWN (replaces Key Advantages, Domain Breakdown, Model Input Comparison) ── */}
           <SimulatorContributionPanel fA={fA} fB={fB} result={result} modelToggle={modelToggle} />
 
-          <div className="bg-slate-900 border border-slate-700 rounded-xl p-5">
+          <div className="hidden sm:block bg-slate-900 border border-slate-700 rounded-xl p-5">
             <div className="flex items-center justify-between gap-4 mb-4">
               <div>
                 <p className="text-white text-xs font-black uppercase tracking-widest">
