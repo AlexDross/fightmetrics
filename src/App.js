@@ -2959,14 +2959,14 @@ function PendingPropsSection({ picks, onGrade, onDelete, manualOpen, onToggleMan
         </div>
         <button
           onClick={onToggleManual}
-          className="text-xs font-semibold text-slate-400 hover:text-white underline decoration-dotted underline-offset-2"
+          className="hidden sm:inline text-xs font-semibold text-slate-400 hover:text-white underline decoration-dotted underline-offset-2"
         >
           {manualOpen ? 'Cancel manual prop' : '+ Log a manual prop'}
         </button>
       </div>
 
       {manualOpen && (
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 mb-4">
+        <div className="hidden sm:block bg-slate-900 border border-slate-800 rounded-xl p-4 mb-4">
           <PropEntryForm mode="manual" allFighters={allFighters} onAdd={onAddManual} onCancel={onToggleManual} />
         </div>
       )}
@@ -2993,7 +2993,7 @@ function PendingPropsSection({ picks, onGrade, onDelete, manualOpen, onToggleMan
                   </p>
                   <p className="text-slate-400 text-xs mt-1">{pick.odds} · {stake}u</p>
                 </div>
-                <div className="flex items-center gap-2 shrink-0">
+                <div className="hidden sm:flex items-center gap-2 shrink-0">
                   <select
                     value={pick.result}
                     onChange={(e) => onGrade(pick.id, e.target.value)}
@@ -3068,7 +3068,7 @@ function PropBetsPanel({ picks, onGrade, onDelete }) {
                     <select
                       value={pick.result}
                       onChange={(e) => onGrade(pick.id, e.target.value)}
-                      className="bg-slate-800 border border-slate-700 text-slate-200 text-xs rounded-lg px-2 py-1.5 focus:outline-none focus:border-red-500 cursor-pointer"
+                      className="hidden sm:inline-block bg-slate-800 border border-slate-700 text-slate-200 text-xs rounded-lg px-2 py-1.5 focus:outline-none focus:border-red-500 cursor-pointer"
                     >
                       {PROP_RESULT_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
                     </select>
@@ -3090,7 +3090,7 @@ function PropBetsPanel({ picks, onGrade, onDelete }) {
                           onDelete(pick.id);
                         }
                       }}
-                      className="text-slate-600 hover:text-red-400 text-xs"
+                      className="hidden sm:inline text-slate-600 hover:text-red-400 text-xs"
                     >
                       Delete
                     </button>
@@ -5261,7 +5261,7 @@ function UpcomingEventTab({
         {subTab === 'props' && propPicks.length > 0 && (
           <button
             onClick={() => navigator.clipboard.writeText(propsExportedCode)}
-            className="px-3 py-2 rounded-lg border border-slate-700 text-slate-300 text-xs font-semibold hover:text-white hover:border-slate-600 transition-colors"
+            className="hidden sm:inline-block px-3 py-2 rounded-lg border border-slate-700 text-slate-300 text-xs font-semibold hover:text-white hover:border-slate-600 transition-colors"
           >
             Copy Updated propPicksData.js
           </button>
@@ -5489,7 +5489,7 @@ function UpcomingEventTab({
                 </div>
 
                 {propFormFor === entry.id && (
-                  <div className="border-t border-slate-800 mt-3 pt-3">
+                  <div className="hidden sm:block border-t border-slate-800 mt-3 pt-3">
                     <PropEntryForm
                       mode="fromFight"
                       fighterA={entry.fighterA}
