@@ -2370,27 +2370,29 @@ function StatisticsTab({ entries, prospectNameSet, filterSince, setFilterSince, 
       </div>
 
       {entries.length > 0 && (
-        <div className="flex items-center gap-3 mb-6">
-          <span className="text-slate-500 text-xs uppercase tracking-wider font-semibold">Since</span>
-          <input
-            type="date"
-            value={filterSince}
-            onChange={e => setFilterSince(e.target.value)}
-            className="bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-1.5 focus:outline-none focus:border-red-500"
-          />
-          {filterSince && (
-            <button
-              onClick={() => setFilterSince('')}
-              className="text-slate-500 hover:text-slate-300 text-xs underline"
-            >
-              Clear
-            </button>
-          )}
-          {filterSince && (
-            <span className="text-slate-600 text-xs">
-              {statsEntries.length} fights
-            </span>
-          )}
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-6">
+          <div className="flex items-center gap-3 flex-wrap">
+            <span className="text-slate-500 text-xs uppercase tracking-wider font-semibold">Since</span>
+            <input
+              type="date"
+              value={filterSince}
+              onChange={e => setFilterSince(e.target.value)}
+              className="bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-1.5 focus:outline-none focus:border-red-500"
+            />
+            {filterSince && (
+              <button
+                onClick={() => setFilterSince('')}
+                className="text-slate-500 hover:text-slate-300 text-xs underline"
+              >
+                Clear
+              </button>
+            )}
+            {filterSince && (
+              <span className="text-slate-600 text-xs">
+                {statsEntries.length} fights
+              </span>
+            )}
+          </div>
           {v2ScoredFloorDate && (!filterSince || filterSince <= v2ScoredFloorDate) && (
             <span className="text-slate-600 text-xs">
               Earliest v2-scored fight: {v2ScoredFloorDate}. Dates before this don't change the stats — v2 hadn't scored fights yet.
