@@ -3216,7 +3216,7 @@ function ParlaysPanel({ parlayEntries, roiEntries, onDelete, showSummary = true 
                           onDelete(parlay.id);
                         }
                       }}
-                      className="text-slate-600 hover:text-red-400 text-xs"
+                      className="hidden sm:inline text-slate-600 hover:text-red-400 text-xs"
                     >
                       Delete
                     </button>
