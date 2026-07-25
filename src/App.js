@@ -38,6 +38,8 @@ import {
   Calendar,
   AlertTriangle,
   ClipboardList,
+  MoreHorizontal,
+  X,
 } from 'lucide-react';
 import { _D2 } from './fightersData';
 import { getActiveProspects } from './prospectsData';
@@ -5571,7 +5573,7 @@ function Header({ view, setView }) {
           </p>
         </div>
       </div>
-      <nav className="flex gap-1 overflow-x-auto min-w-0">
+      <nav className="hidden sm:flex gap-1 overflow-x-auto min-w-0">
         {tabs.map(({ id, label, Icon }) => (
           <button
             key={id}
@@ -5588,6 +5590,128 @@ function Header({ view, setView }) {
         ))}
       </nav>
     </div>
+  );
+}
+
+// True below Tailwind's sm breakpoint (640px). Used to gate BottomNav's
+// mount entirely -- CSS-only "sm:hidden" would still leave the fixed-
+// position bar (and its backdrop/sheet) sitting in the desktop DOM, just
+// invisible, which is exactly what App.js:9312's render is trying to avoid.
+//
+// 639.98px, not 639px: Tailwind's `sm:` prefix (used by the header nav's
+// `hidden sm:flex`) is `min-width: 640px`, so this boundary must stay in
+// sync with that value. A plain `max-width: 639px` would leave a
+// fractional-viewport gap (639.01-639.99px, reachable via browser zoom)
+// where sm:flex doesn't apply (hiding the header nav) AND max-width:639
+// doesn't match (never mounting the bottom bar) -- no navigation at all.
+// Both the initial state and the listener read the same matchMedia query
+// so there's no separate boundary computation to drift out of sync.
+function useBelowSm() {
+  const query = '(max-width: 639.98px)';
+  const [belowSm, setBelowSm] = useState(
+    () => typeof window !== 'undefined' && window.matchMedia(query).matches
+  );
+  useEffect(() => {
+    const mq = window.matchMedia(query);
+    const onChange = () => setBelowSm(mq.matches);
+    onChange();
+    mq.addEventListener('change', onChange);
+    return () => mq.removeEventListener('change', onChange);
+  }, []);
+  return belowSm;
+}
+
+// Bottom tab bar, mobile only -- mounted only when useBelowSm() is true (see
+// above); the header nav owns navigation above sm, this owns it below sm.
+// 5 slots for 7 destinations: the 4 most-used tabs get their own slot, the
+// remaining 3 (ROI, Explore, Info) live behind "More", a slide-up sheet --
+// no routing library, just local state mirroring the "N legs selected"
+// banner pattern elsewhere in this file (a fixed-position overlay gated on
+// its own useState, dismissed by either an explicit close button or the
+// backdrop).
+const BOTTOM_NAV_PRIMARY = [
+  { id: 'home', label: 'Home', Icon: Trophy },
+  { id: 'simulator', label: 'Simulator', Icon: Swords },
+  { id: 'upcoming', label: 'Card', Icon: Zap },
+  { id: 'statistics', label: 'Stats', Icon: BarChart2 },
+];
+const BOTTOM_NAV_MORE = [
+  { id: 'roi', label: 'ROI', Icon: Calendar },
+  { id: 'explore', label: 'Explore', Icon: Search },
+  { id: 'info', label: 'Info', Icon: Info },
+];
+function BottomNav({ view, setView }) {
+  const [moreOpen, setMoreOpen] = useState(false);
+  const moreActive = BOTTOM_NAV_MORE.some((t) => t.id === view);
+
+  const go = (id) => {
+    setView(id);
+    setMoreOpen(false);
+  };
+
+  return (
+    <>
+      {moreOpen && (
+        <div
+          className="sm:hidden fixed inset-0 bg-black/60 z-40"
+          onClick={() => setMoreOpen(false)}
+        />
+      )}
+      {moreOpen && (
+        <div className="sm:hidden fixed inset-x-0 bottom-16 z-50 bg-slate-900 border-t border-x border-slate-800 rounded-t-xl overflow-hidden">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800">
+            <span className="text-slate-400 text-xs font-black uppercase tracking-widest">
+              More
+            </span>
+            <button
+              onClick={() => setMoreOpen(false)}
+              aria-label="Close"
+              className="min-w-[44px] min-h-[44px] flex items-center justify-center text-slate-500 hover:text-white"
+            >
+              <X size={18} />
+            </button>
+          </div>
+          {BOTTOM_NAV_MORE.map(({ id, label, Icon }) => (
+            <button
+              key={id}
+              onClick={() => go(id)}
+              className={`w-full flex items-center gap-3 px-4 min-h-[44px] py-3 text-sm font-medium transition-colors ${
+                view === id ? 'text-red-400' : 'text-slate-300 hover:bg-slate-800'
+              }`}
+            >
+              <Icon size={16} />
+              {label}
+            </button>
+          ))}
+        </div>
+      )}
+      <nav
+        className="sm:hidden fixed bottom-0 inset-x-0 z-40 bg-slate-900 border-t border-slate-800 flex pb-[env(safe-area-inset-bottom)]"
+        style={{ height: 'calc(64px + env(safe-area-inset-bottom))' }}
+      >
+        {BOTTOM_NAV_PRIMARY.map(({ id, label, Icon }) => (
+          <button
+            key={id}
+            onClick={() => go(id)}
+            className={`flex-1 min-w-[44px] min-h-[44px] flex flex-col items-center justify-center gap-0.5 text-[11px] font-semibold transition-colors ${
+              view === id ? 'text-red-400' : 'text-slate-500 hover:text-slate-300'
+            }`}
+          >
+            <Icon size={20} />
+            {label}
+          </button>
+        ))}
+        <button
+          onClick={() => setMoreOpen((o) => !o)}
+          className={`flex-1 min-w-[44px] min-h-[44px] flex flex-col items-center justify-center gap-0.5 text-[11px] font-semibold transition-colors ${
+            moreOpen || moreActive ? 'text-red-400' : 'text-slate-500 hover:text-slate-300'
+          }`}
+        >
+          <MoreHorizontal size={20} />
+          More
+        </button>
+      </nav>
+    </>
   );
 }
 
@@ -9074,6 +9198,7 @@ const isUpcomingVisible = (eventDate, todayStr) => {
 
 export default function App() {
   const [view, setView] = useState('home');
+  const belowSm = useBelowSm();
   const [filterSince, setFilterSince] = useState('2026-05-23');
   const [modelToggle, setModelToggle] = useState('v2');
   // Local calendar date (YYYY-MM-DD), NOT UTC. toISOString() returns UTC, which
@@ -9213,8 +9338,11 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans">
+    <div
+      className="min-h-screen bg-slate-950 text-slate-100 font-sans pb-[calc(64px+env(safe-area-inset-bottom))] sm:pb-0"
+    >
       <Header view={view} setView={setView} />
+      {belowSm && <BottomNav view={view} setView={setView} />}
       {view === 'home' && (
         <HomeTab summary={roiSummary} entries={roiEntries} onNavigate={setView} allFighters={fightersWithProspectsFiltered} filterSince={filterSince} />
       )}
