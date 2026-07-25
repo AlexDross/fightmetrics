@@ -6455,6 +6455,31 @@ const SIMULATOR_DOMAIN_MAP = {
   },
 };
 
+// Human-readable readings for the 16 raw MODEL_V2.features identifiers
+// (the exact set referenced by SIMULATOR_DOMAIN_MAP's v2 arrays above).
+// v1's per-feature labels never need this -- they already come out of
+// auditRows as plain language (e.g. "Sig Strikes Landed / Min"). v2's
+// come out of result.v2Contributions keyed by the raw feature name, which
+// buildSimulatorDomainRows used to surface verbatim.
+const V2_FEATURE_LABELS = {
+  sig_str_landed: 'Significant strikes landed per minute',
+  sig_str_accuracy: 'Significant strike accuracy',
+  td_landed: 'Takedowns landed per 15 min',
+  td_accuracy: 'Takedown accuracy',
+  sub_attempts: 'Submission attempts per 15 min',
+  reach: 'Reach',
+  height: 'Height',
+  younger: 'Age (younger-fighter advantage)',
+  modern_form: 'Recent form (last 8 fights, weighted)',
+  wins: 'Total wins',
+  losses: 'Total losses',
+  rounds: 'Total rounds fought',
+  title_bouts: 'Title-fight experience',
+  ko_wins: 'KO/TKO wins',
+  sub_wins: 'Submission wins',
+  elo: 'ELO rating',
+};
+
 // Not part of the 6-domain loop above -- rendered as its own, always-last
 // group. resultFields reference the Step-1-added scalar fields on
 // computeMatchupEdges' return object, not auditRows.
@@ -6858,7 +6883,7 @@ const buildSimulatorDomainRows = (result, modelToggle) => {
         .filter(Boolean);
     } else {
       features = domain.v2.map((featKey) => ({
-        label: featKey,
+        label: V2_FEATURE_LABELS[featKey] ?? featKey,
         contribution: result.v2Contributions?.[featKey] ?? 0,
         featsV2Value: result.featsV2?.[featKey] ?? null,
       }));
