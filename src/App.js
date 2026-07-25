@@ -2379,12 +2379,12 @@ function StatisticsTab({ entries, prospectNameSet, filterSince, setFilterSince, 
               type="date"
               value={filterSince}
               onChange={e => setFilterSince(e.target.value)}
-              className="bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-1.5 focus:outline-none focus:border-red-500"
+              className="bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-1.5 min-h-[44px] sm:min-h-0 focus:outline-none focus:border-red-500"
             />
             {filterSince && (
               <button
                 onClick={() => setFilterSince('')}
-                className="text-slate-500 hover:text-slate-300 text-xs underline"
+                className="inline-flex items-center justify-center min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0 text-slate-500 hover:text-slate-300 text-xs underline"
               >
                 Clear
               </button>
@@ -5278,7 +5278,7 @@ function UpcomingEventTab({
         )}
       </div>
 
-      <div className="flex items-center gap-1 bg-slate-800 rounded-lg p-1 mb-4 w-fit">
+      <div className="flex items-center flex-wrap gap-1 bg-slate-800 rounded-lg p-1 mb-4 w-fit">
         {[
           { id: 'fights', label: 'Upcoming Fights' },
           { id: 'props', label: 'Props' },
@@ -5287,7 +5287,7 @@ function UpcomingEventTab({
           <button
             key={id}
             onClick={() => setSubTab(id)}
-            className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-colors ${
+            className={`inline-flex items-center justify-center min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0 whitespace-nowrap px-3 py-1.5 rounded-md text-xs font-semibold transition-colors ${
               subTab === id
                 ? 'bg-red-600 text-white'
                 : 'text-slate-400 hover:text-white'
@@ -5726,7 +5726,7 @@ function Filters({ wc, setWC, minMin, setMinMin, count }) {
           <select
             value={wc}
             onChange={(e) => setWC(e.target.value)}
-            className="bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-1.5 focus:outline-none focus:border-red-500 cursor-pointer min-w-40"
+            className="bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-1.5 min-h-[44px] sm:min-h-0 focus:outline-none focus:border-red-500 cursor-pointer min-w-40"
           >
             {WEIGHT_CLASSES.map((w) => (
               <option key={w}>{w}</option>
@@ -5974,7 +5974,7 @@ function DataTable({ fighters }) {
           </div>
           <button
             onClick={() => setShowKey((k) => !k)}
-            className={`shrink-0 text-xs px-3 py-1 rounded-lg border font-semibold transition-all ${
+            className={`inline-flex items-center justify-center min-h-[44px] sm:min-h-0 shrink-0 text-xs px-3 py-1 rounded-lg border font-semibold transition-all ${
               showKey
                 ? 'bg-red-600 border-red-700 text-white'
                 : 'bg-slate-800 border-slate-700 text-slate-400 hover:text-white hover:border-slate-600'
@@ -6017,7 +6017,7 @@ function DataTable({ fighters }) {
               setSearch(e.target.value);
               setPage(1);
             }}
-            className="bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg pl-9 pr-4 py-2 w-64 focus:outline-none focus:border-red-500"
+            className="bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg pl-9 pr-4 py-2 w-64 min-h-[44px] sm:min-h-0 focus:outline-none focus:border-red-500"
           />
         </div>
         <div className="flex items-center gap-3 text-xs text-slate-500 flex-wrap">
@@ -6039,7 +6039,7 @@ function DataTable({ fighters }) {
                   ((lbl === '«' || lbl === '‹') && safePage === 1) ||
                   ((lbl === '›' || lbl === '»') && safePage === totalPages)
                 }
-                className="px-2.5 py-1 bg-slate-800 rounded disabled:opacity-30 hover:bg-slate-700 text-slate-300 transition-colors"
+                className="inline-flex items-center justify-center min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0 px-2.5 py-1 bg-slate-800 rounded disabled:opacity-30 hover:bg-slate-700 text-slate-300 transition-colors"
               >
                 {lbl}
               </button>
@@ -6271,7 +6271,7 @@ function FighterSearch({
           setOpen(true);
         }}
         onFocus={() => setOpen(true)}
-        className={`bg-slate-800 border ${bdr} text-slate-200 text-sm rounded-lg pl-9 pr-4 py-2 w-full focus:outline-none transition-colors`}
+        className={`bg-slate-800 border ${bdr} text-slate-200 text-sm rounded-lg pl-9 pr-4 py-2 w-full min-h-[44px] sm:min-h-0 focus:outline-none transition-colors`}
       />
       {open && opts.length > 0 && (
         <div className="absolute top-full left-0 right-0 mt-1 bg-slate-800 border border-slate-600 rounded-xl z-30 shadow-2xl overflow-hidden">
@@ -7129,7 +7129,7 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                     <div className="flex items-center gap-1 bg-slate-800 rounded-lg p-1">
                       <button
                         onClick={() => setModelToggle('v1')}
-                        className={`px-3 py-1 text-xs font-bold rounded-md transition-colors ${
+                        className={`inline-flex items-center justify-center min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0 px-3 py-1 text-xs font-bold rounded-md transition-colors ${
                           modelToggle === 'v1' ? 'bg-red-600 text-white' : 'text-slate-400 hover:text-white'
                         }`}
                       >
@@ -7137,7 +7137,7 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                       </button>
                       <button
                         onClick={() => setModelToggle('v2')}
-                        className={`px-3 py-1 text-xs font-bold rounded-md transition-colors ${
+                        className={`inline-flex items-center justify-center min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0 px-3 py-1 text-xs font-bold rounded-md transition-colors ${
                           modelToggle === 'v2' ? 'bg-red-600 text-white' : 'text-slate-400 hover:text-white'
                         }`}
                       >
@@ -9750,7 +9750,7 @@ function ExploreTab({ allFighters }) {
           <button
             key={id}
             onClick={() => setExploreTab(id)}
-            className={`px-4 py-1.5 rounded-lg text-sm font-semibold transition-all ${
+            className={`inline-flex items-center justify-center min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0 px-4 py-1.5 rounded-lg text-sm font-semibold transition-all ${
               exploreTab === id
                 ? 'bg-slate-700 text-white'
                 : 'text-slate-500 hover:text-slate-300'
@@ -10163,12 +10163,12 @@ function ROITab({
             type="date"
             value={filterSince}
             onChange={e => setFilterSince(e.target.value)}
-            className="bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-1.5 focus:outline-none focus:border-red-500"
+            className="bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-1.5 min-h-[44px] sm:min-h-0 focus:outline-none focus:border-red-500"
           />
           {filterSince && (
             <button
               onClick={() => setFilterSince('')}
-              className="text-slate-500 hover:text-slate-300 text-xs underline"
+              className="inline-flex items-center justify-center min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0 text-slate-500 hover:text-slate-300 text-xs underline"
             >
               Clear
             </button>
@@ -10181,7 +10181,7 @@ function ROITab({
         </div>
       )}
 
-      <div className="flex items-center gap-1 bg-slate-800 rounded-lg p-1 mb-4 w-fit">
+      <div className="flex items-center flex-wrap gap-1 bg-slate-800 rounded-lg p-1 mb-4 w-fit">
         {[
           { id: 'all', label: 'All Events' },
           { id: 'recent', label: 'Most Recent Event' },
@@ -10191,7 +10191,7 @@ function ROITab({
           <button
             key={id}
             onClick={() => setSubTab(id)}
-            className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-colors ${
+            className={`inline-flex items-center justify-center min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0 whitespace-nowrap px-3 py-1.5 rounded-md text-xs font-semibold transition-colors ${
               subTab === id
                 ? 'bg-red-600 text-white'
                 : 'text-slate-400 hover:text-white'
