@@ -5239,7 +5239,7 @@ function UpcomingEventTab({
           </p>
         </div>
         {subTab === 'fights' && (
-          <div className="flex items-center gap-2">
+          <div className="hidden sm:flex items-center gap-2">
             {entries.length > 0 && (
               <button
                 onClick={() => navigator.clipboard.writeText(exportedCode)}
@@ -5269,7 +5269,7 @@ function UpcomingEventTab({
         {subTab === 'parlays' && (parlayEntries ?? []).length > 0 && (
           <button
             onClick={() => navigator.clipboard.writeText(parlayExportedCode)}
-            className="px-3 py-2 rounded-lg border border-slate-700 text-slate-300 text-xs font-semibold hover:text-white hover:border-slate-600 transition-colors"
+            className="hidden sm:inline-block px-3 py-2 rounded-lg border border-slate-700 text-slate-300 text-xs font-semibold hover:text-white hover:border-slate-600 transition-colors"
           >
             Copy Updated parlayData.js
           </button>
@@ -5297,7 +5297,7 @@ function UpcomingEventTab({
       </div>
 
       {subTab === 'fights' && selectedLegIds.size > 0 && (
-        <div className="flex items-center justify-between bg-slate-900 border border-red-800/60 rounded-xl px-4 py-3 mb-4">
+        <div className="hidden sm:flex items-center justify-between bg-slate-900 border border-red-800/60 rounded-xl px-4 py-3 mb-4">
           <p className="text-slate-400 text-sm">
             {selectedLegIds.size} leg{selectedLegIds.size === 1 ? '' : 's'} selected
             {lockedEventName ? ` · ${lockedEventName}` : ''}
@@ -5351,7 +5351,7 @@ function UpcomingEventTab({
                       disabled={isOtherEvent && !isSelected}
                       onChange={() => toggleLeg(entry.id)}
                       title={isOtherEvent && !isSelected ? `Parlay locked to ${lockedEventName}` : 'Select for parlay'}
-                      className="mt-1.5 w-4 h-4 accent-red-600 cursor-pointer disabled:cursor-not-allowed disabled:opacity-30"
+                      className="hidden sm:block mt-1.5 w-4 h-4 accent-red-600 cursor-pointer disabled:cursor-not-allowed disabled:opacity-30"
                     />
                     <div>
                       <div className="flex items-center gap-2 flex-wrap">
@@ -5369,7 +5369,7 @@ function UpcomingEventTab({
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2 shrink-0">
+                  <div className="hidden sm:flex items-center gap-2 shrink-0">
                     <button
                       onClick={() => setPropFormFor((id) => (id === entry.id ? null : entry.id))}
                       className={`px-3 py-1.5 rounded-lg border text-xs font-semibold transition-colors ${
@@ -5459,7 +5459,7 @@ function UpcomingEventTab({
                 </div>
 
                 {/* Actual Winner + Units Staked */}
-                <div className="border-t border-slate-800 pt-3 flex items-center justify-between gap-3 flex-wrap">
+                <div className="hidden sm:flex border-t border-slate-800 pt-3 items-center justify-between gap-3 flex-wrap">
                   <div className="flex items-center gap-3">
                     <span className="text-slate-500 text-xs font-semibold uppercase tracking-wider">
                       Actual Winner
@@ -5531,11 +5531,13 @@ function UpcomingEventTab({
       )}
 
       {showBuildParlay && (
+        <div className="hidden sm:block">
         <BuildParlayPanel
           legInputs={selectedLegInputs}
           onConfirm={handleConfirmParlay}
           onCancel={() => setShowBuildParlay(false)}
         />
+        </div>
       )}
     </div>
   );
