@@ -9405,7 +9405,7 @@ function HomeTab({ summary, entries, onNavigate, allFighters, filterSince }) {
       <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider mb-3">
         Model Track Record
       </p>
-      <div className="grid grid-cols-3 gap-4 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
         <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
           <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold mb-2">
             Pick Accuracy
