@@ -5562,7 +5562,7 @@ function Header({ view, setView }) {
           <h1 className="text-white font-black text-base tracking-tight leading-none">
             FightMetrics
           </h1>
-          <p className="text-slate-500 text-xs mt-0.5">
+          <p className="hidden sm:block text-slate-500 text-xs mt-0.5">
             Fight Prediction Engine · {FIGHTERS.length} fighters · v7
           </p>
         </div>
