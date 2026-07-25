@@ -6583,6 +6583,7 @@ const fmtT = (f, { key, dec, signed, pct }) => {
 // renders — defining it inline remounted the subtree (and reset FighterSearch
 // state) on every keystroke in the odds/event inputs.
 const FighterPanel = ({ f, setF, color, ph, allFighters, fA, fB }) => {
+  const [showFull, setShowFull] = useState(false);
   const tc = color === 'blue' ? 'text-blue-400' : 'text-red-400';
   const bc =
     color === 'blue'
@@ -6602,16 +6603,31 @@ const FighterPanel = ({ f, setF, color, ph, allFighters, fA, fB }) => {
       />
       {f && (
         <div className={`mt-2 border ${bc} rounded-xl p-4`}>
-          {/* Header tier: weight class eyebrow + label + record */}
-          <div className="mb-3 pb-3 border-b border-slate-700/50">
-            <p className="text-slate-500 text-xs mb-1">{f.WEIGHT_CLASS}</p>
-            <div className="flex items-baseline justify-between">
+          {/* Compact summary: always visible, replaces the old header tier
+              (weight class / Fighter A-B label / record) below -- that tier
+              is dropped from the full-profile disclosure since it would be
+              a word-for-word repeat of this block once expanded. */}
+          <div className="flex items-center justify-between gap-3">
+            <div className="min-w-0">
               <p className={`text-xs font-bold ${tc}`}>
                 {color === 'blue' ? 'Fighter A' : 'Fighter B'}
               </p>
-              <p className="text-white font-black text-lg">{f.RECORD}</p>
+              <p className="text-white font-black text-base leading-snug">
+                {f.FIGHTER}
+              </p>
+              <p className="text-slate-500 text-xs mt-0.5">
+                {f.WEIGHT_CLASS} · {f.RECORD} · RTG {f.ADJUSTED_RATING.toFixed(1)}
+              </p>
             </div>
+            <button
+              onClick={() => setShowFull((o) => !o)}
+              className="shrink-0 text-slate-500 hover:text-slate-300 text-xs font-semibold"
+            >
+              {showFull ? 'Full Profile ▲' : 'Full Profile ▾'}
+            </button>
           </div>
+          {showFull && (
+          <div className="mt-3 pt-3 border-t border-slate-700/50">
           {/* Primary stats: RTG, Reach, Age */}
           <div className="grid grid-cols-3 gap-2 mb-3 pb-3 border-b border-slate-700/50">
             {[
@@ -6732,6 +6748,8 @@ const FighterPanel = ({ f, setF, color, ph, allFighters, fA, fB }) => {
               );
             })}
           </div>
+          </div>
+          )}
         </div>
       )}
     </div>
@@ -7136,7 +7154,7 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
         </p>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
         <FighterPanel
           f={fA}
           setF={setFA}
