@@ -7104,11 +7104,20 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
             const avgCredibility = ((fA.CREDIBILITY ?? 100) + (fB.CREDIBILITY ?? 100)) / 2;
             const lowSample = avgCredibility < 50;
             const minTracked = Math.min(fA.TOTAL_MIN ?? 0, fB.TOTAL_MIN ?? 0);
-            const allDomainKeys = ['striking', 'grappling', 'physical', 'form', 'experience', 'analytics'];
-            const topDomains = allDomainKeys
-              .map((k) => result.edges[k])
-              .filter((e) => (favA ? e.clamped > 0 : e.clamped < 0))
-              .sort((a, b) => Math.abs(b.weighted) - Math.abs(a.weighted))
+            // Toggle-aware: reuses buildSimulatorDomainRows (the same source
+            // the Contribution Breakdown panel renders) instead of always
+            // reading result.edges, which is v1-only. Previously this line
+            // stayed v1-derived even under a v2 headline, so it could name
+            // domains for the fighter v1 favors while the percentage above it
+            // showed v2's -- possible on any Model Disagreement matchup.
+            // totalContribution follows the same "positive favors A" sign
+            // convention as result.edges[k].weighted (see SimulatorContribution
+            // Panel's own favA derivation, App.js:6928), so the favA/sort
+            // logic below is unchanged -- only the data source is toggle-aware.
+            const topDomains = buildSimulatorDomainRows(result, modelToggle)
+              .filter((r) => !r.isGlobal)
+              .filter((r) => (favA ? r.totalContribution > 0 : r.totalContribution < 0))
+              .sort((a, b) => Math.abs(b.totalContribution) - Math.abs(a.totalContribution))
               .slice(0, 2);
             const reasoningLine =
               topDomains.length >= 2
