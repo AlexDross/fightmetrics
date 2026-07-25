@@ -6923,6 +6923,11 @@ const buildSimulatorDomainRows = (result, modelToggle) => {
 // being wired into MatchupSimulator's render tree.
 function SimulatorContributionPanel({ fA, fB, result, modelToggle }) {
   const [expanded, setExpanded] = useState(() => new Set());
+  // Separate from `expanded`: a domain must already be expanded before its
+  // technical toggle is reachable, and collapsing the domain again (see
+  // isOpen && hasFeatures below) hides the raw coefficients along with it --
+  // no need to also clear technicalOpen on collapse.
+  const [technicalOpen, setTechnicalOpen] = useState(() => new Set());
   if (!fA || !fB || !result) return null;
 
   const rows = buildSimulatorDomainRows(result, modelToggle);
@@ -6930,6 +6935,15 @@ function SimulatorContributionPanel({ fA, fB, result, modelToggle }) {
 
   const toggleExpanded = (key) => {
     setExpanded((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  };
+
+  const toggleTechnical = (key) => {
+    setTechnicalOpen((prev) => {
       const next = new Set(prev);
       if (next.has(key)) next.delete(key);
       else next.add(key);
@@ -6956,10 +6970,18 @@ function SimulatorContributionPanel({ fA, fB, result, modelToggle }) {
           const nearEmptyCopy = SIMULATOR_NEAR_EMPTY_COPY[nearEmptyKey];
           const headlineStats = row.isGlobal ? [] : getSimulatorHeadlineStats(row.key, modelToggle, fA, fB);
           const hasFeatures = row.features.length > 0;
+          // Global-under-v2 is the only row that's ever truly inert (0
+          // features -- SIMULATOR_GLOBAL_GROUP.v2 is deliberately empty, see
+          // its own comment above). Rendering it as a div instead of a
+          // button drops the implied clickability (default button cursor)
+          // that a no-op onClick left behind, rather than distinguishing it
+          // with new visual language for a case that only ever fires once.
+          const RowWrapper = hasFeatures ? 'button' : 'div';
+          const isTechnicalOpen = technicalOpen.has(row.key);
           return (
             <div key={row.key} className="bg-slate-800/40 rounded-xl overflow-hidden">
-              <button
-                onClick={() => hasFeatures && toggleExpanded(row.key)}
+              <RowWrapper
+                {...(hasFeatures ? { onClick: () => toggleExpanded(row.key) } : {})}
                 className="w-full text-left p-4"
               >
                 <div className="flex items-center justify-between gap-3 mb-2">
@@ -6997,7 +7019,7 @@ function SimulatorContributionPanel({ fA, fB, result, modelToggle }) {
                     )}
                   </>
                 )}
-              </button>
+              </RowWrapper>
               {isOpen && hasFeatures && (
                 <div className="border-t border-slate-700/50 px-4 pb-3 pt-2 space-y-1.5">
                   {row.features.map((f) => {
@@ -7022,22 +7044,44 @@ function SimulatorContributionPanel({ fA, fB, result, modelToggle }) {
                               <span className="text-slate-600"> (raw {rawB.toFixed(2)})</span>
                             )}
                           </span>
-                        ) : null}
-                        <span
-                          className={`font-mono font-bold ${
-                            f.contribution > 0
-                              ? 'text-blue-400'
-                              : f.contribution < 0
-                              ? 'text-red-400'
-                              : 'text-slate-500'
-                          }`}
-                        >
-                          {f.contribution > 0 ? '+' : ''}
-                          {f.contribution.toFixed(4)}
-                        </span>
+                        ) : (
+                          // v2 features are trained on a single signed A-minus-B
+                          // diff (App.js featsV2, e.g. reach: fA.REACH_IN -
+                          // fB.REACH_IN) -- there's no separate per-fighter pair
+                          // to show the way v1's auditRows carry one. featsV2Value
+                          // was already computed by buildSimulatorDomainRows and
+                          // left unrendered; this surfaces it as the v2 analog of
+                          // v1's raw stat comparison, distinct from the model's
+                          // internal contribution coefficient shown below.
+                          <span className="text-slate-400 font-mono">
+                            {typeof f.featsV2Value === 'number'
+                              ? `${f.featsV2Value > 0 ? '+' : ''}${f.featsV2Value.toFixed(2)} (A−B)`
+                              : '—'}
+                          </span>
+                        )}
+                        {isTechnicalOpen && (
+                          <span
+                            className={`font-mono font-bold ${
+                              f.contribution > 0
+                                ? 'text-blue-400'
+                                : f.contribution < 0
+                                ? 'text-red-400'
+                                : 'text-slate-500'
+                            }`}
+                          >
+                            {f.contribution > 0 ? '+' : ''}
+                            {f.contribution.toFixed(4)}
+                          </span>
+                        )}
                       </div>
                     );
                   })}
+                  <button
+                    onClick={() => toggleTechnical(row.key)}
+                    className="text-slate-600 hover:text-slate-400 text-[11px] pt-1 transition-colors"
+                  >
+                    {isTechnicalOpen ? 'Hide technical details' : 'Show technical details'}
+                  </button>
                 </div>
               )}
             </div>
