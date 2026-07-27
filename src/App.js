@@ -7177,30 +7177,26 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
 
       {result && fA && fB ? (
         <div className="space-y-4">
-          {/* ── SECTION 1: THE VERDICT ── */}
+          {/* ── SECTION 1: THE VERDICT HERO ── */}
           {(() => {
             const pctA = (activePA * 100).toFixed(1);
             const pctB = (activePB * 100).toFixed(1);
             const favA = activePA > activePB;
             const winner = favA ? fA : fB;
+            const winnerPct = favA ? pctA : pctB;
             // Low-sample de-emphasis: same underlying signal as the existing
             // "Low Credibility" Matchup Context pill (App.js CREDIBILITY < 30
             // check), applied here to the headline number's own visual
             // certainty instead of a separate pill only. Does not change
-            // activePA/pctA/pctB themselves -- purely a style branch.
+            // activePA/pctA/pctB themselves -- purely a style branch. Carried
+            // over unchanged from the pre-recompose hero.
             const avgCredibility = ((fA.CREDIBILITY ?? 100) + (fB.CREDIBILITY ?? 100)) / 2;
             const lowSample = avgCredibility < 50;
             const minTracked = Math.min(fA.TOTAL_MIN ?? 0, fB.TOTAL_MIN ?? 0);
             // Toggle-aware: reuses buildSimulatorDomainRows (the same source
             // the Contribution Breakdown panel renders) instead of always
-            // reading result.edges, which is v1-only. Previously this line
-            // stayed v1-derived even under a v2 headline, so it could name
-            // domains for the fighter v1 favors while the percentage above it
-            // showed v2's -- possible on any Model Disagreement matchup.
-            // totalContribution follows the same "positive favors A" sign
-            // convention as result.edges[k].weighted (see SimulatorContribution
-            // Panel's own favA derivation, App.js:6928), so the favA/sort
-            // logic below is unchanged -- only the data source is toggle-aware.
+            // reading result.edges, which is v1-only. See sim/recompose commit
+            // "make verdict reasoning line toggle-aware" for the full history.
             const topDomains = buildSimulatorDomainRows(result, modelToggle)
               .filter((r) => !r.isGlobal)
               .filter((r) => (favA ? r.totalContribution > 0 : r.totalContribution < 0))
@@ -7212,6 +7208,44 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                 : topDomains.length === 1
                 ? `${winner.FIGHTER.split(' ').pop()} wins on ${topDomains[0].label.toLowerCase()}`
                 : `${winner.FIGHTER.split(' ').pop()} has the overall edge`;
+            // Confidence derives from the DISPLAYED model's own probability
+            // spread (activePA/activePB, already toggle-aware), not the raw
+            // ELO gap (result.diff -- its own comment calls it legacy) which
+            // was decoupled from whatever probability was actually on screen.
+            // Display-derived only: reads activePA, writes nothing back.
+            // Thresholds match the app's existing NO READ/LEAN precedent
+            // (App.js: market.pickProb < 0.53 => NO READ; v2 bet-rec bands
+            // at 0.60/0.65/0.70) rather than inventing new numbers. Carried
+            // over unchanged; only its presentation (badge instead of a
+            // second grid tile) changed.
+            const spread = Math.abs(activePA - 0.5) * 2;
+            const confidenceLabel =
+              spread >= 0.30 ? 'Clear edge' : spread >= 0.06 ? 'Moderate' : 'Coin flip';
+            const confidenceBadgeCls =
+              spread >= 0.30
+                ? 'text-emerald-400 bg-emerald-900/20 border-emerald-800/40'
+                : spread >= 0.06
+                ? 'text-yellow-400 bg-yellow-900/20 border-yellow-800/40'
+                : 'text-slate-300 bg-slate-800/40 border-slate-700/40';
+            // Model Disagreement: moved in from the old Matchup Context Flags
+            // list (was one of nine generic pills) -- this is specifically
+            // about how the two models the toggle switches between disagree,
+            // so it belongs where the toggle lives. Condition unchanged: only
+            // flags when v2's pick clears the app's own existing NO READ
+            // boundary (App.js: market.pickProb < 0.53 => NO READ) -- a
+            // 49.8/50.2 split is noise, not a real disagreement.
+            let disagreement = null;
+            if (result.v2pA != null) {
+              const v1FavorsA = result.pA > 0.5;
+              const v2FavorsA = result.v2pA > 0.5;
+              const v2PickProb = Math.max(result.v2pA, result.v2pB);
+              if (v1FavorsA !== v2FavorsA && v2PickProb >= 0.53) {
+                disagreement = {
+                  v1Favors: (v1FavorsA ? fA : fB).FIGHTER.split(' ').pop(),
+                  v2Favors: (v2FavorsA ? fA : fB).FIGHTER.split(' ').pop(),
+                };
+              }
+            }
             return (
               <div className="bg-slate-900 border border-slate-700 rounded-xl p-5">
                 <div className="flex items-center justify-between mb-4">
@@ -7242,21 +7276,31 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                     </div>
                   )}
                 </div>
-                <div className="flex items-center gap-3 mb-3">
-                  <span className="text-blue-400 font-bold text-sm w-28 truncate">
-                    {fA.FIGHTER}
-                  </span>
-                  <div className="flex-1 h-3 bg-slate-800 rounded-full overflow-hidden flex">
-                    <div
-                      className="h-full bg-blue-500 rounded-l-full transition-all"
-                      style={{ width: `${activePA * 100}%` }}
-                    />
-                    <div className="h-full bg-red-500 flex-1 rounded-r-full" />
-                  </div>
-                  <span className="text-red-400 font-bold text-sm w-28 truncate text-right">
-                    {fB.FIGHTER}
-                  </span>
+
+                {/* One clear statement -- replaces the old Model Favorite tile
+                    outright (it said nothing this doesn't already say). Full
+                    name, no width constraint, wraps instead of truncating. */}
+                <p className={lowSample ? 'text-slate-200 font-bold text-xl leading-snug mb-1.5' : 'text-white font-black text-xl leading-snug mb-1.5'}>
+                  <span className={favA ? 'text-blue-400' : 'text-red-400'}>{winner.FIGHTER}</span>
+                  {' favored, '}{winnerPct}%
+                </p>
+                <span className={`inline-block text-xs font-bold px-2 py-0.5 rounded-full border mb-3 ${confidenceBadgeCls}`}>
+                  {confidenceLabel}
+                </span>
+
+                {/* Split bar: names stacked above/below (A upper-left, B
+                    lower-right) instead of fixed-width w-28 truncate side
+                    labels -- guarantees no truncation regardless of name
+                    length on either side. */}
+                <p className="text-blue-400 font-bold text-sm mb-1">{fA.FIGHTER}</p>
+                <div className="h-3 bg-slate-800 rounded-full overflow-hidden flex">
+                  <div
+                    className="h-full bg-blue-500 rounded-l-full transition-all"
+                    style={{ width: `${activePA * 100}%` }}
+                  />
+                  <div className="h-full bg-red-500 flex-1 rounded-r-full" />
                 </div>
+                <p className="text-red-400 font-bold text-sm text-right mt-1 mb-2">{fB.FIGHTER}</p>
                 <div className="flex justify-between px-1 mb-2">
                   <span className={lowSample ? 'text-slate-300 font-semibold text-2xl' : 'text-white font-black text-2xl'}>
                     {pctA}%
@@ -7270,50 +7314,20 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                     low sample — {minTracked} min tracked
                   </p>
                 )}
-                <p className="text-slate-500 text-xs text-center italic mb-4">
+
+                {/* Reasoning promoted from a tiny italic caption -- it's the
+                    one piece here that's genuinely new information (why),
+                    so it earns more visual weight than the redundant tiles
+                    it replaces did. */}
+                <p className="text-slate-300 text-sm text-center mb-1">
                   {reasoningLine}
                 </p>
-                {(() => {
-                  // Confidence derives from the DISPLAYED model's own probability
-                  // spread (activePA/activePB, already toggle-aware), not the raw
-                  // ELO gap (result.diff -- its own comment calls it legacy) which
-                  // was decoupled from whatever probability was actually on screen.
-                  // Display-derived only: reads activePA, writes nothing back.
-                  // Thresholds match the app's existing NO READ/LEAN precedent
-                  // (App.js: market.pickProb < 0.53 => NO READ; v2 bet-rec bands
-                  // at 0.60/0.65/0.70) rather than inventing new numbers.
-                  const spread = Math.abs(activePA - 0.5) * 2;
-                  const confidenceLabel =
-                    spread >= 0.30 ? 'Clear edge' : spread >= 0.06 ? 'Moderate' : 'Coin flip';
-                  const confidenceColor =
-                    spread >= 0.30
-                      ? 'text-emerald-400'
-                      : spread >= 0.06
-                      ? 'text-yellow-400'
-                      : 'text-slate-300';
-                  return (
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="bg-slate-800/40 rounded-lg p-3 text-center">
-                        <p className="text-slate-500 text-xs">Model Favorite</p>
-                        <p
-                          className={`font-bold text-sm mt-1 ${
-                            favA ? 'text-blue-400' : 'text-red-400'
-                          }`}
-                        >
-                          {favA
-                            ? fA.FIGHTER.split(' ').pop()
-                            : fB.FIGHTER.split(' ').pop()}
-                        </p>
-                      </div>
-                      <div className="bg-slate-800/40 rounded-lg p-3 text-center">
-                        <p className="text-slate-500 text-xs">Confidence</p>
-                        <p className={`font-black text-lg mt-1 ${confidenceColor}`}>
-                          {confidenceLabel}
-                        </p>
-                      </div>
-                    </div>
-                  );
-                })()}
+
+                {disagreement && (
+                  <p className="text-amber-400 text-xs text-center bg-amber-950/20 border border-amber-800/40 rounded-lg px-3 py-2 mt-3">
+                    ⚠ Model Disagreement — v1 favors {disagreement.v1Favors}, v2 favors {disagreement.v2Favors}
+                  </p>
+                )}
               </div>
             );
           })()}
@@ -7344,22 +7358,8 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
               flags.push({ label: 'Active Loss Streak', color: 'text-red-400 bg-red-900/20 border-red-800/40' });
             if (Math.abs(result.qualMomDiff ?? 0) > 0.5)
               flags.push({ label: `Form Edge: ${(result.qualMomDiff ?? 0) > 0 ? fA.FIGHTER.split(' ').pop() : fB.FIGHTER.split(' ').pop()}`, color: 'text-emerald-400 bg-emerald-900/20 border-emerald-800/40' });
-            // Flag only when v2's pick clears the app's own existing NO READ
-            // boundary (App.js: market.pickProb < 0.53 => NO READ) -- a
-            // 49.8/50.2 split is noise, not a real disagreement.
-            if (result.v2pA != null) {
-              const v1FavorsA = result.pA > 0.5;
-              const v2FavorsA = result.v2pA > 0.5;
-              const v2PickProb = Math.max(result.v2pA, result.v2pB);
-              if (v1FavorsA !== v2FavorsA && v2PickProb >= 0.53) {
-                const v1Favors = (v1FavorsA ? fA : fB).FIGHTER.split(' ').pop();
-                const v2Favors = (v2FavorsA ? fA : fB).FIGHTER.split(' ').pop();
-                flags.push({
-                  label: `Model Disagreement — v1 favors ${v1Favors}, v2 favors ${v2Favors}`,
-                  color: 'text-amber-400 bg-amber-900/20 border-amber-800/40',
-                });
-              }
-            }
+            // Model Disagreement moved to the verdict hero above -- not
+            // computed here anymore.
             if (flags.length === 0) return null;
             return (
               <div className="bg-slate-900 border border-slate-700 rounded-xl p-4">
