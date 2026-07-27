@@ -7145,7 +7145,7 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
 
   return (
     <div className="max-w-5xl mx-auto px-5 py-8">
-      <div className="mb-6">
+      <div className="hidden sm:block mb-6">
         <h2 className="text-white font-black text-xl mb-1">
           Matchup Simulator
         </h2>
