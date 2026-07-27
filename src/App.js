@@ -7177,6 +7177,58 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
 
       {result && fA && fB ? (
         <div className="space-y-4">
+          {/* ── MARKET ODDS INPUT ── */}
+          <div className="bg-slate-900 border border-slate-700 rounded-xl p-5">
+            <p className="text-white text-xs font-black uppercase tracking-widest mb-1">
+              Enter Market Lines
+            </p>
+            <p className="text-slate-500 text-xs mb-4">
+              Input current sportsbook moneyline odds to unlock value analysis
+            </p>
+            <div className="grid grid-cols-2 gap-4 mb-4">
+              {[
+                { f: fA, val: oddsA, set: setOddsA, color: 'blue', ph: '-150' },
+                { f: fB, val: oddsB, set: setOddsB, color: 'red', ph: '+130' },
+              ].map(({ f, val, set, color, ph }) => (
+                <div key={color}>
+                  <label
+                    className={`text-xs font-bold mb-1.5 block ${
+                      color === 'blue' ? 'text-blue-400' : 'text-red-400'
+                    }`}
+                  >
+                    {f.FIGHTER}
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={val}
+                      onChange={(e) => {
+                        let v = e.target.value.replace(/[^0-9+-]/g, '');
+                        if (v.length > 0 && v[0] !== '+' && v[0] !== '-')
+                          v = '';
+                        if (v.length > 5) v = v.slice(0, 5);
+                        set(v);
+                      }}
+                      placeholder={ph}
+                      className="w-full bg-slate-800 border border-slate-600 rounded-lg px-4 py-3 text-white font-black text-xl text-center placeholder-slate-700 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30 transition-colors"
+                    />
+                    {parseAmericanOdds(val) != null && (
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-500">
+                        {(parseAmericanOdds(val) * 100).toFixed(1)}%
+                      </span>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {oddsA && oddsB && !market && (
+              <p className="text-orange-400 text-xs mt-3 text-center">
+                Enter valid American odds for both fighters (e.g. -200 and +170)
+              </p>
+            )}
+          </div>
+
           {/* ── SECTION 1: THE VERDICT HERO ── */}
           {(() => {
             const pctA = (activePA * 100).toFixed(1);
@@ -7332,9 +7384,6 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
             );
           })()}
 
-          <p className="sm:hidden text-slate-600 text-xs text-center">
-            Saving is available on desktop.
-          </p>
 
           {/* ── MATCHUP CONTEXT FLAGS ── */}
           {(() => {
@@ -7379,195 +7428,6 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
 
           {/* ── CONTRIBUTION BREAKDOWN (replaces Key Advantages, Domain Breakdown, Model Input Comparison) ── */}
           <SimulatorContributionPanel fA={fA} fB={fB} result={result} modelToggle={modelToggle} />
-
-          <div className="hidden sm:block bg-slate-900 border border-slate-700 rounded-xl p-5">
-            <div className="flex items-center justify-between gap-4 mb-4">
-              <div>
-                <p className="text-white text-xs font-black uppercase tracking-widest">
-                  Send To ROI Tracker
-                </p>
-                <p className="text-slate-500 text-xs mt-1">
-                  Save this matchup to grade the pick later against the real
-                  result.
-                </p>
-              </div>
-              {saveFeedback && (
-                <span className="text-emerald-400 text-xs font-semibold">
-                  {saveFeedback}
-                </span>
-              )}
-            </div>
-            <div className="grid grid-cols-3 gap-4 mb-4">
-              <div>
-                <label className="text-slate-500 text-xs font-semibold uppercase tracking-wider block mb-1.5">
-                  Event Name
-                </label>
-                <input
-                  type="text"
-                  value={eventName}
-                  onChange={(e) => setEventName(e.target.value)}
-                  placeholder="UFC 325"
-                  className="w-full bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-red-500"
-                />
-              </div>
-              <div>
-                <label className="text-slate-500 text-xs font-semibold uppercase tracking-wider block mb-1.5">
-                  Event Date
-                </label>
-                <input
-                  type="date"
-                  value={eventDate}
-                  onChange={(e) => setEventDate(e.target.value)}
-                  className="w-full bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-red-500"
-                />
-              </div>
-              <div>
-                <label className="text-slate-500 text-xs font-semibold uppercase tracking-wider block mb-1.5">
-                  Units Staked
-                </label>
-                <input
-                  type="number"
-                  step="0.1"
-                  min="0"
-                  value={unitsWagered}
-                  onChange={(e) => setUnitsWagered(e.target.value)}
-                  placeholder="1"
-                  className="w-full bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-red-500"
-                />
-              </div>
-            </div>
-            {(() => {
-              const savePick = activePA >= activePB ? fA.FIGHTER : fB.FIGHTER;
-              const saveProb = Math.max(activePA, activePB);
-              return (
-            <div className="grid grid-cols-3 gap-3 mb-4">
-              <div className="bg-slate-800/40 rounded-lg p-3">
-                <p className="text-slate-500 text-xs">Model pick</p>
-                <p className="text-white font-bold text-sm mt-1">
-                  {savePick}
-                </p>
-                <p className="text-slate-500 text-xs mt-0.5">
-                  {(saveProb * 100).toFixed(1)}% win prob
-                </p>
-              </div>
-              <div className="bg-slate-800/40 rounded-lg p-3">
-                <p className="text-slate-500 text-xs">Bet recommendation</p>
-                {market &&
-                (market.betAction === 'LEAN' ||
-                  market.betAction === 'BET' ||
-                  market.betAction === 'STRONG BET') ? (
-                  <>
-                    <p className="font-bold text-sm mt-1 text-emerald-400">
-                      {market.betAction}
-                    </p>
-                    {market.bestBet && (
-                      <p className="text-slate-400 text-xs mt-0.5">
-                        {market.bestBet === 'A' ? fA.FIGHTER : fB.FIGHTER}
-                      </p>
-                    )}
-                  </>
-                ) : (
-                  <p className="font-bold text-sm mt-1 text-slate-600">—</p>
-                )}
-              </div>
-              <div className="bg-slate-800/40 rounded-lg p-3">
-                <p className="text-slate-500 text-xs">Saved with market</p>
-                <p className="text-white font-bold text-sm mt-1">
-                  {market ? 'Yes' : 'No'}
-                </p>
-              </div>
-            </div>
-              );
-            })()}
-            <div className="flex gap-3 flex-wrap">
-              <button
-                onClick={() => {
-                  if (!fA || !fB) return;
-                  const entry = buildRoiEntry({
-                    fA, fB, oddsA, oddsB,
-                    eventName: eventName.trim(),
-                    eventDate,
-                    modelToggle,
-                    unitsWagered: unitsWagered.trim() ? Number(unitsWagered) : 1,
-                  });
-                  onSaveToUpcoming?.(entry);
-                  setSaveFeedback('Saved to Upcoming.');
-                }}
-                className="px-4 py-2 rounded-lg border border-blue-700 text-blue-300 text-sm font-semibold hover:text-white hover:border-blue-500 transition-colors"
-              >
-                Save to Upcoming
-              </button>
-              <button
-                onClick={() => {
-                  if (!fA || !fB) return;
-                  const entry = buildRoiEntry({
-                    fA, fB, oddsA, oddsB,
-                    eventName: eventName.trim(),
-                    eventDate,
-                    modelToggle,
-                    unitsWagered: unitsWagered.trim() ? Number(unitsWagered) : 1,
-                  });
-                  onSaveToUpcomingAndOpen?.(entry);
-                  setSaveFeedback('Saved to Upcoming.');
-                }}
-                className="px-4 py-2 rounded-lg bg-blue-700 text-white text-sm font-semibold hover:bg-blue-600 transition-colors"
-              >
-                Save and Open Upcoming
-              </button>
-            </div>
-          </div>
-
-          {/* ── MARKET ODDS INPUT ── */}
-          <div className="bg-slate-900 border border-slate-700 rounded-xl p-5">
-            <p className="text-white text-xs font-black uppercase tracking-widest mb-1">
-              Enter Market Lines
-            </p>
-            <p className="text-slate-500 text-xs mb-4">
-              Input current sportsbook moneyline odds to unlock value analysis
-            </p>
-            <div className="grid grid-cols-2 gap-4 mb-4">
-              {[
-                { f: fA, val: oddsA, set: setOddsA, color: 'blue', ph: '-150' },
-                { f: fB, val: oddsB, set: setOddsB, color: 'red', ph: '+130' },
-              ].map(({ f, val, set, color, ph }) => (
-                <div key={color}>
-                  <label
-                    className={`text-xs font-bold mb-1.5 block ${
-                      color === 'blue' ? 'text-blue-400' : 'text-red-400'
-                    }`}
-                  >
-                    {f.FIGHTER}
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      value={val}
-                      onChange={(e) => {
-                        let v = e.target.value.replace(/[^0-9+-]/g, '');
-                        if (v.length > 0 && v[0] !== '+' && v[0] !== '-')
-                          v = '';
-                        if (v.length > 5) v = v.slice(0, 5);
-                        set(v);
-                      }}
-                      placeholder={ph}
-                      className="w-full bg-slate-800 border border-slate-600 rounded-lg px-4 py-3 text-white font-black text-xl text-center placeholder-slate-700 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30 transition-colors"
-                    />
-                    {parseAmericanOdds(val) != null && (
-                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-500">
-                        {(parseAmericanOdds(val) * 100).toFixed(1)}%
-                      </span>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {oddsA && oddsB && !market && (
-              <p className="text-orange-400 text-xs mt-3 text-center">
-                Enter valid American odds for both fighters (e.g. -200 and +170)
-              </p>
-            )}
-          </div>
 
           {/* ── BETTING ANALYSIS (only when odds entered) ── */}
           {market && (
@@ -8158,6 +8018,147 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                 </>
               );
             })()}
+          </div>
+
+          <p className="sm:hidden text-slate-600 text-xs text-center">
+            Saving is available on desktop.
+          </p>
+
+          <div className="hidden sm:block bg-slate-900 border border-slate-700 rounded-xl p-5">
+            <div className="flex items-center justify-between gap-4 mb-4">
+              <div>
+                <p className="text-white text-xs font-black uppercase tracking-widest">
+                  Save to Upcoming
+                </p>
+                <p className="text-slate-500 text-xs mt-1">
+                  Save this matchup to grade the pick later against the real
+                  result.
+                </p>
+              </div>
+              {saveFeedback && (
+                <span className="text-emerald-400 text-xs font-semibold">
+                  {saveFeedback}
+                </span>
+              )}
+            </div>
+            <div className="grid grid-cols-3 gap-4 mb-4">
+              <div>
+                <label className="text-slate-500 text-xs font-semibold uppercase tracking-wider block mb-1.5">
+                  Event Name
+                </label>
+                <input
+                  type="text"
+                  value={eventName}
+                  onChange={(e) => setEventName(e.target.value)}
+                  placeholder="UFC 325"
+                  className="w-full bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-red-500"
+                />
+              </div>
+              <div>
+                <label className="text-slate-500 text-xs font-semibold uppercase tracking-wider block mb-1.5">
+                  Event Date
+                </label>
+                <input
+                  type="date"
+                  value={eventDate}
+                  onChange={(e) => setEventDate(e.target.value)}
+                  className="w-full bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-red-500"
+                />
+              </div>
+              <div>
+                <label className="text-slate-500 text-xs font-semibold uppercase tracking-wider block mb-1.5">
+                  Units Staked
+                </label>
+                <input
+                  type="number"
+                  step="0.1"
+                  min="0"
+                  value={unitsWagered}
+                  onChange={(e) => setUnitsWagered(e.target.value)}
+                  placeholder="1"
+                  className="w-full bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-red-500"
+                />
+              </div>
+            </div>
+            {(() => {
+              const savePick = activePA >= activePB ? fA.FIGHTER : fB.FIGHTER;
+              const saveProb = Math.max(activePA, activePB);
+              return (
+            <div className="grid grid-cols-3 gap-3 mb-4">
+              <div className="bg-slate-800/40 rounded-lg p-3">
+                <p className="text-slate-500 text-xs">Model pick</p>
+                <p className="text-white font-bold text-sm mt-1">
+                  {savePick}
+                </p>
+                <p className="text-slate-500 text-xs mt-0.5">
+                  {(saveProb * 100).toFixed(1)}% win prob
+                </p>
+              </div>
+              <div className="bg-slate-800/40 rounded-lg p-3">
+                <p className="text-slate-500 text-xs">Bet recommendation</p>
+                {market &&
+                (market.betAction === 'LEAN' ||
+                  market.betAction === 'BET' ||
+                  market.betAction === 'STRONG BET') ? (
+                  <>
+                    <p className="font-bold text-sm mt-1 text-emerald-400">
+                      {market.betAction}
+                    </p>
+                    {market.bestBet && (
+                      <p className="text-slate-400 text-xs mt-0.5">
+                        {market.bestBet === 'A' ? fA.FIGHTER : fB.FIGHTER}
+                      </p>
+                    )}
+                  </>
+                ) : (
+                  <p className="font-bold text-sm mt-1 text-slate-600">—</p>
+                )}
+              </div>
+              <div className="bg-slate-800/40 rounded-lg p-3">
+                <p className="text-slate-500 text-xs">Saved with market</p>
+                <p className="text-white font-bold text-sm mt-1">
+                  {market ? 'Yes' : 'No'}
+                </p>
+              </div>
+            </div>
+              );
+            })()}
+            <div className="flex gap-3 flex-wrap">
+              <button
+                onClick={() => {
+                  if (!fA || !fB) return;
+                  const entry = buildRoiEntry({
+                    fA, fB, oddsA, oddsB,
+                    eventName: eventName.trim(),
+                    eventDate,
+                    modelToggle,
+                    unitsWagered: unitsWagered.trim() ? Number(unitsWagered) : 1,
+                  });
+                  onSaveToUpcoming?.(entry);
+                  setSaveFeedback('Saved to Upcoming.');
+                }}
+                className="px-4 py-2 rounded-lg border border-blue-700 text-blue-300 text-sm font-semibold hover:text-white hover:border-blue-500 transition-colors"
+              >
+                Save to Upcoming
+              </button>
+              <button
+                onClick={() => {
+                  if (!fA || !fB) return;
+                  const entry = buildRoiEntry({
+                    fA, fB, oddsA, oddsB,
+                    eventName: eventName.trim(),
+                    eventDate,
+                    modelToggle,
+                    unitsWagered: unitsWagered.trim() ? Number(unitsWagered) : 1,
+                  });
+                  onSaveToUpcomingAndOpen?.(entry);
+                  setSaveFeedback('Saved to Upcoming.');
+                }}
+                className="px-4 py-2 rounded-lg bg-blue-700 text-white text-sm font-semibold hover:bg-blue-600 transition-colors"
+              >
+                Save and Open Upcoming
+              </button>
+            </div>
           </div>
 
         </div>
