@@ -9305,9 +9305,19 @@ export default function App() {
   // today's entries are included.
   const now = new Date();
   const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-  const [upcomingEntries, setUpcomingEntries] = useState(
-    UPCOMING_ENTRIES.filter(e => isUpcomingVisible(e.eventDate, today))
-  );
+  // Excludes anything already graded in ROI_ENTRIES (the raw file import, not
+  // derived roiEntries state -- this runs before that state exists) so a
+  // stale upcomingData.js export can't resurrect a graded fight as a ghost
+  // pending entry on reload. Matches by id, which buildRoiEntry/
+  // handleGradeUpcoming stamp once and carry unchanged from Upcoming into
+  // ROI. Composes with isUpcomingVisible rather than replacing it -- both
+  // conditions must hold.
+  const [upcomingEntries, setUpcomingEntries] = useState(() => {
+    const gradedIds = new Set(ROI_ENTRIES.map((e) => e.id));
+    return UPCOMING_ENTRIES.filter(
+      (e) => isUpcomingVisible(e.eventDate, today) && !gradedIds.has(e.id)
+    );
+  });
   const [roiEntries, setRoiEntries] = useState(() => {
     const fightersByName = Object.fromEntries(FIGHTERS.map((f) => [f.FIGHTER, f]));
     return ROI_ENTRIES.map((entry) => {
