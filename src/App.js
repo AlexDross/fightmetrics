@@ -6455,6 +6455,31 @@ const SIMULATOR_DOMAIN_MAP = {
   },
 };
 
+// Human-readable readings for the 16 raw MODEL_V2.features identifiers
+// (the exact set referenced by SIMULATOR_DOMAIN_MAP's v2 arrays above).
+// v1's per-feature labels never need this -- they already come out of
+// auditRows as plain language (e.g. "Sig Strikes Landed / Min"). v2's
+// come out of result.v2Contributions keyed by the raw feature name, which
+// buildSimulatorDomainRows used to surface verbatim.
+const V2_FEATURE_LABELS = {
+  sig_str_landed: 'Significant strikes landed per minute',
+  sig_str_accuracy: 'Significant strike accuracy',
+  td_landed: 'Takedowns landed per 15 min',
+  td_accuracy: 'Takedown accuracy',
+  sub_attempts: 'Submission attempts per 15 min',
+  reach: 'Reach',
+  height: 'Height',
+  younger: 'Age (younger-fighter advantage)',
+  modern_form: 'Recent form (last 8 fights, weighted)',
+  wins: 'Total wins',
+  losses: 'Total losses',
+  rounds: 'Total rounds fought',
+  title_bouts: 'Title-fight experience',
+  ko_wins: 'KO/TKO wins',
+  sub_wins: 'Submission wins',
+  elo: 'ELO rating',
+};
+
 // Not part of the 6-domain loop above -- rendered as its own, always-last
 // group. resultFields reference the Step-1-added scalar fields on
 // computeMatchupEdges' return object, not auditRows.
@@ -6558,6 +6583,7 @@ const fmtT = (f, { key, dec, signed, pct }) => {
 // renders — defining it inline remounted the subtree (and reset FighterSearch
 // state) on every keystroke in the odds/event inputs.
 const FighterPanel = ({ f, setF, color, ph, allFighters, fA, fB }) => {
+  const [showFull, setShowFull] = useState(false);
   const tc = color === 'blue' ? 'text-blue-400' : 'text-red-400';
   const bc =
     color === 'blue'
@@ -6577,16 +6603,31 @@ const FighterPanel = ({ f, setF, color, ph, allFighters, fA, fB }) => {
       />
       {f && (
         <div className={`mt-2 border ${bc} rounded-xl p-4`}>
-          {/* Header tier: weight class eyebrow + label + record */}
-          <div className="mb-3 pb-3 border-b border-slate-700/50">
-            <p className="text-slate-500 text-xs mb-1">{f.WEIGHT_CLASS}</p>
-            <div className="flex items-baseline justify-between">
+          {/* Compact summary: always visible, replaces the old header tier
+              (weight class / Fighter A-B label / record) below -- that tier
+              is dropped from the full-profile disclosure since it would be
+              a word-for-word repeat of this block once expanded. */}
+          <div className="flex items-center justify-between gap-3">
+            <div className="min-w-0">
               <p className={`text-xs font-bold ${tc}`}>
                 {color === 'blue' ? 'Fighter A' : 'Fighter B'}
               </p>
-              <p className="text-white font-black text-lg">{f.RECORD}</p>
+              <p className="text-white font-black text-base leading-snug">
+                {f.FIGHTER}
+              </p>
+              <p className="text-slate-500 text-xs mt-0.5">
+                {f.WEIGHT_CLASS} · {f.RECORD} · RTG {f.ADJUSTED_RATING.toFixed(1)}
+              </p>
             </div>
+            <button
+              onClick={() => setShowFull((o) => !o)}
+              className="shrink-0 text-slate-500 hover:text-slate-300 text-xs font-semibold"
+            >
+              {showFull ? 'Full Profile ▲' : 'Full Profile ▾'}
+            </button>
           </div>
+          {showFull && (
+          <div className="mt-3 pt-3 border-t border-slate-700/50">
           {/* Primary stats: RTG, Reach, Age */}
           <div className="grid grid-cols-3 gap-2 mb-3 pb-3 border-b border-slate-700/50">
             {[
@@ -6707,6 +6748,8 @@ const FighterPanel = ({ f, setF, color, ph, allFighters, fA, fB }) => {
               );
             })}
           </div>
+          </div>
+          )}
         </div>
       )}
     </div>
@@ -6858,7 +6901,7 @@ const buildSimulatorDomainRows = (result, modelToggle) => {
         .filter(Boolean);
     } else {
       features = domain.v2.map((featKey) => ({
-        label: featKey,
+        label: V2_FEATURE_LABELS[featKey] ?? featKey,
         contribution: result.v2Contributions?.[featKey] ?? 0,
         featsV2Value: result.featsV2?.[featKey] ?? null,
       }));
@@ -6898,6 +6941,11 @@ const buildSimulatorDomainRows = (result, modelToggle) => {
 // being wired into MatchupSimulator's render tree.
 function SimulatorContributionPanel({ fA, fB, result, modelToggle }) {
   const [expanded, setExpanded] = useState(() => new Set());
+  // Separate from `expanded`: a domain must already be expanded before its
+  // technical toggle is reachable, and collapsing the domain again (see
+  // isOpen && hasFeatures below) hides the raw coefficients along with it --
+  // no need to also clear technicalOpen on collapse.
+  const [technicalOpen, setTechnicalOpen] = useState(() => new Set());
   if (!fA || !fB || !result) return null;
 
   const rows = buildSimulatorDomainRows(result, modelToggle);
@@ -6905,6 +6953,15 @@ function SimulatorContributionPanel({ fA, fB, result, modelToggle }) {
 
   const toggleExpanded = (key) => {
     setExpanded((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  };
+
+  const toggleTechnical = (key) => {
+    setTechnicalOpen((prev) => {
       const next = new Set(prev);
       if (next.has(key)) next.delete(key);
       else next.add(key);
@@ -6931,10 +6988,18 @@ function SimulatorContributionPanel({ fA, fB, result, modelToggle }) {
           const nearEmptyCopy = SIMULATOR_NEAR_EMPTY_COPY[nearEmptyKey];
           const headlineStats = row.isGlobal ? [] : getSimulatorHeadlineStats(row.key, modelToggle, fA, fB);
           const hasFeatures = row.features.length > 0;
+          // Global-under-v2 is the only row that's ever truly inert (0
+          // features -- SIMULATOR_GLOBAL_GROUP.v2 is deliberately empty, see
+          // its own comment above). Rendering it as a div instead of a
+          // button drops the implied clickability (default button cursor)
+          // that a no-op onClick left behind, rather than distinguishing it
+          // with new visual language for a case that only ever fires once.
+          const RowWrapper = hasFeatures ? 'button' : 'div';
+          const isTechnicalOpen = technicalOpen.has(row.key);
           return (
             <div key={row.key} className="bg-slate-800/40 rounded-xl overflow-hidden">
-              <button
-                onClick={() => hasFeatures && toggleExpanded(row.key)}
+              <RowWrapper
+                {...(hasFeatures ? { onClick: () => toggleExpanded(row.key) } : {})}
                 className="w-full text-left p-4"
               >
                 <div className="flex items-center justify-between gap-3 mb-2">
@@ -6972,7 +7037,7 @@ function SimulatorContributionPanel({ fA, fB, result, modelToggle }) {
                     )}
                   </>
                 )}
-              </button>
+              </RowWrapper>
               {isOpen && hasFeatures && (
                 <div className="border-t border-slate-700/50 px-4 pb-3 pt-2 space-y-1.5">
                   {row.features.map((f) => {
@@ -6997,22 +7062,44 @@ function SimulatorContributionPanel({ fA, fB, result, modelToggle }) {
                               <span className="text-slate-600"> (raw {rawB.toFixed(2)})</span>
                             )}
                           </span>
-                        ) : null}
-                        <span
-                          className={`font-mono font-bold ${
-                            f.contribution > 0
-                              ? 'text-blue-400'
-                              : f.contribution < 0
-                              ? 'text-red-400'
-                              : 'text-slate-500'
-                          }`}
-                        >
-                          {f.contribution > 0 ? '+' : ''}
-                          {f.contribution.toFixed(4)}
-                        </span>
+                        ) : (
+                          // v2 features are trained on a single signed A-minus-B
+                          // diff (App.js featsV2, e.g. reach: fA.REACH_IN -
+                          // fB.REACH_IN) -- there's no separate per-fighter pair
+                          // to show the way v1's auditRows carry one. featsV2Value
+                          // was already computed by buildSimulatorDomainRows and
+                          // left unrendered; this surfaces it as the v2 analog of
+                          // v1's raw stat comparison, distinct from the model's
+                          // internal contribution coefficient shown below.
+                          <span className="text-slate-400 font-mono">
+                            {typeof f.featsV2Value === 'number'
+                              ? `${f.featsV2Value > 0 ? '+' : ''}${f.featsV2Value.toFixed(2)} (A−B)`
+                              : '—'}
+                          </span>
+                        )}
+                        {isTechnicalOpen && (
+                          <span
+                            className={`font-mono font-bold ${
+                              f.contribution > 0
+                                ? 'text-blue-400'
+                                : f.contribution < 0
+                                ? 'text-red-400'
+                                : 'text-slate-500'
+                            }`}
+                          >
+                            {f.contribution > 0 ? '+' : ''}
+                            {f.contribution.toFixed(4)}
+                          </span>
+                        )}
                       </div>
                     );
                   })}
+                  <button
+                    onClick={() => toggleTechnical(row.key)}
+                    className="text-slate-600 hover:text-slate-400 text-[11px] pt-1 transition-colors"
+                  >
+                    {isTechnicalOpen ? 'Hide technical details' : 'Show technical details'}
+                  </button>
                 </div>
               )}
             </div>
@@ -7058,7 +7145,7 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
 
   return (
     <div className="max-w-5xl mx-auto px-5 py-8">
-      <div className="mb-6">
+      <div className="hidden sm:block mb-6">
         <h2 className="text-white font-black text-xl mb-1">
           Matchup Simulator
         </h2>
@@ -7067,7 +7154,7 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
         </p>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
         <FighterPanel
           f={fA}
           setF={setFA}
@@ -7090,337 +7177,6 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
 
       {result && fA && fB ? (
         <div className="space-y-4">
-          {/* ── SECTION 1: THE VERDICT ── */}
-          {(() => {
-            const pctA = (activePA * 100).toFixed(1);
-            const pctB = (activePB * 100).toFixed(1);
-            const favA = activePA > activePB;
-            const winner = favA ? fA : fB;
-            // Low-sample de-emphasis: same underlying signal as the existing
-            // "Low Credibility" Matchup Context pill (App.js CREDIBILITY < 30
-            // check), applied here to the headline number's own visual
-            // certainty instead of a separate pill only. Does not change
-            // activePA/pctA/pctB themselves -- purely a style branch.
-            const avgCredibility = ((fA.CREDIBILITY ?? 100) + (fB.CREDIBILITY ?? 100)) / 2;
-            const lowSample = avgCredibility < 50;
-            const minTracked = Math.min(fA.TOTAL_MIN ?? 0, fB.TOTAL_MIN ?? 0);
-            const allDomainKeys = ['striking', 'grappling', 'physical', 'form', 'experience', 'analytics'];
-            const topDomains = allDomainKeys
-              .map((k) => result.edges[k])
-              .filter((e) => (favA ? e.clamped > 0 : e.clamped < 0))
-              .sort((a, b) => Math.abs(b.weighted) - Math.abs(a.weighted))
-              .slice(0, 2);
-            const reasoningLine =
-              topDomains.length >= 2
-                ? `${winner.FIGHTER.split(' ').pop()} wins on ${topDomains[0].label.toLowerCase()} and ${topDomains[1].label.toLowerCase()}`
-                : topDomains.length === 1
-                ? `${winner.FIGHTER.split(' ').pop()} wins on ${topDomains[0].label.toLowerCase()}`
-                : `${winner.FIGHTER.split(' ').pop()} has the overall edge`;
-            return (
-              <div className="bg-slate-900 border border-slate-700 rounded-xl p-5">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-3">
-                    <p className="text-slate-400 text-xs font-semibold uppercase tracking-widest">
-                      Win Probability
-                    </p>
-                    <p className="text-slate-600 text-xs font-mono">{MODEL_VERSION}</p>
-                  </div>
-                  {result.v2pA != null && (
-                    <div className="flex items-center gap-1 bg-slate-800 rounded-lg p-1">
-                      <button
-                        onClick={() => setModelToggle('v1')}
-                        className={`inline-flex items-center justify-center min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0 px-3 py-1 text-xs font-bold rounded-md transition-colors ${
-                          modelToggle === 'v1' ? 'bg-red-600 text-white' : 'text-slate-400 hover:text-white'
-                        }`}
-                      >
-                        v1
-                      </button>
-                      <button
-                        onClick={() => setModelToggle('v2')}
-                        className={`inline-flex items-center justify-center min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0 px-3 py-1 text-xs font-bold rounded-md transition-colors ${
-                          modelToggle === 'v2' ? 'bg-red-600 text-white' : 'text-slate-400 hover:text-white'
-                        }`}
-                      >
-                        v2
-                      </button>
-                    </div>
-                  )}
-                </div>
-                <div className="flex items-center gap-3 mb-3">
-                  <span className="text-blue-400 font-bold text-sm w-28 truncate">
-                    {fA.FIGHTER}
-                  </span>
-                  <div className="flex-1 h-3 bg-slate-800 rounded-full overflow-hidden flex">
-                    <div
-                      className="h-full bg-blue-500 rounded-l-full transition-all"
-                      style={{ width: `${activePA * 100}%` }}
-                    />
-                    <div className="h-full bg-red-500 flex-1 rounded-r-full" />
-                  </div>
-                  <span className="text-red-400 font-bold text-sm w-28 truncate text-right">
-                    {fB.FIGHTER}
-                  </span>
-                </div>
-                <div className="flex justify-between px-1 mb-2">
-                  <span className={lowSample ? 'text-slate-300 font-semibold text-2xl' : 'text-white font-black text-2xl'}>
-                    {pctA}%
-                  </span>
-                  <span className={lowSample ? 'text-slate-300 font-semibold text-2xl' : 'text-white font-black text-2xl'}>
-                    {pctB}%
-                  </span>
-                </div>
-                {lowSample && (
-                  <p className="text-amber-500 text-xs text-center mb-1">
-                    low sample — {minTracked} min tracked
-                  </p>
-                )}
-                <p className="text-slate-500 text-xs text-center italic mb-4">
-                  {reasoningLine}
-                </p>
-                {(() => {
-                  // Confidence derives from the DISPLAYED model's own probability
-                  // spread (activePA/activePB, already toggle-aware), not the raw
-                  // ELO gap (result.diff -- its own comment calls it legacy) which
-                  // was decoupled from whatever probability was actually on screen.
-                  // Display-derived only: reads activePA, writes nothing back.
-                  // Thresholds match the app's existing NO READ/LEAN precedent
-                  // (App.js: market.pickProb < 0.53 => NO READ; v2 bet-rec bands
-                  // at 0.60/0.65/0.70) rather than inventing new numbers.
-                  const spread = Math.abs(activePA - 0.5) * 2;
-                  const confidenceLabel =
-                    spread >= 0.30 ? 'Clear edge' : spread >= 0.06 ? 'Moderate' : 'Coin flip';
-                  const confidenceColor =
-                    spread >= 0.30
-                      ? 'text-emerald-400'
-                      : spread >= 0.06
-                      ? 'text-yellow-400'
-                      : 'text-slate-300';
-                  return (
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="bg-slate-800/40 rounded-lg p-3 text-center">
-                        <p className="text-slate-500 text-xs">Model Favorite</p>
-                        <p
-                          className={`font-bold text-sm mt-1 ${
-                            favA ? 'text-blue-400' : 'text-red-400'
-                          }`}
-                        >
-                          {favA
-                            ? fA.FIGHTER.split(' ').pop()
-                            : fB.FIGHTER.split(' ').pop()}
-                        </p>
-                      </div>
-                      <div className="bg-slate-800/40 rounded-lg p-3 text-center">
-                        <p className="text-slate-500 text-xs">Confidence</p>
-                        <p className={`font-black text-lg mt-1 ${confidenceColor}`}>
-                          {confidenceLabel}
-                        </p>
-                      </div>
-                    </div>
-                  );
-                })()}
-              </div>
-            );
-          })()}
-
-          <p className="sm:hidden text-slate-600 text-xs text-center">
-            Saving is available on desktop.
-          </p>
-
-          {/* ── MATCHUP CONTEXT FLAGS ── */}
-          {(() => {
-            if (!fA || !fB || !result) return null;
-            const flags = [];
-            if (result.debutMatchup)
-              flags.push({ label: 'Debut / Prospect', color: 'text-amber-400 bg-amber-900/20 border-amber-800/40' });
-            if ((fA.TOTAL_ROUNDS ?? fA.tr ?? 0) < 5 || (fB.TOTAL_ROUNDS ?? fB.tr ?? 0) < 5)
-              flags.push({ label: 'Sparse Data', color: 'text-yellow-400 bg-yellow-900/20 border-yellow-800/40' });
-            if ((fA.CREDIBILITY ?? 100) < 30 || (fB.CREDIBILITY ?? 100) < 30)
-              flags.push({ label: 'Low Credibility', color: 'text-orange-400 bg-orange-900/20 border-orange-800/40' });
-            if (fA.WEIGHT_CLASS !== fB.WEIGHT_CLASS)
-              flags.push({ label: 'Cross-Division', color: 'text-purple-400 bg-purple-900/20 border-purple-800/40' });
-            if (fA.WEIGHT_CLASS?.startsWith("Women's") || fB.WEIGHT_CLASS?.startsWith("Women's"))
-              flags.push({ label: "Women's Division", color: 'text-pink-400 bg-pink-900/20 border-pink-800/40' });
-            if (result.southpawMismatch)
-              flags.push({ label: 'Southpaw vs Orthodox', color: 'text-cyan-400 bg-cyan-900/20 border-cyan-800/40' });
-            if ((fA.AGE ?? 0) >= 38 || (fB.AGE ?? 0) >= 38)
-              flags.push({ label: 'Veteran Age (38+)', color: 'text-red-400 bg-red-900/20 border-red-800/40' });
-            if ((result.loseStreakA ?? 0) >= 3 || (result.loseStreakB ?? 0) >= 3)
-              flags.push({ label: 'Active Loss Streak', color: 'text-red-400 bg-red-900/20 border-red-800/40' });
-            if (Math.abs(result.qualMomDiff ?? 0) > 0.5)
-              flags.push({ label: `Form Edge: ${(result.qualMomDiff ?? 0) > 0 ? fA.FIGHTER.split(' ').pop() : fB.FIGHTER.split(' ').pop()}`, color: 'text-emerald-400 bg-emerald-900/20 border-emerald-800/40' });
-            // Flag only when v2's pick clears the app's own existing NO READ
-            // boundary (App.js: market.pickProb < 0.53 => NO READ) -- a
-            // 49.8/50.2 split is noise, not a real disagreement.
-            if (result.v2pA != null) {
-              const v1FavorsA = result.pA > 0.5;
-              const v2FavorsA = result.v2pA > 0.5;
-              const v2PickProb = Math.max(result.v2pA, result.v2pB);
-              if (v1FavorsA !== v2FavorsA && v2PickProb >= 0.53) {
-                const v1Favors = (v1FavorsA ? fA : fB).FIGHTER.split(' ').pop();
-                const v2Favors = (v2FavorsA ? fA : fB).FIGHTER.split(' ').pop();
-                flags.push({
-                  label: `Model Disagreement — v1 favors ${v1Favors}, v2 favors ${v2Favors}`,
-                  color: 'text-amber-400 bg-amber-900/20 border-amber-800/40',
-                });
-              }
-            }
-            if (flags.length === 0) return null;
-            return (
-              <div className="bg-slate-900 border border-slate-700 rounded-xl p-4">
-                <p className="text-slate-500 text-xs font-semibold uppercase tracking-widest mb-2">
-                  Matchup Context
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {flags.map(({ label, color }) => (
-                    <span key={label} className={`text-xs font-semibold px-2 py-1 rounded-full border ${color}`}>
-                      {label}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            );
-          })()}
-
-          {/* ── CONTRIBUTION BREAKDOWN (replaces Key Advantages, Domain Breakdown, Model Input Comparison) ── */}
-          <SimulatorContributionPanel fA={fA} fB={fB} result={result} modelToggle={modelToggle} />
-
-          <div className="hidden sm:block bg-slate-900 border border-slate-700 rounded-xl p-5">
-            <div className="flex items-center justify-between gap-4 mb-4">
-              <div>
-                <p className="text-white text-xs font-black uppercase tracking-widest">
-                  Send To ROI Tracker
-                </p>
-                <p className="text-slate-500 text-xs mt-1">
-                  Save this matchup to grade the pick later against the real
-                  result.
-                </p>
-              </div>
-              {saveFeedback && (
-                <span className="text-emerald-400 text-xs font-semibold">
-                  {saveFeedback}
-                </span>
-              )}
-            </div>
-            <div className="grid grid-cols-3 gap-4 mb-4">
-              <div>
-                <label className="text-slate-500 text-xs font-semibold uppercase tracking-wider block mb-1.5">
-                  Event Name
-                </label>
-                <input
-                  type="text"
-                  value={eventName}
-                  onChange={(e) => setEventName(e.target.value)}
-                  placeholder="UFC 325"
-                  className="w-full bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-red-500"
-                />
-              </div>
-              <div>
-                <label className="text-slate-500 text-xs font-semibold uppercase tracking-wider block mb-1.5">
-                  Event Date
-                </label>
-                <input
-                  type="date"
-                  value={eventDate}
-                  onChange={(e) => setEventDate(e.target.value)}
-                  className="w-full bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-red-500"
-                />
-              </div>
-              <div>
-                <label className="text-slate-500 text-xs font-semibold uppercase tracking-wider block mb-1.5">
-                  Units Staked
-                </label>
-                <input
-                  type="number"
-                  step="0.1"
-                  min="0"
-                  value={unitsWagered}
-                  onChange={(e) => setUnitsWagered(e.target.value)}
-                  placeholder="1"
-                  className="w-full bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-red-500"
-                />
-              </div>
-            </div>
-            {(() => {
-              const savePick = activePA >= activePB ? fA.FIGHTER : fB.FIGHTER;
-              const saveProb = Math.max(activePA, activePB);
-              return (
-            <div className="grid grid-cols-3 gap-3 mb-4">
-              <div className="bg-slate-800/40 rounded-lg p-3">
-                <p className="text-slate-500 text-xs">Model pick</p>
-                <p className="text-white font-bold text-sm mt-1">
-                  {savePick}
-                </p>
-                <p className="text-slate-500 text-xs mt-0.5">
-                  {(saveProb * 100).toFixed(1)}% win prob
-                </p>
-              </div>
-              <div className="bg-slate-800/40 rounded-lg p-3">
-                <p className="text-slate-500 text-xs">Bet recommendation</p>
-                {market &&
-                (market.betAction === 'LEAN' ||
-                  market.betAction === 'BET' ||
-                  market.betAction === 'STRONG BET') ? (
-                  <>
-                    <p className="font-bold text-sm mt-1 text-emerald-400">
-                      {market.betAction}
-                    </p>
-                    {market.bestBet && (
-                      <p className="text-slate-400 text-xs mt-0.5">
-                        {market.bestBet === 'A' ? fA.FIGHTER : fB.FIGHTER}
-                      </p>
-                    )}
-                  </>
-                ) : (
-                  <p className="font-bold text-sm mt-1 text-slate-600">—</p>
-                )}
-              </div>
-              <div className="bg-slate-800/40 rounded-lg p-3">
-                <p className="text-slate-500 text-xs">Saved with market</p>
-                <p className="text-white font-bold text-sm mt-1">
-                  {market ? 'Yes' : 'No'}
-                </p>
-              </div>
-            </div>
-              );
-            })()}
-            <div className="flex gap-3 flex-wrap">
-              <button
-                onClick={() => {
-                  if (!fA || !fB) return;
-                  const entry = buildRoiEntry({
-                    fA, fB, oddsA, oddsB,
-                    eventName: eventName.trim(),
-                    eventDate,
-                    modelToggle,
-                    unitsWagered: unitsWagered.trim() ? Number(unitsWagered) : 1,
-                  });
-                  onSaveToUpcoming?.(entry);
-                  setSaveFeedback('Saved to Upcoming.');
-                }}
-                className="px-4 py-2 rounded-lg border border-blue-700 text-blue-300 text-sm font-semibold hover:text-white hover:border-blue-500 transition-colors"
-              >
-                Save to Upcoming
-              </button>
-              <button
-                onClick={() => {
-                  if (!fA || !fB) return;
-                  const entry = buildRoiEntry({
-                    fA, fB, oddsA, oddsB,
-                    eventName: eventName.trim(),
-                    eventDate,
-                    modelToggle,
-                    unitsWagered: unitsWagered.trim() ? Number(unitsWagered) : 1,
-                  });
-                  onSaveToUpcomingAndOpen?.(entry);
-                  setSaveFeedback('Saved to Upcoming.');
-                }}
-                className="px-4 py-2 rounded-lg bg-blue-700 text-white text-sm font-semibold hover:bg-blue-600 transition-colors"
-              >
-                Save and Open Upcoming
-              </button>
-            </div>
-          </div>
-
           {/* ── MARKET ODDS INPUT ── */}
           <div className="bg-slate-900 border border-slate-700 rounded-xl p-5">
             <p className="text-white text-xs font-black uppercase tracking-widest mb-1">
@@ -7472,6 +7228,206 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
               </p>
             )}
           </div>
+
+          {/* ── SECTION 1: THE VERDICT HERO ── */}
+          {(() => {
+            const pctA = (activePA * 100).toFixed(1);
+            const pctB = (activePB * 100).toFixed(1);
+            const favA = activePA > activePB;
+            const winner = favA ? fA : fB;
+            const winnerPct = favA ? pctA : pctB;
+            // Low-sample de-emphasis: same underlying signal as the existing
+            // "Low Credibility" Matchup Context pill (App.js CREDIBILITY < 30
+            // check), applied here to the headline number's own visual
+            // certainty instead of a separate pill only. Does not change
+            // activePA/pctA/pctB themselves -- purely a style branch. Carried
+            // over unchanged from the pre-recompose hero.
+            const avgCredibility = ((fA.CREDIBILITY ?? 100) + (fB.CREDIBILITY ?? 100)) / 2;
+            const lowSample = avgCredibility < 50;
+            const minTracked = Math.min(fA.TOTAL_MIN ?? 0, fB.TOTAL_MIN ?? 0);
+            // Toggle-aware: reuses buildSimulatorDomainRows (the same source
+            // the Contribution Breakdown panel renders) instead of always
+            // reading result.edges, which is v1-only. See sim/recompose commit
+            // "make verdict reasoning line toggle-aware" for the full history.
+            const topDomains = buildSimulatorDomainRows(result, modelToggle)
+              .filter((r) => !r.isGlobal)
+              .filter((r) => (favA ? r.totalContribution > 0 : r.totalContribution < 0))
+              .sort((a, b) => Math.abs(b.totalContribution) - Math.abs(a.totalContribution))
+              .slice(0, 2);
+            const reasoningLine =
+              topDomains.length >= 2
+                ? `${winner.FIGHTER.split(' ').pop()} wins on ${topDomains[0].label.toLowerCase()} and ${topDomains[1].label.toLowerCase()}`
+                : topDomains.length === 1
+                ? `${winner.FIGHTER.split(' ').pop()} wins on ${topDomains[0].label.toLowerCase()}`
+                : `${winner.FIGHTER.split(' ').pop()} has the overall edge`;
+            // Confidence derives from the DISPLAYED model's own probability
+            // spread (activePA/activePB, already toggle-aware), not the raw
+            // ELO gap (result.diff -- its own comment calls it legacy) which
+            // was decoupled from whatever probability was actually on screen.
+            // Display-derived only: reads activePA, writes nothing back.
+            // Thresholds match the app's existing NO READ/LEAN precedent
+            // (App.js: market.pickProb < 0.53 => NO READ; v2 bet-rec bands
+            // at 0.60/0.65/0.70) rather than inventing new numbers. Carried
+            // over unchanged; only its presentation (badge instead of a
+            // second grid tile) changed.
+            const spread = Math.abs(activePA - 0.5) * 2;
+            const confidenceLabel =
+              spread >= 0.30 ? 'Clear edge' : spread >= 0.06 ? 'Moderate' : 'Coin flip';
+            const confidenceBadgeCls =
+              spread >= 0.30
+                ? 'text-emerald-400 bg-emerald-900/20 border-emerald-800/40'
+                : spread >= 0.06
+                ? 'text-yellow-400 bg-yellow-900/20 border-yellow-800/40'
+                : 'text-slate-300 bg-slate-800/40 border-slate-700/40';
+            // Model Disagreement: moved in from the old Matchup Context Flags
+            // list (was one of nine generic pills) -- this is specifically
+            // about how the two models the toggle switches between disagree,
+            // so it belongs where the toggle lives. Condition unchanged: only
+            // flags when v2's pick clears the app's own existing NO READ
+            // boundary (App.js: market.pickProb < 0.53 => NO READ) -- a
+            // 49.8/50.2 split is noise, not a real disagreement.
+            let disagreement = null;
+            if (result.v2pA != null) {
+              const v1FavorsA = result.pA > 0.5;
+              const v2FavorsA = result.v2pA > 0.5;
+              const v2PickProb = Math.max(result.v2pA, result.v2pB);
+              if (v1FavorsA !== v2FavorsA && v2PickProb >= 0.53) {
+                disagreement = {
+                  v1Favors: (v1FavorsA ? fA : fB).FIGHTER.split(' ').pop(),
+                  v2Favors: (v2FavorsA ? fA : fB).FIGHTER.split(' ').pop(),
+                };
+              }
+            }
+            return (
+              <div className="bg-slate-900 border border-slate-700 rounded-xl p-5">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <p className="text-slate-400 text-xs font-semibold uppercase tracking-widest">
+                      Win Probability
+                    </p>
+                    <p className="text-slate-600 text-xs font-mono">{MODEL_VERSION}</p>
+                  </div>
+                  {result.v2pA != null && (
+                    <div className="flex items-center gap-1 bg-slate-800 rounded-lg p-1">
+                      <button
+                        onClick={() => setModelToggle('v1')}
+                        className={`inline-flex items-center justify-center min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0 px-3 py-1 text-xs font-bold rounded-md transition-colors ${
+                          modelToggle === 'v1' ? 'bg-red-600 text-white' : 'text-slate-400 hover:text-white'
+                        }`}
+                      >
+                        v1
+                      </button>
+                      <button
+                        onClick={() => setModelToggle('v2')}
+                        className={`inline-flex items-center justify-center min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0 px-3 py-1 text-xs font-bold rounded-md transition-colors ${
+                          modelToggle === 'v2' ? 'bg-red-600 text-white' : 'text-slate-400 hover:text-white'
+                        }`}
+                      >
+                        v2
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* One clear statement -- replaces the old Model Favorite tile
+                    outright (it said nothing this doesn't already say). Full
+                    name, no width constraint, wraps instead of truncating. */}
+                <p className={lowSample ? 'text-slate-200 font-bold text-xl leading-snug mb-1.5' : 'text-white font-black text-xl leading-snug mb-1.5'}>
+                  <span className={favA ? 'text-blue-400' : 'text-red-400'}>{winner.FIGHTER}</span>
+                  {' favored, '}{winnerPct}%
+                </p>
+                <span className={`inline-block text-xs font-bold px-2 py-0.5 rounded-full border mb-3 ${confidenceBadgeCls}`}>
+                  {confidenceLabel}
+                </span>
+
+                {/* Split bar: names stacked above/below (A upper-left, B
+                    lower-right) instead of fixed-width w-28 truncate side
+                    labels -- guarantees no truncation regardless of name
+                    length on either side. */}
+                <p className="text-blue-400 font-bold text-sm mb-1">{fA.FIGHTER}</p>
+                <div className="h-3 bg-slate-800 rounded-full overflow-hidden flex">
+                  <div
+                    className="h-full bg-blue-500 rounded-l-full transition-all"
+                    style={{ width: `${activePA * 100}%` }}
+                  />
+                  <div className="h-full bg-red-500 flex-1 rounded-r-full" />
+                </div>
+                <p className="text-red-400 font-bold text-sm text-right mt-1 mb-2">{fB.FIGHTER}</p>
+                <div className="flex justify-between px-1 mb-2">
+                  <span className={lowSample ? 'text-slate-300 font-semibold text-2xl' : 'text-white font-black text-2xl'}>
+                    {pctA}%
+                  </span>
+                  <span className={lowSample ? 'text-slate-300 font-semibold text-2xl' : 'text-white font-black text-2xl'}>
+                    {pctB}%
+                  </span>
+                </div>
+                {lowSample && (
+                  <p className="text-amber-500 text-xs text-center mb-1">
+                    low sample — {minTracked} min tracked
+                  </p>
+                )}
+
+                {/* Reasoning promoted from a tiny italic caption -- it's the
+                    one piece here that's genuinely new information (why),
+                    so it earns more visual weight than the redundant tiles
+                    it replaces did. */}
+                <p className="text-slate-300 text-sm text-center mb-1">
+                  {reasoningLine}
+                </p>
+
+                {disagreement && (
+                  <p className="text-amber-400 text-xs text-center bg-amber-950/20 border border-amber-800/40 rounded-lg px-3 py-2 mt-3">
+                    ⚠ Model Disagreement — v1 favors {disagreement.v1Favors}, v2 favors {disagreement.v2Favors}
+                  </p>
+                )}
+              </div>
+            );
+          })()}
+
+
+          {/* ── MATCHUP CONTEXT FLAGS ── */}
+          {(() => {
+            if (!fA || !fB || !result) return null;
+            const flags = [];
+            if (result.debutMatchup)
+              flags.push({ label: 'Debut / Prospect', color: 'text-amber-400 bg-amber-900/20 border-amber-800/40' });
+            if ((fA.TOTAL_ROUNDS ?? fA.tr ?? 0) < 5 || (fB.TOTAL_ROUNDS ?? fB.tr ?? 0) < 5)
+              flags.push({ label: 'Sparse Data', color: 'text-yellow-400 bg-yellow-900/20 border-yellow-800/40' });
+            if ((fA.CREDIBILITY ?? 100) < 30 || (fB.CREDIBILITY ?? 100) < 30)
+              flags.push({ label: 'Low Credibility', color: 'text-orange-400 bg-orange-900/20 border-orange-800/40' });
+            if (fA.WEIGHT_CLASS !== fB.WEIGHT_CLASS)
+              flags.push({ label: 'Cross-Division', color: 'text-purple-400 bg-purple-900/20 border-purple-800/40' });
+            if (fA.WEIGHT_CLASS?.startsWith("Women's") || fB.WEIGHT_CLASS?.startsWith("Women's"))
+              flags.push({ label: "Women's Division", color: 'text-pink-400 bg-pink-900/20 border-pink-800/40' });
+            if (result.southpawMismatch)
+              flags.push({ label: 'Southpaw vs Orthodox', color: 'text-cyan-400 bg-cyan-900/20 border-cyan-800/40' });
+            if ((fA.AGE ?? 0) >= 38 || (fB.AGE ?? 0) >= 38)
+              flags.push({ label: 'Veteran Age (38+)', color: 'text-red-400 bg-red-900/20 border-red-800/40' });
+            if ((result.loseStreakA ?? 0) >= 3 || (result.loseStreakB ?? 0) >= 3)
+              flags.push({ label: 'Active Loss Streak', color: 'text-red-400 bg-red-900/20 border-red-800/40' });
+            if (Math.abs(result.qualMomDiff ?? 0) > 0.5)
+              flags.push({ label: `Form Edge: ${(result.qualMomDiff ?? 0) > 0 ? fA.FIGHTER.split(' ').pop() : fB.FIGHTER.split(' ').pop()}`, color: 'text-emerald-400 bg-emerald-900/20 border-emerald-800/40' });
+            // Model Disagreement moved to the verdict hero above -- not
+            // computed here anymore.
+            if (flags.length === 0) return null;
+            return (
+              <div className="bg-slate-900 border border-slate-700 rounded-xl p-4">
+                <p className="text-slate-500 text-xs font-semibold uppercase tracking-widest mb-2">
+                  Matchup Context
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {flags.map(({ label, color }) => (
+                    <span key={label} className={`text-xs font-semibold px-2 py-1 rounded-full border ${color}`}>
+                      {label}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* ── CONTRIBUTION BREAKDOWN (replaces Key Advantages, Domain Breakdown, Model Input Comparison) ── */}
+          <SimulatorContributionPanel fA={fA} fB={fB} result={result} modelToggle={modelToggle} />
 
           {/* ── BETTING ANALYSIS (only when odds entered) ── */}
           {market && (
@@ -8062,6 +8018,147 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                 </>
               );
             })()}
+          </div>
+
+          <p className="sm:hidden text-slate-600 text-xs text-center">
+            Saving is available on desktop.
+          </p>
+
+          <div className="hidden sm:block bg-slate-900 border border-slate-700 rounded-xl p-5">
+            <div className="flex items-center justify-between gap-4 mb-4">
+              <div>
+                <p className="text-white text-xs font-black uppercase tracking-widest">
+                  Save to Upcoming
+                </p>
+                <p className="text-slate-500 text-xs mt-1">
+                  Save this matchup to grade the pick later against the real
+                  result.
+                </p>
+              </div>
+              {saveFeedback && (
+                <span className="text-emerald-400 text-xs font-semibold">
+                  {saveFeedback}
+                </span>
+              )}
+            </div>
+            <div className="grid grid-cols-3 gap-4 mb-4">
+              <div>
+                <label className="text-slate-500 text-xs font-semibold uppercase tracking-wider block mb-1.5">
+                  Event Name
+                </label>
+                <input
+                  type="text"
+                  value={eventName}
+                  onChange={(e) => setEventName(e.target.value)}
+                  placeholder="UFC 325"
+                  className="w-full bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-red-500"
+                />
+              </div>
+              <div>
+                <label className="text-slate-500 text-xs font-semibold uppercase tracking-wider block mb-1.5">
+                  Event Date
+                </label>
+                <input
+                  type="date"
+                  value={eventDate}
+                  onChange={(e) => setEventDate(e.target.value)}
+                  className="w-full bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-red-500"
+                />
+              </div>
+              <div>
+                <label className="text-slate-500 text-xs font-semibold uppercase tracking-wider block mb-1.5">
+                  Units Staked
+                </label>
+                <input
+                  type="number"
+                  step="0.1"
+                  min="0"
+                  value={unitsWagered}
+                  onChange={(e) => setUnitsWagered(e.target.value)}
+                  placeholder="1"
+                  className="w-full bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-red-500"
+                />
+              </div>
+            </div>
+            {(() => {
+              const savePick = activePA >= activePB ? fA.FIGHTER : fB.FIGHTER;
+              const saveProb = Math.max(activePA, activePB);
+              return (
+            <div className="grid grid-cols-3 gap-3 mb-4">
+              <div className="bg-slate-800/40 rounded-lg p-3">
+                <p className="text-slate-500 text-xs">Model pick</p>
+                <p className="text-white font-bold text-sm mt-1">
+                  {savePick}
+                </p>
+                <p className="text-slate-500 text-xs mt-0.5">
+                  {(saveProb * 100).toFixed(1)}% win prob
+                </p>
+              </div>
+              <div className="bg-slate-800/40 rounded-lg p-3">
+                <p className="text-slate-500 text-xs">Bet recommendation</p>
+                {market &&
+                (market.betAction === 'LEAN' ||
+                  market.betAction === 'BET' ||
+                  market.betAction === 'STRONG BET') ? (
+                  <>
+                    <p className="font-bold text-sm mt-1 text-emerald-400">
+                      {market.betAction}
+                    </p>
+                    {market.bestBet && (
+                      <p className="text-slate-400 text-xs mt-0.5">
+                        {market.bestBet === 'A' ? fA.FIGHTER : fB.FIGHTER}
+                      </p>
+                    )}
+                  </>
+                ) : (
+                  <p className="font-bold text-sm mt-1 text-slate-600">—</p>
+                )}
+              </div>
+              <div className="bg-slate-800/40 rounded-lg p-3">
+                <p className="text-slate-500 text-xs">Saved with market</p>
+                <p className="text-white font-bold text-sm mt-1">
+                  {market ? 'Yes' : 'No'}
+                </p>
+              </div>
+            </div>
+              );
+            })()}
+            <div className="flex gap-3 flex-wrap">
+              <button
+                onClick={() => {
+                  if (!fA || !fB) return;
+                  const entry = buildRoiEntry({
+                    fA, fB, oddsA, oddsB,
+                    eventName: eventName.trim(),
+                    eventDate,
+                    modelToggle,
+                    unitsWagered: unitsWagered.trim() ? Number(unitsWagered) : 1,
+                  });
+                  onSaveToUpcoming?.(entry);
+                  setSaveFeedback('Saved to Upcoming.');
+                }}
+                className="px-4 py-2 rounded-lg border border-blue-700 text-blue-300 text-sm font-semibold hover:text-white hover:border-blue-500 transition-colors"
+              >
+                Save to Upcoming
+              </button>
+              <button
+                onClick={() => {
+                  if (!fA || !fB) return;
+                  const entry = buildRoiEntry({
+                    fA, fB, oddsA, oddsB,
+                    eventName: eventName.trim(),
+                    eventDate,
+                    modelToggle,
+                    unitsWagered: unitsWagered.trim() ? Number(unitsWagered) : 1,
+                  });
+                  onSaveToUpcomingAndOpen?.(entry);
+                  setSaveFeedback('Saved to Upcoming.');
+                }}
+                className="px-4 py-2 rounded-lg bg-blue-700 text-white text-sm font-semibold hover:bg-blue-600 transition-colors"
+              >
+                Save and Open Upcoming
+              </button>
+            </div>
           </div>
 
         </div>
