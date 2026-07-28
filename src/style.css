@@ -1,4 +1,26 @@
-@import 'tailwindcss';
+/*
+  source(none) disables Tailwind v4's automatic source detection, which scans the
+  entire project root. Verified: a root-level .py file containing
+  `x = "mt-77 pb-83 text-fuchsia-700"` caused all three to be emitted as real
+  production CSS. With ~40 Python scripts, research notes and JSON at the root,
+  the stylesheet was carrying utilities from files that are not the application.
+
+  This restores the explicit scoping Tailwind v3 had via its content array:
+  the root index.html plus the js and jsx files under src.
+
+  @source paths resolve relative to THIS stylesheet (src/style.css), so the root
+  index.html is '../index.html' and the app sources are './**' -- not
+  './index.html' or './src/**', which would resolve from the wrong directory.
+
+  Two separate patterns rather than one brace group: a brace group collides with
+  CSS block syntax and tailwindcss 4.3.3 rejects it with "Invalid declaration".
+  Note that it is rejected even inside a comment, so the literal form is not
+  written anywhere in this file.
+*/
+@import 'tailwindcss' source(none);
+@source '../index.html';
+@source './**/*.js';
+@source './**/*.jsx';
 
 /*
   ── Tailwind v4 Preflight compatibility (Foundation Stage 1b) ──────────────

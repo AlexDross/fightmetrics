@@ -132,14 +132,53 @@ contains junk classes from files that are not part of the application. The
 Stage 1b note that "no safelist is needed" was correct about *missing* classes
 but silent about *extra* ones.
 
-**Recommended follow-up** (not done here — it changes CSS output and needs its
-own visual gate, and Stage 2 was scoped to three commits):
+### RESOLVED — source detection is now scoped
+
+Fixed in its own commit rather than deferred to Stage 8. `src/style.css`:
 
 ```css
 @import 'tailwindcss' source(none);
-@source './index.html';
-@source './src/**/*.{js,jsx}';
+@source '../index.html';
+@source './**/*.js';
+@source './**/*.jsx';
 ```
 
-`source(none)` disables automatic detection, restoring v3's exact scoping. Worth
-doing before Stage 8, when component splitting will change which files matter.
+Two things to know if you touch this:
+
+- **Paths resolve relative to the stylesheet**, `src/style.css` — so the root
+  page is `../index.html` and the app sources are `./**`. `./index.html` and
+  `./src/**` would resolve from the wrong directory and silently match nothing.
+- **A brace group breaks the build.** `'./**/*.{js,jsx}'` fails with
+  `Invalid declaration: js,jsx` on tailwindcss 4.3.3 — the group collides with
+  CSS block syntax. It fails *even inside a comment*, so the literal form is not
+  written anywhere in the file.
+
+**Binding probes.** With a throwaway `zz_scope_probe.py` at the repo root
+containing `x = "mt-77 pb-83 text-fuchsia-700"`:
+
+| Probe | Result |
+|---|---|
+| root `.py` classes must be absent | `.mt-77`, `.pb-83`, `.text-fuchsia-700` — all absent, PASS |
+| real app classes must survive | `.bg-slate-800`, `.text-slate-200`, `.rounded-lg`, `.bg-linear-to-r`, `.focus\:outline-hidden:focus`, `.min-h-\[44px\]` — all present, PASS |
+
+**CSS: 51,886 → 51,516 bytes (−370).** A block-level diff shows exactly nine
+spurious rules removed and one narrowed, with nothing added:
+
+```
+.static  .top-10  .top-15  .isolate  .contents  .shrink
+.bg-gradient-to-r            .focus\:outline-none:focus
+.ring,.ring-1  ->  .ring-1
+```
+
+All eight utilities verified **unused** in `src/` and `index.html`. Provenance is
+instructive: `.bg-gradient-to-r` and `.focus:outline-none` came from
+`baseline/stage-1b.md` — the document describing those exact v3→v4 renames was
+injecting the removed classes back into production CSS — and `.top-15` from
+`research/fighter_image_sourcing.md`. The rest (`static`, `contents`, `isolate`,
+`shrink`) are ordinary English words in prose that Tailwind's heuristic scanner
+read as utilities.
+
+**Rendered pixels unchanged**, as they must be for unused utilities:
+identical=12, within-tolerance=2, fail=0, and all 14 dimensions agree across
+Stage 0, Stage 1b and the candidate. Neither screenshot reference was
+regenerated.
