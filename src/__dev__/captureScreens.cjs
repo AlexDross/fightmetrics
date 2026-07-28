@@ -17,28 +17,37 @@ const CHROME =
   '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 
 const ROOT = path.join(__dirname, '..', '..');
-const REFERENCE_DIR = path.join(ROOT, 'baseline', 'screenshots-stage0');
+
+// BOTH committed visual references are protected from overwrite. Stage 0 is the
+// historical v3 record and must never be replaced, renamed or deleted; Stage 1b
+// is the active reference for Stage 2 onward.
+const PROTECTED_REFERENCES = [
+  { dir: path.join(ROOT, 'baseline', 'screenshots-stage0'), label: 'Stage 0 (CRA + Tailwind v3 CDN, historical)' },
+  { dir: path.join(ROOT, 'baseline', 'screenshots-stage1b'), label: 'Stage 1b (Vite + Tailwind v4, active reference)' },
+];
 
 const argv = process.argv.slice(2).filter((a) => a !== '--init');
 const INIT = process.argv.includes('--init');
 const BASE = argv[0] || 'http://localhost:3001';
 
-// Same protection as captureGoldens.cjs: candidates never default to the
-// approved reference directory.
+// Candidates never default to a protected reference directory.
 const OUT = argv[1]
   ? path.resolve(argv[1])
   : path.join(ROOT, 'baseline', 'candidates', new Date().toISOString().replace(/[:.]/g, '-') + '-screens');
 
-if (path.resolve(OUT) === path.resolve(REFERENCE_DIR)) {
-  const existing = fs.existsSync(REFERENCE_DIR)
-    ? fs.readdirSync(REFERENCE_DIR).filter((f) => !f.startsWith('.')) : [];
+for (const ref of PROTECTED_REFERENCES) {
+  if (path.resolve(OUT) !== path.resolve(ref.dir)) continue;
+  const existing = fs.existsSync(ref.dir)
+    ? fs.readdirSync(ref.dir).filter((f) => !f.startsWith('.')) : [];
   if (!INIT || existing.length) {
     console.error(
-      '\nREFUSED: ' + REFERENCE_DIR + ' is the committed Stage 0 visual reference.\n' +
+      '\nREFUSED: ' + ref.dir + '\n' +
+      'is the committed ' + ref.label + ' visual reference.\n' +
+      (existing.length ? '  (--init given but the directory is not empty: ' + existing.length + ' file(s))\n' : '') +
       'Capture to a candidate directory instead:\n' +
       '  node src/__dev__/captureScreens.cjs <baseUrl>          # auto candidate dir\n' +
       '  node src/__dev__/captureScreens.cjs <baseUrl> <outDir> # explicit dir\n' +
-      'Then diff against the reference using baseline/screenshots-stage0.sha256.json.\n'
+      'Then compare with verifyScreens.cjs (defaults to Stage 1b; --stage0 for v3).\n'
     );
     process.exit(2);
   }

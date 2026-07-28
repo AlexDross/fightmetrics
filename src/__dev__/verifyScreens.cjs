@@ -1,26 +1,30 @@
-// Foundation Stage 0 -- visual baseline integrity. DEV ONLY.
+// Foundation -- visual baseline integrity. DEV ONLY.
 //
-//   node src/__dev__/verifyScreens.cjs                      # reference self-check
-//   node src/__dev__/verifyScreens.cjs --candidate <dir>    # compare a later capture
-//   node src/__dev__/verifyScreens.cjs --write              # (re)write the manifest
+//   node src/__dev__/verifyScreens.cjs                            reference self-check (Stage 1b)
+//   node src/__dev__/verifyScreens.cjs --candidate <dir> --pixel   compare a capture
+//   node src/__dev__/verifyScreens.cjs --stage0 ...                use the historical v3 reference
+//   node src/__dev__/verifyScreens.cjs --write [--stage0]          (re)write a manifest
 //
-// The Stage 0 screenshots are COMMITTED at baseline/screenshots-stage0/ and
-// checksummed here. An ignored directory that later captures overwrite is not a
-// durable baseline, so candidates are written elsewhere and compared to this.
+// TWO REFERENCES, BOTH COMMITTED, NEITHER OVERWRITABLE:
 //
-// Identical checksums mean pixel-identical. DIFFERING checksums are expected in
-// Stage 1b (Tailwind v4 changes rendering) and must be triaged visually.
+//   stage1b (DEFAULT)  baseline/screenshots-stage1b/  Vite + Tailwind v4.
+//                      The reference for Stage 2 onward.
+//   stage0  (--stage0) baseline/screenshots-stage0/   CRA + Tailwind v3 Play CDN.
+//                      Kept permanently as the historical v3 record. Stage 1b
+//                      differs from it by a uniform OKLCH palette shift
+//                      (~99% of pixels, mean delta ~1.3/255), so it is NOT a
+//                      useful gate for v4 builds -- only for archaeology.
 //
-// --pixel adds a measured tolerance, which some screens require:
+// Identical checksums mean pixel-identical.
+//
+// --pixel adds a measured tolerance, which one screen requires:
 // MEASURED (Stage 1a) -- the Statistics tab is NOT deterministically
 // renderable. Six consecutive captures of the SAME build at 1440w differed from
-// the first by 26, 24, 24, 0 and 47 pixels (page height constant at 2791). The
-// charts do not settle to a fixed frame. Checksum equality is therefore the
-// wrong instrument for it, while a real styling regression moves thousands of
-// pixels or changes page height.
+// the first by 26, 24, 24, 0 and 47 pixels, page height constant at 2791. The
+// charts do not settle to a fixed frame.
 //
 // Rule: dimensions must match EXACTLY (any change is a layout regression), and
-// differing pixels must stay under PIXEL_TOLERANCE_PCT of the image.
+// the UNROUNDED differing-pixel ratio must stay under PIXEL_TOLERANCE_PCT.
 // Requires NODE_PATH=/tmp/pptr/node_modules for puppeteer-core.
 const fs = require('fs');
 const path = require('path');
@@ -30,17 +34,35 @@ const PIXEL_TOLERANCE_PCT = 0.01; // 1 pixel in 10,000
 
 // The tolerance applies to THESE SCREENS ONLY. Every other screen must be
 // checksum-identical -- a blanket tolerance would quietly absorb a real
-// regression on a screen that is perfectly deterministic today (all 12 others
-// were pixel-exact across the CRA -> Vite migration, including 1440w__roi.png
-// at 1440x3894).
+// regression on a screen that is perfectly deterministic today, and a tolerance
+// wide enough to cover the v3->v4 OKLCH shift would hide almost anything.
 const PIXEL_TOLERANCE_SCREENS = new Set([
   '1440w__statistics.png',
   '375w__statistics.png',
 ]);
 
 const ROOT = path.join(__dirname, '..', '..');
-const REF_DIR = path.join(ROOT, 'baseline', 'screenshots-stage0');
-const MANIFEST = path.join(ROOT, 'baseline', 'screenshots-stage0.sha256.json');
+
+const REFERENCES = {
+  stage1b: {
+    key: 'stage1b',
+    dir: path.join(ROOT, 'baseline', 'screenshots-stage1b'),
+    manifest: path.join(ROOT, 'baseline', 'screenshots-stage1b.sha256.json'),
+    label: 'Stage 1b — Vite + Tailwind v4 (DEFAULT)',
+  },
+  stage0: {
+    key: 'stage0',
+    dir: path.join(ROOT, 'baseline', 'screenshots-stage0'),
+    manifest: path.join(ROOT, 'baseline', 'screenshots-stage0.sha256.json'),
+    label: 'Stage 0 — CRA + Tailwind v3 Play CDN (historical)',
+  },
+};
+
+const argv = process.argv.slice(2);
+const arg = (n) => { const i = argv.indexOf(n); return i >= 0 ? argv[i + 1] : null; };
+const REF = argv.includes('--stage0') ? REFERENCES.stage0 : REFERENCES.stage1b;
+const usePixel = argv.includes('--pixel');
+const candDir = arg('--candidate');
 
 const sha = (p) => crypto.createHash('sha256').update(fs.readFileSync(p)).digest('hex');
 
@@ -54,38 +76,43 @@ function shotsIn(dir) {
   return out;
 }
 
-const argv = process.argv.slice(2);
-const arg = (n) => { const i = argv.indexOf(n); return i >= 0 ? argv[i + 1] : null; };
-
 if (argv.includes('--write')) {
-  const shots = shotsIn(REF_DIR);
+  const shots = shotsIn(REF.dir);
+  if (!Object.keys(shots).length) {
+    console.error('refusing to write an empty manifest -- ' + REF.dir + ' has no PNGs');
+    process.exit(2);
+  }
   const payload = {
-    note: 'SHA-256 of each committed Stage 0 screenshot. Stage 1a expects visual ' +
-          'parity (checksums should match). Stage 1b expects differences, which must ' +
-          'be triaged individually against Tailwind v4 breaking changes.',
+    note: 'SHA-256 of each committed screenshot for ' + REF.label + '. Stage 1b is ' +
+          'the default reference for later stages; Stage 0 is retained for historical ' +
+          'v3 comparison only and differs from v4 by a uniform OKLCH palette shift.',
+    reference: REF.key,
     generatedAt: new Date().toISOString(),
-    directory: 'baseline/screenshots-stage0',
+    directory: path.relative(ROOT, REF.dir),
+    pixelTolerancePct: PIXEL_TOLERANCE_PCT,
+    pixelToleranceScreens: [...PIXEL_TOLERANCE_SCREENS],
     count: Object.keys(shots).length,
     totalBytes: Object.values(shots).reduce((a, s) => a + s.bytes, 0),
     shots,
   };
-  fs.writeFileSync(MANIFEST, JSON.stringify(payload, null, 2));
-  console.log('wrote ' + MANIFEST + '  (' + payload.count + ' shots, ' +
+  fs.writeFileSync(REF.manifest, JSON.stringify(payload, null, 2));
+  console.log('wrote ' + REF.manifest + '  (' + payload.count + ' shots, ' +
               (payload.totalBytes / 1048576).toFixed(1) + 'MB)');
   process.exit(0);
 }
 
-if (!fs.existsSync(MANIFEST)) {
-  console.error('no manifest at ' + MANIFEST + ' -- run with --write');
+if (!fs.existsSync(REF.manifest)) {
+  console.error('no manifest at ' + REF.manifest + ' -- run with --write' +
+                (REF.key === 'stage0' ? ' --stage0' : ''));
   process.exit(2);
 }
-const m = JSON.parse(fs.readFileSync(MANIFEST, 'utf8'));
-const candDir = arg('--candidate');
-const actual = shotsIn(candDir || REF_DIR);
+const m = JSON.parse(fs.readFileSync(REF.manifest, 'utf8'));
+const actual = shotsIn(candDir || REF.dir);
 
-console.log((candDir ? 'candidate: ' + candDir : 'reference self-check: ' + REF_DIR) + '\n');
-
-const usePixel = argv.includes('--pixel');
+console.log('reference : ' + REF.label);
+console.log('            ' + path.relative(ROOT, REF.dir));
+console.log(candDir ? 'candidate : ' + candDir : 'mode      : reference self-check');
+console.log('');
 
 async function pixelDiff(aPath, bPath) {
   const puppeteer = require('puppeteer-core');
@@ -109,11 +136,10 @@ async function pixelDiff(aPath, bPath) {
     for (let i = 0; i < d1.length; i += 4) {
       if (d1[i] !== d2[i] || d1[i + 1] !== d2[i + 1] || d1[i + 2] !== d2[i + 2]) n++;
     }
-    const total = a.width * a.height;
-    // Return the UNROUNDED ratio. Rounding before the comparison could let a
-    // value just over tolerance format down to look compliant.
-    return { sizeMismatch: false, width: a.width, height: a.height, differingPixels: n,
-             totalPixels: total, ratioPct: (100 * n) / total };
+    // UNROUNDED ratio. Rounding before comparison could let a value just over
+    // tolerance format down to look compliant.
+    return { sizeMismatch: false, width: a.width, height: a.height,
+             differingPixels: n, ratioPct: (100 * n) / (a.width * a.height) };
   }, url(aPath), url(bPath));
   await browser.close();
   return r;
@@ -128,13 +154,11 @@ async function pixelDiff(aPath, bPath) {
 
     const tolerated = PIXEL_TOLERANCE_SCREENS.has(name);
 
-    // Any screen outside the tolerance set must be checksum-identical. Measure
-    // it anyway when --pixel is on, purely as diagnostics, but it still fails.
     if (!tolerated) {
       fail++;
       let detail = '(' + m.shots[name].bytes + ' -> ' + a.bytes + ' bytes)';
       if (usePixel) {
-        const d = await pixelDiff(path.join(REF_DIR, name), path.join(candDir || REF_DIR, name));
+        const d = await pixelDiff(path.join(REF.dir, name), path.join(candDir || REF.dir, name));
         detail = d.sizeMismatch
           ? 'DIMENSIONS CHANGED ' + JSON.stringify(d.a) + ' -> ' + JSON.stringify(d.b)
           : d.differingPixels + ' px (' + d.ratioPct.toFixed(4) + '%) of ' + d.width + 'x' + d.height;
@@ -150,13 +174,12 @@ async function pixelDiff(aPath, bPath) {
       continue;
     }
 
-    const d = await pixelDiff(path.join(REF_DIR, name), path.join(candDir || REF_DIR, name));
+    const d = await pixelDiff(path.join(REF.dir, name), path.join(candDir || REF.dir, name));
     if (d.sizeMismatch) {
       fail++;
       console.log('FAIL      ' + name + '  DIMENSIONS CHANGED ' + JSON.stringify(d.a) +
                   ' -> ' + JSON.stringify(d.b) + '  (layout regression)');
     } else if (d.ratioPct <= PIXEL_TOLERANCE_PCT) {
-      // Unrounded comparison above; formatted only for display.
       within++;
       console.log('WITHIN    ' + name + '  ' + d.differingPixels + ' px (' +
                   d.ratioPct.toFixed(4) + '%) of ' + d.width + 'x' + d.height +
@@ -168,8 +191,6 @@ async function pixelDiff(aPath, bPath) {
     }
   }
 
-  // An unexpected screenshot means the capture set drifted from the reference
-  // set -- a renamed tab, a new screen, a stale file. That is a failure, not a note.
   const extra = Object.keys(actual).filter((n) => !(n in m.shots));
   extra.forEach((n) => { fail++; console.log('FAIL      ' + n + '  UNEXPECTED (not in the reference manifest)'); });
 

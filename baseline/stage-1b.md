@@ -119,38 +119,92 @@ not a v4 effect.
 99 %-of-pixels shift would hide almost anything, which would defeat the gate at
 Stage 8. The correct resolution is a new v4 visual reference — pending approval.
 
-## Browser support — decision needed
+## Visual references — two, both committed, neither overwritable
+
+| Reference | Directory | Role |
+|---|---|---|
+| **Stage 1b** (default) | `baseline/screenshots-stage1b/` | Vite + Tailwind v4. The reference for Stage 2 onward. |
+| Stage 0 (`--stage0`) | `baseline/screenshots-stage0/` | CRA + Tailwind v3 Play CDN. Historical record, preserved unchanged. |
+
+`verifyScreens.cjs` defaults to Stage 1b; `--stage0` selects the v3 record for
+archaeology. Stage 0 is **not** a useful gate for v4 builds — it differs by the
+uniform OKLCH shift — but it is never replaced, renamed or deleted.
+`captureScreens.cjs` refuses to write into **either** directory without `--init`
+on an empty directory.
+
+Policy unchanged: exact checksums on the 12 deterministic screens, scoped pixel
+tolerance for the two Statistics screenshots only. No global colour tolerance.
+
+### The first reference capture was contaminated — cold dev server
+
+Worth recording, because it looked like a real regression and was not.
+
+The Stage 1b reference was first captured ~12 s after starting a **cold** Vite
+dev server. Verifying a fresh candidate against it produced:
+
+```
+FAIL  1440w__explore.png       1 px
+FAIL  1440w__info.png          1 px
+FAIL  1440w__statistics.png    82,108 px (2.0430%)
+```
+
+Two independent candidates then produced **exactly 82,108 px and exactly 1 px
+again** — bit-identical failures. That ruled out nondeterminism: a flaky render
+does not repeat to the pixel. The *reference* was the outlier, captured while
+Vite was still transforming modules on demand.
+
+Recaptured against a warm server, `1440w__statistics.png` is **identical** and
+Explore and Info are **identical**. Two further candidates:
+
+| Candidate | Result |
+|---|---|
+| c1 | identical=13, within-tolerance=1 (375w statistics, 90 px / 0.0012 %), fail=0 |
+| c2 | identical=12, within-tolerance=2, fail=0 |
+
+**Operational rule: warm the dev server before capturing a reference.** Start it,
+take a throwaway capture, then capture the reference. The measured 1440 w
+Statistics variance is ~0–47 px; anything in the thousands means the capture,
+not the code.
+
+## Browser support — accepted
 
 Tailwind v4 requires **Safari 16.4+, Chrome 111+, Firefox 128+** (all
 approximately March 2023 onward, except Firefox at July 2024). v4 relies on
 native cascade layers, `@property` and `color-mix()`; there is no v3-style
 fallback build.
 
-Practical read for FightMetrics: it is a single-user tool installed as a PWA on
-a current iPhone and viewed on a current desktop browser, so the floor is very
-unlikely to bite. **Confirm explicitly rather than assuming.**
+**ACCEPTED as FightMetrics' supported browser floor.** This is now the effective
+application requirement, not merely a build-tool detail: the app will not render
+correctly below it, and there is no fallback path short of reverting to
+Tailwind v3.
 
-One inconsistency to settle: `package.json` still declares
+The vestigial `browserslist` field has been **deleted** from `package.json`.
+With `autoprefixer` removed and Tailwind v4 prefixing internally via Lightning
+CSS, nothing read it — Vite does not consult browserslist unless configured to —
+and it advertised a wider support floor than v4 actually provides. `build.target`
+was deliberately **not** added: changing it alters JS output and would need its
+own verification pass, and the CSS floor is what actually binds here.
 
-```json
-"browserslist": { "production": [">0.2%", "not dead", "not op_mini all"] }
+Removing it is provably build-neutral. Both emitted assets are byte-identical
+before and after, including their content-derived filenames:
+
+```
+index-CSDIG1a5.css  fd32983…7209   (unchanged)
+index-DlIB8AEP.js   355c0006…ec3f  (unchanged)
 ```
 
-With `autoprefixer` removed and Tailwind v4 prefixing internally, **nothing reads
-this field any more** — Vite does not consult browserslist unless configured to.
-It is now vestigial and describes a wider support floor than v4 actually
-provides. Options: delete it, or set `build.target` in `vite.config.mjs` to match
-v4's floor so the JS and CSS targets agree. Deliberately not changed here —
-altering `build.target` changes JS output and would need its own verification
-pass. Raised as a Stage 1b follow-up.
+The reference was still recaptured from the final source state rather than
+reused, because screenshots come from the dev server rather than the production
+build.
 
-## Pending
+## Final verification
 
-`baseline/screenshots-stage1b/` is **not** created yet. Establishing it means
-re-initialising a protected reference, which requires explicit approval. Once
-approved: keep `screenshots-stage0/`, add `screenshots-stage1b/` with its own
-checksum manifest, make the verifier default to Stage 1b with an explicit
-opt-in for Stage 0, and protect both directories from overwrite.
-
-Candidate captures retained at `baseline/candidates/screens-1b-fixed`
-(gitignored) so approval needs no recapture.
+| Check | Result |
+|---|---|
+| Stage 1b reference self-integrity | identical=14, fail=0 |
+| Stage 0 reference self-integrity (`--stage0`) | identical=14, fail=0 |
+| Fresh candidate c1 vs Stage 1b | identical=13, within=1, fail=0 |
+| Fresh candidate c2 vs Stage 1b | identical=12, within=2, fail=0 |
+| Goldens | all six canonical hashes MATCH; join OK, `de0704a5` |
+| Dimensions vs Stage 0 | 14/14 match |
+| Production build | no `.map`, 0 bridge matches, 0 model-source matches, no CDN tag, 4.5 MB |

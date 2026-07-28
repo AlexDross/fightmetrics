@@ -1,0 +1,71 @@
+{
+  "note": "SHA-256 of each committed screenshot for Stage 1b — Vite + Tailwind v4 (DEFAULT). Stage 1b is the default reference for later stages; Stage 0 is retained for historical v3 comparison only and differs from v4 by a uniform OKLCH palette shift.",
+  "reference": "stage1b",
+  "generatedAt": "2026-07-28T05:43:18.748Z",
+  "directory": "baseline/screenshots-stage1b",
+  "pixelTolerancePct": 0.01,
+  "pixelToleranceScreens": [
+    "1440w__statistics.png",
+    "375w__statistics.png"
+  ],
+  "count": 14,
+  "totalBytes": 5179087,
+  "shots": {
+    "1440w__explore.png": {
+      "sha256": "273abe86b5e7154b24cc050896c05491b510e768abf3bde844ae8feeb24faa05",
+      "bytes": 241699
+    },
+    "1440w__home.png": {
+      "sha256": "f320eb5e2140c9d10687e0e5b361dc953bfb28a834a60717f9e1a0745397b68d",
+      "bytes": 121087
+    },
+    "1440w__info.png": {
+      "sha256": "af2f82dda69a474decf0b492c27dd37dad83b682fe46ae215c177ff0a8f7d681",
+      "bytes": 357438
+    },
+    "1440w__roi.png": {
+      "sha256": "572f611684f6a42e02a515f24a0c41cb63c89c432c687cc94df847416f4cb847",
+      "bytes": 402191
+    },
+    "1440w__simulator.png": {
+      "sha256": "7cd210dc81cb994c7db6a1f320ff7c5b1d69a3d54e959cc231fd353dce429daf",
+      "bytes": 39553
+    },
+    "1440w__statistics.png": {
+      "sha256": "369248f1c4c660a33635691552bfe87c47f008ff9eeed32de4a515894fabd42f",
+      "bytes": 377409
+    },
+    "1440w__upcoming.png": {
+      "sha256": "83b9dc24892db4ad6d5506203a23e627b53a486cbf65909498c82654453ed1e6",
+      "bytes": 261376
+    },
+    "375w__explore.png": {
+      "sha256": "1fad88790ef615850e2e5135aaf76d803499993efd0759f95cdb8d42d7a49a1b",
+      "bytes": 218963
+    },
+    "375w__home.png": {
+      "sha256": "82ae782161d4cd2fe104c74a7e60b8c1c13ff2e65f6cffdb7b807455c34f9f8a",
+      "bytes": 218868
+    },
+    "375w__info.png": {
+      "sha256": "e0b7718f100c6324e2b13cd5d557f44684d3fdc49e9619f103dce88f85d67bbc",
+      "bytes": 901217
+    },
+    "375w__roi.png": {
+      "sha256": "032c2e8368c78be9114def458fa0d0513580f30f30bc3126b782abac52131476",
+      "bytes": 731889
+    },
+    "375w__simulator.png": {
+      "sha256": "ea0a2af8f6cff859e6d75569559afaa831d9855929441290cf1e4580e4984b89",
+      "bytes": 49209
+    },
+    "375w__statistics.png": {
+      "sha256": "b9c749bbd5d6281f476a1246f09fbfba253bff0d5a1c75b035793bc13ad30617",
+      "bytes": 861468
+    },
+    "375w__upcoming.png": {
+      "sha256": "77a957c4b80e393c58462c44e96b3f4cdc7c1e229f9b18501dda3d0ebfc5d2c8",
+      "bytes": 396720
+    }
+  }
+}
