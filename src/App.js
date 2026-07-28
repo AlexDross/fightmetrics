@@ -11004,3 +11004,30 @@ function InfoTab() {
     </div>
   );
 }
+
+// ─── DEV-ONLY GOLDEN BRIDGE — Foundation Stage 0 ─────────────────────────────
+// TEMPORARY. Removed together with src/__dev__/goldenHarness.js in Stage 4.
+//
+// Exposes existing module-scope values for read-only capture by the Stage 0
+// golden harness. It runs no computation on load — the harness invokes
+// explicitly. No function, coefficient, or model behavior is modified by this
+// block; it only creates a frozen reference to values that already exist.
+//
+// Guarded for CRA (process.env.NODE_ENV). Stage 1a mechanically replaces the
+// guard with `import.meta.env.DEV` once Vite is the bundler. Verified absent
+// from production builds — see baseline/metrics.md.
+if (process.env.NODE_ENV !== 'production') {
+  window.__FM_GOLDEN_INTERNALS__ = Object.freeze({
+    FIGHTERS,
+    ROI_ENTRIES,
+    computeMatchupEdges,
+    buildRoiEntry,
+    computeROISummary,
+    computeV2Summary,
+    computeCalibrationReliability,
+    computeRoiByMarketBand,
+    computeBetTierBreakdown,
+    computeCumulativePnl,
+    computeMonthlyPerformance,
+  });
+}
