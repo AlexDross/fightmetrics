@@ -9961,6 +9961,19 @@ function ROITab({
     return entries;
   }, [evaluatedEntries, filterSince]);
 
+  // Top-of-tab stats banner -- same population and same two summary
+  // functions StatisticsTab's headline cards use (filterRoiEntriesForStats ->
+  // computeROISummary for Tracked Fights/Graded Picks, computeV2Summary for
+  // Pick Accuracy/ROI), called on the SAME raw `entries` + `filterSince`
+  // StatisticsTab receives. No parallel scoring math -- this is the same
+  // call, just made from ROITab too, so the two tabs can never drift.
+  const roiStatsEntries = useMemo(
+    () => filterRoiEntriesForStats(entries, prospectNameSet, filterSince),
+    [entries, prospectNameSet, filterSince]
+  );
+  const roiBannerV1 = useMemo(() => computeROISummary(roiStatsEntries, new Set()), [roiStatsEntries]);
+  const roiBannerV2 = useMemo(() => computeV2Summary(roiStatsEntries), [roiStatsEntries]);
+
   const [modelView, setModelView] = useState('v2');
   // Sub-tabs replace the former "Most Recent Event / All Results" toggle:
   //   'all'    -> collapsible per-event groups (former "All Results")
@@ -10019,6 +10032,21 @@ function ROITab({
         return a._i - b._i;
       });
   }, [visibleEntries]);
+
+  // Per-event ROI for the accordion headers -- same computeV2Summary call as
+  // the top banner and StatisticsTab, just scoped to one event's entries
+  // instead of the whole Since-filtered window. Fights only: group.entries
+  // comes from visibleEntries, which is never mixed with propPicks/
+  // parlayEntries. bets===0 (no v2-scored, gradable entries in this event)
+  // is the "—" case, not 0.0%/+0.00u -- an event can have zero v2-scored
+  // entries (see v2ScoredFloorDate in StatisticsTab) without being empty.
+  const eventV2Summaries = useMemo(() => {
+    const map = new Map();
+    eventGroups.forEach((group) => {
+      map.set(group.key, computeV2Summary(group.entries));
+    });
+    return map;
+  }, [eventGroups]);
 
   // Collapsible groups: default = most-recent event expanded, others collapsed.
   // `expandedEvents` is null until the user first toggles; after that it's an
@@ -10299,6 +10327,41 @@ function ROITab({
         </div>
       )}
 
+      {/* Same four cards, same classes, as StatisticsTab's headline banner --
+          fights-only (props/parlays hidden here exactly like the Since
+          filter above), so it's hidden on those two sub-tabs rather than
+          showing numbers that don't describe what's on screen. */}
+      {entries.length > 0 && !isProps && !isParlays && (
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6 items-stretch">
+          <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 h-full">
+            <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold">Tracked Fights</p>
+            <p className="font-black text-2xl mt-2 text-white">{roiBannerV1.total}</p>
+          </div>
+          <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 h-full">
+            <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold">Graded Picks</p>
+            <p className="font-black text-2xl mt-2 text-blue-400">{roiBannerV1.graded}</p>
+          </div>
+          <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 h-full">
+            <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold">Pick Accuracy</p>
+            <p className={`font-black text-2xl mt-2 ${roiBannerV2.accuracy >= 60 ? 'text-emerald-400' : 'text-yellow-400'}`}>
+              {roiBannerV2.accuracy.toFixed(1)}%
+            </p>
+            <p className="text-slate-600 text-[10px] mt-1">
+              v2 frozen scoring across {roiBannerV2.graded} graded fights (stake-weighted). Frozen at each pick's capture — no lookahead.
+            </p>
+          </div>
+          <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 h-full">
+            <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold">ROI</p>
+            <p className={`font-black text-2xl mt-2 ${roiBannerV2.roi >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+              {roiBannerV2.roi >= 0 ? '+' : ''}{roiBannerV2.roi.toFixed(1)}%
+            </p>
+            <p className="text-slate-600 text-xs mt-1">
+              {roiBannerV2.profit >= 0 ? '+' : ''}{roiBannerV2.profit.toFixed(2)}u on {roiBannerV2.bets} bets (stake-weighted)
+            </p>
+          </div>
+        </div>
+      )}
+
       <div className="flex items-center flex-wrap gap-1 bg-slate-800 rounded-lg p-1 mb-4 w-fit">
         {[
           { id: 'all', label: 'All Events' },
@@ -10349,6 +10412,8 @@ function ROITab({
         <div className="space-y-4">
           {eventGroups.map((group) => {
             const open = isEventOpen(group.key);
+            const eventSummary = eventV2Summaries.get(group.key);
+            const eventHasV2Bets = Boolean(eventSummary && eventSummary.bets > 0);
             return (
               <div
                 key={group.key}
@@ -10371,9 +10436,18 @@ function ROITab({
                       )}
                     </div>
                   </div>
-                  <span className="text-slate-500 text-xs font-semibold uppercase tracking-wider shrink-0">
-                    {group.entries.length} {group.entries.length === 1 ? 'fight' : 'fights'}
-                  </span>
+                  <div className="flex items-center gap-3 shrink-0">
+                    {eventHasV2Bets ? (
+                      <span className={`text-xs font-bold ${eventSummary.profit >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                        {eventSummary.profit >= 0 ? '+' : ''}{eventSummary.profit.toFixed(2)}u
+                      </span>
+                    ) : (
+                      <span className="text-slate-600 text-xs font-semibold">—</span>
+                    )}
+                    <span className="text-slate-500 text-xs font-semibold uppercase tracking-wider">
+                      {group.entries.length} {group.entries.length === 1 ? 'fight' : 'fights'}
+                    </span>
+                  </div>
                 </button>
                 {open && (
                   <div className="space-y-4 px-4 pb-4">
