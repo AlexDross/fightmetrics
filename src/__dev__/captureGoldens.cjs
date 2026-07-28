@@ -15,10 +15,45 @@ const puppeteer = require('puppeteer-core');
 
 const CHROME = process.env.CHROME_PATH ||
   '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
-const BASE = process.argv[2] || 'http://localhost:3001';
-const OUT = path.join(__dirname, '..', '..', 'baseline', 'fixtures');
+const ROOT = path.join(__dirname, '..', '..');
+const REFERENCE_DIR = path.join(ROOT, 'baseline', 'fixtures');
+
+const args = process.argv.slice(2).filter((a) => a !== '--init');
+const INIT = process.argv.includes('--init');
+const BASE = args[0] || 'http://localhost:3001';
+
+// Default destination is a timestamped CANDIDATE directory. The committed
+// reference is never the default target -- an approved baseline must not be
+// silently overwritten by a routine re-run (which is exactly how the Stage 0
+// metrics timestamp ended up describing a superseded capture).
+const OUT = args[1]
+  ? path.resolve(args[1])
+  : path.join(ROOT, 'baseline', 'candidates', new Date().toISOString().replace(/[:.]/g, '-'));
+
+function guardReference(dir) {
+  if (path.resolve(dir) !== path.resolve(REFERENCE_DIR)) return;
+  if (!INIT) {
+    console.error(
+      '\nREFUSED: ' + REFERENCE_DIR + ' is the committed Stage 0 reference.\n' +
+      'Capture to a candidate directory and compare with verifyFixtures.cjs:\n' +
+      '  node src/__dev__/captureGoldens.cjs <baseUrl>            # auto candidate dir\n' +
+      '  node src/__dev__/captureGoldens.cjs <baseUrl> <outDir>   # explicit dir\n' +
+      'Only pass --init to establish a NEW baseline in an EMPTY reference dir.\n'
+    );
+    process.exit(2);
+  }
+  const existing = fs.existsSync(dir) ? fs.readdirSync(dir).filter((f) => !f.startsWith('.')) : [];
+  if (existing.length) {
+    console.error(
+      '\nREFUSED: --init given but ' + REFERENCE_DIR + ' is not empty (' +
+      existing.length + ' file(s)).\nRemove them deliberately, in their own commit, before re-initialising.\n'
+    );
+    process.exit(2);
+  }
+}
 
 (async () => {
+  guardReference(OUT);
   fs.mkdirSync(OUT, { recursive: true });
   const browser = await puppeteer.launch({
     executablePath: CHROME, headless: 'new', args: ['--no-sandbox'],
@@ -69,7 +104,12 @@ const OUT = path.join(__dirname, '..', '..', 'baseline', 'fixtures');
   }
   await browser.close();
 
-  console.log('\ncaptureIso :', payload.head.captureIso);
+  console.log('\noutDir     :', OUT);
+  console.log('captureIso :', payload.head.captureIso);
   console.log('captureBase:', payload.head.captureBase);
   console.log('counts     :', JSON.stringify(payload.counts));
+  if (path.resolve(OUT) !== path.resolve(REFERENCE_DIR)) {
+    console.log('\nCandidate written. Compare against the approved reference:');
+    console.log('  node src/__dev__/verifyFixtures.cjs --candidate "' + OUT + '"');
+  }
 })();

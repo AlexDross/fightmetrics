@@ -1,0 +1,65 @@
+{
+  "note": "SHA-256 of each committed Stage 0 screenshot. Stage 1a expects visual parity (checksums should match). Stage 1b expects differences, which must be triaged individually against Tailwind v4 breaking changes.",
+  "generatedAt": "2026-07-28T03:48:15.765Z",
+  "directory": "baseline/screenshots-stage0",
+  "count": 14,
+  "totalBytes": 5178029,
+  "shots": {
+    "1440w__explore.png": {
+      "sha256": "515c6bac650455b960e2096ef7cb0da4cde9c9fcdca9334110a13e8c42554c86",
+      "bytes": 240763
+    },
+    "1440w__home.png": {
+      "sha256": "d41cfb61e892f429e8efb991042e748f2f69614deb9fd351ccacca1bf29033df",
+      "bytes": 121403
+    },
+    "1440w__info.png": {
+      "sha256": "598b59f5853ad3f7f8f87f2538f3fe0527cc1d47826fdbf549874e8539f18339",
+      "bytes": 358146
+    },
+    "1440w__roi.png": {
+      "sha256": "9c9518e1fca5953b6cb4d2737101fd9c80f02320c5f9726e41bbde8d0120b695",
+      "bytes": 401988
+    },
+    "1440w__simulator.png": {
+      "sha256": "4d66b6794ba647ad4730c9cc1687562ab9e581f7c0ae5a76868f19bbff71db94",
+      "bytes": 39427
+    },
+    "1440w__statistics.png": {
+      "sha256": "41b19b24726f1525a29141600997501bfbbd9484ba57db283d76da5785cb0e68",
+      "bytes": 377620
+    },
+    "1440w__upcoming.png": {
+      "sha256": "dbdcb92bc191fec326a1438c02e5b4c4fbdad955aef17f98043c96ba85006bee",
+      "bytes": 261687
+    },
+    "375w__explore.png": {
+      "sha256": "f0cfe764e5cd611c533df6a416f65ca17cca5b8599b5c667d8a44fc4dd014c09",
+      "bytes": 218077
+    },
+    "375w__home.png": {
+      "sha256": "e22ff189acbaf506f992c526421bb1aed1b91167af41964ca715fb1a137bd5c0",
+      "bytes": 219227
+    },
+    "375w__info.png": {
+      "sha256": "2ce03173733294680181c42cba32cc18086bbe0ce792885ceae070a88394147f",
+      "bytes": 898965
+    },
+    "375w__roi.png": {
+      "sha256": "9ff4daa71726650b93f5c43f9e8686f087edd535b7f6179b34aaf88e0f80409a",
+      "bytes": 732156
+    },
+    "375w__simulator.png": {
+      "sha256": "6661b0aeefb06a150e5bf2019075a2a38e3c5072fd1f483648d9a07cf9a72b0f",
+      "bytes": 49281
+    },
+    "375w__statistics.png": {
+      "sha256": "e29af679a07e1ebb37b1276e457f68a180dae0a4722b33038e2ef6d2326468f6",
+      "bytes": 860901
+    },
+    "375w__upcoming.png": {
+      "sha256": "6350fac1f32c4301c4977f1c0642e3784b892438f1ac378046a5bf8842d761fb",
+      "bytes": 398388
+    }
+  }
+}

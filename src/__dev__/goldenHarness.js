@@ -163,6 +163,19 @@ function buildRosterManifest(FIGHTERS, captureMs) {
     return hash(stableStringify(stable));
   });
 
+  // FULL fight-history hash, per fighter. `stableHashes` above summarises
+  // FIGHT_HISTORY as {length, first, last}, which cannot detect a change to a
+  // middle bout. This hashes the entire history value while still not storing
+  // it, so a middle-record edit changes the hash.
+  //
+  // ADDITIVE ONLY. `stableHashes` keeps its v1 semantics so the approved
+  // Stage 0 reference (captured before this field existed) stays directly
+  // comparable to later candidates. verifyFixtures reports this field as
+  // "reference-absent" rather than failing. See also hashFightHistory.cjs,
+  // which derives the same guarantee straight from src/fightHistory.js and is
+  // therefore independent of any capture generation.
+  const historyHashes = FIGHTERS.map((f) => hash(stableStringify(f.FIGHT_HISTORY || [])));
+
   const dateDerived = FIGHTERS.map((f) => {
     const o = {};
     for (const k of DATE_DERIVED_FIELDS) o[k] = f[k];
@@ -170,7 +183,10 @@ function buildRosterManifest(FIGHTERS, captureMs) {
   });
 
   return {
+    manifestHashVersion: 2,
     length: FIGHTERS.length,
+    historyHashes,
+    rosterHistoryHash: hash(stableStringify(historyHashes)),
     captureMs,
     captureIso: new Date(captureMs).toISOString(),
     identityKeys,

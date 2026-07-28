@@ -1,0 +1,31 @@
+{
+  "note": "Expected CANONICAL payload hashes of the approved Stage 0 reference. Volatile capture metadata excluded. Regenerate only when the reference itself is re-initialised.",
+  "generatedAt": "2026-07-28T03:48:15.958Z",
+  "reference": {
+    "captureIso": "2026-07-28T03:28:01.945Z",
+    "captureBase": "foundation/stage-0 (origin/main fa3e54e + rebased ROI event-summary 9dd3a60)",
+    "rosterLength": 2273,
+    "rosterStableHash": "0f2c80cd",
+    "rosterHistoryHash": null,
+    "manifestHashVersion": 1
+  },
+  "volatileExcluded": [
+    "captureMs",
+    "captureIso"
+  ],
+  "postReferenceExcluded": {
+    "roster.manifest.json": [
+      "manifestHashVersion",
+      "historyHashes",
+      "rosterHistoryHash"
+    ]
+  },
+  "hashes": {
+    "characterisation.json": "e444a0da",
+    "entries.golden.json": "dca722cb",
+    "fighters.golden.json": "dcfcd47a",
+    "model.golden.json": "b753bd8b",
+    "roster.manifest.json": "57f9fd80",
+    "statistics.golden.json": "754086cd"
+  }
+}

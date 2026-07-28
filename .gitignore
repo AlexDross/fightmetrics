@@ -6,5 +6,5 @@ __pycache__/
 package-lock.json
 .claude/settings.local.json
 
-# Foundation Stage 0 -- regeneration artifact, not history (see baseline/metrics.md)
-baseline/screenshots/
+# Foundation: candidate captures are disposable; the Stage 0 reference is committed
+baseline/candidates/

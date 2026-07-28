@@ -2,8 +2,17 @@
 
 **Capture base:** `foundation/stage-0` = `origin/main` @ `fa3e54e` + rebased ROI
 event-summary `9dd3a60`
-**Fixture captureIso:** `2026-07-28T03:27:32.259Z`
+**Fixture captureIso:** `2026-07-28T03:28:01.945Z`
 **Roster stable hash:** `0f2c80cd` (2,273 fighters)
+**Fight-history aggregate hash:** `1e52ca0c` (2,718 fighters, 17,568 bouts)
+
+> **Correction.** An earlier revision of this file recorded
+> `2026-07-28T03:27:32.259Z`. That was the *first* of the two determinism runs;
+> the second run overwrote `baseline/fixtures/`, so the committed reference is
+> the second capture. The scripts now refuse to write into the reference
+> directory precisely so this cannot recur (§10). Commit `9d77f63` carries the
+> same stale timestamp in its message and was left unamended to preserve the
+> SHA already reported; this file is authoritative.
 
 Everything here is the reference Stages 1a, 1b and 3 are measured against.
 
@@ -22,9 +31,16 @@ BROWSER=none PORT=3001 npx react-scripts start
 # isolated puppeteer (deliberately NOT added to package.json)
 mkdir -p /tmp/pptr && cd /tmp/pptr && npm init -y && npm i puppeteer-core
 
-# fixtures + screenshots
+# capture a CANDIDATE (never the reference -- see §10)
 NODE_PATH=/tmp/pptr/node_modules node src/__dev__/captureGoldens.cjs http://localhost:3001
 NODE_PATH=/tmp/pptr/node_modules node src/__dev__/captureScreens.cjs http://localhost:3001
+
+# verify the candidate against the approved reference
+node src/__dev__/verifyFixtures.cjs --candidate baseline/candidates/<stamp>
+node src/__dev__/verifyScreens.cjs  --candidate baseline/candidates/<stamp>-screens
+
+# source-derived integrity, independent of any capture
+node src/__dev__/hashFightHistory.cjs
 ```
 
 Both capture scripts are headless and reproducible. Do **not** capture through
@@ -74,9 +90,18 @@ Verified two ways against `npx serve -s build`:
 | `statistics.golden.json` | 18 KB | 9 statistics functions × 2 entry sets (all=153, since_2026-05-23=70) |
 | `characterisation.json` | 1 KB | current-behaviour records — **not** desired invariants |
 
-**Determinism:** two independent headless captures produce byte-identical output
-for 5 of 6 files. `entries.golden.json` differs only in `observedVolatile`
-(`id`, `createdAt`, `predictionTimestamp`); the `canonical` block is identical.
+**Determinism.** Two independently captured files can *never* be byte-identical
+— `captureMs` and `captureIso` differ by construction. Byte equality is the
+wrong test. The correct statement:
+
+> Across two independent headless captures, the **canonical,
+> volatility-excluded payload hashes were identical for all six files.**
+
+Canonical means: `captureMs` and `captureIso` removed, `entryGoldens[].observedVolatile`
+removed (it records the raw `id` / `createdAt` / `predictionTimestamp` on
+purpose), then hashed with the same `stableStringify`/`hash` used in-page.
+`verifyFixtures.cjs` implements exactly this; `baseline/REFERENCE_HASHES.json`
+records the expected values.
 
 **Coverage:** low-sample (<75 min), seed-Elo (0 UFC fights), prospect,
 ranked-deep, P4P, long-layoff (>700 d), deepest-sample, 12 of 13 divisions,
@@ -183,12 +208,26 @@ deleted in Stage 3.
 
 ## 7. Visual baseline
 
-`baseline/screenshots/` — 14 full-page PNGs, 7 tabs × {375 w @2x, 1440 w @1x},
-4.9 MB total, plus `manifest.json`.
+`baseline/screenshots-stage0/` — 14 full-page PNGs, 7 tabs × {375 w @2x,
+1440 w @1x}, 4.9 MB total, plus `manifest.json`. **Committed**, with SHA-256 per
+file in `baseline/screenshots-stage0.sha256.json`.
 
-**Storage decision (plan correction 11):** the directory is **gitignored**. It is
-a regeneration artifact, not history — `captureScreens.cjs` reproduces it in
-about a minute. Stage 1a and 1b re-run the same script and diff the output.
+**Storage decision, revised.** These were originally gitignored on the theory
+that a regenerable artifact does not belong in history. That was wrong for a
+*reference*: an ignored directory that later captures overwrite is not durable,
+and the same failure mode produced the timestamp error corrected at the top of
+this file. They are now committed.
+
+No WebP or PNG optimiser is available on this machine (`cwebp`, `pngquant`,
+`optipng`, `oxipng` all absent; `sips` cannot emit WebP), so they are committed
+lossless at 4.9 MB. That is a deliberate one-time cost for a durable pixel
+reference. They can be dropped once Stage 1b is signed off, since by then the
+Tailwind v4 comparison they exist for is complete.
+
+Candidate screenshots go to `baseline/candidates/` (gitignored) and are compared
+with `verifyScreens.cjs`. Stage 1a expects checksum equality; **Stage 1b expects
+differences**, which must be triaged individually against Tailwind v4 breaking
+changes rather than treated as pass/fail.
 
 ---
 
@@ -199,7 +238,9 @@ about a minute. Stage 1a and 1b re-run the same script and diff the output.
 | `src/__dev__/goldenHarness.js` | in-page capture; `window.__fmGoldens` |
 | `src/__dev__/captureGoldens.cjs` | headless fixture capture (reproducible) |
 | `src/__dev__/captureScreens.cjs` | headless visual baseline (reproducible) |
-| `src/__dev__/verifyFixtures.cjs` | hash-compare fixtures without transferring them |
+| `src/__dev__/verifyFixtures.cjs` | canonical-hash compare candidate vs reference; reference self-integrity |
+| `src/__dev__/verifyScreens.cjs` | SHA-256 compare of the visual baseline |
+| `src/__dev__/hashFightHistory.cjs` | full fight-history hashes from source; **keep after Stage 4 if useful** |
 | `src/__dev__/fixtureReceiver.cjs` | superseded by `captureGoldens.cjs`; retained for manual use |
 | `src/App.js` (tail) | dev-guarded bridge, 27 lines, `process.env.NODE_ENV` |
 | `src/index.js` | dev-guarded dynamic import |
@@ -208,8 +249,64 @@ Stage 1a mechanically swaps both guards to `import.meta.env.DEV`.
 
 ---
 
-## 9. Open item for Stage 1a
+## 9. Stage 1a requirements
 
-Nothing blocking. Note only that Stage 1a's acceptance requires a compiled CSS
-file to appear where there is currently none, so "no visual change" cannot be
-verified by asserting output equality — it must be the screenshot diff.
+**Dependency hygiene is now part of Stage 1a's definition of done.**
+
+`package-lock.json` is currently gitignored (`.gitignore:6`) *and* `react-scripts`
+is declared as `"latest"`. Together these mean the toolchain is not pinned and
+installs are not reproducible across machines or across time — which is
+indefensible for a stage whose entire purpose is proving a toolchain swap
+changed nothing. Stage 1a must:
+
+1. Remove `package-lock.json` from `.gitignore` and **commit a fresh lockfile**.
+2. Replace every floating version with an exact pin — `"latest"` on
+   `react-scripts` first, and audit the `||` ranges on `vite`, `@types/node`,
+   and `stylus` while there.
+3. Use `npm ci` (or `npm install --include=dev`) in every documented command.
+   **This machine has `NODE_ENV=production` exported**, so a bare `npm install`
+   omits devDependencies and silently deletes `react-scripts` — see §6.
+
+**Acceptance nuance.** Stage 1a makes a compiled CSS file appear where there is
+currently none, so "no visual change" cannot be asserted as output equality. It
+must be the screenshot checksum comparison (§7), and the goldens (§4) carry the
+model-integrity half.
+
+---
+
+## 10. Reference protection
+
+The approved reference is `baseline/fixtures/` +
+`baseline/screenshots-stage0/`. Both capture scripts **refuse** to write there:
+
+- default destination is a timestamped directory under `baseline/candidates/`
+  (gitignored);
+- writing to the reference requires `--init` **and** an empty reference
+  directory; otherwise the script exits `2` with an explanation.
+
+| Manifest | Covers |
+|---|---|
+| `baseline/REFERENCE_HASHES.json` | canonical payload hash of each of the 6 fixtures, plus what was excluded |
+| `baseline/fixtures/fightHistory.hashes.json` | per-fighter hash of the **complete** `FIGHT_HISTORY`, derived from `src/fightHistory.js` |
+| `baseline/screenshots-stage0.sha256.json` | SHA-256 of each committed screenshot |
+
+`verifyFixtures.cjs` run with no `--candidate` performs a **self-integrity
+check**: it recomputes the reference hashes and compares them to the committed
+manifest, so tampering with the reference itself is detectable.
+
+### Why fight-history hashing is split in two
+
+`roster.manifest.json`'s `stableHashes` summarise `FIGHT_HISTORY` as
+`{length, first, last}` — which cannot detect a change to a **middle** bout.
+Two changes address this:
+
+1. `hashFightHistory.cjs` hashes every fighter's complete history straight from
+   `src/fightHistory.js`. It needs no browser and no capture, so it protects the
+   existing goldens **without recapturing them** — 2,718 fighters, 17,568 bouts,
+   aggregate `1e52ca0c`.
+2. `buildRosterManifest` now also emits `historyHashes` and `rosterHistoryHash`
+   (`manifestHashVersion: 2`). This is **additive**: `stableHashes` keeps its v1
+   meaning so the approved reference stays directly comparable to candidates.
+   `verifyFixtures.cjs` excludes the new fields via `POST_REFERENCE_FIELDS` and
+   says so in its output. Remove that exclusion whenever the reference is next
+   re-initialised.
