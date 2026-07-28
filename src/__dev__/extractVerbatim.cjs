@@ -17,11 +17,29 @@ const MEMBERS = specs.map((s) => {
 });
 
 const lines = fs.readFileSync(APP, 'utf8').split('\n');
-for (const [name, a] of MEMBERS) {
+
+// A range may OPEN WITH LEADING COMMENTS so a declaration's explanatory block
+// travels with it. Stage 3 commits 1-4 moved [declLine .. nextDecl-1], which put
+// each comment at the tail of the PRECEDING declaration and stranded five of
+// them (repaired in 29533f5 and 53eda57). Starting a range at the comment fixes
+// that at the source.
+//
+// Still verified: the declaration must appear somewhere in the range, and
+// everything before it must be a comment or blank.
+for (const [name, a, b] of MEMBERS) {
   const re = new RegExp('^(?:export\\s+)?(?:const|let|var|function)\\s+' + name + '\\b');
-  if (!re.test(lines[a - 1])) {
-    console.error('RANGE MISMATCH ' + name + ' @' + a + ': ' + lines[a - 1]);
+  let declAt = -1;
+  for (let i = a; i <= b; i++) if (re.test(lines[i - 1])) { declAt = i; break; }
+  if (declAt < 0) {
+    console.error('RANGE MISMATCH ' + name + ' @' + a + '-' + b + ': declaration not found in range');
     process.exit(2);
+  }
+  for (let i = a; i < declAt; i++) {
+    const l = lines[i - 1].trim();
+    if (l !== '' && !l.startsWith('//') && !l.startsWith('/*') && !l.startsWith('*')) {
+      console.error('RANGE LEAD-IN for ' + name + ' @' + i + ' is not a comment: ' + lines[i - 1]);
+      process.exit(2);
+    }
   }
 }
 
