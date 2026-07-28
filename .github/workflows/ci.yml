@@ -1,0 +1,111 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Read-only: this workflow verifies, it never writes to the repository.
+permissions:
+  contents: read
+
+# A new push to a PR cancels the in-flight run for that PR. Runs on main are
+# keyed by SHA so they are never cancelled by a subsequent merge.
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  test:
+    name: Test and build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+
+      # --include=dev is explicit: NODE_ENV=production in the environment would
+      # otherwise make npm omit devDependencies, taking vitest and vite with it.
+      - name: Install dependencies
+        run: npm ci --include=dev
+
+      - name: Run Vitest
+        run: npm test
+
+      - name: Production build
+        run: npm run build
+
+      # The Vite outDir is `build`, not `dist`. Checking the wrong directory
+      # makes every assertion below vacuously pass, so the first check is that
+      # the directory exists and has files in it.
+      - name: Verify build output
+        run: |
+          set -euo pipefail
+
+          if [ ! -d build ]; then
+            echo "::error::build/ does not exist"
+            exit 1
+          fi
+
+          file_count=$(find build -type f | wc -l | tr -d ' ')
+          echo "build/ contains $file_count files"
+          if [ "$file_count" -eq 0 ]; then
+            echo "::error::build/ is empty"
+            exit 1
+          fi
+
+          fail=0
+
+          map_count=$(find build -name '*.map' | wc -l | tr -d ' ')
+          if [ "$map_count" -ne 0 ]; then
+            echo "::error::build/ contains $map_count source map(s)"
+            find build -name '*.map'
+            fail=1
+          fi
+
+          # Dev-only golden bridge markers. These were removed in Stage 4; if any
+          # reappears in a production bundle the dev guard has regressed.
+          for marker in '__FM_GOLDEN_INTERNALS__' '__fmGoldens' 'goldenHarness'; do
+            if grep -rqF "$marker" build; then
+              echo "::error::build/ contains the dev-only marker $marker"
+              grep -rlF "$marker" build
+              fail=1
+            fi
+          done
+
+          # The Play CDN was replaced by a compiled Tailwind stylesheet in Stage 2.
+          if grep -rqF 'cdn.tailwindcss.com' build; then
+            echo "::error::build/ references the Tailwind Play CDN"
+            grep -rlF 'cdn.tailwindcss.com' build
+            fail=1
+          fi
+
+          # Test fixtures must never ship. 'GOLDEN FIXTURE EVENT' is the synthetic
+          # event name in entries.golden.json; the other two are provenance keys
+          # unique to the frozen statistics input. All three are verified to be
+          # present in src/__tests__/, so these greps are not vacuous.
+          for marker in 'GOLDEN FIXTURE EVENT' 'canonicalEntriesSha256' 'roiDataBlob'; do
+            if grep -rqF "$marker" build; then
+              echo "::error::build/ contains the test-fixture marker $marker"
+              grep -rlF "$marker" build
+              fail=1
+            fi
+          done
+
+          if [ "$fail" -ne 0 ]; then
+            exit 1
+          fi
+
+          echo "build/ output checks passed"
+
+# Deliberately no `git diff --check` step here: on a fresh checkout the working
+# tree always matches the index, so it would pass unconditionally and prove
+# nothing. It is a local pre-commit check and is run as such.

@@ -10,9 +10,38 @@ becomes a Vitest suite that runs in ~2 s. The browser bridge is gone.
 | `471e484` | exact probability-tier boundaries |
 | `42e0c97` | workflow transition extraction |
 | `6fe73e1` | workflow + statistics characterisation; dev harness removed |
-| *(this)* | non-vacuous prop and parlay population tests |
+| `8f00b21` | non-vacuous prop and parlay population tests |
+| *(this)* | CI enforcement on PRs, main, and data refreshes |
 
 **156 tests across 12 files, ~1.4 s.**
+
+## Enforcement
+
+Vitest is no longer advisory. `.github/workflows/ci.yml` runs `npm ci
+--include=dev`, `npm test`, `npm run build` and a set of build-output checks on:
+
+- pull requests targeting `main`
+- pushes to `main`
+- manual `workflow_dispatch`
+
+Read-only `contents: read` permissions; concurrent PR runs are cancelled, runs
+on `main` are keyed by SHA and are not.
+
+The same three steps were inserted into `update-fighters.yml` **before** its
+commit-and-push step, so the Monday/Thursday data refresh cannot push to `main`
+without the suite passing against the regenerated data.
+
+The build-output checks assert `build/` exists and is nonempty *first* — the
+Vite `outDir` is `build`, and a check pointed at `dist` passes vacuously. Then:
+no `.map` files, no `__FM_GOLDEN_INTERNALS__` / `__fmGoldens` / `goldenHarness`,
+no Tailwind Play CDN reference, and no fixture markers (`GOLDEN FIXTURE EVENT`,
+`canonicalEntriesSha256`, `roiDataBlob`). All three fixture markers are verified
+present in `src/__tests__/`, so the greps can actually fire. Verified by
+planting each violation into a copy of `build/` and confirming the script exits
+non-zero and names every one.
+
+These are leak checks. They say nothing about whether the minified model is
+readable, and are not claimed to.
 
 ## Protected fixtures — unchanged, now enforced in-suite
 
@@ -174,6 +203,16 @@ That was wrong and `baseline/stage-3.md` now records what actually happened.
   warm-up capture. That stays until Stage 8.
 - The projected-finish formula remains structurally broken and is characterised
   only.
+- **The data-refresh gate will fire on every refresh, not just breaking ones.**
+  `src/domain/model` imports `_D2` and derives `DIVISION_UFC_AVERAGES` from the
+  whole roster at module load, so three test files are coupled to any roster
+  change: `model.golden`, `symmetry`, and `entries.golden` (which embeds model
+  output). Measured in an isolated worktree: changing one fighter's `asl` and
+  `elo` fails 3 tests across those three files. The other nine files replay
+  from frozen inputs and were unaffected. As written, `update-fighters.yml`
+  will therefore block the Monday/Thursday push whenever the roster moves —
+  which is most refreshes. This needs a decision before the workflow is relied
+  on; the approved fixtures must not be regenerated to paper over it.
 - The bundle greps confirm no bridge, test or fixture content ships, but they
   cannot prove the *formula* is unreadable — minification mangles the internal
   identifiers while the result-object keys (`sosContribution`,
