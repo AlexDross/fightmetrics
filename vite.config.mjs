@@ -49,9 +49,13 @@ export default defineConfig({
     include: ['src/**/__tests__/**/*.test.js'],
     // fixtures/ holds data, not tests
     exclude: ['**/node_modules/**', 'src/__tests__/fixtures/**'],
-    // Determinism: no retries masking flakiness, no parallel interleaving of
-    // the golden replays, and a hard ceiling so the suite stays fast enough to
-    // run on every extraction.
+    // Determinism, accurately described:
+    //   retry: 0            a flaky test fails rather than being masked
+    //   shuffle: false      fixed ordering WITHIN a file
+    // File-level parallelism is left at Vitest's default and is deliberately
+    // NOT disabled: every test here is a pure function of frozen fixtures, so
+    // there is no shared state to serialise. (An earlier comment implied
+    // serial execution, which shuffle: false does not provide.)
     retry: 0,
     sequence: { shuffle: false },
     testTimeout: 20000,

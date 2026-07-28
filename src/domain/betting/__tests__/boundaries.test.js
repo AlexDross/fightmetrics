@@ -50,6 +50,42 @@ const EVEN = ['+100', '+100'];
 const action = (pA, odds = EVEN, fa = HI, fb = HI2) =>
   computeMarketAnalysis(mkResult(pA), odds[0], odds[1], fa, fb)?.betAction;
 
+// ── adjacent-double helpers ─────────────────────────────────────────────────
+// Edge thresholds are reached through odds conversion, so the boundary
+// probability must be DERIVED from the market's actual no-vig line rather than
+// written as a decimal. `below`/`above` then step to the immediately adjacent
+// representable doubles, which characterises the exact float behaviour instead
+// of smearing it with a tolerance.
+const _buf = new ArrayBuffer(8);
+const _f = new Float64Array(_buf);
+const _i = new BigInt64Array(_buf);
+const above = (x) => { _f[0] = x; _i[0] += x >= 0 ? 1n : -1n; return _f[0]; };
+const below = (x) => { _f[0] = x; _i[0] += x > 0 ? -1n : 1n; return _f[0]; };
+
+// The no-vig probability of side A for a given American pair, straight from the
+// production functions -- not re-derived in the test.
+const noVigA = (oddsA, oddsB) =>
+  stripVig(parseAmericanOdds(oddsA), parseAmericanOdds(oddsB)).noVigA;
+
+// The SMALLEST representable pA whose production-computed edge satisfies the
+// `>= edge` gate for this market.
+//
+// `base + edge` is not it: the subtraction the production code performs
+// (pA - noVigA) need not round back to exactly `edge`, which is the same
+// characteristic that makes 0.60 against an even market yield
+// 0.09999999999999998. So step to the true boundary rather than assume it.
+function edgeBoundary(odds, edge) {
+  const base = noVigA(odds[0], odds[1]);
+  const passes = (p) => p - base >= edge;
+  let p = base + edge;
+  if (passes(p)) { while (passes(below(p))) p = below(p); }
+  else { while (!passes(p)) p = above(p); }
+  return p;
+}
+
+// The probability tier a given pA lands in, per the production rule.
+const tierOf = (p) => (p < 0.60 ? 'floor' : p < 0.65 ? 'low' : p < 0.70 ? 'mid' : 'high');
+
 describe('odds conversion', () => {
   it('parseAmericanOdds converts both signs and rejects junk', () => {
     expect(parseAmericanOdds('+100')).toBe(0.5);
@@ -121,9 +157,9 @@ describe('bet-action probability boundaries — both sides and the exact value',
   });
 
   it('0.60 to just under 0.65 reaches LEAN once edge genuinely clears 0.10', () => {
-    // -140/+120 puts the no-vig line near 0.575, giving pickEdge > 0.10.
-    expect(action(0.62, ['+100', '+100'])).toBe('LEAN');
-    expect(action(0.6499, ['+100', '+100'])).toBe('LEAN');
+    // Even market, so the no-vig line is 0.5 and edge = pA - 0.5.
+    expect(action(0.62)).toBe('LEAN');
+    expect(action(0.6499)).toBe('LEAN');
   });
 
   it('exactly 0.65 enters the mid tier', () => {
@@ -135,13 +171,93 @@ describe('bet-action probability boundaries — both sides and the exact value',
     expect(action(0.70)).toBe('BET');
   });
 
-  it('high tier reaches STRONG BET once edge clears 0.25', () => {
-    expect(action(0.75)).toBe('STRONG BET');
-    expect(action(0.7499)).toBe('BET');
+  it('probability thresholds: adjacent doubles either side of 0.60, 0.65, 0.70', () => {
+    // Held at a large edge so only the probability tier moves. -400/+300 puts
+    // the no-vig line near 0.73... instead use an even market and a big gap:
+    // at these pA values edge = pA - 0.5, which is >= 0.10 throughout.
+    // 0.60 boundary: below is NO BET (floor), at/above depends on the edge gate
+    expect(action(below(0.60))).toBe('NO BET');
+    // 0.65 boundary: LEAN both sides (mid tier needs edge >= 0.30 for BET)
+    expect(action(below(0.65))).toBe('LEAN');
+    expect(action(0.65)).toBe('LEAN');
+    expect(action(above(0.65))).toBe('LEAN');
+    // 0.70 boundary: mid tier LEAN below, high tier BET at and above
+    expect(action(below(0.70))).toBe('LEAN');
+    expect(action(0.70)).toBe('BET');
+    expect(action(above(0.70))).toBe('BET');
+  });
+});
+
+describe('bet-action EDGE boundaries — derived from the market, adjacent doubles', () => {
+  // The 0.03 minimum edge never by itself produces a bet -- every tier needs at
+  // least 0.10 (0.15 in the high tier). Its observable effect is on
+  // hasPickEdge, which zeroes edgeScore in betConfidence and selects the
+  // "no positive edge" reason. That is what gets asserted.
+  it('minimum edge 0.03: betConfidence and reason flip at the boundary', () => {
+    const odds = ['-120', '+100'];
+    const at = edgeBoundary(odds, 0.03);
+    const m = (p) => computeMarketAnalysis(mkResult(p), odds[0], odds[1], HI, HI2);
+
+    expect(m(below(at)).betConfidence).toBeLessThan(m(at).betConfidence);
+    expect(m(below(at)).noBetReason).toMatch(/No positive edge/i);
+    expect(m(at).noBetReason).not.toMatch(/No positive edge/i);
+    expect(m(above(at)).betConfidence).toBeGreaterThanOrEqual(m(at).betConfidence);
   });
 
-  it('requires pickEdge >= 0.03 at all', () => {
-    expect(action(0.75, [americanOdds(0.74), americanOdds(0.26)])).toBe('NO BET');
+  it('low tier edge 0.10: below is NO BET, at and above are LEAN', () => {
+    const odds = ['-120', '+100'];
+    const at = edgeBoundary(odds, 0.10);
+    expect(tierOf(at)).toBe('low');
+    expect(action(below(at), odds)).toBe('NO BET');
+    expect(action(at, odds)).toBe('LEAN');
+    expect(action(above(at), odds)).toBe('LEAN');
+  });
+
+  it('mid tier edge 0.10: below is NO BET, at and above are LEAN', () => {
+    const odds = ['-155', '+135'];
+    const at = edgeBoundary(odds, 0.10);
+    expect(tierOf(at)).toBe('mid');
+    expect(action(below(at), odds)).toBe('NO BET');
+    expect(action(at, odds)).toBe('LEAN');
+    expect(action(above(at), odds)).toBe('LEAN');
+  });
+
+  it('mid tier edge 0.30: below is LEAN, at and above are BET', () => {
+    const odds = ['+160', '-190'];         // no-vig A ~ 0.37, so +0.30 lands mid
+    const at = edgeBoundary(odds, 0.30);
+    expect(tierOf(at)).toBe('mid');
+    expect(action(below(at), odds)).toBe('LEAN');
+    expect(action(at, odds)).toBe('BET');
+    expect(action(above(at), odds)).toBe('BET');
+  });
+
+  it('high tier edge 0.15: below is LEAN, at and above are BET', () => {
+    const odds = ['-160', '+140'];
+    const at = edgeBoundary(odds, 0.15);
+    expect(tierOf(at)).toBe('high');
+    expect(action(below(at), odds)).toBe('LEAN');
+    expect(action(at, odds)).toBe('BET');
+    expect(action(above(at), odds)).toBe('BET');
+  });
+
+  it('high tier edge 0.25: below is BET, at and above are STRONG BET', () => {
+    // Market implied must stay <= 2/3 or the heavy-favourite ceiling fires.
+    const odds = ['-180', '+155'];
+    expect(parseAmericanOdds(odds[0])).toBeLessThanOrEqual(2 / 3);
+    const at = edgeBoundary(odds, 0.25);
+    expect(tierOf(at)).toBe('high');
+    expect(action(below(at), odds)).toBe('BET');
+    expect(action(at, odds)).toBe('STRONG BET');
+    expect(action(above(at), odds)).toBe('STRONG BET');
+  });
+
+  it('edgeBoundary really is the boundary — one step below fails the gate', () => {
+    for (const [odds, edge] of [[['-120', '+100'], 0.10], [['-160', '+140'], 0.15]]) {
+      const base = noVigA(odds[0], odds[1]);
+      const at = edgeBoundary(odds, edge);
+      expect(at - base).toBeGreaterThanOrEqual(edge);
+      expect(below(at) - base).toBeLessThan(edge);
+    }
   });
 });
 
@@ -153,8 +269,53 @@ describe('bet-action overrides', () => {
     expect(action(0.75, EVEN, { FIGHTER: 'A30', CREDIBILITY: 30 }, HI2)).toBe('STRONG BET');
   });
 
+  it('credibility threshold 30: adjacent doubles either side', () => {
+    expect(action(0.75, EVEN, { FIGHTER: 'x', CREDIBILITY: below(30) }, HI2)).toBe('LEAN');
+    expect(action(0.75, EVEN, { FIGHTER: 'x', CREDIBILITY: 30 }, HI2)).toBe('STRONG BET');
+    expect(action(0.75, EVEN, { FIGHTER: 'x', CREDIBILITY: above(30) }, HI2)).toBe('STRONG BET');
+  });
+
+  it('the credibility cap only downgrades BET/STRONG BET, never LEAN or NO BET', () => {
+    const low = { FIGHTER: 'low', CREDIBILITY: 10 };
+    expect(action(0.62, EVEN, low, HI2)).toBe('LEAN');      // already LEAN
+    expect(action(0.55, EVEN, low, HI2)).toBe('NO BET');    // already NO BET
+  });
+
   it('heavy-favourite ceiling suppresses to NO BET above 2/3 implied with edge < 0.25', () => {
     expect(action(0.78, ['-250', '+250'])).toBe('NO BET');
+  });
+
+  it('heavy-favourite threshold: strictly ABOVE 2/3 implied, adjacent doubles', () => {
+    // The guard is `pickRawOdds > 2/3`, so exactly 2/3 does NOT suppress.
+    // -200 implies exactly 2/3.
+    expect(parseAmericanOdds('-200')).toBe(2 / 3);
+    // At exactly 2/3 with a sub-0.25 edge the action survives...
+    expect(action(0.72, ['-200', '+170'])).not.toBe('NO BET');
+    // ...and just above 2/3 it is suppressed.
+    expect(action(0.72, ['-201', '+170'])).toBe('NO BET');
+    expect(parseAmericanOdds('-201')).toBeGreaterThan(2 / 3);
+  });
+
+  it('heavy-favourite accompanying edge 0.25: at and above survives, below is suppressed', () => {
+    const odds = ['-250', '+200'];
+    const base = noVigA(odds[0], odds[1]);
+    expect(parseAmericanOdds(odds[0])).toBeGreaterThan(2 / 3);
+    const at = base + 0.25;
+    expect(action(below(at), odds)).toBe('NO BET');
+    expect(action(at, odds)).not.toBe('NO BET');
+    expect(action(above(at), odds)).not.toBe('NO BET');
+  });
+
+  it('conflicting signals force NO BET even at a large opposite edge', () => {
+    // Model picks A (pA > 0.5) but the market underprices B by >= 0.03, and A
+    // itself has no edge -- betting the "value" would mean betting against the
+    // model's own pick.
+    const odds = ['-400', '+320'];              // no-vig A ~ 0.79
+    const m = computeMarketAnalysis(mkResult(0.72), odds[0], odds[1], HI, HI2);
+    expect(m.edgeA).toBeLessThan(0.03);         // pick has no edge
+    expect(m.edgeB).toBeGreaterThanOrEqual(0.03); // opposite side does
+    expect(m.betAction).toBe('NO BET');
+    expect(m.noBetReason).toMatch(/conflicting signals/i);
   });
 });
 

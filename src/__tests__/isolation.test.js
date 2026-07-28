@@ -16,13 +16,28 @@ function testFiles(dir, acc = []) {
   return acc;
 }
 
-// The single most important structural guarantee in this suite.
+// WHAT THIS GUARANTEES, PRECISELY.
 //
-// FIGHTERS is assembled at module scope from Date.now() (DAYS_SINCE_LAST), so
-// any test that reached the live collection would pass today and fail after the
-// next 12:00 UTC rollover. Stage 0 hit exactly that failure. Every test must
-// therefore read frozen fixtures only.
-describe('test isolation', () => {
+// FIGHTERS is assembled at module scope from Date.now() (DAYS_SINCE_LAST), so a
+// test reaching the live collection would pass today and fail after the next
+// 12:00 UTC rollover -- the Stage 2 failure. These checks prevent that.
+//
+// What is actually true:
+//   - fighter MATCHUP INPUTS are frozen: every model, finish and betting test
+//     feeds objects from fighters.golden.json, never live fighter data;
+//   - no test imports the assembled FIGHTERS collection, App.js, or a live
+//     data module.
+//
+// What is NOT claimed. The production model module itself imports _D2 (for
+// DIVISION_UFC_AVERAGES) and getHistoricalTier (for getOpponentTier), so those
+// remain real production dependencies reached THROUGH the real module. The
+// suite is therefore not hermetic with respect to committed data files; it is
+// isolated from the date-derived assembled collection, which is the property
+// that actually matters here. Changing those dependencies is not a Stage 4 job.
+//
+// Scope of the scanner: it inspects DIRECT imports in test files. It does not
+// walk transitive dependencies -- a direct-import guard, not a sandbox.
+describe('test isolation (direct-import guard)', () => {
   const files = testFiles(SRC);
 
   it('finds the test files it is guarding', () => {
@@ -82,7 +97,25 @@ describe('goldenSupport — the decoder itself', () => {
     expect(firstDifference({ a: -0 }, { a: 0 })).toMatchObject({ path: 'a' });
     expect(firstDifference({ a: NaN }, { a: NaN })).toBeNull();
     expect(firstDifference({ a: 1 }, { a: 1 })).toBeNull();
-    expect(firstDifference({ a: undefined }, {})).toBeNull();  // both read undefined
+  });
+
+  it('firstDifference distinguishes a present undefined from an absent property', () => {
+    // An earlier version read both sides through `?.[k]`, saw undefined on each
+    // and called them equal. Ownership is now compared before value.
+    expect(firstDifference({ a: undefined }, {})).toMatchObject({ path: 'a', reason: 'ownership' });
+    expect(firstDifference({}, { a: undefined })).toMatchObject({ path: 'a', reason: 'ownership' });
+    expect(firstDifference({ a: undefined }, { a: undefined })).toBeNull();
+  });
+
+  it('firstDifference compares array length and sparse slots', () => {
+    expect(firstDifference([1, 2], [1, 2])).toBeNull();
+    expect(firstDifference([1, 2], [1])).toMatchObject({ reason: 'length' });
+    // a hole is not the same as an index explicitly holding undefined
+    const sparse = [1, , 3];            // eslint-disable-line no-sparse-arrays
+    const dense = [1, undefined, 3];
+    expect(firstDifference(sparse, dense)).toMatchObject({ path: '[1]', reason: 'sparse-slot' });
+    expect(firstDifference(sparse, sparse)).toBeNull();
+    expect(firstDifference([1], { 0: 1 })).toMatchObject({ reason: 'array-vs-object' });
   });
 
   it('ULP helper measures adjacency, not decimals', () => {

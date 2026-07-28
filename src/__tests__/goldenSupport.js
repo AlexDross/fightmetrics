@@ -44,19 +44,54 @@ export function loadFixture(name) {
 }
 
 // ── exact structural comparison ─────────────────────────────────────────────
-// Object.is at the leaves, so -0 !== 0, NaN === NaN, and undefined is
-// distinguished from absent. Returns the first differing path, or null.
+// Object.is at the leaves, so -0 is not 0 and NaN is NaN.
+//
+// Property OWNERSHIP is compared with Object.hasOwn before values, so a present
+// property holding undefined is distinguished from an absent one. An earlier
+// version read both through `?.[k]`, saw undefined on each side and reported
+// them equal -- so `{a: undefined}` compared equal to `{}`. Arrays additionally
+// compare length and per-index ownership, so a sparse hole is distinguished
+// from an index explicitly holding undefined.
 export function firstDifference(actual, expected, pathSoFar = '') {
   if (Object.is(actual, expected)) return null;
 
   const ta = actual === null ? 'null' : typeof actual;
   const te = expected === null ? 'null' : typeof expected;
-  if (ta !== te) return { path: pathSoFar || '(root)', actual, expected, reason: 'type' };
-  if (ta !== 'object') return { path: pathSoFar || '(root)', actual, expected, reason: 'value' };
+  const at = pathSoFar || '(root)';
+  if (ta !== te) return { path: at, actual, expected, reason: 'type' };
+  if (ta !== 'object') return { path: at, actual, expected, reason: 'value' };
 
-  const keys = new Set([...Object.keys(actual ?? {}), ...Object.keys(expected ?? {})]);
+  const aIsArr = Array.isArray(actual);
+  const eIsArr = Array.isArray(expected);
+  if (aIsArr !== eIsArr) return { path: at, actual, expected, reason: 'array-vs-object' };
+
+  if (aIsArr) {
+    if (actual.length !== expected.length) {
+      return { path: `${at}.length`, actual: actual.length, expected: expected.length, reason: 'length' };
+    }
+    for (let i = 0; i < actual.length; i++) {
+      const p = `${pathSoFar}[${i}]`;
+      const ha = Object.hasOwn(actual, i);
+      const he = Object.hasOwn(expected, i);
+      if (ha !== he) {
+        return { path: p, actual: ha ? actual[i] : '<hole>', expected: he ? expected[i] : '<hole>', reason: 'sparse-slot' };
+      }
+      if (!ha) continue;
+      const d = firstDifference(actual[i], expected[i], p);
+      if (d) return d;
+    }
+    return null;
+  }
+
+  const keys = new Set([...Object.keys(actual), ...Object.keys(expected)]);
   for (const k of [...keys].sort()) {
-    const d = firstDifference(actual?.[k], expected?.[k], pathSoFar ? `${pathSoFar}.${k}` : k);
+    const p = pathSoFar ? `${pathSoFar}.${k}` : k;
+    const ha = Object.hasOwn(actual, k);
+    const he = Object.hasOwn(expected, k);
+    if (ha !== he) {
+      return { path: p, actual: ha ? actual[k] : '<absent>', expected: he ? expected[k] : '<absent>', reason: 'ownership' };
+    }
+    const d = firstDifference(actual[k], expected[k], p);
     if (d) return d;
   }
   return null;
