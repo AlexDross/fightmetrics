@@ -150,8 +150,15 @@ FAIL  1440w__statistics.png    82,108 px (2.0430%)
 
 Two independent candidates then produced **exactly 82,108 px and exactly 1 px
 again** — bit-identical failures. That ruled out nondeterminism: a flaky render
-does not repeat to the pixel. The *reference* was the outlier, captured while
-Vite was still transforming modules on demand.
+does not repeat to the pixel. The *reference* was the outlier.
+
+**Cause: a repeatable cold-start timing artifact. The exact mechanism is not
+proven** — it may include deterministic chart-animation timing rather than, or
+as well as, Vite's on-demand module transformation. What is established is only
+that the first capture after a cold start differs reproducibly from every
+subsequent capture, and that warming the server removes the difference. The
+mechanism was not chased further because the operational fix is the same either
+way.
 
 Recaptured against a warm server, `1440w__statistics.png` is **identical** and
 Explore and Info are **identical**. Two further candidates:
@@ -207,4 +214,14 @@ build.
 | Fresh candidate c2 vs Stage 1b | identical=12, within=2, fail=0 |
 | Goldens | all six canonical hashes MATCH; join OK, `de0704a5` |
 | Dimensions vs Stage 0 | 14/14 match |
-| Production build | no `.map`, 0 bridge matches, 0 model-source matches, no CDN tag, 4.5 MB |
+| Production build | no `.map`, **0 verbatim source-map or bridge markers**, no CDN tag, 4.5 MB |
+
+> **What that check does and does not establish.** It confirms the emitted output
+> contains no source map and no verbatim `__FM_GOLDEN_INTERNALS__` or
+> `const MODEL = {` markers — i.e. the dev bridge is gone and the unminified
+> source is no longer shipped. It does **not** mean the model is secret. Inference
+> is still entirely client-side, so the model logic and every coefficient remain
+> present in the executable JavaScript in minified form and are recoverable with
+> modest effort. See `baseline/POST_MERGE_CHECKLIST.md` §4 — minification is not
+> secrecy, and server-side inference is the only real remedy if confidentiality
+> is ever a requirement.
