@@ -40,6 +40,24 @@ export default defineConfig({
   server: { port: 3001 },
   preview: { port: 4173 },
 
+  // Foundation Stage 4. The domain modules are pure ES modules with no DOM
+  // dependency, so the suite runs in plain Node -- no jsdom, no browser, no
+  // dev server. Deliberately NOT a DOM environment: adding one would invite
+  // tests that render components, which belongs to a later stage.
+  test: {
+    environment: 'node',
+    include: ['src/**/__tests__/**/*.test.js'],
+    // fixtures/ holds data, not tests
+    exclude: ['**/node_modules/**', 'src/__tests__/fixtures/**'],
+    // Determinism: no retries masking flakiness, no parallel interleaving of
+    // the golden replays, and a hard ceiling so the suite stays fast enough to
+    // run on every extraction.
+    retry: 0,
+    sequence: { shuffle: false },
+    testTimeout: 20000,
+    hookTimeout: 20000,
+  },
+
   build: {
     // Kept as `build` (not Vite's default `dist`) so the existing Vercel
     // project settings and .gitignore keep working. vercel.json pins it

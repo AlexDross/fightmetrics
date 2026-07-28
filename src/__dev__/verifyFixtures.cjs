@@ -18,7 +18,7 @@ const fs = require('fs');
 const path = require('path');
 
 const ROOT = path.join(__dirname, '..', '..');
-const REFERENCE_DIR = path.join(ROOT, 'baseline', 'fixtures');
+const REFERENCE_DIR = path.join(ROOT, 'src', '__tests__', 'fixtures');
 const MANIFEST = path.join(ROOT, 'baseline', 'REFERENCE_HASHES.json');
 
 const FILES = [
@@ -44,7 +44,7 @@ const POST_REFERENCE_FIELDS = {
 
 // Independently derived expectation for the in-browser join. Written by
 // hashFightHistory.cjs from identityKeys + src/fightHistory.js + sortHistoryDesc.
-const HISTORY_MANIFEST = path.join(ROOT, 'baseline', 'fixtures', 'fightHistory.hashes.json');
+const HISTORY_MANIFEST = path.join(ROOT, 'src', '__tests__', 'fixtures', 'fightHistory.hashes.json');
 
 function stableStringify(value) {
   if (value === undefined) return '@undefined';

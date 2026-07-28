@@ -18,7 +18,7 @@ const path = require('path');
 
 const ROOT = path.join(__dirname, '..', '..');
 const SRC = path.join(ROOT, 'src', 'fightHistory.js');
-const OUT = path.join(ROOT, 'baseline', 'fixtures', 'fightHistory.hashes.json');
+const OUT = path.join(ROOT, 'src', '__tests__', 'fixtures', 'fightHistory.hashes.json');
 
 // Same stableStringify/hash as goldenHarness.js.
 function stableStringify(value) {
@@ -87,12 +87,12 @@ for (const n of names) {
 // Stage 3's extraction could introduce. Derive what the in-browser
 // `historyHashes` array MUST be, from committed inputs only:
 //
-//   identityKeys  <- baseline/fixtures/roster.manifest.json (roster order, = d.n)
+//   identityKeys  <- src/__tests__/fixtures/roster.manifest.json (roster order, = d.n)
 //   FIGHT_HISTORY <- src/fightHistory.js
 //   sortHistoryDesc, stableStringify, hash <- copied verbatim from the app
 //
 // A mis-join moves the hash at that fighter's index, so rosterHistoryHash moves.
-const ROSTER = path.join(ROOT, 'baseline', 'fixtures', 'roster.manifest.json');
+const ROSTER = path.join(ROOT, 'src', '__tests__', 'fixtures', 'roster.manifest.json');
 let expectedAttachedHashes = null;
 let expectedRosterHistoryHash = null;
 let rosterIdentityCount = null;
