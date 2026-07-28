@@ -479,7 +479,17 @@ const buildRoiEntry = ({ fA, fB, oddsA, oddsB, eventName, eventDate, modelToggle
   };
 };
 
+// NO READ: when the ACTIVE model's pick probability is below 53%, the fight is
+// treated as a coin-flip and any bet read is suppressed. Distinct from NO BET,
+// which means conviction exists but the market offers no value.
+//
+// Extracted from App.js in Stage 4 so the rule is callable production code
+// rather than an inline expression inside a render path. The threshold is
+// unchanged: strictly less than 0.53.
+const isNoReadProbability = (probability) => probability < 0.53;
+
 export {
+  isNoReadProbability,
   americanOdds,
   parseAmericanOdds,
   stripVig,
