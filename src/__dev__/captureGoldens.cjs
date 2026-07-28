@@ -17,10 +17,31 @@ const CHROME = process.env.CHROME_PATH ||
   '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 const ROOT = path.join(__dirname, '..', '..');
 const REFERENCE_DIR = path.join(ROOT, 'baseline', 'fixtures');
+const REFERENCE_HASHES = path.join(ROOT, 'baseline', 'REFERENCE_HASHES.json');
 
-const args = process.argv.slice(2).filter((a) => a !== '--init');
+const args = process.argv.slice(2).filter((a) => a !== '--init' && a !== '--live-time');
 const INIT = process.argv.includes('--init');
+const LIVE_TIME = process.argv.includes('--live-time');
 const BASE = args[0] || 'http://localhost:3001';
+
+// ── FROZEN CLOCK ────────────────────────────────────────────────────────────
+// DAYS_SINCE_LAST is computed from Date.now() at module scope (App.js:822) and
+// feeds the model, so a capture is only comparable to a reference taken in the
+// same 12:00-UTC window. Scheduling work around the rollover is brittle:
+// regression correctness must not depend on the wall clock.
+//
+// The default regression mode therefore pins the browser clock to the approved
+// Stage 0 capture instant, read from baseline/REFERENCE_HASHES.json. Use
+// --live-time for a genuine wall-clock capture (e.g. re-initialising a
+// reference); it will not match the committed fixtures outside their window.
+function referenceCaptureIso() {
+  if (!fs.existsSync(REFERENCE_HASHES)) {
+    throw new Error('cannot pin the clock: ' + REFERENCE_HASHES + ' is missing');
+  }
+  const iso = JSON.parse(fs.readFileSync(REFERENCE_HASHES, 'utf8')).reference?.captureIso;
+  if (!iso) throw new Error('cannot pin the clock: reference.captureIso absent from REFERENCE_HASHES.json');
+  return iso;
+}
 
 // Default destination is a timestamped CANDIDATE directory. The committed
 // reference is never the default target -- an approved baseline must not be
@@ -59,6 +80,32 @@ function guardReference(dir) {
     executablePath: CHROME, headless: 'new', args: ['--no-sandbox'],
   });
   const page = await browser.newPage();
+
+  // Installed via evaluateOnNewDocument so it runs BEFORE any page script --
+  // App.js assembles FIGHTERS (and DAYS_SINCE_LAST) during module evaluation,
+  // so patching after goto would be too late.
+  if (!LIVE_TIME) {
+    await page.evaluateOnNewDocument((fixedMs) => {
+      const RealDate = Date;
+      function FrozenDate(...a) {
+        // Date() without new returns a string, per spec.
+        if (!(this instanceof FrozenDate)) return new RealDate(fixedMs).toString();
+        // Zero-arg construction is frozen; every other form is untouched, so
+        // new Date(iso), new Date(y,m,d) etc. keep working normally.
+        return a.length === 0 ? new RealDate(fixedMs) : new RealDate(...a);
+      }
+      // Share the prototype so instanceof Date and all instance methods behave,
+      // and inherit statics so anything not overridden below still resolves.
+      FrozenDate.prototype = RealDate.prototype;
+      Object.setPrototypeOf(FrozenDate, RealDate);
+      FrozenDate.now = () => fixedMs;
+      FrozenDate.parse = RealDate.parse;
+      FrozenDate.UTC = RealDate.UTC;
+      window.Date = FrozenDate;
+      window.__FM_FROZEN_CLOCK__ = fixedMs;
+    }, new Date(referenceCaptureIso()).getTime());
+  }
+
   await page.goto(BASE, { waitUntil: 'domcontentloaded', timeout: 120000 });
 
   await page.waitForFunction(
@@ -105,6 +152,9 @@ function guardReference(dir) {
   await browser.close();
 
   console.log('\noutDir     :', OUT);
+  console.log('clock      :', LIVE_TIME
+    ? 'LIVE wall clock (--live-time) -- will NOT match committed fixtures outside their 12:00-UTC window'
+    : 'FROZEN to reference ' + referenceCaptureIso() + ' (from baseline/REFERENCE_HASHES.json)');
   console.log('captureIso :', payload.head.captureIso);
   console.log('captureBase:', payload.head.captureBase);
   console.log('counts     :', JSON.stringify(payload.counts));

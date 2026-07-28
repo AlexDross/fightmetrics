@@ -74,15 +74,35 @@ Everything designed to be date-independent still matched exactly:
 `rosterHistoryHash de0704a5` SAME, plus `statistics.golden.json` and
 `characterisation.json`.
 
-**This does not affect Stage 4.** The plan already mandates that every test feeds
-the frozen fixture objects and never reads the live `FIGHTERS` array, so the
-Vitest suite will not drift. The 12-hour window only constrains *browser-capture*
-comparison — the interim mechanism used in Stages 1a–2.
+### RESOLVED — the capture clock is now frozen
 
-**Operational rule:** when a capture-based golden comparison mismatches, check
-the clock before the code. If only `DAYS_SINCE_LAST` differs and the deltas are
-`{0, 1}`, the window was crossed. Re-run inside one window to get a clean
-comparison, or wait for Stage 4.
+This was originally written with a recommendation to schedule Stage 3 shortly
+after 12:00 UTC. **That advice is withdrawn.** Regression correctness must not
+depend on the wall clock, and Stage 4's future frozen *unit* fixtures do not help
+the Stage 3 *browser-capture* gate, which is what Stage 3 actually runs against.
+
+`captureGoldens.cjs` now pins the browser clock in its default regression mode.
+It reads `reference.captureIso` from `baseline/REFERENCE_HASHES.json` and
+installs the shim via `evaluateOnNewDocument`, i.e. **before `page.goto`** —
+necessary because `App.js` assembles `FIGHTERS` and `DAYS_SINCE_LAST` during
+module evaluation, so patching after navigation would be too late.
+
+Verified at **14:38 UTC**, eleven hours outside the reference window: all six
+canonical hashes match, join OK, `rosterHistoryHash de0704a5`.
+
+The shim freezes `Date.now()` and zero-argument `new Date()` only. Twelve
+properties probed, all passing: `new Date(iso)`, `new Date(ms)`,
+`new Date(y,m,d)`, `Date.parse`, `Date.UTC`, `instanceof Date` for both
+construction forms, prototype methods, `Date()` without `new` returning a string,
+and date arithmetic.
+
+`--live-time` opts into a genuine wall-clock capture (needed when re-initialising
+a reference); it will not match committed fixtures outside their window. The mode
+and effective timestamp are logged on every run.
+
+**Operational rule:** capture-based golden comparison is now time-independent. If
+one mismatches, it is the code — check the clock line in the log only to confirm
+the run was in frozen mode.
 
 ## Finding 2 — Tailwind v4 scans Python files (Stage 1b defect)
 
