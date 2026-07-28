@@ -56,11 +56,22 @@ const action = (pA, odds = EVEN, fa = HI, fb = HI2) =>
 // written as a decimal. `below`/`above` then step to the immediately adjacent
 // representable doubles, which characterises the exact float behaviour instead
 // of smearing it with a tolerance.
+// SCOPE: strictly positive finite numbers only. For x > 0 the IEEE-754 bit
+// pattern increases monotonically, so +/-1 on the raw bits is next-up and
+// next-down. This is NOT a general nextAfter -- it is wrong across zero, where
+// the sign bit flips (nextDown(+0) is -MIN_VALUE, not a bit decrement). Every
+// use here is a probability or a credibility score, all > 0, and the guard
+// makes a future misuse fail loudly rather than silently.
 const _buf = new ArrayBuffer(8);
 const _f = new Float64Array(_buf);
 const _i = new BigInt64Array(_buf);
-const above = (x) => { _f[0] = x; _i[0] += x >= 0 ? 1n : -1n; return _f[0]; };
-const below = (x) => { _f[0] = x; _i[0] += x > 0 ? -1n : 1n; return _f[0]; };
+const assertPositive = (x) => {
+  if (!(x > 0) || !Number.isFinite(x)) {
+    throw new Error(`above/below are positive-finite helpers; got ${x}`);
+  }
+};
+const above = (x) => { assertPositive(x); _f[0] = x; _i[0] += 1n; return _f[0]; };
+const below = (x) => { assertPositive(x); _f[0] = x; _i[0] -= 1n; return _f[0]; };
 
 // The no-vig probability of side A for a given American pair, straight from the
 // production functions -- not re-derived in the test.
@@ -171,17 +182,34 @@ describe('bet-action probability boundaries — both sides and the exact value',
     expect(action(0.70)).toBe('BET');
   });
 
-  it('probability thresholds: adjacent doubles either side of 0.60, 0.65, 0.70', () => {
-    // Held at a large edge so only the probability tier moves. -400/+300 puts
-    // the no-vig line near 0.73... instead use an even market and a big gap:
-    // at these pA values edge = pA - 0.5, which is >= 0.10 throughout.
-    // 0.60 boundary: below is NO BET (floor), at/above depends on the edge gate
-    expect(action(below(0.60))).toBe('NO BET');
-    // 0.65 boundary: LEAN both sides (mid tier needs edge >= 0.30 for BET)
-    expect(action(below(0.65))).toBe('LEAN');
-    expect(action(0.65)).toBe('LEAN');
-    expect(action(above(0.65))).toBe('LEAN');
-    // 0.70 boundary: mid tier LEAN below, high tier BET at and above
+  // Each transition needs a market where the EDGE gate is comfortably satisfied
+  // on both adjacent sides, so the only thing changing across the boundary is
+  // the probability tier. An even market fails that: at 0.60 the edge is
+  // 0.09999999999999998 and at 0.65 it is 0.15, so both sides of each boundary
+  // give the same answer for edge reasons and the threshold is not bound.
+  it('0.60 floor: below is NO BET, at and above are LEAN', () => {
+    const odds = ['+150', '-170'];              // no-vig A ~ 0.3885
+    const base = noVigA(odds[0], odds[1]);
+    expect(0.60 - base).toBeGreaterThan(0.10);  // edge clears the low-tier gate
+    expect(below(0.60) - base).toBeGreaterThan(0.10);
+    expect(action(below(0.60), odds)).toBe('NO BET');   // floor, not edge
+    expect(action(0.60, odds)).toBe('LEAN');
+    expect(action(above(0.60), odds)).toBe('LEAN');
+  });
+
+  it('0.65 low-to-mid: below is LEAN, at and above are BET', () => {
+    const odds = ['+200', '-250'];              // no-vig A ~ 0.3182
+    const base = noVigA(odds[0], odds[1]);
+    expect(0.65 - base).toBeGreaterThan(0.30);  // edge clears the mid-tier BET gate
+    expect(below(0.65) - base).toBeGreaterThan(0.30);
+    expect(action(below(0.65), odds)).toBe('LEAN');     // low tier caps at LEAN
+    expect(action(0.65, odds)).toBe('BET');             // mid tier, edge >= 0.30
+    expect(action(above(0.65), odds)).toBe('BET');
+  });
+
+  it('0.70 mid-to-high: below is LEAN, at and above are BET', () => {
+    // Even market: edge is 0.20 throughout, which is < 0.30 (so mid tier caps
+    // at LEAN) but >= 0.15 (so the high tier reaches BET).
     expect(action(below(0.70))).toBe('LEAN');
     expect(action(0.70)).toBe('BET');
     expect(action(above(0.70))).toBe('BET');
@@ -298,9 +326,9 @@ describe('bet-action overrides', () => {
 
   it('heavy-favourite accompanying edge 0.25: at and above survives, below is suppressed', () => {
     const odds = ['-250', '+200'];
-    const base = noVigA(odds[0], odds[1]);
     expect(parseAmericanOdds(odds[0])).toBeGreaterThan(2 / 3);
-    const at = base + 0.25;
+    // edgeBoundary, not base + 0.25 -- the same reason established above.
+    const at = edgeBoundary(odds, 0.25);
     expect(action(below(at), odds)).toBe('NO BET');
     expect(action(at, odds)).not.toBe('NO BET');
     expect(action(above(at), odds)).not.toBe('NO BET');
