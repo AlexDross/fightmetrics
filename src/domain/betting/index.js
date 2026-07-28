@@ -351,8 +351,12 @@ export const buildProvenance = ({ eventDate, result, fA, fB, predictionTimestamp
 // tab. Used by the manual savePrediction path ("Save to Upcoming" / "Save and
 // Open Upcoming" in the Simulator).
 
-const buildRoiEntry = ({ fA, fB, oddsA, oddsB, eventName, eventDate, modelToggle = 'v2', unitsWagered = 1 }) => {
-  const result = computeMatchupEdges(fA, fB);
+// modelContext is OPTIONAL and is forwarded verbatim to computeMatchupEdges.
+// Application callers omit it and keep reading live roster averages; only the
+// frozen characterisation tests supply one. See the comment on
+// computeMatchupEdges for why this exists.
+const buildRoiEntry = ({ fA, fB, oddsA, oddsB, eventName, eventDate, modelToggle = 'v2', unitsWagered = 1, modelContext }) => {
+  const result = computeMatchupEdges(fA, fB, modelContext);
   // Use whichever model the user had active at save time (v1 or v2) for every
   // bet-decision field, mirroring the Simulator's own market useMemo. The raw
   // per-model probabilities are still stored separately and unchanged
@@ -479,7 +483,17 @@ const buildRoiEntry = ({ fA, fB, oddsA, oddsB, eventName, eventDate, modelToggle
   };
 };
 
+// NO READ: when the ACTIVE model's pick probability is below 53%, the fight is
+// treated as a coin-flip and any bet read is suppressed. Distinct from NO BET,
+// which means conviction exists but the market offers no value.
+//
+// Extracted from App.js in Stage 4 so the rule is callable production code
+// rather than an inline expression inside a render path. The threshold is
+// unchanged: strictly less than 0.53.
+const isNoReadProbability = (probability) => probability < 0.53;
+
 export {
+  isNoReadProbability,
   americanOdds,
   parseAmericanOdds,
   stripVig,

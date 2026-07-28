@@ -652,7 +652,20 @@ const computeLogisticProb = (featsV2) => {
 // Odds do NOT affect win probability. They are used only in the betting layer.
 
 
-const computeMatchupEdges = (fA, fB) => {
+// modelContext is an OPTIONAL third argument. It exists so characterisation
+// tests can pin the normalisation context that would otherwise drift every time
+// the roster is refreshed -- DIVISION_UFC_AVERAGES is derived from the whole
+// _D2 roster at module load, so a single fighter's stats moving shifts every
+// division mean and therefore every golden.
+//
+// Production NEVER passes it. Every application call site remains two-argument
+// and keeps reading the live roster averages, which is the intended behaviour:
+// the app must adapt when new fighter data arrives. Only the frozen tests inject
+// a context, so they compare the model under fixed conditions.
+//
+// Scope is deliberately limited to divisionAverages. Coefficients, rankings,
+// SOS behaviour and clocks are NOT injectable here.
+const computeMatchupEdges = (fA, fB, modelContext) => {
   const S = MODEL.SCALES;
   const debutAdjA = getDebutProspectAdjustment(fA, fB);
   const debutAdjB = getDebutProspectAdjustment(fB, fA);
@@ -666,8 +679,11 @@ const computeMatchupEdges = (fA, fB) => {
   const loseStreakB = fB.MODEL_UFC_LOSE_STREAK ?? fB.LOSE_STREAK ?? 0;
   const winStreakA = fA.MODEL_UFC_WIN_STREAK ?? fA.WIN_STREAK ?? 0;
   const winStreakB = fB.MODEL_UFC_WIN_STREAK ?? fB.WIN_STREAK ?? 0;
-  const divA = DIVISION_UFC_AVERAGES[fA.WEIGHT_CLASS] ?? {};
-  const divB = DIVISION_UFC_AVERAGES[fB.WEIGHT_CLASS] ?? {};
+  // Omitted context => live roster averages, byte-identical to the previous
+  // behaviour. This is the only place divisionAverages is read.
+  const divisionAverages = modelContext?.divisionAverages ?? DIVISION_UFC_AVERAGES;
+  const divA = divisionAverages[fA.WEIGHT_CLASS] ?? {};
+  const divB = divisionAverages[fB.WEIGHT_CLASS] ?? {};
   const totalMinA = fA.TOTAL_MIN ?? 0;
   const totalMinB = fB.TOTAL_MIN ?? 0;
   // Blend a fighter's observed stat toward the division mean when sample is small

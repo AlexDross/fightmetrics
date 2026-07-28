@@ -40,6 +40,28 @@ export default defineConfig({
   server: { port: 3001 },
   preview: { port: 4173 },
 
+  // Foundation Stage 4. The domain modules are pure ES modules with no DOM
+  // dependency, so the suite runs in plain Node -- no jsdom, no browser, no
+  // dev server. Deliberately NOT a DOM environment: adding one would invite
+  // tests that render components, which belongs to a later stage.
+  test: {
+    environment: 'node',
+    include: ['src/**/__tests__/**/*.test.js'],
+    // fixtures/ holds data, not tests
+    exclude: ['**/node_modules/**', 'src/__tests__/fixtures/**'],
+    // Determinism, accurately described:
+    //   retry: 0            a flaky test fails rather than being masked
+    //   shuffle: false      fixed ordering WITHIN a file
+    // File-level parallelism is left at Vitest's default and is deliberately
+    // NOT disabled: every test here is a pure function of frozen fixtures, so
+    // there is no shared state to serialise. (An earlier comment implied
+    // serial execution, which shuffle: false does not provide.)
+    retry: 0,
+    sequence: { shuffle: false },
+    testTimeout: 20000,
+    hookTimeout: 20000,
+  },
+
   build: {
     // Kept as `build` (not Vite's default `dist`) so the existing Vercel
     // project settings and .gitignore keep working. vercel.json pins it

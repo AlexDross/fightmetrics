@@ -95,7 +95,15 @@ import {
   djb2Checksum,
   buildProvenance,
   buildRoiEntry,
+  isNoReadProbability,
 } from './domain/betting';
+// Foundation Stage 4: Upcoming -> ROI transitions extracted verbatim.
+import {
+  filterVisibleUpcoming,
+  addPendingEntry,
+  createGradedEntry,
+  removePendingEntry,
+} from './domain/workflow';
 
 // Foundation Stage 3: extracted verbatim -- see src/domain/statistics/index.js
 import {
@@ -4555,7 +4563,7 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                 // distinct from NO BET (we have conviction but no market value).
                 // Uses market.pickProb, which already reflects the v1/v2 toggle.
                 const pickProbActive = market.pickProb ?? Math.max(activePA, activePB);
-                const noRead = pickProbActive < 0.53;
+                const noRead = isNoReadProbability(pickProbActive);
                 const displayAction = noRead ? 'NO READ' : market.betAction;
 
                 const isBet = !noRead && (market.betAction === 'STRONG BET' || market.betAction === 'BET');
@@ -6368,40 +6376,6 @@ function ScoutProfile({ allFighters }) {
   );
 }
 
-// Upcoming-tab visibility window: an entry stays visible through the first
-// Tuesday that falls at least 7 days after its event date (not just until
-// the event date itself), so there's about a week of post-event runway to
-// grade it regardless of what weekday the event landed on. Pure string/date
-// math, no side effects -- never touches upcomingData.js; only decides what
-// UPCOMING_ENTRIES.filter keeps in initial render state (App.js, search
-// "isUpcomingVisible").
-//
-// Parses eventDate's y/m/d manually into new Date(y, m-1, d) -- the local-
-// time constructor overload -- rather than new Date(eventDate), which for a
-// date-only ISO string parses as UTC midnight and can land on the wrong
-// local day (the same class of bug the `today` construction below already
-// works around). Fails open (keeps the entry visible) on anything that
-// doesn't cleanly parse as YYYY-MM-DD, exactly like the pre-existing
-// !e.eventDate check already did for missing dates -- extended here to also
-// cover a malformed-but-present string, which the old plain string
-// comparison never actually validated.
-const isUpcomingVisible = (eventDate, todayStr) => {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(eventDate ?? '')) return true;
-  const [y, m, d] = eventDate.split('-').map(Number);
-  const eventLocal = new Date(y, m - 1, d);
-  if (isNaN(eventLocal.getTime())) return true;
-  const plus7 = new Date(eventLocal);
-  plus7.setDate(plus7.getDate() + 7);
-  const daysUntilTuesday = (2 - plus7.getDay() + 7) % 7; // getDay(): 0=Sun..2=Tue..6=Sat
-  const cutoff = new Date(plus7);
-  cutoff.setDate(cutoff.getDate() + daysUntilTuesday);
-  const cutoffStr = `${cutoff.getFullYear()}-${String(cutoff.getMonth() + 1).padStart(2, '0')}-${String(cutoff.getDate()).padStart(2, '0')}`;
-  // Inclusive: still visible ON the cutoff Tuesday itself, hidden the day
-  // after. Matches the pre-existing lower-bound `>=` convention below
-  // (inclusive of today) rather than introducing a stricter boundary style.
-  return todayStr <= cutoffStr;
-};
-
 export default function App() {
   const [view, setView] = useState('home');
   const belowSm = useBelowSm();
@@ -6421,12 +6395,9 @@ export default function App() {
   // handleGradeUpcoming stamp once and carry unchanged from Upcoming into
   // ROI. Composes with isUpcomingVisible rather than replacing it -- both
   // conditions must hold.
-  const [upcomingEntries, setUpcomingEntries] = useState(() => {
-    const gradedIds = new Set(ROI_ENTRIES.map((e) => e.id));
-    return UPCOMING_ENTRIES.filter(
-      (e) => isUpcomingVisible(e.eventDate, today) && !gradedIds.has(e.id)
-    );
-  });
+  const [upcomingEntries, setUpcomingEntries] = useState(() =>
+    filterVisibleUpcoming(UPCOMING_ENTRIES, ROI_ENTRIES, today)
+  );
   const [roiEntries, setRoiEntries] = useState(() => {
     const fightersByName = Object.fromEntries(FIGHTERS.map((f) => [f.FIGHTER, f]));
     return ROI_ENTRIES.map((entry) => {
@@ -6521,14 +6492,7 @@ export default function App() {
   };
 
   const handleSaveToUpcoming = (entry) => {
-    setUpcomingEntries((prev) => {
-      const key = [entry.fighterA, entry.fighterB].sort().join('|');
-      const alreadyExists = prev.some(
-        (e) => [e.fighterA, e.fighterB].sort().join('|') === key
-      );
-      if (alreadyExists) return prev;
-      return [entry, ...prev];
-    });
+    setUpcomingEntries((prev) => addPendingEntry(prev, entry));
   };
 
   const handleSaveToUpcomingAndOpen = (entry) => {
@@ -6539,12 +6503,12 @@ export default function App() {
   const handleGradeUpcoming = (id, actualWinner) => {
     const entry = upcomingEntries.find((e) => e.id === id);
     if (!entry) return;
-    setRoiEntries((prev) => [{ ...entry, actualWinner }, ...prev]);
-    setUpcomingEntries((prev) => prev.filter((e) => e.id !== id));
+    setRoiEntries((prev) => [createGradedEntry(entry, actualWinner), ...prev]);
+    setUpcomingEntries((prev) => removePendingEntry(prev, id));
   };
 
   const handleDeleteUpcoming = (id) => {
-    setUpcomingEntries((prev) => prev.filter((e) => e.id !== id));
+    setUpcomingEntries((prev) => removePendingEntry(prev, id));
   };
 
   const handleUpdateUpcomingEntry = (id, patch) => {
@@ -8110,31 +8074,4 @@ function InfoTab() {
 
     </div>
   );
-}
-
-// ─── DEV-ONLY GOLDEN BRIDGE — Foundation Stage 0 ─────────────────────────────
-// TEMPORARY. Removed together with src/__dev__/goldenHarness.js in Stage 4.
-//
-// Exposes existing module-scope values for read-only capture by the Stage 0
-// golden harness. It runs no computation on load — the harness invokes
-// explicitly. No function, coefficient, or model behavior is modified by this
-// block; it only creates a frozen reference to values that already exist.
-//
-// Guard swapped from process.env.NODE_ENV to import.meta.env.DEV in Stage 1a,
-// now that Vite is the bundler. Verified absent from production builds by grep
-// and at runtime — see baseline/metrics.md.
-if (import.meta.env.DEV) {
-  window.__FM_GOLDEN_INTERNALS__ = Object.freeze({
-    FIGHTERS,
-    ROI_ENTRIES,
-    computeMatchupEdges,
-    buildRoiEntry,
-    computeROISummary,
-    computeV2Summary,
-    computeCalibrationReliability,
-    computeRoiByMarketBand,
-    computeBetTierBreakdown,
-    computeCumulativePnl,
-    computeMonthlyPerformance,
-  });
 }

@@ -1,0 +1,157 @@
+{
+  "_readme": [
+    "FROZEN MODEL NORMALISATION CONTEXT — Stage 4.",
+    "DIVISION_UFC_AVERAGES is derived from the ENTIRE _D2 roster at module load,",
+    "so any fighter-data refresh shifts every division mean and would otherwise",
+    "rewrite the model goldens on a schedule.",
+    "PRODUCTION does not use this file. computeMatchupEdges defaults to the live",
+    "DIVISION_UFC_AVERAGES computed from the current _D2, so the app keeps",
+    "adapting when new fighter data arrives.",
+    "CHARACTERISATION TESTS inject these frozen averages as modelContext so they",
+    "compare the model under fixed conditions every run.",
+    "Values were read from the production export, never retyped."
+  ],
+  "provenance": {
+    "sourceCommit": "9f98a53",
+    "fightersDataBlob": "464a017",
+    "modelModuleBlob": "0de2a6e",
+    "derivedFrom": "DIVISION_UFC_AVERAGES export of src/domain/model/index.js",
+    "rosterFighterCount": 2272
+  },
+  "divisionCount": 13,
+  "divisions": [
+    "Bantamweight",
+    "Catch Weight",
+    "Featherweight",
+    "Flyweight",
+    "Heavyweight",
+    "Light Heavyweight",
+    "Lightweight",
+    "Middleweight",
+    "Welterweight",
+    "Women's Bantamweight",
+    "Women's Featherweight",
+    "Women's Flyweight",
+    "Women's Strawweight"
+  ],
+  "canonicalContextSha256": "a4be41895c57e1fe6c486d99659188a14e0f617774c3d285e0f0efb2047cd8d9",
+  "divisionAverages": {
+    "Bantamweight": {
+      "asa": 0.5429166666666665,
+      "asl": 3.3014393939393956,
+      "asp": 0.4231287878787878,
+      "atl": 1.5361742424242426,
+      "atp": 0.33121969696969716,
+      "crd": 1.058838257575757,
+      "elo": 1499.2170454545442
+    },
+    "Catch Weight": {
+      "asa": 0,
+      "asl": 4.235,
+      "asp": 0.46499999999999997,
+      "atl": 0.5,
+      "atp": 0.085,
+      "crd": 1,
+      "elo": 1490
+    },
+    "Featherweight": {
+      "asa": 0.5591693950177935,
+      "asl": 4.148362633451956,
+      "asp": 0.44306761565836306,
+      "atl": 1.47504128113879,
+      "atp": 0.3195658362989323,
+      "crd": 1.0349672597864772,
+      "elo": 1499.3345195729544
+    },
+    "Flyweight": {
+      "asa": 0.5625886524822695,
+      "asl": 3.7786290780141836,
+      "asp": 0.4202836879432623,
+      "atl": 1.5589482269503543,
+      "atp": 0.32224822695035443,
+      "crd": 1.0674170212765957,
+      "elo": 1498.14255319149
+    },
+    "Heavyweight": {
+      "asa": 0.40043478260869575,
+      "asl": 3.9803726708074545,
+      "asp": 0.47885714285714287,
+      "atl": 1.287142857142857,
+      "atp": 0.3080931677018633,
+      "crd": 1.049157763975155,
+      "elo": 1505.8795031055913
+    },
+    "Light Heavyweight": {
+      "asa": 0.45918749999999997,
+      "asl": 3.572937499999999,
+      "asp": 0.4759562499999997,
+      "atl": 1.2878124999999998,
+      "atp": 0.29018749999999993,
+      "crd": 1.0297974999999997,
+      "elo": 1498.1193750000007
+    },
+    "Lightweight": {
+      "asa": 0.4955091666666665,
+      "asl": 3.6744630555555546,
+      "asp": 0.42936666666666634,
+      "atl": 1.5705369444444446,
+      "atp": 0.34064722222222216,
+      "crd": 1.0504302777777776,
+      "elo": 1495.9308333333329
+    },
+    "Middleweight": {
+      "asa": 0.5094337164750958,
+      "asl": 3.687475478927203,
+      "asp": 0.4618275862068969,
+      "atl": 1.4943804597701138,
+      "atp": 0.377888888888889,
+      "crd": 1.019310727969349,
+      "elo": 1500.3065134099622
+    },
+    "Welterweight": {
+      "asa": 0.48118191780821923,
+      "asl": 3.912982465753425,
+      "asp": 0.43709863013698613,
+      "atl": 1.4942805479452062,
+      "atp": 0.33889863013698596,
+      "crd": 1.0642745205479456,
+      "elo": 1504.0273972602731
+    },
+    "Women's Bantamweight": {
+      "asa": 0.41078947368421065,
+      "asl": 3.6265789473684196,
+      "asp": 0.4422368421052633,
+      "atl": 1.3744736842105265,
+      "atp": 0.3489473684210527,
+      "crd": 1.0270921052631579,
+      "elo": 1503.605263157895
+    },
+    "Women's Featherweight": {
+      "asa": 0.2814285714285715,
+      "asl": 3.3942857142857146,
+      "asp": 0.43142857142857144,
+      "atl": 0.8057142857142857,
+      "atp": 0.3057142857142857,
+      "crd": 1.1489999999999998,
+      "elo": 1496.3285714285714
+    },
+    "Women's Flyweight": {
+      "asa": 0.46258823529411747,
+      "asl": 3.7210588235294106,
+      "asp": 0.43117647058823527,
+      "atl": 1.319058823529412,
+      "atp": 0.3922352941176471,
+      "crd": 1.0889082352941177,
+      "elo": 1502.477647058824
+    },
+    "Women's Strawweight": {
+      "asa": 0.44018348623853204,
+      "asl": 6.788012844036693,
+      "asp": 0.44899082568807336,
+      "atl": 1.4114064220183484,
+      "atp": 0.37357798165137607,
+      "crd": 1.1096339449541286,
+      "elo": 1495.097247706422
+    }
+  }
+}

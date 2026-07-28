@@ -51,6 +51,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '24'
+          cache: npm
 
       - name: Validate generated JS is syntactically valid
         run: |
@@ -71,6 +72,37 @@ jobs:
 
       - name: Verify canonical fighter identity joins
         run: node scripts/verify-fighter-identity.mjs
+
+      # ─── Stage 4 contract gate ──────────────────────────────────────────
+      # An automated data refresh must not be able to push to main when it
+      # breaks the model/statistics contracts. These three steps run against
+      # the freshly regenerated data, before any commit or push.
+      #
+      # The suite is roster-independent by construction. DIVISION_UFC_AVERAGES
+      # is derived from the whole _D2 roster, so it used to move on every
+      # refresh and drag the model goldens with it. The characterisation tests
+      # now inject a frozen normalisation context
+      # (src/__tests__/inputs/model-context.input.json) while production
+      # continues to read the live averages -- the app adapts to new data, the
+      # tests do not drift.
+      #
+      # Verified: the same one-fighter asl/elo mutation that failed 3 tests
+      # before this change leaves all 161 green, while the default production
+      # output still moves on 4 of 74 model results.
+      #
+      # So a failure here is a real signal. Do NOT regenerate the approved
+      # fixtures to make it pass -- escalate.
+      #
+      # Not covered: rankHistory's getHistoricalTier is still read live, so a
+      # rankings change can legitimately move the goldens.
+      - name: Install Node dependencies
+        run: npm ci --include=dev
+
+      - name: Run Vitest against the regenerated data
+        run: npm test
+
+      - name: Production build
+        run: npm run build
 
       - name: Commit and push if changed
         run: |

@@ -1,4 +1,5 @@
 // Foundation -- pixel diff between two screenshots. DEV ONLY.
+// RETAINED through Stage 8 visual sign-off.
 //   NODE_PATH=/tmp/pptr/node_modules node src/__dev__/diffScreens.cjs <a.png> <b.png>
 //
 // Checksum inequality only says "not identical". This says HOW different, which

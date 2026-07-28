@@ -98,20 +98,31 @@ and `53eda57`.
 
 ## `src/__dev__` inventory — 10 files
 
-Correcting an earlier undercount of five. No deletions here; Stage 4 must decide
-against this list explicitly.
+Correcting an earlier undercount of five. No deletions in Stage 3.
+
+**WHAT STAGE 4 ACTUALLY DID** (recorded after the fact — the "remove all
+screenshot tools in Stage 4" reading of this table was wrong, and was corrected
+before it could be acted on):
+
+- **six removed** in Stage 4: `goldenHarness.js`, `captureGoldens.cjs`,
+  `verifyFixtures.cjs`, `fixtureReceiver.cjs`, `captureFightersArray.cjs`,
+  `extractVerbatim.cjs`
+- **three visual tools retained through Stage 8 visual sign-off**:
+  `captureScreens.cjs`, `verifyScreens.cjs`, `diffScreens.cjs`, together with
+  both protected screenshot references and their manifests
+- **one long-term keeper**: `hashFightHistory.cjs`
 
 | File | Purpose | Stage 4 disposition |
 |---|---|---|
-| `goldenHarness.js` | in-page capture, `window.__fmGoldens` | remove with the App.js bridge |
-| `captureGoldens.cjs` | headless fixture capture, frozen clock | remove |
-| `captureScreens.cjs` | headless visual capture | remove |
-| `captureFightersArray.cjs` | complete assembled-array comparison | remove — Stage 3 only |
-| `extractVerbatim.cjs` | verbatim range extractor | remove — Stage 3 only |
-| `verifyFixtures.cjs` | canonical-hash + join verification | remove |
-| `verifyScreens.cjs` | visual comparison, scoped tolerance | remove |
-| `diffScreens.cjs` | pixel-diff diagnostics | remove |
-| `fixtureReceiver.cjs` | superseded by `captureGoldens.cjs` | remove |
+| ~~`goldenHarness.js`~~ (removed) | in-page capture, `window.__fmGoldens` | remove with the App.js bridge |
+| ~~`captureGoldens.cjs`~~ (removed) | headless fixture capture, frozen clock | remove |
+| `captureScreens.cjs` | headless visual capture | **RETAINED through Stage 8** |
+| ~~`captureFightersArray.cjs`~~ (removed) | complete assembled-array comparison | remove — Stage 3 only |
+| ~~`extractVerbatim.cjs`~~ (removed) | verbatim range extractor | remove — Stage 3 only |
+| ~~`verifyFixtures.cjs`~~ (removed) | canonical-hash + join verification | remove |
+| `verifyScreens.cjs` | visual comparison, scoped tolerance | **RETAINED through Stage 8** |
+| `diffScreens.cjs` | pixel-diff diagnostics | **RETAINED through Stage 8** |
+| ~~`fixtureReceiver.cjs`~~ (removed) | superseded by `captureGoldens.cjs` | remove |
 | `hashFightHistory.cjs` | full fight-history hashes **from source** | **KEEP** — needs no browser, no bridge, no capture; it protects the join independently and keeps working after the harness is gone |
 
 ## Verification
