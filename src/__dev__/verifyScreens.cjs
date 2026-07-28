@@ -28,6 +28,16 @@ const crypto = require('crypto');
 
 const PIXEL_TOLERANCE_PCT = 0.01; // 1 pixel in 10,000
 
+// The tolerance applies to THESE SCREENS ONLY. Every other screen must be
+// checksum-identical -- a blanket tolerance would quietly absorb a real
+// regression on a screen that is perfectly deterministic today (all 12 others
+// were pixel-exact across the CRA -> Vite migration, including 1440w__roi.png
+// at 1440x3894).
+const PIXEL_TOLERANCE_SCREENS = new Set([
+  '1440w__statistics.png',
+  '375w__statistics.png',
+]);
+
 const ROOT = path.join(__dirname, '..', '..');
 const REF_DIR = path.join(ROOT, 'baseline', 'screenshots-stage0');
 const MANIFEST = path.join(ROOT, 'baseline', 'screenshots-stage0.sha256.json');
@@ -100,8 +110,10 @@ async function pixelDiff(aPath, bPath) {
       if (d1[i] !== d2[i] || d1[i + 1] !== d2[i + 1] || d1[i + 2] !== d2[i + 2]) n++;
     }
     const total = a.width * a.height;
+    // Return the UNROUNDED ratio. Rounding before the comparison could let a
+    // value just over tolerance format down to look compliant.
     return { sizeMismatch: false, width: a.width, height: a.height, differingPixels: n,
-             percent: +(100 * n / total).toFixed(4) };
+             totalPixels: total, ratioPct: (100 * n) / total };
   }, url(aPath), url(bPath));
   await browser.close();
   return r;
@@ -114,29 +126,55 @@ async function pixelDiff(aPath, bPath) {
     if (!a) { absent++; console.log('ABSENT    ' + name); continue; }
     if (a.sha256 === m.shots[name].sha256) { same++; console.log('IDENTICAL ' + name); continue; }
 
-    if (!usePixel) {
+    const tolerated = PIXEL_TOLERANCE_SCREENS.has(name);
+
+    // Any screen outside the tolerance set must be checksum-identical. Measure
+    // it anyway when --pixel is on, purely as diagnostics, but it still fails.
+    if (!tolerated) {
       fail++;
-      console.log('DIFFERS   ' + name + '  (' + m.shots[name].bytes + ' -> ' + a.bytes + ' bytes)  [rerun with --pixel to measure]');
+      let detail = '(' + m.shots[name].bytes + ' -> ' + a.bytes + ' bytes)';
+      if (usePixel) {
+        const d = await pixelDiff(path.join(REF_DIR, name), path.join(candDir || REF_DIR, name));
+        detail = d.sizeMismatch
+          ? 'DIMENSIONS CHANGED ' + JSON.stringify(d.a) + ' -> ' + JSON.stringify(d.b)
+          : d.differingPixels + ' px (' + d.ratioPct.toFixed(4) + '%) of ' + d.width + 'x' + d.height;
+      }
+      console.log('FAIL      ' + name + '  ' + detail + '  [no tolerance for this screen]');
       continue;
     }
+
+    if (!usePixel) {
+      fail++;
+      console.log('DIFFERS   ' + name + '  (' + m.shots[name].bytes + ' -> ' + a.bytes +
+                  ' bytes)  [rerun with --pixel to measure against tolerance]');
+      continue;
+    }
+
     const d = await pixelDiff(path.join(REF_DIR, name), path.join(candDir || REF_DIR, name));
     if (d.sizeMismatch) {
       fail++;
-      console.log('FAIL      ' + name + '  DIMENSIONS CHANGED ' + JSON.stringify(d.a) + ' -> ' + JSON.stringify(d.b) + '  (layout regression)');
-    } else if (d.percent <= PIXEL_TOLERANCE_PCT) {
+      console.log('FAIL      ' + name + '  DIMENSIONS CHANGED ' + JSON.stringify(d.a) +
+                  ' -> ' + JSON.stringify(d.b) + '  (layout regression)');
+    } else if (d.ratioPct <= PIXEL_TOLERANCE_PCT) {
+      // Unrounded comparison above; formatted only for display.
       within++;
-      console.log('WITHIN    ' + name + '  ' + d.differingPixels + ' px (' + d.percent + '%) of ' +
-                  d.width + 'x' + d.height + '  <= ' + PIXEL_TOLERANCE_PCT + '% tolerance');
+      console.log('WITHIN    ' + name + '  ' + d.differingPixels + ' px (' +
+                  d.ratioPct.toFixed(4) + '%) of ' + d.width + 'x' + d.height +
+                  '  <= ' + PIXEL_TOLERANCE_PCT + '% tolerance');
     } else {
       fail++;
-      console.log('FAIL      ' + name + '  ' + d.differingPixels + ' px (' + d.percent + '%) EXCEEDS ' +
-                  PIXEL_TOLERANCE_PCT + '% tolerance');
+      console.log('FAIL      ' + name + '  ' + d.differingPixels + ' px (' +
+                  d.ratioPct.toFixed(4) + '%) EXCEEDS ' + PIXEL_TOLERANCE_PCT + '% tolerance');
     }
   }
+
+  // An unexpected screenshot means the capture set drifted from the reference
+  // set -- a renamed tab, a new screen, a stale file. That is a failure, not a note.
   const extra = Object.keys(actual).filter((n) => !(n in m.shots));
-  extra.forEach((n) => console.log('NEW       ' + n));
+  extra.forEach((n) => { fail++; console.log('FAIL      ' + n + '  UNEXPECTED (not in the reference manifest)'); });
 
   console.log('\nidentical=' + same + '  within-tolerance=' + within +
-              '  fail=' + fail + '  absent=' + absent + '  new=' + extra.length);
+              '  fail=' + fail + '  absent=' + absent + '  unexpected=' + extra.length);
+  console.log('tolerance applies only to: ' + [...PIXEL_TOLERANCE_SCREENS].join(', '));
   process.exit(fail + absent === 0 ? 0 : 1);
 })();

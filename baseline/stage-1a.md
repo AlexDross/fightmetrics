@@ -17,7 +17,7 @@ so any visual difference is attributable to one migration or the other.
 | JS raw | 4,554.7 kB | 4,612.3 kB | +1.3 % |
 | JS gzipped | 886.5 kB | 901.9 kB | +1.7 % |
 | **CSS emitted** | **none** | **31.3 kB / 6.3 kB gz** | was generated in-browser |
-| `build/` total | 18 MB | 17 MB | |
+| `build/` total | 18 MB | **4.5 MB** | source maps now off |
 | npm packages | ~930 | **171** | |
 | vulnerabilities | 5 (4 high) | **0** | all were CRA transitives |
 | `cdn.tailwindcss.com` | present | **removed** | |
@@ -46,8 +46,37 @@ WITHIN     375w__statistics.png   60 px (0.0008%) of 750x9826
 identical=12  within-tolerance=2  fail=0
 ```
 
-**Production build:** bridge and harness absent (grep = 0) under the new
-`import.meta.env.DEV` guard; CDN tag absent from `build/index.html`.
+**Production build:** `grep -r __FM_GOLDEN_INTERNALS__ build/` returns **zero
+matches anywhere in the output** under the new `import.meta.env.DEV` guard;
+`const MODEL = {` appears nowhere in `build/`; CDN tag absent from
+`build/index.html`.
+
+## Source maps are off by default (production hardening)
+
+The first Stage 1a build — like every CRA build before it — emitted a public
+`index-*.js.map` of **12.9 MB** carrying `sourcesContent` for 445 modules,
+including the **complete 471,657-character `src/App.js`**: the `MODEL` object,
+the v2 logistic coefficients, every betting and statistics function, and the dev
+bridge. Read out of the map directly, not inferred.
+
+So the earlier claim that the bridge was "absent from the production build" held
+only for **executable JavaScript**. The guard did work — nothing ran, and
+`window.__FM_GOLDEN_INTERNALS__` was `undefined` at runtime — but the source
+shipped alongside it, and fightmetrics.app has been serving the entire model
+implementation to anyone who opened devtools.
+
+`build.sourcemap` is now `process.env.FM_SOURCEMAP === 'true'`, i.e. **off**.
+
+| | with maps | default (no maps) |
+|---|---|---|
+| `build/` total | 17 MB | **4.5 MB** |
+| `.map` emitted | 12.9 MB | **none** |
+| bridge anywhere in `build/` | present in map | **0 matches** |
+| model source in `build/` | complete | **not present** |
+
+Opt in for a debugging build with `FM_SOURCEMAP=true npm run build` — verified to
+still emit the map. The variable is deliberately **not** `VITE_*` prefixed, which
+would embed its value in the client bundle.
 
 ## The Statistics tab is not deterministically renderable
 
@@ -60,10 +89,27 @@ the control is decisive: `1440w__roi.png` — a 1440×3894 screen — is **0 pix
 different across the migration.
 
 So checksum equality is the wrong instrument for this one screen.
-`verifyScreens.cjs --pixel` now applies a measured rule:
+`verifyScreens.cjs --pixel` now applies a measured rule, **scoped to exactly two
+files**:
 
-- **dimensions must match exactly** — any change is a layout regression, FAIL;
-- differing pixels must stay under **0.01 %** (1 in 10,000).
+```js
+PIXEL_TOLERANCE_SCREENS = { '1440w__statistics.png', '375w__statistics.png' }
+```
+
+- Every **other** screen must be checksum-identical. It is still measured when
+  `--pixel` is on, but only as diagnostics — it fails regardless.
+- For the two tolerated screens: **dimensions must match exactly** (any change is
+  a layout regression), and the **unrounded** differing-pixel ratio must be
+  ≤ 0.01 %. The ratio is compared before formatting, so a value just over
+  tolerance cannot round down into compliance.
+- An **unexpected** screenshot not in the reference manifest is a failure, not a
+  note — it means the capture set drifted from the reference set.
+
+**Negative-tested.** In one run: `1440w__roi.png` altered by **30 px (0.0005 %)**
+FAILED, while `375w__statistics.png` at **62 px (0.0008 %)** passed. A *smaller*
+difference failing and a *larger* one passing is the scoping working — a blanket
+tolerance would have absorbed both. An injected extra screenshot also failed.
+Exit 1.
 
 A genuine styling regression — a Tailwind v4 default border-colour change, say —
 moves thousands of pixels or changes page height, and still fails. Stage 1b must

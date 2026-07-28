@@ -65,7 +65,7 @@ CRA's own output: *"The bundle size is significantly larger than recommended."*
 **Stage 1a target:** a CSS file must exist and the CDN tag must be gone.
 **Stage 8 target:** more than one JS chunk.
 
-## 3. Production build excludes the dev harness
+## 3. Production build excludes the dev harness — from executable JavaScript
 
 Verified two ways against `npx serve -s build`:
 
@@ -76,6 +76,20 @@ Verified two ways against `npx serve -s build`:
 | `typeof window.__FM_GOLDEN_INTERNALS__` at runtime | **`undefined`** |
 | `typeof window.__fmGoldens` at runtime | **`undefined`** |
 | App renders | yes |
+
+> **Correction (Stage 1a).** "Excludes the dev harness" was too strong as
+> originally written here. It is true of **executable JavaScript** — the guard
+> works, nothing runs, `window.__FM_GOLDEN_INTERNALS__` is `undefined`. It was
+> **not** true of the deployment as a whole: CRA emitted a public source map,
+> and Stage 1a's first Vite build did too. That map carried `sourcesContent` for
+> 445 modules including the **complete 471,657-character `src/App.js`** — the
+> `MODEL` object, the v2 logistic coefficients, every betting and statistics
+> function, and the bridge itself. Verified by reading the map, not inferred.
+>
+> Stage 1a turns production source maps **off by default** (`FM_SOURCEMAP=true`
+> to opt in). After that change `grep -r __FM_GOLDEN_INTERNALS__ build/` returns
+> **zero matches anywhere in the output**, and `build/` drops from 17 MB to
+> 4.5 MB. See `baseline/stage-1a.md`.
 
 ## 4. Fixtures
 

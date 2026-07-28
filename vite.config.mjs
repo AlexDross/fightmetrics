@@ -38,8 +38,24 @@ export default defineConfig({
     // project settings and .gitignore keep working. vercel.json pins it
     // explicitly regardless.
     outDir: 'build',
-    // Baseline (CRA) emitted source maps; keep them on so the Stage 0 bundle
-    // size comparison in baseline/metrics.md is like for like.
-    sourcemap: true,
+
+    // Source maps are OFF by default.
+    //
+    // CRA emitted them, and so did Stage 1a's first build. The emitted
+    // index-*.js.map was 12.9 MB and carried `sourcesContent` for 445 modules
+    // -- including the COMPLETE 471,657-character src/App.js, i.e. the MODEL
+    // object, the v2 logistic coefficients, every betting/statistics function
+    // and the dev bridge. Verified by reading the map, not assumed.
+    //
+    // The bridge is genuinely absent from executable JavaScript (grep = 0, and
+    // window.__FM_GOLDEN_INTERNALS__ is undefined at runtime), but "absent from
+    // the production build" was too strong a claim while the map shipped the
+    // source alongside it.
+    //
+    // Opt in deliberately for a debugging build:
+    //   FM_SOURCEMAP=true npm run build
+    // Deliberately NOT named VITE_* -- that prefix would embed the value in the
+    // client bundle.
+    sourcemap: process.env.FM_SOURCEMAP === 'true',
   },
 });
