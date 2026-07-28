@@ -11013,10 +11013,10 @@ function InfoTab() {
 // explicitly. No function, coefficient, or model behavior is modified by this
 // block; it only creates a frozen reference to values that already exist.
 //
-// Guarded for CRA (process.env.NODE_ENV). Stage 1a mechanically replaces the
-// guard with `import.meta.env.DEV` once Vite is the bundler. Verified absent
-// from production builds — see baseline/metrics.md.
-if (process.env.NODE_ENV !== 'production') {
+// Guard swapped from process.env.NODE_ENV to import.meta.env.DEV in Stage 1a,
+// now that Vite is the bundler. Verified absent from production builds by grep
+// and at runtime — see baseline/metrics.md.
+if (import.meta.env.DEV) {
   window.__FM_GOLDEN_INTERNALS__ = Object.freeze({
     FIGHTERS,
     ROI_ENTRIES,
