@@ -352,7 +352,7 @@ const momentumScore = Math.max(
   -2,
   Math.min(2, ((winStreak ?? 0) - (loseStreak ?? 0)) / 4)
 );
-  
+
   const qualityMomentum = computeMomentum(fightHistory);
 
   return {

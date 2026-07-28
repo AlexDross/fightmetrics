@@ -41,12 +41,6 @@ import {
   MoreHorizontal,
   X,
 } from 'lucide-react';
-import { _D2 } from './fightersData';
-import { getActiveProspects } from './prospectsData';
-import { ELO_RATINGS } from './eloModule';
-import { CARDIO_RATIOS } from './cardioModule';
-import { FIGHT_HISTORY } from './fightHistory';
-import { getHistoricalTier } from './rankHistory';
 import { ROI_ENTRIES } from './roiData';
 import { UPCOMING_ENTRIES } from './upcomingData';
 import { SOURCE_MANIFEST } from './sourceManifest';
@@ -140,24 +134,8 @@ import {
 } from './domain/statistics';
 
 // Foundation Stage 3: extracted verbatim -- see src/domain/fighters/index.js
-import {
-  currentRankTier,
-  computeMomentum,
-  getFightRoundCount,
-  sumFightRounds,
-  sumDeepRounds,
-  DIV_ELO_STATS,
-  eloToRating,
-  PROSPECT_TIER_CONFIG,
-  blendToward,
-  computeProspectSeededElo,
-  computeProspectSeededCardio,
-  getProspectTrustProfile,
-  activeProspects,
-  FIGHTERS,
-} from './domain/fighters';
+import { FIGHTERS } from './domain/fighters';
 
-// _D2 imported from fightersData.js
 
 const ufcRankLabel = (name) => {
   const r = UFC_RANKINGS[name];

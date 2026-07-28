@@ -15,6 +15,7 @@
 // Output is a TEMPORARY artifact. It is never added to baseline/.
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 const puppeteer = require('puppeteer-core');
 
 const CHROME = process.env.CHROME_PATH ||
@@ -52,12 +53,20 @@ const refIso = JSON.parse(
     () => !!window.__fmGoldens && !!window.__FM_GOLDEN_INTERNALS__, { timeout: 120000 }
   );
 
+  // THE DECISIVE ARTIFACT is `canonical`: stableStringify(encodeSpecials(FIGHTERS))
+  // over the COMPLETE ordered array. SHA-256 is taken over that string in Node.
+  //
+  // The per-fighter/per-field djb2 hashes below are for MISMATCH DIAGNOSIS ONLY.
+  // Hashing a summary of hashes would not prove value equality -- djb2 is a
+  // non-cryptographic 32-bit hash and an inner collision would hide a real
+  // difference. So the gate is SHA-256 over the actual encoded values.
   const payload = await page.evaluate(() => {
     const saved = { log: console.log, assert: console.assert, warn: console.warn };
     console.log = () => {}; console.assert = () => {}; console.warn = () => {};
     try {
       const { FIGHTERS } = window.__FM_GOLDEN_INTERNALS__;
       const { stableStringify, hash, encodeSpecials } = window.__fmGoldens;
+      const canonical = stableStringify(encodeSpecials(FIGHTERS));
       const perFighter = FIGHTERS.map((f) => {
         const enc = encodeSpecials(f);
         const fields = {};
@@ -66,7 +75,7 @@ const refIso = JSON.parse(
       });
       return {
         length: FIGHTERS.length,
-        arrayHash: hash(stableStringify(perFighter.map((p) => p.h))),
+        canonical,
         identityHash: hash(stableStringify(FIGHTERS.map((f) => f.FIGHTER))),
         perFighter,
       };
@@ -74,10 +83,21 @@ const refIso = JSON.parse(
   });
 
   await browser.close();
-  fs.writeFileSync(OUT, JSON.stringify(payload));
-  console.log('clock       : FROZEN to ' + refIso);
-  console.log('fighters    : ' + payload.length);
-  console.log('arrayHash   : ' + payload.arrayHash);
-  console.log('identityHash: ' + payload.identityHash);
-  console.log('wrote       : ' + OUT + ' (' + (fs.statSync(OUT).size / 1048576).toFixed(1) + ' MB)');
+
+  const canonPath = OUT.replace(/\.json$/, '') + '.canonical.txt';
+  fs.writeFileSync(canonPath, payload.canonical);
+  const sha = crypto.createHash('sha256').update(payload.canonical, 'utf8').digest('hex');
+
+  const diag = { length: payload.length, identityHash: payload.identityHash, perFighter: payload.perFighter };
+  fs.writeFileSync(OUT, JSON.stringify(diag));
+
+  console.log('clock        : FROZEN to ' + refIso);
+  console.log('fighters     : ' + payload.length);
+  console.log('identityHash : ' + payload.identityHash + '   (diagnostic)');
+  console.log('');
+  console.log('CANONICAL SERIALISATION -- stableStringify(encodeSpecials(FIGHTERS))');
+  console.log('  bytes      : ' + Buffer.byteLength(payload.canonical, 'utf8'));
+  console.log('  sha256     : ' + sha);
+  console.log('  file       : ' + canonPath);
+  console.log('diagnostics  : ' + OUT);
 })();
