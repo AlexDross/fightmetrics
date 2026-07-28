@@ -2379,7 +2379,7 @@ function StatisticsTab({ entries, prospectNameSet, filterSince, setFilterSince, 
               type="date"
               value={filterSince}
               onChange={e => setFilterSince(e.target.value)}
-              className="bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-1.5 min-h-[44px] sm:min-h-0 focus:outline-none focus:border-red-500"
+              className="bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-1.5 min-h-[44px] sm:min-h-0 focus:outline-hidden focus:border-red-500"
             />
             {filterSince && (
               <button
@@ -2726,7 +2726,7 @@ const PROP_RESULT_OPTIONS = [
 ];
 
 const PROP_INPUT_CLS =
-  'w-full bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-red-500';
+  'w-full bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:outline-hidden focus:border-red-500';
 const PROP_LABEL_CLS =
   'text-slate-500 text-xs font-semibold uppercase tracking-wider block mb-1.5';
 
@@ -2999,7 +2999,7 @@ function PendingPropsSection({ picks, onGrade, onDelete, manualOpen, onToggleMan
                   <select
                     value={pick.result}
                     onChange={(e) => onGrade(pick.id, e.target.value)}
-                    className="bg-slate-800 border border-slate-700 text-slate-200 text-xs rounded-lg px-2 py-1.5 focus:outline-none focus:border-red-500 cursor-pointer"
+                    className="bg-slate-800 border border-slate-700 text-slate-200 text-xs rounded-lg px-2 py-1.5 focus:outline-hidden focus:border-red-500 cursor-pointer"
                   >
                     {PROP_RESULT_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
                   </select>
@@ -3070,7 +3070,7 @@ function PropBetsPanel({ picks, onGrade, onDelete }) {
                     <select
                       value={pick.result}
                       onChange={(e) => onGrade(pick.id, e.target.value)}
-                      className="hidden sm:inline-block bg-slate-800 border border-slate-700 text-slate-200 text-xs rounded-lg px-2 py-1.5 focus:outline-none focus:border-red-500 cursor-pointer"
+                      className="hidden sm:inline-block bg-slate-800 border border-slate-700 text-slate-200 text-xs rounded-lg px-2 py-1.5 focus:outline-hidden focus:border-red-500 cursor-pointer"
                     >
                       {PROP_RESULT_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
                     </select>
@@ -4914,7 +4914,7 @@ function UnitsStakedInput({ value, onCommit }) {
         if (next !== '' && !Number.isNaN(n)) onCommit(n);
       }}
       onBlur={() => setRaw(String(value))}
-      className="w-20 bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-1.5 focus:outline-none focus:border-red-500"
+      className="w-20 bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-1.5 focus:outline-hidden focus:border-red-500"
     />
   );
 }
@@ -5000,7 +5000,7 @@ function BuildParlayPanel({ legInputs, onConfirm, onCancel }) {
                 ))}
               </div>
               <p className="text-slate-600 text-xs mt-1.5 flex items-center gap-1.5 flex-wrap">
-                <span className="text-[10px] font-bold text-violet-400 bg-violet-900/30 border border-violet-700/40 px-1.5 py-0.5 rounded uppercase">
+                <span className="text-[10px] font-bold text-violet-400 bg-violet-900/30 border border-violet-700/40 px-1.5 py-0.5 rounded-sm uppercase">
                   v2
                 </span>
                 <span>
@@ -5407,7 +5407,7 @@ function UpcomingEventTab({
                         Model Pick
                       </p>
                       {hasV2 && modelToggle === 'v2' && (
-                        <span className="text-[10px] font-bold text-violet-400 bg-violet-900/30 border border-violet-700/40 px-1.5 py-0.5 rounded uppercase">
+                        <span className="text-[10px] font-bold text-violet-400 bg-violet-900/30 border border-violet-700/40 px-1.5 py-0.5 rounded-sm uppercase">
                           v2
                         </span>
                       )}
@@ -5473,7 +5473,7 @@ function UpcomingEventTab({
                       onChange={(e) => {
                         if (e.target.value) onGrade(entry.id, e.target.value);
                       }}
-                      className="bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-1.5 focus:outline-none focus:border-red-500 cursor-pointer"
+                      className="bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-1.5 focus:outline-hidden focus:border-red-500 cursor-pointer"
                     >
                       <option value="">Pending…</option>
                       <option value={entry.fighterA}>{entry.fighterA}</option>
@@ -5728,7 +5728,7 @@ function Filters({ wc, setWC, minMin, setMinMin, count }) {
           <select
             value={wc}
             onChange={(e) => setWC(e.target.value)}
-            className="bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-1.5 min-h-[44px] sm:min-h-0 focus:outline-none focus:border-red-500 cursor-pointer min-w-40"
+            className="bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-1.5 min-h-[44px] sm:min-h-0 focus:outline-hidden focus:border-red-500 cursor-pointer min-w-40"
           >
             {WEIGHT_CLASSES.map((w) => (
               <option key={w}>{w}</option>
@@ -6019,7 +6019,7 @@ function DataTable({ fighters }) {
               setSearch(e.target.value);
               setPage(1);
             }}
-            className="bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg pl-9 pr-4 py-2 w-64 min-h-[44px] sm:min-h-0 focus:outline-none focus:border-red-500"
+            className="bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg pl-9 pr-4 py-2 w-64 min-h-[44px] sm:min-h-0 focus:outline-hidden focus:border-red-500"
           />
         </div>
         <div className="flex items-center gap-3 text-xs text-slate-500 flex-wrap">
@@ -6041,7 +6041,7 @@ function DataTable({ fighters }) {
                   ((lbl === '«' || lbl === '‹') && safePage === 1) ||
                   ((lbl === '›' || lbl === '»') && safePage === totalPages)
                 }
-                className="inline-flex items-center justify-center min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0 px-2.5 py-1 bg-slate-800 rounded disabled:opacity-30 hover:bg-slate-700 text-slate-300 transition-colors"
+                className="inline-flex items-center justify-center min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0 px-2.5 py-1 bg-slate-800 rounded-sm disabled:opacity-30 hover:bg-slate-700 text-slate-300 transition-colors"
               >
                 {lbl}
               </button>
@@ -6138,7 +6138,7 @@ function DataTable({ fighters }) {
                         )}
                         {f.IS_PROSPECT && (
                           <span
-                            className="text-[10px] font-black font-mono px-1.5 py-0.5 rounded border bg-amber-900/40 text-amber-400 border-amber-800"
+                            className="text-[10px] font-black font-mono px-1.5 py-0.5 rounded-sm border bg-amber-900/40 text-amber-400 border-amber-800"
                             title="Pre-debut UFC signee — stats from pre-UFC pro fights"
                           >
                             PRE-UFC
@@ -6273,7 +6273,7 @@ function FighterSearch({
           setOpen(true);
         }}
         onFocus={() => setOpen(true)}
-        className={`bg-slate-800 border ${bdr} text-slate-200 text-sm rounded-lg pl-9 pr-4 py-2 w-full min-h-[44px] sm:min-h-0 focus:outline-none transition-colors`}
+        className={`bg-slate-800 border ${bdr} text-slate-200 text-sm rounded-lg pl-9 pr-4 py-2 w-full min-h-[44px] sm:min-h-0 focus:outline-hidden transition-colors`}
       />
       {open && opts.length > 0 && (
         <div className="absolute top-full left-0 right-0 mt-1 bg-slate-800 border border-slate-600 rounded-xl z-30 shadow-2xl overflow-hidden">
@@ -6289,7 +6289,7 @@ function FighterSearch({
             >
               <span className="text-slate-200 font-medium flex items-center gap-2">
                 {f.IS_PROSPECT && (
-                  <span className="text-[10px] font-black font-mono px-1.5 py-0.5 rounded border bg-amber-900/40 text-amber-400 border-amber-800">
+                  <span className="text-[10px] font-black font-mono px-1.5 py-0.5 rounded-sm border bg-amber-900/40 text-amber-400 border-amber-800">
                     PRE-UFC
                   </span>
                 )}
@@ -7212,7 +7212,7 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                         set(v);
                       }}
                       placeholder={ph}
-                      className="w-full bg-slate-800 border border-slate-600 rounded-lg px-4 py-3 text-white font-black text-xl text-center placeholder-slate-700 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30 transition-colors"
+                      className="w-full bg-slate-800 border border-slate-600 rounded-lg px-4 py-3 text-white font-black text-xl text-center placeholder-slate-700 focus:outline-hidden focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30 transition-colors"
                     />
                     {parseAmericanOdds(val) != null && (
                       <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-500">
@@ -8053,7 +8053,7 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                   value={eventName}
                   onChange={(e) => setEventName(e.target.value)}
                   placeholder="UFC 325"
-                  className="w-full bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-red-500"
+                  className="w-full bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:outline-hidden focus:border-red-500"
                 />
               </div>
               <div>
@@ -8064,7 +8064,7 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                   type="date"
                   value={eventDate}
                   onChange={(e) => setEventDate(e.target.value)}
-                  className="w-full bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-red-500"
+                  className="w-full bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:outline-hidden focus:border-red-500"
                 />
               </div>
               <div>
@@ -8078,7 +8078,7 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                   value={unitsWagered}
                   onChange={(e) => setUnitsWagered(e.target.value)}
                   placeholder="1"
-                  className="w-full bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-red-500"
+                  className="w-full bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:outline-hidden focus:border-red-500"
                 />
               </div>
             </div>
@@ -8682,11 +8682,11 @@ function ScoutProfile({ allFighters }) {
                   </ResponsiveContainer>
                   <div className="flex justify-center gap-6 text-xs text-slate-500 mt-1">
                     <span className="flex items-center gap-1.5">
-                      <span className="w-4 h-0.5 bg-red-500 inline-block rounded" />
+                      <span className="w-4 h-0.5 bg-red-500 inline-block rounded-sm" />
                       {fighter.FIGHTER}
                     </span>
                     <span className="flex items-center gap-1.5">
-                      <span className="w-4 h-0.5 bg-slate-500 inline-block rounded" />
+                      <span className="w-4 h-0.5 bg-slate-500 inline-block rounded-sm" />
                       Div. Avg
                     </span>
                   </div>
@@ -8750,7 +8750,7 @@ function ScoutProfile({ allFighters }) {
                           </div>
                           <div className="h-2.5 bg-slate-800 rounded-full overflow-hidden">
                             <div
-                              className={`h-full bg-gradient-to-r ${color} rounded-full`}
+                              className={`h-full bg-linear-to-r ${color} rounded-full`}
                               style={{
                                 width: `${Math.min((displayVal / max) * 100, 100)}%`,
                               }}
@@ -10309,7 +10309,7 @@ function ROITab({
             type="date"
             value={filterSince}
             onChange={e => setFilterSince(e.target.value)}
-            className="bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-1.5 min-h-[44px] sm:min-h-0 focus:outline-none focus:border-red-500"
+            className="bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-1.5 min-h-[44px] sm:min-h-0 focus:outline-hidden focus:border-red-500"
           />
           {filterSince && (
             <button
@@ -10572,7 +10572,7 @@ function ROITab({
                         <p className="text-slate-500 text-xs uppercase tracking-wider">
                           Model Pick
                         </p>
-                        <span className="text-[10px] font-bold text-violet-400 bg-violet-900/30 border border-violet-700/40 px-1.5 py-0.5 rounded uppercase">
+                        <span className="text-[10px] font-bold text-violet-400 bg-violet-900/30 border border-violet-700/40 px-1.5 py-0.5 rounded-sm uppercase">
                           v2
                         </span>
                       </div>
@@ -10701,7 +10701,7 @@ function ROITab({
                       onChange={(e) =>
                         onUpdateEntry(entry.id, { eventName: e.target.value })
                       }
-                      className="w-full bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-red-500"
+                      className="w-full bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:outline-hidden focus:border-red-500"
                     />
                   </div>
                   <div>
@@ -10714,7 +10714,7 @@ function ROITab({
                       onChange={(e) =>
                         onUpdateEntry(entry.id, { eventDate: e.target.value })
                       }
-                      className="w-full bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-red-500"
+                      className="w-full bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:outline-hidden focus:border-red-500"
                     />
                   </div>
                   <div>
@@ -10732,7 +10732,7 @@ function ROITab({
                               : entry.oddsB || '',
                         })
                       }
-                      className="w-full bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-red-500"
+                      className="w-full bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:outline-hidden focus:border-red-500"
                     >
                       <option value={entry.fighterA}>{entry.fighterA}</option>
                       <option value={entry.fighterB}>{entry.fighterB}</option>
@@ -10751,7 +10751,7 @@ function ROITab({
                         })
                       }
                       placeholder="-150"
-                      className="w-full bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-red-500"
+                      className="w-full bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:outline-hidden focus:border-red-500"
                     />
                   </div>
                   <div>
@@ -10765,7 +10765,7 @@ function ROITab({
                           actualWinner: e.target.value,
                         })
                       }
-                      className="w-full bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-red-500"
+                      className="w-full bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:outline-hidden focus:border-red-500"
                     >
                       <option value="">Pending</option>
                       <option value={entry.fighterA}>{entry.fighterA}</option>

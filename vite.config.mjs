@@ -1,14 +1,21 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import tailwindcss from '@tailwindcss/vite';
 
 // Foundation Stage 1a -- replaces react-scripts (CRA 5.0.1, unmaintained since
 // 2022). No application code changes in this stage beyond the dev-guard swap.
 //
 // Named .mjs deliberately: package.json has no "type": "module", so a
-// vite.config.js using ESM syntax would be ambiguous, while tailwind.config.js
-// and postcss.config.js must stay CommonJS.
+// vite.config.js using ESM syntax would be ambiguous.
+//
+// Stage 1b: Tailwind v4 via its own Vite plugin. tailwind.config.js and
+// postcss.config.js are gone -- v4 detects sources automatically and needs no
+// PostCSS pipeline (autoprefixing is handled internally by Lightning CSS).
+// The official @tailwindcss/upgrade tool migrated to the PostCSS path; switched
+// here to the Vite plugin, which is the recommended and faster route for Vite.
 export default defineConfig({
   plugins: [
+    tailwindcss(),
     // src/App.js and src/index.js contain JSX in .js files (1,068 className
     // sites). esbuild only treats .jsx as JSX by default, so widen it here
     // rather than renaming the files -- the baseline records, risk register and
