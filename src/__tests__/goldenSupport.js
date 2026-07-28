@@ -9,6 +9,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { computeMatchupEdges } from '../domain/model/index.js';
+import { buildRoiEntry } from '../domain/betting/index.js';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 export const FIXTURE_DIR = path.join(HERE, 'fixtures');
@@ -41,6 +43,38 @@ export function decodeSpecials(value) {
 
 export function loadFixture(name) {
   return decodeSpecials(JSON.parse(fs.readFileSync(path.join(FIXTURE_DIR, name), 'utf8')));
+}
+
+export const INPUT_DIR = path.join(HERE, 'inputs');
+
+export function loadInput(name) {
+  return JSON.parse(fs.readFileSync(path.join(INPUT_DIR, name), 'utf8'));
+}
+
+// ── frozen model normalisation context ──────────────────────────────────────
+// DIVISION_UFC_AVERAGES is derived from the whole _D2 roster at module load, so
+// every fighter-data refresh moves every division mean and would rewrite the
+// model goldens on a schedule. Production keeps using the live averages -- the
+// app must adapt to new data -- while these tests inject a frozen snapshot so
+// they compare the model under fixed conditions.
+//
+// Exposed ONLY as the two wrappers below. Tests must not call
+// computeMatchupEdges or buildRoiEntry directly when asserting frozen
+// behaviour, because an omitted context silently reintroduces roster coupling
+// and the test would still pass today. Routing through one place is what makes
+// that omission impossible rather than merely discouraged.
+export const FROZEN_MODEL_CONTEXT = Object.freeze({
+  divisionAverages: loadInput('model-context.input.json').divisionAverages,
+});
+
+// Thin wrappers. Signature-compatible with the production functions; the only
+// difference is that the frozen context is always supplied.
+export function frozenEdges(fA, fB) {
+  return computeMatchupEdges(fA, fB, FROZEN_MODEL_CONTEXT);
+}
+
+export function frozenRoiEntry(args) {
+  return buildRoiEntry({ ...args, modelContext: FROZEN_MODEL_CONTEXT });
 }
 
 // ── exact structural comparison ─────────────────────────────────────────────

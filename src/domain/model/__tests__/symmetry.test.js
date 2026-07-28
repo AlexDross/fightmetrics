@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { computeMatchupEdges } from '../index.js';
-import { loadFixture, expectWithinUlps, ulpDistance } from '../../../__tests__/goldenSupport.js';
+// See model.golden.test.js: frozen normalisation context, not the live roster.
+import { loadFixture, expectWithinUlps, ulpDistance, frozenEdges } from '../../../__tests__/goldenSupport.js';
 
 const { fighterFixtures, pairs } = loadFixture('fighters.golden.json');
 const { symmetry } = loadFixture('model.golden.json');
@@ -30,7 +30,7 @@ const MAX_ABS = 1.1102230246251565e-16;
 const live = pairs
   .map((p) => ({ pair: `${p.a} vs ${p.b}`, fA: fighterFixtures[p.a], fB: fighterFixtures[p.b] }))
   .filter((x) => x.fA && x.fB)
-  .map((x) => ({ ...x, ab: computeMatchupEdges(x.fA, x.fB), ba: computeMatchupEdges(x.fB, x.fA) }));
+  .map((x) => ({ ...x, ab: frozenEdges(x.fA, x.fB), ba: frozenEdges(x.fB, x.fA) }));
 
 const KEYS = { v1: ['pA', 'pB'], v2: ['v2pA', 'v2pB'] };
 

@@ -1,6 +1,8 @@
 import { describe, it, expect } from 'vitest';
-import { buildRoiEntry, buildProvenance } from '../index.js';
-import { loadFixture, expectExact } from '../../../__tests__/goldenSupport.js';
+// buildRoiEntry is reached through frozenRoiEntry so the entry goldens use the
+// same frozen division averages as the model goldens they embed.
+import { buildProvenance } from '../index.js';
+import { loadFixture, expectExact, frozenRoiEntry } from '../../../__tests__/goldenSupport.js';
 
 const { fighterFixtures } = loadFixture('fighters.golden.json');
 const { entryGoldens, volatileEntryPaths } = loadFixture('entries.golden.json');
@@ -47,7 +49,7 @@ describe('buildRoiEntry — exact golden replay', () => {
       expect(g.error, `${g.pair} ${g.modelToggle} captured an error`).toBeUndefined();
       const [fA, fB] = pairFighters(g.pair);
       expect(fA, `missing fixture for ${g.pair}`).toBeTruthy();
-      const built = buildRoiEntry({
+      const built = frozenRoiEntry({
         fA, fB, oddsA: '-150', oddsB: '+130',
         eventName: 'GOLDEN FIXTURE EVENT', eventDate: '2026-08-01',
         modelToggle: g.modelToggle, unitsWagered: 1,
@@ -73,8 +75,8 @@ describe('buildRoiEntry — exact golden replay', () => {
       eventName: 'GOLDEN FIXTURE EVENT', eventDate: '2026-08-01',
       modelToggle: g.modelToggle, unitsWagered: 1,
     };
-    const a = buildRoiEntry(args);
-    const b = buildRoiEntry(args);
+    const a = frozenRoiEntry(args);
+    const b = frozenRoiEntry(args);
     expectExact(canonicalise(a), canonicalise(b), 'repeat build after canonicalisation');
     expect(a.id).not.toBe(b.id);   // genuinely volatile
   });

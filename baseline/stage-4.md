@@ -11,9 +11,91 @@ becomes a Vitest suite that runs in ~2 s. The browser bridge is gone.
 | `42e0c97` | workflow transition extraction |
 | `6fe73e1` | workflow + statistics characterisation; dev harness removed |
 | `8f00b21` | non-vacuous prop and parlay population tests |
-| *(this)* | CI enforcement on PRs, main, and data refreshes |
+| `9f98a53` | CI enforcement on PRs, main, and data refreshes |
+| *(this)* | frozen model normalisation context |
 
-**156 tests across 12 files, ~1.4 s.**
+**161 tests across 12 files, ~1.5 s.**
+
+## Live production, frozen tests
+
+`DIVISION_UFC_AVERAGES` is derived from the entire `_D2` roster at module load.
+Every fighter-data refresh moves every division mean, so the model goldens were
+coupled to the roster: the CI gate added in `9f98a53` would have blocked most
+routine Monday/Thursday refreshes even when nothing was wrong.
+
+Narrowing the gate was rejected, and correctly — it would only have moved the
+failure. Once an automated roster update landed on `main`, every subsequent pull
+request would have inherited red model tests.
+
+The split instead happens at the point of use:
+
+- **Production keeps reading the live roster.** `computeMatchupEdges(fA, fB)` is
+  unchanged for every application call site and still derives its averages from
+  the current `_D2`. The app must adapt when new fighter data arrives.
+- **Characterisation tests inject a frozen snapshot.** An optional third
+  argument, `computeMatchupEdges(fA, fB, modelContext)`, resolves as
+  `modelContext?.divisionAverages ?? DIVISION_UFC_AVERAGES`. `buildRoiEntry`
+  accepts an optional `modelContext` property and forwards it verbatim.
+
+Scope is deliberately narrow: only `divisionAverages`. Coefficients, rankings,
+SOS behaviour and clocks are not injectable.
+
+Tests never call the production functions directly when asserting frozen
+behaviour. `goldenSupport.js` exposes `frozenEdges` and `frozenRoiEntry`, and
+those two wrappers are the only callers in the whole suite — an omitted context
+would silently reintroduce roster coupling and still pass today, so routing
+through one place is what makes the omission impossible rather than merely
+discouraged.
+
+### The frozen context
+
+`src/__tests__/inputs/model-context.input.json`, stored outside the seven
+approved goldens. Values were read from the production `DIVISION_UFC_AVERAGES`
+export, never retyped.
+
+```
+raw bytes            8afda57cc3a7074282e6f189af1de011b130a8c9290cb790806ffacc25ce5acb
+canonical context    a4be41895c57e1fe6c486d99659188a14e0f617774c3d285e0f0efb2047cd8d9
+source commit        9f98a53
+roster fighters      2272
+divisions            13
+```
+
+`inputIntegrity.test.js` pins both hashes, asserts every division carries all
+seven averaged stats, asserts the doubles survive the JSON round trip exactly,
+and requires the inputs directory to hold exactly the two expected files.
+
+### Proof the production default did not move
+
+Captured all 74 default `computeMatchupEdges` outputs and all 32 default
+`buildRoiEntry` outputs at the exact parent `9f98a53`, then again after the
+change with the context omitted, canonicalising only the four already-approved
+volatile entry paths. Both captures hash to
+
+```
+6b5a53290bd475bfb3ab2bf8c87f4ceaff87434f193c32f8b5fc4f0b41e1b374
+```
+
+`cmp` reports the files identical. This is independent of the new tests.
+
+Warm screenshot verification against the Stage 1b reference: 12 identical, 2
+within the known statistics-tab tolerance (1440w 26 px / 0.0006%, 375w 280 px /
+0.0038%), 0 failures.
+
+### Both negative proofs
+
+| Probe | Expected | Result |
+|---|---|---|
+| roster mutation — one fighter's `asl` 2.45→3.55, `elo` 1783.8→1900.0 | suite green | **161 passed**, 12 files |
+| same mutation, default production call | output moves | **4/74** model and **4/32** entry outputs changed |
+| coefficient mutation — `younger` 0.274→0.284 | suite red | **7 failed** across 3 files |
+
+The first two together are the point: the same roster change that failed three
+tests at `9f98a53` now leaves the suite green *while* the application output
+still responds to it. The third confirms freezing normalisation did not make the
+model tests insensitive to the model.
+
+Both probes ran in disposable copies, which were discarded.
 
 ## Enforcement
 
@@ -101,7 +183,7 @@ untouched.
 | `__tests__/lifecycle.test.js` | save → Upcoming → Grade → ROI, freeze-at-save |
 | `__tests__/isolation.test.js` | direct-import guard, decoder and ULP self-tests |
 | `__tests__/fixtureIntegrity.test.js` | seven approved fixture byte hashes |
-| `__tests__/inputIntegrity.test.js` | statistics input byte + canonical hashes |
+| `__tests__/inputIntegrity.test.js` | statistics + model-context hashes, float round trip, exact inputs listing |
 
 ## Exclusion tests must be non-vacuous
 
@@ -177,7 +259,8 @@ That was wrong and `baseline/stage-3.md` now records what actually happened.
 
 | Check | Result |
 |---|---|
-| Vitest | 156 passed, 12 files, **~1.4 s** |
+| Vitest | 161 passed, 12 files, **~1.5 s** |
+| Default production path vs parent `9f98a53` | byte-identical, `6b5a5329…` |
 | Production build | exit 0, 4.5 MB, 7 files in `build/` |
 | No source maps / bridge markers in `build/` | 0 / 0 |
 | No test code or fixture data bundled | 0 / 0 |
@@ -195,24 +278,19 @@ That was wrong and `baseline/stage-3.md` now records what actually happened.
 - Model goldens replay to **8 ULP** on eight SOS-derived paths, not bit-exactly,
   because they were captured in Chrome and replay in Node and `Math.exp` is not
   correctly rounded. Per-path budgets are measured and pinned.
-- The suite is **not hermetic**: `src/domain/model` still imports `_D2` and
-  `getHistoricalTier`. It is isolated from the date-derived assembled `FIGHTERS`
-  collection, which is the property that matters. The import scanner is a
-  direct-import guard, not a sandbox.
 - Visual verification still requires a running dev server, headless Chrome and a
   warm-up capture. That stays until Stage 8.
 - The projected-finish formula remains structurally broken and is characterised
   only.
-- **The data-refresh gate will fire on every refresh, not just breaking ones.**
-  `src/domain/model` imports `_D2` and derives `DIVISION_UFC_AVERAGES` from the
-  whole roster at module load, so three test files are coupled to any roster
-  change: `model.golden`, `symmetry`, and `entries.golden` (which embeds model
-  output). Measured in an isolated worktree: changing one fighter's `asl` and
-  `elo` fails 3 tests across those three files. The other nine files replay
-  from frozen inputs and were unaffected. As written, `update-fighters.yml`
-  will therefore block the Monday/Thursday push whenever the roster moves —
-  which is most refreshes. This needs a decision before the workflow is relied
-  on; the approved fixtures must not be regenerated to paper over it.
+- **Ranking history is not yet injected.** `src/domain/model` still imports
+  `getHistoricalTier` from `rankHistory`, which the frozen context does not
+  cover. A rankings change can therefore still move the model goldens. This is
+  the same class of coupling that `divisionAverages` just resolved and is the
+  obvious next candidate, but it is out of scope here — this commit deliberately
+  injects one dependency, not several.
+- The suite is isolated from the date-derived assembled `FIGHTERS` collection
+  and now from roster-derived division averages, but it is still not hermetic.
+  The import scanner remains a direct-import guard, not a sandbox.
 - The bundle greps confirm no bridge, test or fixture content ships, but they
   cannot prove the *formula* is unreadable — minification mangles the internal
   identifiers while the result-object keys (`sosContribution`,

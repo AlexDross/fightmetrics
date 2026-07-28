@@ -1,6 +1,8 @@
 import { describe, it, expect } from 'vitest';
-import { computeMatchupEdges } from '../index.js';
-import { loadFixture, expectExact, expectWithinUlps, ulpDistance } from '../../../__tests__/goldenSupport.js';
+// computeMatchupEdges is NOT imported directly. frozenEdges injects the frozen
+// division averages so a roster refresh cannot rewrite these goldens; calling
+// the production function here would silently reintroduce that coupling.
+import { loadFixture, expectExact, expectWithinUlps, ulpDistance, frozenEdges } from '../../../__tests__/goldenSupport.js';
 
 // Frozen fixture inputs ONLY. Nothing here imports the live assembled FIGHTERS
 // collection -- DAYS_SINCE_LAST is derived from Date.now() at module scope, so
@@ -127,7 +129,7 @@ function measurePathMaxima() {
   for (const g of modelGoldens) {
     const fA = fighterFixtures[g.slotA];
     const fB = fighterFixtures[g.slotB];
-    if (fA && fB) walk(computeMatchupEdges(fA, fB), g.output, '');
+    if (fA && fB) walk(frozenEdges(fA, fB), g.output, '');
   }
   return max;
 }
@@ -141,7 +143,7 @@ describe('computeMatchupEdges — golden replay', () => {
       const fB = fighterFixtures[g.slotB];
       expect(fA, `missing fixture ${g.slotA}`).toBeDefined();
       expect(fB, `missing fixture ${g.slotB}`).toBeDefined();
-      compareGolden(computeMatchupEdges(fA, fB), g.output, `${g.pair} [${g.order}]`);
+      compareGolden(frozenEdges(fA, fB), g.output, `${g.pair} [${g.order}]`);
     }
   });
 
@@ -151,7 +153,7 @@ describe('computeMatchupEdges — golden replay', () => {
       const fA = fighterFixtures[g.slotA];
       const fB = fighterFixtures[g.slotB];
       if (!fA || !fB) continue;
-      try { expectExact(computeMatchupEdges(fA, fB), g.output, g.pair); exact++; } catch { /* engine-sensitive */ }
+      try { expectExact(frozenEdges(fA, fB), g.output, g.pair); exact++; } catch { /* engine-sensitive */ }
     }
     // Characterisation: 57 of 74 are bit-exact in Node. If this number moves,
     // either the model changed or the engine did -- both worth knowing.
@@ -160,8 +162,8 @@ describe('computeMatchupEdges — golden replay', () => {
 
   it('is deterministic for a fixed input — same call twice, exactly equal', () => {
     const g = modelGoldens[0];
-    const a = computeMatchupEdges(fighterFixtures[g.slotA], fighterFixtures[g.slotB]);
-    const b = computeMatchupEdges(fighterFixtures[g.slotA], fighterFixtures[g.slotB]);
+    const a = frozenEdges(fighterFixtures[g.slotA], fighterFixtures[g.slotB]);
+    const b = frozenEdges(fighterFixtures[g.slotA], fighterFixtures[g.slotB]);
     expectExact(a, b, 'repeat call');
   });
 

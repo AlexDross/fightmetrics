@@ -1,10 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { buildRoiEntry } from '../domain/betting/index.js';
+// Frozen normalisation context -- see goldenSupport.frozenRoiEntry.
 import {
   addPendingEntry, filterVisibleUpcoming, createGradedEntry, removePendingEntry,
 } from '../domain/workflow/index.js';
 import * as stats from '../domain/statistics/index.js';
-import { loadFixture, expectExact, firstDifference } from './goldenSupport.js';
+import { loadFixture, expectExact, firstDifference, frozenRoiEntry } from './goldenSupport.js';
 
 const { fighterFixtures } = loadFixture('fighters.golden.json');
 const names = Object.keys(fighterFixtures);
@@ -12,7 +12,7 @@ const names = Object.keys(fighterFixtures);
 // Composes the REAL production functions end to end -- no duplicated logic and
 // no App.js import. This is the save -> Upcoming -> Grade -> ROI path the
 // application performs, exercised through the same implementations.
-const mkEntry = (fA, fB) => buildRoiEntry({
+const mkEntry = (fA, fB) => frozenRoiEntry({
   fA, fB, oddsA: '-150', oddsB: '+130',
   eventName: 'LIFECYCLE EVENT', eventDate: '2026-08-01',
   modelToggle: 'v2', unitsWagered: 1,

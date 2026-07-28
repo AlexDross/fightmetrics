@@ -351,8 +351,12 @@ export const buildProvenance = ({ eventDate, result, fA, fB, predictionTimestamp
 // tab. Used by the manual savePrediction path ("Save to Upcoming" / "Save and
 // Open Upcoming" in the Simulator).
 
-const buildRoiEntry = ({ fA, fB, oddsA, oddsB, eventName, eventDate, modelToggle = 'v2', unitsWagered = 1 }) => {
-  const result = computeMatchupEdges(fA, fB);
+// modelContext is OPTIONAL and is forwarded verbatim to computeMatchupEdges.
+// Application callers omit it and keep reading live roster averages; only the
+// frozen characterisation tests supply one. See the comment on
+// computeMatchupEdges for why this exists.
+const buildRoiEntry = ({ fA, fB, oddsA, oddsB, eventName, eventDate, modelToggle = 'v2', unitsWagered = 1, modelContext }) => {
+  const result = computeMatchupEdges(fA, fB, modelContext);
   // Use whichever model the user had active at save time (v1 or v2) for every
   // bet-decision field, mirroring the Simulator's own market useMemo. The raw
   // per-model probabilities are still stored separately and unchanged

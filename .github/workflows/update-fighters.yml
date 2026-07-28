@@ -78,21 +78,23 @@ jobs:
       # breaks the model/statistics contracts. These three steps run against
       # the freshly regenerated data, before any commit or push.
       #
-      # KNOWN COUPLING -- read before triaging a red run here. src/domain/model
-      # imports _D2 from fightersData.js and derives DIVISION_UFC_AVERAGES from
-      # the whole roster at module load, so three test files are sensitive to
-      # ANY roster change, not just a breaking one:
-      #     model/__tests__/model.golden.test.js
-      #     model/__tests__/symmetry.test.js
-      #     betting/__tests__/entries.golden.test.js
-      # Measured: changing one fighter's asl and elo fails 3 tests across those
-      # files. The remaining nine files replay from frozen inputs and are
-      # roster-independent.
+      # The suite is roster-independent by construction. DIVISION_UFC_AVERAGES
+      # is derived from the whole _D2 roster, so it used to move on every
+      # refresh and drag the model goldens with it. The characterisation tests
+      # now inject a frozen normalisation context
+      # (src/__tests__/inputs/model-context.input.json) while production
+      # continues to read the live averages -- the app adapts to new data, the
+      # tests do not drift.
       #
-      # So a failure here does NOT by itself mean the refresh is bad -- it may
-      # mean the goldens were captured against an older roster and need
-      # re-approval. Do not regenerate the approved fixtures to make this pass.
-      # Escalate instead.
+      # Verified: the same one-fighter asl/elo mutation that failed 3 tests
+      # before this change leaves all 161 green, while the default production
+      # output still moves on 4 of 74 model results.
+      #
+      # So a failure here is a real signal. Do NOT regenerate the approved
+      # fixtures to make it pass -- escalate.
+      #
+      # Not covered: rankHistory's getHistoricalTier is still read live, so a
+      # rankings change can legitimately move the goldens.
       - name: Install Node dependencies
         run: npm ci --include=dev
 
