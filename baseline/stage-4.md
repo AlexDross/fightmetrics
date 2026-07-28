@@ -9,9 +9,10 @@ becomes a Vitest suite that runs in ~2 s. The browser bridge is gone.
 | `f68e999` | tightened golden contracts |
 | `471e484` | exact probability-tier boundaries |
 | `42e0c97` | workflow transition extraction |
-| *(this)* | workflow + statistics characterisation; dev harness removed |
+| `6fe73e1` | workflow + statistics characterisation; dev harness removed |
+| *(this)* | non-vacuous prop and parlay population tests |
 
-**153 tests across 12 files, 2.28 s.**
+**156 tests across 12 files, ~1.4 s.**
 
 ## Protected fixtures — unchanged, now enforced in-suite
 
@@ -66,12 +67,40 @@ untouched.
 | `betting/__tests__/entries.golden.test.js` | 32 `buildRoiEntry` replays, `buildProvenance` |
 | `finish/__tests__/finish.golden.test.js` | shape invariants, label vocabulary |
 | `statistics/__tests__/statistics.golden.test.js` | all 18 results, exact, both populations |
-| `statistics/__tests__/populations.test.js` | reconstructed exclusion, prop/parlay isolation |
+| `statistics/__tests__/populations.test.js` | reconstructed exclusion, prop/parlay isolation, exclusion controls |
 | `workflow/__tests__/workflow.test.js` | visibility, dedup, grading, removal, NO READ |
 | `__tests__/lifecycle.test.js` | save → Upcoming → Grade → ROI, freeze-at-save |
 | `__tests__/isolation.test.js` | direct-import guard, decoder and ULP self-tests |
 | `__tests__/fixtureIntegrity.test.js` | seven approved fixture byte hashes |
 | `__tests__/inputIntegrity.test.js` | statistics input byte + canonical hashes |
+
+## Exclusion tests must be non-vacuous
+
+The first revision of `populations.test.js` used invented prop and parlay
+shapes: `result: 'win'` where production matches `'WON'`, `units` where it reads
+`stake`, and legs keyed `entryId`/`side` where `computeParlayResult` reads
+`fightId`/`pickedFighter`. Every aggregate came back zero, every parlay resolved
+`PENDING`, and each "the excluded record changed nothing" assertion was
+comparing 0 to 0. The tests passed while proving nothing.
+
+Corrected to the real schema and restructured so every exclusion is preceded by
+a **control** that proves the included record participates:
+
+| Control | Asserted value |
+|---|---|
+| graded prop (`+150`, 1 unit, `WON`) | `graded 1`, `wins 1`, `staked 1`, `netUnits 1.5` |
+| prop type breakdown | one bucket, `Method of Victory`, `count 1`, `netUnits 1.5` |
+| settled parlay (`+300`, 1 unit) | `GRADED`/`WIN`, `graded 1`, `wins 1`, `staked 1`, `netUnits 3` |
+
+Both excluded states are now genuinely reached rather than assumed: a leg with
+no matching ROI id returns `PENDING`/`null`, and a leg resolved against an entry
+whose `actualWinner` is `DRAW` returns `GRADED`/`NEEDS_REVIEW` with
+`resolvedLegs === totalLegs`. Adding both to the settled-only aggregate leaves
+it exactly unchanged — which also pins that `NEEDS_REVIEW` never falls into the
+`LOSS` bucket by omission (it would have cut `netUnits` from 3 to 2).
+
+The prop-isolation and parlay-isolation tests now assert their own summaries are
+nonzero before concluding that ROI statistics were untouched.
 
 ## Behaviour characterised, not corrected
 
@@ -119,9 +148,9 @@ That was wrong and `baseline/stage-3.md` now records what actually happened.
 
 | Check | Result |
 |---|---|
-| Vitest | 153 passed, 12 files, **2.28 s** |
-| Production build | exit 0, 4.5 MB |
-| No `.map` / bridge markers / readable model source | 0 / 0 / 0 |
+| Vitest | 156 passed, 12 files, **~1.4 s** |
+| Production build | exit 0, 4.5 MB, 7 files in `build/` |
+| No source maps / bridge markers in `build/` | 0 / 0 |
 | No test code or fixture data bundled | 0 / 0 |
 | No Tailwind CDN | 0 |
 | `git diff --check` | clean |
@@ -145,3 +174,8 @@ That was wrong and `baseline/stage-3.md` now records what actually happened.
   warm-up capture. That stays until Stage 8.
 - The projected-finish formula remains structurally broken and is characterised
   only.
+- The bundle greps confirm no bridge, test or fixture content ships, but they
+  cannot prove the *formula* is unreadable — minification mangles the internal
+  identifiers while the result-object keys (`sosContribution`,
+  `scaledComposite`, `agePenAdj`) necessarily survive because the UI reads them
+  by name. Treat these as obfuscation checks, not secrecy guarantees.
