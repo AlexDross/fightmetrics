@@ -9,10 +9,10 @@
 // script hashes every fighter's COMPLETE history, without storing the history,
 // so any edit anywhere in the record changes a hash.
 //
-// It reads src/fightHistory.js DIRECTLY. It does not depend on a browser, on
-// the dev bridge, or on any capture generation -- so it protects the goldens
-// without requiring them to be recaptured, and it keeps working after the
-// Stage 4 harness removal if you choose to keep it.
+// It reads src/fightHistory.js DIRECTLY. No browser, no dev bridge, no capture
+// generation -- which is why it is RETAINED after the Stage 4 harness removal.
+// It is the only remaining guard on fighter/history integrity now that
+// verifyFixtures.cjs is gone.
 const fs = require('fs');
 const path = require('path');
 
@@ -20,7 +20,9 @@ const ROOT = path.join(__dirname, '..', '..');
 const SRC = path.join(ROOT, 'src', 'fightHistory.js');
 const OUT = path.join(ROOT, 'src', '__tests__', 'fixtures', 'fightHistory.hashes.json');
 
-// Same stableStringify/hash as goldenHarness.js.
+// stableStringify/hash are self-contained copies. goldenHarness.js was removed
+// in Stage 4; this tool deliberately has no dependency on it, which is why it
+// survives -- it reads src/fightHistory.js directly and needs no browser.
 function stableStringify(value) {
   if (value === undefined) return '@undefined';
   if (value === null) return 'null';

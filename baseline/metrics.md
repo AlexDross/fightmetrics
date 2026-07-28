@@ -8,7 +8,7 @@ event-summary `9dd3a60`
 
 > **Correction.** An earlier revision of this file recorded
 > `2026-07-28T03:27:32.259Z`. That was the *first* of the two determinism runs;
-> the second run overwrote `baseline/fixtures/`, so the committed reference is
+> the second run overwrote `baseline/fixtures/` (its location at the time), so the committed reference is
 > the second capture. The scripts now refuse to write into the reference
 > directory precisely so this cannot recur (§10). Commit `9d77f63` carries the
 > same stale timestamp in its message and was left unamended to preserve the
@@ -93,7 +93,9 @@ Verified two ways against `npx serve -s build`:
 
 ## 4. Fixtures
 
-`baseline/fixtures/` — all six share one `captureIso`.
+`src/__tests__/fixtures/` — all six share one `captureIso`.
+(Moved there from `baseline/fixtures/` in Stage 4 commit `5777f68` via `git mv`,
+all seven byte-identical; hashes now enforced by `fixtureIntegrity.test.js`.)
 
 | File | Size | Contents |
 |---|---|---|
@@ -290,7 +292,7 @@ model-integrity half.
 
 ## 10. Reference protection
 
-The approved reference is `baseline/fixtures/` +
+The approved reference is `src/__tests__/fixtures/` (Stage 4 relocation) +
 `baseline/screenshots-stage0/`. Both capture scripts **refuse** to write there:
 
 - default destination is a timestamped directory under `baseline/candidates/`
@@ -301,7 +303,7 @@ The approved reference is `baseline/fixtures/` +
 | Manifest | Covers |
 |---|---|
 | `baseline/REFERENCE_HASHES.json` | canonical payload hash of each of the 6 fixtures, plus what was excluded |
-| `baseline/fixtures/fightHistory.hashes.json` | per-fighter hash of the **complete** `FIGHT_HISTORY`, derived from `src/fightHistory.js` |
+| `src/__tests__/fixtures/fightHistory.hashes.json` | per-fighter hash of the **complete** `FIGHT_HISTORY`, derived from `src/fightHistory.js` |
 | `baseline/screenshots-stage0.sha256.json` | SHA-256 of each committed screenshot |
 
 `verifyFixtures.cjs` run with no `--candidate` performs a **self-integrity

@@ -7,7 +7,9 @@
 //   node src/__dev__/captureScreens.cjs [baseUrl] [outDir]
 //
 // Uses the system Chrome rather than downloading a browser.
-// Removed together with the harness in Stage 4.
+// RETAINED through Stage 8 visual sign-off. The Stage 3 inventory listed this
+// for Stage 4 removal; that was wrong -- Stage 8 still needs visual comparison
+// against the protected screenshot references.
 const fs = require('fs');
 const path = require('path');
 const puppeteer = require('puppeteer-core');
