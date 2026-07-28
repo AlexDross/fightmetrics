@@ -1,8 +1,10 @@
 # Foundation Stage 3 — mechanical domain extraction
 
-Five commits plus three cleanups. **No application logic changed.** Every moved
-line is byte-identical to its original; exports are declared in trailing blocks
-so no moved line had to be rewritten.
+Four extraction commits plus three cleanup commits. **No application logic
+changed.** Extracted declarations were initially byte-identical to their
+originals; the only later edit inside a moved range removed one trailing
+whitespace-only line. Exports are declared in trailing blocks so no declaration
+had to be rewritten for module access.
 
 `src/App.js` **11,034 → 8,146 lines**. 3,234 lines now live in five domain
 modules.
@@ -125,7 +127,7 @@ against this list explicitly.
 | production build | exit 0, no `.map`, 0 bridge markers, 0 readable model source, no CDN, 4.5 MB |
 | screenshots (warm) | identical=12, within-tolerance=2, fail=0 |
 | dimensions | 14/14 agree with Stage 0 and Stage 1b |
-| `git diff eb039cf -- baseline/` | empty |
+| protected fixture, screenshot, and checksum references | unchanged; `baseline/stage-3.md` is the only baseline addition |
 
 A first screenshot run failed `375w__roi.png` at 146 px because the warm-up pass
 had been interrupted, leaving the capture effectively cold. Re-run warm, ROI is
