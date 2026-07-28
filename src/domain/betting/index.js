@@ -81,6 +81,10 @@ const kellyFraction = (modelProb, decimalOdds) => {
 };
 
 
+// Market/edge analysis for a matchup at given American odds. Returns null when
+// odds are unparseable (mirrors the manual-save path where no odds → null market).
+// Single source of truth shared by MatchupSimulator's market useMemo and the
+// manual savePrediction path.
 const computeMarketAnalysis = (result, oddsA, oddsB, fA, fB) => {
   const rawA = parseAmericanOdds(oddsA);
   const rawB = parseAmericanOdds(oddsB);

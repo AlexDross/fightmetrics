@@ -1305,11 +1305,6 @@ const computeMatchupEdges = (fA, fB) => {
   };
 };
 
-// Market/edge analysis for a matchup at given American odds. Returns null when
-// odds are unparseable (mirrors the manual-save path where no odds → null market).
-// Single source of truth shared by MatchupSimulator's market useMemo and the
-// manual savePrediction path.
-
 // Latest 'dt' present in a fighter's FIGHT_HISTORY at computation time — used
 // only for provenance capture (_provenance.fightHistoryCutoff), not for any
 // prediction calculation.
