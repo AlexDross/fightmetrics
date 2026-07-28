@@ -1,12 +1,19 @@
 @import 'tailwindcss';
 
 /*
-  The default border color has changed to `currentcolor` in Tailwind CSS v4,
-  so we've added these compatibility styles to make sure everything still
-  looks the same as it did with Tailwind CSS v3.
+  ── Tailwind v4 Preflight compatibility (Foundation Stage 1b) ──────────────
 
-  If we ever want to remove these styles, we need to add an explicit border
-  color utility to any element that depends on these defaults.
+  v4 changed several Preflight defaults. Each block below restores the v3
+  behaviour so the upgrade is a toolchain change, not a restyling. Removing any
+  of them later is a deliberate design decision, not cleanup.
+*/
+
+/*
+  1. Border colour.
+  v4 defaults border-color to `currentcolor`; v3 used gray-200. Without this,
+  every bordered element in the app changes colour.
+  To remove: add an explicit border-colour utility to anything relying on the
+  default.
 */
 @layer base {
   *,
@@ -15,5 +22,32 @@
   ::backdrop,
   ::file-selector-button {
     border-color: var(--color-gray-200, currentcolor);
+  }
+}
+
+/*
+  2. Button cursor.
+  v4 sets `cursor: default` on buttons to match the browser default; v3 set
+  `cursor: pointer`. This is Tailwind's own recommended compatibility rule.
+  `:not(:disabled)` keeps disabled controls showing the default cursor.
+*/
+@layer base {
+  button:not(:disabled),
+  [role='button']:not(:disabled) {
+    cursor: pointer;
+  }
+}
+
+/*
+  3. Placeholder colour.
+  v4 renders placeholders at the current text colour with reduced opacity; v3
+  used gray-400. Restored for migration parity. Any element with an explicit
+  placeholder utility (e.g. `placeholder-slate-700` on the Simulator odds
+  inputs) still overrides this, because utilities win over base.
+*/
+@layer base {
+  input::placeholder,
+  textarea::placeholder {
+    color: var(--color-gray-400);
   }
 }

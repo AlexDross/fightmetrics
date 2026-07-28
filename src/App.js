@@ -2379,7 +2379,7 @@ function StatisticsTab({ entries, prospectNameSet, filterSince, setFilterSince, 
               type="date"
               value={filterSince}
               onChange={e => setFilterSince(e.target.value)}
-              className="bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-1.5 min-h-[44px] sm:min-h-0 focus:outline-hidden focus:border-red-500"
+              className="bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-1.5 min-h-[44px] sm:min-h-0 sm:h-9 focus:outline-hidden focus:border-red-500"
             />
             {filterSince && (
               <button
@@ -2822,7 +2822,7 @@ function PropEntryForm({
               type="date"
               value={manualEventDate}
               onChange={(e) => setManualEventDate(e.target.value)}
-              className={PROP_INPUT_CLS}
+              className={`${PROP_INPUT_CLS} h-10`}
             />
           </div>
           <div>
@@ -8064,7 +8064,7 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                   type="date"
                   value={eventDate}
                   onChange={(e) => setEventDate(e.target.value)}
-                  className="w-full bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:outline-hidden focus:border-red-500"
+                  className="w-full h-10 bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:outline-hidden focus:border-red-500"
                 />
               </div>
               <div>
@@ -10309,7 +10309,7 @@ function ROITab({
             type="date"
             value={filterSince}
             onChange={e => setFilterSince(e.target.value)}
-            className="bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-1.5 min-h-[44px] sm:min-h-0 focus:outline-hidden focus:border-red-500"
+            className="bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-1.5 min-h-[44px] sm:min-h-0 sm:h-9 focus:outline-hidden focus:border-red-500"
           />
           {filterSince && (
             <button
@@ -10714,7 +10714,7 @@ function ROITab({
                       onChange={(e) =>
                         onUpdateEntry(entry.id, { eventDate: e.target.value })
                       }
-                      className="w-full bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:outline-hidden focus:border-red-500"
+                      className="w-full h-10 bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:outline-hidden focus:border-red-500"
                     />
                   </div>
                   <div>
