@@ -36,12 +36,6 @@ function getProjectedFinishLabel(probs) {
   return leaders.join(' / ');
 }
 
-// ─── MATCHUP SIMULATOR ────────────────────────────────────────────────────────
-// Display-only decode of v2's modern_form (App.js:369-388) into plain
-// language -- last-8 W-L record plus the two penalty flags, sorted most
-// recent first exactly as computeModernForm does. Does not compute or
-// alter modern_form's actual score; reads the same FIGHT_HISTORY/
-// DAYS_SINCE_LAST inputs purely to describe it.
 
 export {
   computeFinishProbs,

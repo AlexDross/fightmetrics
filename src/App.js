@@ -1708,6 +1708,13 @@ const PROP_METHOD_SINGLE = ['KO/TKO', 'Submission', 'Decision'];
 const PROP_METHOD_DOUBLE = ['KO/TKO or Submission', 'KO/TKO or Decision', 'Submission or Decision'];
 const PROP_METHOD_OPTIONS = [...PROP_METHOD_SINGLE, ...PROP_METHOD_DOUBLE];
 
+// Export-string builders -- one definition each, called from both
+// UpcomingEventTab and ROITab so every sub-tab that displays a data type also
+// has a "Copy Updated ...File.js" button, without duplicating the
+// serialization logic in two places. Status/result on each parlay stays
+// as-stored (not frozen at export time) -- re-derived live via
+// computeParlayResult whenever the pasted-over file is reloaded, per the
+// locked no-freeze decision.
 const buildPropsExportedCode = (propPicks) =>
   `export const PROP_PICKS = ${JSON.stringify(propPicks, null, 2)};\n`;
 const buildParlayExportedCode = (parlayEntries) =>
@@ -2469,6 +2476,9 @@ const methodColor = (m) => {
 };
 export const MODEL_VERSION = 'DrossPom Composite v1.0 · Logistic v2.0';
 
+// Local edit buffer (separate from the committed value) so a controlled
+// number input can hold an in-progress "2." without React snapping it back
+// to "2" on every keystroke -- only well-formed numbers get committed up.
 function UnitsStakedInput({ value, onCommit }) {
   const [raw, setRaw] = useState(String(value));
   return (
@@ -4328,6 +4338,11 @@ const FighterPanel = ({ f, setF, color, ph, allFighters, fA, fB }) => {
   );
 };
 
+// Display-only decode of v2's modern_form (App.js:369-388) into plain
+// language -- last-8 W-L record plus the two penalty flags, sorted most
+// recent first exactly as computeModernForm does. Does not compute or
+// alter modern_form's actual score; reads the same FIGHT_HISTORY/
+// DAYS_SINCE_LAST inputs purely to describe it.
 const describeModernForm = (fighter) => {
   const fh = fighter?.FIGHT_HISTORY || [];
   const sorted = [...fh].sort((a, b) => (a.dt < b.dt ? 1 : -1));

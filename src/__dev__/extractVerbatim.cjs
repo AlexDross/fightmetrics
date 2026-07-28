@@ -38,7 +38,29 @@ while ((m = re.exec(whole))) {
 }
 
 let movedRaw = MEMBERS.map(([, a, b]) => lines.slice(a - 1, b).join('\n')).join('\n\n');
-const scrub = movedRaw.replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/\/\/[^\n]*/g, ' ');
+
+// KNOWN LIMITATION, PARTIALLY MITIGATED.
+// The scanner is token-based, not an AST walk. Two failure modes:
+//
+//   1. Member properties read as free bindings. `fA.FIGHT_HISTORY` is a
+//      property access, not the imported FIGHT_HISTORY module binding, but a
+//      bare identifier scan cannot tell them apart. This produced two unused
+//      imports in the Stage 3 model and betting modules. Mitigated below by
+//      stripping `.prop` and `?.prop` before scanning, and by requiring at
+//      least one occurrence NOT preceded by a dot.
+//   2. Object literal keys (`{ FIGHT_HISTORY: ... }`) look the same as
+//      references. Not mitigated -- still review the generated list.
+//
+// The inverse error is the dangerous one: a MISSING import is a runtime
+// ReferenceError (this is how SOURCE_MANIFEST was caught by the goldens),
+// whereas a spurious one is only clutter. So the scan stays deliberately
+// generous, and the printed list must be reviewed against real usage before
+// the commit lands. Do not trust it blind.
+const scrub = movedRaw
+  .replace(/\/\*[\s\S]*?\*\//g, ' ')
+  .replace(/\/\/[^\n]*/g, ' ')
+  .replace(/\?\.\s*[A-Za-z_$][\w$]*/g, ' ')   // optional-chained property access
+  .replace(/\.\s*[A-Za-z_$][\w$]*/g, ' ');    // plain property access
 const ids = new Set(scrub.match(/[A-Za-z_$][\w$]*/g) || []);
 const own = new Set(MEMBERS.map(([n]) => n));
 const needed = Object.keys(importMap)
@@ -102,6 +124,9 @@ for (const [name, a, b] of MEMBERS) {
 console.log(label + ': ' + MEMBERS.length + ' decls, ' +
   MEMBERS.reduce((n, [, a, b]) => n + (b - a + 1), 0) + ' lines');
 console.log('imports added: ' + (importLines || '(none)'));
+console.log('  ^ REVIEW THESE. The scanner is token-based; object-literal keys can');
+console.log('    still masquerade as references. A missing import is a runtime');
+console.log('    ReferenceError; a spurious one is dead weight. Check each by hand.');
 console.log('App.js: ' + lines.length + ' -> ' + kept.length);
 console.log(ok ? 'ALL RANGES BYTE-IDENTICAL' : 'VERBATIM CHECK FAILED');
 process.exit(ok ? 0 : 1);

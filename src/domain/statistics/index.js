@@ -821,13 +821,6 @@ function computeParlaySummary(parlayEntries, roiEntries) {
   };
 }
 
-// Export-string builders -- one definition each, called from both
-// UpcomingEventTab and ROITab so every sub-tab that displays a data type also
-// has a "Copy Updated ...File.js" button, without duplicating the
-// serialization logic in two places. Status/result on each parlay stays
-// as-stored (not frozen at export time) -- re-derived live via
-// computeParlayResult whenever the pasted-over file is reloaded, per the
-// locked no-freeze decision.
 
 function computeROISummary(entries, prospectNameSet) {
   const resolveProspect = (e) =>

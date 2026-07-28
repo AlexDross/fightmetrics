@@ -32,7 +32,6 @@
 //    4715-4743  latestFightHistoryDate
 
 import { _D2 } from '../../fightersData';
-import { FIGHT_HISTORY } from '../../fightHistory';
 import { getHistoricalTier } from '../../rankHistory';
 
 const UFC_RANKINGS = {
@@ -1311,6 +1310,9 @@ const computeMatchupEdges = (fA, fB) => {
 // Single source of truth shared by MatchupSimulator's market useMemo and the
 // manual savePrediction path.
 
+// Latest 'dt' present in a fighter's FIGHT_HISTORY at computation time — used
+// only for provenance capture (_provenance.fightHistoryCutoff), not for any
+// prediction calculation.
 const latestFightHistoryDate = (fightHistory) => {
   if (!fightHistory || fightHistory.length === 0) return null;
   let max = null;
@@ -1319,27 +1321,6 @@ const latestFightHistoryDate = (fightHistory) => {
   }
   return max;
 };
-
-// Builds the _provenance block attached to every saved ROI/Upcoming entry.
-// This is the ONLY supported way to produce that block — any script that
-// programmatically writes fighterAProb/v2pA/v2pB to roiData.js or
-// upcomingData.js should call this rather than hand-constructing the shape,
-// so a future bulk recompute can't silently skip provenance the way commit
-// 9343523 (2026-07-12) did. See BASELINE_NOTES.md.
-//
-// predictionTimestamp/captureMode default to "derive from right now" (the
-// normal live-save path) but accept overrides — used only for backfilling
-// provenance onto entries whose real capture time is a known historical
-// moment, not "when this function happened to run."
-//
-// frozenTier: forward-only, no retrofit onto historical entries. Records the
-// bet-action tier the gate assigned AT THIS EXACT CALL, alongside the probs
-// it was derived from -- an unambiguous prediction-time tier, unlike the
-// top-level `betAction` field, whose provenance turned out to be mixed for
-// older entries (verified directly: for reconstructed rows, `betAction` is
-// the original v1-era capture tier, never touched by the later v2pA/v2pB
-// backfill). Optional and undefined for any caller that doesn't pass it, so
-// this is purely additive.
 
 export {
   UFC_RANKINGS,

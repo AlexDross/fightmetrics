@@ -19,7 +19,6 @@
 
 import { computeFinishProbs, getProjectedFinishLabel } from '../finish';
 import { MODEL_V2, computeMatchupEdges, latestFightHistoryDate } from '../model';
-import { FIGHT_HISTORY } from '../../fightHistory';
 import { SOURCE_MANIFEST } from '../../sourceManifest';
 
 const americanOdds = (p) => {
@@ -300,10 +299,26 @@ const djb2Checksum = (str) => {
   return (h >>> 0).toString(16);
 };
 
-// Latest 'dt' present in a fighter's FIGHT_HISTORY at computation time — used
-// only for provenance capture (_provenance.fightHistoryCutoff), not for any
-// prediction calculation.
-
+// Builds the _provenance block attached to every saved ROI/Upcoming entry.
+// This is the ONLY supported way to produce that block — any script that
+// programmatically writes fighterAProb/v2pA/v2pB to roiData.js or
+// upcomingData.js should call this rather than hand-constructing the shape,
+// so a future bulk recompute can't silently skip provenance the way commit
+// 9343523 (2026-07-12) did. See BASELINE_NOTES.md.
+//
+// predictionTimestamp/captureMode default to "derive from right now" (the
+// normal live-save path) but accept overrides — used only for backfilling
+// provenance onto entries whose real capture time is a known historical
+// moment, not "when this function happened to run."
+//
+// frozenTier: forward-only, no retrofit onto historical entries. Records the
+// bet-action tier the gate assigned AT THIS EXACT CALL, alongside the probs
+// it was derived from -- an unambiguous prediction-time tier, unlike the
+// top-level `betAction` field, whose provenance turned out to be mixed for
+// older entries (verified directly: for reconstructed rows, `betAction` is
+// the original v1-era capture tier, never touched by the later v2pA/v2pB
+// backfill). Optional and undefined for any caller that doesn't pass it, so
+// this is purely additive.
 export const buildProvenance = ({ eventDate, result, fA, fB, predictionTimestamp, captureMode, frozenTier }) => {
   const todayIso = new Date().toISOString().slice(0, 10);
   const resolvedCaptureMode =
@@ -459,10 +474,6 @@ const buildRoiEntry = ({ fA, fB, oddsA, oddsB, eventName, eventDate, modelToggle
     _provenance: buildProvenance({ eventDate, result, fA, fB, frozenTier: market?.betAction ?? 'NO BET' }),
   };
 };
-// ─── UPCOMING EVENT TAB ──────────────────────────────────────────────────────
-// Local edit buffer (separate from the committed value) so a controlled
-// number input can hold an in-progress "2." without React snapping it back
-// to "2" on every keystroke -- only well-formed numbers get committed up.
 
 export {
   americanOdds,
