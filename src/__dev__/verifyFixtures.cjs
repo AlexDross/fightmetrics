@@ -34,11 +34,17 @@ const FILES = [
 const VOLATILE_TOP = ['captureMs', 'captureIso'];
 
 // Fields added to the harness AFTER the approved Stage 0 reference was
-// captured. Excluded so an additive improvement does not read as a regression.
-// Remove an entry here once the reference is re-initialised with it present.
+// captured. Excluded from the FILE-LEVEL canonical hash so an additive
+// improvement does not read as a regression against a reference that predates
+// them. They are NOT unchecked -- historyHashes/rosterHistoryHash are enforced
+// separately and mandatorily by checkJoin() below.
 const POST_REFERENCE_FIELDS = {
   'roster.manifest.json': ['manifestHashVersion', 'historyHashes', 'rosterHistoryHash'],
 };
+
+// Independently derived expectation for the in-browser join. Written by
+// hashFightHistory.cjs from identityKeys + src/fightHistory.js + sortHistoryDesc.
+const HISTORY_MANIFEST = path.join(ROOT, 'baseline', 'fixtures', 'fightHistory.hashes.json');
 
 function stableStringify(value) {
   if (value === undefined) return '@undefined';
@@ -177,13 +183,74 @@ for (const f of FILES) {
               ' ref=' + refHashes[f] + '  cand=' + candHashes[f]);
 }
 
-if (candMeta.rosterHistoryHash) {
-  console.log('\ncandidate rosterHistoryHash (full fight history): ' + candMeta.rosterHistoryHash);
-  console.log('reference predates this field; cross-check with hashFightHistory.cjs instead.');
+// --- REQUIRED: fighter <-> history join -------------------------------------
+// Source integrity (hashFightHistory.cjs) proves src/fightHistory.js is
+// unchanged. It does NOT prove the assembled FIGHTERS collection still attaches
+// each history to the RIGHT fighter -- the exact failure Stage 3's extraction
+// can introduce by changing module evaluation order or the d.n join.
+//
+// Every candidate MUST provide historyHashes + rosterHistoryHash and match the
+// independently derived expectation. Absence is a FAILURE, not a skip.
+function checkJoin(candPath) {
+  console.log('\n--- fighter/history join (REQUIRED) ---');
+  if (!fs.existsSync(HISTORY_MANIFEST)) {
+    console.log('FAIL  no ' + HISTORY_MANIFEST + ' -- run hashFightHistory.cjs --write');
+    return 1;
+  }
+  const exp = JSON.parse(fs.readFileSync(HISTORY_MANIFEST, 'utf8'));
+  if (!exp.expectedRosterHistoryHash || !Array.isArray(exp.expectedAttachedHashes)) {
+    console.log('FAIL  manifest has no derived join expectation -- rerun hashFightHistory.cjs --write');
+    return 1;
+  }
+
+  const p = path.join(candPath, 'roster.manifest.json');
+  if (!fs.existsSync(p)) { console.log('FAIL  candidate has no roster.manifest.json'); return 1; }
+  const cand = JSON.parse(fs.readFileSync(p, 'utf8'));
+
+  if (!Array.isArray(cand.historyHashes) || !cand.rosterHistoryHash) {
+    console.log('FAIL  candidate does not provide historyHashes/rosterHistoryHash.');
+    console.log('      The capture predates manifestHashVersion 2, or the harness lost the field.');
+    console.log('      Recapture with the current goldenHarness.js. This check is mandatory.');
+    return 1;
+  }
+
+  let bad = 0;
+  if (cand.historyHashes.length !== exp.expectedAttachedHashes.length) {
+    console.log('FAIL  length ' + cand.historyHashes.length +
+                ' != expected ' + exp.expectedAttachedHashes.length);
+    bad++;
+  } else {
+    const keys = cand.identityKeys || [];
+    const wrong = [];
+    for (let i = 0; i < cand.historyHashes.length; i++) {
+      if (cand.historyHashes[i] !== exp.expectedAttachedHashes[i]) {
+        wrong.push({ index: i, fighter: keys[i] || '?', got: cand.historyHashes[i], want: exp.expectedAttachedHashes[i] });
+      }
+    }
+    if (wrong.length) {
+      bad++;
+      console.log('FAIL  ' + wrong.length + ' fighter(s) carry the WRONG fight history:');
+      wrong.slice(0, 10).forEach((w) =>
+        console.log('        [' + w.index + '] ' + w.fighter + '  got=' + w.got + ' want=' + w.want));
+      if (wrong.length > 10) console.log('        ...and ' + (wrong.length - 10) + ' more');
+    } else {
+      console.log('OK    all ' + cand.historyHashes.length +
+                  ' fighters carry their own history (' + exp.rosterNamesWithHistory + ' non-empty)');
+    }
+  }
+
+  const rhOk = cand.rosterHistoryHash === exp.expectedRosterHistoryHash;
+  if (!rhOk) bad++;
+  console.log((rhOk ? 'OK    ' : 'FAIL  ') + 'rosterHistoryHash  cand=' + cand.rosterHistoryHash +
+              '  expected=' + exp.expectedRosterHistoryHash);
+  console.log('      expectation derived in Node from identityKeys + src/fightHistory.js + sortHistoryDesc');
+  return bad;
 }
 
-const fail = bad + missing;
+const joinBad = checkJoin(candDir);
+
+const fail = bad + missing + joinBad;
 console.log('\n' + (fail === 0
-  ? 'ALL CANONICAL HASHES MATCH'
-  : bad + ' mismatch(es), ' + missing + ' absent'));
+  ? 'ALL CANONICAL HASHES MATCH — including the fighter/history join'
+  : bad + ' canonical mismatch(es), ' + missing + ' absent, ' + joinBad + ' join failure(s)'));
 process.exit(fail === 0 && selfOk ? 0 : 1);

@@ -46,6 +46,18 @@ function hash(str) {
   return h.toString(16).padStart(8, '0');
 }
 
+// Verbatim from App.js:3491. The app attaches
+//   sortHistoryDesc(FIGHT_HISTORY[d.n] ?? [])
+// so the ATTACHED value is the sorted one. Copy the sort rather than assuming
+// the source file is already ordered.
+function sortHistoryDesc(history) {
+  return [...(history || [])].sort((a, b) => {
+    const aTime = a && a.dt ? new Date(a.dt).getTime() : 0;
+    const bTime = b && b.dt ? new Date(b.dt).getTime() : 0;
+    return bTime - aTime;
+  });
+}
+
 // src/fightHistory.js is `export const FIGHT_HISTORY = { ...JSON... };`.
 // The package has no "type": "module", so Node would treat the .js as CJS and
 // choke on the export. Parse the literal instead of importing it.
@@ -69,6 +81,31 @@ for (const n of names) {
   perFighter[n] = { n: h.length, h: hash(stableStringify(h)) };
 }
 
+// --- EXPECTED ATTACHED-HISTORY HASHES (the join proof) ----------------------
+// Source integrity alone does not prove that the assembled FIGHTERS collection
+// still attaches each history to the RIGHT fighter -- exactly the failure mode
+// Stage 3's extraction could introduce. Derive what the in-browser
+// `historyHashes` array MUST be, from committed inputs only:
+//
+//   identityKeys  <- baseline/fixtures/roster.manifest.json (roster order, = d.n)
+//   FIGHT_HISTORY <- src/fightHistory.js
+//   sortHistoryDesc, stableStringify, hash <- copied verbatim from the app
+//
+// A mis-join moves the hash at that fighter's index, so rosterHistoryHash moves.
+const ROSTER = path.join(ROOT, 'baseline', 'fixtures', 'roster.manifest.json');
+let expectedAttachedHashes = null;
+let expectedRosterHistoryHash = null;
+let rosterIdentityCount = null;
+let rosterNamesWithHistory = null;
+
+if (fs.existsSync(ROSTER)) {
+  const keys = JSON.parse(fs.readFileSync(ROSTER, 'utf8')).identityKeys || [];
+  rosterIdentityCount = keys.length;
+  rosterNamesWithHistory = keys.filter((n) => fh[n] && fh[n].length).length;
+  expectedAttachedHashes = keys.map((n) => hash(stableStringify(sortHistoryDesc(fh[n] || []))));
+  expectedRosterHistoryHash = hash(stableStringify(expectedAttachedHashes));
+}
+
 const payload = {
   note: 'Per-fighter hash over the COMPLETE FIGHT_HISTORY value. Detects changes ' +
         'to any bout, including middle records, which the roster manifest summary cannot. ' +
@@ -78,6 +115,17 @@ const payload = {
   fighters: names.length,
   bouts,
   aggregateHash: hash(stableStringify(names.map((n) => perFighter[n].h))),
+
+  joinNote: 'expectedRosterHistoryHash is what the in-browser roster manifest ' +
+            'historyHashes/rosterHistoryHash MUST equal. Independently derived here from ' +
+            'identityKeys + src/fightHistory.js + sortHistoryDesc -- NOT adopted from a ' +
+            'browser capture. verifyFixtures.cjs REQUIRES every candidate to provide and ' +
+            'match it. This is the guard against Stage 3 attaching a history to the wrong fighter.',
+  rosterIdentityCount,
+  rosterNamesWithHistory,
+  expectedRosterHistoryHash,
+  expectedAttachedHashes,
+
   perFighter,
 };
 
@@ -87,6 +135,9 @@ if (process.argv.includes('--write')) {
   console.log('wrote ' + OUT);
   console.log('fighters=' + payload.fighters + ' bouts=' + payload.bouts +
               ' aggregate=' + payload.aggregateHash);
+  console.log('expectedRosterHistoryHash=' + payload.expectedRosterHistoryHash +
+              ' over ' + payload.rosterIdentityCount + ' roster names (' +
+              payload.rosterNamesWithHistory + ' with history)');
   process.exit(0);
 }
 

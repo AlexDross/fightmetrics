@@ -294,6 +294,41 @@ The approved reference is `baseline/fixtures/` +
 check**: it recomputes the reference hashes and compares them to the committed
 manifest, so tampering with the reference itself is detectable.
 
+### The fighter/history join is a REQUIRED check
+
+**Expected `rosterHistoryHash`: `de0704a5`** (2,273 roster names, 2,179 with history).
+
+Source integrity proves `src/fightHistory.js` is unchanged. It does **not** prove
+the assembled `FIGHTERS` collection still attaches each history to the *right*
+fighter — precisely what Stage 3's extraction can break by changing module
+evaluation order or the `d.n` join at `App.js:758`.
+
+So `verifyFixtures.cjs` now **requires** every candidate to provide
+`historyHashes` and `rosterHistoryHash` and to match the expectation. A missing
+field is a **failure**, not a skip.
+
+The expectation is **derived, not adopted.** `hashFightHistory.cjs` computes it
+in Node from committed inputs only — `identityKeys` (roster order, `= d.n`),
+`src/fightHistory.js`, and `sortHistoryDesc` copied verbatim from `App.js:3491`:
+
+```
+expectedAttachedHashes[i]  = hash(stableStringify(sortHistoryDesc(FIGHT_HISTORY[identityKeys[i]] ?? [])))
+expectedRosterHistoryHash  = hash(stableStringify(expectedAttachedHashes))
+```
+
+The Node derivation independently reproduced the browser's `de0704a5`, so the
+two agree without either being taken on trust.
+
+**Negative-tested — both cases pass all six canonical hashes and are still caught:**
+
+| Tamper | Result |
+|---|---|
+| Swap Islam Makhachev ↔ Jon Jones histories, then recompute `rosterHistoryHash` so the aggregate is internally consistent | `FAIL 2 fighter(s) carry the WRONG fight history`, both named with got/want; exit 1 |
+| Delete `historyHashes` / `rosterHistoryHash` (simulates a pre-v2 capture) | `FAIL candidate does not provide…`; exit 1 |
+
+The first is the important one: **all six canonical file hashes still MATCHED**
+while the join was wrong. Without this check the mis-join was invisible.
+
 ### Why fight-history hashing is split in two
 
 `roster.manifest.json`'s `stableHashes` summarise `FIGHT_HISTORY` as
@@ -307,6 +342,12 @@ Two changes address this:
 2. `buildRosterManifest` now also emits `historyHashes` and `rosterHistoryHash`
    (`manifestHashVersion: 2`). This is **additive**: `stableHashes` keeps its v1
    meaning so the approved reference stays directly comparable to candidates.
-   `verifyFixtures.cjs` excludes the new fields via `POST_REFERENCE_FIELDS` and
-   says so in its output. Remove that exclusion whenever the reference is next
-   re-initialised.
+   `verifyFixtures.cjs` excludes the new fields from the **file-level** canonical
+   hash via `POST_REFERENCE_FIELDS`, because the reference predates them — but
+   they are **not** unchecked. `checkJoin()` enforces them mandatorily against
+   the derived expectation above. Remove the exclusion whenever the reference is
+   next re-initialised.
+
+**Stage 3 gate.** The fighter-data extraction (Stage 3 commit 5, `FIGHTERS`
+construction) is not complete until a fresh candidate reports
+`rosterHistoryHash = de0704a5` and `all 2273 fighters carry their own history`.

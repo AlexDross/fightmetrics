@@ -1,6 +1,6 @@
 {
   "note": "Expected CANONICAL payload hashes of the approved Stage 0 reference. Volatile capture metadata excluded. Regenerate only when the reference itself is re-initialised.",
-  "generatedAt": "2026-07-28T03:48:15.958Z",
+  "generatedAt": "2026-07-28T03:58:06.145Z",
   "reference": {
     "captureIso": "2026-07-28T03:28:01.945Z",
     "captureBase": "foundation/stage-0 (origin/main fa3e54e + rebased ROI event-summary 9dd3a60)",
