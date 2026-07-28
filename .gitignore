@@ -7,3 +7,11 @@ __pycache__/
 
 # Foundation: candidate captures are disposable; the Stage 0 reference is committed
 baseline/candidates/
+
+# Foundation Stage 2 -- large regenerable backtest artifacts.
+# NOT deleted; they stay on disk. backtest_results.json and
+# backtest_results_original.json are deliberately NOT ignored -- BASELINE_NOTES.md
+# treats those as the authoritative 60.71% record.
+backtest_ledger.json
+backtest_results_age.json
+backtest_results_momentum.json
