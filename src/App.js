@@ -41,12 +41,6 @@ import {
   MoreHorizontal,
   X,
 } from 'lucide-react';
-import { _D2 } from './fightersData';
-import { getActiveProspects } from './prospectsData';
-import { ELO_RATINGS } from './eloModule';
-import { CARDIO_RATIOS } from './cardioModule';
-import { FIGHT_HISTORY } from './fightHistory';
-import { getHistoricalTier } from './rankHistory';
 import { ROI_ENTRIES } from './roiData';
 import { UPCOMING_ENTRIES } from './upcomingData';
 import { SOURCE_MANIFEST } from './sourceManifest';
@@ -58,211 +52,90 @@ import { PROP_PICKS } from './propPicksData';
 // computations.
 import { PARLAY_ENTRIES } from './parlayData';
 
-// _D2 imported from fightersData.js
+// Foundation Stage 3: the pure model engine now lives in src/domain/model.
+// Extracted verbatim; see that file's header for original App.js line numbers.
+import {
+  UFC_RANKINGS,
+  getOpponentTier,
+  computeModernForm,
+  computeSOS,
+  DIVISION_UFC_AVERAGES,
+  clampNum,
+  sortHistoryDesc,
+  getResultStreak,
+  isDecisionMethod,
+  isKoMethod,
+  isSubMethod,
+  getDebutProspectAdjustment,
+  ageDecayPenalty,
+  recentForm,
+  MODEL,
+  MODEL_V2,
+  computeLogisticProb,
+  computeMatchupEdges,
+  latestFightHistoryDate,
+} from './domain/model';
 
-const UFC_RANKINGS = {
-  // Bantamweight
-  'Petr Yan': { division: 'Bantamweight', rank: 'C' },
-  'Merab Dvalishvili': { division: 'Bantamweight', rank: 1 },
-  'Umar Nurmagomedov': { division: 'Bantamweight', rank: 2 },
-  "Sean O'Malley": { division: 'Bantamweight', rank: 3 },
-  'Cory Sandhagen': { division: 'Bantamweight', rank: 4 },
-  'Song Yadong': { division: 'Bantamweight', rank: 5 },
-  'Aiemann Zahabi': { division: 'Bantamweight', rank: 6 },
-  'Deiveson Figueiredo': { division: 'Bantamweight', rank: 7 },
-  'Mario Bautista': { division: 'Bantamweight', rank: 8 },
-  'David Martinez': { division: 'Bantamweight', rank: 9 },
-  'Marlon Vera': { division: 'Bantamweight', rank: 10 },
-  'Payton Talbott': { division: 'Bantamweight', rank: 11 },
-  'Vinicius Oliveira': { division: 'Bantamweight', rank: 12 },
-  'Raul Rosas Jr.': { division: 'Bantamweight', rank: 13 },
-  'Montel Jackson': { division: 'Bantamweight', rank: 14 },
-  'Farid Basharat': { division: 'Bantamweight', rank: 15 },
-  // Featherweight
-  'Alexander Volkanovski': { division: 'Featherweight', rank: 'C' },
-  'Movsar Evloev': { division: 'Featherweight', rank: 1 },
-  'Diego Lopes': { division: 'Featherweight', rank: 2 },
-  'Lerone Murphy': { division: 'Featherweight', rank: 3 },
-  'Yair Rodriguez': { division: 'Featherweight', rank: 4 },
-  'Aljamain Sterling': { division: 'Featherweight', rank: 5 },
-  'Jean Silva': { division: 'Featherweight', rank: 6 },
-  'Youssef Zalal': { division: 'Featherweight', rank: 7 },
-  'Arnold Allen': { division: 'Featherweight', rank: 8 },
-  'Steve Garcia': { division: 'Featherweight', rank: 9 },
-  'Brian Ortega': { division: 'Featherweight', rank: 10 },
-  'Josh Emmett': { division: 'Featherweight', rank: 11 },
-  'Melquizael Costa': { division: 'Featherweight', rank: 12 },
-  'Patricio Pitbull': { division: 'Featherweight', rank: 13 },
-  'Kevin Vallejos': { division: 'Featherweight', rank: 14 },
-  'David Onama': { division: 'Featherweight', rank: 15 },
-  // Flyweight
-  'Joshua Van': { division: 'Flyweight', rank: 'C' },
-  'Alexandre Pantoja': { division: 'Flyweight', rank: 1 },
-  'Manel Kape': { division: 'Flyweight', rank: 2 },
-  'Tatsuro Taira': { division: 'Flyweight', rank: 3 },
-  'Brandon Royval': { division: 'Flyweight', rank: 4 },
-  'Kyoji Horiguchi': { division: 'Flyweight', rank: 5 },
-  "Lone'er Kavanagh": { division: 'Flyweight', rank: 6 },
-  'Asu Almabayev': { division: 'Flyweight', rank: 7 },
-  'Amir Albazi': { division: 'Flyweight', rank: 8 },
-  'Brandon Moreno': { division: 'Flyweight', rank: 9 },
-  'Alex Perez': { division: 'Flyweight', rank: 10 },
-  'Tim Elliott': { division: 'Flyweight', rank: 11 },
-  'Steve Erceg': { division: 'Flyweight', rank: 12 },
-  'Tagir Ulanbekov': { division: 'Flyweight', rank: 13 },
-  'Charles Johnson': { division: 'Flyweight', rank: 14 },
-  'Bruno Silva': { division: 'Flyweight', rank: 15 },
-  // Heavyweight
-  'Tom Aspinall': { division: 'Heavyweight', rank: 'C' },
-  'Ciryl Gane': { division: 'Heavyweight', rank: 1 },
-  'Alexander Volkov': { division: 'Heavyweight', rank: 2 },
-  'Sergei Pavlovich': { division: 'Heavyweight', rank: 3 },
-  'Curtis Blaydes': { division: 'Heavyweight', rank: 4 },
-  'Waldo Cortes Acosta': { division: 'Heavyweight', rank: 5 },
-  'Serghei Spivac': { division: 'Heavyweight', rank: 6 },
-  'Rizvan Kuniev': { division: 'Heavyweight', rank: 7 },
-  'Marcin Tybura': { division: 'Heavyweight', rank: 8 },
-  'Derrick Lewis': { division: 'Heavyweight', rank: 9 },
-  'Ante Delija': { division: 'Heavyweight', rank: 10 },
-  'Tallison Teixeira': { division: 'Heavyweight', rank: 11 },
-  'Mick Parkin': { division: 'Heavyweight', rank: 12 },
-  'Shamil Gaziev': { division: 'Heavyweight', rank: 13 },
-  'Valter Walker': { division: 'Heavyweight', rank: 14 },
-  'Tai Tuivasa': { division: 'Heavyweight', rank: 15 },
-  // Light Heavyweight
-  'Alex Pereira': { division: 'Light Heavyweight', rank: 'C' },
-  'Magomed Ankalaev': { division: 'Light Heavyweight', rank: 1 },
-  'Jiří Procházka': { division: 'Light Heavyweight', rank: 2 },
-  'Carlos Ulberg': { division: 'Light Heavyweight', rank: 3 },
-  'Khalil Rountree Jr.': { division: 'Light Heavyweight', rank: 4 },
-  'Jan Błachowicz': { division: 'Light Heavyweight', rank: 5 },
-  'Azamat Murzakanov': { division: 'Light Heavyweight', rank: 6 },
-  'Jamahal Hill': { division: 'Light Heavyweight', rank: 7 },
-  'Bogdan Guskov': { division: 'Light Heavyweight', rank: 8 },
-  'Volkan Oezdemir': { division: 'Light Heavyweight', rank: 9 },
-  'Dominick Reyes': { division: 'Light Heavyweight', rank: 10 },
-  'Aleksandar Rakić': { division: 'Light Heavyweight', rank: 11 },
-  'Johnny Walker': { division: 'Light Heavyweight', rank: 12 },
-  'Nikita Krylov': { division: 'Light Heavyweight', rank: 13 },
-  'Dustin Jacoby': { division: 'Light Heavyweight', rank: 14 },
-  'Zhang Mingyang': { division: 'Light Heavyweight', rank: 15 },
-  // Lightweight
-  'Ilia Topuria': { division: 'Lightweight', rank: 'C' },
-  'Justin Gaethje': { division: 'Lightweight', rank: 1 },
-  'Arman Tsarukyan': { division: 'Lightweight', rank: 2 },
-  'Charles Oliveira': { division: 'Lightweight', rank: 3 },
-  'Max Holloway': { division: 'Lightweight', rank: 4 },
-  'Benoît Saint Denis': { division: 'Lightweight', rank: 5 },
-  'Paddy Pimblett': { division: 'Lightweight', rank: 6 },
-  'Dan Hooker': { division: 'Lightweight', rank: 7 },
-  'Mateusz Gamrot': { division: 'Lightweight', rank: 8 },
-  'Mauricio Ruffy': { division: 'Lightweight', rank: 9 },
-  'Rafael Fiziev': { division: 'Lightweight', rank: 10 },
-  'Renato Moicano': { division: 'Lightweight', rank: 11 },
-  'Beneil Dariush': { division: 'Lightweight', rank: 12 },
-  'Michael Chandler': { division: 'Lightweight', rank: 13 },
-  'Manuel Torres': { division: 'Lightweight', rank: 14 },
-  'Farès Ziam': { division: 'Lightweight', rank: 15 },
-  // Middleweight
-  'Khamzat Chimaev': { division: 'Middleweight', rank: 'C' },
-  'Dricus Du Plessis': { division: 'Middleweight', rank: 1 },
-  'Nassourdine Imavov': { division: 'Middleweight', rank: 2 },
-  'Sean Strickland': { division: 'Middleweight', rank: 3 },
-  'Israel Adesanya': { division: 'Middleweight', rank: 4 },
-  'Caio Borralho': { division: 'Middleweight', rank: 5 },
-  'Brendan Allen': { division: 'Middleweight', rank: 6 },
-  'Anthony Hernandez': { division: 'Middleweight', rank: 7 },
-  'Reinier de Ridder': { division: 'Middleweight', rank: 8 },
-  'Robert Whittaker': { division: 'Middleweight', rank: 9 },
-  'Jared Cannonier': { division: 'Middleweight', rank: 10 },
-  'Roman Dolidze': { division: 'Middleweight', rank: 11 },
-  'Gregory Rodrigues': { division: 'Middleweight', rank: 12 },
-  'Paulo Costa': { division: 'Middleweight', rank: 13 },
-  'Joe Pyfer': { division: 'Middleweight', rank: 14 },
-  'Brunno Ferreira': { division: 'Middleweight', rank: 15 },
-  // Welterweight
-  'Islam Makhachev': { division: 'Welterweight', rank: 'C' },
-  'Jack Della Maddalena': { division: 'Welterweight', rank: 1 },
-  'Ian Machado Garry': { division: 'Welterweight', rank: 1 },
-  'Michael Morales': { division: 'Welterweight', rank: 3 },
-  'Belal Muhammad': { division: 'Welterweight', rank: 4 },
-  'Carlos Prates': { division: 'Welterweight', rank: 5 },
-  'Sean Brady': { division: 'Welterweight', rank: 6 },
-  'Kamaru Usman': { division: 'Welterweight', rank: 7 },
-  'Leon Edwards': { division: 'Welterweight', rank: 8 },
-  'Joaquin Buckley': { division: 'Welterweight', rank: 9 },
-  'Gabriel Bonfim': { division: 'Welterweight', rank: 10 },
-  'Gilbert Burns': { division: 'Welterweight', rank: 11 },
-  'Uroš Medić': { division: 'Welterweight', rank: 12 },
-  'Michael Page': { division: 'Welterweight', rank: 13 },
-  'Colby Covington': { division: 'Welterweight', rank: 14 },
-  'Daniel Rodriguez': { division: 'Welterweight', rank: 15 },
-  // Women's Bantamweight
-  'Kayla Harrison': { division: "Women's Bantamweight", rank: 'C' },
-  'Julianna Peña': { division: "Women's Bantamweight", rank: 1 },
-  'Raquel Pennington': { division: "Women's Bantamweight", rank: 2 },
-  'Norma Dumont': { division: "Women's Bantamweight", rank: 3 },
-  'Ketlen Vieira': { division: "Women's Bantamweight", rank: 4 },
-  'Yana Santos': { division: "Women's Bantamweight", rank: 5 },
-  'Irene Aldana': { division: "Women's Bantamweight", rank: 6 },
-  'Ailin Perez': { division: "Women's Bantamweight", rank: 7 },
-  'Karol Rosa': { division: "Women's Bantamweight", rank: 8 },
-  'Macy Chiasson': { division: "Women's Bantamweight", rank: 9 },
-  'Jacqueline Cavalcanti': { division: "Women's Bantamweight", rank: 10 },
-  'Joselyne Edwards': { division: "Women's Bantamweight", rank: 11 },
-  'Mayra Bueno Silva': { division: "Women's Bantamweight", rank: 12 },
-  'Nora Cornolle': { division: "Women's Bantamweight", rank: 13 },
-  'Miesha Tate': { division: "Women's Bantamweight", rank: 14 },
-  'Luana Santos': { division: "Women's Bantamweight", rank: 15 },
-  // Women's Flyweight
-  'Valentina Shevchenko': { division: "Women's Flyweight", rank: 'C' },
-  'Natalia Silva': { division: "Women's Flyweight", rank: 1 },
-  'Manon Fiorot': { division: "Women's Flyweight", rank: 2 },
-  'Erin Blanchfield': { division: "Women's Flyweight", rank: 3 },
-  'Alexa Grasso': { division: "Women's Flyweight", rank: 4 },
-  'Maycee Barber': { division: "Women's Flyweight", rank: 5 },
-  'Rose Namajunas': { division: "Women's Flyweight", rank: 6 },
-  'Jasmine Jasudavicius': { division: "Women's Flyweight", rank: 7 },
-  'Tracy Cortez': { division: "Women's Flyweight", rank: 8 },
-  'Miranda Maverick': { division: "Women's Flyweight", rank: 9 },
-  'Karine Silva': { division: "Women's Flyweight", rank: 10 },
-  'Wang Cong': { division: "Women's Flyweight", rank: 11 },
-  "Casey O'Neill": { division: "Women's Flyweight", rank: 12 },
-  'Eduarda Moura': { division: "Women's Flyweight", rank: 13 },
-  'Gabriella Fernandes': { division: "Women's Flyweight", rank: 14 },
-  'JJ Aldrich': { division: "Women's Flyweight", rank: 15 },
-  // Women's Strawweight
-  'Mackenzie Dern': { division: "Women's Strawweight", rank: 'C' },
-  'Zhang Weili': { division: "Women's Strawweight", rank: 1 },
-  'Tatiana Suarez': { division: "Women's Strawweight", rank: 2 },
-  'Virna Jandiroba': { division: "Women's Strawweight", rank: 3 },
-  'Yan Xiaonan': { division: "Women's Strawweight", rank: 4 },
-  'Amanda Lemos': { division: "Women's Strawweight", rank: 5 },
-  'Loopy Godinez': { division: "Women's Strawweight", rank: 6 },
-  'Tabatha Ricci': { division: "Women's Strawweight", rank: 7 },
-  'Gillian Robertson': { division: "Women's Strawweight", rank: 8 },
-  'Jéssica Andrade': { division: "Women's Strawweight", rank: 9 },
-  'Amanda Ribas': { division: "Women's Strawweight", rank: 10 },
-  'Fatima Kline': { division: "Women's Strawweight", rank: 11 },
-  'Denise Gomes': { division: "Women's Strawweight", rank: 12 },
-  'Alexia Thainara': { division: "Women's Strawweight", rank: 13 },
-  'Angela Hill': { division: "Women's Strawweight", rank: 14 },
-  Mizuki: { division: "Women's Strawweight", rank: 15 },
-};
+// Foundation Stage 3: extracted verbatim -- see src/domain/finish/index.js
+import {
+  computeFinishProbs,
+  getProjectedFinishLabel,
+} from './domain/finish';
 
-const getOpponentTier = (opponentName, fightEntry) => {
-  if (fightEntry && fightEntry.ot != null) return fightEntry.ot;
-  // Use point-in-time rankings for completed fights so opponent quality
-  // reflects what the opponent was at the time, not what they are today.
-  if (fightEntry?.dt) {
-    return getHistoricalTier(opponentName, fightEntry.dt);
-  }
-  // Fall back to current rankings for upcoming fights or undated entries.
-  const r = UFC_RANKINGS[opponentName];
-  if (!r) return 0.12;
-  if (r.rank === 'C') return 1.0;
-  return Math.max(0.42, 0.93 * Math.exp(-0.037 * (r.rank - 1)));
-};
+// Foundation Stage 3: extracted verbatim -- see src/domain/betting/index.js
+import {
+  americanOdds,
+  parseAmericanOdds,
+  stripVig,
+  calcExpectedValue,
+  americanToDecimal,
+  createPredictionId,
+  kellyFraction,
+  computeMarketAnalysis,
+  djb2Checksum,
+  buildProvenance,
+  buildRoiEntry,
+} from './domain/betting';
+
+// Foundation Stage 3: extracted verbatim -- see src/domain/statistics/index.js
+import {
+  isPushResult,
+  isResolvedWinner,
+  calcTrackedProfit,
+  ROI_ANALYTICS_LOW_N,
+  ROI_MARKET_BANDS,
+  ROI_V2_PROB_BUCKETS,
+  bandOf,
+  computeRoiByMarketBand,
+  roiV2GradedPopulation,
+  computeModelVsMarketByBand,
+  computeCalibrationReliability,
+  filterRoiEntriesForStats,
+  ROI_BET_TIERS,
+  computeBetTierBreakdown,
+  filterStakedGraded,
+  computeCumulativePnl,
+  computeMonthlyPerformance,
+  computeV2FrozenRows,
+  computeV2WindowComposition,
+  computeV2Summary,
+  computeRoiByMarketBandV2,
+  computeCumulativePnlV2,
+  computeMonthlyPerformanceV2,
+  isDoubleChance,
+  buildPropLabel,
+  propTypeOf,
+  computePropSummary,
+  computePropTypeBreakdown,
+  propPickProfit,
+  computeParlayResult,
+  computeParlaySummary,
+  computeROISummary,
+} from './domain/statistics';
+
+// Foundation Stage 3: extracted verbatim -- see src/domain/fighters/index.js
+import { FIGHTERS } from './domain/fighters';
+
 
 const ufcRankLabel = (name) => {
   const r = UFC_RANKINGS[name];
@@ -270,12 +143,6 @@ const ufcRankLabel = (name) => {
   return r.rank === 'C' ? 'C' : `#${r.rank}`;
 };
 
-const currentRankTier = (rankObj) => {
-  if (!rankObj) return 0.12;
-  const rank = rankObj.rank;
-  if (rank === 'C' || rank === 0) return 1.0;
-  return Math.max(0.42, 0.93 * Math.exp(-0.037 * (rank - 1)));
-};
 
 // ─── FIGHT DURATION HELPER ───────────────────────────────────────────────────
 const parseFightMinutes = (rn, ti) => {
@@ -347,66 +214,12 @@ const computeFinishQuality = (fh) => {
   return den > 0 ? num / den : 0;
 };
 
-// ─── MOMENTUM SCORE ──────────────────────────────────────────────────────────
-// Captures recent form: wins vs tough opponents and losses vs weak ones matter most
-const computeMomentum = (fh) => {
-  if (!fh || fh.length === 0) return 0;
-  const DECAY = 0.68;
-  let num = 0,
-    den = 0;
-  fh.slice(0, 5).forEach((fight, i) => {
-    const w = Math.pow(DECAY, i);
-    const tier = getOpponentTier(fight.op, fight);
-    if (fight.re === 'W') {
-      num += w * (0.4 + 1.6 * tier); // win vs champ = +2, vs unranked = +0.6
-    } else if (fight.re === 'L') {
-      num += w * -(0.3 + 1.7 * (1 - tier)); // loss vs unranked = -1.7, vs champ = -0.3
-    }
-    den += w;
-  });
-  return den > 0 ? Math.max(-2, Math.min(2, (num / den) * 2)) : 0;
-};
 
 // ─── MODERN FORM (MODEL_V2 only) ─────────────────────────────────────────────
 // Exp-weighted last-8 win rate (λ=0.8) with finish-loss and layoff penalties.
 // Replaces raw win/lose-streak counts in the v2 feature vector. Source: modern-era
 // (2018+) statistical analysis, 7,365 fighter-fight rows. Validated 2026-07-08 on
 // the 42-fight OOS set: v2 64.3% -> 66.7%, v1 unaffected (see BASELINE_NOTES.md).
-const computeModernForm = (fh, daysSinceLast) => {
-  const s = [...(fh || [])].sort((a, b) => (a.dt < b.dt ? 1 : -1)); // most recent first
-  let num = 0,
-    den = 0;
-  s.slice(0, 8).forEach((f, i) => {
-    const w = Math.pow(0.8, i);
-    if (f.re === 'W') {
-      num += w;
-      den += w;
-    } else if (f.re === 'L') {
-      den += w; // win_i = 0; NC excluded from the window
-    }
-  });
-  const wr = den > 0 ? num / den : 0.5;
-  const mr = s[0];
-  const lastLossByFinish =
-    mr && mr.re === 'L' && (isKoMethod(mr.me || '') || isSubMethod(mr.me || '')) ? 1 : 0;
-  const layoff = (daysSinceLast ?? 180) > 420 ? 1 : 0;
-  return Math.max(-0.2, Math.min(0.85, 0.8 * wr - 0.05 * lastLossByFinish - 0.065 * layoff));
-};
-
-// ─── STRENGTH OF SCHEDULE ────────────────────────────────────────────────────
-// Mean opponent tier over the last 5 fights via point-in-time getOpponentTier.
-// Returns 0.12 (unranked floor) when history is absent — backtest-validated at
-// SOS@0.10 + Mom@0.03 = +0.89 pp over ELO baseline (name-only YYYYMMDD tiers).
-const computeSOS = (fh) => {
-  if (!fh || fh.length === 0) return 0.12;
-  const last5 = fh.slice(0, 5);
-  const tiers = last5.map((fight) => getOpponentTier(fight.op, fight));
-  return tiers.reduce((a, b) => a + b, 0) / tiers.length;
-};
-
-// ─── LAYOFF PENALTY ──────────────────────────────────────────────────────────
-// Requires 'dt' field (YYYY-MM) on each fight history entry — add this to your data!
-// Example: { ev: 'UFC 309', op: 'Stipe Miocic', re: 'W', dt: '2024-11', ... }
 const EVENT_DATES = {
   // 2024
   'UFC 285: Jones vs. Gane': '2023-03',
@@ -570,477 +383,17 @@ const computeQualityAdjustment = (fightHistory) => {
   return Math.max(-18, Math.min(12, winBoost - lossPenalty));
 };
 
-const getFightRoundCount = (fight) => {
-  const rn = Number(fight?.rn);
-  if (Number.isFinite(rn) && rn > 0) return rn;
-  if (isDecisionMethod(fight?.me || '')) return fight?.tb ? 5 : 3;
-  return null;
-};
 
-const sumFightRounds = (history) =>
-  (history || []).reduce((sum, fight) => {
-    const rounds = getFightRoundCount(fight);
-    return sum + (rounds ?? 0);
-  }, 0);
 
-// Count fights that reached round 3 or later.
-// Explicit round number wins. If round is missing, infer only from decisions.
-const sumDeepRounds = (history) =>
-  (history || []).reduce((sum, fight) => {
-    const rounds = getFightRoundCount(fight);
-    return sum + ((rounds ?? 0) >= 3 ? 1 : 0);
-  }, 0);
 
-// ─── FIGHTERS MAPPING (v5) ────────────────────────────────────────────────────
-// Replace the entire `const FIGHTERS = _D.map((d) => { ... });` block with this.
-// Uses compact field names from fightersData.js (_D2 array).
 
-// Per-division ELO normalization (min/max per division → 0–100 rating)
-const DIV_ELO_STATS = (() => {
-  const stats = {};
-  for (const d of _D2) {
-    if (!d.w) continue;
-    const elo = ELO_RATINGS[d.n]?.elo ?? d.elo;
-    if (!elo) continue;
-    if (!stats[d.w]) stats[d.w] = { min: Infinity, max: -Infinity };
-    if (elo < stats[d.w].min) stats[d.w].min = elo;
-    if (elo > stats[d.w].max) stats[d.w].max = elo;
-  }
-  return stats;
-})();
 
-const eloToRating = (elo, weightClass) => {
-  const s = DIV_ELO_STATS[weightClass];
-  if (!s || s.max === s.min) return 50;
-  return Math.round(
-    Math.max(0, Math.min(100, ((elo - s.min) / (s.max - s.min)) * 100))
-  );
-};
 
-const DIVISION_UFC_AVERAGES = (() => {
-  const stats = {};
-  for (const d of _D2) {
-    if (!d.w) continue;
-    if (!stats[d.w]) {
-      stats[d.w] = {
-        count: 0,
-        asl: 0,
-        asp: 0,
-        asa: 0,
-        atl: 0,
-        atp: 0,
-        crd: 0,
-        elo: 0,
-      };
-    }
-    const bucket = stats[d.w];
-    bucket.count += 1;
-    bucket.asl += d.asl ?? 0;
-    bucket.asp += d.asp ?? 0;
-    bucket.asa += d.asa ?? 0;
-    bucket.atl += d.atl ?? 0;
-    bucket.atp += d.atp ?? 0;
-    bucket.crd += d.crd ?? 1.0;
-    bucket.elo += d.elo ?? 1500;
-  }
 
-  return Object.fromEntries(
-    Object.entries(stats).map(([weightClass, bucket]) => [
-      weightClass,
-      {
-        asl: bucket.asl / bucket.count,
-        asp: bucket.asp / bucket.count,
-        asa: bucket.asa / bucket.count,
-        atl: bucket.atl / bucket.count,
-        atp: bucket.atp / bucket.count,
-        crd: bucket.crd / bucket.count,
-        elo: bucket.elo / bucket.count,
-      },
-    ])
-  );
-})();
 
-const PROSPECT_TIER_CONFIG = {
-  tier1: { rateBase: 0.8, recordBase: 0.58, eloBase: 0.46, cardioBase: 0.62 },
-  tier2: { rateBase: 0.62, recordBase: 0.42, eloBase: 0.32, cardioBase: 0.48 },
-  tier3: { rateBase: 0.46, recordBase: 0.28, eloBase: 0.18, cardioBase: 0.36 },
-};
 
-const clampNum = (value, min, max) => Math.max(min, Math.min(max, value));
-const blendToward = (value, baseline, trust) =>
-  baseline + (value - baseline) * clampNum(trust, 0, 1);
 
-const computeProspectSeededElo = (d) => {
-  if (d.elo != null && d.elo !== 1520) return d.elo;
-  const wins = d.wi ?? 0;
-  const losses = d.lo ?? 0;
-  const finishWins = (d.kow ?? 0) + (d.sbw ?? 0);
-  const finishRate = wins > 0 ? finishWins / wins : 0;
-  const tierBonus =
-    d._p_tier === 'tier1' ? 50 : d._p_tier === 'tier2' ? 25 : 0;
-  const undefeatedLast5 = losses === 0 && wins >= 5 ? 30 : 0;
 
-  const tierCap =
-    d._p_tier === 'tier1' ? 1520 :
-    d._p_tier === 'tier2' ? 1490 :
-    1450;
-  const shortNoticePenalty = d._p_source === 'short_notice' ? 30 : 0;
-  return clampNum(
-    1400 +
-      (wins - losses) * 8 +
-      Math.min(40, finishRate * 50) +
-      tierBonus +
-      undefeatedLast5,
-    1370,
-    tierCap - shortNoticePenalty
-  );
-};
-
-const computeProspectSeededCardio = (d) => {
-  if (d.crd != null) return d.crd;
-  const totalRounds = d.tr ?? 0;
-  const wins = d.wi ?? 0;
-  const decisionRate = wins > 0 ? (d.dcw ?? 0) / wins : 0;
-  return clampNum(
-    0.85 + Math.min(0.3, totalRounds * 0.006) + decisionRate * 0.2,
-    0.5,
-    1.5
-  );
-};
-
-const getProspectTrustProfile = (d, totalRounds) => {
-  const cfg = PROSPECT_TIER_CONFIG[d._p_tier] ?? PROSPECT_TIER_CONFIG.tier3;
-  const statsFights = d._p_fights_with_stats ?? 0;
-  const sampleTrust =
-    statsFights <= 0 ? 0.12 : Math.min(1, 0.24 + statsFights * 0.11);
-  const roundsTrust = Math.min(1, (totalRounds ?? 0) / 30);
-
-  const rateTrust = clampNum(cfg.rateBase * sampleTrust, 0.08, 0.88);
-  const recordTrust = clampNum(
-    cfg.recordBase * (0.35 + roundsTrust * 0.65),
-    0.1,
-    0.72
-  );
-  const eloTrust = clampNum(
-    cfg.eloBase * (0.3 + sampleTrust * 0.7),
-    0.08,
-    0.58
-  );
-  const cardioTrust = clampNum(
-    cfg.cardioBase * (0.35 + Math.max(sampleTrust, roundsTrust) * 0.65),
-    0.12,
-    0.78
-  );
-  const credibilityTrust = clampNum(
-    Math.min(rateTrust, recordTrust) * 0.95,
-    0.08,
-    0.72
-  );
-
-  return {
-    statsFights,
-    rateTrust,
-    recordTrust,
-    eloTrust,
-    cardioTrust,
-    credibilityTrust,
-  };
-};
-
-const activeProspects = (() => {
-  const existingFighterNames = new Set(_D2.map((fighter) => fighter.n));
-  return getActiveProspects().filter((prospect) => !existingFighterNames.has(prospect.n));
-})();
-
-const FIGHTERS = [..._D2, ...activeProspects].map((d) => {
-  const isProspect = d._p_source !== undefined;
-  const eloRec = ELO_RATINGS[d.n] ?? null;
-  const fightHistory = sortHistoryDesc(FIGHT_HISTORY[d.n] ?? []);
-  const officialRank = UFC_RANKINGS[d.n] ?? null;
-  const fallbackRank =
-    d.dr != null ? { division: d.w, rank: Math.round(d.dr) } : null;
-  const mergedRank = officialRank ?? fallbackRank;
-
-  const divisionAvg = DIVISION_UFC_AVERAGES[d.w] ?? {
-    asl: 3.5,
-    asp: 0.44,
-    asa: 0.25,
-    atl: 1.0,
-    atp: 0.35,
-    crd: 1.0,
-    elo: 1450,
-  };
-  const seededProspectElo = isProspect
-    ? computeProspectSeededElo(d)
-    : d.elo ?? 1500;
-  const seededProspectCardio = isProspect
-    ? computeProspectSeededCardio(d)
-    : d.crd ?? 1.0;
-  const liveEloBase = eloRec?.elo ?? seededProspectElo;
-  const peakEloBase = eloRec?.peak ?? liveEloBase;
-  const rawCardio = CARDIO_RATIOS[d.n];
-  const cardioBase = (rawCardio !== undefined && rawCardio !== 0.5)
-    ? rawCardio
-    : seededProspectCardio;
-  const rankTier = currentRankTier(mergedRank);
-  const historyWins = fightHistory.filter((fight) => fight.re === 'W');
-  const historyLosses = fightHistory.filter((fight) => fight.re === 'L');
-  const rawWins = fightHistory.length > 0 ? historyWins.length : d.wi ?? 0;
-  const rawLosses = fightHistory.length > 0 ? historyLosses.length : d.lo ?? 0;
-  const totalFights = rawWins + rawLosses;
-  const rawTotalRounds =
-    d.tr ?? (fightHistory.length > 0 ? sumFightRounds(fightHistory) : 0);
-  const rawDeepRounds =
-    fightHistory.length > 0
-      ? sumDeepRounds(fightHistory)
-      : Math.min(d.dcw ?? 0, Math.round((rawTotalRounds ?? 0) / 6));
-  const rawKoWins =
-    fightHistory.length > 0
-      ? historyWins.filter((fight) => isKoMethod(fight.me || '')).length
-      : d.kow ?? 0;
-  const rawSubWins =
-    fightHistory.length > 0
-      ? historyWins.filter((fight) => isSubMethod(fight.me || '')).length
-      : d.sbw ?? 0;
-  const rawDecWins =
-    fightHistory.length > 0
-      ? historyWins.filter((fight) => isDecisionMethod(fight.me || '')).length
-      : d.dcw ?? 0;
-  const rawTitleBouts = Math.max(
-    fightHistory.length > 0 ? fightHistory.filter((fight) => fight.tb).length : 0,
-    d.tb ?? 0,
-  );
-  const winStreak =
-    fightHistory.length > 0 ? getResultStreak(fightHistory, 'W') : d.ws ?? 0;
-  const loseStreak =
-    fightHistory.length > 0 ? getResultStreak(fightHistory, 'L') : d.ls ?? 0;
-  const lastFightDate = fightHistory[0]?.dt ?? d.lfd;
-  const daysSinceLast = fightHistory[0]?.dt
-    ? Math.max(
-        0,
-        Math.round(
-          (Date.now() - new Date(fightHistory[0].dt).getTime()) / 86400000
-        )
-      )
-    : d.dsl;
-  const rawUfcFightCount =
-    fightHistory.length > 0 ? totalFights : eloRec?.n ?? totalFights;
-  const prospectTrust = isProspect
-    ? getProspectTrustProfile(d, rawTotalRounds)
-    : null;
-  const modelAsl = isProspect
-    ? blendToward(d.asl ?? divisionAvg.asl, divisionAvg.asl, prospectTrust.rateTrust)
-    : d.asl;
-  const modelAsp = isProspect
-    ? blendToward(d.asp ?? divisionAvg.asp, divisionAvg.asp, prospectTrust.rateTrust)
-    : d.asp;
-  const modelAsa = isProspect
-    ? blendToward(d.asa ?? divisionAvg.asa, divisionAvg.asa, prospectTrust.rateTrust)
-    : d.asa;
-  const modelAtl = isProspect
-    ? blendToward(d.atl ?? divisionAvg.atl, divisionAvg.atl, prospectTrust.rateTrust)
-    : d.atl;
-  const modelAtp = isProspect
-    ? blendToward(d.atp ?? divisionAvg.atp, divisionAvg.atp, prospectTrust.rateTrust)
-    : d.atp;
-  const modelElo = isProspect
-    ? blendToward(liveEloBase, divisionAvg.elo, prospectTrust.eloTrust)
-    : liveEloBase;
-  const modelPeakElo = isProspect
-    ? blendToward(peakEloBase, divisionAvg.elo, prospectTrust.eloTrust)
-    : peakEloBase;
-  const modelCardioRatio = isProspect
-    ? blendToward(cardioBase, divisionAvg.crd, prospectTrust.cardioTrust)
-    : cardioBase;
-  const modelWins = isProspect ? rawWins * prospectTrust.recordTrust : rawWins;
-  const modelLosses = isProspect
-    ? rawLosses * prospectTrust.recordTrust
-    : rawLosses;
-  const modelTotalRounds = isProspect
-    ? rawTotalRounds * prospectTrust.recordTrust
-    : rawTotalRounds;
-  const modelDeepRounds = isProspect
-    ? rawDeepRounds * prospectTrust.recordTrust
-    : rawDeepRounds;
-  const modelKoWins = isProspect
-    ? rawKoWins * prospectTrust.recordTrust
-    : rawKoWins;
-  const modelSubWins = isProspect
-    ? rawSubWins * prospectTrust.recordTrust
-    : rawSubWins;
-  const modelDecWins = isProspect
-    ? rawDecWins * prospectTrust.recordTrust
-    : rawDecWins;
-  const modelTitleBouts = isProspect
-    ? rawTitleBouts * prospectTrust.recordTrust
-    : rawTitleBouts;
-  const modelUfcWins = isProspect ? 0 : rawWins;
-  const modelUfcLosses = isProspect ? 0 : rawLosses;
-  const modelUfcWinStreak = isProspect ? 0 : winStreak;
-  const modelUfcLoseStreak = isProspect ? 0 : loseStreak;
-  const modelUfcFightCount = isProspect ? 0 : rawUfcFightCount;
-
-  const rating = eloToRating(modelElo, d.w);
-  const baseCred = Math.min(100, Math.round((rawTotalRounds / 60) * 100));
-  const cred = isProspect
-    ? Math.max(8, Math.round(baseCred * prospectTrust.credibilityTrust))
-    : baseCred;
-  const winPct =
-    totalFights > 0 ? Math.round((rawWins / totalFights) * 100) : 0;
-  // Finish rate
-  const finishRate =
-    rawWins > 0
-      ? Math.round((((rawKoWins ?? 0) + (rawSubWins ?? 0)) / rawWins) * 100)
-      : 0;
-  const totalMin = Math.round(rawTotalRounds * 5);
-  const kdPerMin =
-    totalMin > 0 ? parseFloat(((rawKoWins ?? 0) / totalMin).toFixed(4)) : 0;
-  const controlPct = Math.min(
-    100,
-    parseFloat(
-      (
-        (modelAtl ?? 0) * ((modelAtp ?? 0.35) + 0.15) * 10 +
-        (modelAsa ?? 0) * 3
-      ).toFixed(1)
-    )
-  );
-  const eloStrength = Math.max(0, Math.min(1, (modelElo - 1400) / 450));
-  const oqiProxy = parseFloat(
-    (0.65 * rankTier + 0.35 * eloStrength).toFixed(3)
-  );
-const momentumScore = Math.max(
-  -2,
-  Math.min(2, ((winStreak ?? 0) - (loseStreak ?? 0)) / 4)
-);
-  
-  const qualityMomentum = computeMomentum(fightHistory);
-
-  return {
-    FIGHTER: d.n,
-    WEIGHT_CLASS: d.w,
-    AGE: d.ag,
-    HEIGHT_IN: d.ht,
-    REACH_IN: d.rh,
-    STANCE: d.st,
-    WINS: rawWins,
-    LOSSES: rawLosses,
-    WIN_STREAK: winStreak,
-    LOSE_STREAK: loseStreak,
-    TOTAL_ROUNDS: rawTotalRounds,
-    DEEP_ROUNDS: rawDeepRounds,
-    TITLE_BOUTS: rawTitleBouts,
-    KO_WINS: rawKoWins,
-    SUB_WINS: rawSubWins,
-    DEC_WINS: rawDecWins,
-    ASL: modelAsl,
-    ASP: modelAsp,
-    ASA: modelAsa,
-    ATL: modelAtl,
-    ATP: modelAtp,
-    ATD: d.atd ?? 0.60,
-    ATD_PCT: parseFloat(((d.atd ?? 0.60) * 100).toFixed(1)),
-    ELO: modelElo,
-    ELO_PEAK: modelPeakElo,
-    UFC_FIGHT_COUNT: modelUfcFightCount,
-    RANK_TIER: rankTier,
-    CARDIO_RATIO: modelCardioRatio,
-    LAST_FIGHT_DATE: lastFightDate,
-    DAYS_SINCE_LAST: daysSinceLast,
-    DIV_RANK: d.dr,
-    P4P_RANK: d.p4p,
-    WEIGHT_LBS: d.wlb,
-    // Derived display fields
-    ADJUSTED_RATING: rating, // 0–100, ELO-based, normalized per division
-    CREDIBILITY: cred,
-    WIN_PCT: winPct,
-    FINISH_RATE: finishRate,
-    RECORD: `${rawWins}-${rawLosses}`,
-    RAW_ASL: d.asl ?? null,
-    RAW_ASP: d.asp ?? null,
-    RAW_ASA: d.asa ?? null,
-    RAW_ATL: d.atl ?? null,
-    RAW_ATP: d.atp ?? null,
-    RAW_ELO: liveEloBase,
-    RAW_CARDIO_RATIO: cardioBase,
-    MODEL_WINS: modelWins,
-    MODEL_LOSSES: modelLosses,
-    MODEL_UFC_WINS: modelUfcWins,
-    MODEL_UFC_LOSSES: modelUfcLosses,
-    MODEL_UFC_WIN_STREAK: modelUfcWinStreak,
-    MODEL_UFC_LOSE_STREAK: modelUfcLoseStreak,
-    MODEL_TOTAL_ROUNDS: modelTotalRounds,
-    MODEL_DEEP_ROUNDS: modelDeepRounds,
-    MODEL_TITLE_BOUTS: modelTitleBouts,
-    MODEL_KO_WINS: modelKoWins,
-    MODEL_SUB_WINS: modelSubWins,
-    MODEL_DEC_WINS: modelDecWins,
-    MODEL_UFC_FIGHT_COUNT: modelUfcFightCount,
-    PROSPECT_CONFIDENCE: isProspect ? prospectTrust.credibilityTrust : 1,
-    // Legacy aliases (keep for UI components that reference old names)
-    // Effective strike output: strikes landed per min × accuracy.
-    // True net margin (landed minus absorbed) requires absorbed data not available
-    // at the per-fighter aggregate level, so this is the best available proxy.
-    NET_STRIKE_MARGIN:
-      modelAsl != null
-        ? parseFloat((modelAsl * (modelAsp ?? 0.45)).toFixed(2))
-        : null,
-    SIG_STR_ACC: modelAsp != null ? modelAsp * 100 : null,
-    TDE: modelAtl,
-    TD_ACC: modelAtp != null ? modelAtp * 100 : null,
-    KD_PER_MIN: kdPerMin,
-    OQI: oqiProxy,
-    MOMENTUM: momentumScore,
-    QUALITY_MOMENTUM: qualityMomentum,
-    FINISH_QUALITY: finishRate / 100,
-    FIGHT_HISTORY: fightHistory,
-
-    // ── Legacy fields for UI compatibility (v5 equivalents) ──
-    CARDIO_DECAY: modelCardioRatio,
-    TOTAL_EFFICIENCY:
-      modelAsl != null
-        ? Math.max(0, parseFloat((modelAsl * (modelAsp ?? 0.45)).toFixed(2)))
-        : 0,
-    QUALITY_ADJUSTMENT: 0,
-    LAYOFF_PENALTY: 0,
-    EXPERIENCE_FACTOR: 1.0,
-    OQI_SCALE: rankTier,
-    TOTAL_MIN: totalMin,
-    UFC_RANK: mergedRank,
-    SUB_THREAT_RATE: modelAsa ?? 0,
-    KO_WIN_PCT:
-      rawWins > 0
-        ? parseFloat((((rawKoWins ?? 0) / rawWins) * 100).toFixed(1))
-        : 0,
-    SUB_WIN_PCT:
-      rawWins > 0
-        ? parseFloat((((rawSubWins ?? 0) / rawWins) * 100).toFixed(1))
-        : 0,
-    CONTROL_TIME_PCT: controlPct,
-    RECENT_STR_OUTPUT: modelAsl ?? null,
-    RECENT_STR_ACC: modelAsp != null ? modelAsp * 100 : null,
-    RECENT_TD_RATE: modelAtl ?? null,
-    RECENT_CTRL_PCT: controlPct,
-    IS_LIGHT: false,
-    ASD: modelAsl != null ? modelAsl * (1 - (modelAsp ?? 0.45)) : 0,
-    FACTOR_DAMAGE:
-      modelAsl != null
-        ? parseFloat((modelAsl * (modelAsp ?? 0.45) * 0.4).toFixed(1))
-        : 0,
-    FACTOR_POSITION:
-      modelAtp != null ? parseFloat((modelAtp * 30).toFixed(1)) : 0,
-    FACTOR_FINISH: parseFloat((finishRate * 0.2).toFixed(1)),
-    FACTOR_CARDIO: parseFloat((modelCardioRatio * 10).toFixed(1)),
-    // ── Prospect fields (undefined for UFC veterans) ──
-    IS_PROSPECT: isProspect,
-    PROSPECT_TIER: isProspect ? d._p_tier : null,
-    PROSPECT_SOURCE: isProspect ? d._p_source : null,
-    PROSPECT_SIGNED: isProspect ? d._p_signed : null,
-    PROSPECT_DEBUT: isProspect ? d._p_debut : null,
-    PROSPECT_OPPONENT: isProspect ? d._p_opponent : null,
-    PROSPECT_NOTES: isProspect ? d._p_notes : null,
-    PROSPECT_STATS_FIGHTS: isProspect ? d._p_fights_with_stats ?? 0 : null,
-  };
-});
 
 // ─── IN-APP BACKTEST ─────────────────────────────────────────────────────────
 // Tests the matchup engine against known fight history outcomes.
@@ -1251,603 +604,6 @@ const decayColor = (v) =>
     : v >= 0.95
     ? 'text-slate-200'
     : 'text-red-400';
-const americanOdds = (p) => {
-  p = Math.max(0.001, Math.min(0.999, p));
-  return p >= 0.5
-    ? `-${Math.round((p / (1 - p)) * 100)}`
-    : `+${Math.round(((1 - p) / p) * 100)}`;
-};
-
-// ─── VIG-STRIPPING & VALUE ENGINE ────────────────────────────────────────────
-const parseAmericanOdds = (str) => {
-  if (!str || str === '' || str === '+' || str === '-') return null;
-  const n = parseInt(str, 10);
-  if (isNaN(n) || n === 0) return null;
-  // Convert American odds → raw implied probability
-  if (n > 0) return 100 / (n + 100);
-  return Math.abs(n) / (Math.abs(n) + 100);
-};
-
-const stripVig = (implA, implB) => {
-  // Multiplicative / proportional method — most common industry standard
-  const total = implA + implB;
-  if (total <= 0) return { noVigA: 0.5, noVigB: 0.5, vig: 0, overround: 0 };
-  return {
-    noVigA: implA / total,
-    noVigB: implB / total,
-    vig: ((total - 1) / total) * 100, // vig as % of bet
-    overround: (total - 1) * 100, // raw overround %
-  };
-};
-
-const calcExpectedValue = (modelProb, decimalOdds) => {
-  // EV = (prob × net_win) - ((1 - prob) × stake)
-  // For $100 bet: EV = (prob × (decimalOdds - 1) × 100) - ((1 - prob) × 100)
-  return modelProb * (decimalOdds - 1) * 100 - (1 - modelProb) * 100;
-};
-
-const americanToDecimal = (str) => {
-  const n = parseInt(str, 10);
-  if (isNaN(n) || n === 0) return null;
-  if (n > 0) return n / 100 + 1;
-  return 100 / Math.abs(n) + 1;
-};
-
-const createPredictionId = () =>
-  `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-
-const isPushResult = (value) => value === 'NC' || value === 'DRAW';
-
-const isResolvedWinner = (value, entry) =>
-  value === entry?.fighterA ||
-  value === entry?.fighterB ||
-  isPushResult(value);
-
-const calcTrackedProfit = (entry) => {
-  if (
-    !entry ||
-    !entry.marketOdds ||
-    !isResolvedWinner(entry.actualWinner, entry)
-  )
-    return null;
-
-  if (isPushResult(entry.actualWinner)) return 0;
-
-  const dec = americanToDecimal(entry.marketOdds);
-  if (!dec) return null;
-
-  // Stake defaults to 1u when unitsWagered is absent -- true for every entry
-  // saved before this field existed (Alex confirmed all prior entries were
-  // flat 1u). This keeps every historical entry's computed profit identical.
-  const stake = entry.unitsWagered != null ? entry.unitsWagered : 1;
-  return entry.actualWinner === entry.trackedSide ? stake * (dec - 1) : -stake;
-};
-
-// ─── ROI TAB ANALYTICS (read-only aggregation over graded ROI_ENTRIES) ─────────
-// Three chart datasets below reuse the existing pure helpers above
-// (isResolvedWinner, americanToDecimal, calcTrackedProfit, parseAmericanOdds,
-// stripVig) exactly as-is. They only READ entry fields already computed and
-// stored by buildRoiEntry()/the save-prediction flow -- no prediction,
-// probability, or betAction value is computed or altered here.
-//
-// Low-sample threshold: n < 8, matching the ⚠ convention already established in
-// research/v2_calibration_audit.md and research/v2_recalibration_test.md.
-const ROI_ANALYTICS_LOW_N = 8;
-
-// Market-probability bands -- identical boundaries to the "By market band" table
-// in research/v2_calibration_audit.md (raw-implied prob of the relevant side).
-const ROI_MARKET_BANDS = [
-  { name: '<55%', lo: 0, hi: 0.55 },
-  { name: '55-60%', lo: 0.55, hi: 0.60 },
-  { name: '60-65%', lo: 0.60, hi: 0.65 },
-  { name: '65-70%', lo: 0.65, hi: 0.70 },
-  { name: '70-80%', lo: 0.70, hi: 0.80 },
-  { name: '80%+', lo: 0.80, hi: 1.01 },
-];
-
-// V2 self-confidence buckets for the calibration reliability chart.
-const ROI_V2_PROB_BUCKETS = [
-  { name: '50-60%', lo: 0.50, hi: 0.60 },
-  { name: '60-70%', lo: 0.60, hi: 0.70 },
-  { name: '70-80%', lo: 0.70, hi: 0.80 },
-  { name: '80-90%', lo: 0.80, hi: 0.90 },
-  { name: '90%+', lo: 0.90, hi: 1.01 },
-];
-
-const bandOf = (bands, p) => {
-  if (p == null) return null;
-  const hit = bands.find((b) => p >= b.lo && p < b.hi);
-  return hit ? hit.name : null;
-};
-
-// Chart 1 — ROI by market band, on the entry's actual staked (tracked) side.
-// Model-agnostic: uses whatever price/side was actually recorded, same
-// population logic (marketOdds present, resolved winner, not user-rejected)
-// as computeROISummary's `betEntries`.
-function computeRoiByMarketBand(entries) {
-  const staked = entries.filter(
-    (e) =>
-      isResolvedWinner(e.actualWinner, e) &&
-      e.confirmedByUser !== false &&
-      americanToDecimal(e.marketOdds)
-  );
-  const buckets = ROI_MARKET_BANDS.map((b) => ({ ...b, profits: [] }));
-  staked.forEach((e) => {
-    const raw = parseAmericanOdds(e.marketOdds);
-    const name = bandOf(ROI_MARKET_BANDS, raw);
-    if (!name) return;
-    const bucket = buckets.find((b) => b.name === name);
-    const profit = calcTrackedProfit(e);
-    if (profit != null) bucket.profits.push(profit);
-  });
-  return buckets.map((b) => {
-    const n = b.profits.length;
-    return {
-      band: b.name,
-      n,
-      roi: n ? (b.profits.reduce((s, p) => s + p, 0) / n) * 100 : null,
-      lowN: n > 0 && n < ROI_ANALYTICS_LOW_N,
-    };
-  });
-}
-
-// Shared population for charts 2 & 3: entries carrying the FROZEN v2pA/v2pB
-// fields (not live-recomputed), decisive graded outcome only. This mirrors
-// research/v2_calibration_audit.md's basis exactly (same frozen fields, same
-// decisive-only filter) so the live chart is a direct, growing extension of
-// that report's 54-fight window, not a different methodology.
-function roiV2GradedPopulation(entries) {
-  return entries.filter(
-    (e) =>
-      e.v2pA != null &&
-      e.v2pB != null &&
-      (e.actualWinner === e.fighterA || e.actualWinner === e.fighterB)
-  );
-}
-
-// Chart 2 — V2's picked-side actual win rate vs. de-vigged market-implied
-// probability, grouped by market band. Band membership uses RAW implied prob
-// (matches Codex/v2_calibration_audit.md bucket convention); the plotted
-// market-probability value is DE-VIGGED (matches that report's "Market
-// columns scored with de-vig probability" choice).
-//
-// basis='v1' reads the frozen fighterAProb/fighterBProb pair instead of
-// v2pA/v2pB, on the exact same population (buildRoiEntry stores both pairs
-// unconditionally in the same save, so there's no population mismatch).
-// Default ('v2') is byte-identical to this function's original behavior.
-// v2's basis is restricted to _provenance.captureMode === 'live', same
-// reasoning and same population as computeCalibrationReliability below --
-// this chart shares roiV2GradedPopulation with that one and reads the same
-// frozen v2pA/v2pB fields, so it has identical exposure to the 2026-07-12
-// reconstruction (see BASELINE_NOTES.md). v1's basis is untouched.
-function computeModelVsMarketByBand(entries, basis = 'v2') {
-  const pop =
-    basis === 'v2'
-      ? roiV2GradedPopulation(entries).filter((e) => e._provenance?.captureMode === 'live')
-      : roiV2GradedPopulation(entries);
-  const buckets = ROI_MARKET_BANDS.map((b) => ({ ...b, rows: [] }));
-  pop.forEach((e) => {
-    const rawA = parseAmericanOdds(e.oddsA);
-    const rawB = parseAmericanOdds(e.oddsB);
-    if (rawA == null || rawB == null) return;
-    const pA = basis === 'v1' ? e.fighterAProb : e.v2pA;
-    const pB = basis === 'v1' ? e.fighterBProb : e.v2pB;
-    const pickA = pA >= pB;
-    const pickName = pickA ? e.fighterA : e.fighterB;
-    const { noVigA, noVigB } = stripVig(rawA, rawB);
-    const rawPick = pickA ? rawA : rawB;
-    const noVigPick = pickA ? noVigA : noVigB;
-    const name = bandOf(ROI_MARKET_BANDS, rawPick);
-    if (!name) return;
-    buckets
-      .find((b) => b.name === name)
-      .rows.push({ won: e.actualWinner === pickName ? 1 : 0, mktProb: noVigPick });
-  });
-  return buckets.map((b) => {
-    const n = b.rows.length;
-    return {
-      band: b.name,
-      n,
-      actualWinRate: n
-        ? (b.rows.reduce((s, r) => s + r.won, 0) / n) * 100
-        : null,
-      marketImplied: n
-        ? (b.rows.reduce((s, r) => s + r.mktProb, 0) / n) * 100
-        : null,
-      lowN: n > 0 && n < ROI_ANALYTICS_LOW_N,
-    };
-  });
-}
-
-// Chart 3 — calibration reliability: V2's own predicted probability (on its
-// picked side) bucketed, vs. actual win rate in that bucket. `predictedMean`
-// (mean of V2's actual predictions within the bucket, not the bucket's
-// nominal midpoint) doubles as the "perfect calibration" reference series --
-// connecting it across buckets is the bucketed equivalent of a y=x diagonal.
-// basis='v1' reads frozen fighterAProb/fighterBProb instead of v2pA/v2pB, same
-// population and shape as the v2 default. Default is byte-identical to before.
-// v2's basis is restricted to _provenance.captureMode === 'live' -- a
-// reliability curve is a claim about forecasting before the outcome was
-// known, and a meaningful fraction of stored v2pA values were computed
-// after the fact (see BASELINE_NOTES.md, "2026-07-12 reconstruction").
-// v1's fighterAProb history has no equivalent contamination and is left
-// unfiltered, unchanged from this function's original behavior.
-function computeCalibrationReliability(entries, basis = 'v2') {
-  const pop =
-    basis === 'v2'
-      ? roiV2GradedPopulation(entries).filter((e) => e._provenance?.captureMode === 'live')
-      : roiV2GradedPopulation(entries);
-  const buckets = ROI_V2_PROB_BUCKETS.map((b) => ({ ...b, rows: [] }));
-  pop.forEach((e) => {
-    const pA = basis === 'v1' ? e.fighterAProb : e.v2pA;
-    const pB = basis === 'v1' ? e.fighterBProb : e.v2pB;
-    const pickA = pA >= pB;
-    const pickName = pickA ? e.fighterA : e.fighterB;
-    const pickProb = Math.max(pA, pB);
-    const name = bandOf(ROI_V2_PROB_BUCKETS, pickProb);
-    if (!name) return;
-    buckets
-      .find((b) => b.name === name)
-      .rows.push({ won: e.actualWinner === pickName ? 1 : 0, pred: pickProb });
-  });
-  return buckets.map((b) => {
-    const n = b.rows.length;
-    return {
-      bucket: b.name,
-      n,
-      predictedMean: n
-        ? (b.rows.reduce((s, r) => s + r.pred, 0) / n) * 100
-        : null,
-      actualWinRate: n
-        ? (b.rows.reduce((s, r) => s + r.won, 0) / n) * 100
-        : null,
-      lowN: n > 0 && n < ROI_ANALYTICS_LOW_N,
-    };
-  });
-}
-
-// Shared population filter for the Statistics tab charts -- mirrors ROITab's
-// own `displayedEntries` filter (prospect exclusion + Since-date cutoff)
-// without the extra display-only fields ROITab's list rendering needs. Feeds
-// the same three compute* functions above with the same inputs as before;
-// this is the "minimal wiring" the charts' relocation out of ROITab needs.
-function filterRoiEntriesForStats(entries, prospectNameSet, filterSince) {
-  return entries.filter((e) => {
-    const includesProspect =
-      e.includesProspect != null
-        ? e.includesProspect
-        : e.fighterAIsProspect != null
-        ? e.fighterAIsProspect
-        : e.fighterBIsProspect != null
-        ? e.fighterBIsProspect
-        : prospectNameSet.has(e.fighterA) || prospectNameSet.has(e.fighterB);
-    if (includesProspect) return false;
-    if (filterSince && (e.eventDate || '') < filterSince) return false;
-    return true;
-  });
-}
-
-const ROI_BET_TIERS = ['STRONG BET', 'BET', 'LEAN', 'NO BET'];
-
-// Chart 4 — ROI and win rate by bet-action tier (STRONG BET / BET / LEAN /
-// NO BET), including the declined (NO BET) pool.
-//
-// FROZEN: reads each entry's own STORED `betAction` -- the tier is never
-// re-derived from current fighter data (no computeMatchupEdges call, no
-// fighterMap). This makes the chart invariant to how far fighter data has
-// drifted past the fight, at the cost of tier-provenance being mixed:
-// - Live-captured entries (`_provenance.captureMode === 'live'`): `betAction`
-//   was set by the gate at save time, for whichever model (v1/v2) was active
-//   then -- a genuine prediction-time tier.
-// - Reconstructed entries: verified directly against the data (not assumed)
-//   that `betAction`/`trackedSide`/`edge` on these rows equal the ORIGINAL
-//   v1-basis capture (predictedWinner/predictedProb), untouched by the
-//   2026-07-12 v2pA/v2pB backfill -- i.e. this is a v1-era tier, not a
-//   v2-specific gate decision, despite the entry now also carrying v2 fields.
-// See BetTierWinRateChart/BetTierRoiChart captions for the user-facing
-// version of this caveat. Per-entry profit still uses v2's own pick (v2pA/
-// v2pB, frozen, read directly -- not recomputed) at that pick's own price,
-// stake-weighted by unitsWagered, matching every other frozen v2 chart below.
-function computeBetTierBreakdown(entries) {
-  const rows = [];
-  entries.forEach((entry) => {
-    if (!isResolvedWinner(entry.actualWinner, entry)) return;
-    if (isPushResult(entry.actualWinner)) return;
-    if (entry.confirmedByUser === false) return;
-    if (entry.v2pA == null || entry.v2pB == null) return;
-    const tier = entry.betAction;
-    if (!tier) return;
-
-    const v2pick = entry.v2pA >= entry.v2pB ? entry.fighterA : entry.fighterB;
-    const v2odds = v2pick === entry.fighterA
-      ? (entry.oddsA || entry.marketOdds)
-      : (entry.oddsB || entry.marketOdds);
-    const dec = americanToDecimal(v2odds);
-    if (!dec) return;
-    const won = entry.actualWinner === v2pick;
-    const stake = entry.unitsWagered != null ? entry.unitsWagered : 1;
-    const profit = (won ? dec - 1 : -1) * stake;
-
-    rows.push({ tier, won: won ? 1 : 0, profit, stake });
-  });
-
-  return ROI_BET_TIERS.map((tier) => {
-    const tierRows = rows.filter((r) => r.tier === tier);
-    const n = tierRows.length;
-    // ROI must be scaled by units actually risked, not row count -- `n`
-    // stays the displayed tier count, only the roi denominator uses staked
-    // units.
-    const totalStaked = tierRows.reduce((s, r) => s + r.stake, 0);
-    return {
-      tier,
-      n,
-      winRate: n ? (tierRows.reduce((s, r) => s + r.won, 0) / n) * 100 : null,
-      roi: totalStaked ? (tierRows.reduce((s, r) => s + r.profit, 0) / totalStaked) * 100 : null,
-      lowN: n > 0 && n < ROI_ANALYTICS_LOW_N,
-    };
-  });
-}
-
-// Staked/graded population shared by the cumulative P&L chart and monthly
-// table below -- same filter as computeRoiByMarketBand's `staked` (chart 1),
-// duplicated rather than extracted so that function stays untouched.
-function filterStakedGraded(entries) {
-  return entries.filter(
-    (e) =>
-      isResolvedWinner(e.actualWinner, e) &&
-      e.confirmedByUser !== false &&
-      americanToDecimal(e.marketOdds)
-  );
-}
-
-// Cumulative P&L, grouped per-event (not per-month): at current data volume
-// (~6-7 events per Since window) per-event gives a clean multi-point line;
-// per-month would collapse to 2-3 points, too coarse to show a trend.
-// Events are ordered by eventDate; ties (same date) keep ledger order.
-function computeCumulativePnl(entries) {
-  const staked = filterStakedGraded(entries);
-  const byEvent = new Map();
-  staked.forEach((e) => {
-    const key = `${e.eventDate || ''}__${e.eventName || 'Unknown Event'}`;
-    if (!byEvent.has(key)) {
-      byEvent.set(key, { eventDate: e.eventDate || '', eventName: e.eventName || 'Unknown Event', profits: [] });
-    }
-    const profit = calcTrackedProfit(e);
-    if (profit != null) byEvent.get(key).profits.push(profit);
-  });
-  const events = Array.from(byEvent.values()).sort((a, b) =>
-    a.eventDate < b.eventDate ? -1 : a.eventDate > b.eventDate ? 1 : 0
-  );
-  let cumulative = 0;
-  return events.map((ev) => {
-    const eventProfit = ev.profits.reduce((s, p) => s + p, 0);
-    cumulative += eventProfit;
-    return {
-      eventName: ev.eventName,
-      eventDate: ev.eventDate,
-      n: ev.profits.length,
-      eventProfit,
-      cumulative,
-    };
-  });
-}
-
-// Monthly performance table, grouped by event month (YYYY-MM from eventDate).
-function computeMonthlyPerformance(entries) {
-  const staked = filterStakedGraded(entries);
-  const byMonth = new Map();
-  staked.forEach((e) => {
-    const month = (e.eventDate || '').slice(0, 7) || 'Unknown';
-    if (!byMonth.has(month)) byMonth.set(month, []);
-    const profit = calcTrackedProfit(e);
-    const stake = e.unitsWagered != null ? e.unitsWagered : 1;
-    if (profit != null) byMonth.get(month).push({ profit, won: e.actualWinner === e.trackedSide ? 1 : 0, stake });
-  });
-  const months = Array.from(byMonth.keys()).sort();
-  return months.map((month) => {
-    const rows = byMonth.get(month);
-    const n = rows.length;
-    const netUnits = rows.reduce((s, r) => s + r.profit, 0);
-    // ROI must be scaled by units actually risked, not bet count -- `n`
-    // stays the row count (winRate denom, Bets column); `staked` and the
-    // roi denominator use the summed stake. netUnits was already
-    // stake-aware via calcTrackedProfit; only the denominator here was
-    // still a row count.
-    const totalStaked = rows.reduce((s, r) => s + r.stake, 0);
-    return {
-      month,
-      n,
-      winRate: n ? (rows.reduce((s, r) => s + r.won, 0) / n) * 100 : null,
-      staked: totalStaked,
-      netUnits,
-      roi: totalStaked ? (netUnits / totalStaked) * 100 : null,
-    };
-  });
-}
-
-// ─── V2-BASIS VARIANTS (for the Statistics tab's v1/v2 toggle) ────────────
-// FROZEN: every function below reads each entry's own STORED v2pA/v2pB and
-// odds fields. ZERO calls to computeMatchupEdges, ZERO reads of fighterMap/
-// FIGHT_HISTORY/eloModule anywhere in this block. This is a deliberate
-// invariance property, not an optimization: these functions used to LIVE-
-// RECOMPUTE every pick against current fighter data, which was leakage-clean
-// while Greco's scraper lagged every window fight (through 2026-05-16) and
-// silently became contaminated once it caught up (through 2026-07-18) --
-// each fight's own outcome ends up in the ELO/form/record inputs used to
-// "predict" it. See research/source_integrity_audit.md's retired-verdict
-// addendum. Frozen scoring can't drift the same way: the probability used to
-// grade a pick is fixed at whatever was stored for it, never re-derived from
-// whatever fighter data happens to exist at render time.
-//
-// Population note: these functions operate on whatever `entries` they're
-// given -- callers decide whether that's the full window (mixed live +
-// reconstructed, NOT a track record) or the live-only subset (the genuine
-// prospective track record). See StatisticsTab's `summaryV2Live` vs
-// `summaryV2All` split.
-function computeV2FrozenRows(entries) {
-  const rows = [];
-  entries.forEach((entry) => {
-    if (!isResolvedWinner(entry.actualWinner, entry)) return;
-    if (isPushResult(entry.actualWinner)) return;
-    if (!americanToDecimal(entry.marketOdds)) return;
-    if (entry.confirmedByUser === false) return;
-    const v2pA = entry.v2pA;
-    const v2pB = entry.v2pB;
-    if (v2pA == null || v2pB == null) return;
-    const v2pick = v2pA >= v2pB ? entry.fighterA : entry.fighterB;
-    const v2odds = v2pick === entry.fighterA
-      ? (entry.oddsA || entry.marketOdds)
-      : (entry.oddsB || entry.marketOdds);
-    const dec = americanToDecimal(v2odds);
-    if (!dec) return;
-    const won = entry.actualWinner === v2pick;
-    const stake = entry.unitsWagered != null ? entry.unitsWagered : 1;
-    const profit = (won ? dec - 1 : -1) * stake;
-    const rawPick = parseAmericanOdds(v2odds);
-    rows.push({
-      entry, v2pick, won, profit, rawPick, stake,
-      eventName: entry.eventName,
-      eventDate: entry.eventDate,
-    });
-  });
-  return rows;
-}
-
-// Window composition of the v2-scored population -- same rows as
-// computeV2FrozenRows, split by capture provenance. Feeds chart captions so
-// they state the real live/reconstructed makeup of whatever SINCE window is
-// active instead of a number baked in at write time.
-function computeV2WindowComposition(entries) {
-  const rows = computeV2FrozenRows(entries);
-  const liveN = rows.filter((r) => r.entry._provenance?.captureMode === 'live').length;
-  return { n: rows.length, liveN, reconN: rows.length - liveN };
-}
-
-// v2-basis accuracy + ROI summary. FROZEN: pick = argmax(stored v2pA, v2pB),
-// never entry.trackedSide (trackedSide is v1's tracked pick -- for 9 of the
-// 42 reconstructed entries in the default window, v1 and v2 disagree on the
-// pick, so scoring trackedSide would silently grade v1's call on those rows;
-// verified directly against committed data, not assumed). Accuracy is gated
-// to v2-scored entries only (v2pA/v2pB both present) -- the SAME gate
-// computeV2FrozenRows applies for ROI's `bets` population below -- so the two
-// hero numbers share one population and move together under the Since filter
-// instead of accuracy silently grading v1's pick on pre-v2-backfill fights.
-function computeV2Summary(entries) {
-  let gradedCount = 0;
-  let v2Correct = 0;
-  entries.forEach((entry) => {
-    const decisive = entry.actualWinner === entry.fighterA || entry.actualWinner === entry.fighterB;
-    if (!decisive) return;
-    if (entry.v2pA == null || entry.v2pB == null) return;
-    gradedCount++;
-    const winner = entry.v2pA >= entry.v2pB ? entry.fighterA : entry.fighterB;
-    if (winner === entry.actualWinner) v2Correct++;
-  });
-  const rows = computeV2FrozenRows(entries);
-  const bets = rows.length;
-  const profit = rows.reduce((s, r) => s + r.profit, 0);
-  // ROI must be scaled by units actually risked, not bet count -- those are
-  // only the same number when every bet is flat 1u. `bets` stays a row count
-  // (displayed as "on N bets"); only the roi denominator uses totalStaked.
-  const totalStaked = rows.reduce((s, r) => s + r.stake, 0);
-  return {
-    graded: gradedCount,
-    correct: v2Correct,
-    accuracy: gradedCount > 0 ? (v2Correct / gradedCount) * 100 : 0,
-    bets,
-    profit,
-    roi: totalStaked > 0 ? (profit / totalStaked) * 100 : 0,
-  };
-}
-
-// v2-basis variant of Chart 1 (ROI by Market Band): same band scheme, same
-// output shape, but banded by V2's FROZEN pick + its own stored price instead
-// of the tracked/staked side.
-function computeRoiByMarketBandV2(entries) {
-  const rows = computeV2FrozenRows(entries);
-  const buckets = ROI_MARKET_BANDS.map((b) => ({ ...b, profits: [], stakes: [] }));
-  rows.forEach((r) => {
-    const name = bandOf(ROI_MARKET_BANDS, r.rawPick);
-    if (!name) return;
-    const bucket = buckets.find((b) => b.name === name);
-    bucket.profits.push(r.profit);
-    bucket.stakes.push(r.stake);
-  });
-  return buckets.map((b) => {
-    const n = b.profits.length;
-    // ROI must be scaled by units actually risked, not row count -- `n` stays
-    // the displayed band count, only the roi denominator uses staked units.
-    const totalStaked = b.stakes.reduce((s, st) => s + st, 0);
-    return {
-      band: b.name,
-      n,
-      roi: totalStaked ? (b.profits.reduce((s, p) => s + p, 0) / totalStaked) * 100 : null,
-      lowN: n > 0 && n < ROI_ANALYTICS_LOW_N,
-    };
-  });
-}
-
-// v2-basis variant of the cumulative P&L chart: same per-event grouping,
-// same output shape, banded on V2's frozen pick's own profit per entry.
-function computeCumulativePnlV2(entries) {
-  const rows = computeV2FrozenRows(entries);
-  const byEvent = new Map();
-  rows.forEach((r) => {
-    const key = `${r.eventDate || ''}__${r.eventName || 'Unknown Event'}`;
-    if (!byEvent.has(key)) {
-      byEvent.set(key, { eventDate: r.eventDate || '', eventName: r.eventName || 'Unknown Event', profits: [] });
-    }
-    byEvent.get(key).profits.push(r.profit);
-  });
-  const events = Array.from(byEvent.values()).sort((a, b) =>
-    a.eventDate < b.eventDate ? -1 : a.eventDate > b.eventDate ? 1 : 0
-  );
-  let cumulative = 0;
-  return events.map((ev) => {
-    const eventProfit = ev.profits.reduce((s, p) => s + p, 0);
-    cumulative += eventProfit;
-    return {
-      eventName: ev.eventName,
-      eventDate: ev.eventDate,
-      n: ev.profits.length,
-      eventProfit,
-      cumulative,
-    };
-  });
-}
-
-// v2-basis variant of the monthly performance table: same per-month
-// grouping, same output shape, using V2's frozen pick's own outcome/profit.
-function computeMonthlyPerformanceV2(entries) {
-  const rows = computeV2FrozenRows(entries);
-  const byMonth = new Map();
-  rows.forEach((r) => {
-    const month = (r.eventDate || '').slice(0, 7) || 'Unknown';
-    if (!byMonth.has(month)) byMonth.set(month, []);
-    byMonth.get(month).push({ profit: r.profit, won: r.won ? 1 : 0, stake: r.stake });
-  });
-  const months = Array.from(byMonth.keys()).sort();
-  return months.map((month) => {
-    const monthRows = byMonth.get(month);
-    const n = monthRows.length;
-    const netUnits = monthRows.reduce((s, r) => s + r.profit, 0);
-    // ROI must be scaled by units actually risked, not bet count -- `n` stays
-    // the row count (winRate denom, Bets column); `staked` and the roi
-    // denominator use the summed stake.
-    const totalStaked = monthRows.reduce((s, r) => s + r.stake, 0);
-    return {
-      month,
-      n,
-      winRate: n ? (monthRows.reduce((s, r) => s + r.won, 0) / n) * 100 : null,
-      staked: totalStaked,
-      netUnits,
-      roi: totalStaked ? (netUnits / totalStaked) * 100 : null,
-    };
-  });
-}
-
-// Shared XAxis tick renderer: draws the band/bucket label plus its n= count,
-// with a low-n asterisk + amber color when the chart's own data marks lowN.
 function makeBandTick(data) {
   return function BandTick({ x, y, payload }) {
     const row = data[payload?.index];
@@ -2379,7 +1135,7 @@ function StatisticsTab({ entries, prospectNameSet, filterSince, setFilterSince, 
               type="date"
               value={filterSince}
               onChange={e => setFilterSince(e.target.value)}
-              className="bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-1.5 min-h-[44px] sm:min-h-0 focus:outline-none focus:border-red-500"
+              className="bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-1.5 min-h-[44px] sm:min-h-0 sm:h-9 focus:outline-hidden focus:border-red-500"
             />
             {filterSince && (
               <button
@@ -2507,205 +1263,6 @@ const PROP_METHOD_SINGLE = ['KO/TKO', 'Submission', 'Decision'];
 const PROP_METHOD_DOUBLE = ['KO/TKO or Submission', 'KO/TKO or Decision', 'Submission or Decision'];
 const PROP_METHOD_OPTIONS = [...PROP_METHOD_SINGLE, ...PROP_METHOD_DOUBLE];
 
-const isDoubleChance = (method) => (method || '').includes(' or ');
-
-// Human-readable prop label from side + method (round dropped per design).
-// side: 'A' | 'B' | null (null = fight-level). Enumerated combinations:
-//   fighter + single method   -> "{Fighter} wins by {method}"
-//   fighter + double chance    -> "{Fighter} wins by {A} or {B}"
-//     (special: KO/TKO or Submission -> "{Fighter} wins inside the distance")
-//   fight-level + single       -> "Fight Goes to Decision" / "Fight Ends by KO/TKO" / "…by Submission"
-//   fight-level + double chance -> "Fight Ends Inside Distance" / "Fight Ends by {A} or {B}"
-function buildPropLabel({ side, method, fighterA, fighterB }) {
-  const fighterName = side === 'A' ? fighterA : side === 'B' ? fighterB : '';
-  if (fighterName) {
-    if (method === 'KO/TKO or Submission') return `${fighterName} wins inside the distance`;
-    return `${fighterName} wins by ${method}`;
-  }
-  if (method === 'Decision') return 'Fight Goes to Decision';
-  if (method === 'KO/TKO') return 'Fight Ends by KO/TKO';
-  if (method === 'Submission') return 'Fight Ends by Submission';
-  if (method === 'KO/TKO or Submission') return 'Fight Ends Inside Distance';
-  return `Fight Ends by ${method}`;
-}
-
-// Breakdown bucket for the Statistics by-type table. Covers every side×method
-// combination cleanly, with no combination landing somewhere misleading:
-//   fighter + single -> "Method of Victory"
-//   fighter + double -> "Double Chance"
-//   fight-level      -> "Fight Outcome"
-function propTypeOf({ side, method }) {
-  const fighterLevel = side === 'A' || side === 'B';
-  if (fighterLevel) return isDoubleChance(method) ? 'Double Chance' : 'Method of Victory';
-  return 'Fight Outcome';
-}
-
-// Mirrors isResolvedWinner's role for model stats: PENDING props are
-// excluded from every prop statistic (count, win rate, staked, ROI), not
-// just win rate/ROI's denominators. Unlike roiEntries (which reach the ROI
-// array only by being graded), propPicks now routinely holds long-lived
-// PENDING rows while they sit in the Upcoming tab, so "total" must be
-// graded-only here rather than "everything in the array".
-function computePropSummary(picks) {
-  const graded = picks.filter((p) => p.result === 'WON' || p.result === 'LOST' || p.result === 'PUSH');
-  const decisive = graded.filter((p) => p.result === 'WON' || p.result === 'LOST');
-  const wins = decisive.filter((p) => p.result === 'WON').length;
-  let staked = 0;
-  let netUnits = 0;
-  graded.forEach((p) => {
-    const stake = Number(p.stake) || 1;
-    if (p.result === 'PUSH') {
-      staked += stake;
-      return;
-    }
-    const dec = americanToDecimal(p.odds);
-    if (!dec) return;
-    staked += stake;
-    netUnits += p.result === 'WON' ? stake * (dec - 1) : -stake;
-  });
-  return {
-    total: graded.length,
-    graded: graded.length,
-    wins,
-    winRate: decisive.length ? (wins / decisive.length) * 100 : 0,
-    staked,
-    netUnits,
-    roi: staked > 0 ? (netUnits / staked) * 100 : 0,
-  };
-}
-
-// Per-type breakdown for the Statistics prop section: count / win rate /
-// staked / net units per prop type. PENDING props excluded entirely (same
-// reasoning as computePropSummary above) -- count reflects graded picks only.
-function computePropTypeBreakdown(picks) {
-  const byType = new Map();
-  const ensure = (type) => {
-    if (!byType.has(type)) byType.set(type, { type, count: 0, decisive: 0, wins: 0, staked: 0, netUnits: 0 });
-    return byType.get(type);
-  };
-  picks
-    .filter((p) => p.result === 'WON' || p.result === 'LOST' || p.result === 'PUSH')
-    .forEach((p) => {
-      const b = ensure(p.propType || propTypeOf(p));
-      b.count += 1;
-      const stake = Number(p.stake) || 1;
-      b.staked += stake;
-      if (p.result === 'PUSH') return;
-      b.decisive += 1;
-      if (p.result === 'WON') {
-        b.wins += 1;
-        const dec = americanToDecimal(p.odds);
-        if (dec) b.netUnits += stake * (dec - 1);
-      } else {
-        b.netUnits -= stake;
-      }
-    });
-  return [...byType.values()]
-    .map((b) => ({ ...b, winRate: b.decisive ? (b.wins / b.decisive) * 100 : 0 }))
-    .sort((a, b) => b.count - a.count);
-}
-
-// A single prop-pick payout in units. Positive on a win, negative on a loss,
-// 0 for push/pending. Same americanToDecimal math as computePropSummary.
-function propPickProfit(pick) {
-  if (pick.result !== 'WON' && pick.result !== 'LOST') return 0;
-  const stake = Number(pick.stake) || 1;
-  if (pick.result === 'LOST') return -stake;
-  const dec = americanToDecimal(pick.odds);
-  return dec ? stake * (dec - 1) : 0;
-}
-
-// ─── PARLAYS -- Alex's manual, multi-fight bet grading ────────────────────
-// Derived, read-only grading: computeParlayResult never mutates parlayEntries
-// or roiEntries. It reads roiEntries ONLY to resolve each leg's actual winner
-// (the one-directional read the isolation design allows -- see the
-// parlayData.js header comment) and returns a plain result object; nothing
-// here writes back into roiEntries, and no model/Statistics function
-// (computeV2Summary, computeV2FrozenRows, filterRoiEntriesForStats,
-// computeROISummary) is ever called with parlay data.
-//
-// Mirrors props' "grading is a filtered view" design: a parlay's current
-// grading state is recomputed fresh every time it's needed (the Parlays
-// sub-tab, added in a later commit), the same way PROP_PICKS's "pending"
-// list is just `picks.filter(p => p.result === 'PENDING')` rather than a
-// migrated array -- no useEffect writes the derived result back onto
-// parlayEntries. The parlay object's OWN `status`/`result` fields (set to
-// 'PENDING'/null at build time in the Build Parlay modal) exist for the
-// exported parlayData.js file -- what "Copy Updated parlayData.js" snapshots
-// so a re-imported file still displays something sane without roiEntries to
-// derive against between sessions. At runtime this function's return value
-// is authoritative and the stored fields are never overwritten by it; a
-// future commit could push a fresh status/result onto the entry right before
-// export (mirroring how ROI/Upcoming entries get real fields written on
-// grade), but that's an explicit, user-triggered write, never a render-time
-// side effect.
-function computeParlayResult(parlay, roiEntries) {
-  const roiById = new Map(roiEntries.map((e) => [e.id, e]));
-  const legResults = parlay.legs.map((leg) => {
-    const roiEntry = roiById.get(leg.fightId);
-    if (!roiEntry || !isResolvedWinner(roiEntry.actualWinner, roiEntry)) {
-      return { fightId: leg.fightId, resolved: false, pushed: false, correct: null };
-    }
-    const pushed = isPushResult(roiEntry.actualWinner);
-    const correct = pushed ? null : roiEntry.actualWinner === leg.pickedFighter;
-    return { fightId: leg.fightId, resolved: true, pushed, correct };
-  });
-
-  const totalLegs = legResults.length;
-  const resolvedLegs = legResults.filter((l) => l.resolved).length;
-  if (resolvedLegs !== totalLegs) {
-    return { status: 'PENDING', result: null, resolvedLegs, totalLegs, legResults };
-  }
-
-  if (legResults.some((l) => l.pushed)) {
-    return { status: 'GRADED', result: 'NEEDS_REVIEW', resolvedLegs, totalLegs, legResults };
-  }
-
-  const allCorrect = legResults.every((l) => l.correct === true);
-  return {
-    status: 'GRADED',
-    result: allCorrect ? 'WIN' : 'LOSS',
-    resolvedLegs,
-    totalLegs,
-    legResults,
-  };
-}
-
-// Parlay aggregate for the Parlays sub-tab. Mirrors computePropSummary's
-// shape/rounding, but the population is GRADED (WIN/LOSS) parlays only --
-// PENDING (via computeParlayResult) and NEEDS_REVIEW are both excluded from
-// every stat here, same as PENDING props are excluded from computePropSummary.
-// NEEDS_REVIEW must never fall into the LOSS bucket by omission -- the
-// `!= 'WIN' && != 'LOSS'` skip below is what keeps it out.
-function computeParlaySummary(parlayEntries, roiEntries) {
-  let graded = 0;
-  let wins = 0;
-  let staked = 0;
-  let netUnits = 0;
-  parlayEntries.forEach((parlay) => {
-    const derived = computeParlayResult(parlay, roiEntries);
-    if (derived.result !== 'WIN' && derived.result !== 'LOSS') return;
-    graded += 1;
-    const stake = Number(parlay.unitsWagered) || 1;
-    staked += stake;
-    if (derived.result === 'WIN') {
-      wins += 1;
-      const dec = americanToDecimal(parlay.combinedOdds);
-      if (dec) netUnits += stake * (dec - 1);
-    } else {
-      netUnits -= stake;
-    }
-  });
-  return {
-    graded,
-    wins,
-    winRate: graded ? (wins / graded) * 100 : 0,
-    staked,
-    netUnits,
-    roi: staked > 0 ? (netUnits / staked) * 100 : 0,
-  };
-}
-
 // Export-string builders -- one definition each, called from both
 // UpcomingEventTab and ROITab so every sub-tab that displays a data type also
 // has a "Copy Updated ...File.js" button, without duplicating the
@@ -2726,7 +1283,7 @@ const PROP_RESULT_OPTIONS = [
 ];
 
 const PROP_INPUT_CLS =
-  'w-full bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-red-500';
+  'w-full bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:outline-hidden focus:border-red-500';
 const PROP_LABEL_CLS =
   'text-slate-500 text-xs font-semibold uppercase tracking-wider block mb-1.5';
 
@@ -2822,7 +1379,7 @@ function PropEntryForm({
               type="date"
               value={manualEventDate}
               onChange={(e) => setManualEventDate(e.target.value)}
-              className={PROP_INPUT_CLS}
+              className={`${PROP_INPUT_CLS} h-10`}
             />
           </div>
           <div>
@@ -2999,7 +1556,7 @@ function PendingPropsSection({ picks, onGrade, onDelete, manualOpen, onToggleMan
                   <select
                     value={pick.result}
                     onChange={(e) => onGrade(pick.id, e.target.value)}
-                    className="bg-slate-800 border border-slate-700 text-slate-200 text-xs rounded-lg px-2 py-1.5 focus:outline-none focus:border-red-500 cursor-pointer"
+                    className="bg-slate-800 border border-slate-700 text-slate-200 text-xs rounded-lg px-2 py-1.5 focus:outline-hidden focus:border-red-500 cursor-pointer"
                   >
                     {PROP_RESULT_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
                   </select>
@@ -3070,7 +1627,7 @@ function PropBetsPanel({ picks, onGrade, onDelete }) {
                     <select
                       value={pick.result}
                       onChange={(e) => onGrade(pick.id, e.target.value)}
-                      className="hidden sm:inline-block bg-slate-800 border border-slate-700 text-slate-200 text-xs rounded-lg px-2 py-1.5 focus:outline-none focus:border-red-500 cursor-pointer"
+                      className="hidden sm:inline-block bg-slate-800 border border-slate-700 text-slate-200 text-xs rounded-lg px-2 py-1.5 focus:outline-hidden focus:border-red-500 cursor-pointer"
                     >
                       {PROP_RESULT_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
                     </select>
@@ -3452,143 +2009,6 @@ function ParlayStatsSection({ parlayEntries, roiEntries }) {
 
 // Single source of truth for ROI summary math.
 // Called once in App() via useMemo; result passed as prop to HomeTab and ROITab.
-function computeROISummary(entries, prospectNameSet) {
-  const resolveProspect = (e) =>
-    e.includesProspect != null
-      ? e.includesProspect
-      : e.fighterAIsProspect != null
-      ? e.fighterAIsProspect
-      : e.fighterBIsProspect != null
-      ? e.fighterBIsProspect
-      : prospectNameSet.has(e.fighterA) || prospectNameSet.has(e.fighterB);
-  const graded = entries.filter((e) => isResolvedWinner(e.actualWinner, e));
-  const gradedStats = graded.filter((e) => !resolveProspect(e) && e.confirmedByUser !== false);
-  const decisive = gradedStats.filter(
-    (e) => e.actualWinner === e.fighterA || e.actualWinner === e.fighterB
-  );
-  const correct = decisive.filter((e) => e.predictedWinner === e.actualWinner).length;
-  const betEntries = gradedStats.filter((e) => Boolean(americanToDecimal(e.marketOdds)));
-  const profit = betEntries.reduce((sum, e) => sum + (calcTrackedProfit(e) ?? 0), 0);
-  // ROI must be scaled by units actually risked, not bet count -- those are
-  // only the same number when every bet is flat 1u. unitsWagered defaults to
-  // 1 for every entry that predates this field, so totalStaked === bets.length
-  // for all historical data (identical ROI% to before this change).
-  const totalStaked = betEntries.reduce(
-    (sum, e) => sum + (e.unitsWagered != null ? e.unitsWagered : 1),
-    0
-  );
-  return {
-    total: entries.filter((e) => !resolveProspect(e) && e.confirmedByUser !== false).length,
-    graded: gradedStats.length,
-    correct,
-    accuracy: decisive.length ? (correct / decisive.length) * 100 : 0,
-    bets: betEntries.length,
-    profit,
-    roi: totalStaked > 0 ? (profit / totalStaked) * 100 : 0,
-  };
-}
-
-function sortHistoryDesc(history) {
-  return [...(history || [])].sort((a, b) => {
-    const aTime = a?.dt ? new Date(a.dt).getTime() : 0;
-    const bTime = b?.dt ? new Date(b.dt).getTime() : 0;
-    return bTime - aTime;
-  });
-}
-
-function getResultStreak(history, target) {
-  let streak = 0;
-  for (const fight of history || []) {
-    if (fight.re !== target) break;
-    streak += 1;
-  }
-  return streak;
-}
-
-function isDecisionMethod(method = '') {
-  const m = String(method).toLowerCase().trim();
-  return (
-    m.startsWith('dec') ||
-    m === 'u-dec' ||
-    m === 's-dec' ||
-    m === 'm-dec' ||
-    m.includes('decision')
-  );
-}
-
-function isKoMethod(method = '') {
-  const m = String(method).toLowerCase().trim();
-
-  if (!m) return false;
-  if (isSubMethod(m) || isDecisionMethod(m)) return false;
-
-  return (
-    m === 'ko' ||
-    m === 'tko' ||
-    m === 'tko-dr' ||
-    m.includes('ko/tko') ||
-    m.includes(' tko') ||
-    m.startsWith('tko') ||
-    m === 'doctor stoppage' ||
-    m === 'corner stoppage' ||
-    m.includes('doctor stoppage') ||
-    m.includes('corner stoppage') ||
-    m.includes('retirement') ||
-    m.includes('punch') ||
-    m.includes('punches') ||
-    m.includes('elbow') ||
-    m.includes('elbows') ||
-    m.includes('knee') ||
-    m.includes('knees') ||
-    m.includes('kick') ||
-    m.includes('head kick') ||
-    m.includes('body kick') ||
-    m.includes('leg kick') ||
-    m.includes('spinning back fist')
-  );
-}
-
-function isSubMethod(method = '') {
-  const m = String(method).toLowerCase().trim();
-
-  if (!m) return false;
-  if (isDecisionMethod(m)) return false;
-
-  return (
-    m === 'sub' ||
-    m.includes('submission') ||
-    m.includes('choke') ||
-    m.includes('rear naked choke') ||
-    m.includes('guillotine') ||
-    m.includes('triangle') ||
-    m.includes('arm triangle') ||
-    m.includes('anaconda') ||
-    m.includes('darce') ||
-    m.includes('brabo') ||
-    m.includes('bulldog choke') ||
-    m.includes('von flue') ||
-    m.includes('north-south choke') ||
-    m.includes('armbar') ||
-    m.includes('kimura') ||
-    m.includes('americana') ||
-    m.includes('omoplata') ||
-    m.includes('kneebar') ||
-    m.includes('heel hook') ||
-    m.includes('toe hold') ||
-    m.includes('calf slicer') ||
-    m.includes('twister') ||
-    m.includes('lock')
-  );
-}
-
-const kellyFraction = (modelProb, decimalOdds) => {
-  // Kelly = (bp - q) / b where b = decimal - 1, p = prob, q = 1-p
-  const b = decimalOdds - 1;
-  if (b <= 0) return 0;
-  const f = (b * modelProb - (1 - modelProb)) / b;
-  return Math.max(0, f);
-};
-
 const fmtHeight = (i) => (i ? `${Math.floor(i / 12)}' ${i % 12}"` : '—');
 const fmtReach = (r) => (r ? `${r}"` : '—');
 const fmtCtrl = (s) => {
@@ -3602,92 +2022,6 @@ const stanceColor = (s) =>
     ? 'text-purple-400'
     : 'text-slate-300';
 
-const getDebutProspectAdjustment = (fighter, opponent) => {
-  const isDebutProspect =
-    !!fighter?.IS_PROSPECT && (fighter?.MODEL_UFC_FIGHT_COUNT ?? fighter?.UFC_FIGHT_COUNT ?? 0) <= 0;
-  if (!isDebutProspect) {
-    return {
-      isDebutProspect: false,
-      severeVeteranSpot: false,
-      translationRisk: 0,
-      resumeTrust: 1,
-      finishTrust: 1,
-      analyticsTrust: 1,
-      ageTrust: 1,
-      qualityPenalty: 0,
-      directPenalty: 0,
-    };
-  }
-
-  const tierBase =
-    fighter.PROSPECT_TIER === 'tier1' ? 0.35 :
-    fighter.PROSPECT_TIER === 'tier2' ? 0.28 :
-    0.13;
-  const winPctBonus  = (fighter.WIN_PCT     ?? 0) / 100 * 0.10;
-  const finishBonus  = (fighter.FINISH_RATE ?? 0) / 100 * 0.10;
-  const winsBonus    = Math.min(fighter.WINS ?? 0, 15) / 15 * 0.07;
-  const sourceBonus  =
-    fighter.PROSPECT_SOURCE === 'dwcs' ? 0.08 :
-    fighter.PROSPECT_SOURCE === 'tuf'  ? 0.04 :
-    0;
-  const sampleTrust = fighter.PROSPECT_CONFIDENCE ?? 0.30;
-  const prospectConfidence = clampNum(
-    tierBase + (winPctBonus + finishBonus + winsBonus + sourceBonus) * sampleTrust,
-    0.08,
-    0.72
-  );
-  const opponentFightCount =
-    opponent?.MODEL_UFC_FIGHT_COUNT ?? opponent?.UFC_FIGHT_COUNT ?? 0;
-  const opponentDeepRounds =
-    opponent?.MODEL_DEEP_ROUNDS ?? opponent?.DEEP_ROUNDS ?? 0;
-  const opponentCredibility = clampNum(
-    (opponent?.CREDIBILITY ?? 50) / 100,
-    0,
-    1
-  );
-
-  const translationRisk = clampNum(
-    (1 - prospectConfidence) * 0.42 +
-      clampNum(opponentFightCount / 15, 0, 1) * 0.38 +
-      clampNum(opponentDeepRounds / 12, 0, 1) * 0.12 +
-      opponentCredibility * 0.08,
-    0,
-    0.95
-  );
-
-  const severeVeteranSpot =
-    opponentFightCount >= 8 || (opponentFightCount >= 5 && opponentDeepRounds >= 5);
-
-  return {
-    isDebutProspect: true,
-    severeVeteranSpot,
-    translationRisk,
-    resumeTrust: clampNum(1 - translationRisk * 0.72, 0.18, 1),
-    finishTrust: clampNum(1 - translationRisk * 0.78, 0.14, 1),
-    analyticsTrust: clampNum(1 - translationRisk * 0.56, 0.32, 1),
-    ageTrust: clampNum(1 - translationRisk * 0.62, 0.24, 1),
-    qualityPenalty: parseFloat(
-      (0.2 + translationRisk * (severeVeteranSpot ? 1.1 : 0.75)).toFixed(2)
-    ),
-    directPenalty: parseFloat(
-      (translationRisk * (severeVeteranSpot ? 0.52 : 0.3)).toFixed(3)
-    ),
-  };
-};
-
-const ageDecayPenalty = (f) => {
-  const age = f.AGE;
-  if (!age || age < 35) return 0;
-  // Heavier divisions lose athleticism faster — scale by weight class
-  const divMultiplier = (() => {
-    const wc = f.WEIGHT_CLASS || '';
-    if (wc === 'Heavyweight' || wc === 'Light Heavyweight') return 1.4;
-    if (wc === 'Middleweight' || wc === 'Welterweight') return 1.1;
-    return 1.0; // lighter divisions
-  })();
-  const base = age >= 40 ? 0.12 : age >= 38 ? 0.08 : age >= 36 ? 0.05 : 0.02;
-  return Math.min(0.18, base * divMultiplier);
-};
 const methodColor = (m) => {
   if (!m) return 'text-slate-400';
   if (m === 'KO' || m === 'TKO-Dr') return 'text-red-400';
@@ -3695,1207 +2029,8 @@ const methodColor = (m) => {
   if (m.startsWith('Dec')) return 'text-blue-400';
   return 'text-slate-400';
 };
-const recentForm = (fh) => {
-  if (!fh || !fh.length) return [];
-  return fh.slice(0, 5).map((f) => f.re);
-};
-
-// ─── MODEL WEIGHTS ────────────────────────────────────────────────────────────
-// DrossPom Composite v1.0 — domain-engineered linear scoring model.
-// Feature weights are informed by XGBoost importance rankings trained on
-// 7,177 UFC fights (2010–2026) but the live app runs a transparent composite,
-// not an exported XGBoost booster.
-//
-// NOTE: The in-app backtest uses current career stats, not point-in-time
-// pre-fight snapshots. Results are diagnostic only — not validated accuracy.
-
 export const MODEL_VERSION = 'DrossPom Composite v1.0 · Logistic v2.0';
 
-const MODEL = {
-  // Feature weights (normalized, sum to 1)
-  W_NO: {
-    win_streak_dif: 0.077696,
-    avg_td_dif: 0.068343,
-    sig_str_dif: 0.063872,
-    R_avg_SIG_STR_pct: 0.058393,
-    total_round_dif: 0.056274,
-    elo_dif: 0.055311,
-    B_avg_SIG_STR_pct: 0.048587,
-    loss_dif: 0.04606,
-    height_dif: 0.044978,
-    cardio_dif: 0.044775,
-    R_avg_TD_pct: 0.043259,
-    lose_streak_dif: 0.042474,
-    avg_sub_att_dif: 0.04195,
-    age_dif: 0.041496,
-    layoff_dif: 0.041283,
-    reach_dif: 0.03988,
-    B_avg_TD_pct: 0.039716,
-    ko_dif: 0.039261,
-    win_dif: 0.03834,
-    total_title_bout_dif: 0.036427,
-    sub_dif: 0.031623,
-  },
-  // Sigmoid probability mapping: p = [sigmoid(a·c+b) + sigmoid(a·c−b)] / 2
-  // Recalibrated on stored backtest composite/outcome pairs (3,380 fights):
-  // slope steepened (the prior 1.6096 was underconfident, monotonic) and the
-  // red-corner intercept dropped to 0 (slot assignment is arbitrary live).
-  // Validated ~0.004 full / walk-forward ~0.007 log-loss improvement.
-  SIGMOID_MAP: { a: 2.0, b: 0 },
-  // Normalization scales (1 std of each differential feature)
-  // Used to put all features on the same scale before weighting
-  SCALES: {
-    sig_str_dif: 15.8,
-    avg_sig_str_pct_dif: 0.1,
-    avg_td_dif: 1.4,
-    avg_td_pct_dif: 0.23,
-    avg_sub_att_dif: 0.7,
-    control_time_dif: 18,
-    reach_dif: 10.8,
-    height_dif: 9.1,
-    age_dif: 4.3,
-    win_streak_dif: 1.4,
-    lose_streak_dif: 1.0,
-    win_dif: 4.4,
-    loss_dif: 2.7,
-    total_round_dif: 17.0,
-    total_title_bout_dif: 1.4,
-    ko_dif: 2.0,
-    sub_dif: 1.4,
-    elo_dif: 49.6,
-    layoff_dif: 200,
-    cardio_dif: 0.24,
-    peak_elo_dif: 55,
-    ufc_fight_count_dif: 8,
-    rank_tier_dif: 0.25,
-    atd_dif: 0.15,
-    kd_dif: 0.025,
-  },
-};
-
-// ─── MODEL_V2: learned logistic (live default model) ──────────────────────────
-// Coefficients originally standardized from model_artifact.json (logistic_v1_
-// 20260625), then modified in-place — see the coef block below for the 2026-07-07
-// through 2026-07-09 changes. Imputer medians and scaler means are all 0 (symmetric
-// training), so the only transform needed is: scaled = rawDiff / scale, then dot
-// with standardized coef.
-// NOTE: the artifact's 18th feature `longest_streak` is omitted — it is not stored
-// in fightersData.js — so this 17-feature port differs from the artifact's 70.15%
-// test accuracy. This is the LIVE DEFAULT model (MODEL_VERSION "· Logistic v2.0"):
-// its output feeds v2pA/v2pB, the active-model toggle, and the bet layer.
-const MODEL_V2 = {
-  version: "logistic_v2.0_20260709",
-  features: ["modern_form","wins","losses","rounds","title_bouts","ko_wins","sub_wins","height","reach","younger","sig_str_landed","sig_str_accuracy","sub_attempts","td_landed","td_accuracy","elo"],
-  scales: {
-    modern_form: 0.343, wins: 5.105, losses: 3.721,
-    rounds: 23.105, title_bouts: 1.749, ko_wins: 2.446, sub_wins: 2.101,
-    height: 6.257, reach: 8.941, younger: 5.256, sig_str_landed: 2.137,
-    sig_str_accuracy: 0.128, sub_attempts: 1.036, td_landed: 1.974,
-    td_accuracy: 0.312, elo: 1.072
-  },
-  coef: {
-    // RED features zeroed 2026-07-07: wins/losses/ko_wins/sub_wins/title_bouts
-    // had inverted outcome correlations (same issue that caused v1 to zero
-    // win_dif); out-of-sample (42 graded fights) confirmed removing them helps.
-    // win_streak/lose_streak replaced 2026-07-08 with modern_form (exp-weighted
-    // last-8 win rate + finish-loss/layoff penalties) — 42-fight OOS confirmed
-    // v2 64.3% -> 66.7% with zero regressions; see BASELINE_NOTES.md.
-    younger: 0.274, elo: 0.246, sig_str_landed: 0.243, td_landed: 0.224,
-    wins: 0, sig_str_accuracy: 0.193, modern_form: 0.175,
-    sub_attempts: 0.155, losses: 0, rounds: 0.105,
-    title_bouts: 0, sub_wins: 0, reach: 0.073,
-    ko_wins: 0, height: 0.060, td_accuracy: 0.049
-  }
-};
-
-// [MODEL-ADJACENT] contributions is additive only -- captures each term
-// before summing instead of discarding it. Same array, same left-to-right
-// iteration order a .reduce() over MODEL_V2.features would walk, so
-// floating-point rounding is identical at every step and logit/pA/pB are
-// bit-identical to the prior reduce-only implementation. Proven across
-// 280,552 real same-division pairs (0 mismatches) -- rerun with
-// node scripts/verify_v2_contribution_bitproof.js. SCALES is read-only here.
-const computeLogisticProb = (featsV2) => {
-  const contributions = {};
-  let logit = 0;
-  for (const k of MODEL_V2.features) {
-    const c = (featsV2[k] / MODEL_V2.scales[k]) * MODEL_V2.coef[k];
-    contributions[k] = c;
-    logit += c;
-  }
-  const pA = 1 / (1 + Math.exp(-logit));
-  return { pA, pB: 1 - pA, contributions };
-};
-
-// ─── PREDICTION ENGINE ────────────────────────────────────────────────────────
-// DrossPom Composite v1.0 — transparent linear scoring model.
-// Computes win probability for fA vs fB using domain-engineered feature
-// differentials. Weights are informed by XGBoost importance rankings but this
-// is a composite model, not a live XGBoost booster.
-//
-// Probability = sigmoid(a * composite + b)
-// Odds do NOT affect win probability. They are used only in the betting layer.
-
-const computeMatchupEdges = (fA, fB) => {
-  const S = MODEL.SCALES;
-  const debutAdjA = getDebutProspectAdjustment(fA, fB);
-  const debutAdjB = getDebutProspectAdjustment(fB, fA);
-  const agePenA = ageDecayPenalty(fA);
-  const agePenB = ageDecayPenalty(fB);
-
-  // Discount striking stats for fighters on losing streaks so high-volume
-  // output in losses does not overstate current offensive strength.
-  const formDecay = (ls) => Math.max(0.8, 1 - Math.min(ls ?? 0, 3) * 0.07);
-  const loseStreakA = fA.MODEL_UFC_LOSE_STREAK ?? fA.LOSE_STREAK ?? 0;
-  const loseStreakB = fB.MODEL_UFC_LOSE_STREAK ?? fB.LOSE_STREAK ?? 0;
-  const winStreakA = fA.MODEL_UFC_WIN_STREAK ?? fA.WIN_STREAK ?? 0;
-  const winStreakB = fB.MODEL_UFC_WIN_STREAK ?? fB.WIN_STREAK ?? 0;
-  const divA = DIVISION_UFC_AVERAGES[fA.WEIGHT_CLASS] ?? {};
-  const divB = DIVISION_UFC_AVERAGES[fB.WEIGHT_CLASS] ?? {};
-  const totalMinA = fA.TOTAL_MIN ?? 0;
-  const totalMinB = fB.TOTAL_MIN ?? 0;
-  // Blend a fighter's observed stat toward the division mean when sample is small
-  const sampleBlend = (stat, divMean, totalMin) => {
-    const w = Math.min(1.0, totalMin / 75);
-    return w * stat + (1 - w) * divMean;
-  };
-  const aslA =
-    sampleBlend(fA.ASL ?? 0, divA.asl ?? 3.5, totalMinA) *
-    formDecay(loseStreakA) *
-    (debutAdjA.isDebutProspect ? debutAdjA.analyticsTrust : 1);
-  const aslB =
-    sampleBlend(fB.ASL ?? 0, divB.asl ?? 3.5, totalMinB) *
-    formDecay(loseStreakB) *
-    (debutAdjB.isDebutProspect ? debutAdjB.analyticsTrust : 1);
-  const aspA =
-    sampleBlend(fA.ASP ?? 0, divA.asp ?? 0.44, totalMinA) *
-    (0.6 + 0.4 * formDecay(loseStreakA)) *
-    (debutAdjA.isDebutProspect ? (0.82 + debutAdjA.analyticsTrust * 0.18) : 1);
-  const aspB =
-    sampleBlend(fB.ASP ?? 0, divB.asp ?? 0.44, totalMinB) *
-    (0.6 + 0.4 * formDecay(loseStreakB)) *
-    (debutAdjB.isDebutProspect ? (0.82 + debutAdjB.analyticsTrust * 0.18) : 1);
-  const atlA = sampleBlend(fA.ATL ?? 0, divA.atl ?? 1.0, totalMinA);
-  const atlB = sampleBlend(fB.ATL ?? 0, divB.atl ?? 1.0, totalMinB);
-  const atpA = sampleBlend(fA.ATP ?? 0, divA.atp ?? 0.35, totalMinA);
-  const atpB = sampleBlend(fB.ATP ?? 0, divB.atp ?? 0.35, totalMinB);
-  const atdA = sampleBlend(fA.ATD ?? 0.60, 0.60, totalMinA);
-  const atdB = sampleBlend(fB.ATD ?? 0.60, 0.60, totalMinB);
-  const asaA = sampleBlend(fA.ASA ?? 0, divA.asa ?? 0.25, totalMinA);
-  const asaB = sampleBlend(fB.ASA ?? 0, divB.asa ?? 0.25, totalMinB);
-  const winsA = fA.MODEL_UFC_WINS ?? fA.WINS ?? 0;
-  const winsB = fB.MODEL_UFC_WINS ?? fB.WINS ?? 0;
-  const lossesA = fA.MODEL_UFC_LOSSES ?? fA.LOSSES ?? 0;
-  const lossesB = fB.MODEL_UFC_LOSSES ?? fB.LOSSES ?? 0;
-  const roundsA = fA.MODEL_TOTAL_ROUNDS ?? fA.TOTAL_ROUNDS ?? 0;
-  const roundsB = fB.MODEL_TOTAL_ROUNDS ?? fB.TOTAL_ROUNDS ?? 0;
-  const deepRoundsA = fA.MODEL_DEEP_ROUNDS ?? fA.DEEP_ROUNDS ?? 0;
-  const deepRoundsB = fB.MODEL_DEEP_ROUNDS ?? fB.DEEP_ROUNDS ?? 0;
-  const titleBoutsA = fA.MODEL_TITLE_BOUTS ?? fA.TITLE_BOUTS ?? 0;
-  const titleBoutsB = fB.MODEL_TITLE_BOUTS ?? fB.TITLE_BOUTS ?? 0;
-  const koWinsA = fA.MODEL_KO_WINS ?? fA.KO_WINS ?? 0;
-  const koWinsB = fB.MODEL_KO_WINS ?? fB.KO_WINS ?? 0;
-  const subWinsA = fA.MODEL_SUB_WINS ?? fA.SUB_WINS ?? 0;
-  const subWinsB = fB.MODEL_SUB_WINS ?? fB.SUB_WINS ?? 0;
-  const ufcFightCountA = fA.MODEL_UFC_FIGHT_COUNT ?? fA.UFC_FIGHT_COUNT ?? 0;
-  const ufcFightCountB = fB.MODEL_UFC_FIGHT_COUNT ?? fB.UFC_FIGHT_COUNT ?? 0;
-  const neutralLosses = debutAdjA.isDebutProspect || debutAdjB.isDebutProspect;
-  const effectiveLossesA = neutralLosses ? 0 : lossesA;
-  const effectiveLossesB = neutralLosses ? 0 : lossesB;
-  const effectiveKoWinsA = koWinsA * debutAdjA.finishTrust;
-  const effectiveKoWinsB = koWinsB * debutAdjB.finishTrust;
-  const effectiveSubWinsA = subWinsA * debutAdjA.finishTrust;
-  const effectiveSubWinsB = subWinsB * debutAdjB.finishTrust;
-  const effectiveEloA =
-    1500 + ((fA.ELO ?? 1500) - 1500) * debutAdjA.analyticsTrust;
-  const effectiveEloB =
-    1500 + ((fB.ELO ?? 1500) - 1500) * debutAdjB.analyticsTrust;
-  const effectiveCardioA =
-    1 + ((fA.CARDIO_RATIO ?? 1) - 1) * debutAdjA.analyticsTrust;
-  const effectiveCardioB =
-    1 + ((fB.CARDIO_RATIO ?? 1) - 1) * debutAdjB.analyticsTrust;
-  const effectiveQualMomA =
-    (fA.QUALITY_MOMENTUM ?? 0) - debutAdjA.qualityPenalty;
-  const effectiveQualMomB =
-    (fB.QUALITY_MOMENTUM ?? 0) - debutAdjB.qualityPenalty;
-  let ageDiff =
-    ((fB.AGE ?? 30) - (fA.AGE ?? 30)) / S.age_dif;
-  if (debutAdjA.isDebutProspect && ageDiff > 0) ageDiff *= debutAdjA.ageTrust;
-  if (debutAdjB.isDebutProspect && ageDiff < 0) ageDiff *= debutAdjB.ageTrust;
-
-  // ── Compute each raw differential ──────────────────────────────────────────
-  const feats = {
-    sig_str_dif: (aslA - aslB) / S.sig_str_dif,
-    avg_sig_str_pct_dif: (aspA - aspB) / S.avg_sig_str_pct_dif,
-    avg_td_dif: (atlA - atlB) / S.avg_td_dif,
-    avg_td_pct_dif: (atpA - atpB) / S.avg_td_pct_dif,
-    atd_dif: (atdA - atdB) / S.atd_dif,
-    avg_sub_att_dif: (asaA - asaB) / S.avg_sub_att_dif,
-    kd_dif: ((fA.KD_PER_MIN ?? 0) - (fB.KD_PER_MIN ?? 0)) / S.kd_dif,
-    control_time_dif:
-      ((fA.CONTROL_TIME_PCT ?? 0) - (fB.CONTROL_TIME_PCT ?? 0)) /
-      S.control_time_dif,
-    reach_dif: ((fA.REACH_IN ?? 0) - (fB.REACH_IN ?? 0)) / S.reach_dif,
-    height_dif: ((fA.HEIGHT_IN ?? 0) - (fB.HEIGHT_IN ?? 0)) / S.height_dif,
-    age_dif: ageDiff, // reversed: younger is better, capped in debut-vs-veteran spots
-    win_streak_dif: (winStreakA - winStreakB) / S.win_streak_dif,
-    lose_streak_dif: (loseStreakB - loseStreakA) / S.lose_streak_dif, // reversed
-    win_dif: (winsA - winsB) / S.win_dif,
-    loss_dif: (effectiveLossesB - effectiveLossesA) / S.loss_dif, // reversed; debutants do not get free credit for 0 UFC losses
-    total_round_dif: (roundsA - roundsB) / S.total_round_dif,
-    deep_round_dif: (deepRoundsA - deepRoundsB) / S.total_round_dif,
-    total_title_bout_dif:
-      (titleBoutsA - titleBoutsB) / S.total_title_bout_dif,
-    ko_dif: (effectiveKoWinsA - effectiveKoWinsB) / S.ko_dif,
-    sub_dif: (effectiveSubWinsA - effectiveSubWinsB) / S.sub_dif,
-    elo_dif: (effectiveEloA - effectiveEloB) / S.elo_dif,
-    layoff_dif:
-      ((fB.DAYS_SINCE_LAST ?? 180) - (fA.DAYS_SINCE_LAST ?? 180)) /
-      S.layoff_dif, // reversed
-    cardio_dif:
-      (effectiveCardioA - effectiveCardioB) / S.cardio_dif,
-    peak_elo_dif:
-      ((fA.ELO_PEAK ?? fA.ELO ?? 1500) - (fB.ELO_PEAK ?? fB.ELO ?? 1500)) /
-      S.peak_elo_dif,
-    ufc_fight_count_dif: (ufcFightCountA - ufcFightCountB) / S.ufc_fight_count_dif,
-    rank_tier_dif:
-      ((fA.RANK_TIER ?? 0.12) - (fB.RANK_TIER ?? 0.12)) / S.rank_tier_dif,
-  };
-
-  // ── Map features to the weight keys used in training ──────────────────────
-  // NOTE: The model trained on R_avg_SIG_STR_pct and B_avg_SIG_STR_pct as
-  // separate absolute features. Here we combine them into one differential and
-  // use their summed weight.
-  const W = MODEL.W_NO;
-  // Sum (not average): the model trained R and B accuracy as *separate* features,
-  // each contributing their own weight. Collapsing into one differential means
-  // the combined weight must be the total — halving it cuts the signal by 50%.
-  const accCombinedW = W.R_avg_SIG_STR_pct + W.B_avg_SIG_STR_pct;
-  const tdCombinedW = W.R_avg_TD_pct + W.B_avg_TD_pct;
-  // Grappling: atd_dif is a small rule-based addition (disclosed); its weight
-  // is carved from the pool so total grappling weight stays constant.
-  const ATD_DEF_W = 0.04;
-  const grapplingWeightPool = W.avg_td_dif + tdCombinedW + W.avg_sub_att_dif;
-  const grapplingScale = (grapplingWeightPool - ATD_DEF_W) / grapplingWeightPool;
-  const tdOffenseWeight = W.avg_td_dif * grapplingScale;
-  const tdDefenseWeight = tdCombinedW * grapplingScale;
-  const subThreatWeight = W.avg_sub_att_dif * grapplingScale;
-  // Experience: split total_round_dif weight between UFC fight count and deep rounds
-  const experienceWeightPool = W.total_round_dif + W.total_title_bout_dif;
-  const fightCountWeight = experienceWeightPool * 0.58;
-  const deepRoundsWeight = experienceWeightPool * 0.42;
-
-  const clamp = (v) => Math.max(-2, Math.min(2, v));
-  const auditRow = ({
-    group,
-    label,
-    aLabel,
-    bLabel,
-    aValue,
-    bValue,
-    diff,
-    scale,
-    weight,
-    higherBetter = true,
-  }) => ({
-    group,
-    label,
-    aLabel,
-    bLabel,
-    aValue,
-    bValue,
-    diff,
-    scale,
-    weight,
-    higherBetter,
-    clamped: clamp(diff),
-    contribution: clamp(diff) * weight,
-  });
-
-  // ── Group into display edges ───────────────────────────────────────────────
-  const strikingScore =
-    clamp(feats.sig_str_dif) * W.sig_str_dif +
-    clamp(feats.avg_sig_str_pct_dif) * accCombinedW;
-
-  const grapplingScore =
-    clamp(feats.avg_td_dif) * tdOffenseWeight +
-    clamp(feats.avg_td_pct_dif) * tdDefenseWeight +
-    clamp(feats.avg_sub_att_dif) * subThreatWeight +
-    clamp(feats.atd_dif) * ATD_DEF_W;
-
-  const physicalScore =
-    clamp(feats.reach_dif) * W.reach_dif +
-    clamp(feats.height_dif) * W.height_dif +
-    clamp(feats.age_dif) * W.age_dif;
-
-  const formScore =
-    clamp(feats.win_streak_dif) * W.win_streak_dif +
-    clamp(feats.lose_streak_dif) * W.lose_streak_dif +
-    clamp(feats.win_dif) * W.win_dif +
-    clamp(feats.loss_dif) * W.loss_dif;
-
-  const expScore =
-    clamp(feats.ufc_fight_count_dif) * fightCountWeight +
-    clamp(feats.deep_round_dif) * deepRoundsWeight +
-    clamp(feats.ko_dif) * W.ko_dif +
-    clamp(feats.sub_dif) * W.sub_dif;
-
-  const analyticsScore =
-    clamp(feats.elo_dif) * W.elo_dif +
-    clamp(feats.layoff_dif) * W.layoff_dif +
-    clamp(feats.cardio_dif) * W.cardio_dif;
-
-  // NOTE: peak_elo_dif and rank_tier_dif are computed in feats but NOT added to
-  // the composite. ufc_fight_count_dif is folded into the experience bucket as a
-  // proxy for total rounds (better handles early-finisher inflation).
-
-  // Context variables retained for UI warnings/display:
-  const QUALITY_MOM_W = 0.055; // kept for display weight reference only
-  const qualMomDiff = effectiveQualMomA - effectiveQualMomB;
-
-  const sosA = computeSOS(fA.FIGHT_HISTORY || []);
-  const sosB = computeSOS(fB.FIGHT_HISTORY || []);
-  const sosDiff = sosA - sosB;
-  const lossStreakPenaltyA = loseStreakA >= 2 ? Math.min((loseStreakA - 1) * 0.04, 0.10) : 0;
-  const lossStreakPenaltyB = loseStreakB >= 2 ? Math.min((loseStreakB - 1) * 0.04, 0.10) : 0;
-  const southpawMismatch =
-    (fA.STANCE === 'Southpaw' && fB.STANCE === 'Orthodox') ||
-    (fA.STANCE === 'Orthodox' && fB.STANCE === 'Southpaw');
-  const debutMatchup = debutAdjA.isDebutProspect || debutAdjB.isDebutProspect;
-  const agePenaltyA = agePenA;
-  const agePenaltyB = agePenB;
-
-  const auditRows = [
-    auditRow({
-      group: 'Striking',
-      label: 'Sig Strikes Landed / Min',
-      aLabel: 'ASL',
-      bLabel: 'ASL',
-      aValue: aslA,
-      bValue: aslB,
-      diff: feats.sig_str_dif,
-      scale: S.sig_str_dif,
-      weight: W.sig_str_dif,
-    }),
-    auditRow({
-      group: 'Striking',
-      label: 'Strike Accuracy',
-      aLabel: 'ASP',
-      bLabel: 'ASP',
-      aValue: aspA,
-      bValue: aspB,
-      diff: feats.avg_sig_str_pct_dif,
-      scale: S.avg_sig_str_pct_dif,
-      weight: accCombinedW,
-    }),
-    auditRow({
-      group: 'Grappling',
-      label: 'Takedowns / 15 Min',
-      aLabel: 'ATL',
-      bLabel: 'ATL',
-      aValue: fA.ATL ?? 0,
-      bValue: fB.ATL ?? 0,
-      diff: feats.avg_td_dif,
-      scale: S.avg_td_dif,
-      weight: tdOffenseWeight,
-    }),
-    auditRow({
-      group: 'Grappling',
-      label: 'Takedown Accuracy',
-      aLabel: 'ATP',
-      bLabel: 'ATP',
-      aValue: fA.ATP ?? 0,
-      bValue: fB.ATP ?? 0,
-      diff: feats.avg_td_pct_dif,
-      scale: S.avg_td_pct_dif,
-      weight: tdDefenseWeight,
-    }),
-    auditRow({
-      group: 'Grappling',
-      label: 'Sub Attempts / 15 Min',
-      aLabel: 'ASA',
-      bLabel: 'ASA',
-      aValue: fA.ASA ?? 0,
-      bValue: fB.ASA ?? 0,
-      diff: feats.avg_sub_att_dif,
-      scale: S.avg_sub_att_dif,
-      weight: subThreatWeight,
-    }),
-    auditRow({
-      group: 'Grappling',
-      label: 'TD Defense %',
-      aLabel: 'ATD',
-      bLabel: 'ATD',
-      aValue: fA.ATD ?? 0.60,
-      bValue: fB.ATD ?? 0.60,
-      diff: feats.atd_dif,
-      scale: S.atd_dif,
-      weight: ATD_DEF_W,
-    }),
-    auditRow({
-      group: 'Physical',
-      label: 'Reach',
-      aLabel: 'REACH_IN',
-      bLabel: 'REACH_IN',
-      aValue: fA.REACH_IN ?? 0,
-      bValue: fB.REACH_IN ?? 0,
-      diff: feats.reach_dif,
-      scale: S.reach_dif,
-      weight: W.reach_dif,
-    }),
-    auditRow({
-      group: 'Physical',
-      label: 'Height',
-      aLabel: 'HEIGHT_IN',
-      bLabel: 'HEIGHT_IN',
-      aValue: fA.HEIGHT_IN ?? 0,
-      bValue: fB.HEIGHT_IN ?? 0,
-      diff: feats.height_dif,
-      scale: S.height_dif,
-      weight: W.height_dif,
-    }),
-    auditRow({
-      group: 'Physical',
-      label: 'Age',
-      aLabel: 'AGE',
-      bLabel: 'AGE',
-      aValue: fA.AGE ?? 30,
-      bValue: fB.AGE ?? 30,
-      diff: feats.age_dif,
-      scale: S.age_dif,
-      weight: W.age_dif,
-      higherBetter: false,
-    }),
-    auditRow({
-      group: 'Form',
-      label: 'Win Streak',
-      aLabel: 'WIN_STREAK',
-      bLabel: 'WIN_STREAK',
-      aValue: winStreakA,
-      bValue: winStreakB,
-      diff: feats.win_streak_dif,
-      scale: S.win_streak_dif,
-      weight: W.win_streak_dif,
-    }),
-    auditRow({
-      group: 'Form',
-      label: 'Loss Streak',
-      aLabel: 'LOSE_STREAK',
-      bLabel: 'LOSE_STREAK',
-      aValue: loseStreakA,
-      bValue: loseStreakB,
-      diff: feats.lose_streak_dif,
-      scale: S.lose_streak_dif,
-      weight: W.lose_streak_dif,
-      higherBetter: false,
-    }),
-    auditRow({
-      group: 'Form',
-      label: 'UFC Wins',
-      aLabel: 'WINS',
-      bLabel: 'WINS',
-      aValue: winsA,
-      bValue: winsB,
-      diff: feats.win_dif,
-      scale: S.win_dif,
-      weight: W.win_dif,
-    }),
-    auditRow({
-      group: 'Form',
-      label: 'UFC Losses',
-      aLabel: 'LOSSES',
-      bLabel: 'LOSSES',
-      aValue: neutralLosses ? 'Neutralized' : lossesA,
-      bValue: neutralLosses ? 'Neutralized' : lossesB,
-      diff: feats.loss_dif,
-      scale: S.loss_dif,
-      weight: W.loss_dif,
-      higherBetter: false,
-    }),
-    auditRow({
-      group: 'Experience',
-      label: 'UFC Fight Count',
-      aLabel: 'UFC_FIGHT_COUNT',
-      bLabel: 'UFC_FIGHT_COUNT',
-      aValue: fA.UFC_FIGHT_COUNT ?? 0,
-      bValue: fB.UFC_FIGHT_COUNT ?? 0,
-      diff: feats.ufc_fight_count_dif,
-      scale: S.ufc_fight_count_dif,
-      weight: fightCountWeight,
-    }),
-    auditRow({
-      group: 'Experience',
-      label: 'Fights Reaching R3+',
-      aLabel: 'DEEP_ROUNDS',
-      bLabel: 'DEEP_ROUNDS',
-      aValue: fA.DEEP_ROUNDS ?? 0,
-      bValue: fB.DEEP_ROUNDS ?? 0,
-      diff: feats.deep_round_dif,
-      scale: S.total_round_dif,
-      weight: deepRoundsWeight,
-    }),
-    auditRow({
-      group: 'Finishing',
-      label: 'KO Wins',
-      aLabel: 'KO_WINS',
-      bLabel: 'KO_WINS',
-      aValue: parseFloat(effectiveKoWinsA.toFixed(2)),
-      bValue: parseFloat(effectiveKoWinsB.toFixed(2)),
-      diff: feats.ko_dif,
-      scale: S.ko_dif,
-      weight: W.ko_dif,
-    }),
-    auditRow({
-      group: 'Finishing',
-      label: 'Submission Wins',
-      aLabel: 'SUB_WINS',
-      bLabel: 'SUB_WINS',
-      aValue: parseFloat(effectiveSubWinsA.toFixed(2)),
-      bValue: parseFloat(effectiveSubWinsB.toFixed(2)),
-      diff: feats.sub_dif,
-      scale: S.sub_dif,
-      weight: W.sub_dif,
-    }),
-    auditRow({
-      group: 'Analytics',
-      label: 'ELO',
-      aLabel: 'ELO',
-      bLabel: 'ELO',
-      aValue: parseFloat(effectiveEloA.toFixed(1)),
-      bValue: parseFloat(effectiveEloB.toFixed(1)),
-      diff: feats.elo_dif,
-      scale: S.elo_dif,
-      weight: W.elo_dif,
-    }),
-    auditRow({
-      group: 'Analytics',
-      label: 'Days Since Last Fight',
-      aLabel: 'DAYS_SINCE_LAST',
-      bLabel: 'DAYS_SINCE_LAST',
-      aValue: fA.DAYS_SINCE_LAST ?? 180,
-      bValue: fB.DAYS_SINCE_LAST ?? 180,
-      diff: feats.layoff_dif,
-      scale: S.layoff_dif,
-      weight: W.layoff_dif,
-      higherBetter: false,
-    }),
-    auditRow({
-      group: 'Analytics',
-      label: 'Cardio Ratio',
-      aLabel: 'CARDIO_RATIO',
-      bLabel: 'CARDIO_RATIO',
-      aValue: parseFloat(effectiveCardioA.toFixed(2)),
-      bValue: parseFloat(effectiveCardioB.toFixed(2)),
-      diff: feats.cardio_dif,
-      scale: S.cardio_dif,
-      weight: W.cardio_dif,
-    }),
-  ];
-
-
-
-  // DrossPom Composite v1.0: six domain scores plus age-decay and schedule terms.
-  // agePenAdj: 1.5× magnitude (backtest: +0.33 pp, monotonic sweep).
-  // sosDiff/qualMomDiff: backtest-validated SOS@0.10 + Mom@0.03 = +0.89 pp
-  //   over ELO baseline (name-only YYYYMMDD tiers, 3380 fights, 0 contamination).
-  const agePenAdj = 1.5 * (agePenB - agePenA);
-  // Named so they can be returned below (Global group contribution display)
-  // without changing the composite arithmetic -- same expressions, just no
-  // longer inlined.
-  const sosContribution = clamp(sosDiff) * 0.10;
-  const qualMomContribution = clamp(qualMomDiff) * 0.03;
-  const composite =
-    strikingScore +
-    grapplingScore +
-    physicalScore +
-    formScore +
-    expScore +
-    analyticsScore +
-    agePenAdj +
-    sosContribution +
-    qualMomContribution;
-
-  // ── Sigmoid probability mapping ───────────────────────────────────────────
-  // p(A wins) = sigmoid(a * composite + b)
-  // Parameters require refit on cleaned composite/outcome pairs (Sprint 2).
-  const P = MODEL.SIGMOID_MAP;
-  // Orientation-symmetric: averaging both slot orientations makes pA + pB = 1 and
-  // the pick slot-order invariant; validated at 61.1% on the clean 3,380-fight
-  // point-in-time backtest.
-  const pA =
-    (1 / (1 + Math.exp(-(P.a * composite + P.b))) +
-      1 / (1 + Math.exp(-(P.a * composite - P.b)))) /
-    2;
-
-  // ── MODEL_V2 run: computed alongside v1, returned separately as v2pA/v2pB (does
-  // not overwrite v1's pA/pB). v2 is the live DEFAULT model — its output drives the
-  // active-model toggle and the bet layer downstream.
-  const modernFormA = computeModernForm(fA.FIGHT_HISTORY, fA.DAYS_SINCE_LAST);
-  const modernFormB = computeModernForm(fB.FIGHT_HISTORY, fB.DAYS_SINCE_LAST);
-  const featsV2 = {
-    modern_form:      modernFormA - modernFormB,
-    wins:             winsA - winsB,
-    losses:           lossesB - lossesA,
-    rounds:           roundsA - roundsB,
-    title_bouts:      titleBoutsA - titleBoutsB,
-    ko_wins:          koWinsA - koWinsB,
-    sub_wins:         subWinsA - subWinsB,
-    height:           (fA.HEIGHT_IN ?? 69) - (fB.HEIGHT_IN ?? 69),
-    reach:            (fA.REACH_IN ?? 70) - (fB.REACH_IN ?? 70),
-    younger:          (fB.AGE ?? 30) - (fA.AGE ?? 30),
-    sig_str_landed:   aslA - aslB,
-    sig_str_accuracy: aspA - aspB,
-    sub_attempts:     asaA - asaB,
-    td_landed:        atlA - atlB,
-    td_accuracy:      atpA - atpB,
-    // ELO diff is /100 to match the training feature's units (ELO in hundreds);
-    // scales.elo (1.072) is the artifact std of THAT /100 feature. Do NOT also
-    // scale by ~107 — that double-divides and crushes ELO ~100x (fixed 2026-07-09).
-    elo:              (effectiveEloA - effectiveEloB) / 100,
-  };
-  const v2 = computeLogisticProb(featsV2);
-  console.log('[MODEL_V2]', fA.FIGHTER, 'vs', fB.FIGHTER, '| v1:', (pA * 100).toFixed(1) + '%', '| v2:', (v2.pA * 100).toFixed(1) + '%');
-  const featsV2flip = {
-    modern_form:      modernFormB - modernFormA,
-    wins:             winsB - winsA,
-    losses:           lossesA - lossesB,
-    rounds:           roundsB - roundsA,
-    title_bouts:      titleBoutsB - titleBoutsA,
-    ko_wins:          koWinsB - koWinsA,
-    sub_wins:         subWinsB - subWinsA,
-    height:           (fB.HEIGHT_IN ?? 69) - (fA.HEIGHT_IN ?? 69),
-    reach:            (fB.REACH_IN ?? 70) - (fA.REACH_IN ?? 70),
-    younger:          (fA.AGE ?? 30) - (fB.AGE ?? 30),
-    sig_str_landed:   aslB - aslA,
-    sig_str_accuracy: aspB - aspA,
-    sub_attempts:     asaB - asaA,
-    td_landed:        atlB - atlA,
-    td_accuracy:      atpB - atpA,
-    elo:              (effectiveEloB - effectiveEloA) / 100,
-  };
-  const v2flip = computeLogisticProb(featsV2flip);
-  console.assert(Math.abs(v2.pA + v2flip.pA - 1) < 0.001, 'MODEL_V2 symmetry violation');
-
-  const clampE = (v) => Math.max(-1.5, Math.min(1.5, v));
-  const mkEdge = (raw, label, icon, weight) => ({
-    raw,
-    label,
-    icon,
-    weight,
-    clamped: clampE(raw),
-    weighted: clampE(raw) * weight,
-  });
-  const edges = {
-    striking: mkEdge(
-      strikingScore,
-      'Striking',
-      '⚔️',
-      W.sig_str_dif + accCombinedW
-    ),
-    grappling: mkEdge(
-      grapplingScore,
-      'Grappling',
-      '🤼',
-      grapplingWeightPool
-    ),
-    physical: mkEdge(
-      physicalScore,
-      'Physical',
-      '📏',
-      W.reach_dif + W.height_dif + W.age_dif
-    ),
-    form: mkEdge(
-      formScore,
-      'Form',
-      '📈',
-      W.win_streak_dif + W.lose_streak_dif + W.win_dif + W.loss_dif
-    ),
-    experience: mkEdge(
-      expScore,
-      'Experience',
-      '🎖️',
-      experienceWeightPool + W.ko_dif + W.sub_dif
-    ),
-    analytics: mkEdge(
-      analyticsScore,
-      'Analytics',
-      '📊',
-      W.elo_dif + W.layoff_dif + W.cardio_dif
-    ),
-    // Legacy key aliases — old UI references these by name
-    rating: mkEdge(analyticsScore, 'Analytics', '🏆', W.elo_dif),
-    momentum: mkEdge(formScore, 'Form', '📈', W.win_streak_dif),
-    finishing: mkEdge(expScore, 'Experience', '💥', W.ko_dif),
-    cardio: mkEdge(analyticsScore, 'Cardio', '💨', W.cardio_dif),
-    age: mkEdge(physicalScore, 'Age/Decay', '📉', W.age_dif),
-    elo: mkEdge(analyticsScore, 'ELO', '📊', W.elo_dif),
-  };
-
-  return {
-    pA,
-    pB: 1 - pA,
-    composite,
-    edges,
-    auditRows,
-    activeWeights: W,
-    activeScales: S,
-    feats,
-    // Legacy fields kept for UI compatibility
-    diff: (fA.ELO ?? 1500) - (fB.ELO ?? 1500),
-    adjA: fA.ADJUSTED_RATING ?? 0,
-    adjB: fB.ADJUSTED_RATING ?? 0,
-    avgCred: ((fA.CREDIBILITY ?? 50) + (fB.CREDIBILITY ?? 50)) / 200,
-    scaledComposite: composite,
-    penA: 0,
-    penB: 0,
-    layA: 0,
-    layB: 0,
-    stanceMismatch: fA.STANCE !== fB.STANCE,
-    southpawBonus: southpawMismatch ? 1 : 0,
-    grapplerBonus: 0,
-    cardioStrikerBonus: 0,
-    reachEdge: (fA.REACH_IN ?? 0) - (fB.REACH_IN ?? 0),
-    heightEdge: (fA.HEIGHT_IN ?? 0) - (fB.HEIGHT_IN ?? 0),
-    // Context variables for UI flags
-    southpawMismatch,
-    debutMatchup,
-    loseStreakA,
-    loseStreakB,
-    qualMomDiff,
-    agePenaltyA,
-    agePenaltyB,
-    sosDiff,
-    sosA,
-    sosB,
-    v2pA: v2.pA,
-    v2pB: v2.pB,
-    // Additive only: exposes the already-computed v2 feature vector for
-    // provenance/manifest capture (buildRoiEntry's _provenance.featureVector).
-    // Does not change v2pA/v2pB or any other computation above.
-    featsV2,
-    // Additive only: per-feature signed contributions to v2's logit, keyed
-    // by MODEL_V2 feature name (see computeLogisticProb). Does not change
-    // v2pA/v2pB -- v2.pA/v2.pB are still derived from the same summed logit.
-    v2Contributions: v2.contributions,
-    // Additive only: the three v1 composite contributors that belong to no
-    // domain (App.js:3846-3860's agePenAdj/sosContribution/
-    // qualMomContribution feed `composite` directly). Exposed for the
-    // Simulator's Global contribution group -- does not change composite,
-    // pA/pB, edges, or auditRows above.
-    agePenAdj,
-    sosContribution,
-    qualMomContribution,
-  };
-};
-
-// Market/edge analysis for a matchup at given American odds. Returns null when
-// odds are unparseable (mirrors the manual-save path where no odds → null market).
-// Single source of truth shared by MatchupSimulator's market useMemo and the
-// manual savePrediction path.
-const computeMarketAnalysis = (result, oddsA, oddsB, fA, fB) => {
-  const rawA = parseAmericanOdds(oddsA);
-  const rawB = parseAmericanOdds(oddsB);
-  if (!rawA || !rawB || !result) return null;
-
-  const { noVigA, noVigB, vig, overround } = stripVig(rawA, rawB);
-  const decA = americanToDecimal(oddsA);
-  const decB = americanToDecimal(oddsB);
-
-  const edgeA = result.pA - noVigA;
-  const edgeB = result.pB - noVigB;
-  const evA = decA ? calcExpectedValue(result.pA, decA) : 0;
-  const evB = decB ? calcExpectedValue(result.pB, decB) : 0;
-  const kellyA = decA ? kellyFraction(result.pA, decA) : 0;
-  const kellyB = decB ? kellyFraction(result.pB, decB) : 0;
-
-  // Break-even % at market odds
-  const breakEvenA = rawA;
-  const breakEvenB = rawB;
-
-  // Fair value line based on model probability
-  const fairLineA = americanOdds(result.pA);
-  const fairLineB = americanOdds(result.pB);
-
-  // Domain alignment: how many of the 6 real model domains favor the same fighter
-  const modelFavorsA = result.pA >= 0.5;
-  const domainKeys = [
-    'striking',
-    'grappling',
-    'physical',
-    'form',
-    'experience',
-    'analytics',
-  ];
-  const alignedDomains = domainKeys.filter((k) => {
-    const e = result.edges[k];
-    return modelFavorsA ? e.clamped > 0 : e.clamped < 0;
-  }).length;
-
-  // ── Step 1: Who does the model pick? (always the >50% fighter)
-  const pickSide = result.pA >= 0.5 ? 'A' : 'B';
-  const pickEdge = pickSide === 'A' ? edgeA : edgeB;
-  const oppEdge  = pickSide === 'A' ? edgeB : edgeA;
-
-  // ── Step 2: Classify signals
-  // CONFLICTING: model picks A but market underprices B.
-  // Betting the 'value' here means betting against your own model pick.
-  const hasPickEdge = pickEdge >= 0.03;
-  const conflictingSignals = !hasPickEdge && oppEdge >= 0.03;
-
-  // ── Step 3: Confidence — only meaningful when signals align
-  const avgCred = (fA.CREDIBILITY + fB.CREDIBILITY) / 200;
-  const edgeScore = hasPickEdge ? Math.min(40, pickEdge * 280) : 0;
-  const credScore = avgCred * 30;
-  const alignScore = alignedDomains * 5;
-  const betConfidence = Math.round(Math.max(0, edgeScore + credScore + alignScore));
-
-  // ── Step 4: Conviction gate + bet action ─────────────────────────────────
-  const pickProb = pickSide === 'A' ? result.pA : result.pB;
-  const lowConviction  = pickProb < 0.60;  // below hard floor — no bet zone
-  const midConviction  = pickProb < 0.65;  // low conviction tier
-
-  const betAction = (() => {
-    if (conflictingSignals) return 'NO BET';
-    if (!hasPickEdge) return 'NO BET';
-
-    // Hard floor — model unproven below 60%
-    if (pickProb < 0.60) return 'NO BET';
-
-    // Low conviction tier (60-64%) — cap at LEAN regardless of edge
-    if (pickProb < 0.65) {
-      if (pickEdge >= 0.10) return 'LEAN';
-      return 'NO BET';
-    }
-
-    // Mid conviction tier (65-69%)
-    if (pickProb < 0.70) {
-      if (pickEdge >= 0.30) return 'BET';
-      if (pickEdge >= 0.10) return 'LEAN';
-      return 'NO BET';
-    }
-
-    // High conviction tier (70%+)
-    if (pickEdge >= 0.25) return 'STRONG BET';
-    if (pickEdge >= 0.15) return 'BET';
-    return 'LEAN';
-  })();
-
-  const lowCredCap = (fA.CREDIBILITY ?? 0) < 30 || (fB.CREDIBILITY ?? 0) < 30;
-  const cappedBetAction =
-    lowCredCap && (betAction === 'STRONG BET' || betAction === 'BET')
-      ? 'LEAN'
-      : betAction;
-
-  // Heavy-favourite ceiling: if market implies >66.7% (odds shorter than -200),
-  // require edge >25pp or suppress to NO BET.
-  const pickRawOdds = pickSide === 'A' ? rawA : rawB;
-  const heavyFavSuppressed =
-    pickRawOdds > (2 / 3) &&
-    pickEdge < 0.25 &&
-    cappedBetAction !== 'NO BET';
-  const finalBetAction = heavyFavSuppressed ? 'NO BET' : cappedBetAction;
-
-  // ── Step 5: No-bet / lean reason for UI display ───────────────────────────
-  const noBetReason = (() => {
-    if (conflictingSignals) {
-      const oppFighter  = pickSide === 'A' ? fB.FIGHTER : fA.FIGHTER;
-      const pickFighter = pickSide === 'A' ? fA.FIGHTER : fB.FIGHTER;
-      return `Market underprices ${oppFighter} (+${(oppEdge * 100).toFixed(1)}pp edge) but model picks ${pickFighter} — conflicting signals`;
-    }
-    if (!hasPickEdge) return `No positive edge on model pick at current lines`;
-    if (lowConviction) return `Model pick is ${(pickProb * 100).toFixed(1)}% — below the 60% floor required for any bet recommendation.`;
-    if (heavyFavSuppressed) {
-      const pickFighter = pickSide === 'A' ? fA.FIGHTER : fB.FIGHTER;
-      return `${pickFighter} priced at ${Math.round(pickRawOdds * 100)}% implied — heavy-favourite ceiling requires edge >25pp (current: ${(pickEdge * 100).toFixed(1)}pp)`;
-    }
-    return `Edge below minimum threshold`;
-  })();
-
-  // betSide alias so downstream UI keeps working
-  const betSide = pickSide;
-
-  const gradeEdge = (edge) => {
-    const abs = Math.abs(edge);
-    if (abs >= 0.12)
-      return {
-        label: 'STRONG VALUE',
-        color: 'text-emerald-400',
-        bg: 'bg-emerald-900/30 border-emerald-700',
-      };
-    if (abs >= 0.06)
-      return {
-        label: 'VALUE',
-        color: 'text-emerald-400',
-        bg: 'bg-emerald-900/20 border-emerald-800',
-      };
-    if (abs >= 0.03)
-      return {
-        label: 'LEAN',
-        color: 'text-yellow-400',
-        bg: 'bg-yellow-900/20 border-yellow-800',
-      };
-    return {
-      label: 'NO EDGE',
-      color: 'text-slate-500',
-      bg: 'bg-slate-800/40 border-slate-700',
-    };
-  };
-
-  return {
-    rawA,
-    rawB,
-    noVigA,
-    noVigB,
-    vig,
-    overround,
-    edgeA,
-    edgeB,
-    evA,
-    evB,
-    kellyA,
-    kellyB,
-    breakEvenA,
-    breakEvenB,
-    fairLineA,
-    fairLineB,
-    betConfidence,
-    betAction: finalBetAction,
-    betSide,
-    alignedDomains,
-    gradeA:
-      edgeA > 0.02
-        ? gradeEdge(edgeA)
-        : {
-            label: edgeA < -0.05 ? 'FADE' : 'NO EDGE',
-            color: edgeA < -0.05 ? 'text-red-400' : 'text-slate-500',
-            bg:
-              edgeA < -0.05
-                ? 'bg-red-900/20 border-red-800'
-                : 'bg-slate-800/40 border-slate-700',
-          },
-    gradeB:
-      edgeB > 0.02
-        ? gradeEdge(edgeB)
-        : {
-            label: edgeB < -0.05 ? 'FADE' : 'NO EDGE',
-            color: edgeB < -0.05 ? 'text-red-400' : 'text-slate-500',
-            bg:
-              edgeB < -0.05
-                ? 'bg-red-900/20 border-red-800'
-                : 'bg-slate-800/40 border-slate-700',
-          },
-    // bestBet fires only when model pick and market value align
-    bestBet: cappedBetAction !== 'NO BET' ? pickSide : null,
-    pickSide,
-    pickProb,
-    lowConviction,
-    midConviction,
-    pickEdge,
-    oppEdge,
-    hasPickEdge,
-    conflictingSignals,
-    noBetReason,
-    lowCredCap,
-  };
-};
-
-// Lightweight, synchronous, non-cryptographic checksum (djb2) — used only to
-// detect drift in MODEL_V2's coefficients between saves, not for security.
-const djb2Checksum = (str) => {
-  let h = 5381;
-  for (let i = 0; i < str.length; i++) {
-    h = (h * 33) ^ str.charCodeAt(i);
-  }
-  return (h >>> 0).toString(16);
-};
-
-// Latest 'dt' present in a fighter's FIGHT_HISTORY at computation time — used
-// only for provenance capture (_provenance.fightHistoryCutoff), not for any
-// prediction calculation.
-const latestFightHistoryDate = (fightHistory) => {
-  if (!fightHistory || fightHistory.length === 0) return null;
-  let max = null;
-  for (const f of fightHistory) {
-    if (f.dt && (max === null || f.dt > max)) max = f.dt;
-  }
-  return max;
-};
-
-// Builds the _provenance block attached to every saved ROI/Upcoming entry.
-// This is the ONLY supported way to produce that block — any script that
-// programmatically writes fighterAProb/v2pA/v2pB to roiData.js or
-// upcomingData.js should call this rather than hand-constructing the shape,
-// so a future bulk recompute can't silently skip provenance the way commit
-// 9343523 (2026-07-12) did. See BASELINE_NOTES.md.
-//
-// predictionTimestamp/captureMode default to "derive from right now" (the
-// normal live-save path) but accept overrides — used only for backfilling
-// provenance onto entries whose real capture time is a known historical
-// moment, not "when this function happened to run."
-//
-// frozenTier: forward-only, no retrofit onto historical entries. Records the
-// bet-action tier the gate assigned AT THIS EXACT CALL, alongside the probs
-// it was derived from -- an unambiguous prediction-time tier, unlike the
-// top-level `betAction` field, whose provenance turned out to be mixed for
-// older entries (verified directly: for reconstructed rows, `betAction` is
-// the original v1-era capture tier, never touched by the later v2pA/v2pB
-// backfill). Optional and undefined for any caller that doesn't pass it, so
-// this is purely additive.
-export const buildProvenance = ({ eventDate, result, fA, fB, predictionTimestamp, captureMode, frozenTier }) => {
-  const todayIso = new Date().toISOString().slice(0, 10);
-  const resolvedCaptureMode =
-    captureMode ??
-    (!eventDate ? 'unknown' : eventDate >= todayIso ? 'live' : 'reconstructed');
-  return {
-    predictionTimestamp: predictionTimestamp ?? new Date().toISOString(),
-    targetEventDate: eventDate,
-    captureMode: resolvedCaptureMode,
-    modelVersion: MODEL_V2.version,
-    modelCoefHash: djb2Checksum(JSON.stringify(MODEL_V2.coef)),
-    ...(frozenTier !== undefined ? { frozenTier } : {}),
-    featureVector: {
-      v1: result.feats,
-      v2: result.featsV2 ?? null,
-    },
-    fightHistoryCutoff: {
-      fighterA: latestFightHistoryDate(fA.FIGHT_HISTORY),
-      fighterB: latestFightHistoryDate(fB.FIGHT_HISTORY),
-    },
-    sourceManifest: SOURCE_MANIFEST.modules,
-  };
-};
-
-// Assembles a complete ROI entry object with the exact shape consumed by the ROI
-// tab. Used by the manual savePrediction path ("Save to Upcoming" / "Save and
-// Open Upcoming" in the Simulator).
-const buildRoiEntry = ({ fA, fB, oddsA, oddsB, eventName, eventDate, modelToggle = 'v2', unitsWagered = 1 }) => {
-  const result = computeMatchupEdges(fA, fB);
-  // Use whichever model the user had active at save time (v1 or v2) for every
-  // bet-decision field, mirroring the Simulator's own market useMemo. The raw
-  // per-model probabilities are still stored separately and unchanged
-  // (fighterAProb/fighterBProb = v1, v2pA/v2pB = v2) so the v1-vs-v2 accuracy
-  // snapshots stay intact; modelUsed records which model drove the bet fields.
-  const activePA = modelToggle === 'v2' && result.v2pA != null ? result.v2pA : result.pA;
-  const activePB = modelToggle === 'v2' && result.v2pB != null ? result.v2pB : result.pB;
-  const activeResult = { ...result, pA: activePA, pB: activePB };
-  const market = computeMarketAnalysis(activeResult, oddsA, oddsB, fA, fB);
-
-  // predictedWinner/predictedProb stay on the v1 snapshot (consumed by the v1
-  // accuracy stats and the "v2 differs" comparisons). trackedSide is the active
-  // model's pick — the side actually being tracked/bet.
-  const predictedWinner = result.pA >= result.pB ? fA.FIGHTER : fB.FIGHTER;
-  const trackedSide = activePA >= activePB ? fA.FIGHTER : fB.FIGHTER;
-  const trackedProb = trackedSide === fA.FIGHTER ? activePA : activePB;
-  const trackedOdds =
-    trackedSide === fA.FIGHTER
-      ? oddsA || ''
-      : trackedSide === fB.FIGHTER
-      ? oddsB || ''
-      : '';
-  const trackedEdge =
-    trackedSide === fA.FIGHTER
-      ? market?.edgeA ?? null
-      : trackedSide === fB.FIGHTER
-      ? market?.edgeB ?? null
-      : null;
-  const trackedEV =
-    trackedSide === fA.FIGHTER
-      ? market?.evA ?? null
-      : trackedSide === fB.FIGHTER
-      ? market?.evB ?? null
-      : null;
-  const trackedKelly =
-    trackedSide === fA.FIGHTER
-      ? market?.kellyA ?? null
-      : trackedSide === fB.FIGHTER
-      ? market?.kellyB ?? null
-      : null;
-  const trackedFairLine =
-    trackedSide === fA.FIGHTER
-      ? market?.fairLineA ?? null
-      : trackedSide === fB.FIGHTER
-      ? market?.fairLineB ?? null
-      : null;
-  const betRecommendedFighter =
-    market?.bestBet === 'A'
-      ? fA.FIGHTER
-      : market?.bestBet === 'B'
-      ? fB.FIGHTER
-      : '';
-
-  const betRecommendedOdds =
-    market?.bestBet === 'A'
-      ? oddsA || ''
-      : market?.bestBet === 'B'
-      ? oddsB || ''
-      : '';
-
-  return {
-    id: createPredictionId(),
-    createdAt: new Date().toISOString(),
-    eventName,
-    eventDate,
-    fighterA: fA.FIGHTER,
-    fighterB: fB.FIGHTER,
-    fighterAIsProspect: !!fA.IS_PROSPECT,
-    fighterBIsProspect: !!fB.IS_PROSPECT,
-    includesProspect: !!fA.IS_PROSPECT || !!fB.IS_PROSPECT,
-    division:
-      fA.WEIGHT_CLASS === fB.WEIGHT_CLASS
-        ? fA.WEIGHT_CLASS
-        : `${fA.WEIGHT_CLASS} / ${fB.WEIGHT_CLASS}`,
-    fighterAProb: result.pA,
-    fighterBProb: result.pB,
-    predictedWinner,
-    predictedProb: predictedWinner === fA.FIGHTER ? result.pA : result.pB,
-    modelUsed: modelToggle,
-    trackedSide,
-    trackedProb,
-    // Units actually staked on trackedSide at save time. Defaults to 1
-    // (matches every pre-existing entry, which was always flat 1u).
-    unitsWagered,
-    betAction: market?.betAction ?? 'NO BET',
-    bestBet: market?.bestBet ?? null,
-    betRecommendedFighter,
-    betRecommendedOdds,
-    marketOdds: trackedOdds,
-    edge: trackedEdge,
-    edgeA: market?.edgeA ?? null,
-    edgeB: market?.edgeB ?? null,
-    ev: trackedEV,
-    evA: market?.evA ?? null,
-    evB: market?.evB ?? null,
-    kelly: trackedKelly,
-    kellyA: market?.kellyA ?? null,
-    kellyB: market?.kellyB ?? null,
-    fairLine: trackedFairLine,
-    fairLineA: market?.fairLineA ?? null,
-    fairLineB: market?.fairLineB ?? null,
-    oddsA,
-    oddsB,
-    v2pA: result.v2pA ?? null,
-    v2pB: result.v2pB ?? null,
-    ...(() => {
-      const { ko, sub, dec } = computeFinishProbs(fA, fB);
-      return {
-        projectedKO: ko,
-        projectedSUB: sub,
-        projectedDEC: dec,
-        projectedFinish: getProjectedFinishLabel({ ko, sub, dec }),
-      };
-    })(),
-    actualWinner: '',
-    actualFinish: '',
-    notes: '',
-    // Additive metadata only — does not affect any field above. Lets future
-    // analysis answer "is this prediction authentically point-in-time or
-    // reconstructed" and "what fed it" without a manual forensic audit (see
-    // research/source_integrity_audit.md and research/daysSinceLast_live_audit.md,
-    // which this schema exists to make unnecessary going forward).
-    _provenance: buildProvenance({ eventDate, result, fA, fB, frozenTier: market?.betAction ?? 'NO BET' }),
-  };
-};
-// ─── UPCOMING EVENT TAB ──────────────────────────────────────────────────────
 // Local edit buffer (separate from the committed value) so a controlled
 // number input can hold an in-progress "2." without React snapping it back
 // to "2" on every keystroke -- only well-formed numbers get committed up.
@@ -4914,7 +2049,7 @@ function UnitsStakedInput({ value, onCommit }) {
         if (next !== '' && !Number.isNaN(n)) onCommit(n);
       }}
       onBlur={() => setRaw(String(value))}
-      className="w-20 bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-1.5 focus:outline-none focus:border-red-500"
+      className="w-20 bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-1.5 focus:outline-hidden focus:border-red-500"
     />
   );
 }
@@ -5000,7 +2135,7 @@ function BuildParlayPanel({ legInputs, onConfirm, onCancel }) {
                 ))}
               </div>
               <p className="text-slate-600 text-xs mt-1.5 flex items-center gap-1.5 flex-wrap">
-                <span className="text-[10px] font-bold text-violet-400 bg-violet-900/30 border border-violet-700/40 px-1.5 py-0.5 rounded uppercase">
+                <span className="text-[10px] font-bold text-violet-400 bg-violet-900/30 border border-violet-700/40 px-1.5 py-0.5 rounded-sm uppercase">
                   v2
                 </span>
                 <span>
@@ -5407,7 +2542,7 @@ function UpcomingEventTab({
                         Model Pick
                       </p>
                       {hasV2 && modelToggle === 'v2' && (
-                        <span className="text-[10px] font-bold text-violet-400 bg-violet-900/30 border border-violet-700/40 px-1.5 py-0.5 rounded uppercase">
+                        <span className="text-[10px] font-bold text-violet-400 bg-violet-900/30 border border-violet-700/40 px-1.5 py-0.5 rounded-sm uppercase">
                           v2
                         </span>
                       )}
@@ -5473,7 +2608,7 @@ function UpcomingEventTab({
                       onChange={(e) => {
                         if (e.target.value) onGrade(entry.id, e.target.value);
                       }}
-                      className="bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-1.5 focus:outline-none focus:border-red-500 cursor-pointer"
+                      className="bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-1.5 focus:outline-hidden focus:border-red-500 cursor-pointer"
                     >
                       <option value="">Pending…</option>
                       <option value={entry.fighterA}>{entry.fighterA}</option>
@@ -5728,7 +2863,7 @@ function Filters({ wc, setWC, minMin, setMinMin, count }) {
           <select
             value={wc}
             onChange={(e) => setWC(e.target.value)}
-            className="bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-1.5 min-h-[44px] sm:min-h-0 focus:outline-none focus:border-red-500 cursor-pointer min-w-40"
+            className="bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-1.5 min-h-[44px] sm:min-h-0 focus:outline-hidden focus:border-red-500 cursor-pointer min-w-40"
           >
             {WEIGHT_CLASSES.map((w) => (
               <option key={w}>{w}</option>
@@ -6019,7 +3154,7 @@ function DataTable({ fighters }) {
               setSearch(e.target.value);
               setPage(1);
             }}
-            className="bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg pl-9 pr-4 py-2 w-64 min-h-[44px] sm:min-h-0 focus:outline-none focus:border-red-500"
+            className="bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg pl-9 pr-4 py-2 w-64 min-h-[44px] sm:min-h-0 focus:outline-hidden focus:border-red-500"
           />
         </div>
         <div className="flex items-center gap-3 text-xs text-slate-500 flex-wrap">
@@ -6041,7 +3176,7 @@ function DataTable({ fighters }) {
                   ((lbl === '«' || lbl === '‹') && safePage === 1) ||
                   ((lbl === '›' || lbl === '»') && safePage === totalPages)
                 }
-                className="inline-flex items-center justify-center min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0 px-2.5 py-1 bg-slate-800 rounded disabled:opacity-30 hover:bg-slate-700 text-slate-300 transition-colors"
+                className="inline-flex items-center justify-center min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0 px-2.5 py-1 bg-slate-800 rounded-sm disabled:opacity-30 hover:bg-slate-700 text-slate-300 transition-colors"
               >
                 {lbl}
               </button>
@@ -6138,7 +3273,7 @@ function DataTable({ fighters }) {
                         )}
                         {f.IS_PROSPECT && (
                           <span
-                            className="text-[10px] font-black font-mono px-1.5 py-0.5 rounded border bg-amber-900/40 text-amber-400 border-amber-800"
+                            className="text-[10px] font-black font-mono px-1.5 py-0.5 rounded-sm border bg-amber-900/40 text-amber-400 border-amber-800"
                             title="Pre-debut UFC signee — stats from pre-UFC pro fights"
                           >
                             PRE-UFC
@@ -6273,7 +3408,7 @@ function FighterSearch({
           setOpen(true);
         }}
         onFocus={() => setOpen(true)}
-        className={`bg-slate-800 border ${bdr} text-slate-200 text-sm rounded-lg pl-9 pr-4 py-2 w-full min-h-[44px] sm:min-h-0 focus:outline-none transition-colors`}
+        className={`bg-slate-800 border ${bdr} text-slate-200 text-sm rounded-lg pl-9 pr-4 py-2 w-full min-h-[44px] sm:min-h-0 focus:outline-hidden transition-colors`}
       />
       {open && opts.length > 0 && (
         <div className="absolute top-full left-0 right-0 mt-1 bg-slate-800 border border-slate-600 rounded-xl z-30 shadow-2xl overflow-hidden">
@@ -6289,7 +3424,7 @@ function FighterSearch({
             >
               <span className="text-slate-200 font-medium flex items-center gap-2">
                 {f.IS_PROSPECT && (
-                  <span className="text-[10px] font-black font-mono px-1.5 py-0.5 rounded border bg-amber-900/40 text-amber-400 border-amber-800">
+                  <span className="text-[10px] font-black font-mono px-1.5 py-0.5 rounded-sm border bg-amber-900/40 text-amber-400 border-amber-800">
                     PRE-UFC
                   </span>
                 )}
@@ -6758,34 +3893,6 @@ const FighterPanel = ({ f, setF, color, ph, allFighters, fA, fB }) => {
   );
 };
 
-function computeFinishProbs(fA, fB) {
-  const avgFinish    = ((fA.FINISH_RATE ?? 0) + (fB.FINISH_RATE ?? 0)) / 2;
-  const avgKdRate    = ((fA.KD_PER_MIN ?? 0) + (fB.KD_PER_MIN ?? 0)) / 2;
-  const avgKoWinPct  = ((fA.KO_WIN_PCT ?? 0) + (fB.KO_WIN_PCT ?? 0)) / 2;
-  const avgSubWinPct = ((fA.SUB_WIN_PCT ?? 0) + (fB.SUB_WIN_PCT ?? 0)) / 2;
-  const avgSubThreat = ((fA.SUB_THREAT_RATE ?? 0) + (fB.SUB_THREAT_RATE ?? 0)) / 2;
-  const rawKO  = Math.min(avgKoWinPct * 0.55 + avgKdRate * 200 + avgFinish * 0.18, 60);
-  const rawSub = Math.min(avgSubWinPct * 0.40 + avgSubThreat * 4 + avgFinish * 0.12, 60);
-  const rawDec = Math.max(100 - rawKO - rawSub, 18);
-  const total  = rawKO + rawSub + rawDec;
-  return {
-    ko:  Math.round((rawKO  / total) * 100),
-    sub: Math.round((rawSub / total) * 100),
-    dec: Math.round((rawDec / total) * 100),
-  };
-}
-
-function getProjectedFinishLabel(probs) {
-  const { ko, sub, dec } = probs;
-  const max = Math.max(ko, sub, dec);
-  const leaders = [];
-  if (ko === max) leaders.push('KO/TKO');
-  if (sub === max) leaders.push('SUB');
-  if (dec === max) leaders.push('DEC');
-  return leaders.join(' / ');
-}
-
-// ─── MATCHUP SIMULATOR ────────────────────────────────────────────────────────
 // Display-only decode of v2's modern_form (App.js:369-388) into plain
 // language -- last-8 W-L record plus the two penalty flags, sorted most
 // recent first exactly as computeModernForm does. Does not compute or
@@ -7212,7 +4319,7 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                         set(v);
                       }}
                       placeholder={ph}
-                      className="w-full bg-slate-800 border border-slate-600 rounded-lg px-4 py-3 text-white font-black text-xl text-center placeholder-slate-700 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30 transition-colors"
+                      className="w-full bg-slate-800 border border-slate-600 rounded-lg px-4 py-3 text-white font-black text-xl text-center placeholder-slate-700 focus:outline-hidden focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30 transition-colors"
                     />
                     {parseAmericanOdds(val) != null && (
                       <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-500">
@@ -8053,7 +5160,7 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                   value={eventName}
                   onChange={(e) => setEventName(e.target.value)}
                   placeholder="UFC 325"
-                  className="w-full bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-red-500"
+                  className="w-full bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:outline-hidden focus:border-red-500"
                 />
               </div>
               <div>
@@ -8064,7 +5171,7 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                   type="date"
                   value={eventDate}
                   onChange={(e) => setEventDate(e.target.value)}
-                  className="w-full bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-red-500"
+                  className="w-full h-10 bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:outline-hidden focus:border-red-500"
                 />
               </div>
               <div>
@@ -8078,7 +5185,7 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                   value={unitsWagered}
                   onChange={(e) => setUnitsWagered(e.target.value)}
                   placeholder="1"
-                  className="w-full bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-red-500"
+                  className="w-full bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:outline-hidden focus:border-red-500"
                 />
               </div>
             </div>
@@ -8682,11 +5789,11 @@ function ScoutProfile({ allFighters }) {
                   </ResponsiveContainer>
                   <div className="flex justify-center gap-6 text-xs text-slate-500 mt-1">
                     <span className="flex items-center gap-1.5">
-                      <span className="w-4 h-0.5 bg-red-500 inline-block rounded" />
+                      <span className="w-4 h-0.5 bg-red-500 inline-block rounded-sm" />
                       {fighter.FIGHTER}
                     </span>
                     <span className="flex items-center gap-1.5">
-                      <span className="w-4 h-0.5 bg-slate-500 inline-block rounded" />
+                      <span className="w-4 h-0.5 bg-slate-500 inline-block rounded-sm" />
                       Div. Avg
                     </span>
                   </div>
@@ -8750,7 +5857,7 @@ function ScoutProfile({ allFighters }) {
                           </div>
                           <div className="h-2.5 bg-slate-800 rounded-full overflow-hidden">
                             <div
-                              className={`h-full bg-gradient-to-r ${color} rounded-full`}
+                              className={`h-full bg-linear-to-r ${color} rounded-full`}
                               style={{
                                 width: `${Math.min((displayVal / max) * 100, 100)}%`,
                               }}
@@ -9961,6 +7068,19 @@ function ROITab({
     return entries;
   }, [evaluatedEntries, filterSince]);
 
+  // Top-of-tab stats banner -- same population and same two summary
+  // functions StatisticsTab's headline cards use (filterRoiEntriesForStats ->
+  // computeROISummary for Tracked Fights/Graded Picks, computeV2Summary for
+  // Pick Accuracy/ROI), called on the SAME raw `entries` + `filterSince`
+  // StatisticsTab receives. No parallel scoring math -- this is the same
+  // call, just made from ROITab too, so the two tabs can never drift.
+  const roiStatsEntries = useMemo(
+    () => filterRoiEntriesForStats(entries, prospectNameSet, filterSince),
+    [entries, prospectNameSet, filterSince]
+  );
+  const roiBannerV1 = useMemo(() => computeROISummary(roiStatsEntries, new Set()), [roiStatsEntries]);
+  const roiBannerV2 = useMemo(() => computeV2Summary(roiStatsEntries), [roiStatsEntries]);
+
   const [modelView, setModelView] = useState('v2');
   // Sub-tabs replace the former "Most Recent Event / All Results" toggle:
   //   'all'    -> collapsible per-event groups (former "All Results")
@@ -10019,6 +7139,21 @@ function ROITab({
         return a._i - b._i;
       });
   }, [visibleEntries]);
+
+  // Per-event ROI for the accordion headers -- same computeV2Summary call as
+  // the top banner and StatisticsTab, just scoped to one event's entries
+  // instead of the whole Since-filtered window. Fights only: group.entries
+  // comes from visibleEntries, which is never mixed with propPicks/
+  // parlayEntries. bets===0 (no v2-scored, gradable entries in this event)
+  // is the "—" case, not 0.0%/+0.00u -- an event can have zero v2-scored
+  // entries (see v2ScoredFloorDate in StatisticsTab) without being empty.
+  const eventV2Summaries = useMemo(() => {
+    const map = new Map();
+    eventGroups.forEach((group) => {
+      map.set(group.key, computeV2Summary(group.entries));
+    });
+    return map;
+  }, [eventGroups]);
 
   // Collapsible groups: default = most-recent event expanded, others collapsed.
   // `expandedEvents` is null until the user first toggles; after that it's an
@@ -10281,7 +7416,7 @@ function ROITab({
             type="date"
             value={filterSince}
             onChange={e => setFilterSince(e.target.value)}
-            className="bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-1.5 min-h-[44px] sm:min-h-0 focus:outline-none focus:border-red-500"
+            className="bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-1.5 min-h-[44px] sm:min-h-0 sm:h-9 focus:outline-hidden focus:border-red-500"
           />
           {filterSince && (
             <button
@@ -10296,6 +7431,41 @@ function ROITab({
               {displayedEntries.length} fights
             </span>
           )}
+        </div>
+      )}
+
+      {/* Same four cards, same classes, as StatisticsTab's headline banner --
+          fights-only (props/parlays hidden here exactly like the Since
+          filter above), so it's hidden on those two sub-tabs rather than
+          showing numbers that don't describe what's on screen. */}
+      {entries.length > 0 && !isProps && !isParlays && (
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6 items-stretch">
+          <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 h-full">
+            <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold">Tracked Fights</p>
+            <p className="font-black text-2xl mt-2 text-white">{roiBannerV1.total}</p>
+          </div>
+          <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 h-full">
+            <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold">Graded Picks</p>
+            <p className="font-black text-2xl mt-2 text-blue-400">{roiBannerV1.graded}</p>
+          </div>
+          <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 h-full">
+            <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold">Pick Accuracy</p>
+            <p className={`font-black text-2xl mt-2 ${roiBannerV2.accuracy >= 60 ? 'text-emerald-400' : 'text-yellow-400'}`}>
+              {roiBannerV2.accuracy.toFixed(1)}%
+            </p>
+            <p className="text-slate-600 text-[10px] mt-1">
+              v2 frozen scoring across {roiBannerV2.graded} graded fights (stake-weighted). Frozen at each pick's capture — no lookahead.
+            </p>
+          </div>
+          <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 h-full">
+            <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold">ROI</p>
+            <p className={`font-black text-2xl mt-2 ${roiBannerV2.roi >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+              {roiBannerV2.roi >= 0 ? '+' : ''}{roiBannerV2.roi.toFixed(1)}%
+            </p>
+            <p className="text-slate-600 text-xs mt-1">
+              {roiBannerV2.profit >= 0 ? '+' : ''}{roiBannerV2.profit.toFixed(2)}u on {roiBannerV2.bets} bets (stake-weighted)
+            </p>
+          </div>
         </div>
       )}
 
@@ -10349,6 +7519,8 @@ function ROITab({
         <div className="space-y-4">
           {eventGroups.map((group) => {
             const open = isEventOpen(group.key);
+            const eventSummary = eventV2Summaries.get(group.key);
+            const eventHasV2Bets = Boolean(eventSummary && eventSummary.bets > 0);
             return (
               <div
                 key={group.key}
@@ -10371,9 +7543,18 @@ function ROITab({
                       )}
                     </div>
                   </div>
-                  <span className="text-slate-500 text-xs font-semibold uppercase tracking-wider shrink-0">
-                    {group.entries.length} {group.entries.length === 1 ? 'fight' : 'fights'}
-                  </span>
+                  <div className="flex items-center gap-3 shrink-0">
+                    {eventHasV2Bets ? (
+                      <span className={`text-xs font-bold ${eventSummary.profit >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                        {eventSummary.profit >= 0 ? '+' : ''}{eventSummary.profit.toFixed(2)}u
+                      </span>
+                    ) : (
+                      <span className="text-slate-600 text-xs font-semibold">—</span>
+                    )}
+                    <span className="text-slate-500 text-xs font-semibold uppercase tracking-wider">
+                      {group.entries.length} {group.entries.length === 1 ? 'fight' : 'fights'}
+                    </span>
+                  </div>
                 </button>
                 {open && (
                   <div className="space-y-4 px-4 pb-4">
@@ -10498,7 +7679,7 @@ function ROITab({
                         <p className="text-slate-500 text-xs uppercase tracking-wider">
                           Model Pick
                         </p>
-                        <span className="text-[10px] font-bold text-violet-400 bg-violet-900/30 border border-violet-700/40 px-1.5 py-0.5 rounded uppercase">
+                        <span className="text-[10px] font-bold text-violet-400 bg-violet-900/30 border border-violet-700/40 px-1.5 py-0.5 rounded-sm uppercase">
                           v2
                         </span>
                       </div>
@@ -10627,7 +7808,7 @@ function ROITab({
                       onChange={(e) =>
                         onUpdateEntry(entry.id, { eventName: e.target.value })
                       }
-                      className="w-full bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-red-500"
+                      className="w-full bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:outline-hidden focus:border-red-500"
                     />
                   </div>
                   <div>
@@ -10640,7 +7821,7 @@ function ROITab({
                       onChange={(e) =>
                         onUpdateEntry(entry.id, { eventDate: e.target.value })
                       }
-                      className="w-full bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-red-500"
+                      className="w-full h-10 bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:outline-hidden focus:border-red-500"
                     />
                   </div>
                   <div>
@@ -10658,7 +7839,7 @@ function ROITab({
                               : entry.oddsB || '',
                         })
                       }
-                      className="w-full bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-red-500"
+                      className="w-full bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:outline-hidden focus:border-red-500"
                     >
                       <option value={entry.fighterA}>{entry.fighterA}</option>
                       <option value={entry.fighterB}>{entry.fighterB}</option>
@@ -10677,7 +7858,7 @@ function ROITab({
                         })
                       }
                       placeholder="-150"
-                      className="w-full bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-red-500"
+                      className="w-full bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:outline-hidden focus:border-red-500"
                     />
                   </div>
                   <div>
@@ -10691,7 +7872,7 @@ function ROITab({
                           actualWinner: e.target.value,
                         })
                       }
-                      className="w-full bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-red-500"
+                      className="w-full bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:outline-hidden focus:border-red-500"
                     >
                       <option value="">Pending</option>
                       <option value={entry.fighterA}>{entry.fighterA}</option>
@@ -10929,4 +8110,31 @@ function InfoTab() {
 
     </div>
   );
+}
+
+// ─── DEV-ONLY GOLDEN BRIDGE — Foundation Stage 0 ─────────────────────────────
+// TEMPORARY. Removed together with src/__dev__/goldenHarness.js in Stage 4.
+//
+// Exposes existing module-scope values for read-only capture by the Stage 0
+// golden harness. It runs no computation on load — the harness invokes
+// explicitly. No function, coefficient, or model behavior is modified by this
+// block; it only creates a frozen reference to values that already exist.
+//
+// Guard swapped from process.env.NODE_ENV to import.meta.env.DEV in Stage 1a,
+// now that Vite is the bundler. Verified absent from production builds by grep
+// and at runtime — see baseline/metrics.md.
+if (import.meta.env.DEV) {
+  window.__FM_GOLDEN_INTERNALS__ = Object.freeze({
+    FIGHTERS,
+    ROI_ENTRIES,
+    computeMatchupEdges,
+    buildRoiEntry,
+    computeROISummary,
+    computeV2Summary,
+    computeCalibrationReliability,
+    computeRoiByMarketBand,
+    computeBetTierBreakdown,
+    computeCumulativePnl,
+    computeMonthlyPerformance,
+  });
 }

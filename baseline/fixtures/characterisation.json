@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "captureMs": 1785209281945,
+  "captureIso": "2026-07-28T03:28:01.945Z",
+  "captureBase": "foundation/stage-0 (origin/main fa3e54e + rebased ROI event-summary 9dd3a60)",
+  "rematch": {
+    "label": "CURRENT_BEHAVIOUR_CHARACTERISATION",
+    "isDesiredInvariant": false,
+    "note": "Upcoming dedup ignores event, so a rematch at a different event is treated as a duplicate. Event-aware identity belongs to the Stage 6 schema and Stage 11 migration. Do NOT change during the refactor.",
+    "sourceRef": "App.js:9418-9420",
+    "contrastRef": "App.js:1060 (backtest dedup includes fight.ev)",
+    "keyFormula": "[fighterA, fighterB].sort().join(\"|\")",
+    "keyExample": "Fighter A|Fighter B",
+    "orderInsensitive": true,
+    "eventInsensitive": true
+  },
+  "dateDerivedFields": [
+    "DAYS_SINCE_LAST",
+    "LAYOFF_PENALTY"
+  ]
+}

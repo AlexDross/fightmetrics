@@ -1,0 +1,651 @@
+{
+  "schemaVersion": 1,
+  "captureMs": 1785209281945,
+  "captureIso": "2026-07-28T03:28:01.945Z",
+  "captureBase": "foundation/stage-0 (origin/main fa3e54e + rebased ROI event-summary 9dd3a60)",
+  "statistics": {
+    "all": {
+      "entryCount": 153,
+      "results": [
+        {
+          "label": "computeROISummary",
+          "ok": true,
+          "value": {
+            "total": 142,
+            "graded": 142,
+            "correct": 83,
+            "accuracy": 59.285714285714285,
+            "bets": 141,
+            "profit": 2.8782848228610165,
+            "roi": 2.012786589413298
+          }
+        },
+        {
+          "label": "computeROISummary_emptyProspectSet",
+          "ok": true,
+          "value": {
+            "total": 142,
+            "graded": 142,
+            "correct": 83,
+            "accuracy": 59.285714285714285,
+            "bets": 141,
+            "profit": 2.8782848228610165,
+            "roi": 2.012786589413298
+          }
+        },
+        {
+          "label": "computeV2Summary",
+          "ok": true,
+          "value": {
+            "graded": 69,
+            "correct": 49,
+            "accuracy": 71.01449275362319,
+            "bets": 68,
+            "profit": 7.4748922620733635,
+            "roi": 10.678417517247663
+          }
+        },
+        {
+          "label": "computeCalibrationReliability_v1",
+          "ok": true,
+          "value": [
+            {
+              "bucket": "50-60%",
+              "n": 32,
+              "predictedMean": 55.53651494723957,
+              "actualWinRate": 53.125,
+              "lowN": false
+            },
+            {
+              "bucket": "60-70%",
+              "n": 24,
+              "predictedMean": 63.83628922597461,
+              "actualWinRate": 66.66666666666666,
+              "lowN": false
+            },
+            {
+              "bucket": "70-80%",
+              "n": 11,
+              "predictedMean": 74.36049381562158,
+              "actualWinRate": 81.81818181818183,
+              "lowN": false
+            },
+            {
+              "bucket": "80-90%",
+              "n": 2,
+              "predictedMean": 81.10419484119491,
+              "actualWinRate": 50,
+              "lowN": true
+            },
+            {
+              "bucket": "90%+",
+              "n": 0,
+              "predictedMean": null,
+              "actualWinRate": null,
+              "lowN": false
+            }
+          ]
+        },
+        {
+          "label": "computeCalibrationReliability_v2",
+          "ok": true,
+          "value": [
+            {
+              "bucket": "50-60%",
+              "n": 16,
+              "predictedMean": 55.13743505005008,
+              "actualWinRate": 68.75,
+              "lowN": false
+            },
+            {
+              "bucket": "60-70%",
+              "n": 6,
+              "predictedMean": 66.00887152089493,
+              "actualWinRate": 50,
+              "lowN": true
+            },
+            {
+              "bucket": "70-80%",
+              "n": 4,
+              "predictedMean": 73.45962352615678,
+              "actualWinRate": 100,
+              "lowN": true
+            },
+            {
+              "bucket": "80-90%",
+              "n": 1,
+              "predictedMean": 82.51147679473273,
+              "actualWinRate": 100,
+              "lowN": true
+            },
+            {
+              "bucket": "90%+",
+              "n": 0,
+              "predictedMean": null,
+              "actualWinRate": null,
+              "lowN": false
+            }
+          ]
+        },
+        {
+          "label": "computeRoiByMarketBand",
+          "ok": true,
+          "value": [
+            {
+              "band": "<55%",
+              "n": 63,
+              "roi": 2.6103806476477294,
+              "lowN": false
+            },
+            {
+              "band": "55-60%",
+              "n": 10,
+              "roi": 2.2512082952989254,
+              "lowN": false
+            },
+            {
+              "band": "60-65%",
+              "n": 18,
+              "roi": 11.000441916754227,
+              "lowN": false
+            },
+            {
+              "band": "65-70%",
+              "n": 15,
+              "roi": -41.26750325569242,
+              "lowN": false
+            },
+            {
+              "band": "70-80%",
+              "n": 19,
+              "roi": 16.742217018697257,
+              "lowN": false
+            },
+            {
+              "band": "80%+",
+              "n": 27,
+              "roi": -3.186655359260994,
+              "lowN": false
+            }
+          ]
+        },
+        {
+          "label": "computeBetTierBreakdown",
+          "ok": true,
+          "value": [
+            {
+              "tier": "STRONG BET",
+              "n": 0,
+              "winRate": null,
+              "roi": null,
+              "lowN": false
+            },
+            {
+              "tier": "BET",
+              "n": 0,
+              "winRate": null,
+              "roi": null,
+              "lowN": false
+            },
+            {
+              "tier": "LEAN",
+              "n": 10,
+              "winRate": 30,
+              "roi": -52.23665223665223,
+              "lowN": false
+            },
+            {
+              "tier": "NO BET",
+              "n": 58,
+              "winRate": 77.58620689655173,
+              "roi": 21.164262476230977,
+              "lowN": false
+            }
+          ]
+        },
+        {
+          "label": "computeCumulativePnl",
+          "ok": true,
+          "value": [
+            {
+              "eventName": "UFC Vegas 115",
+              "eventDate": "2026-04-04",
+              "n": 10,
+              "eventProfit": 0.5485401201838105,
+              "cumulative": 0.5485401201838105
+            },
+            {
+              "eventName": "UFC 327",
+              "eventDate": "2026-04-11",
+              "n": 12,
+              "eventProfit": 3.950261608835195,
+              "cumulative": 4.498801729019005
+            },
+            {
+              "eventName": "UFC Winnipeg",
+              "eventDate": "2026-04-18",
+              "n": 12,
+              "eventProfit": -2.03071879945227,
+              "cumulative": 2.4680829295667355
+            },
+            {
+              "eventName": "UFC Vegas 116",
+              "eventDate": "2026-04-25",
+              "n": 13,
+              "eventProfit": -0.9332083723836297,
+              "cumulative": 1.5348745571831057
+            },
+            {
+              "eventName": "UFC Perth",
+              "eventDate": "2026-05-02",
+              "n": 13,
+              "eventProfit": -0.8677090388246831,
+              "cumulative": 0.6671655183584226
+            },
+            {
+              "eventName": "UFC 328",
+              "eventDate": "2026-05-09",
+              "n": 13,
+              "eventProfit": 3.86365441992095,
+              "cumulative": 4.530819938279373
+            },
+            {
+              "eventName": "UFC Vegas 117",
+              "eventDate": "2026-05-16",
+              "n": 10,
+              "eventProfit": -2.616009012300572,
+              "cumulative": 1.9148109259788004
+            },
+            {
+              "eventName": "UFC Macau",
+              "eventDate": "2026-05-23",
+              "n": 6,
+              "eventProfit": 1.1499999999999997,
+              "cumulative": 3.0648109259788
+            },
+            {
+              "eventName": "UFC Vegas 118",
+              "eventDate": "2026-06-06",
+              "n": 11,
+              "eventProfit": -0.15348113090048598,
+              "cumulative": 2.9113297950783137
+            },
+            {
+              "eventName": "Freedom 250",
+              "eventDate": "2026-06-14",
+              "n": 7,
+              "eventProfit": -2.0548525099189234,
+              "cumulative": 0.8564772851593903
+            },
+            {
+              "eventName": "UFC Vegas 119",
+              "eventDate": "2026-06-20",
+              "n": 9,
+              "eventProfit": 0.29785067873303195,
+              "cumulative": 1.1543279638924222
+            },
+            {
+              "eventName": "UFC Fight Night Baku",
+              "eventDate": "2026-06-27",
+              "n": 10,
+              "eventProfit": -3.1341711376774493,
+              "cumulative": -1.979843173785027
+            },
+            {
+              "eventName": "UFC 329",
+              "eventDate": "2026-07-11",
+              "n": 12,
+              "eventProfit": -1.1639644337854058,
+              "cumulative": -3.143807607570433
+            },
+            {
+              "eventName": "UFC Fight Night OKC",
+              "eventDate": "2026-07-18",
+              "n": 8,
+              "eventProfit": 5.243815708101422,
+              "cumulative": 2.1000081005309887
+            },
+            {
+              "eventName": "UFC Fight Night Abu Dhabi",
+              "eventDate": "2026-07-25",
+              "n": 6,
+              "eventProfit": -2.1197691197691197,
+              "cumulative": -0.019761019238131006
+            }
+          ]
+        },
+        {
+          "label": "computeMonthlyPerformance",
+          "ok": true,
+          "value": [
+            {
+              "month": "2026-04",
+              "n": 47,
+              "winRate": 51.06382978723404,
+              "staked": 47,
+              "netUnits": 1.5348745571831062,
+              "roi": 3.265690547198098
+            },
+            {
+              "month": "2026-05",
+              "n": 42,
+              "winRate": 57.14285714285714,
+              "staked": 42,
+              "netUnits": 1.5299363687956942,
+              "roi": 3.642705639989748
+            },
+            {
+              "month": "2026-06",
+              "n": 37,
+              "winRate": 59.45945945945946,
+              "staked": 37,
+              "netUnits": -5.044654099763827,
+              "roi": -13.634200269631966
+            },
+            {
+              "month": "2026-07",
+              "n": 26,
+              "winRate": 69.23076923076923,
+              "staked": 28,
+              "netUnits": 1.9600821545468965,
+              "roi": 7.000293409096059
+            }
+          ]
+        }
+      ]
+    },
+    "since_2026-05-23": {
+      "entryCount": 70,
+      "results": [
+        {
+          "label": "computeROISummary",
+          "ok": true,
+          "value": {
+            "total": 70,
+            "graded": 70,
+            "correct": 43,
+            "accuracy": 62.31884057971014,
+            "bets": 69,
+            "profit": -1.9345719452169314,
+            "roi": -2.7247492186153965
+          }
+        },
+        {
+          "label": "computeROISummary_emptyProspectSet",
+          "ok": true,
+          "value": {
+            "total": 70,
+            "graded": 70,
+            "correct": 43,
+            "accuracy": 62.31884057971014,
+            "bets": 69,
+            "profit": -1.9345719452169314,
+            "roi": -2.7247492186153965
+          }
+        },
+        {
+          "label": "computeV2Summary",
+          "ok": true,
+          "value": {
+            "graded": 69,
+            "correct": 49,
+            "accuracy": 71.01449275362319,
+            "bets": 68,
+            "profit": 7.4748922620733635,
+            "roi": 10.678417517247663
+          }
+        },
+        {
+          "label": "computeCalibrationReliability_v1",
+          "ok": true,
+          "value": [
+            {
+              "bucket": "50-60%",
+              "n": 32,
+              "predictedMean": 55.53651494723957,
+              "actualWinRate": 53.125,
+              "lowN": false
+            },
+            {
+              "bucket": "60-70%",
+              "n": 24,
+              "predictedMean": 63.83628922597461,
+              "actualWinRate": 66.66666666666666,
+              "lowN": false
+            },
+            {
+              "bucket": "70-80%",
+              "n": 11,
+              "predictedMean": 74.36049381562158,
+              "actualWinRate": 81.81818181818183,
+              "lowN": false
+            },
+            {
+              "bucket": "80-90%",
+              "n": 2,
+              "predictedMean": 81.10419484119491,
+              "actualWinRate": 50,
+              "lowN": true
+            },
+            {
+              "bucket": "90%+",
+              "n": 0,
+              "predictedMean": null,
+              "actualWinRate": null,
+              "lowN": false
+            }
+          ]
+        },
+        {
+          "label": "computeCalibrationReliability_v2",
+          "ok": true,
+          "value": [
+            {
+              "bucket": "50-60%",
+              "n": 16,
+              "predictedMean": 55.13743505005008,
+              "actualWinRate": 68.75,
+              "lowN": false
+            },
+            {
+              "bucket": "60-70%",
+              "n": 6,
+              "predictedMean": 66.00887152089493,
+              "actualWinRate": 50,
+              "lowN": true
+            },
+            {
+              "bucket": "70-80%",
+              "n": 4,
+              "predictedMean": 73.45962352615678,
+              "actualWinRate": 100,
+              "lowN": true
+            },
+            {
+              "bucket": "80-90%",
+              "n": 1,
+              "predictedMean": 82.51147679473273,
+              "actualWinRate": 100,
+              "lowN": true
+            },
+            {
+              "bucket": "90%+",
+              "n": 0,
+              "predictedMean": null,
+              "actualWinRate": null,
+              "lowN": false
+            }
+          ]
+        },
+        {
+          "label": "computeRoiByMarketBand",
+          "ok": true,
+          "value": [
+            {
+              "band": "<55%",
+              "n": 25,
+              "roi": -16.87585168454734,
+              "lowN": false
+            },
+            {
+              "band": "55-60%",
+              "n": 2,
+              "roi": -100,
+              "lowN": true
+            },
+            {
+              "band": "60-65%",
+              "n": 6,
+              "roi": 57.86342587813175,
+              "lowN": true
+            },
+            {
+              "band": "65-70%",
+              "n": 7,
+              "roi": -37.32623484176279,
+              "lowN": true
+            },
+            {
+              "band": "70-80%",
+              "n": 13,
+              "roi": 29.819843527748514,
+              "lowN": false
+            },
+            {
+              "band": "80%+",
+              "n": 16,
+              "roi": -2.8197362278244613,
+              "lowN": false
+            }
+          ]
+        },
+        {
+          "label": "computeBetTierBreakdown",
+          "ok": true,
+          "value": [
+            {
+              "tier": "STRONG BET",
+              "n": 0,
+              "winRate": null,
+              "roi": null,
+              "lowN": false
+            },
+            {
+              "tier": "BET",
+              "n": 0,
+              "winRate": null,
+              "roi": null,
+              "lowN": false
+            },
+            {
+              "tier": "LEAN",
+              "n": 10,
+              "winRate": 30,
+              "roi": -52.23665223665223,
+              "lowN": false
+            },
+            {
+              "tier": "NO BET",
+              "n": 58,
+              "winRate": 77.58620689655173,
+              "roi": 21.164262476230977,
+              "lowN": false
+            }
+          ]
+        },
+        {
+          "label": "computeCumulativePnl",
+          "ok": true,
+          "value": [
+            {
+              "eventName": "UFC Macau",
+              "eventDate": "2026-05-23",
+              "n": 6,
+              "eventProfit": 1.1499999999999997,
+              "cumulative": 1.1499999999999997
+            },
+            {
+              "eventName": "UFC Vegas 118",
+              "eventDate": "2026-06-06",
+              "n": 11,
+              "eventProfit": -0.15348113090048598,
+              "cumulative": 0.9965188690995137
+            },
+            {
+              "eventName": "Freedom 250",
+              "eventDate": "2026-06-14",
+              "n": 7,
+              "eventProfit": -2.0548525099189234,
+              "cumulative": -1.0583336408194097
+            },
+            {
+              "eventName": "UFC Vegas 119",
+              "eventDate": "2026-06-20",
+              "n": 9,
+              "eventProfit": 0.29785067873303195,
+              "cumulative": -0.7604829620863778
+            },
+            {
+              "eventName": "UFC Fight Night Baku",
+              "eventDate": "2026-06-27",
+              "n": 10,
+              "eventProfit": -3.1341711376774493,
+              "cumulative": -3.894654099763827
+            },
+            {
+              "eventName": "UFC 329",
+              "eventDate": "2026-07-11",
+              "n": 12,
+              "eventProfit": -1.1639644337854058,
+              "cumulative": -5.058618533549232
+            },
+            {
+              "eventName": "UFC Fight Night OKC",
+              "eventDate": "2026-07-18",
+              "n": 8,
+              "eventProfit": 5.243815708101422,
+              "cumulative": 0.1851971745521892
+            },
+            {
+              "eventName": "UFC Fight Night Abu Dhabi",
+              "eventDate": "2026-07-25",
+              "n": 6,
+              "eventProfit": -2.1197691197691197,
+              "cumulative": -1.9345719452169305
+            }
+          ]
+        },
+        {
+          "label": "computeMonthlyPerformance",
+          "ok": true,
+          "value": [
+            {
+              "month": "2026-05",
+              "n": 6,
+              "winRate": 50,
+              "staked": 6,
+              "netUnits": 1.1499999999999997,
+              "roi": 19.16666666666666
+            },
+            {
+              "month": "2026-06",
+              "n": 37,
+              "winRate": 59.45945945945946,
+              "staked": 37,
+              "netUnits": -5.044654099763827,
+              "roi": -13.634200269631966
+            },
+            {
+              "month": "2026-07",
+              "n": 26,
+              "winRate": 69.23076923076923,
+              "staked": 28,
+              "netUnits": 1.9600821545468965,
+              "roi": 7.000293409096059
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

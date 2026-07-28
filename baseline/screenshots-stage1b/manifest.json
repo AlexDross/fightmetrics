@@ -1,0 +1,129 @@
+{
+  "capturedAt": "2026-07-28T05:43:06.500Z",
+  "baseUrl": "http://localhost:3001",
+  "tabs": [
+    "Home",
+    "Simulator",
+    "Upcoming",
+    "ROI",
+    "Statistics",
+    "Explore",
+    "Info"
+  ],
+  "viewports": [
+    {
+      "label": "375w",
+      "width": 375,
+      "height": 812,
+      "dsf": 2,
+      "mobile": true
+    },
+    {
+      "label": "1440w",
+      "width": 1440,
+      "height": 900,
+      "dsf": 1,
+      "mobile": false
+    }
+  ],
+  "shots": [
+    {
+      "viewport": "375w",
+      "tab": "Home",
+      "file": "375w__home.png",
+      "clicked": true,
+      "bytes": 218868
+    },
+    {
+      "viewport": "375w",
+      "tab": "Simulator",
+      "file": "375w__simulator.png",
+      "clicked": true,
+      "bytes": 49209
+    },
+    {
+      "viewport": "375w",
+      "tab": "Upcoming",
+      "file": "375w__upcoming.png",
+      "clicked": true,
+      "bytes": 396720
+    },
+    {
+      "viewport": "375w",
+      "tab": "ROI",
+      "file": "375w__roi.png",
+      "clicked": true,
+      "bytes": 731889
+    },
+    {
+      "viewport": "375w",
+      "tab": "Statistics",
+      "file": "375w__statistics.png",
+      "clicked": true,
+      "bytes": 861468
+    },
+    {
+      "viewport": "375w",
+      "tab": "Explore",
+      "file": "375w__explore.png",
+      "clicked": true,
+      "bytes": 218963
+    },
+    {
+      "viewport": "375w",
+      "tab": "Info",
+      "file": "375w__info.png",
+      "clicked": true,
+      "bytes": 901217
+    },
+    {
+      "viewport": "1440w",
+      "tab": "Home",
+      "file": "1440w__home.png",
+      "clicked": true,
+      "bytes": 121087
+    },
+    {
+      "viewport": "1440w",
+      "tab": "Simulator",
+      "file": "1440w__simulator.png",
+      "clicked": true,
+      "bytes": 39553
+    },
+    {
+      "viewport": "1440w",
+      "tab": "Upcoming",
+      "file": "1440w__upcoming.png",
+      "clicked": true,
+      "bytes": 261376
+    },
+    {
+      "viewport": "1440w",
+      "tab": "ROI",
+      "file": "1440w__roi.png",
+      "clicked": true,
+      "bytes": 402191
+    },
+    {
+      "viewport": "1440w",
+      "tab": "Statistics",
+      "file": "1440w__statistics.png",
+      "clicked": true,
+      "bytes": 377409
+    },
+    {
+      "viewport": "1440w",
+      "tab": "Explore",
+      "file": "1440w__explore.png",
+      "clicked": true,
+      "bytes": 241699
+    },
+    {
+      "viewport": "1440w",
+      "tab": "Info",
+      "file": "1440w__info.png",
+      "clicked": true,
+      "bytes": 357438
+    }
+  ]
+}

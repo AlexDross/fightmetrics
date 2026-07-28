@@ -23,7 +23,6 @@ from datetime import datetime, date, timedelta
 SRC          = os.path.dirname(os.path.abspath(__file__))
 JS_PATH      = os.path.join(SRC, 'src', 'fightersData.js')
 FH_PATH      = os.path.join(SRC, 'src', 'fightHistory.js')
-UPCOMING_PATH = os.path.join(SRC, 'src', 'upcomingCard.js')
 PROSPECT_PATH = os.path.join(SRC, 'src', 'prospectsData.js')
 NAME_ALIASES_PATH = os.path.join(SRC, 'name_aliases.json')
 
@@ -594,101 +593,3 @@ for name in checks:
     r = record_updates.get(name, {})
     print(f"  {name:25s} | {r.get('wi','?')}-{r.get('lo','?')} "
           f"| ws:{r.get('ws','?')} ls:{r.get('ls','?')} | lfd:{r.get('lfd','?')}")
-
-# ─── Generate upcomingCard.js ─────────────────────────────────────────────────
-def generate_upcoming_card():
-    upcoming_csv = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'upcoming.csv')
-    if not os.path.exists(upcoming_csv):
-        print("\n⚠️  upcoming.csv not found — writing empty upcomingCard.js")
-        with open(UPCOMING_PATH, 'w') as f:
-            f.write("export const UPCOMING_CARD = [];\n")
-        return
-
-    try:
-        df = pd.read_csv(upcoming_csv, dtype=str)
-    except Exception as e:
-        print(f"\n⚠️  Could not read upcoming.csv ({e}) — writing empty upcomingCard.js")
-        with open(UPCOMING_PATH, 'w') as f:
-            f.write("export const UPCOMING_CARD = [];\n")
-        return
-
-    today_str = date.today().isoformat()
-    future = df[df['date'].fillna('') > today_str].copy()
-
-    if future.empty:
-        print("\n⚠️  No future fights in upcoming.csv — writing empty upcomingCard.js")
-        with open(UPCOMING_PATH, 'w') as f:
-            f.write("export const UPCOMING_CARD = [];\n")
-        return
-
-    # Take only the nearest upcoming event date
-    next_date = future['date'].min()
-    card_rows = future[future['date'] == next_date]
-
-    def fmt_odds(v):
-        try:
-            n = int(float(str(v).strip()))
-            return f"+{n}" if n > 0 else str(n)
-        except:
-            return ""
-
-    # Build known-fighter name set from fightersData.js for debut detection
-    known_fighters = set()
-    try:
-        with open(JS_PATH, 'r', encoding='utf-8') as jf:
-            js_content = jf.read()
-        for raw_name in re.findall(r"n:'((?:[^'\\]|\\.)*)'", js_content):
-            known_fighters.add(raw_name.replace("\\'", "'"))
-    except Exception as e:
-        print(f"⚠️  Could not read fightersData.js for debut detection ({e})")
-
-    entries = []
-    for _, row in card_rows.iterrows():
-        fighter_a = str(row.get('R_fighter', '')).strip()
-        fighter_b = str(row.get('B_fighter', '')).strip()
-        division  = str(row.get('weight_class', '')).strip()
-        rounds_raw = str(row.get('no_of_rounds', '3')).strip()
-        try:
-            rounds = int(float(rounds_raw))
-        except:
-            rounds = 3
-        title_raw = str(row.get('title_bout', 'False')).strip()
-        title_fight = title_raw.lower() in ('true', '1', 'yes')
-        odds_a = fmt_odds(row.get('R_odds', ''))
-        odds_b = fmt_odds(row.get('B_odds', ''))
-
-        if not fighter_a or not fighter_b:
-            continue
-
-        is_debut = bool(known_fighters) and (
-            fighter_a not in known_fighters or fighter_b not in known_fighters
-        )
-        if is_debut:
-            print(f"  🆕 Debut flagged: {fighter_a} vs {fighter_b}")
-
-        entry = {
-            'fighterA':  fighter_a,
-            'fighterB':  fighter_b,
-            'division':  division,
-            'rounds':    rounds,
-            'titleFight': title_fight,
-            'oddsA':     odds_a,
-            'oddsB':     odds_b,
-            'date':      next_date,
-        }
-        if is_debut:
-            entry['debutFighter'] = True
-        entries.append(entry)
-
-    js_entries = json.dumps(entries, indent=2, ensure_ascii=False)
-    with open(UPCOMING_PATH, 'w') as f:
-        f.write(f"export const UPCOMING_CARD = {js_entries};\n")
-
-    print(f"\n✅  upcomingCard.js — {len(entries)} fights for {next_date}")
-    for e in entries:
-        debut_tag = '  🆕 DEBUT' if e.get('debutFighter') else ''
-        print(f"     {e['fighterA']} vs {e['fighterB']}  [{e['division']}]  "
-              f"{e['oddsA']}/{e['oddsB']}"
-              f"{'  TITLE' if e['titleFight'] else ''}{debut_tag}")
-
-generate_upcoming_card()
