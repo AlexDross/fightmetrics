@@ -90,11 +90,16 @@ export const LEGACY_FIELD_MAP = Object.freeze({
     '_provenance.featureVector.v2': { to: 'PredictionSnapshot[basis=v2].featureVector' },
     '_provenance.featureVector.v1.*': { pattern: true, to: 'PredictionSnapshot[basis=legacy-v1-unversioned].featureVector.<key> (all 26 keys verbatim)' },
     '_provenance.featureVector.v2.*': { pattern: true, to: 'PredictionSnapshot[basis=v2].featureVector.<key> (all 16 keys verbatim)' },
-    '_provenance.fightHistoryCutoff': { to: 'PredictionSnapshot.fightHistoryCutoff' },
-    '_provenance.fightHistoryCutoff.fighterA': { to: 'PredictionSnapshot.fightHistoryCutoff.cornerA (orientation-mapped)' },
-    '_provenance.fightHistoryCutoff.fighterB': { to: 'PredictionSnapshot.fightHistoryCutoff.cornerB (orientation-mapped)' },
-    '_provenance.sourceManifest': { to: 'PredictionSnapshot.sourceManifest' },
-    '_provenance.sourceManifest.*': { pattern: true, to: 'PredictionSnapshot.sourceManifest.<module> (5 modules x 8 fields verbatim)' },
+    // Attached to BOTH snapshots of a full live record (22 rows). These describe
+    // the DATA the live calculation read, not one model's coefficients, and
+    // several manifest modules are explicitly feedsV2:true — so writing them
+    // only onto v1 would make the v2 snapshot look unprovenanced. Deliberate
+    // immutable duplication. Reconstructed rows supply neither and stay null.
+    '_provenance.fightHistoryCutoff': { to: 'PredictionSnapshot.fightHistoryCutoff (both bases)' },
+    '_provenance.fightHistoryCutoff.fighterA': { to: 'PredictionSnapshot.fightHistoryCutoff.cornerA (orientation-mapped, both bases)' },
+    '_provenance.fightHistoryCutoff.fighterB': { to: 'PredictionSnapshot.fightHistoryCutoff.cornerB (orientation-mapped, both bases)' },
+    '_provenance.sourceManifest': { to: 'PredictionSnapshot.sourceManifest (both bases)' },
+    '_provenance.sourceManifest.*': { pattern: true, to: 'PredictionSnapshot.sourceManifest.<module> (5 modules x 8 fields verbatim, both bases)' },
   },
 
   // ── Prop picks ──────────────────────────────────────────────────────────
@@ -169,6 +174,8 @@ export const GENERATED_FIELD_SOURCES = Object.freeze({
   'PredictionSnapshot.captureMode': 'legacy _provenance.captureMode, else "unknown" — never assumed "reconstructed"',
   'PredictionSnapshot[basis=legacy-v1-unversioned].capturedAt': 'legacy createdAt (no separate v1 timestamp exists in any generation)',
   'PredictionSnapshot.basis': 'derived: "legacy-v1-unversioned" for the original output, "v2" when v2pA/v2pB exist',
+  'PredictionSnapshot.sourceManifest': 'legacy _provenance.sourceManifest, copied to BOTH bases of the 22 full live records; null for the other 193 snapshots',
+  'PredictionSnapshot.fightHistoryCutoff': 'legacy _provenance.fightHistoryCutoff, orientation-mapped and copied to BOTH bases of the 22 full live records; null elsewhere',
   'MarketSnapshot.source': 'canonical default "manual"',
   'MarketSnapshot.capturedAt': 'legacy createdAt — the odds belong to the original save, not a later v2 reconstruction',
   'BettingAssessment.tierProvenance': 'derived: stored / frozenTier / absent',

@@ -60,10 +60,28 @@ export function checkInvariants(store) {
     const decision = snapshots.get(run.decisionSnapshotId);
     if (!decision) {
       push(out, 'FK_MISSING', 'run.decisionSnapshotId does not resolve', run.id);
-    } else if (decision.runId !== run.id) {
+    } else {
       // The whole point of replacing the duplicated decisionBasis/isDecisionBasis
-      // flags: the pointer must belong to its own run.
-      push(out, 'DECISION_SNAPSHOT_FOREIGN', 'decisionSnapshotId belongs to another run', run.id);
+      // flags: the pointer must belong to its own run AND its own bout.
+      if (decision.runId !== run.id) {
+        push(out, 'DECISION_SNAPSHOT_FOREIGN', 'decisionSnapshotId belongs to another run', run.id);
+      }
+      if (decision.boutId !== run.boutId) {
+        push(out, 'DECISION_SNAPSHOT_FOREIGN_BOUT', 'decisionSnapshotId belongs to another bout', run.id);
+      }
+    }
+
+    // Derived flag consistency. Only checked when both corner flags are known:
+    // 22 legacy rows record neither, and null means unknown, not false.
+    if (
+      run.cornerAIsProspectAtCapture !== null &&
+      run.cornerBIsProspectAtCapture !== null &&
+      run.includesProspectAtCapture !== null
+    ) {
+      const expected = run.cornerAIsProspectAtCapture || run.cornerBIsProspectAtCapture;
+      if (run.includesProspectAtCapture !== expected) {
+        push(out, 'PROSPECT_FLAG_MISMATCH', 'includesProspectAtCapture is not the OR of the corner flags', run.id);
+      }
     }
   }
 
@@ -86,6 +104,11 @@ export function checkInvariants(store) {
     }
     if (s.captureMode !== 'reconstructed' && s.reconstruction !== null) {
       push(out, 'RECONSTRUCTION_UNEXPECTED', 'reconstruction present on a non-reconstructed snapshot', s.id);
+    }
+    // Both directions. Claiming reconstruction without recording what was
+    // reconstructed is an unfalsifiable provenance claim.
+    if (s.captureMode === 'reconstructed' && s.reconstruction === null) {
+      push(out, 'RECONSTRUCTION_MISSING', 'a reconstructed snapshot must record its reconstruction details', s.id);
     }
   }
 
@@ -111,8 +134,14 @@ export function checkInvariants(store) {
     if (run && a.boutId !== run.boutId) {
       push(out, 'DENORM_MISMATCH', 'assessment.boutId disagrees with its run', a.id);
     }
-    if (a.marketSnapshotId !== null && !markets.has(a.marketSnapshotId)) {
-      push(out, 'FK_MISSING', 'assessment.marketSnapshotId does not resolve', a.id);
+    if (a.marketSnapshotId !== null) {
+      const m = markets.get(a.marketSnapshotId);
+      if (!m) {
+        push(out, 'FK_MISSING', 'assessment.marketSnapshotId does not resolve', a.id);
+      } else if (m.boutId !== a.boutId) {
+        // Pricing one fight against another fight's line is meaningless.
+        push(out, 'ASSESSMENT_MARKET_FOREIGN', 'assessment market snapshot belongs to another bout', a.id);
+      }
     }
     // ONE-WAY rule. No market => no market-derived values. The converse is NOT
     // asserted: a market may exist while a particular derived value is null.
@@ -136,7 +165,8 @@ export function checkInvariants(store) {
     if (t.boutId !== a.boutId) {
       push(out, 'DENORM_MISMATCH', 'trackedPosition.boutId disagrees with its assessment', t.id);
     }
-    checkFinancialComputability(out, t, a, markets, bouts);
+    // A tracked position is scored against the market its ASSESSMENT froze.
+    checkFinancialComputability(out, t, a.marketSnapshotId, markets, bouts);
   }
 
   // ── Wager ────────────────────────────────────────────────────────────────
@@ -161,17 +191,33 @@ export function checkInvariants(store) {
     if (w.settlement.status === 'settled' && w.settlement.settledAt === null) {
       push(out, 'WAGER_SETTLED_AT_NULL', 'a wager settlement must record when it settled', w.id);
     }
-    checkFinancialComputability(out, w, a, markets, bouts);
+    // A wager is scored against ITS OWN market, not the assessment's. A real
+    // bet may deliberately be taken at a later or different line, so reading
+    // the assessment market here would validate the wrong price entirely —
+    // an assessment with a priced corner would excuse a wager whose own market
+    // never priced that corner.
+    checkFinancialComputability(out, w, w.marketSnapshotId, markets, bouts);
   }
 
   // ── Prop / Parlay ────────────────────────────────────────────────────────
   for (const p of store.props) {
     if (!events.has(p.eventId)) push(out, 'FK_MISSING', 'prop.eventId does not resolve', p.id);
-    if (p.target.kind === 'bout' && !bouts.has(p.target.boutId)) {
-      push(out, 'FK_MISSING', 'prop.target.boutId does not resolve', p.id);
+    if (p.target.kind === 'bout') {
+      const bout = bouts.get(p.target.boutId);
+      if (!bout) {
+        push(out, 'FK_MISSING', 'prop.target.boutId does not resolve', p.id);
+      } else if (bout.eventId !== p.eventId) {
+        // Otherwise a prop could claim to belong to one card while pointing at
+        // a fight on another.
+        push(out, 'PROP_EVENT_MISMATCH', 'prop.eventId disagrees with its target bout\'s event', p.id);
+      }
     }
-    if (p.target.kind === 'event' && !events.has(p.target.eventId)) {
-      push(out, 'FK_MISSING', 'prop.target.eventId does not resolve', p.id);
+    if (p.target.kind === 'event') {
+      if (!events.has(p.target.eventId)) {
+        push(out, 'FK_MISSING', 'prop.target.eventId does not resolve', p.id);
+      } else if (p.target.eventId !== p.eventId) {
+        push(out, 'PROP_EVENT_MISMATCH', 'event-level prop targets a different event than it belongs to', p.id);
+      }
     }
   }
 
@@ -191,9 +237,14 @@ export function checkInvariants(store) {
 }
 
 /**
- * Financial computability depends on the SELECTED corner's odds, not merely on
- * whether a market snapshot exists — a partial market can price one corner and
- * not the other.
+ * Financial computability depends on the SELECTED corner's odds in the
+ * RELEVANT market, not merely on whether some market snapshot exists — a
+ * partial market can price one corner and not the other.
+ *
+ * The relevant market differs per record type, so it is passed in rather than
+ * read from the assessment:
+ *   TrackedPosition -> assessment.marketSnapshotId  (the frozen assessment price)
+ *   Wager           -> wager.marketSnapshotId       (the price actually taken)
  *
  *   open                       -> no financial result at all
  *   settled draw  -> push,  computed 0
@@ -201,12 +252,12 @@ export function checkInvariants(store) {
  *   decisive, selected corner priced      -> computed profit
  *   decisive, selected corner not priced  -> uncomputable
  */
-function checkFinancialComputability(out, position, assessment, markets, bouts) {
+function checkFinancialComputability(out, position, marketSnapshotId, markets, bouts) {
   const s = position.settlement;
   if (s.status !== 'settled') return;
 
   const bout = bouts.get(position.boutId);
-  const market = assessment.marketSnapshotId ? markets.get(assessment.marketSnapshotId) : null;
+  const market = marketSnapshotId ? markets.get(marketSnapshotId) : null;
   const selectedOdds = market ? (position.corner === 'A' ? market.oddsA : market.oddsB) : null;
 
   if (bout && bout.result.status === 'resolved') {

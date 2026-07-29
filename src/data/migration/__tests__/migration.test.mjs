@@ -162,6 +162,85 @@ describe('v1 / v2 are both preserved', () => {
     }
   });
 
+  it('attaches shared source provenance to BOTH snapshots of a full live record', () => {
+    // sourceManifest and fightHistoryCutoff describe the DATA the live
+    // calculation read, not one model's coefficients — several manifest modules
+    // are explicitly feedsV2:true. Attaching them only to v1 made the v2
+    // snapshot look like it had no provenance when the legacy record supplied it.
+    const full = [...ROI_ENTRIES, ...UPCOMING_ENTRIES].filter((e) => e._provenance?.sourceManifest);
+    expect(full).toHaveLength(22);
+
+    const byRun = new Map();
+    for (const s of store.predictionSnapshots) {
+      if (!byRun.has(s.runId)) byRun.set(s.runId, {});
+      byRun.get(s.runId)[s.basis] = s;
+    }
+
+    let pairs = 0;
+    for (const entry of full) {
+      const run = store.predictionRuns.find((r) => r.legacyEntryId === entry.id);
+      const { 'legacy-v1-unversioned': v1, v2 } = byRun.get(run.id);
+      expect(v1.sourceManifest, `${entry.id} v1 manifest`).not.toBe(null);
+      expect(v1.fightHistoryCutoff, `${entry.id} v1 cutoff`).not.toBe(null);
+      expect(v2, `${entry.id} should have a v2 snapshot`).toBeTruthy();
+      // Byte-equivalent, not merely present.
+      expect(JSON.stringify(v2.sourceManifest)).toBe(JSON.stringify(v1.sourceManifest));
+      expect(JSON.stringify(v2.fightHistoryCutoff)).toBe(JSON.stringify(v1.fightHistoryCutoff));
+      // featureVector stays SPLIT by basis — those are genuinely per-model.
+      expect(JSON.stringify(v1.featureVector)).not.toBe(JSON.stringify(v2.featureVector));
+      // At least one manifest module declares it feeds v2, which is why the
+      // duplication is correct rather than contradictory.
+      expect(Object.values(v1.sourceManifest).some((m) => m.feedsV2 === true)).toBe(true);
+      pairs++;
+    }
+    expect(pairs).toBe(22);
+
+    const v1WithManifest = store.predictionSnapshots.filter(
+      (s) => s.basis === 'legacy-v1-unversioned' && s.sourceManifest !== null
+    );
+    const v2WithManifest = store.predictionSnapshots.filter(
+      (s) => s.basis === 'v2' && s.sourceManifest !== null
+    );
+    expect(v1WithManifest).toHaveLength(22);
+    expect(v2WithManifest).toHaveLength(22);
+    expect(store.predictionSnapshots.filter((s) => s.fightHistoryCutoff !== null)).toHaveLength(44);
+  });
+
+  it('does not invent provenance for reconstructed records', () => {
+    const reconstructed = store.predictionSnapshots.filter((s) => s.captureMode === 'reconstructed');
+    expect(reconstructed).toHaveLength(43);
+    for (const s of reconstructed) {
+      expect(s.sourceManifest, 'reconstructed snapshots must not gain a manifest').toBe(null);
+      expect(s.fightHistoryCutoff, 'reconstructed snapshots must not gain a cutoff').toBe(null);
+    }
+    // Their v1 partners are equally bare: the legacy rows supplied neither.
+    const reconRuns = new Set(reconstructed.map((s) => s.runId));
+    for (const s of store.predictionSnapshots.filter((x) => reconRuns.has(x.runId))) {
+      expect(s.sourceManifest).toBe(null);
+      expect(s.fightHistoryCutoff).toBe(null);
+    }
+  });
+
+  it('keeps corner cutoffs orientation-correct on both snapshots', () => {
+    const bouts = new Map(store.bouts.map((b) => [b.id, b]));
+    let checked = 0;
+    for (const entry of [...ROI_ENTRIES, ...UPCOMING_ENTRIES]) {
+      const cutoff = entry._provenance?.fightHistoryCutoff;
+      if (!cutoff) continue;
+      const run = store.predictionRuns.find((r) => r.legacyEntryId === entry.id);
+      const bout = bouts.get(run.boutId);
+      const flipped = bout.cornerA.displayName !== entry.fighterA;
+      const expected = flipped
+        ? { cornerA: cutoff.fighterB, cornerB: cutoff.fighterA }
+        : { cornerA: cutoff.fighterA, cornerB: cutoff.fighterB };
+      for (const s of store.predictionSnapshots.filter((x) => x.runId === run.id)) {
+        expect(s.fightHistoryCutoff).toEqual(expected);
+      }
+      checked++;
+    }
+    expect(checked).toBe(22);
+  });
+
   it('never marks a provenance-less row as reconstructed', () => {
     const modes = new Map();
     for (const s of store.predictionSnapshots) modes.set(s.captureMode, (modes.get(s.captureMode) ?? 0) + 1);

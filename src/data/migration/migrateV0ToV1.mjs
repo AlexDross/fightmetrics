@@ -212,6 +212,24 @@ export function migrateV0ToV1(legacy, deps) {
     const decisionIsV2 = has(entry, 'modelUsed');
 
     // ── snapshots: one per model basis ───────────────────────────────────
+    //
+    // sourceManifest and fightHistoryCutoff describe the DATA the live
+    // calculation read, not one model's coefficients — several manifest modules
+    // are explicitly feedsV2:true. They are therefore attached to BOTH
+    // snapshots of a full live record, which is deliberate immutable provenance
+    // duplication rather than contradictory state. featureVector stays split by
+    // basis, because those really are per-model inputs.
+    //
+    // Reconstructed records supply neither field and must not gain invented
+    // provenance, so both stay null there.
+    const sharedCutoff = prov?.fightHistoryCutoff
+      ? {
+          cornerA: o.pick(prov.fightHistoryCutoff.fighterA, prov.fightHistoryCutoff.fighterB)[0] ?? null,
+          cornerB: o.pick(prov.fightHistoryCutoff.fighterA, prov.fightHistoryCutoff.fighterB)[1] ?? null,
+        }
+      : null;
+    const sharedManifest = prov?.sourceManifest ? normaliseManifest(prov.sourceManifest) : null;
+
     const [pA1, pB1] = o.pick(entry.fighterAProb, entry.fighterBProb);
     const v1Id = snapshotIdFor({ runId, basis: 'legacy-v1-unversioned' });
     predictionSnapshots.push({
@@ -229,13 +247,8 @@ export function migrateV0ToV1(legacy, deps) {
       captureMode: 'unknown',
       reconstruction: null,
       featureVector: prov?.featureVector?.v1 ? { ...prov.featureVector.v1 } : null,
-      fightHistoryCutoff: prov?.fightHistoryCutoff
-        ? {
-            cornerA: o.pick(prov.fightHistoryCutoff.fighterA, prov.fightHistoryCutoff.fighterB)[0] ?? null,
-            cornerB: o.pick(prov.fightHistoryCutoff.fighterA, prov.fightHistoryCutoff.fighterB)[1] ?? null,
-          }
-        : null,
-      sourceManifest: prov?.sourceManifest ? normaliseManifest(prov.sourceManifest) : null,
+      fightHistoryCutoff: sharedCutoff,
+      sourceManifest: sharedManifest,
     });
 
     let v2Id = null;
@@ -268,8 +281,9 @@ export function migrateV0ToV1(legacy, deps) {
             }
           : null,
         featureVector: prov?.featureVector?.v2 ? { ...prov.featureVector.v2 } : null,
-        fightHistoryCutoff: null,
-        sourceManifest: null,
+        // Same live calculation, same source data — see the note above.
+        fightHistoryCutoff: sharedCutoff,
+        sourceManifest: sharedManifest,
       });
     }
 

@@ -9,7 +9,8 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:ci": "vitest run --reporter=verbose"
+    "test:ci": "vitest run --reporter=verbose",
+    "probe:browser": "vite build --config vite.browser-probe.config.mjs"
   },
   "dependencies": {
     "lucide-react": "0.577.0",

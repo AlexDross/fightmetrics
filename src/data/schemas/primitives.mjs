@@ -39,17 +39,31 @@ export const stakeUnits = () => rejectNegativeZero(z.number().positive());
 // ── strings ────────────────────────────────────────────────────────────────
 export const nonEmptyString = () => z.string().min(1);
 
-/** Calendar date, local, YYYY-MM-DD. Not a Date object: these are day-precision
- *  facts and converting through Date() reintroduces the UTC rollover bug the
- *  app already fixed once. */
-export const isoDate = () =>
-  z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'expected YYYY-MM-DD');
+/**
+ * Calendar date, local, YYYY-MM-DD.
+ *
+ * z.iso.date(), NOT a regex. A shape-only pattern accepts '2026-13-45' and
+ * '2026-02-30', which is exactly the malformed-date behaviour already
+ * characterised as a defect elsewhere in this app (isUpcomingVisible silently
+ * normalises '2026-13-45' to Feb 2027). The durable schema must not
+ * institutionalise it: real calendar validation rejects impossible months and
+ * days while still accepting genuine leap days such as 2024-02-29.
+ *
+ * Still a string, never a Date object: these are day-precision facts, and
+ * converting through Date() reintroduces the UTC rollover bug the app already
+ * fixed once.
+ */
+export const isoDate = () => z.iso.date();
 
-export const isoDateTime = () =>
-  z.string().regex(
-    /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})$/,
-    'expected an ISO-8601 timestamp'
-  );
+/**
+ * ISO-8601 timestamp with a required offset (Z or ±HH:MM).
+ *
+ * `offset: true` permits both the Z form every legacy record uses and explicit
+ * numeric offsets, while calendar/clock components are genuinely validated —
+ * impossible months, days, hours, minutes and seconds are rejected rather than
+ * pattern-matched. Fractional seconds are preserved.
+ */
+export const isoDateTime = () => z.iso.datetime({ offset: true });
 
 /** UUID (v5 for migrated records, v7 for new ones). Accepts either. */
 export const uuid = () =>

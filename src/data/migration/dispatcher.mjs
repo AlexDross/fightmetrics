@@ -6,6 +6,7 @@
 //   is a no-op. A v0->v1 function does not have to accept its own v1 output.
 import { migrateV0ToV1 } from './migrateV0ToV1.mjs';
 import { SCHEMA_VERSION, StoreSchema } from '../schemas/entities.mjs';
+import { checkInvariants } from '../schemas/invariants.mjs';
 
 export const CURRENT_VERSION = SCHEMA_VERSION;
 
@@ -78,15 +79,45 @@ export function migrateToCurrent(payload, deps) {
   return { store: current, manifest, errors, applied, alreadyCurrent: false };
 }
 
-/** Validate before and after; a failure aborts rather than half-writing. */
+/**
+ * Validates the MIGRATED STORE both structurally (Zod) and relationally
+ * (cross-entity invariants), and aborts rather than half-writing.
+ *
+ * It does NOT validate the legacy input against a v0 schema — the six
+ * historical generations differ too much for one permissive schema to say
+ * anything useful, and the migration's own `errors` array already reports
+ * unparseable odds, unresolvable props and same-key corners. An earlier comment
+ * claimed "validate before and after", which was inaccurate.
+ *
+ * Zod alone is not enough: it checks one record at a time, so a PredictionRun
+ * pointing at a nonexistent Bout parses perfectly. checkInvariants is what
+ * catches missing foreign keys, denormalised-index drift and bad decision
+ * snapshot relationships.
+ */
 export function migrateAndValidate(payload, deps) {
   const result = migrateToCurrent(payload, deps);
   if (result.errors.length) {
     throw new Error(`migration aborted with ${result.errors.length} error(s):\n  ${result.errors.join('\n  ')}`);
   }
+
   const parsed = StoreSchema.safeParse(result.store);
   if (!parsed.success) {
-    throw new Error(`migrated store failed validation: ${JSON.stringify(parsed.error.issues.slice(0, 5), null, 2)}`);
+    throw new Error(
+      `migrated store failed structural validation: ${JSON.stringify(parsed.error.issues.slice(0, 5), null, 2)}`
+    );
   }
+
+  const violations = checkInvariants(result.store);
+  if (violations.length) {
+    const detail = violations
+      .slice(0, 10)
+      .map((v) => `  ${v.code}: ${v.message} [${v.context}]`)
+      .join('\n');
+    throw new Error(
+      `migrated store failed relational validation with ${violations.length} violation(s):\n${detail}` +
+        (violations.length > 10 ? `\n  ...and ${violations.length - 10} more` : '')
+    );
+  }
+
   return result;
 }

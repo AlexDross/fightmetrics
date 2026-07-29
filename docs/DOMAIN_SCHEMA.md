@@ -77,6 +77,55 @@ The decision basis is recorded **once**, as `PredictionRun.decisionSnapshotId`.
 There is no `decisionBasis` string and no `isDecisionBasis` flag to disagree
 with it.
 
+**Source provenance is attached to both snapshots of a full live record.**
+`featureVector` is genuinely per-model and stays split by basis. But
+`sourceManifest` and `fightHistoryCutoff` describe the *data* the live
+calculation read, and several manifest modules are explicitly `feedsV2: true` —
+so writing them only onto v1 made the v2 snapshot look unprovenanced when the
+legacy record had supplied it. Both are copied to both bases for the 22 full
+live records: deliberate immutable duplication, not contradictory state. The 43
+reconstructed records supply neither and keep `null` on both.
+
+## Validation
+
+Two layers, both required, both run by `migrateAndValidate`:
+
+1. **Structural** — `StoreSchema.safeParse`. One record at a time.
+2. **Relational** — `checkInvariants`. Foreign keys, denormalised-index
+   consistency, decision-snapshot ownership, financial computability.
+
+Zod alone is not sufficient and the two are not interchangeable: a
+`PredictionRun` pointing at a nonexistent `Bout` parses perfectly. An earlier
+version of `migrateAndValidate` ran only the structural pass and returned
+success on exactly that input.
+
+There is deliberately **no** v0 input schema. The six legacy generations differ
+too much for one permissive schema to assert anything useful, and the
+migration's own `errors` array already reports unparseable odds, unresolvable
+props and same-key corners.
+
+### Dates are calendar-validated
+
+`z.iso.date()` and `z.iso.datetime({ offset: true })`, not regexes. A shape-only
+pattern accepts `2026-13-45` and `2026-02-30` — which is precisely the
+malformed-date behaviour already characterised as a defect elsewhere in this app
+(`isUpcomingVisible` silently normalises `2026-13-45` to Feb 2027). Real leap
+days such as `2024-02-29` are accepted; `2023-02-29` is not.
+
+### Financial computability is per-record-type
+
+It depends on the selected corner's odds in the **relevant** market, which is
+not the same market for both position types:
+
+| Record | Market consulted |
+|---|---|
+| `TrackedPosition` | `assessment.marketSnapshotId` — the frozen assessment price |
+| `Wager` | `wager.marketSnapshotId` — the price actually taken |
+
+Reading the assessment market for a wager was wrong: a real bet may be taken at
+a later or different line, so an assessment that priced the corner would have
+excused a wager whose own market never did.
+
 ## Optional values
 
 - Every field the **selected** union variant defines is present; nullable ones
@@ -151,9 +200,26 @@ records may use `null`; anything the app settles must supply a real timestamp.
 | Prop / Parlay | legacy id verbatim | UUIDv7 |
 
 IDs are minted **once**. Later editing `Event.name`, `Event.promotion` or
-attaching real fighter IDs does not change any ID. Because `eventId` is inside
-the bout derivation, a **cross-event rematch produces a different Bout ID** —
-the structural fix for the known collision.
+attaching real fighter IDs does not change any ID.
+
+The ID layer is **browser-safe**: no Node builtins anywhere in `src/data`.
+SHA-1 is implemented in-file and randomness comes from Web Crypto
+(`globalThis.crypto.getRandomValues`). `npm run probe:browser` performs a real
+Vite/Rollup browser build of the data-layer entry points and is bound as a test
+— a source-text check alone would not have caught the original `node:crypto`
+import, which failed the browser bundle outright.
+
+> The `uuid` package was evaluated first and rejected: it validates namespace
+> arguments, and `NS.EVENT` is **not a well-formed RFC UUID** (its version
+> nibble is `d`). Adopting the library would have forced changing that constant,
+> which changes every derived Event and Bout ID. The constant is retained
+> verbatim so migrated IDs stay byte-identical; it is only ever SHA-1 input, so
+> its version bits are never interpreted. Replacing it is a deliberate decision
+> that should be taken **before** any data is persisted, not after. uuid@14.0.1
+> was also audit-clean, so this is a compatibility decision, not a security one.
+
+Because `eventId` is inside the bout derivation, a **cross-event rematch
+produces a different Bout ID** — the structural fix for the known collision.
 
 `fighterKey` (NFC + trim + collapse + lowercase) is a **non-authoritative**
 migration matching hint, never a uniqueness constraint. `fighterId` stays `null`
@@ -248,6 +314,8 @@ because `.fixed`, `.block`, `.hidden` and `.flex` **are** already emitted while
 - **`confirmedByUser` is not introduced.** Read 6× in `src/domain/statistics`
   but written 0/160 times. Recorded as a reader-only phantom so Stage 8 can
   implement or remove it deliberately.
+- **`NS.EVENT` is not a valid RFC 4122 UUID.** Retained for byte-identical IDs;
+  see above. Worth resolving before Stage 7 persists anything.
 - `Bout.division` stays free text, including 23 catchweight `"X / Y"` strings.
 - Parlay coverage is derived from the constructor and readers, since
   `PARLAY_ENTRIES` is empty.
