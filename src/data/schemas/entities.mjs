@@ -137,14 +137,32 @@ export const PredictionSnapshotSchema = z.strictObject({
 // A snapshot may hold odds for one corner and not the other; that is why
 // financial computability is decided by the SELECTED corner's odds rather than
 // by whether a snapshot exists.
-export const MarketSnapshotSchema = z.strictObject({
-  id: uuid(),
-  boutId: uuid(),
-  capturedAt: isoDateTime(),
-  source: z.enum(['manual']),
-  oddsA: americanOdds().nullable(),
-  oddsB: americanOdds().nullable(),
-});
+// `legacyTrackedOverride` marks a snapshot reconstructed from a legacy
+// `marketOdds` value that had been edited away from the original oddsA/oddsB.
+// Such an edit has NO recorded time — the legacy row stores only the resulting
+// price — so capturedAt is null for exactly this source. Labelling the original
+// entry.createdAt as the override's edit time would assert a fact the data does
+// not contain. Every other source still requires a real timestamp.
+export const MarketSnapshotSchema = z
+  .strictObject({
+    id: uuid(),
+    boutId: uuid(),
+    capturedAt: isoDateTime().nullable(),
+    source: z.enum(['manual', 'legacyTrackedOverride']),
+    oddsA: americanOdds().nullable(),
+    oddsB: americanOdds().nullable(),
+  })
+  .check((ctx) => {
+    const v = ctx.value;
+    if (!v) return;
+    if (v.capturedAt === null && v.source !== 'legacyTrackedOverride') {
+      ctx.issues.push({
+        code: 'custom',
+        input: v,
+        message: 'capturedAt may only be null for source "legacyTrackedOverride"',
+      });
+    }
+  });
 
 // ── BettingAssessment ──────────────────────────────────────────────────────
 // IMMUTABLE = prediction x market. BOTH corners are retained for every derived

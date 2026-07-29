@@ -86,6 +86,30 @@ Changing the tracked corner updates `TrackedPosition.corner` alone; the
 displayed price re-derives from the corresponding corner of the position's
 existing market.
 
+**Legacy `marketOdds` is a source field, not a derivation.** App.js edits it
+independently (`:7890`) and rewrites it separately when the tracked side changes
+(`:7868`), so it can legitimately disagree with `oddsA`/`oddsB`. It equals the
+selected corner on all 160 current rows — but that is a characterisation of
+today's seed, not a rule. Deriving it would silently discard a real correction,
+so migration parses it separately and reconciles:
+
+| legacy `marketOdds` | result |
+|---|---|
+| key absent | reuse the assessment market |
+| equals the selected assessment corner | reuse the assessment market |
+| differs | **new** snapshot: copy both corners, replace only the tracked corner |
+| explicitly blank | that corner is **explicitly unpriced** — never falls back to `oddsA`/`oddsB` |
+| both corners end null | no snapshot; `marketSnapshotId` is `null` |
+
+The override snapshot uses the deterministic id
+`uuidv5(NS.MARKET, "${runId}|tracked-market")` and `source:
+'legacyTrackedOverride'`. Its **`capturedAt` is `null`**: the legacy row records
+the corrected price but never when it was edited, and `entry.createdAt` is the
+original save, not the correction. `capturedAt` may be null **only** for that
+source; every other snapshot still requires a real timestamp, enforced by the
+schema. Settlement is scored at the tracked price, so historical profit is never
+computed at a discarded one.
+
 ### Review state
 
 `TrackedPosition.reviewState` is a discriminated union:

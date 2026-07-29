@@ -110,7 +110,7 @@ describe('TrackedPosition.marketSnapshotId is the scoring price', () => {
 describe('reviewState legacy mapping is exhaustive and strict', () => {
   const withFields = (over) => {
     const src = ROI_ENTRIES[0];
-    const entry = { ...src, id: '1790000000099-revst' };
+    const entry = { ...src, id: '1790000000099-revsta' };
     for (const [k, v] of Object.entries(over)) {
       if (v === '<absent>') delete entry[k];
       else entry[k] = v;
@@ -118,7 +118,7 @@ describe('reviewState legacy mapping is exhaustive and strict', () => {
     return migrateV0ToV1({ ...LEGACY, roiEntries: [...ROI_ENTRIES, entry] }, deps());
   };
   const stateOf = (out) => {
-    const run = out.store.predictionRuns.find((r) => r.legacyEntryId === '1790000000099-revst');
+    const run = out.store.predictionRuns.find((r) => r.legacyEntryId === '1790000000099-revsta');
     const a = out.store.bettingAssessments.find((x) => x.runId === run.id);
     return out.store.trackedPositions.find((t) => t.assessmentId === a.id).reviewState;
   };
@@ -153,10 +153,10 @@ describe('reviewState legacy mapping is exhaustive and strict', () => {
     it(`aborts on ${label}`, () => {
       const out = withFields(over);
       expect(out.errors.length, `${label} should abort`).toBeGreaterThan(0);
-      expect(out.errors.some((e) => e.includes('1790000000099-revst'))).toBe(true);
+      expect(out.errors.some((e) => e.includes('1790000000099-revsta'))).toBe(true);
       // And it must abort the whole migration, not merely warn.
       expect(() =>
-        migrateAndValidate({ ...LEGACY, roiEntries: [ROI_ENTRIES[0], { ...ROI_ENTRIES[0], id: '1790000000099-revst', ...Object.fromEntries(Object.entries(over).filter(([, v]) => v !== '<absent>')) }] }, deps())
+        migrateAndValidate({ ...LEGACY, roiEntries: [ROI_ENTRIES[0], { ...ROI_ENTRIES[0], id: '1790000000099-revsta', ...Object.fromEntries(Object.entries(over).filter(([, v]) => v !== '<absent>')) }] }, deps())
       ).toThrow();
     });
   }
