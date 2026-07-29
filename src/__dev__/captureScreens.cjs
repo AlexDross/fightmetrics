@@ -83,14 +83,40 @@ const VIEWPORTS = [
     await new Promise((r) => setTimeout(r, 2500));
 
     for (const tab of TABS) {
+      // Stage 5: the header tabs are <a> (NavLink) rather than <button>. This
+      // selector was button-only, so after routing landed it matched nothing,
+      // silently captured Home 14 times and reported a size mismatch on every
+      // other screen. `clicked` is asserted below precisely so a miss like that
+      // fails loudly instead of producing a plausible-looking baseline.
+      //
+      // Still a CLICK, not a page.goto: clicking exercises the real in-app
+      // navigation the references were captured through. At 375w the header nav
+      // is display:none (`hidden sm:flex`) but the anchors are still in the DOM,
+      // and .click() works on hidden elements, so both viewports drive the same
+      // seven destinations exactly as before.
       const clicked = await page.evaluate((label) => {
-        const btn = [...document.querySelectorAll('button')].find(
-          (b) => (b.textContent || '').trim() === label
+        const el = [...document.querySelectorAll('a, button')].find(
+          (n) => (n.textContent || '').trim() === label
         );
-        if (!btn) return false;
-        btn.click();
+        if (!el) return false;
+        el.click();
         return true;
       }, tab);
+
+      // Abort BEFORE anything is written. This check used to sit after the
+      // delay, the screenshot and the manifest push, so a miss still produced
+      // one invalid PNG on disk -- exactly the "plausible-looking baseline" it
+      // claims to prevent. Nothing below this line runs on a miss.
+      if (!clicked) {
+        console.error(
+          `\nABORTED: no navigation control matched "${tab}" at ${vp.label}.\n` +
+          'Every shot from here would silently duplicate the current screen, so\n' +
+          'no screenshot was written for it. Fix the selector; do not diff this run.\n'
+        );
+        await browser.close();
+        process.exit(3);
+      }
+
       await new Promise((r) => setTimeout(r, 1200));
 
       const file = `${vp.label}__${tab.toLowerCase()}.png`;
@@ -101,7 +127,7 @@ const VIEWPORTS = [
       });
       const bytes = fs.statSync(path.join(OUT, file)).size;
       manifest.push({ viewport: vp.label, tab, file, clicked, bytes });
-      console.log(`${clicked ? 'ok  ' : 'MISS'} ${file} ${(bytes / 1024).toFixed(0)}KB`);
+      console.log(`ok   ${file} ${(bytes / 1024).toFixed(0)}KB`);
     }
     await page.close();
   }

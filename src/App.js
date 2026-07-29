@@ -1,4 +1,8 @@
 import React, { useEffect, useState, useMemo } from 'react';
+import { Link, NavLink, Navigate, useLocation, useNavigate } from 'react-router-dom';
+// Stage 5: URL <-> screen mapping. The registry is the only place the seven
+// paths are written down; nothing in this file hard-codes a path string.
+import { pathForView, viewForPathname, HOME_PATH } from './app/routes.jsx';
 import {
   RadarChart,
   PolarGrid,
@@ -2691,7 +2695,15 @@ function UpcomingEventTab({
 }
 
 // ─── HEADER ───────────────────────────────────────────────────────────────────
-function Header({ view, setView }) {
+// Tabs are real <a> elements (NavLink) rather than buttons, so middle-click,
+// cmd-click, "copy link address" and screen-reader link semantics all work.
+// NavLink also stamps aria-current="page" on the active tab for free.
+//
+// The active-styling test stays `view === id` rather than NavLink's own
+// isActive callback: `view` is already derived from the same pathname by the
+// route registry, and reusing it keeps one definition of "active" instead of
+// two that could drift.
+function Header({ view }) {
   const tabs = [
     { id: 'home', label: 'Home', Icon: Trophy },
     { id: 'simulator', label: 'Simulator', Icon: Swords },
@@ -2720,9 +2732,10 @@ function Header({ view, setView }) {
       </div>
       <nav className="hidden sm:flex gap-1 overflow-x-auto min-w-0">
         {tabs.map(({ id, label, Icon }) => (
-          <button
+          <NavLink
             key={id}
-            onClick={() => setView(id)}
+            to={pathForView(id)}
+            end
             className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
               view === id
                 ? 'bg-red-600 text-white shadow-lg shadow-red-900/30'
@@ -2731,7 +2744,7 @@ function Header({ view, setView }) {
           >
             <Icon size={14} />
             {label}
-          </button>
+          </NavLink>
         ))}
       </nav>
     </div>
@@ -2769,11 +2782,12 @@ function useBelowSm() {
 // Bottom tab bar, mobile only -- mounted only when useBelowSm() is true (see
 // above); the header nav owns navigation above sm, this owns it below sm.
 // 5 slots for 7 destinations: the 4 most-used tabs get their own slot, the
-// remaining 3 (ROI, Explore, Info) live behind "More", a slide-up sheet --
-// no routing library, just local state mirroring the "N legs selected"
-// banner pattern elsewhere in this file (a fixed-position overlay gated on
-// its own useState, dismissed by either an explicit close button or the
-// backdrop).
+// remaining 3 (ROI, Explore, Info) live behind "More", a slide-up sheet.
+//
+// Destinations are NavLinks (real URLs, since Stage 5). The sheet's open/closed
+// state is still plain local useState -- it is presentation, not a destination,
+// so it deliberately does NOT go in the URL: a "More sheet open" history entry
+// would make Back close a menu instead of going back a page.
 const BOTTOM_NAV_PRIMARY = [
   { id: 'home', label: 'Home', Icon: Trophy },
   { id: 'simulator', label: 'Simulator', Icon: Swords },
@@ -2785,14 +2799,18 @@ const BOTTOM_NAV_MORE = [
   { id: 'explore', label: 'Explore', Icon: Search },
   { id: 'info', label: 'Info', Icon: Info },
 ];
-function BottomNav({ view, setView }) {
+function BottomNav({ view }) {
   const [moreOpen, setMoreOpen] = useState(false);
   const moreActive = BOTTOM_NAV_MORE.some((t) => t.id === view);
+  const { pathname } = useLocation();
 
-  const go = (id) => {
-    setView(id);
+  // Close on ANY route change, not just on click. Tapping a destination is the
+  // common case, but Back/Forward can also change the route while the sheet is
+  // open (open More, tap ROI, press Back) -- keying off pathname covers both
+  // with one rule instead of relying on every future call site to remember.
+  useEffect(() => {
     setMoreOpen(false);
-  };
+  }, [pathname]);
 
   return (
     <>
@@ -2817,16 +2835,21 @@ function BottomNav({ view, setView }) {
             </button>
           </div>
           {BOTTOM_NAV_MORE.map(({ id, label, Icon }) => (
-            <button
+            <NavLink
               key={id}
-              onClick={() => go(id)}
+              to={pathForView(id)}
+              end
+              // The pathname effect above handles every case except one: tapping
+              // the destination you are ALREADY on produces no route change, so
+              // the sheet would stay open. Closing here as well covers it.
+              onClick={() => setMoreOpen(false)}
               className={`w-full flex items-center gap-3 px-4 min-h-[44px] py-3 text-sm font-medium transition-colors ${
                 view === id ? 'text-red-400' : 'text-slate-300 hover:bg-slate-800'
               }`}
             >
               <Icon size={16} />
               {label}
-            </button>
+            </NavLink>
           ))}
         </div>
       )}
@@ -2835,16 +2858,17 @@ function BottomNav({ view, setView }) {
         style={{ height: 'calc(64px + env(safe-area-inset-bottom))' }}
       >
         {BOTTOM_NAV_PRIMARY.map(({ id, label, Icon }) => (
-          <button
+          <NavLink
             key={id}
-            onClick={() => go(id)}
+            to={pathForView(id)}
+            end
             className={`flex-1 min-w-[44px] min-h-[44px] flex flex-col items-center justify-center gap-0.5 text-[11px] font-semibold transition-colors ${
               view === id ? 'text-red-400' : 'text-slate-500 hover:text-slate-300'
             }`}
           >
             <Icon size={20} />
             {label}
-          </button>
+          </NavLink>
         ))}
         <button
           onClick={() => setMoreOpen((o) => !o)}
@@ -6377,7 +6401,23 @@ function ScoutProfile({ allFighters }) {
 }
 
 export default function App() {
-  const [view, setView] = useState('home');
+  // Stage 5: the active screen lives in the URL, not in App state. `view` is
+  // derived from location.pathname on every render via the route registry, so
+  // there is exactly one source of truth and Back/Forward/refresh/deep links
+  // all work without any extra synchronisation.
+  //
+  // App is rendered by index.js INSIDE BrowserRouter but OUTSIDE any <Route>,
+  // so navigating re-renders it and never remounts it. Every piece of state
+  // below (upcomingEntries, roiEntries, propPicks, parlayEntries, filters,
+  // toggles) therefore survives tab changes exactly as it did when `view` was
+  // local state.
+  //
+  // viewForPathname returns null for an unrecognised path rather than falling
+  // back to 'home', which is what lets the render below tell "show Home" apart
+  // from "this URL is wrong" -- see the <Navigate replace> at the end.
+  const { pathname } = useLocation();
+  const navigate = useNavigate();
+  const view = viewForPathname(pathname);
   const belowSm = useBelowSm();
   const [filterSince, setFilterSince] = useState('2026-05-23');
   const [modelToggle, setModelToggle] = useState('v2');
@@ -6497,7 +6537,9 @@ export default function App() {
 
   const handleSaveToUpcomingAndOpen = (entry) => {
     handleSaveToUpcoming(entry);
-    setView('upcoming');
+    // Programmatic navigation (this is a side effect of saving, not a link the
+    // user clicked). Pushes, so Back returns to the Simulator.
+    navigate(pathForView('upcoming'));
   };
 
   const handleGradeUpcoming = (id, actualWinner) => {
@@ -6521,10 +6563,18 @@ export default function App() {
     <div
       className="min-h-screen bg-slate-950 text-slate-100 font-sans pb-[calc(64px+env(safe-area-inset-bottom))] sm:pb-0"
     >
-      <Header view={view} setView={setView} />
-      {belowSm && <BottomNav view={view} setView={setView} />}
+      <Header view={view} />
+      {belowSm && <BottomNav view={view} />}
+      {/*
+        Unknown path: replace rather than push, so a mistyped URL does not leave
+        a dead entry in history that Back would land on again. Rendered as an
+        element (not an effect) so it is declarative and runs after the chrome
+        above has already mounted -- Header and BottomNav stay on screen through
+        the redirect instead of flashing an empty page.
+      */}
+      {view === null && <Navigate to={HOME_PATH} replace />}
       {view === 'home' && (
-        <HomeTab summary={roiSummary} entries={roiEntries} onNavigate={setView} allFighters={fightersWithProspectsFiltered} filterSince={filterSince} />
+        <HomeTab summary={roiSummary} entries={roiEntries} allFighters={fightersWithProspectsFiltered} filterSince={filterSince} />
       )}
       {view === 'simulator' && (
         <MatchupSimulator
@@ -6596,7 +6646,7 @@ const betTier = (action) => {
   return { label: '', cls: 'text-slate-500', border: 'border-slate-800' };
 };
 
-function HomeTab({ summary, entries, onNavigate, allFighters, filterSince }) {
+function HomeTab({ summary, entries, allFighters, filterSince }) {
   const fighterMap = useMemo(() => {
     const m = new Map();
     (allFighters ?? []).forEach((f) => m.set(f.FIGHTER, f));
@@ -6885,19 +6935,41 @@ function HomeTab({ summary, entries, onNavigate, allFighters, filterSince }) {
       )}
 
       {/* CTAs */}
+      {/*
+        Real links, so they can be opened in a new tab and are announced as
+        links. `flex items-center justify-center` replaces the UA button
+        behaviour these relied on and is required for pixel parity, not taste:
+
+          horizontally - a <button> centres its label by default, a block <a>
+                         left-aligns it;
+          vertically   - these two CTAs are flex siblings with `align-items:
+                         stretch`, and the bordered one is 2px taller, so both
+                         stretch to 46px. That leaves a 22px content box around
+                         a 20px line box. A <button> centres its anonymous
+                         content block in that space; a block <a> does not, so
+                         the label rendered exactly 1px high.
+
+        Measured, not guessed: text y was 993 as a button and 992 as a plain
+        block anchor, which the screenshot diff caught as 640 changed pixels
+        confined to the glyphs. With flex centring it is 993 again and the
+        Home screens match the Stage 1b reference exactly.
+
+        Every other control converted in this commit already used flex, which
+        is why only these two needed anything.
+      */}
       <div className="flex gap-3">
-        <button
-          onClick={() => onNavigate('simulator')}
-          className="flex-1 py-3 rounded-xl bg-red-600 text-white font-bold text-sm hover:bg-red-500 transition-colors shadow-lg shadow-red-900/30"
+        <Link
+          to={pathForView('simulator')}
+          className="flex-1 py-3 flex items-center justify-center rounded-xl bg-red-600 text-white font-bold text-sm hover:bg-red-500 transition-colors shadow-lg shadow-red-900/30"
         >
           Build a Matchup →
-        </button>
-        <button
-          onClick={() => onNavigate('roi')}
-          className="flex-1 py-3 rounded-xl border border-slate-700 text-slate-300 font-semibold text-sm hover:text-white hover:border-slate-500 transition-colors"
+        </Link>
+        <Link
+          to={pathForView('roi')}
+          className="flex-1 py-3 flex items-center justify-center rounded-xl border border-slate-700 text-slate-300 font-semibold text-sm hover:text-white hover:border-slate-500 transition-colors"
         >
           Full Track Record →
-        </button>
+        </Link>
       </div>
     </div>
   );
