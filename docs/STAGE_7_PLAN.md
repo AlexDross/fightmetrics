@@ -468,8 +468,12 @@ Rules, all in one transaction with the inserts *and* the `seed_version` write:
 - `seed_version IS NULL` → initial seed, ledger row per root
 - stale version → insert only roots **absent from the ledger**; ledger
   membership is the test, not table membership
-- any delete/clear stamps `removed_at`
-- a tombstoned root is never re-inserted by any later seed
+- any delete/clear stamps `removed_at`, whether or not the row was physically
+  removed
+- a tombstoned root is never re-inserted by any later seed — **Gate 3**, since
+  applying a seed means inserting Events, Bouts, market snapshots, assessments
+  and tracked positions, not merely roots. Gate 1 guarantees only that the
+  tombstone exists and is authoritative for reads.
 - `fm_rpc_reset_workspace` clears entities, ledger and `seed_version`
 - correcting a seeded record goes through `fm_rpc_import_store`, never a silent
   seed overwrite
@@ -493,6 +497,49 @@ WHERE a.workspace_id = v_ws AND a.id = v_assessment_id
 Order: position → assessment → market snapshots → prediction snapshots → run →
 **stop**. Events and Bouts always remain as legitimate card history.
 `ON DELETE RESTRICT` makes a mistake an error rather than a silent cascade.
+
+**Decide the run's fate before pruning its snapshots.** Prediction snapshots hang
+off the run by `run_id`, so if the run row survives — which happens exactly when
+a wager pinned its assessment through step 2 — then **none** of its snapshots are
+orphans, whatever else does or does not point at them. Testing a snapshot only
+against *other* runs' `decision_snapshot_id` is not enough: measured on the
+migrated corpus, **77 of 237 snapshots are referenced by no
+`decision_snapshot_id` and no `prediction_snapshot_id`** and are reachable only
+through `run_id`. On run `1779253814932-7igxlf` that rule deleted the `v2`
+snapshot while leaving the run alive, and **both `StoreSchema` and
+`checkInvariants` still passed** — a snapshot is only ever a child, so nothing
+dangles. It is silent loss of immutable model output that the statistics
+projection reads by basis.
+
+The run row is additionally never deleted while any snapshot still carries its
+`run_id`; that clause is the structural guard `ON DELETE RESTRICT` enforces.
+
+### Logical versus physical deletion
+
+Deleting a root is a **logical** delete of the root plus a **physical** delete of
+whatever it provably orphans. The two come apart whenever a wager pins a shared
+assessment, so:
+
+- the root is **always** tombstoned in `seed_items`, whether or not its row went
+- the tombstone is **authoritative**: a tombstoned root is `notFound` to every
+  read surface, is absent from every list, and cannot be deleted twice
+- the RPC reports both facts — `physically_removed` plus a `retained` breakdown
+  of run, assessment, market snapshots and prediction snapshots
+
+Tombstoning only on physical removal was the worst of the available outcomes:
+the delete reported success, the ledger stayed active, and `get_aggregate` kept
+returning a row with a null tracked position — a malformed aggregate the readers
+would have dereferenced. An aggregate now requires a run, an assessment **and** a
+tracked position, or it is `notFound`.
+
+### Storage state is not Store content
+
+`seed_version`, row revisions and the `seed_items` ledger are **workspace
+storage**, never fields of the durable Store. `MetaSchema` is strict, so writing
+`seedVersion` into `meta` made every subsequent export fail `StoreSchema` with
+`unrecognized_keys` — the store could no longer be re-imported by its own
+repository. Export must always yield exactly a Stage 6 Store: `meta` carries
+`schemaVersion` and `migratedAt` and nothing else.
 
 ---
 
@@ -614,6 +661,14 @@ membership only and never implies a session. Three states, three UIs:
 Collapsing these into one tri-state made the middle row unreachable, and with it
 the only path by which a fresh deployment ever acquires an owner. The distinction
 is also what separates "sign in" from "request access" in the UI.
+
+**Both are transitions, not reports.** `claimOwnership()` grants the caller the
+owner role in the same operation that takes ownership, and `signOut()` clears the
+session and the resolved membership with it. Returning `{role:'owner'}` while
+leaving membership unresolved, or `{signedOut:true}` while leaving the session in
+place, are successes that change nothing — in the second case the caller stayed
+fully authorised after signing out. Every state row above must be reachable by
+calling the API, not only by constructing a repository in that state.
 
 `authRepository` + provider exposing `{ session, status, signIn(email), signOut() }`.
 Magic-link/OTP with `shouldCreateUser: false`; **open signup disabled at project

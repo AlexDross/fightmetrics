@@ -32,6 +32,12 @@ export const REPOSITORY_CONTRACT = Object.freeze({
     listGraded: 1,           // ({since}) -> Result<RoiRow[]>
     getAggregate: 1,         // (runId) -> Result<PredictionAggregate>
     savePrediction: 1,       // (aggregate) -> Result<{runId}>
+    // Deleting a root is a LOGICAL delete (always tombstoned) plus a PHYSICAL
+    // delete of whatever it provably orphans. When a wager pins the shared
+    // assessment the run row survives, so the response distinguishes the two:
+    //   -> Result<{removed, physicallyRemoved, retained:{run, assessment,
+    //               marketSnapshots, predictionSnapshots}}>
+    // A tombstoned root is notFound to every read surface either way.
     remove: 2,               // (runId, expectedRevision)
     // ── Revision VECTORS, not positional arrays ───────────────────────────
     // Every method below writes more than one row, so it takes an ID-KEYED
@@ -43,7 +49,7 @@ export const REPOSITORY_CONTRACT = Object.freeze({
     // its vector is {bout} ∪ {positions on bout} ∪ {wagers on bout}. Taking a
     // bout revision alone let a concurrently-edited position be re-settled
     // against a stake the caller had never seen.
-    clearGraded: 1,          // (revisions[]) -> Result<{removed, rootsRemoved}>
+    clearGraded: 1,          // (revisions[]) -> Result<{removed, rootsTombstoned, physicallyRemoved}>
     grade: 4,                // (boutId, outcome, method, revisions[])
     returnToPending: 2,      // (boutId, revisions[])
     changeTrackedCorner: 3,  // (positionId, corner, expectedRevision)

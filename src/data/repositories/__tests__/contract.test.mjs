@@ -3,9 +3,11 @@ import { ROI_ENTRIES } from '../../../roiData.js';
 import { UPCOMING_ENTRIES } from '../../../upcomingData.js';
 import { PROP_PICKS } from '../../../propPicksData.js';
 import { migrateV0ToV1 } from '../../migration/migrateV0ToV1.mjs';
-import { createInMemoryRepositories, SEED_LEDGER, APPLY_SEED } from '../inMemory.mjs';
+import { createInMemoryRepositories, SEED_LEDGER } from '../inMemory.mjs';
 import { REPOSITORY_CONTRACT, conformsToContract } from '../interfaces.mjs';
 import { isRevision, isValidStakeTransport, semanticEquals } from '../types.mjs';
+import { StoreSchema } from '../../schemas/entities.mjs';
+import { checkInvariants } from '../../schemas/invariants.mjs';
 import { computeROISummary } from '../../../domain/statistics/index.js';
 
 // The contract suite runs against a REAL migrated Stage 6 store, not fixtures,
@@ -32,6 +34,25 @@ const boutVector = (r, boutId) => {
 
 const runIdOfPosition = (positionId) => store.bettingAssessments.find((a) => a.id ===
   store.trackedPositions.find((t) => t.id === positionId).assessmentId).runId;
+
+const snapshotsOfRun = (runId) => store.predictionSnapshots.filter((s) => s.runId === runId);
+
+/**
+ * A priced, graded row whose run carries BOTH a v1 and a v2 snapshot.
+ *
+ * The v2 snapshot is referenced by no `decisionSnapshotId` and no
+ * `predictionSnapshotId` — it is reachable only through `runId`. Measured on the
+ * migrated corpus: 77 of 237 snapshots are in that position, and 69 of the 152
+ * priced graded rows sit on such a run. Picking a single-snapshot run instead
+ * makes the pruning assertions vacuous, because the only snapshot present is
+ * also the one the assessment pins.
+ */
+const pricedRowWithTwoSnapshots = (r) => {
+  const row = r.predictionRepository.listGraded({}).data.find((x) =>
+    x.trackedOddsA !== null && snapshotsOfRun(runIdOfPosition(x.trackedPositionId)).length === 2);
+  if (!row) throw new Error('fixture drift: no priced graded row with two snapshots');
+  return row;
+};
 
 const counts = (r) => {
   const s = r.workspaceRepository.exportStore().data;
@@ -94,13 +115,35 @@ describe('contract conformance', () => {
       .toContain('predictionRepository.grade declares 0 params, contract requires exactly 4');
   });
 
-  it('the symbol-keyed test seams do not widen the contract surface', () => {
-    // SEED_LEDGER and APPLY_SEED must stay invisible to Object.keys, or the UI
-    // could come to depend on them.
+  it('the ledger seam widens neither the contract surface nor the Store', () => {
     const impl = make();
     expect(impl[SEED_LEDGER]).toBeTruthy();
-    expect(typeof impl[APPLY_SEED]).toBe('function');
+    // Invisible to Object.keys, so the contract stays exactly ten repositories…
     expect(conformsToContract(impl)).toEqual([]);
+    expect(Object.keys(impl)).toHaveLength(10);
+    expect(Object.getOwnPropertyDescriptor(impl, SEED_LEDGER).enumerable).toBe(false);
+    // …and it is storage-side only: no trace of it reaches the exported Store.
+    const exported = impl.workspaceRepository.exportStore().data;
+    expect(Object.keys(exported).sort()).toEqual([
+      'bettingAssessments', 'bouts', 'events', 'marketSnapshots', 'meta',
+      'parlays', 'predictionRuns', 'predictionSnapshots', 'props',
+      'trackedPositions', 'wagers',
+    ]);
+    expect(JSON.stringify(exported).includes('removedAt')).toBe(false);
+    expect(JSON.stringify(exported).includes('firstSeedVersion')).toBe(false);
+    // The getter hands out copies; mutating them cannot reach the live ledger.
+    const snapshot = impl[SEED_LEDGER];
+    snapshot[0].removedAt = 'tampered';
+    snapshot.length = 0;
+    expect(impl[SEED_LEDGER]).toHaveLength(164);
+    expect(impl[SEED_LEDGER].every((x) => x.removedAt === null)).toBe(true);
+  });
+
+  it('exposes no seed applier — complete seed application is Gate 3', () => {
+    const impl = make();
+    for (const key of Object.getOwnPropertySymbols(impl)) {
+      expect(String(key)).not.toMatch(/applySeed/i);
+    }
   });
 
   it('declares every repository the plan requires', () => {
@@ -228,6 +271,55 @@ describe('authentication and membership are separate', () => {
     expect(r.authRepository.claimOwnership().error.kind).toBe('forbidden');
   });
 
+  it('the claim TRANSITIONS the same instance to owner', () => {
+    const r = nonMember();
+    // Before: not a member, cannot write at all.
+    expect(r.authRepository.whoami().data.role).toBe(null);
+    expect(r.workspaceRepository.reset({ backupConfirmed: true }).error.kind).toBe('forbidden');
+    expect(r.workspaceRepository.exportStore().error.kind).toBe('forbidden');
+
+    expect(r.authRepository.claimOwnership().ok).toBe(true);
+
+    // After: the SAME instance is an owner by every observable measure.
+    expect(r.authRepository.whoami().data.role).toBe('owner');
+    expect(r.workspaceRepository.exportStore().ok).toBe(true);
+    // An editor-level write…
+    expect(r.propRepository.settle(store.props[0].id, 'LOST', '1').ok).toBe(true);
+    // …and an owner-only one.
+    const graded = r.predictionRepository.listGraded({}).data;
+    expect(r.predictionRepository.clearGraded(
+      graded.map((g) => ({ id: g.trackedPositionId, revision: g.revision }))).ok).toBe(true);
+    expect(r.workspaceRepository.reset({ backupConfirmed: true }).ok).toBe(true);
+  });
+
+  it('signOut TRANSITIONS to signed out, not merely acknowledges', () => {
+    const r = make();
+    expect(r.authRepository.session().data).not.toBe(null);
+    expect(r.authRepository.whoami().data.role).toBe('owner');
+
+    expect(r.authRepository.signOut().ok).toBe(true);
+
+    expect(r.authRepository.session().data).toBe(null);
+    expect(r.authRepository.whoami().data.role).toBe(null);
+    // Writes revert to unauthenticated, not forbidden: there is no session.
+    expect(r.propRepository.create({ id: 'x' }).error.kind).toBe('unauthenticated');
+    expect(r.workspaceRepository.reset({ backupConfirmed: true }).error.kind)
+      .toBe('unauthenticated');
+    expect(r.workspaceRepository.exportStore().error.kind).toBe('unauthenticated');
+    expect(r.authRepository.claimOwnership().error.kind).toBe('unauthenticated');
+    // The public read surface is still open.
+    expect(r.predictionRepository.listGraded({}).data).toHaveLength(153);
+  });
+
+  it('signing out after claiming drops the claimed role too', () => {
+    const r = nonMember();
+    expect(r.authRepository.claimOwnership().ok).toBe(true);
+    expect(r.authRepository.whoami().data.role).toBe('owner');
+    expect(r.authRepository.signOut().ok).toBe(true);
+    expect(r.authRepository.whoami().data.role).toBe(null);
+    expect(r.propRepository.create({ id: 'x' }).error.kind).toBe('unauthenticated');
+  });
+
   it('state 2 — the claim is refused when the workspace already has an owner', () => {
     const r = make({ session: { userId: 'u-3' }, role: null, ownerExists: true });
     expect(r.authRepository.claimOwnership().error.kind).toBe('forbidden');
@@ -348,7 +440,10 @@ describe('deletion removes the COMPLETE aggregate, and only proven orphans', () 
 
     const res = r.predictionRepository.remove(runId, row.revision);
     expect(res.ok).toBe(true);
-    expect(res.data.rootRemoved).toBe(true);
+    expect(res.data.physicallyRemoved).toBe(true);
+    expect(res.data.retained).toEqual({
+      run: false, assessment: false, marketSnapshots: 0, predictionSnapshots: 0,
+    });
 
     const after = counts(r);
     expect(after.positions).toBe(before.positions - 1);
@@ -370,7 +465,8 @@ describe('deletion removes the COMPLETE aggregate, and only proven orphans', () 
       graded.map((g) => ({ id: g.trackedPositionId, revision: g.revision })));
     expect(res.ok, JSON.stringify(res.error ?? {})).toBe(true);
     expect(res.data.removed).toBe(153);
-    expect(res.data.rootsRemoved).toBe(153);
+    expect(res.data.rootsTombstoned).toBe(153);
+    expect(res.data.physicallyRemoved).toBe(153);
 
     const after = counts(r);
     // THE regression: the old implementation dropped 153 positions and left
@@ -391,9 +487,14 @@ describe('deletion removes the COMPLETE aggregate, and only proven orphans', () 
 
   it('a shared assessment and market survive because a WAGER still references them', () => {
     const r = make();
-    const row = r.predictionRepository.listGraded({}).data.find((x) => x.trackedOddsA !== null);
+    const row = pricedRowWithTwoSnapshots(r);
     const runId = runIdOfPosition(row.trackedPositionId);
     const agg = r.predictionRepository.getAggregate(runId).data;
+    expect(agg.snapshots).toHaveLength(2);
+    const v2 = agg.snapshots.find((s) => s.basis === 'v2');
+    // Nothing but the run's own runId column points at the v2 snapshot.
+    expect(store.predictionRuns.some((x) => x.decisionSnapshotId === v2.id)).toBe(false);
+    expect(store.bettingAssessments.some((x) => x.predictionSnapshotId === v2.id)).toBe(false);
     // A wager on the same bout, pointing at the same assessment and market.
     r.wagerRepository.create({
       id: '11111111-2222-4333-8444-555555555555',
@@ -405,27 +506,121 @@ describe('deletion removes the COMPLETE aggregate, and only proven orphans', () 
       settlement: { status: 'open' }, notes: null, externalIds: {},
     });
     const before = counts(r);
-    expect(r.predictionRepository.remove(runId, row.revision).ok).toBe(true);
+    const res = r.predictionRepository.remove(runId, row.revision);
+    expect(res.ok).toBe(true);
     const after = counts(r);
     expect(after.positions).toBe(before.positions - 1);
     // Proven-orphan check accounts for wager references: neither is an orphan.
     expect(after.assessments).toBe(before.assessments);
     expect(after.markets).toBe(before.markets);
-    // …and the run therefore also survives, because its assessment still exists.
+    // …and the run row therefore also survives, because its assessment does.
     expect(after.runs).toBe(before.runs);
     expect(r.wagerRepository.listByBout(agg.trackedPosition.boutId).data).toHaveLength(1);
+
+    // The response says so explicitly rather than reporting a bare "removed".
+    expect(res.data.physicallyRemoved).toBe(false);
+    expect(res.data.retained).toEqual({
+      run: true, assessment: true, marketSnapshots: 1, predictionSnapshots: 2,
+    });
+
+    // BOTH snapshots survive, because the run row survives and they are its
+    // children. Pruning by "does another run need it?" deleted the v2 here
+    // while leaving the run alive — and neither StoreSchema nor checkInvariants
+    // could see it, because a snapshot is only ever a child.
+    const exportedNow = r.workspaceRepository.exportStore().data;
+    expect(exportedNow.predictionSnapshots.filter((s) => s.runId === runId)).toHaveLength(2);
+    expect(exportedNow.predictionSnapshots.some((s) => s.id === v2.id)).toBe(true);
+    const survivingRun = exportedNow.predictionRuns.find((x) => x.id === runId);
+    expect(survivingRun).toBeTruthy();
+    expect(exportedNow.predictionSnapshots.some((s) => s.id === survivingRun.decisionSnapshotId))
+      .toBe(true);
+
+    // THE ambiguity: the root is LOGICALLY deleted regardless, and the
+    // tombstone is authoritative.
+    expect(r[SEED_LEDGER].find((x) => x.rootId === runId).removedAt)
+      .toBe('2026-08-01T00:00:00.000Z');
+    // getAggregate must NOT return a malformed success with no trackedPosition.
+    const agg2 = r.predictionRepository.getAggregate(runId);
+    expect(agg2.ok).toBe(false);
+    expect(agg2.error.kind).toBe('notFound');
+    expect(agg2.data).toBe(undefined);
+    // Invisible to every read surface, and not re-deletable.
+    expect(r.predictionRepository.listGraded({}).data
+      .some((x) => x.trackedPositionId === row.trackedPositionId)).toBe(false);
+    expect(r.predictionRepository.remove(runId, row.revision).error.kind).toBe('notFound');
+    // The retained rows are still a coherent Store: export stays valid.
+    const exported = r.workspaceRepository.exportStore().data;
+    expect(StoreSchema.safeParse(exported).success).toBe(true);
+    expect(checkInvariants(exported)).toEqual([]);
   });
 
-  it('the orphan check is not vacuous: without the wager, both are pruned', () => {
+  it('no live root ever yields an aggregate with a missing required part', () => {
     const r = make();
-    const row = r.predictionRepository.listGraded({}).data.find((x) => x.trackedOddsA !== null);
+    // Exhaustive over the whole corpus, before and after a shared-wager delete.
+    const allRunIds = store.predictionRuns.map((x) => x.id);
+    const check = () => {
+      for (const runId of allRunIds) {
+        const res = r.predictionRepository.getAggregate(runId);
+        if (!res.ok) continue;
+        expect(res.data.run, runId).toBeTruthy();
+        expect(res.data.assessment, runId).toBeTruthy();
+        expect(res.data.trackedPosition, runId).toBeTruthy();
+        expect(res.data.snapshots.length, runId).toBeGreaterThan(0);
+      }
+    };
+    check();
+    const row = pricedRowWithTwoSnapshots(r);
+    const runId = runIdOfPosition(row.trackedPositionId);
+    const agg = r.predictionRepository.getAggregate(runId).data;
+    r.wagerRepository.create({
+      id: '22222222-3333-4444-8555-666666666666', boutId: agg.trackedPosition.boutId,
+      assessmentId: agg.assessment.id, marketSnapshotId: agg.trackedPosition.marketSnapshotId,
+      corner: agg.trackedPosition.corner, stakeUnits: 1,
+      placedAt: '2026-08-01T00:00:00.000Z',
+      settlement: { status: 'open' }, notes: null, externalIds: {},
+    });
+    r.predictionRepository.remove(runId, row.revision);
+    check();
+  });
+
+  it('the orphan check is not vacuous: without the wager, the whole chain goes', () => {
+    // Same run as the shared-wager case, so the two tests differ in exactly one
+    // fact: whether a wager pins the assessment.
+    const r = make();
+    const row = pricedRowWithTwoSnapshots(r);
     const runId = runIdOfPosition(row.trackedPositionId);
     const before = counts(r);
-    expect(r.predictionRepository.remove(runId, row.revision).ok).toBe(true);
+    const res = r.predictionRepository.remove(runId, row.revision);
+    expect(res.ok).toBe(true);
+    expect(res.data.physicallyRemoved).toBe(true);
+    expect(res.data.retained).toEqual({
+      run: false, assessment: false, marketSnapshots: 0, predictionSnapshots: 0,
+    });
     const after = counts(r);
     expect(after.assessments).toBe(before.assessments - 1);
     expect(after.markets).toBeLessThan(before.markets);
     expect(after.runs).toBe(before.runs - 1);
+    // BOTH snapshots go this time — nothing live is left to require them.
+    expect(after.snapshots).toBe(before.snapshots - 2);
+    const exported = r.workspaceRepository.exportStore().data;
+    expect(exported.predictionSnapshots.filter((s) => s.runId === runId)).toHaveLength(0);
+    expect(StoreSchema.safeParse(exported).success).toBe(true);
+    expect(checkInvariants(exported)).toEqual([]);
+  });
+
+  it('a run row is never deleted while any snapshot still carries its runId', () => {
+    // The structural guard behind step 5. Deleting the run while a snapshot
+    // still pointed at it would dangle the FK that ON DELETE RESTRICT protects.
+    const r = make();
+    for (const row of r.predictionRepository.listGraded({}).data.slice(0, 40)) {
+      r.predictionRepository.remove(runIdOfPosition(row.trackedPositionId), row.revision);
+    }
+    const s = r.workspaceRepository.exportStore().data;
+    const liveRunIds = new Set(s.predictionRuns.map((x) => x.id));
+    const dangling = s.predictionSnapshots.filter((x) => !liveRunIds.has(x.runId));
+    expect(dangling).toEqual([]);
+    expect(StoreSchema.safeParse(s).success).toBe(true);
+    expect(checkInvariants(s)).toEqual([]);
   });
 
   it('a deleted root is tombstoned in the seed ledger; Events and Bouts never are', () => {
@@ -440,32 +635,116 @@ describe('deletion removes the COMPLETE aggregate, and only proven orphans', () 
       .toBe(true);
   });
 
-  it('a tombstoned root is never re-inserted by a later seed', () => {
+  it('the ledger records 164 roots and tombstones exactly what is deleted', () => {
     const r = make();
     expect(r[SEED_LEDGER]).toHaveLength(164);   // 160 runs + 4 props + 0 parlays
     const row = r.predictionRepository.listGraded({}).data[0];
     const runId = runIdOfPosition(row.trackedPositionId);
     r.predictionRepository.remove(runId, row.revision);
-    expect(r.predictionRepository.getAggregate(runId).error.kind).toBe('notFound');
+    r.propRepository.remove(store.props[0].id, '1');
 
-    // Re-running the ORIGINAL seed must not resurrect it. Ledger membership is
-    // the test, not table membership: after the delete the id no longer
-    // conflicts, so ON CONFLICT DO NOTHING alone would have re-inserted it.
-    const applied = r[APPLY_SEED](store, 'seed-2');
-    expect(applied.inserted).toBe(0);
-    expect(applied.skipped).toBe(164);
-    expect(r.predictionRepository.getAggregate(runId).error.kind).toBe('notFound');
+    const tombstoned = r[SEED_LEDGER].filter((x) => x.removedAt !== null);
+    expect(tombstoned.map((x) => x.rootId).sort())
+      .toEqual([runId, store.props[0].id].sort());
+    expect(r[SEED_LEDGER]).toHaveLength(164);   // tombstoned, not forgotten
+    // Whether a later seed may re-insert a tombstoned root is Gate 3's
+    // behaviour to build and prove; Gate 1 only guarantees the tombstone exists.
   });
 
-  it('reset clears the ledger, so a reset workspace is fully re-seedable', () => {
+  it('reset clears the ledger and the seed version', () => {
     const r = make();
     const row = r.predictionRepository.listGraded({}).data[0];
     r.predictionRepository.remove(runIdOfPosition(row.trackedPositionId), row.revision);
+    expect(r.workspaceRepository.setSeedVersion('seed-1', '1').ok).toBe(true);
     expect(r.workspaceRepository.reset({ backupConfirmed: true }).ok).toBe(true);
     expect(r[SEED_LEDGER]).toHaveLength(0);
-    const applied = r[APPLY_SEED](store, 'seed-3');
-    expect(applied.inserted).toBe(164);
-    expect(applied.skipped).toBe(0);
+    expect(r.workspaceRepository.seedVersion().data).toBe(null);
+  });
+});
+
+describe('the exported Store is always exactly a Stage 6 Store', () => {
+  const assertValidStore = (r, label) => {
+    const res = r.workspaceRepository.exportStore();
+    expect(res.ok, label).toBe(true);
+    const parsed = StoreSchema.safeParse(res.data);
+    expect(parsed.success,
+      `${label}: ${parsed.success ? '' : JSON.stringify(parsed.error.issues.slice(0, 2))}`)
+      .toBe(true);
+    expect(checkInvariants(res.data), label).toEqual([]);
+    // Storage metadata must never appear in Store content.
+    expect('seedVersion' in res.data.meta, `${label}: seedVersion leaked into meta`).toBe(false);
+    expect(Object.keys(res.data.meta).sort(), label).toEqual(['migratedAt', 'schemaVersion']);
+    return res.data;
+  };
+
+  it('baseline', () => assertValidStore(make(), 'baseline'));
+
+  it('after setSeedVersion — seed version is storage, not Store', () => {
+    const r = make();
+    expect(r.workspaceRepository.setSeedVersion('seed-1', '1').ok).toBe(true);
+    // THE regression: this used to write into db.meta, and MetaSchema is
+    // strict, so every later export failed with unrecognized_keys at `meta`.
+    assertValidStore(r, 'after setSeedVersion');
+    // …and it is still readable, from storage.
+    expect(r.workspaceRepository.seedVersion().data).toBe('seed-1');
+    expect(r.workspaceRepository.current().data.seedVersion).toBe('seed-1');
+  });
+
+  it('after reset', () => {
+    const r = make();
+    expect(r.workspaceRepository.reset({ backupConfirmed: true }).ok).toBe(true);
+    const s = assertValidStore(r, 'after reset');
+    expect(s.trackedPositions).toHaveLength(0);
+    expect(s.events).toHaveLength(0);
+  });
+
+  it('after import', () => {
+    const r = make();
+    expect(r.workspaceRepository.importStore(
+      make().workspaceRepository.exportStore().data, { backupConfirmed: true }).ok).toBe(true);
+    assertValidStore(r, 'after import');
+  });
+
+  it('after every retained mutation, in sequence', () => {
+    const r = make();
+    const pos = r.predictionRepository.listGraded({}).data.find((x) => x.trackedOddsA !== null);
+    expect(r.predictionRepository.amendTrackedPrice(pos.trackedPositionId, -130, pos.revision).ok)
+      .toBe(true);
+    assertValidStore(r, 'after amendTrackedPrice');
+
+    const p2 = r.predictionRepository.listGraded({}).data[1];
+    expect(r.predictionRepository.changeTrackedCorner(
+      p2.trackedPositionId, p2.trackedCorner === 'A' ? 'B' : 'A', p2.revision).ok).toBe(true);
+    assertValidStore(r, 'after changeTrackedCorner');
+
+    const ev = r.eventRepository.list().data[0];
+    expect(r.eventRepository.rename(ev.id, { name: 'Renamed Card' }, '1').ok).toBe(true);
+    assertValidStore(r, 'after rename');
+
+    const pending = r.predictionRepository.listPending().data[0];
+    expect(r.predictionRepository.grade(
+      pending.boutId, pending.trackedCorner, 'DEC', boutVector(r, pending.boutId)).ok).toBe(true);
+    assertValidStore(r, 'after grade');
+    expect(r.predictionRepository.returnToPending(
+      pending.boutId, boutVector(r, pending.boutId)).ok).toBe(true);
+    assertValidStore(r, 'after returnToPending');
+
+    expect(r.propRepository.settle(store.props[1].id, 'WON', '1').ok).toBe(true);
+    assertValidStore(r, 'after prop settle');
+    expect(r.propRepository.remove(store.props[1].id, '2').ok).toBe(true);
+    assertValidStore(r, 'after prop remove');
+
+    const row = r.predictionRepository.listGraded({}).data[3];
+    expect(r.predictionRepository.remove(runIdOfPosition(row.trackedPositionId), row.revision).ok)
+      .toBe(true);
+    assertValidStore(r, 'after remove');
+
+    expect(r.workspaceRepository.setSeedVersion('seed-9', '1').ok).toBe(true);
+    const final = assertValidStore(r, 'after setSeedVersion');
+    // The final store re-imports into a fresh repository unchanged.
+    const fresh = make();
+    expect(fresh.workspaceRepository.importStore(final, { backupConfirmed: true }).ok).toBe(true);
+    expect(semanticEquals(fresh.workspaceRepository.exportStore().data, final)).toBe(true);
   });
 });
 

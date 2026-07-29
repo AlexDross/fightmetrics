@@ -21,16 +21,17 @@ import { uuidv5, NS } from '../migration/ids.mjs';
 const clone = (v) => structuredClone(v);
 
 /**
- * Test-only seams. Symbol-keyed on purpose: `conformsToContract` enumerates
- * string keys, so these cannot silently widen the repository surface the UI is
- * allowed to depend on. The seed ledger is `seed_items` from the plan; Gate 3
- * replaces APPLY_SEED with the real seeding RPC.
+ * Read-only inspection seam for the storage-side seed ledger (`seed_items`).
+ * Symbol-keyed on purpose: `conformsToContract` enumerates string keys, so this
+ * cannot silently widen the repository surface the UI may depend on, and it is
+ * NOT part of the Stage 6 Store — see the storage/store split below.
+ *
+ * It exists only so deletion tombstones are observable at Gate 1. There is
+ * deliberately no seed APPLIER here: applying a seed means inserting Events,
+ * Bouts, market snapshots, assessments and tracked positions as well as roots,
+ * and that — with its resurrection tests — is Gate 3's job.
  */
 export const SEED_LEDGER = Symbol('fm.seedLedger');
-export const APPLY_SEED = Symbol('fm.applySeed');
-
-/** Root types the ledger tracks. Events and Bouts are NEVER tombstoned. */
-const ROOT_TYPES = Object.freeze(['predictionRun', 'prop', 'parlay']);
 
 /**
  * @param {object} store   a validated Stage 6 Store
@@ -41,7 +42,16 @@ const ROOT_TYPES = Object.freeze(['predictionRun', 'prop', 'parlay']);
  *   now          () => ISO string
  */
 export function createInMemoryRepositories(store, opts = {}) {
+  // `db` is EXACTLY a Stage 6 Store and nothing else. Repository/storage
+  // metadata — seed version, revisions, the seed ledger — lives beside it in
+  // `storage`, never inside it.
+  //
+  // seedVersion used to be written into db.meta. MetaSchema is strict and has
+  // no such field, so a single setSeedVersion or reset made every subsequent
+  // exportStore() fail StoreSchema with unrecognized_keys at `meta` — the store
+  // could no longer be re-imported by its own repository.
   const db = clone(store);
+  const storage = { seedVersion: null };
   const now = opts.now ?? (() => new Date().toISOString());
 
   // ── Authentication and membership are SEPARATE axes ───────────────────────
@@ -54,11 +64,18 @@ export function createInMemoryRepositories(store, opts = {}) {
   //   session set,  role null     signed-in non-member (public read, no writes,
   //                               MAY claim a zero-owner workspace)
   //   session set,  role set      member: owner | editor | viewer
-  const role = opts.role === undefined ? 'owner' : opts.role;
-  const session = opts.session === undefined
-    ? (role === null ? null : { userId: 'in-memory-user' })
+  //
+  // Both are MUTABLE state, because two operations transition them: claiming
+  // ownership grants the caller the owner role for the rest of the session, and
+  // signing out drops the session. Holding them constant made claimOwnership()
+  // report success while whoami() still said null and every owner-only write
+  // stayed forbidden — a success that changed nothing.
+  const initialRole = opts.role === undefined ? 'owner' : opts.role;
+  let currentRole = initialRole;
+  let currentSession = opts.session === undefined
+    ? (initialRole === null ? null : { userId: 'in-memory-user' })
     : opts.session;
-  let ownerExists = opts.ownerExists === undefined ? role !== null : opts.ownerExists;
+  let ownerExists = opts.ownerExists === undefined ? initialRole !== null : opts.ownerExists;
 
   // Revisions are storage-only and never part of the Stage 6 Store, exactly as
   // in Postgres. They live beside it, keyed by `${table}:${id}`.
@@ -82,11 +99,11 @@ export function createInMemoryRepositories(store, opts = {}) {
     ...s.props.map((p) => ['prop', p.id]),
     ...s.parlays.map((p) => ['parlay', p.id]),
   ];
-  const seedLedgerFrom = (s, seedVersion) => {
+  const seedLedgerFrom = (s) => {
     ledger.clear();
     for (const [rootType, rootId] of rootsOf(s)) {
       ledger.set(ledgerKey(rootType, rootId), {
-        rootType, rootId, firstSeedVersion: seedVersion ?? null, removedAt: null,
+        rootType, rootId, firstSeedVersion: storage.seedVersion, removedAt: null,
       });
     }
   };
@@ -96,10 +113,19 @@ export function createInMemoryRepositories(store, opts = {}) {
     if (row) row.removedAt = now();
     else ledger.set(key, { rootType, rootId, firstSeedVersion: null, removedAt: now() });
   };
-  seedLedgerFrom(db, db.meta.seedVersion ?? null);
+  /**
+   * LOGICAL existence. The ledger, not table membership, is the authority: a
+   * root whose immutable dependencies are pinned by a wager survives
+   * physically but must be invisible to every read surface.
+   */
+  const isLive = (rootType, rootId) => {
+    const row = ledger.get(ledgerKey(rootType, rootId));
+    return row !== undefined && row.removedAt === null;
+  };
+  seedLedgerFrom(db);
 
-  const canWrite = () => role === 'owner' || role === 'editor';
-  const canRead = () => role === 'owner' || role === 'editor' || role === 'viewer';
+  const canWrite = () => currentRole === 'owner' || currentRole === 'editor';
+  const canRead = () => currentRole === 'owner' || currentRole === 'editor' || currentRole === 'viewer';
 
   /**
    * Membership gate. Authentication is checked FIRST and reported distinctly:
@@ -107,9 +133,9 @@ export function createInMemoryRepositories(store, opts = {}) {
    * non-member gets `forbidden` (ask for access) — different UI, different fix.
    */
   const requireMember = (requireOwner = false) => {
-    if (session === null) return unauthenticated();
-    if (role === null) return forbidden();
-    if (requireOwner ? role !== 'owner' : !canWrite()) return forbidden();
+    if (currentSession === null) return unauthenticated();
+    if (currentRole === null) return forbidden();
+    if (requireOwner ? currentRole !== 'owner' : !canWrite()) return forbidden();
     return null;
   };
 
@@ -226,23 +252,69 @@ export function createInMemoryRepositories(store, opts = {}) {
       db.marketSnapshots = db.marketSnapshots.filter((m) => m.id !== mid);
     }
 
-    // 4. prediction snapshots — only those no surviving assessment or run needs
-    for (const sid of db.predictionSnapshots.filter((s) => s.runId === runId).map((s) => s.id)) {
-      if (db.bettingAssessments.some((a) => a.predictionSnapshotId === sid)) continue;
-      if (db.predictionRuns.some((r) => r.id !== runId && r.decisionSnapshotId === sid)) continue;
-      db.predictionSnapshots = db.predictionSnapshots.filter((s) => s.id !== sid);
+    // 4. prediction snapshots — but FIRST decide whether the run itself will
+    //    survive, because that decides whether its snapshots are orphans at all.
+    //
+    // Snapshots hang off the run by `runId`. If the run row survives, NONE of
+    // its snapshots are orphans, whatever else does or does not point at them:
+    // the surviving run still requires its `decisionSnapshotId`, and the rest of
+    // its snapshot set is immutable model output belonging to a live row.
+    //
+    // The run survives exactly when something outside its own snapshot set still
+    // references it — i.e. when an assessment survived step 2 because a wager
+    // pins it.
+    //
+    // The previous check asked only whether some OTHER run needed the snapshot
+    // (`r.id !== runId`), which is never true for a v2 snapshot. Measured on the
+    // migrated corpus: 77 of 237 snapshots are referenced by no
+    // decisionSnapshotId and no predictionSnapshotId, reachable only via runId.
+    // On run 1779253814932-7igxlf the run survived and its v2 snapshot was
+    // deleted anyway — and the export still passed StoreSchema with zero
+    // invariant problems, because a snapshot is only ever a child. Silent loss
+    // of immutable model output that statisticsRow reads by basis.
+    const runSurvives = db.bettingAssessments.some((a) => a.runId === runId);
+    if (!runSurvives) {
+      for (const sid of db.predictionSnapshots.filter((s) => s.runId === runId).map((s) => s.id)) {
+        if (db.bettingAssessments.some((a) => a.predictionSnapshotId === sid)) continue;
+        if (db.predictionRuns.some((r) => r.id !== runId && r.decisionSnapshotId === sid)) continue;
+        db.predictionSnapshots = db.predictionSnapshots.filter((s) => s.id !== sid);
+      }
     }
 
-    // 5. run — only if nothing surviving points at it; then tombstone the root
-    let rootRemoved = false;
-    if (!db.predictionSnapshots.some((s) => s.runId === runId)
-        && !db.bettingAssessments.some((a) => a.runId === runId)) {
+    // 5. run — physically removed only if nothing surviving points at it. The
+    //    snapshot clause is retained as a structural guard: deleting a run while
+    //    any snapshot still carried its runId would dangle the FK, which is what
+    //    ON DELETE RESTRICT refuses in Postgres.
+    let physicallyRemoved = false;
+    if (!runSurvives && !db.predictionSnapshots.some((s) => s.runId === runId)) {
       db.predictionRuns = db.predictionRuns.filter((r) => r.id !== runId);
-      tombstone('predictionRun', runId);
-      rootRemoved = true;
+      physicallyRemoved = true;
     }
-    // 6. STOP. Events and Bouts always remain.
-    return { positions: posIds.size, rootRemoved };
+
+    // 6. The root is ALWAYS tombstoned, whether or not the row survived.
+    //
+    // A user deletion is a logical fact; whether an immutable dependency is
+    // still pinned by a wager is a storage detail. Tombstoning only on physical
+    // removal produced the worst outcome available: remove() reported success,
+    // the ledger stayed active, and getAggregate() kept returning ok with an
+    // undefined trackedPosition — a malformed aggregate the readers would have
+    // dereferenced. `isLive` now makes the tombstone authoritative, so the run
+    // is invisible to every read surface either way.
+    tombstone('predictionRun', runId);
+
+    // 7. STOP. Events and Bouts always remain.
+    return {
+      positions: posIds.size,
+      physicallyRemoved,
+      retained: {
+        run: !physicallyRemoved,
+        assessment: assessment !== null
+          && db.bettingAssessments.some((a) => a.id === assessment.id),
+        marketSnapshots: [...marketCandidates]
+          .filter((mid) => db.marketSnapshots.some((m) => m.id === mid)).length,
+        predictionSnapshots: db.predictionSnapshots.filter((s) => s.runId === runId).length,
+      },
+    };
   };
 
   // ── projections ───────────────────────────────────────────────────────────
@@ -372,14 +444,21 @@ export function createInMemoryRepositories(store, opts = {}) {
       return ok(positionsFor(true).map(positionRow).filter((r) => !since || r.eventDate >= since));
     },
     getAggregate: (runId) => {
+      // The tombstone is authoritative: a logically deleted root is notFound
+      // even when a wager keeps its assessment and run rows alive.
+      if (!isLive('predictionRun', runId)) return notFound();
       const run = db.predictionRuns.find((r) => r.id === runId);
       if (!run) return notFound();
-      const a = db.bettingAssessments.find((x) => x.runId === runId);
+      const a = db.bettingAssessments.find((x) => x.runId === runId) ?? null;
+      const t = a ? db.trackedPositions.find((x) => x.assessmentId === a.id) ?? null : null;
+      // A PredictionAggregate REQUIRES an assessment and a tracked position.
+      // Returning ok with either undefined was a malformed success.
+      if (!a || !t) return notFound();
       return ok({
         run: clone(run),
         snapshots: db.predictionSnapshots.filter((s) => s.runId === runId).map(clone),
         assessment: clone(a),
-        trackedPosition: clone(db.trackedPositions.find((t) => t.assessmentId === a.id)),
+        trackedPosition: clone(t),
       });
     },
     savePrediction: (aggregate) => {
@@ -397,14 +476,26 @@ export function createInMemoryRepositories(store, opts = {}) {
       });
       return ok({ runId: aggregate.run.id });
     },
+    /**
+     * The adapter over `fm_rpc_delete_pending_run`: delete ONE prediction root
+     * and its aggregate. It is a logical delete of the root plus a physical
+     * delete of everything provably orphaned by it.
+     *
+     * The response says exactly what happened, because "removed" alone was
+     * ambiguous when a wager pinned the shared assessment:
+     *   removed            the root id, always logically gone
+     *   physicallyRemoved  whether the run ROW was deleted too
+     *   retained           which immutable dependencies survived, and why
+     */
     remove: (runId, expectedRevision) => {
-      const a = db.bettingAssessments.find((x) => x.runId === runId);
-      if (!a) return notFound();
-      const t = db.trackedPositions.find((x) => x.assessmentId === a.id);
+      if (!isLive('predictionRun', runId)) return notFound();
+      const a = db.bettingAssessments.find((x) => x.runId === runId) ?? null;
+      const t = a ? db.trackedPositions.find((x) => x.assessmentId === a.id) ?? null : null;
+      if (!a || !t) return notFound();
       const g = guardWrite('tracked_positions', t.id, expectedRevision);
       if (g) return g;
-      const { rootRemoved } = deleteAggregate(runId);
-      return ok({ removed: runId, rootRemoved });
+      const { physicallyRemoved, retained } = deleteAggregate(runId);
+      return ok({ removed: runId, physicallyRemoved, retained });
     },
     clearGraded: (revisions) => {
       const m = requireMember(true);
@@ -416,9 +507,11 @@ export function createInMemoryRepositories(store, opts = {}) {
       // ---- nothing above this line has mutated anything ----
       const runIds = [...new Set(graded.map(
         (t) => byId(db.bettingAssessments, t.assessmentId).runId))];
-      let rootsRemoved = 0;
-      for (const runId of runIds) if (deleteAggregate(runId).rootRemoved) rootsRemoved += 1;
-      return ok({ removed: graded.length, rootsRemoved });
+      let physicallyRemoved = 0;
+      for (const runId of runIds) if (deleteAggregate(runId).physicallyRemoved) physicallyRemoved += 1;
+      // Every cleared root is tombstoned; `physicallyRemoved` may be lower if a
+      // wager pins a shared assessment.
+      return ok({ removed: graded.length, rootsTombstoned: runIds.length, physicallyRemoved });
     },
     grade: (boutId, outcome, method, revisions) => {
       const m = requireMember();
@@ -628,18 +721,21 @@ export function createInMemoryRepositories(store, opts = {}) {
   const workspaceRepository = {
     current: () => ok({
       id: 'in-memory', slug: 'fightmetrics', isPublic: true,
-      schemaVersion: db.meta.schemaVersion, seedVersion: db.meta.seedVersion ?? null,
+      schemaVersion: db.meta.schemaVersion, seedVersion: storage.seedVersion,
       migratedAt: db.meta.migratedAt,
     }, revOf('workspaces', 'in-memory')),
-    seedVersion: () => ok(db.meta.seedVersion ?? null),
+    // seedVersion is WORKSPACE metadata, not Store content. It lives in
+    // `storage`; writing it into db.meta made the exported Store unparseable.
+    seedVersion: () => ok(storage.seedVersion),
     setSeedVersion: (version, expectedRevision) => {
       const g = guardWrite('workspaces', 'in-memory', expectedRevision, true);
       if (g) return g;
-      db.meta.seedVersion = version;
+      storage.seedVersion = version;
       return ok({ seedVersion: version }, bump('workspaces', 'in-memory'));
     },
+    /** Always exactly a Stage 6 Store: it must re-parse and re-import as-is. */
     exportStore: () => {
-      if (session === null) return unauthenticated();
+      if (currentSession === null) return unauthenticated();
       if (!canRead()) return forbidden();
       return ok(clone(db));
     },
@@ -687,8 +783,13 @@ export function createInMemoryRepositories(store, opts = {}) {
       const next = clone(parsed.data);
       for (const key of Object.keys(db)) delete db[key];
       Object.assign(db, next);
+      // The incoming store is authoritative, so all derived storage metadata is
+      // rebuilt from it: revisions restart, the ledger is re-derived from the
+      // incoming roots, and the seed version is cleared because the imported
+      // content is no longer the product of any recorded seed.
       revisions.clear();
-      seedLedgerFrom(db, db.meta.seedVersion ?? null);
+      storage.seedVersion = null;
+      seedLedgerFrom(db);
       return ok({ imported: true });
     },
     reset: (options) => {
@@ -696,12 +797,13 @@ export function createInMemoryRepositories(store, opts = {}) {
       const m = requireMember(true);
       if (m) return m;
       if (!backupConfirmed) return validation([{ field: 'backupConfirmed' }]);
+      // Entities only. `meta` is Store content and stays exactly as it was.
       for (const k of Object.keys(db)) if (k !== 'meta') db[k] = [];
-      db.meta.seedVersion = null;
       // reset clears entities, ledger AND seed_version: a reset workspace is
       // re-seedable from scratch, so nothing may stay tombstoned.
       ledger.clear();
       revisions.clear();
+      storage.seedVersion = null;
       return ok({ reset: true });
     },
   };
@@ -713,20 +815,31 @@ export function createInMemoryRepositories(store, opts = {}) {
 
   const authRepository = {
     // Session presence ONLY. Never reports a role.
-    session: () => ok(session === null ? null : { userId: session.userId }),
+    session: () => ok(currentSession === null ? null : { userId: currentSession.userId }),
     // Resolved membership ONLY. Routing is by membership, not session presence:
     // a signed-in non-member reads through the public surface like anyone else.
-    whoami: () => ok({ role }),
+    whoami: () => ok({ role: currentRole }),
     signIn: (email) => (typeof email === 'string' && email.includes('@')
       ? ok({ sent: true }) : validation([{ field: 'email' }])),
-    signOut: () => ok({ signedOut: true }),
+    // A TRANSITION, not an acknowledgement. Returning {signedOut:true} while
+    // leaving the session in place meant the caller stayed fully authorised.
+    signOut: () => {
+      currentSession = null;
+      currentRole = null;   // membership is resolved per session
+      return ok({ signedOut: true });
+    },
     // Requires a session but NOT membership — that is the entire point: the
     // first signed-in user claims a zero-owner workspace. Once an owner exists
     // the claim is refused.
+    //
+    // The claim GRANTS the role atomically with taking ownership. Reporting
+    // {role:'owner'} without setting it left whoami() saying null and every
+    // owner-only write forbidden: a success that changed nothing.
     claimOwnership: () => {
-      if (session === null) return unauthenticated();
+      if (currentSession === null) return unauthenticated();
       if (ownerExists) return forbidden();
       ownerExists = true;
+      currentRole = 'owner';
       return ok({ role: 'owner' });
     },
   };
@@ -737,38 +850,13 @@ export function createInMemoryRepositories(store, opts = {}) {
     undoRepository, authRepository,
   };
 
-  // Symbol-keyed: invisible to Object.keys, so the contract surface is unchanged.
+  // Symbol-keyed and NON-ENUMERABLE: invisible to Object.keys, so neither the
+  // contract surface nor an exported Store can be contaminated by it. The
+  // getter hands back a fresh array of fresh objects, so a caller cannot reach
+  // the live ledger through it either.
   Object.defineProperty(repositories, SEED_LEDGER, {
     enumerable: false,
     get: () => [...ledger.values()].map((r) => ({ ...r })),
-  });
-  Object.defineProperty(repositories, APPLY_SEED, {
-    enumerable: false,
-    value: (seedStore, seedVersion) => {
-      // Ledger MEMBERSHIP is the test, not table membership — and a tombstoned
-      // root is never re-inserted by any later seed.
-      let inserted = 0, skipped = 0;
-      for (const [rootType, rootId] of rootsOf(seedStore)) {
-        if (!ROOT_TYPES.includes(rootType)) continue;
-        if (ledger.has(ledgerKey(rootType, rootId))) { skipped += 1; continue; }
-        if (rootType === 'predictionRun') {
-          const run = seedStore.predictionRuns.find((r) => r.id === rootId);
-          db.predictionRuns.push(clone(run));
-          for (const s of seedStore.predictionSnapshots.filter((x) => x.runId === rootId)) {
-            db.predictionSnapshots.push(clone(s));
-          }
-        } else if (rootType === 'prop') {
-          db.props.push(clone(seedStore.props.find((p) => p.id === rootId)));
-        } else {
-          db.parlays.push(clone(seedStore.parlays.find((p) => p.id === rootId)));
-        }
-        ledger.set(ledgerKey(rootType, rootId),
-                   { rootType, rootId, firstSeedVersion: seedVersion ?? null, removedAt: null });
-        inserted += 1;
-      }
-      db.meta.seedVersion = seedVersion ?? db.meta.seedVersion;
-      return { inserted, skipped };
-    },
   });
 
   return repositories;
