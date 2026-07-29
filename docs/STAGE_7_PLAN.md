@@ -14,6 +14,7 @@ Base: `main` @ `89f6c45`. Backend decision: Supabase/Postgres.
 | 0 · Preflight | Docker runtime present and running; ports 54321–54324 free; Node supports the pinned CLI | ✅ |
 | 1 | This document + `feat(data): add repository interfaces over the durable schema` — in-memory only | ✅ |
 | 2 | `feat(data): add Postgres schema, roles, policies and RPCs` — pinned Supabase CLI as devDependency, committed `supabase/`, full local stack, all SQL/API tests. **No hosted project.** | ✅ |
+| 2 · status | **PARTIAL.** Landed: roles, ownership transfer, ACLs, `app_private` schema, all 15 tables with composite FKs and the deferrable run↔snapshot cycle, revision/slug/settlement triggers, RLS on every table, the 32-assertion catalog suite, and the two-reset repeatability proof. **Outstanding:** the full `fm_read_*`/`fm_member_*` surfaces (4 of ~15 exist), the `fm_rpc_*` matrix (1 of ~20 exists — the ownership claim), the rejection and behavioural pgTAP suites, the Gate 2 measurements, and `test:api`. | |
 | 3 | `feat(data): migrate seed data into the durable schema` | ✅ |
 | 4 | `feat(auth): add magic-link sign-in and read-only public state` | ✅ |
 | 5 | **Hosted rollout** — Alex creates/links the project, `db push --dry-run` → `db push`, Vercel vars, invite owner, claim, approve seed | ✅ |
@@ -160,37 +161,75 @@ run that exercises the idempotent branch of step 0 and the re-grant in step 1.
 - every `public.fm_read_*` owned by `fm_public_reader`; every `fm_member_*` /
   `fm_rpc_*` owned by `fm_member_api`
 - **no callable public `fm_` function owned by `fm_table_owner`**
-- `prosecdef = true` and `proconfig @> ARRAY['search_path=']` on every `fm_`
-  function and every `app_private` helper
+- `prosecdef = true` on every **public** `fm_` function. Corrected at Gate 2 from
+  "every `fm_` function and every `app_private` helper": the pure immutable
+  helpers are deliberately `INVOKER`, because they touch no table and `DEFINER`
+  would add privilege without adding capability. The three helpers that DO read
+  tables — `is_member`, `workspace_has_owner`, `lock_unclaimed_workspace` — are
+  `DEFINER`, which is what makes the membership policies non-recursive.
+- `proconfig @> ARRAY['search_path=""']` on every `fm_` function and every
+  `app_private` helper. Corrected at Gate 2: Postgres stores `SET search_path =
+  ''` as the literal `search_path=""`, so the plan's original
+  `ARRAY['search_path=']` could never match — measured, it reported all 24
+  functions as failing while every one of them pins the path correctly.
 - RLS enabled on every `app_private` table
 - ACLs compared with normalized **`aclexplode`** rows via `set_eq`, never
   `array_to_string(proacl)`, whose ordering is not a stable contract
 - all `fm_*` roles remain `NOLOGIN`
-- **no non-`fm_` role retains a PRIVILEGE-CONFERRING membership in any `fm_`
-  role, `postgres` included** — `set_option = false` and `inherit_option = false`
-  for every non-`fm_` member, and `postgres` cannot `SET ROLE` to any of them.
+- **no non-`fm_` role retains an IMMEDIATE-DATA-ACCESS-CONFERRING membership in
+  any `fm_` role**, with exactly one documented exception per `fm_` role — see
+  below.
 
-  Corrected at Gate 2 from "no membership at all", which is unsatisfiable and
-  would break repeatability. Measured on the local stack (PG 17.6, Supabase
-  `postgres` with `rolsuper = f`, i.e. the hosted condition):
+#### The unavoidable `ADMIN OPTION` exception
 
-  | stage | admin | inherit | set |
-  |---|---|---|---|
-  | after `CREATE ROLE fm_x` by `postgres` | `t` | `f` | `f` |
-  | after `GRANT fm_x TO postgres` (second row) | `f` | `t` | `t` |
-  | after plain `REVOKE fm_x FROM postgres` | `t` | `f` | `f` (one row left) |
+Corrected at Gate 2 from "no membership at all", which is unsatisfiable and
+would itself break repeatability. Measured on the local stack (PG 17.6, Supabase
+`postgres` with `rolsuper = f`, i.e. the hosted condition):
 
-  Postgres records an implicit `ADMIN OPTION` membership for the creating role
-  whenever a non-superuser creates a role. Its grantor is `supabase_admin`, so
-  `postgres` cannot revoke it, and it is cluster-level so it survives
-  `db reset`. It confers **no** privilege: no `SET ROLE`, no inheritance. It is
-  also load-bearing — removing it would leave `postgres` unable to grant the
-  roles to itself on the next reset, so run 2 of the repeatability proof would
-  fail at step 1.
+| stage | admin | inherit | set |
+|---|---|---|---|
+| after `CREATE ROLE fm_x` by `postgres` | `t` | `f` | `f` |
+| after `GRANT fm_x TO postgres` (second row) | `f` | `t` | `t` |
+| after plain `REVOKE fm_x FROM postgres` | `t` | `f` | `f` (one row left) |
 
-  Step 7 therefore uses a plain `REVOKE`, which deletes the temporary
-  working row outright. `REVOKE SET OPTION FOR` / `REVOKE INHERIT OPTION FOR`
-  are explicitly NOT used: they leave an all-false zombie row behind.
+Postgres records an implicit `ADMIN OPTION` membership for the creating role
+whenever a non-superuser creates a role. Its grantor is `supabase_admin`, so
+`postgres` cannot revoke it; it is cluster-level, so it survives `db reset`. It
+is load-bearing: remove it and `postgres` can no longer grant the roles to
+itself, so step 1 of the second reset fails.
+
+**`ADMIN OPTION` is not privilege-free.** It confers no *immediate* data access,
+because `INHERIT = false` and `SET = false` — but it is an administrative
+capability. `postgres` can use it to grant itself, or any other role, `SET` or
+`INHERIT` at any time. PostgreSQL documents the automatic grant as a safeguard
+against accidentally creating unreachable roles, **not** as a security boundary.
+
+`postgres` is therefore treated as the **trusted migration/operator role**. This
+control prevents automatic or immediate use of `fm_` role privileges; it does
+**not** defend against a malicious trusted `postgres` operator, who can exercise
+the unavoidable `ADMIN OPTION` at will. Defending against that requires
+cluster-level controls outside this schema.
+
+After each reset, for **each** `fm_*` role, assert:
+
+| # | Assertion |
+|---|---|
+| 1 | exactly one permitted non-`fm_` membership row |
+| 2 | its member is `postgres` |
+| 3 | its grantor is `supabase_admin` (local Supabase stack) |
+| 4 | `admin_option = true` |
+| 5 | `inherit_option = false` |
+| 6 | `set_option = false` |
+| 7 | `pg_has_role('postgres', role, 'MEMBER') = true` |
+| 8 | `pg_has_role('postgres', role, 'SET') = false` |
+| 9 | `pg_has_role('postgres', role, 'USAGE') = false` |
+| 10 | direct `SET ROLE <fm_role>` fails |
+| 11 | no other non-`fm_` member rows, no temporary working rows, no all-false zombie rows |
+
+Step 7 uses a plain `REVOKE`, which removes the temporary `INHERIT`/`SET` row
+outright and leaves the automatic admin-only row the second reset needs.
+`REVOKE SET OPTION FOR` / `REVOKE INHERIT OPTION FOR` are explicitly NOT used:
+measured, they leave an all-false zombie row rather than deleting anything.
 - `has_schema_privilege('fm_public_reader','public','CREATE')` is false; same for
   `fm_member_api`
 
@@ -238,10 +277,13 @@ LANGUAGE sql IMMUTABLE PARALLEL SAFE SET search_path = '' AS $$
 $$;
 
 -- Canonical argmax set: binds order, membership, distinctness and cardinality.
-CREATE FUNCTION app_private.finish_leaders_expected(ko int, sub int, dec int) RETURNS text[]
+-- `dec_pct`, not `dec`: DEC is a SQL keyword (synonym for DECIMAL) and will not
+-- parse as a bare parameter name. Corrected at Gate 2 — the original signature
+-- failed with `syntax error at or near "int"`.
+CREATE FUNCTION app_private.finish_leaders_expected(ko int, sub int, dec_pct int) RETURNS text[]
 LANGUAGE sql IMMUTABLE STRICT PARALLEL SAFE SET search_path = '' AS $$
-  SELECT ARRAY(SELECT label FROM (VALUES ('KO/TKO',ko,1),('SUB',sub,2),('DEC',dec,3))
-               AS t(label,pct,ord) WHERE pct = GREATEST(ko,sub,dec) ORDER BY ord)
+  SELECT ARRAY(SELECT label FROM (VALUES ('KO/TKO',ko,1),('SUB',sub,2),('DEC',dec_pct,3))
+               AS t(label,pct,ord) WHERE pct = GREATEST(ko,sub,dec_pct) ORDER BY ord)
 $$;
 
 -- Range and underflow protection. NOT full JSON-number canonicalization:
@@ -745,21 +787,46 @@ prove nothing. The current store has 3,799 numeric leaves and 0 negative zeros.
 supabase/config.toml            committed, CLI version pinned
 supabase/migrations/<ts>_*.sql  timestamped, forward-only
 supabase/tests/*.test.sql       pgTAP
+supabase/tests/catalog_snapshot.sql  reset-to-reset catalog fingerprint
 ```
+
+**Running the suite.** `supabase test db` fails on this stack with
+`failed to connect to postgres: PgClient: Failed to connect`, so the suites are
+executed directly against the database container:
+
+```
+docker cp supabase/tests/00_catalog.test.sql supabase_db_fightmetrics:/tmp/
+docker exec supabase_db_fightmetrics psql -U postgres -d postgres -Atf /tmp/00_catalog.test.sql
+```
+
+Same SQL, same pgTAP, same assertions — only the transport differs. Diagnosing
+the CLI's connection path is deferred; it does not affect what is proven.
+
+**Repeatability is compared, not asserted.** `catalog_snapshot.sql` emits an
+explicitly ORDERed fingerprint of owners, function ACLs, table ACLs, policies,
+RLS flags, constraints (including `condeferrable`/`condeferred`), triggers, role
+attributes, `fm_` memberships and schema privileges. Catalog scan order is not a
+stable contract, hence the ordering. The two runs are diffed byte-for-byte.
 
 Scripts: `db:start`, `db:stop`, `db:reset`, `test:db`; `test:api` lands with its
 Vitest config. CI adds a **separate** job using `supabase/setup-cli@v1` with a
 pinned `version:`; the existing Vitest/build job is unchanged and stays fast.
 **CI never depends on a hosted project or committed credentials.**
 
-**Install with `npm ci --include=dev`.** Under `NODE_ENV=production` — which CI
-images and this workstation both set — npm silently omits devDependencies, which
-removes `vite`, `vitest` and `@tailwindcss/vite`. Hit while pinning the CLI: the
-install pruned the toolchain and the suite failed to start with
-`Cannot find package 'vite'`. Conversely the production build must run under the
-ambient `NODE_ENV=production`; forcing `NODE_ENV=development` bundles React's
-development build and the JS grows from 4,648,208 to 5,005,192 bytes, which is
-not a real change but does break byte comparison.
+**Install with `npm ci --include=dev`.** This is the durable rule wherever
+`NODE_ENV=production` may be present — CI images and this workstation both set
+it — because npm then silently omits devDependencies, removing `vite`, `vitest`
+and `@tailwindcss/vite`. Hit while pinning the CLI: the install pruned the
+toolchain and the suite failed to start with `Cannot find package 'vite'`.
+
+The **build** needs no ambient `NODE_ENV`. Measured: `npm run build` with
+`NODE_ENV` unset reproduces the approved hashes exactly
+(`bc0fc915…`, 4,648,208 bytes; CSS `4f72dadb…`), because Vite sets production
+mode itself. The prohibition is only against **forcing**
+`NODE_ENV=development`, which selects React's development build and inflates the
+JS to 5,005,192 bytes — not a real change, but it does break byte comparison.
+An earlier revision of this note wrongly claimed ambient
+`NODE_ENV=production` was required.
 
 ### Required rejection tests
 
