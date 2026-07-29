@@ -508,19 +508,70 @@ RepositoryError =
   | { kind: 'offline' }
   | { kind: 'unauthenticated' }
   | { kind: 'forbidden' }
-  | { kind: 'conflict', serverRevision: string }
+  | { kind: 'conflict', serverRevision: string, stale?: {id,serverRevision}[] }
   | { kind: 'validation', issues: unknown[] }
   | { kind: 'notFound' }
   | { kind: 'server', code: string, message: string }
 ```
 
-Error mapping: `42501` → `forbidden`; `P0001 stale_write` → `conflict`;
-`23505/23503/23514` → `validation`; network → `offline`; missing JWT →
-`unauthenticated`.
+Error mapping: `42501` → `forbidden`; `23505/23503/23514` → `validation`;
+network → `offline`; missing JWT → `unauthenticated`.
+
+`P0001` is Postgres's **generic** `RAISE EXCEPTION` and the RPCs use it for
+several unrelated conditions ("workspace already claimed", "bout is still
+pending"). It maps to `conflict` **only** when the message carries the stable
+marker `stale_write` **and** a `revision=<digits>` value inside signed-bigint
+range. Every other `P0001` is a `server` error, and a revision is never
+synthesised — defaulting to `"0"` told the UI to re-apply against a revision
+that had never existed. **Every stale-write `RAISE` in the SQL must therefore
+include the literal `stale_write` token and the current revision.**
 
 Repositories: `eventRepository`, `boutRepository`, `predictionRepository`,
 `wagerRepository`, `propRepository`, `parlayRepository`, `statisticsRepository`,
 `workspaceRepository`, `undoRepository`, `authRepository`.
+
+### Revision vectors
+
+A single-row write takes `p_expected_revision`. Any write that touches more than
+one row takes an **ID-keyed vector** `{id, revision}[]` covering **every** row it
+will write, validated in full before the first mutation:
+
+| RPC | Vector must cover |
+| --- | --- |
+| `fm_rpc_grade_bout` | the bout, every tracked position on it, every wager on it |
+| `fm_rpc_return_bout_to_pending` | identical set |
+| `fm_rpc_clear_graded` | every graded tracked position |
+| `fm_rpc_confirm_all_pending` | every review-pending tracked position |
+
+Duplicate, missing, unknown, malformed and out-of-range entries are `validation`
+errors; stale entries are a `conflict` carrying the full `stale` list. Input
+order is irrelevant because lookup is by id. Positional arrays are forbidden:
+they required the caller to guess the server's ordering, and a short or empty
+array silently skipped the check for every unlisted row.
+
+The success payload is the complete `touched` vector — `{table, id, revision}`
+per row written, including the bout itself — so the client can refresh its whole
+optimistic set from one response.
+
+`revision` is a decimal string bounded by the **signed bigint maximum**
+`9223372036854775807`, not merely 19 digits: `9999999999999999999` is 19 digits
+and would fail the Postgres cast.
+
+### Contract conformance
+
+`conformsToContract()` compares `Function.length` with `===`, not `<=`. An
+at-most rule is not a guard: `Function.length` is 0 for `() => …`, so a
+zero-argument stub satisfied every method including the 4-parameter mutations.
+Exactness is only workable because `Function.length` stops at the first
+defaulted or destructured parameter, so implementations declare **ordinary**
+parameters and destructure options in the body.
+
+### Stake validation
+
+`matchesStakeShape()` mirrors the SQL regex and is **shape only** — it accepts
+`"0"`, which SQL separately rejects with `> 0`. `isValidStakeTransport()` /
+`fromStakeTransport()` are the validity checks. A shape check must never be used
+as proof that a value is a legal stake.
 
 ### Numeric transport
 
@@ -549,6 +600,20 @@ wording: "Applies to all N bouts on this card."
 ---
 
 ## 10. Authentication
+
+**Authentication and membership are separate, separately observable axes.**
+`session()` reports presence only and never a role; `whoami()` reports resolved
+membership only and never implies a session. Three states, three UIs:
+
+| session | role | State | Writes | Ownership claim |
+| --- | --- | --- | --- | --- |
+| `null` | `null` | signed out | `unauthenticated` | `unauthenticated` |
+| set | `null` | signed-in non-member | `forbidden` | **allowed** if zero-owner |
+| set | set | member | by role | `forbidden` |
+
+Collapsing these into one tri-state made the middle row unreachable, and with it
+the only path by which a fresh deployment ever acquires an owner. The distinction
+is also what separates "sign in" from "request access" in the UI.
 
 `authRepository` + provider exposing `{ session, status, signIn(email), signOut() }`.
 Magic-link/OTP with `shouldCreateUser: false`; **open signup disabled at project

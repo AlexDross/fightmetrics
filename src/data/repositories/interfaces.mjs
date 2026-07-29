@@ -33,13 +33,23 @@ export const REPOSITORY_CONTRACT = Object.freeze({
     getAggregate: 1,         // (runId) -> Result<PredictionAggregate>
     savePrediction: 1,       // (aggregate) -> Result<{runId}>
     remove: 2,               // (runId, expectedRevision)
-    clearGraded: 1,          // (expectedRevisions[]) -> Result<{removed}>
-    grade: 4,                // (boutId, outcome, method, expectedRevision)
-    returnToPending: 2,      // (boutId, expectedRevision)
+    // ── Revision VECTORS, not positional arrays ───────────────────────────
+    // Every method below writes more than one row, so it takes an ID-KEYED
+    // vector `{id, revision}[]` covering EVERY row the write will touch, and
+    // rejects a duplicate, missing, unknown, malformed or stale entry before
+    // mutating anything. Input order is irrelevant.
+    //
+    // grade cascades to each tracked position AND each wager on the bout, so
+    // its vector is {bout} ∪ {positions on bout} ∪ {wagers on bout}. Taking a
+    // bout revision alone let a concurrently-edited position be re-settled
+    // against a stake the caller had never seen.
+    clearGraded: 1,          // (revisions[]) -> Result<{removed, rootsRemoved}>
+    grade: 4,                // (boutId, outcome, method, revisions[])
+    returnToPending: 2,      // (boutId, revisions[])
     changeTrackedCorner: 3,  // (positionId, corner, expectedRevision)
     amendTrackedPrice: 3,    // (positionId, odds, expectedRevision)
     confirmEntry: 2,         // (positionId, expectedRevision)
-    confirmAllPending: 1,    // (expectedRevisions[]) -> Result<{confirmed}>
+    confirmAllPending: 1,    // (revisions[]) -> Result<{confirmed, touched}>
   }),
 
   wagerRepository: Object.freeze({
@@ -85,14 +95,23 @@ export const REPOSITORY_CONTRACT = Object.freeze({
     undo: 1,                 // (token) -> Result<{restored}>
   }),
 
+  // AUTHENTICATION and MEMBERSHIP are separate, and both are separately
+  // observable, because three distinct states need three distinct UIs:
+  //   session null, role null -> signed out          ("sign in")
+  //   session set,  role null -> signed-in non-member ("request access", and
+  //                              MAY claim a zero-owner workspace)
+  //   session set,  role set  -> member
+  // A single tri-state made the middle case unreachable: a signed-in
+  // non-member could not claim an unowned workspace, which is the only way a
+  // fresh deployment ever acquires an owner.
   authRepository: Object.freeze({
-    session: 0,              // () -> Result<Session|null>
+    session: 0,              // () -> Result<{userId}|null>   presence ONLY, no role
     // Routing is by RESOLVED MEMBERSHIP, not session presence: a signed-in
     // non-member reads through the public surface like anyone else.
-    whoami: 0,               // () -> Result<{role|null}>
+    whoami: 0,               // () -> Result<{role|null}>     membership ONLY
     signIn: 1,               // (email) -> Result<{sent:true}>  magic link, shouldCreateUser:false
     signOut: 0,
-    claimOwnership: 0,       // () -> Result<{role:'owner'}>
+    claimOwnership: 0,       // () -> Result<{role:'owner'}>  session required, membership not
   }),
 });
 
@@ -106,13 +125,19 @@ export function conformsToContract(impl, contract = REPOSITORY_CONTRACT) {
       const fn = repo[method];
       if (typeof fn !== 'function') {
         problems.push(`${repoName}.${method} is not a function`);
-      } else if (fn.length > arity) {
-        // `<=`, not `===`: Function.length stops counting at the first parameter
-        // with a default or a destructuring default, so `({ since } = {})`
-        // reports 0. An implementation may therefore declare FEWER parameters
-        // than the contract, but never more — an extra required parameter is a
-        // signature the callers do not know about.
-        problems.push(`${repoName}.${method} declares ${fn.length} params, contract allows at most ${arity}`);
+      } else if (fn.length !== arity) {
+        // EXACT, not `<=`. An at-most rule was no guard at all: Function.length
+        // is 0 for `() => ok(...)`, so a zero-argument stub satisfied every
+        // method in the contract, including the 3- and 4-parameter mutations.
+        // Measured: replacing amendTrackedPrice with `() => ok({})` produced an
+        // empty problems array.
+        //
+        // Exactness is only meaningful because Function.length stops counting at
+        // the first defaulted or destructured parameter. Implementations
+        // therefore declare ORDINARY parameters and destructure options in the
+        // body — `listGraded(options)` with `const { since } = options ?? {}`,
+        // never `listGraded({ since } = {})`, which reports 0.
+        problems.push(`${repoName}.${method} declares ${fn.length} params, contract requires exactly ${arity}`);
       }
     }
     for (const extra of Object.keys(repo)) {

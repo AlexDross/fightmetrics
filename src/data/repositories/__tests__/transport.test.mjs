@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
-  toStakeTransport, fromStakeTransport, isStakeTransport, STAKE_MAX_LENGTH,
+  toStakeTransport, fromStakeTransport, matchesStakeShape, isValidStakeTransport,
+  STAKE_MAX_LENGTH, PG_BIGINT_MAX,
   isRevision, assertRevision, semanticEquals, errorFromSqlState,
   ok, conflict, forbidden, notFound, offline, unauthenticated, ERROR_KINDS,
 } from '../types.mjs';
@@ -52,7 +53,8 @@ describe('stake transport', () => {
     const s = '0.0000057692833136856875';
     expect(s.length).toBe(24);
     expect(s.split('.')[1].length).toBe(22);
-    expect(isStakeTransport(s)).toBe(true);
+    expect(matchesStakeShape(s)).toBe(true);
+    expect(isValidStakeTransport(s)).toBe(true);
     expect(Object.is(fromStakeTransport(s), Number(s))).toBe(true);
   });
 
@@ -76,18 +78,42 @@ describe('stake transport', () => {
   it('rejects malformed transport strings', () => {
     for (const s of ['-0', '-1', '-0.0', 'NaN', 'Infinity', '-Infinity', '',
                      '.5', '5.', '0x10', '1e', '+1', '01', '1,5', ' 1', '1 ']) {
-      expect(isStakeTransport(s), s).toBe(false);
+      expect(matchesStakeShape(s), s).toBe(false);
+      expect(isValidStakeTransport(s), s).toBe(false);
       expect(() => fromStakeTransport(s), s).toThrow(TypeError);
     }
-    // Shape-valid but non-positive: caught by the value guard, like SQL's > 0.
-    expect(isStakeTransport('0')).toBe(true);
+  });
+
+  it('the shape helper is NOT a validity check, and says so in its name', () => {
+    // "0" matches the SQL regex and is still not a legal stake: SQL enforces
+    // `> 0` separately. The old `isStakeTransport` returned true here while
+    // reading as an assertion of validity, and the contract suite used it as
+    // proof that every migrated stake was valid.
+    expect(matchesStakeShape('0')).toBe(true);
+    expect(isValidStakeTransport('0')).toBe(false);
     expect(() => fromStakeTransport('0')).toThrow(/positive/);
+    // …and for '0.0', '0.00', which the regex also admits.
+    for (const z of ['0', '0.0', '0.000', '0e0', '0.0e-5']) {
+      expect(matchesStakeShape(z), z).toBe(true);
+      expect(isValidStakeTransport(z), z).toBe(false);
+    }
+  });
+
+  it('shape and validity agree on everything except the zeroes', () => {
+    let disagreements = 0;
+    for (const n of corpus()) {
+      const s = toStakeTransport(n);
+      expect(matchesStakeShape(s)).toBe(true);
+      if (matchesStakeShape(s) !== isValidStakeTransport(s)) disagreements++;
+    }
+    expect(disagreements).toBe(0);
   });
 
   it('enforces the length bound against an abusive mantissa', () => {
     const abusive = `1.${'9'.repeat(40)}`;
     expect(abusive.length).toBeGreaterThan(STAKE_MAX_LENGTH);
-    expect(isStakeTransport(abusive)).toBe(false);
+    expect(matchesStakeShape(abusive)).toBe(false);
+    expect(isValidStakeTransport(abusive)).toBe(false);
     expect(() => fromStakeTransport(abusive)).toThrow(/too long/);
   });
 });
@@ -110,6 +136,29 @@ describe('revision transport', () => {
     expect(asString).toBe('9007199254740993');
     expect(isRevision(asString)).toBe(true);
   });
+
+  it('enforces the signed bigint range Postgres will enforce on cast', () => {
+    // A 19-digit regex alone is not the bigint range. These are all 19 digits.
+    expect(PG_BIGINT_MAX).toBe(9223372036854775807n);
+    expect(isRevision('9223372036854775807')).toBe(true);    // exactly max
+    expect(isRevision('9223372036854775808')).toBe(false);   // max + 1
+    expect(isRevision('9999999999999999999')).toBe(false);   // the old false accept
+    expect(() => assertRevision('9223372036854775808')).toThrow(/bigint range/);
+    expect(() => assertRevision('9223372036854775807')).not.toThrow();
+    // A 20-digit value was already refused by the digit bound; it still is.
+    expect(isRevision('10000000000000000000')).toBe(false);
+  });
+
+  it('the range guard is not vacuous — it is the numeric bound doing the work', () => {
+    // Both of these satisfy /^(0|[1-9][0-9]{0,18})$/ exactly; only the BigInt
+    // comparison separates them.
+    const shape = /^(0|[1-9][0-9]{0,18})$/;
+    for (const v of ['9223372036854775807', '9223372036854775808', '9999999999999999999']) {
+      expect(shape.test(v), v).toBe(true);
+    }
+    expect(['9223372036854775807', '9223372036854775808', '9999999999999999999']
+      .map(isRevision)).toEqual([true, false, false]);
+  });
 });
 
 describe('result and error mapping', () => {
@@ -130,6 +179,48 @@ describe('result and error mapping', () => {
     const c = errorFromSqlState('P0001', 'stale_write revision=42');
     expect(c.error.kind).toBe('conflict');
     expect(c.error.serverRevision).toBe('42');
+  });
+
+  it('P0001 is a conflict ONLY with the stale_write marker AND a valid revision', () => {
+    // P0001 is Postgres's generic RAISE EXCEPTION. Every one of these is a real
+    // message the Stage 7 RPCs raise, and none of them is a stale write. The
+    // old mapping turned all of them into conflicts carrying a FABRICATED
+    // revision of "0" — a revision that had never existed, which told the UI to
+    // re-apply against a value the server would reject again.
+    for (const message of [
+      'workspace already claimed',
+      'bout is still pending',
+      'cannot settle an open wager',
+      'seed version mismatch',
+      '',
+    ]) {
+      const r = errorFromSqlState('P0001', message);
+      expect(r.error.kind, message).toBe('server');
+      expect(r.error.code, message).toBe('P0001');
+      expect('serverRevision' in r.error, message).toBe(false);
+    }
+    // Marker but no revision -> still not a conflict; a revision is never invented.
+    expect(errorFromSqlState('P0001', 'stale_write').error.kind).toBe('server');
+    expect(errorFromSqlState('P0001', 'stale_write on tracked_positions').error.kind).toBe('server');
+    // Marker with an OUT-OF-RANGE revision -> not a conflict either.
+    expect(errorFromSqlState('P0001', 'stale_write revision=9999999999999999999').error.kind)
+      .toBe('server');
+    // A revision without the marker -> not a conflict.
+    expect(errorFromSqlState('P0001', 'row revision=42 was fine').error.kind).toBe('server');
+  });
+
+  it('the conflict path still works for genuine stale writes', () => {
+    for (const [message, expected] of [
+      ['stale_write revision=42', '42'],
+      ['stale_write: revision: 7', '7'],
+      ['fm: stale_write on wagers, revision=9007199254740993', '9007199254740993'],
+      ['stale_write revision=9223372036854775807', '9223372036854775807'],
+    ]) {
+      const r = errorFromSqlState('P0001', message);
+      expect(r.error.kind, message).toBe('conflict');
+      expect(r.error.serverRevision, message).toBe(expected);
+      expect(isRevision(r.error.serverRevision), message).toBe(true);
+    }
   });
 
   it('conflict always carries a string revision', () => {

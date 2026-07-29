@@ -36,8 +36,10 @@ export const server = (code, message) => err({ kind: 'server', code, message });
  * Conflict carries the server's current revision so the UI can re-read and
  * offer "re-apply". serverRevision is an opaque STRING — see below.
  */
-export const conflict = (serverRevision) =>
-  err({ kind: 'conflict', serverRevision: String(serverRevision) });
+export const conflict = (serverRevision, stale) =>
+  err(stale === undefined
+    ? { kind: 'conflict', serverRevision: String(serverRevision) }
+    : { kind: 'conflict', serverRevision: String(serverRevision), stale });
 
 /**
  * Postgres SQLSTATE -> RepositoryError kind. Gate 6 uses this for the real
@@ -46,7 +48,7 @@ export const conflict = (serverRevision) =>
 export const errorFromSqlState = (code, message = '') => {
   switch (code) {
     case '42501': return forbidden();
-    case 'P0001': return conflict(extractServerRevision(message));
+    case 'P0001': return fromP0001(message);
     case '42704': return notFound();
     case '23505':
     case '23503':
@@ -55,9 +57,23 @@ export const errorFromSqlState = (code, message = '') => {
   }
 };
 
-const extractServerRevision = (message) => {
-  const m = /revision[=: ]+(\d+)/i.exec(message ?? '');
-  return m ? m[1] : '0';
+/**
+ * P0001 is Postgres's generic `RAISE EXCEPTION`, so the RPCs use it for several
+ * unrelated conditions ("workspace already claimed", "bout is pending", …).
+ * ONLY a stale write carrying the stable marker AND a parseable in-range
+ * revision becomes a conflict. Everything else is a server error.
+ *
+ * A revision is never fabricated: an earlier version defaulted to "0", which
+ * told the UI to re-apply against a revision that had never existed.
+ */
+const STALE_WRITE_MARKER = /\bstale_write\b/;
+
+const fromP0001 = (message) => {
+  const text = message ?? '';
+  if (!STALE_WRITE_MARKER.test(text)) return server('P0001', text);
+  const m = /revision[=: ]+([0-9]+)/i.exec(text);
+  if (!m || !isRevision(m[1])) return server('P0001', text);
+  return conflict(m[1]);
 };
 
 // ── Revision transport ──────────────────────────────────────────────────────
@@ -67,11 +83,20 @@ const extractServerRevision = (message) => {
 // them; they are compared for equality and passed back verbatim.
 const REVISION_RE = /^(0|[1-9][0-9]{0,18})$/;
 
-export const isRevision = (v) => typeof v === 'string' && REVISION_RE.test(v);
+/** Signed bigint max. A 19-digit regex alone accepts 9999999999999999999,
+ *  which Postgres would reject on cast — the numeric bound is checked too. */
+export const PG_BIGINT_MAX = 9223372036854775807n;
+
+export const isRevision = (v) => {
+  if (typeof v !== 'string' || !REVISION_RE.test(v)) return false;
+  return BigInt(v) <= PG_BIGINT_MAX;
+};
 
 export const assertRevision = (v) => {
   if (!isRevision(v)) {
-    throw new TypeError(`revision must be a decimal string of at most 19 digits, got ${JSON.stringify(v)}`);
+    throw new TypeError(
+      `revision must be a decimal string within signed bigint range, got ${JSON.stringify(v)}`
+    );
   }
   return v;
 };
@@ -113,9 +138,19 @@ export const fromStakeTransport = (s) => {
   return n;
 };
 
-/** Shape check only — used by the contract tests, mirrors the SQL regex. */
-export const isStakeTransport = (s) =>
+/**
+ * SHAPE ONLY — mirrors the SQL regex, which also accepts "0". It is NOT a
+ * validity check: SQL rejects zero with a separate `> 0` guard, and so does
+ * fromStakeTransport. Named explicitly because an earlier `isStakeTransport`
+ * returned true for "0" and was being used in tests as proof of validity.
+ */
+export const matchesStakeShape = (s) =>
   typeof s === 'string' && s.length <= STAKE_MAX_LENGTH && STAKE_RE.test(s);
+
+/** Full validity: shape AND positive AND finite. Use this to assert a value. */
+export const isValidStakeTransport = (s) => {
+  try { fromStakeTransport(s); return true; } catch { return false; }
+};
 
 // ── Semantic equality ───────────────────────────────────────────────────────
 /**
