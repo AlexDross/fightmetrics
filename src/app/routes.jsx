@@ -12,6 +12,12 @@
 // routes, query-string state, and /model-lab. Adding any of those means adding
 // them to this file first.
 
+// Deep-frozen, not just the array. Object.freeze on the array alone would leave
+// each route object mutable, so `ROUTES[0].path = '/x'` would succeed and the
+// exported registry would then disagree with VIEW_TO_PATH / PATH_TO_VIEW, which
+// are built once below and would still hold the original values. Freezing the
+// members closes that gap: the registry cannot drift out of sync with the
+// lookups derived from it.
 export const ROUTES = Object.freeze([
   { view: 'home', path: '/' },
   { view: 'simulator', path: '/simulator' },
@@ -20,7 +26,7 @@ export const ROUTES = Object.freeze([
   { view: 'statistics', path: '/statistics' },
   { view: 'explore', path: '/explore' },
   { view: 'info', path: '/info' },
-]);
+].map((route) => Object.freeze(route)));
 
 export const VIEWS = Object.freeze(ROUTES.map((r) => r.view));
 export const PATHS = Object.freeze(ROUTES.map((r) => r.path));

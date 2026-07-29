@@ -102,6 +102,21 @@ const VIEWPORTS = [
         el.click();
         return true;
       }, tab);
+
+      // Abort BEFORE anything is written. This check used to sit after the
+      // delay, the screenshot and the manifest push, so a miss still produced
+      // one invalid PNG on disk -- exactly the "plausible-looking baseline" it
+      // claims to prevent. Nothing below this line runs on a miss.
+      if (!clicked) {
+        console.error(
+          `\nABORTED: no navigation control matched "${tab}" at ${vp.label}.\n` +
+          'Every shot from here would silently duplicate the current screen, so\n' +
+          'no screenshot was written for it. Fix the selector; do not diff this run.\n'
+        );
+        await browser.close();
+        process.exit(3);
+      }
+
       await new Promise((r) => setTimeout(r, 1200));
 
       const file = `${vp.label}__${tab.toLowerCase()}.png`;
@@ -112,16 +127,7 @@ const VIEWPORTS = [
       });
       const bytes = fs.statSync(path.join(OUT, file)).size;
       manifest.push({ viewport: vp.label, tab, file, clicked, bytes });
-      console.log(`${clicked ? 'ok  ' : 'MISS'} ${file} ${(bytes / 1024).toFixed(0)}KB`);
-      if (!clicked) {
-        console.error(
-          `\nABORTED: no navigation control matched "${tab}".\n` +
-          'Every remaining shot would silently duplicate the current screen and\n' +
-          'the comparison would be meaningless. Fix the selector, do not diff this run.\n'
-        );
-        await browser.close();
-        process.exit(3);
-      }
+      console.log(`ok   ${file} ${(bytes / 1024).toFixed(0)}KB`);
     }
     await page.close();
   }

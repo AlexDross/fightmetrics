@@ -24,7 +24,16 @@ DOM or a render.
 
 Exports: `ROUTES`, `VIEWS`, `PATHS`, `HOME_VIEW`, `HOME_PATH`,
 `canonicalPathname`, `pathForView`, `viewForPathname`, `isKnownPathname`.
-`ROUTES` is frozen. Nothing in `App.js` hard-codes a path string.
+Nothing in `App.js` hard-codes a path string.
+
+`ROUTES` is **deep-frozen** — the array *and* every route object. Freezing only
+the array left the members writable, and `VIEW_TO_PATH` / `PATH_TO_VIEW` are
+built once at module load, so `ROUTES[0].path = '/hijacked'` would have left the
+exported registry disagreeing with the lookups derived from it. Proven by
+reverting to a shallow freeze in a scratch copy: `ROUTES` then reported
+`[['home','/hijacked'], …]` while `pathForView('home')` still returned `/`.
+Both immutability tests fail under the shallow freeze and pass under the deep
+one.
 
 The view IDs are the same string literals the old `useState('home')` used, so
 every `view === 'roi'` comparison in the render tree kept working unchanged.
@@ -128,7 +137,7 @@ assertion were reading static seed data.
 
 ## Automated results
 
-**182 tests, 13 files** — 161 existing, all still green, plus 21 new route tests
+**183 tests, 13 files** — 161 existing, all still green, plus 22 new route tests
 covering the seven mappings, uniqueness, both round-trip directions, root, the
 excluded-scope paths, unknown paths, case sensitivity, trailing slashes and
 idempotence. The expected mapping is written out literally rather than derived
@@ -136,7 +145,7 @@ from `ROUTES`, so the test cannot pass for any seven routes including wrong ones
 
 | Check | Result |
 |---|---|
-| Vitest | 182 passed, 13 files |
+| Vitest | 183 passed, 13 files |
 | Production build | exit 0, 4.5 MB, 7 files in `build/` |
 | Source maps / bridge markers / fixture markers in `build/` | 0 across all |
 | Tailwind CDN | 0 |
@@ -172,6 +181,13 @@ importantly — a miss now **aborts the run** instead of writing a
 plausible-looking baseline. It is still a click, not a `page.goto`, so it drives
 the same in-app navigation the references were captured through.
 
+The abort check sits immediately after `page.evaluate`, **before** the settle
+delay, the screenshot, the manifest entry and any console output. Placed after
+them (as it first was) it still wrote one invalid PNG before stopping, which is
+precisely the outcome it exists to prevent. Verified against a page with no
+matching controls: exit code 3, and the output directory contains **0 PNGs and
+no manifest**.
+
 **2. A real 1px regression in the Home CTAs, found and fixed.** After the
 button → anchor conversion the CTA labels rendered 1px high: 640 changed pixels
 at 1440w, 1896 at 375w, confined to the glyphs.
@@ -196,16 +212,37 @@ No other converted control needed anything — they all already used flex, where
 
 ## Deviations and limitations
 
-- **`react-router-dom@7.18.2` carries a high-severity advisory.**
-  `GHSA-qwww-vcr4-c8h2`, "RSC Mode CSRF Bypass Allows Action Execution Before
-  400 Response", affects `react-router` 7.12.0–8.2.0. The parent commit had
-  **0 vulnerabilities**; this dependency introduces 2. The advisory is specific
-  to **RSC mode**, which this app does not use — it is a client-only SPA with
-  `BrowserRouter`, no server components, no data-router actions, no loaders. The
-  pin was specified exactly, and `npm audit fix --force` would downgrade to
-  7.11.0, a breaking change that contradicts it. Flagged for a decision rather
-  than silently accepted or silently downgraded. Note that neither workflow runs
-  `npm audit`, so CI will not fail on it today.
+- **`react-router-dom@7.18.2` carries one high-severity advisory, and staying on
+  it is the right call.**
+
+  `GHSA-qwww-vcr4-c8h2` — "RSC Mode CSRF Bypass Allows Action Execution Before
+  400 Response" — affects `react-router` 7.12.0–8.2.0. The parent commit audited
+  clean.
+
+  `npm audit` reports "2 high severity vulnerabilities", but that is **two
+  affected packages from one advisory** (`react-router`, and `react-router-dom`
+  which depends on it), not two distinct vulnerabilities. The same "2" is
+  reported for 7.11.0, which actually carries 14 advisories — the count tracks
+  packages, not findings.
+
+  The advisory concerns **unstable RSC APIs**. FightMetrics is a client-only
+  `BrowserRouter` SPA: no React Server Components, no server actions, no data
+  routers, no loaders. It does not reach the affected code paths.
+
+  Downgrading would make the security position **worse**, not better. Measured
+  directly rather than assumed — installing `react-router-dom@7.11.0` and
+  auditing it returns 14 advisories, including XSS via open redirects, unauth
+  RCE via vendored turbo-stream deserialization, arbitrary constructor injection
+  during SSR hydration, and several DoS issues. npm's own remediation for
+  7.11.0 is to install 7.18.2. (The earlier note in this file called 7.11.0 a
+  "breaking change"; that was wrong — it is an older minor version. The reason
+  not to take it is the 14 advisories, not API breakage.)
+
+  **Conclusion: 7.18.2 stays.** It is the best available v7 release for this
+  app. Revisit when a patched release lands that clears
+  `GHSA-qwww-vcr4-c8h2` without reintroducing the older set.
+
+  Neither workflow runs `npm audit`, so CI does not fail on this today.
 - `captureScreens.cjs` was modified. It is a dev tool, not application code, and
   the change was forced by the nav conversion.
 - Scope held: no fighter/event/matchup routes, no query-string state, no

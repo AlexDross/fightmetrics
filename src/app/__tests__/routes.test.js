@@ -37,9 +37,46 @@ describe('route registry', () => {
     expect(new Set(PATHS).size).toBe(PATHS.length);
   });
 
-  it('is frozen, so a caller cannot mutate the registry at runtime', () => {
+  it('is deep-frozen, so a caller cannot mutate the registry at runtime', () => {
+    // Freezing the array alone is not enough: the route objects inside it would
+    // still be writable, and VIEW_TO_PATH / PATH_TO_VIEW are built once at
+    // module load. A mutated route would leave the exported registry disagreeing
+    // with the lookups derived from it, which is the failure this pins.
+    //
+    // These modules are ESM and therefore strict mode, so a write to a frozen
+    // object throws rather than failing silently.
     expect(Object.isFrozen(ROUTES)).toBe(true);
+    for (const route of ROUTES) {
+      expect(Object.isFrozen(route), `${route.view} route object is not frozen`).toBe(true);
+    }
+
     expect(() => { ROUTES.push({ view: 'x', path: '/x' }); }).toThrow();
+    expect(() => { ROUTES[0] = { view: 'x', path: '/x' }; }).toThrow();
+    expect(() => { ROUTES.length = 0; }).toThrow();
+
+    for (const route of ROUTES) {
+      expect(() => { route.view = 'hijacked'; }).toThrow();
+      expect(() => { route.path = '/hijacked'; }).toThrow();
+      expect(() => { delete route.path; }).toThrow();
+      expect(() => { route.extra = 'added'; }).toThrow();
+    }
+  });
+
+  it('keeps the derived lookups intact after every attempted mutation', () => {
+    // The point of freezing is not that the writes throw -- it is that the
+    // helpers still answer correctly afterwards. Asserted separately so a
+    // future change that made writes silent would fail HERE rather than pass.
+    for (const [view, path] of EXPECTED) {
+      try { ROUTES.find((r) => r.view === view).path = '/hijacked'; } catch { /* expected */ }
+      try { ROUTES.push({ view: 'x', path: '/x' }); } catch { /* expected */ }
+      expect(pathForView(view)).toBe(path);
+      expect(viewForPathname(path)).toBe(view);
+    }
+    expect(ROUTES.length).toBe(7);
+    expect(ROUTES.map((r) => [r.view, r.path])).toEqual(EXPECTED);
+    expect(VIEWS).toEqual(EXPECTED.map(([v]) => v));
+    expect(PATHS).toEqual(EXPECTED.map(([, p]) => p));
+    expect(viewForPathname('/hijacked')).toBe(null);
   });
 
   it('does NOT define the destinations Stage 5 excluded', () => {
