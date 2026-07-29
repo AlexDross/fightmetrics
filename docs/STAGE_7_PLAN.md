@@ -137,7 +137,9 @@ REVOKE EXECUTE ON FUNCTION public.fm_read_roi(text) FROM PUBLIC;
 GRANT  EXECUTE ON FUNCTION public.fm_read_roi(text) TO anon, authenticated;
 -- … one explicit pair per function; table GRANT/REVOKE blocks per §4 …
 
--- (7) drop the temporary memberships LAST
+-- (7) drop the temporary memberships LAST. Plain REVOKE, which deletes the
+--     working row. It cannot and must not touch the implicit admin-option row
+--     Postgres created in step 0 — see "Catalog tests" below.
 DO $$ BEGIN
   EXECUTE format('REVOKE fm_table_owner, fm_public_reader, fm_member_api FROM %I', current_user);
 END $$;
@@ -147,7 +149,9 @@ COMMIT;
 
 **Repeatability is proven by two consecutive clean `supabase db reset` runs**,
 with the full pgTAP catalog suite after each, asserting identical owners, ACLs
-and zero residual memberships both times.
+and zero residual *privilege-conferring* memberships both times. Run 2 is the
+load-bearing one: roles are cluster-level and survive the reset, so it is the
+run that exercises the idempotent branch of step 0 and the re-grant in step 1.
 
 ### Catalog tests (pgTAP, Gate 2)
 
@@ -162,7 +166,31 @@ and zero residual memberships both times.
 - ACLs compared with normalized **`aclexplode`** rows via `set_eq`, never
   `array_to_string(proacl)`, whose ordering is not a stable contract
 - all `fm_*` roles remain `NOLOGIN`
-- **no non-`fm_` role retains membership in any `fm_` role, `postgres` included**
+- **no non-`fm_` role retains a PRIVILEGE-CONFERRING membership in any `fm_`
+  role, `postgres` included** — `set_option = false` and `inherit_option = false`
+  for every non-`fm_` member, and `postgres` cannot `SET ROLE` to any of them.
+
+  Corrected at Gate 2 from "no membership at all", which is unsatisfiable and
+  would break repeatability. Measured on the local stack (PG 17.6, Supabase
+  `postgres` with `rolsuper = f`, i.e. the hosted condition):
+
+  | stage | admin | inherit | set |
+  |---|---|---|---|
+  | after `CREATE ROLE fm_x` by `postgres` | `t` | `f` | `f` |
+  | after `GRANT fm_x TO postgres` (second row) | `f` | `t` | `t` |
+  | after plain `REVOKE fm_x FROM postgres` | `t` | `f` | `f` (one row left) |
+
+  Postgres records an implicit `ADMIN OPTION` membership for the creating role
+  whenever a non-superuser creates a role. Its grantor is `supabase_admin`, so
+  `postgres` cannot revoke it, and it is cluster-level so it survives
+  `db reset`. It confers **no** privilege: no `SET ROLE`, no inheritance. It is
+  also load-bearing — removing it would leave `postgres` unable to grant the
+  roles to itself on the next reset, so run 2 of the repeatability proof would
+  fail at step 1.
+
+  Step 7 therefore uses a plain `REVOKE`, which deletes the temporary
+  working row outright. `REVOKE SET OPTION FOR` / `REVOKE INHERIT OPTION FOR`
+  are explicitly NOT used: they leave an all-false zombie row behind.
 - `has_schema_privilege('fm_public_reader','public','CREATE')` is false; same for
   `fm_member_api`
 
@@ -719,10 +747,19 @@ supabase/migrations/<ts>_*.sql  timestamped, forward-only
 supabase/tests/*.test.sql       pgTAP
 ```
 
-Scripts: `db:start`, `db:reset`, `test:db`, `test:api`. CI adds a **separate**
-job using `supabase/setup-cli@v1` with a pinned `version:`; the existing
-Vitest/build job is unchanged and stays fast. **CI never depends on a hosted
-project or committed credentials.**
+Scripts: `db:start`, `db:stop`, `db:reset`, `test:db`; `test:api` lands with its
+Vitest config. CI adds a **separate** job using `supabase/setup-cli@v1` with a
+pinned `version:`; the existing Vitest/build job is unchanged and stays fast.
+**CI never depends on a hosted project or committed credentials.**
+
+**Install with `npm ci --include=dev`.** Under `NODE_ENV=production` — which CI
+images and this workstation both set — npm silently omits devDependencies, which
+removes `vite`, `vitest` and `@tailwindcss/vite`. Hit while pinning the CLI: the
+install pruned the toolchain and the suite failed to start with
+`Cannot find package 'vite'`. Conversely the production build must run under the
+ambient `NODE_ENV=production`; forcing `NODE_ENV=development` bundles React's
+development build and the JS grows from 4,648,208 to 5,005,192 bytes, which is
+not a real change but does break byte comparison.
 
 ### Required rejection tests
 
