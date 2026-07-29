@@ -11,7 +11,7 @@ import {
   americanOdds, Corner, CaptureMode, externalIds, finiteNumber, finishProjection,
   FinishMethod, integer, isoDate, isoDateTime, legacyOrUuid, ModelBasis,
   nonEmptyString, PickSource, probability, ProvenanceCompleteness, RecordOrigin,
-  settlement, stakeUnits, BetTier, uuid,
+  reviewState, settlement, stakeUnits, BetTier, uuid,
 } from './primitives.mjs';
 
 // ── Event ──────────────────────────────────────────────────────────────────
@@ -189,12 +189,24 @@ export const TrackedPositionSchema = z
     id: uuid(),
     boutId: uuid(),
     assessmentId: uuid(),
+    // The price this position is SCORED at. Independent of both
+    // BettingAssessment.marketSnapshotId (the prediction-time market that
+    // produced the frozen tier/edge/EV/Kelly) and Wager.marketSnapshotId (the
+    // price actually taken). They may start equal and diverge.
+    //
+    // This is what makes an ROI odds correction possible without touching the
+    // assessment: amending the tracked price appends a NEW immutable
+    // MarketSnapshot and repoints only this field. The assessment and its
+    // original market stay frozen, so the historical analysis that justified
+    // the position is never rewritten.
+    marketSnapshotId: uuid().nullable(),
     origin: RecordOrigin,
     corner: Corner,
     stakeUnits: stakeUnits(),
     stakeSource: z.enum(['explicit', 'defaultedFlat1u']),
     openedAt: isoDateTime(),
     settlement: settlement(),
+    reviewState: reviewState(),
     notes: z.string().nullable(),
   })
   .check((ctx) => {
@@ -211,6 +223,19 @@ export const TrackedPositionSchema = z
         code: 'custom',
         input: v,
         message: 'settledAt may only be null for origin "legacyMigration"',
+      });
+    }
+    // Same concession, same reason: the legacy UI recorded that an entry was
+    // confirmed but never when. A confirmation the app performs must be timed.
+    if (
+      v.reviewState?.status === 'confirmed' &&
+      v.reviewState.confirmedAt === null &&
+      v.origin !== 'legacyMigration'
+    ) {
+      ctx.issues.push({
+        code: 'custom',
+        input: v,
+        message: 'reviewState.confirmedAt may only be null for origin "legacyMigration"',
       });
     }
   });
