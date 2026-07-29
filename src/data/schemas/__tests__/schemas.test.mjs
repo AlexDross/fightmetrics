@@ -2,13 +2,14 @@ import { describe, it, expect } from 'vitest';
 import {
   BOUT_RESULT_EXAMPLES, FINISH_PROJECTION_EXAMPLES, SETTLEMENT_EXAMPLES,
   PROP_TARGET_EXAMPLES, RECONSTRUCTION_EXAMPLES, ENTITY_EXAMPLES,
+  REVIEW_STATE_EXAMPLES,
 } from '../examples.mjs';
 import {
   BoutResultSchema, BoutSchema, EventSchema, ENTITY_SCHEMAS, MarketSnapshotSchema,
   BettingAssessmentSchema, ParlaySchema, PredictionRunSchema, PredictionSnapshotSchema,
   PropSchema, PropTargetSchema, ReconstructionSchema, TrackedPositionSchema, WagerSchema,
 } from '../entities.mjs';
-import { finishProjection, settlement } from '../primitives.mjs';
+import { finishProjection, reviewState, settlement } from '../primitives.mjs';
 
 const ok = (schema, value, label) => {
   const r = schema.safeParse(value);
@@ -31,6 +32,8 @@ describe('canonical examples validate', () => {
       bettingAssessmentPreBettingLayer: BettingAssessmentSchema,
       trackedPositionLegacy: TrackedPositionSchema,
       trackedPositionAppCreated: TrackedPositionSchema,
+      trackedPositionNoMarket: TrackedPositionSchema,
+      trackedPositionPendingReview: TrackedPositionSchema,
       wager: WagerSchema, prop: PropSchema, parlay: ParlaySchema,
     };
     for (const [name, schema] of Object.entries(byEntity)) {
@@ -45,6 +48,7 @@ describe('canonical examples validate', () => {
     for (const [k, v] of Object.entries(FINISH_PROJECTION_EXAMPLES)) ok(finishProjection(), v, `finish.${k}`);
     for (const [k, v] of Object.entries(SETTLEMENT_EXAMPLES)) ok(settlement(), v, `settlement.${k}`);
     for (const [k, v] of Object.entries(PROP_TARGET_EXAMPLES)) ok(PropTargetSchema, v, `propTarget.${k}`);
+    for (const [k, v] of Object.entries(REVIEW_STATE_EXAMPLES)) ok(reviewState(), v, `reviewState.${k}`);
     for (const [k, v] of Object.entries(RECONSTRUCTION_EXAMPLES)) {
       if (v === null) continue;
       ok(ReconstructionSchema, v, `reconstruction.${k}`);

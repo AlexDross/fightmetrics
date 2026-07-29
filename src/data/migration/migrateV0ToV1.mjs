@@ -12,7 +12,7 @@
 // Migration creates ZERO Wagers. Legacy data cannot prove cash was placed.
 import {
   boutIdFor, eventIdFor, fighterKey, marketIdFor, assessmentIdFor,
-  snapshotIdFor, trackedPositionIdFor,
+  snapshotIdFor, trackedMarketIdFor, trackedPositionIdFor,
 } from './ids.mjs';
 import { SCHEMA_VERSION } from '../schemas/entities.mjs';
 
@@ -392,8 +392,26 @@ export function migrateV0ToV1(legacy, deps) {
 
     // ── tracked position ─────────────────────────────────────────────────
     const corner = o.cornerOf(entry.trackedSide);
-    const selectedOdds = corner === 'A' ? oddsA : oddsB;
     const stakeExplicit = has(entry, 'unitsWagered');
+
+    // LEGACY marketOdds IS AN INDEPENDENT SOURCE FIELD, NOT A DERIVATION.
+    //
+    // App.js edits it on its own (:7890) and rewrites it separately when the
+    // tracked side changes (:7868). It equals the selected corner's odds on
+    // 160/160 rows TODAY, but that is a characterisation of the current seed,
+    // not a rule: deriving it from oddsA/oddsB would silently discard any real
+    // price correction the user had made.
+    //
+    // So it is parsed on its own, and the tracked market is reconciled against
+    // the assessment market rather than assumed equal to it.
+    const assessmentSelected = corner === 'A' ? oddsA : oddsB;
+    const trackedMarket = resolveTrackedMarket({
+      entry, runId, boutId, corner, oddsA, oddsB, assessmentSelected,
+      marketSnapshotId, errors,
+    });
+    if (trackedMarket.snapshot) marketSnapshots.push(trackedMarket.snapshot);
+    // Settlement must be scored at the TRACKED price, not the assessment's.
+    const selectedOdds = trackedMarket.selectedOdds;
     if (!stakeExplicit) {
       manifest.defaulted.push({
         entity: 'TrackedPosition', id: trackedPositionIdFor({ runId }), field: 'stakeUnits', value: 1,
@@ -405,12 +423,17 @@ export function migrateV0ToV1(legacy, deps) {
       id: trackedPositionIdFor({ runId }),
       boutId,
       assessmentId,
+      // The price this position is SCORED at: the assessment market when no
+      // independent override was recorded, otherwise a distinct snapshot
+      // reconstructed from the legacy marketOdds value.
+      marketSnapshotId: trackedMarket.marketSnapshotId,
       origin: 'legacyMigration',
       corner,
       stakeUnits: stakeExplicit ? entry.unitsWagered : 1,
       stakeSource: stakeExplicit ? 'explicit' : 'defaultedFlat1u',
       openedAt: entry.createdAt,
       settlement: buildSettlement(result, corner, selectedOdds, entry, manifest, runId),
+      reviewState: buildReviewState(entry, errors, runId),
       notes: blank(entry.notes) ? null : entry.notes,
     });
   }
@@ -513,6 +536,120 @@ export function migrateV0ToV1(legacy, deps) {
   );
 
   return { store, manifest, errors };
+}
+
+/**
+ * Reconciles the legacy `marketOdds` field against the assessment market.
+ *
+ * `marketOdds` is an INDEPENDENT legacy source field. The ROI tab edits it on
+ * its own and rewrites it when the tracked side changes, so it can legitimately
+ * disagree with oddsA/oddsB. Deriving it would throw away that correction.
+ *
+ *   key absent            -> no override was recorded; reuse the assessment market
+ *   equals selected odds  -> no divergence; reuse the assessment market
+ *   differs               -> NEW immutable snapshot: copy both assessment
+ *                            corners, replace ONLY the tracked corner
+ *   explicitly blank ("")  -> the tracked corner is explicitly unpriced; copy the
+ *                            assessment market with that corner nulled. Never
+ *                            fall back to oddsA/oddsB, which would invent a price
+ *   both corners null      -> no snapshot at all; marketSnapshotId is null
+ *
+ * The assessment and every frozen derived value are untouched in all cases.
+ */
+function resolveTrackedMarket({
+  entry, runId, boutId, corner, oddsA, oddsB, assessmentSelected, marketSnapshotId, errors,
+}) {
+  const reuse = { marketSnapshotId, selectedOdds: assessmentSelected, snapshot: null };
+
+  if (!has(entry, 'marketOdds')) return reuse;
+
+  const raw = entry.marketOdds;
+  const explicitlyBlank = raw === '' || raw === null;
+  const parsed = explicitlyBlank
+    ? null
+    : parseOdds(raw, `${runId}.marketOdds`, errors);
+
+  // parseOdds already recorded the failure; abort rather than guessing a price.
+  if (!explicitlyBlank && parsed === null) return reuse;
+
+  if (!explicitlyBlank && parsed === assessmentSelected) return reuse;
+
+  // Divergent (or explicitly blank): the tracked price is its own fact.
+  const trackedA = corner === 'A' ? parsed : oddsA;
+  const trackedB = corner === 'B' ? parsed : oddsB;
+
+  if (trackedA === null && trackedB === null) {
+    return { marketSnapshotId: null, selectedOdds: null, snapshot: null };
+  }
+
+  const id = trackedMarketIdFor({ runId });
+  return {
+    marketSnapshotId: id,
+    selectedOdds: parsed,
+    snapshot: {
+      id,
+      boutId,
+      // A legacy override records the resulting price and nothing else. There
+      // is no edit time in the data, and entry.createdAt is the ORIGINAL save,
+      // not the correction — labelling it as such would invent history.
+      capturedAt: null,
+      source: 'legacyTrackedOverride',
+      oddsA: trackedA,
+      oddsB: trackedB,
+    },
+  };
+}
+
+/**
+ * Legacy review state.
+ *
+ * `autoGenerated` and `confirmedByUser` are ACTIVE App.js UI state, not
+ * reader-only fields: App.js writes confirmedByUser at :7389 (Confirm All) and
+ * :7688 (Confirm Pick), and reads autoGenerated at :7384/:7388/:7654/:7686.
+ * They are simply absent from every current seed row (0/160), which is why an
+ * earlier reading of the data alone mistook them for phantoms.
+ *
+ * Mapping is EXHAUSTIVE and STRICT. Ambiguous combinations abort rather than
+ * being guessed, because guessing here would silently move entries in or out
+ * of the statistics population.
+ */
+function buildReviewState(entry, errors, runId) {
+  const hasAuto = has(entry, 'autoGenerated');
+  const hasConfirmed = has(entry, 'confirmedByUser');
+
+  // Neither field: the normal case for all 160 seed rows and every manual save.
+  if (!hasAuto && !hasConfirmed) return { status: 'notRequired' };
+
+  // confirmedByUser only means something for an auto-generated entry.
+  if (hasConfirmed && entry.autoGenerated !== true) {
+    errors.push(
+      `entry ${runId}: confirmedByUser=${JSON.stringify(entry.confirmedByUser)} present without ` +
+      `autoGenerated===true (autoGenerated=${hasAuto ? JSON.stringify(entry.autoGenerated) : '<absent>'})`
+    );
+    return { status: 'notRequired' };
+  }
+
+  if (entry.autoGenerated === false) return { status: 'notRequired' };
+
+  if (entry.autoGenerated === true) {
+    if (typeof entry.confirmedByUser !== 'boolean') {
+      errors.push(
+        `entry ${runId}: autoGenerated===true requires an explicit boolean confirmedByUser, got ` +
+        `${hasConfirmed ? JSON.stringify(entry.confirmedByUser) : '<absent>'}`
+      );
+      return { status: 'notRequired' };
+    }
+    return entry.confirmedByUser
+      // Legacy confirmations never recorded a time; null is permitted only for
+      // origin 'legacyMigration', which every migrated position has.
+      ? { status: 'confirmed', reason: 'autoGenerated', confirmedAt: null }
+      : { status: 'pending', reason: 'autoGenerated' };
+  }
+
+  errors.push(
+    `entry ${runId}: autoGenerated must be a boolean when present, got ${JSON.stringify(entry.autoGenerated)}`
+  );
+  return { status: 'notRequired' };
 }
 
 function pickProspect(entry, o, corner) {

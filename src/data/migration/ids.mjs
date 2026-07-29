@@ -196,5 +196,10 @@ export const boutIdFor = ({ eventId, fighterKeys }) =>
 
 export const snapshotIdFor = ({ runId, basis }) => uuidv5(NS.SNAPSHOT, `${runId}|${basis}`);
 export const marketIdFor = ({ runId }) => uuidv5(NS.MARKET, `${runId}|market`);
+
+/** A second, distinct market for a legacy row whose `marketOdds` had been
+ *  edited away from its original oddsA/oddsB. Deterministic and separate from
+ *  the assessment market so both survive. */
+export const trackedMarketIdFor = ({ runId }) => uuidv5(NS.MARKET, `${runId}|tracked-market`);
 export const assessmentIdFor = ({ runId }) => uuidv5(NS.ASSESSMENT, `${runId}|assessment`);
 export const trackedPositionIdFor = ({ runId }) => uuidv5(NS.TRACKED, `${runId}|tracked-position`);

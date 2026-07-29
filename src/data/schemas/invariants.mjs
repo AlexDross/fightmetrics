@@ -172,8 +172,20 @@ export function checkInvariants(store) {
     if (t.boutId !== a.boutId) {
       push(out, 'DENORM_MISMATCH', 'trackedPosition.boutId disagrees with its assessment', t.id);
     }
-    // A tracked position is scored against the market its ASSESSMENT froze.
-    checkFinancialComputability(out, t, a.marketSnapshotId, markets, bouts);
+    if (t.marketSnapshotId !== null) {
+      const m = markets.get(t.marketSnapshotId);
+      if (!m) {
+        push(out, 'FK_MISSING', 'trackedPosition.marketSnapshotId does not resolve', t.id);
+      } else if (m.boutId !== t.boutId) {
+        // Scoring one fight's position against another fight's line.
+        push(out, 'TRACKED_MARKET_FOREIGN', 'tracked market snapshot belongs to another bout', t.id);
+      }
+    }
+    // A tracked position is scored against ITS OWN market, not the
+    // assessment's. Amending an ROI price repoints only this field and leaves
+    // the frozen assessment alone, so reading the assessment market here would
+    // score the position at a price it is no longer tracked at.
+    checkFinancialComputability(out, t, t.marketSnapshotId, markets, bouts);
   }
 
   // ── Wager ────────────────────────────────────────────────────────────────
@@ -249,9 +261,11 @@ export function checkInvariants(store) {
  * partial market can price one corner and not the other.
  *
  * The relevant market differs per record type, so it is passed in rather than
- * read from the assessment:
- *   TrackedPosition -> assessment.marketSnapshotId  (the frozen assessment price)
- *   Wager           -> wager.marketSnapshotId       (the price actually taken)
+ * read from the assessment. All three are independent:
+ *   BettingAssessment.marketSnapshotId -> the prediction-time price that
+ *                                          produced the frozen tier/edge/EV
+ *   TrackedPosition.marketSnapshotId   -> the price the result is SCORED at
+ *   Wager.marketSnapshotId             -> the price actually TAKEN
  *
  *   open                       -> no financial result at all
  *   settled draw  -> push,  computed 0

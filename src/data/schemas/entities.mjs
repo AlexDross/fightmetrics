@@ -11,7 +11,7 @@ import {
   americanOdds, Corner, CaptureMode, externalIds, finiteNumber, finishProjection,
   FinishMethod, integer, isoDate, isoDateTime, legacyOrUuid, ModelBasis,
   nonEmptyString, PickSource, probability, ProvenanceCompleteness, RecordOrigin,
-  settlement, stakeUnits, BetTier, uuid,
+  reviewState, settlement, stakeUnits, BetTier, uuid,
 } from './primitives.mjs';
 
 // ── Event ──────────────────────────────────────────────────────────────────
@@ -137,14 +137,51 @@ export const PredictionSnapshotSchema = z.strictObject({
 // A snapshot may hold odds for one corner and not the other; that is why
 // financial computability is decided by the SELECTED corner's odds rather than
 // by whether a snapshot exists.
-export const MarketSnapshotSchema = z.strictObject({
-  id: uuid(),
-  boutId: uuid(),
-  capturedAt: isoDateTime(),
-  source: z.enum(['manual']),
-  oddsA: americanOdds().nullable(),
-  oddsB: americanOdds().nullable(),
-});
+// `legacyTrackedOverride` marks a snapshot reconstructed from a legacy
+// `marketOdds` value that had been edited away from the original oddsA/oddsB.
+// Such an edit has NO recorded time — the legacy row stores only the resulting
+// price — so capturedAt is null for exactly this source. Labelling the original
+// entry.createdAt as the override's edit time would assert a fact the data does
+// not contain. Every other source still requires a real timestamp.
+export const MarketSnapshotSchema = z
+  .strictObject({
+    id: uuid(),
+    boutId: uuid(),
+    capturedAt: isoDateTime().nullable(),
+    source: z.enum(['manual', 'legacyTrackedOverride']),
+    oddsA: americanOdds().nullable(),
+    oddsB: americanOdds().nullable(),
+  })
+  .check((ctx) => {
+    const v = ctx.value;
+    if (!v) return;
+    // BICONDITIONAL, both directions asserted separately.
+    //
+    // Only the first direction was enforced originally, which let a
+    // legacyTrackedOverride carry a real timestamp — a contradiction, since the
+    // whole meaning of that source is that no edit time was ever recorded. A
+    // one-way rule made the source label unfalsifiable.
+    //
+    // Written as two explicit checks rather than a single equality so it stays
+    // correct if a third source is ever added: a new source would then require
+    // a timestamp by default, rather than silently inheriting the exemption.
+    if (v.capturedAt === null && v.source !== 'legacyTrackedOverride') {
+      ctx.issues.push({
+        code: 'custom',
+        input: v,
+        message: `capturedAt may only be null for source "legacyTrackedOverride" (got "${v.source}")`,
+      });
+    }
+    if (v.source === 'legacyTrackedOverride' && v.capturedAt !== null) {
+      ctx.issues.push({
+        code: 'custom',
+        input: v,
+        message:
+          'source "legacyTrackedOverride" requires capturedAt null: the legacy row records the ' +
+          'corrected price but never when it was edited, so any timestamp here would be invented',
+      });
+    }
+  });
 
 // ── BettingAssessment ──────────────────────────────────────────────────────
 // IMMUTABLE = prediction x market. BOTH corners are retained for every derived
@@ -189,12 +226,24 @@ export const TrackedPositionSchema = z
     id: uuid(),
     boutId: uuid(),
     assessmentId: uuid(),
+    // The price this position is SCORED at. Independent of both
+    // BettingAssessment.marketSnapshotId (the prediction-time market that
+    // produced the frozen tier/edge/EV/Kelly) and Wager.marketSnapshotId (the
+    // price actually taken). They may start equal and diverge.
+    //
+    // This is what makes an ROI odds correction possible without touching the
+    // assessment: amending the tracked price appends a NEW immutable
+    // MarketSnapshot and repoints only this field. The assessment and its
+    // original market stay frozen, so the historical analysis that justified
+    // the position is never rewritten.
+    marketSnapshotId: uuid().nullable(),
     origin: RecordOrigin,
     corner: Corner,
     stakeUnits: stakeUnits(),
     stakeSource: z.enum(['explicit', 'defaultedFlat1u']),
     openedAt: isoDateTime(),
     settlement: settlement(),
+    reviewState: reviewState(),
     notes: z.string().nullable(),
   })
   .check((ctx) => {
@@ -211,6 +260,19 @@ export const TrackedPositionSchema = z
         code: 'custom',
         input: v,
         message: 'settledAt may only be null for origin "legacyMigration"',
+      });
+    }
+    // Same concession, same reason: the legacy UI recorded that an entry was
+    // confirmed but never when. A confirmation the app performs must be timed.
+    if (
+      v.reviewState?.status === 'confirmed' &&
+      v.reviewState.confirmedAt === null &&
+      v.origin !== 'legacyMigration'
+    ) {
+      ctx.issues.push({
+        code: 'custom',
+        input: v,
+        message: 'reviewState.confirmedAt may only be null for origin "legacyMigration"',
       });
     }
   });
