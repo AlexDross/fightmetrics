@@ -148,17 +148,61 @@ describe('relationship invariants that were previously unchecked', () => {
     expect(codes(s)).toContain('RECONSTRUCTION_UNEXPECTED');
   });
 
-  it('includesProspectAtCapture must be the OR of the corner flags', () => {
+  it('rejects an incorrect includesProspectAtCapture boolean', () => {
     const s = clone();
     const run = s.predictionRuns.find(
       (r) => r.cornerAIsProspectAtCapture !== null && r.cornerBIsProspectAtCapture !== null
     );
     run.includesProspectAtCapture = !(run.cornerAIsProspectAtCapture || run.cornerBIsProspectAtCapture);
     expect(codes(s)).toContain('PROSPECT_FLAG_MISMATCH');
-    // Unknown corner flags are exempt: null means unknown, not false.
-    const s2 = clone();
-    const run2 = s2.predictionRuns.find((r) => r.cornerAIsProspectAtCapture === null);
-    if (run2) expect(checkInvariants(s2)).toEqual([]);
+  });
+
+  it('rejects a NULL includesProspectAtCapture when both corner flags are known', () => {
+    // Previously gated on `includesProspectAtCapture !== null`, so
+    // (true, false, null) passed with zero violations — but with both corners
+    // known the derived value is fully determined, so null is not an unknown.
+    const s = clone();
+    const run = s.predictionRuns.find(
+      (r) => r.cornerAIsProspectAtCapture !== null && r.cornerBIsProspectAtCapture !== null
+    );
+    run.cornerAIsProspectAtCapture = true;
+    run.cornerBIsProspectAtCapture = false;
+    run.includesProspectAtCapture = null;
+    expect(StoreSchema.safeParse(s).success, 'precondition: structurally valid').toBe(true);
+    const violation = checkInvariants(s).find((v) => v.code === 'PROSPECT_FLAG_MISMATCH');
+    expect(violation).toBeTruthy();
+    expect(violation.message).toMatch(/null although both corner flags are known/);
+  });
+
+  it('accepts only the exact logical OR', () => {
+    const s = clone();
+    const run = s.predictionRuns.find(
+      (r) => r.cornerAIsProspectAtCapture !== null && r.cornerBIsProspectAtCapture !== null
+    );
+    for (const [a, b] of [[false, false], [true, false], [false, true], [true, true]]) {
+      run.cornerAIsProspectAtCapture = a;
+      run.cornerBIsProspectAtCapture = b;
+      run.includesProspectAtCapture = a || b;
+      expect(codes(s), `${a}/${b} correct OR`).not.toContain('PROSPECT_FLAG_MISMATCH');
+      run.includesProspectAtCapture = !(a || b);
+      expect(codes(s), `${a}/${b} inverted`).toContain('PROSPECT_FLAG_MISMATCH');
+      run.includesProspectAtCapture = null;
+      expect(codes(s), `${a}/${b} null`).toContain('PROSPECT_FLAG_MISMATCH');
+    }
+  });
+
+  it('leaves the derived value unverified when a corner flag is unknown', () => {
+    const s = clone();
+    const run = s.predictionRuns.find(
+      (r) => r.cornerAIsProspectAtCapture !== null && r.cornerBIsProspectAtCapture !== null
+    );
+    run.cornerAIsProspectAtCapture = null;
+    // With one corner unknown the OR genuinely cannot be checked, so any value
+    // is tolerated — including null.
+    for (const v of [true, false, null]) {
+      run.includesProspectAtCapture = v;
+      expect(codes(s), `unknown corner with ${v}`).not.toContain('PROSPECT_FLAG_MISMATCH');
+    }
   });
 
   it('the decision snapshot must share the run\'s bout as well as its run', () => {

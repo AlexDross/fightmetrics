@@ -3,7 +3,10 @@ import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { uuidv5, uuidv7, NS, eventIdFor, boutIdFor } from '../../migration/ids.mjs';
+import {
+  uuidv5, uuidv7, NS, eventIdFor, boutIdFor,
+  isValidUuid, DNS_NAMESPACE, namespaceDerivation,
+} from '../../migration/ids.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(HERE, '..', '..', '..', '..');
@@ -79,24 +82,37 @@ describe('the data layer builds for the browser', () => {
   });
 });
 
-describe('uuidv5 remains byte-identical', () => {
-  // Locked expected values. These are the IDs the committed migration produces;
-  // if the hash implementation ever drifts, every derived entity ID changes.
-  it('reproduces known digests across block boundaries', () => {
-    expect(uuidv5(NS.EVENT, 'UFC|2026-07-11|ufc 329')).toBe('7957e23a-a75b-5569-948a-eac85864433b');
-    expect(eventIdFor({ promotion: 'UFC', date: '2026-07-11', name: 'UFC 329' }))
-      .toBe('7957e23a-a75b-5569-948a-eac85864433b');
-    // Unknown promotion uses the UNKNOWN token, keeping derivation total.
-    expect(eventIdFor({ promotion: null, date: '2026-06-14', name: 'Freedom 250' }))
-      .toBe(uuidv5(NS.EVENT, 'UNKNOWN|2026-06-14|freedom 250'));
-    // Message lengths straddling the 64-byte SHA-1 block boundary, where a
-    // hand-rolled padding bug would show up.
+describe('uuidv5 matches the published RFC reference vectors', () => {
+  // Externally verifiable known-answer tests, not our own output echoed back.
+  // If the hand-written SHA-1 ever drifts, these fail before anything else does.
+  it('reproduces the RFC 4122 Appendix C vectors', () => {
+    expect(uuidv5(DNS_NAMESPACE, 'python.org')).toBe('886313e1-3b8a-5372-9b90-0c9aee199e5d');
+    expect(uuidv5(DNS_NAMESPACE, 'www.example.com')).toBe('2ed6657d-e927-568b-95e1-2665a8aea6a2');
+  });
+
+  it('reproduces the documented FightMetrics namespace derivation', () => {
+    const root = uuidv5(namespaceDerivation.dns, namespaceDerivation.rootName);
+    expect(root).toBe(namespaceDerivation.root);
+    expect(uuidv5(root, namespaceDerivation.eventName)).toBe(namespaceDerivation.event);
+    expect(NS.EVENT).toBe(namespaceDerivation.event);
+  });
+
+  it('hashes correctly across SHA-1 block boundaries and non-ASCII input', () => {
+    // Lengths straddling the 64-byte block boundary, where a padding bug shows up.
     for (const len of [0, 55, 56, 63, 64, 65, 119, 120]) {
-      expect(uuidv5(NS.BOUT, 'x'.repeat(len))).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-5[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
+      expect(uuidv5(NS.BOUT, 'x'.repeat(len)))
+        .toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-5[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
     }
     // Non-ASCII must be hashed as UTF-8 bytes, not UTF-16 code units.
     expect(uuidv5(NS.BOUT, 'ünïcødé ✓')).toBe(uuidv5(NS.BOUT, 'ünïcødé ✓'));
     expect(uuidv5(NS.BOUT, 'ünïcødé ✓')).not.toBe(uuidv5(NS.BOUT, 'unicode'));
+  });
+
+  it('keeps event derivation total for an unknown promotion', () => {
+    expect(eventIdFor({ promotion: null, date: '2026-06-14', name: 'Freedom 250' }))
+      .toBe(uuidv5(NS.EVENT, 'UNKNOWN|2026-06-14|freedom 250'));
+    expect(eventIdFor({ promotion: 'UFC', date: '2026-07-11', name: 'UFC 329' }))
+      .toBe(uuidv5(NS.EVENT, 'UFC|2026-07-11|ufc 329'));
   });
 
   it('is sensitive to the namespace and stable per input', () => {
@@ -111,15 +127,44 @@ describe('uuidv5 remains byte-identical', () => {
       .toBe(boutIdFor({ eventId: e, fighterKeys: ['a', 'b'] }));
   });
 
-  it('documents that NS.EVENT is not a well-formed RFC UUID', () => {
-    // Retained verbatim so derived Event/Bout IDs stay byte-identical. It is
-    // only ever SHA-1 input, so its version bits are never interpreted — but a
-    // stricter implementation (the `uuid` package, for one) rejects it outright.
-    expect(NS.EVENT[14]).toBe('d');
+  it('every namespace is a valid RFC UUID and passes the validator', () => {
     for (const [name, ns] of Object.entries(NS)) {
-      if (name === 'EVENT') continue;
+      expect(isValidUuid(ns), `${name} is not a valid RFC UUID`).toBe(true);
       expect(/[1-8]/.test(ns[14]), `${name} version nibble`).toBe(true);
       expect(/[89ab]/.test(ns[19]), `${name} variant nibble`).toBe(true);
+      // Accepted in practice, not merely by the regex.
+      expect(() => uuidv5(ns, 'probe')).not.toThrow();
+    }
+    expect(isValidUuid(DNS_NAMESPACE)).toBe(true);
+  });
+
+  it('rejects the old Microsoft GUID and other malformed namespaces', () => {
+    // The constant this replaced: version nibble `d`, not a valid RFC UUID.
+    const OLD = '6f9619ff-8b86-d011-b42d-00c04fc964ff';
+    expect(isValidUuid(OLD)).toBe(false);
+    expect(() => uuidv5(OLD, 'anything')).toThrow(TypeError);
+    expect(() => uuidv5(OLD, 'anything')).toThrow(/RFC 4122/);
+
+    for (const bad of [
+      '',
+      'not-a-uuid',
+      '833b2f12-8057-5c87-8e90-ac9d216371b',      // too short
+      '833b2f12-8057-5c87-8e90-ac9d216371b0f',    // too long
+      '833B2F12-8057-5C87-8E90-AC9D216371B0',     // uppercase
+      '833b2f12-8057-0c87-8e90-ac9d216371b0',     // version 0
+      '833b2f12-8057-9c87-8e90-ac9d216371b0',     // version 9
+      '833b2f12-8057-5c87-2e90-ac9d216371b0',     // bad variant
+      '00000000-0000-0000-0000-000000000000',     // nil
+      null, undefined, 42, {},
+    ]) {
+      expect(isValidUuid(bad), `${JSON.stringify(bad)} should be invalid`).toBe(false);
+      expect(() => uuidv5(bad, 'x'), `${JSON.stringify(bad)} should throw`).toThrow(TypeError);
+    }
+  });
+
+  it('rejects a non-string name rather than coercing it', () => {
+    for (const bad of [42, null, undefined, {}, ['a']]) {
+      expect(() => uuidv5(NS.BOUT, bad)).toThrow(TypeError);
     }
   });
 });

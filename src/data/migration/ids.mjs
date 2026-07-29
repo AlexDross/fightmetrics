@@ -7,34 +7,62 @@
 // would have broken the moment Stage 7 wired IndexedDB up. The Vite lib build
 // in vite.browser-probe.config.mjs now exercises this file for real.
 //
-// SHA-1 is implemented here rather than pulled from a package. The `uuid`
-// library was evaluated first and rejected: it validates namespace arguments,
-// and NS.EVENT below is not a well-formed RFC UUID (its version nibble is `d`).
-// Adopting the library would have forced changing that constant, which changes
-// every derived Event and Bout ID — breaking the byte-identical requirement.
-// See the note on NS.EVENT.
+// SHA-1 is implemented here rather than pulled from a package, keeping the
+// module dependency-free and browser-safe. Correctness is pinned against the
+// published RFC reference vectors, not just against our own output.
 //
 // Randomness comes from the Web Crypto API (globalThis.crypto.getRandomValues),
 // available in browsers and in Node 19+.
 
+/** RFC 4122 / 9562: versions 1-8, variant 10xx. */
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
+
+export const isValidUuid = (value) => typeof value === 'string' && UUID_RE.test(value);
+
+/**
+ * The standard DNS namespace from RFC 4122 Appendix C. Used once, to derive the
+ * FightMetrics root below.
+ */
+export const DNS_NAMESPACE = '6ba7b810-9dad-11d1-80b4-00c04fd430c8';
+
 /**
  * Fixed namespaces. Changing ANY of these changes every migrated ID.
  *
- * NOTE: NS.EVENT is the widely-copied Microsoft-style GUID whose version nibble
- * is `d`, so it is not a valid RFC 4122 v1-v8 UUID. It is retained verbatim
- * because the derived Event and Bout IDs must stay byte-identical to those
- * produced at e6b8bde. It is only ever an input to SHA-1, so its version bits
- * are never interpreted — but a stricter implementation would reject it, and
- * replacing it is a deliberate decision that must happen before any data is
- * persisted, not after. Recorded in docs/DOMAIN_SCHEMA.md.
+ * EVENT is derived transparently and reproducibly:
+ *
+ *   root  = uuidv5(DNS_NAMESPACE, 'fightmetrics.app')
+ *         = 1c187bfd-7f44-55ea-a824-7a3e3a544118
+ *   EVENT = uuidv5(root, 'Event')
+ *         = 833b2f12-8057-5c87-8e90-ac9d216371b0
+ *
+ * It is written as a literal rather than computed at module load so the
+ * constant is greppable and cannot drift with a refactor; namespaceDerivation
+ * below records the inputs, and a test recomputes the chain.
+ *
+ * This replaced the widely-copied Microsoft-style GUID
+ * 6f9619ff-8b86-d011-b42d-00c04fc964ff, whose version nibble is `d` and which
+ * is therefore not a valid RFC UUID at all. Correcting it changed Event IDs and
+ * the Bout IDs derived from them; that was deliberate and cost nothing, because
+ * no Stage 6 ID had been persisted, pushed or read by the application.
+ *
+ * The remaining five were already well-formed v4 UUIDs and are unchanged.
  */
 export const NS = Object.freeze({
-  EVENT: '6f9619ff-8b86-d011-b42d-00c04fc964ff',
+  EVENT: '833b2f12-8057-5c87-8e90-ac9d216371b0',
   BOUT: '7b2c1e44-3a55-4a7e-9c1d-2f8e6b0a1d33',
   SNAPSHOT: '1c8a5d92-6e70-4b83-8a41-9d2c7f5b0e64',
   MARKET: '2d9b6ea3-7f81-4c94-9b52-ae3d806c1f75',
   ASSESSMENT: '3eac7fb4-8092-4da5-ac63-bf4e917d2086',
   TRACKED: '4fbd80c5-91a3-4eb6-bd74-c05fa28e3197',
+});
+
+/** Inputs to the EVENT namespace derivation, so a test can recompute it. */
+export const namespaceDerivation = Object.freeze({
+  dns: DNS_NAMESPACE,
+  rootName: 'fightmetrics.app',
+  root: '1c187bfd-7f44-55ea-a824-7a3e3a544118',
+  eventName: 'Event',
+  event: '833b2f12-8057-5c87-8e90-ac9d216371b0',
 });
 
 const rotl = (n, s) => ((n << s) | (n >>> (32 - s))) >>> 0;
@@ -93,8 +121,24 @@ const bytesToUuid = (b) => {
 
 const utf8 = (s) => new TextEncoder().encode(s);
 
-/** RFC 4122 v5 (SHA-1, name-based). Deterministic. */
+/**
+ * RFC 4122 v5 (SHA-1, name-based). Deterministic.
+ *
+ * The namespace is VALIDATED rather than accepted as arbitrary bytes. Without
+ * this, a malformed or non-UUID namespace silently produces plausible-looking
+ * IDs forever — which is exactly how the invalid Microsoft GUID survived here
+ * unnoticed. `name` must be a string: passing a number or object would coerce
+ * and hash something unintended.
+ */
 export function uuidv5(namespace, name) {
+  if (!isValidUuid(namespace)) {
+    throw new TypeError(
+      `uuidv5: namespace must be a lowercase RFC 4122/9562 UUID (version 1-8, variant 10xx), got ${JSON.stringify(namespace)}`
+    );
+  }
+  if (typeof name !== 'string') {
+    throw new TypeError(`uuidv5: name must be a string, got ${typeof name}`);
+  }
   const ns = hexToBytes(namespace);
   const nm = utf8(name);
   const input = new Uint8Array(ns.length + nm.length);

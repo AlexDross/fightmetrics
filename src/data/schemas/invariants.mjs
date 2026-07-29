@@ -71,16 +71,23 @@ export function checkInvariants(store) {
       }
     }
 
-    // Derived flag consistency. Only checked when both corner flags are known:
-    // 22 legacy rows record neither, and null means unknown, not false.
-    if (
-      run.cornerAIsProspectAtCapture !== null &&
-      run.cornerBIsProspectAtCapture !== null &&
-      run.includesProspectAtCapture !== null
-    ) {
+    // Derived flag consistency. When BOTH corner flags are known the derived
+    // value is fully determined, so null is just as wrong as the wrong boolean:
+    // gating on `includesProspectAtCapture !== null` left
+    // (true, false, null) passing, which is not an unknown at all.
+    //
+    // When either corner flag is null the derived value genuinely cannot be
+    // verified, so it is left alone.
+    if (run.cornerAIsProspectAtCapture !== null && run.cornerBIsProspectAtCapture !== null) {
       const expected = run.cornerAIsProspectAtCapture || run.cornerBIsProspectAtCapture;
       if (run.includesProspectAtCapture !== expected) {
-        push(out, 'PROSPECT_FLAG_MISMATCH', 'includesProspectAtCapture is not the OR of the corner flags', run.id);
+        push(
+          out, 'PROSPECT_FLAG_MISMATCH',
+          run.includesProspectAtCapture === null
+            ? 'includesProspectAtCapture is null although both corner flags are known'
+            : 'includesProspectAtCapture is not the OR of the corner flags',
+          run.id
+        );
       }
     }
   }

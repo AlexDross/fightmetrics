@@ -209,14 +209,35 @@ Vite/Rollup browser build of the data-layer entry points and is bound as a test
 — a source-text check alone would not have caught the original `node:crypto`
 import, which failed the browser bundle outright.
 
-> The `uuid` package was evaluated first and rejected: it validates namespace
-> arguments, and `NS.EVENT` is **not a well-formed RFC UUID** (its version
-> nibble is `d`). Adopting the library would have forced changing that constant,
-> which changes every derived Event and Bout ID. The constant is retained
-> verbatim so migrated IDs stay byte-identical; it is only ever SHA-1 input, so
-> its version bits are never interpreted. Replacing it is a deliberate decision
-> that should be taken **before** any data is persisted, not after. uuid@14.0.1
-> was also audit-clean, so this is a compatibility decision, not a security one.
+### Namespace derivation
+
+Every namespace is a valid RFC 4122/9562 UUID, and `uuidv5` **validates its
+namespace argument** rather than accepting arbitrary 16 bytes — without that, a
+malformed namespace silently produces plausible-looking IDs forever.
+
+`NS.EVENT` is derived transparently from the standard DNS namespace:
+
+```
+root  = uuidv5('6ba7b810-9dad-11d1-80b4-00c04fd430c8', 'fightmetrics.app')
+      = 1c187bfd-7f44-55ea-a824-7a3e3a544118
+EVENT = uuidv5(root, 'Event')
+      = 833b2f12-8057-5c87-8e90-ac9d216371b0
+```
+
+A test recomputes that chain, and the SHA-1 implementation is pinned against the
+published RFC 4122 reference vectors (`v5(DNS, 'python.org')` →
+`886313e1-3b8a-5372-9b90-0c9aee199e5d`) rather than against our own output.
+
+This replaced `6f9619ff-8b86-d011-b42d-00c04fc964ff`, the widely-copied
+Microsoft-style GUID whose version nibble is `d` — not a valid UUID at all, and
+now rejected by the validator. Correcting it changed Event IDs and the Bout IDs
+derived from them. That was deliberate and free: no Stage 6 ID had been
+persisted, pushed or read by the application. The other five namespaces were
+already well-formed v4 UUIDs and are unchanged.
+
+> The `uuid` package was evaluated as an alternative and not adopted: SHA-1
+> in-file keeps the module dependency-free, and uuid@13.0.0 carried a moderate
+> advisory in v3/v5/v6 itself (14.0.1 was clean).
 
 Because `eventId` is inside the bout derivation, a **cross-event rematch
 produces a different Bout ID** — the structural fix for the known collision.
@@ -314,8 +335,6 @@ because `.fixed`, `.block`, `.hidden` and `.flex` **are** already emitted while
 - **`confirmedByUser` is not introduced.** Read 6× in `src/domain/statistics`
   but written 0/160 times. Recorded as a reader-only phantom so Stage 8 can
   implement or remove it deliberately.
-- **`NS.EVENT` is not a valid RFC 4122 UUID.** Retained for byte-identical IDs;
-  see above. Worth resolving before Stage 7 persists anything.
 - `Bout.division` stays free text, including 23 catchweight `"X / Y"` strings.
 - Parlay coverage is derived from the constructor and readers, since
   `PARLAY_ENTRIES` is empty.
