@@ -1,0 +1,174 @@
+// Stage 6 — shared primitives for the durable domain schema.
+//
+// .mjs ON PURPOSE. src/style.css declares `@source './**/*.js'` and
+// `'./**/*.jsx'`, so Tailwind scans those extensions whether or not the file is
+// imported anywhere. Enum strings in this directory are class-name candidates:
+// TAILWIND_CANARY below is the proof. `.static` is NOT currently emitted in the
+// production stylesheet while `.fixed`, `.block`, `.hidden`, `.flex` and others
+// are, so if these files were ever scanned the CSS would gain a `.static` rule
+// and change byte-for-byte. Neither @source glob matches .mjs, so it does not.
+// See src/data/schemas/__tests__/tailwindScoping.test.js.
+export const TAILWIND_CANARY = 'static';
+
+import { z } from 'zod';
+
+// ── numbers ────────────────────────────────────────────────────────────────
+// Zod 4 already rejects NaN and Infinity for z.number(). It does NOT reject -0,
+// which JSON.stringify writes as "0" and JSON.parse reads back as +0 — a silent
+// round-trip change. Every persisted number therefore goes through this check.
+const rejectNegativeZero = (schema) =>
+  schema.check((ctx) => {
+    if (Object.is(ctx.value, -0)) {
+      ctx.issues.push({
+        code: 'custom',
+        input: ctx.value,
+        message: 'negative zero is not permitted in persisted data (JSON round-trips it to +0)',
+      });
+    }
+  });
+
+export const finiteNumber = () => rejectNegativeZero(z.number());
+export const integer = () => rejectNegativeZero(z.number().int());
+
+/** Model probability. Bounded, finite, never -0. */
+export const probability = () => rejectNegativeZero(z.number().min(0).max(1));
+
+/** Stake in units. Must be > 0 — a zero-unit position is not a position. */
+export const stakeUnits = () => rejectNegativeZero(z.number().positive());
+
+// ── strings ────────────────────────────────────────────────────────────────
+export const nonEmptyString = () => z.string().min(1);
+
+/** Calendar date, local, YYYY-MM-DD. Not a Date object: these are day-precision
+ *  facts and converting through Date() reintroduces the UTC rollover bug the
+ *  app already fixed once. */
+export const isoDate = () =>
+  z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'expected YYYY-MM-DD');
+
+export const isoDateTime = () =>
+  z.string().regex(
+    /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})$/,
+    'expected an ISO-8601 timestamp'
+  );
+
+/** UUID (v5 for migrated records, v7 for new ones). Accepts either. */
+export const uuid = () =>
+  z.string().regex(
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/,
+    'expected a lowercase UUID'
+  );
+
+/** Legacy IDs are carried verbatim for PredictionRun / Prop / Parlay, so those
+ *  id fields accept either a UUID or the legacy `${ms}-${base36}` shape. */
+export const legacyOrUuid = () =>
+  z.union([uuid(), z.string().regex(/^\d{13}-[a-z0-9]{6}$/, 'expected a legacy id')]);
+
+// ── odds ───────────────────────────────────────────────────────────────────
+// Stored as INTEGERS, not presentation strings. All 952 non-blank legacy odds
+// values parse cleanly; the observed range is -1600..900 for market odds and
+// -472..472 for fair lines, with nothing inside (-100, 100) and no zeros.
+// The leading "+" is added by the UI, never persisted.
+export const americanOdds = () =>
+  rejectNegativeZero(z.number().int()).check((ctx) => {
+    if (Math.abs(ctx.value) < 100) {
+      ctx.issues.push({
+        code: 'custom',
+        input: ctx.value,
+        message: 'american odds must satisfy |odds| >= 100',
+      });
+    }
+  });
+
+// ── enums ──────────────────────────────────────────────────────────────────
+export const Corner = z.enum(['A', 'B']);
+export const FinishMethod = z.enum(['KO/TKO', 'SUB', 'DEC']);
+export const ModelBasis = z.enum(['legacy-v1-unversioned', 'v2']);
+export const CaptureMode = z.enum(['live', 'reconstructed', 'unknown']);
+export const ProvenanceCompleteness = z.enum(['full', 'partial', 'none']);
+export const BetTier = z.enum(['NO BET', 'LEAN', 'BET', 'STRONG BET']);
+export const PickSource = z.enum(['human', 'model']);
+export const RecordOrigin = z.enum(['legacyMigration', 'appCreated']);
+
+/** Canonical ordering for finishProjection.leaders. */
+export const FINISH_METHOD_ORDER = Object.freeze(['KO/TKO', 'SUB', 'DEC']);
+
+// ── shared value objects ───────────────────────────────────────────────────
+export const externalIds = () => z.record(z.string(), z.string());
+
+/**
+ * Settlement, shared by TrackedPosition and Wager.
+ *
+ * `settledAt` is nullable INSIDE the settled variant because 153 migrated
+ * legacy positions have no recorded settlement time. Substituting the
+ * migration clock there would turn the moment of data conversion into a false
+ * historical event. Who may use null is constrained per entity: legacy-migrated
+ * records may, application-created ones may not.
+ *
+ * financialResult is separate from the sporting outcome so a known result can
+ * survive an unknown price — `outcome: 'won'` with an uncomputable profit is a
+ * real and representable state.
+ */
+export const financialResult = () =>
+  z.discriminatedUnion('status', [
+    z.strictObject({ status: z.literal('computed'), profitUnits: finiteNumber() }),
+    z.strictObject({
+      status: z.literal('uncomputable'),
+      reason: z.literal('missingSelectedCornerOdds'),
+    }),
+  ]);
+
+export const settlement = () =>
+  z.discriminatedUnion('status', [
+    z.strictObject({ status: z.literal('open') }),
+    z.strictObject({
+      status: z.literal('settled'),
+      outcome: z.enum(['won', 'lost', 'push', 'void']),
+      financialResult: financialResult(),
+      settledAt: isoDateTime().nullable(),
+    }),
+  ]);
+
+/**
+ * finishProjection.
+ *
+ * Measured over all 160 legacy rows: the three percentages sum to 99, 100 or
+ * 101 (never wider — 16/126/18), and `leaders` reproduces the legacy
+ * projectedFinish string on 160/160 when taken as the exact argmax set.
+ */
+export const finishProjection = () =>
+  z
+    .discriminatedUnion('status', [
+      z.strictObject({ status: z.literal('absent') }),
+      z.strictObject({
+        status: z.literal('computed'),
+        koPct: integer().min(0).max(100),
+        subPct: integer().min(0).max(100),
+        decPct: integer().min(0).max(100),
+        leaders: z.array(FinishMethod).min(1).max(3),
+      }),
+    ])
+    .check((ctx) => {
+      const v = ctx.value;
+      if (!v || v.status !== 'computed') return;
+      const sum = v.koPct + v.subPct + v.decPct;
+      if (sum < 99 || sum > 101) {
+        ctx.issues.push({
+          code: 'custom',
+          input: v,
+          message: `finish percentages must sum to 99..101 (got ${sum})`,
+        });
+      }
+      const byMethod = { 'KO/TKO': v.koPct, SUB: v.subPct, DEC: v.decPct };
+      const max = Math.max(v.koPct, v.subPct, v.decPct);
+      const expected = FINISH_METHOD_ORDER.filter((m) => byMethod[m] === max);
+      if (new Set(v.leaders).size !== v.leaders.length) {
+        ctx.issues.push({ code: 'custom', input: v, message: 'leaders must not contain duplicates' });
+      }
+      if (v.leaders.join('|') !== expected.join('|')) {
+        ctx.issues.push({
+          code: 'custom',
+          input: v,
+          message: `leaders must be exactly the max-percentage methods in canonical order (expected ${expected.join(', ')})`,
+        });
+      }
+    });

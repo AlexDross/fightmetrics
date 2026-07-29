@@ -46,7 +46,15 @@ export default defineConfig({
   // tests that render components, which belongs to a later stage.
   test: {
     environment: 'node',
-    include: ['src/**/__tests__/**/*.test.js'],
+    // Two entries rather than a {js,mjs} brace group: brace groups have already
+    // caused one build failure in this project (Tailwind's @source), so they
+    // are avoided in glob strings on principle.
+    //
+    // .test.mjs exists for src/data: Tailwind's @source globs match .js/.jsx
+    // under src/ whether or not a file is imported, so a TEST that merely
+    // mentions a utility-like string ("static") changes the production CSS.
+    // Keeping the schema tree — tests included — on .mjs puts it out of reach.
+    include: ['src/**/__tests__/**/*.test.js', 'src/**/__tests__/**/*.test.mjs'],
     // fixtures/ holds data, not tests
     exclude: ['**/node_modules/**', 'src/__tests__/fixtures/**'],
     // Determinism, accurately described:
