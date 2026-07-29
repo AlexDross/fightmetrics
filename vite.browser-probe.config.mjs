@@ -31,6 +31,11 @@ export default defineConfig({
         dispatcher: 'src/data/migration/dispatcher.mjs',
         schemas: 'src/data/schemas/entities.mjs',
         invariants: 'src/data/schemas/invariants.mjs',
+        // Stage 7 Gate 1: the repository layer runs in the browser from Gate 6,
+        // so it is probed from the moment it exists rather than when it is wired.
+        repoTypes: 'src/data/repositories/types.mjs',
+        repoInterfaces: 'src/data/repositories/interfaces.mjs',
+        repoInMemory: 'src/data/repositories/inMemory.mjs',
       },
       formats: ['es'],
     },

@@ -1,0 +1,687 @@
+# Stage 7 — Supabase/Postgres persistence plan
+
+Approved SQL contract. **Any implementation deviation must update this document in
+the same commit as the change.**
+
+Base: `main` @ `89f6c45`. Backend decision: Supabase/Postgres.
+
+---
+
+## 0. Gates
+
+| Gate | Content | Stops for review |
+|---|---|---|
+| 0 · Preflight | Docker runtime present and running; ports 54321–54324 free; Node supports the pinned CLI | ✅ |
+| 1 | This document + `feat(data): add repository interfaces over the durable schema` — in-memory only | ✅ |
+| 2 | `feat(data): add Postgres schema, roles, policies and RPCs` — pinned Supabase CLI as devDependency, committed `supabase/`, full local stack, all SQL/API tests. **No hosted project.** | ✅ |
+| 3 | `feat(data): migrate seed data into the durable schema` | ✅ |
+| 4 | `feat(auth): add magic-link sign-in and read-only public state` | ✅ |
+| 5 | **Hosted rollout** — Alex creates/links the project, `db push --dry-run` → `db push`, Vercel vars, invite owner, claim, approve seed | ✅ |
+| 6 | `feat(data): back repositories with Postgres` — runtime rewire; dead handlers removed after proving zero call sites | ✅ |
+| 7 | `feat(data): add save status, undo, and JSON export/import` | ✅ |
+
+Every gate re-runs: full Vitest suite, browser probe, production build, JS/CSS
+byte comparison, leak checks, fixture/reference integrity, and confirmation that
+the 22 untracked user files are untouched.
+
+---
+
+## 1. Architecture
+
+- Durable base tables live in **`app_private`**. The `public` schema contains **only functions**.
+- The browser receives **no INSERT/UPDATE/DELETE privileges** on any table.
+- All mutations go through narrowly granted `SECURITY DEFINER` RPCs with empty
+  `search_path`, fully qualified objects, explicit workspace-role checks,
+  expected-revision conflict checks, and transactional undo/seed handling.
+- Public reads use explicitly scoped, sanitized `SECURITY DEFINER` read functions
+  with exhaustive return shapes and a workspace slug.
+- RLS stays enabled on base tables as defense in depth.
+- `ON UPDATE RESTRICT` and `ON DELETE RESTRICT` everywhere except
+  `workspace_members.user_id`, which cascades from `auth.users`.
+- `BEFORE UPDATE` revision triggers with a storage-only `row_updated_at`,
+  distinct from the durable domain `updatedAt` on Event/Bout.
+- Model inference stays client-side. No `/predict` endpoint, no server-side
+  inference, no recomputation of model values on database read.
+- `SCHEMA_VERSION` 1 becomes durable at Stage 7's first successful write. Every
+  incompatible change after that requires a version increment and a forward
+  migration.
+
+### Three non-login roles
+
+| Role | Owns | Never owns |
+|---|---|---|
+| `fm_table_owner` | base tables, sequences, indexes, triggers, `app_private` helpers | any callable public API function |
+| `fm_public_reader` | `public.fm_read_*` | tables |
+| `fm_member_api` | `public.fm_member_*`, `public.fm_rpc_*` | tables |
+
+RLS is **enabled, not blanket-FORCEd**: `fm_table_owner` owns the tables and owns
+no callable function, so the two roles that API functions actually run as are
+non-owners and are fully bound by policy.
+
+`app_private.is_member` is `SECURITY DEFINER` owned by `fm_table_owner`, so it
+bypasses RLS on `workspace_members` and the membership policies are
+**non-recursive**. `auth.uid()` resolves correctly inside DEFINER functions
+because PostgREST sets `request.jwt.claims` as a per-request GUC.
+
+### Workspace identity
+
+Stage 6 IDs are deterministic (`eventIdFor` derives from `promotion|date|name`),
+so two workspaces migrating the same seed would produce identical UUIDs. Every
+table therefore uses `PRIMARY KEY (workspace_id, id)` with **composite foreign
+keys**, making cross-workspace references structurally impossible.
+
+Slug: immutable, lowercase, constrained `text` (no `citext` extension),
+`fightmetrics`.
+
+---
+
+## 2. Role creation and ownership transfer
+
+Supabase's hosted `postgres` is not a true superuser, so ownership transfer needs
+real membership, and each function owner needs `CREATE` on its schema. One
+transaction, in this order — steps 5–7 are ordered deliberately, because
+revoking membership before the ACL step would leave the migration role unable to
+grant on objects it no longer co-owns.
+
+```sql
+BEGIN;
+
+-- (0) idempotent role creation. Roles are cluster-level while `db reset`
+--     rebuilds only the database, so a bare CREATE ROLE would succeed on the
+--     first reset and fail on every one after.
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_catalog.pg_roles WHERE rolname = 'fm_table_owner')
+    THEN CREATE ROLE fm_table_owner NOLOGIN; END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_catalog.pg_roles WHERE rolname = 'fm_public_reader')
+    THEN CREATE ROLE fm_public_reader NOLOGIN; END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_catalog.pg_roles WHERE rolname = 'fm_member_api')
+    THEN CREATE ROLE fm_member_api NOLOGIN; END IF;
+END $$;
+
+-- (1) temporary SET ROLE capability for the migration role
+DO $$ BEGIN
+  EXECUTE format('GRANT fm_table_owner, fm_public_reader, fm_member_api TO %I', current_user);
+END $$;
+
+-- (2) temporary CREATE for the two function owners
+GRANT CREATE ON SCHEMA public TO fm_public_reader, fm_member_api;
+
+-- (3) create schema, tables, indexes, triggers, helpers, all fm_ functions
+
+-- (4) transfer ownership
+ALTER SCHEMA app_private OWNER TO fm_table_owner;
+DO $$ DECLARE r record; BEGIN
+  FOR r IN SELECT c.relname, c.relkind FROM pg_class c
+             JOIN pg_namespace n ON n.oid = c.relnamespace
+            WHERE n.nspname = 'app_private' AND c.relkind IN ('r','S') LOOP
+    EXECUTE format('ALTER %s app_private.%I OWNER TO fm_table_owner',
+                   CASE r.relkind WHEN 'r' THEN 'TABLE' ELSE 'SEQUENCE' END, r.relname);
+  END LOOP;
+  FOR r IN SELECT p.oid::regprocedure AS sig FROM pg_proc p
+             JOIN pg_namespace n ON n.oid = p.pronamespace WHERE n.nspname = 'app_private' LOOP
+    EXECUTE format('ALTER FUNCTION %s OWNER TO fm_table_owner', r.sig);
+  END LOOP;
+  FOR r IN SELECT p.oid::regprocedure AS sig, p.proname FROM pg_proc p
+             JOIN pg_namespace n ON n.oid = p.pronamespace
+            WHERE n.nspname = 'public' AND p.proname LIKE 'fm\_%' LOOP
+    EXECUTE format('ALTER FUNCTION %s OWNER TO %I', r.sig,
+      CASE WHEN r.proname LIKE 'fm\_read\_%' THEN 'fm_public_reader' ELSE 'fm_member_api' END);
+  END LOOP;
+END $$;
+
+-- (5) revoke CREATE immediately
+REVOKE CREATE ON SCHEMA public FROM fm_public_reader, fm_member_api;
+
+-- (6) FINAL ACLs — before the membership revoke
+REVOKE EXECUTE ON FUNCTION public.fm_read_roi(text) FROM PUBLIC;
+GRANT  EXECUTE ON FUNCTION public.fm_read_roi(text) TO anon, authenticated;
+-- … one explicit pair per function; table GRANT/REVOKE blocks per §4 …
+
+-- (7) drop the temporary memberships LAST
+DO $$ BEGIN
+  EXECUTE format('REVOKE fm_table_owner, fm_public_reader, fm_member_api FROM %I', current_user);
+END $$;
+
+COMMIT;
+```
+
+**Repeatability is proven by two consecutive clean `supabase db reset` runs**,
+with the full pgTAP catalog suite after each, asserting identical owners, ACLs
+and zero residual memberships both times.
+
+### Catalog tests (pgTAP, Gate 2)
+
+- schema owner is `fm_table_owner`
+- every `app_private` table, sequence and index owned by `fm_table_owner`
+- every `public.fm_read_*` owned by `fm_public_reader`; every `fm_member_*` /
+  `fm_rpc_*` owned by `fm_member_api`
+- **no callable public `fm_` function owned by `fm_table_owner`**
+- `prosecdef = true` and `proconfig @> ARRAY['search_path=']` on every `fm_`
+  function and every `app_private` helper
+- RLS enabled on every `app_private` table
+- ACLs compared with normalized **`aclexplode`** rows via `set_eq`, never
+  `array_to_string(proacl)`, whose ordering is not a stable contract
+- all `fm_*` roles remain `NOLOGIN`
+- **no non-`fm_` role retains membership in any `fm_` role, `postgres` included**
+- `has_schema_privilege('fm_public_reader','public','CREATE')` is false; same for
+  `fm_member_api`
+
+---
+
+## 3. Immutable helpers
+
+```sql
+app_private.jsonb_key_count(jsonb) -> int
+app_private.is_string_map(jsonb) -> boolean
+app_private.is_js_double_map(jsonb) -> boolean
+app_private.is_finite_or_null(double precision) -> boolean
+app_private.array_is_distinct(text[]) -> boolean
+app_private.finish_leaders_expected(int,int,int) -> text[]
+app_private.is_american_odds_or_null(int) -> boolean
+app_private.is_iso_date(text) -> boolean
+app_private.is_cutoff(jsonb) -> boolean
+app_private.is_source_manifest(jsonb) -> boolean
+app_private.decimal_from_american(int) -> double precision
+app_private.parse_positive_decimal(text) -> numeric
+app_private.bump_revision() -> trigger
+app_private.forbid_slug_change() -> trigger
+app_private.is_member(uuid, text[]) -> boolean            [DEFINER, fm_table_owner]
+app_private.workspace_has_owner(uuid) -> boolean          [DEFINER, fm_table_owner]
+app_private.lock_unclaimed_workspace(text) -> (uuid,text) [DEFINER, fm_table_owner]
+app_private.assert_settlement_row(...) -> void
+app_private.trg_assert_position() -> trigger
+app_private.trg_assert_bout_dependents() -> trigger
+```
+
+Postgres forbids subqueries in `CHECK`, so `SELECT count(*) FROM
+jsonb_object_keys(...)` is illegal inline — the immutable helper is required, not
+optional. `make_date` is `IMMUTABLE` and raises on impossible dates, which is why
+`is_iso_date` can honestly be `IMMUTABLE`.
+
+Key definitions:
+
+```sql
+-- Postgres treats NaN = NaN as TRUE, so `v <> 'NaN'` is the correct rejection.
+CREATE FUNCTION app_private.is_finite_or_null(v double precision) RETURNS boolean
+LANGUAGE sql IMMUTABLE PARALLEL SAFE SET search_path = '' AS $$
+  SELECT v IS NULL OR (v <> 'NaN'::double precision
+                   AND v <> 'Infinity'::double precision
+                   AND v <> '-Infinity'::double precision)
+$$;
+
+-- Canonical argmax set: binds order, membership, distinctness and cardinality.
+CREATE FUNCTION app_private.finish_leaders_expected(ko int, sub int, dec int) RETURNS text[]
+LANGUAGE sql IMMUTABLE STRICT PARALLEL SAFE SET search_path = '' AS $$
+  SELECT ARRAY(SELECT label FROM (VALUES ('KO/TKO',ko,1),('SUB',sub,2),('DEC',dec,3))
+               AS t(label,pct,ord) WHERE pct = GREATEST(ko,sub,dec) ORDER BY ord)
+$$;
+
+-- Range and underflow protection. NOT full JSON-number canonicalization:
+-- 0.1000000000000000055511151231257827 and 0.1 both pass and parse to the same
+-- double. Canonical form is enforced by the repository adapter, which round-trips
+-- through String()/Number() and rejects anything failing Object.is.
+CREATE FUNCTION app_private.is_js_double_map(j jsonb) RETURNS boolean
+LANGUAGE sql IMMUTABLE STRICT PARALLEL SAFE SET search_path = '' AS $$
+  SELECT jsonb_typeof(j) = 'object'
+     AND NOT EXISTS (
+       SELECT 1 FROM jsonb_each(j) AS e(k, v)
+       WHERE jsonb_typeof(e.v) <> 'number'
+          OR (e.v #>> '{}') ~ '^-0(\.0+)?([eE][+-]?[0-9]+)?$'
+          OR ((e.v #>> '{}')::numeric <> 0
+              AND (abs((e.v #>> '{}')::numeric) < 5e-324::numeric
+                OR abs((e.v #>> '{}')::numeric) > 1.7976931348623157e308::numeric)))
+$$;
+
+-- 32-char bound is MEASURED: over a 699,826-value seeded corpus the longest
+-- String(finite positive double) was 24 chars (0.0000057692833136856875).
+-- MAX_VALUE is 23, MIN_VALUE is 6. NO per-component caps: a {1,20} fractional
+-- cap rejected 12,823 of those values (1.8%), including the 24-char maximum.
+CREATE FUNCTION app_private.parse_positive_decimal(t text) RETURNS numeric
+LANGUAGE plpgsql IMMUTABLE STRICT PARALLEL SAFE SET search_path = '' AS $$
+DECLARE v numeric;
+BEGIN
+  IF length(t) > 32 THEN RAISE EXCEPTION 'stake string too long'; END IF;
+  IF t !~ '^(0|[1-9][0-9]*)(\.[0-9]+)?([eE][+-]?[0-9]+)?$' THEN
+    RAISE EXCEPTION 'not a canonical positive decimal: %', t; END IF;
+  v := t::numeric;
+  IF v <= 0 THEN RAISE EXCEPTION 'value must be > 0: %', t; END IF;
+  RETURN v;
+END $$;
+```
+
+`source_manifest` validation requires each module to carry exactly its eight
+fields, with nonempty strings including for `note` and `maxObservedEventDate`
+when they are present rather than null.
+
+---
+
+## 4. Tables
+
+Full DDL is applied at Gate 2. Shape summary:
+
+`workspaces` · `workspace_members` · `events` · `bouts` · `prediction_runs` ·
+`prediction_snapshots` · `market_snapshots` · `betting_assessments` ·
+`tracked_positions` · `wagers` · `props` · `parlays` · `parlay_legs` ·
+`seed_items` · `undo_log`
+
+**Frequently-updated unions are normalized into columns**, not JSONB, so
+Postgres validates timestamps natively — an immutable JSONB timestamp CHECK is
+unachievable because `text::timestamptz` is STABLE. Export reconstructs the exact
+Stage 6 union. JSONB survives only for genuinely open bags: `external_ids`,
+`feature_vector`, `source_manifest`, `fight_history_cutoff`.
+
+Immutable tables — `prediction_runs`, `prediction_snapshots`, `market_snapshots`,
+`betting_assessments`, `parlays`, `parlay_legs` — receive **no UPDATE grant and
+no UPDATE policy**, denied twice.
+
+### Relationship enforcement — composite FKs carrying the discriminator
+
+Separate single-column FKs cannot stop a snapshot naming one run while carrying
+another run's bout. The discriminating column goes **inside** the referenced key.
+
+| Referencing | References | Prevents |
+|---|---|---|
+| `prediction_snapshots (ws, run_id, bout_id)` | `prediction_runs (ws, id, bout_id)` | snapshot bout ≠ run bout |
+| `prediction_runs (ws, decision_snapshot_id, id, bout_id)` | `prediction_snapshots (ws, id, run_id, bout_id)` | decision snapshot from another run/bout |
+| `betting_assessments (ws, prediction_snapshot_id, run_id, bout_id)` | `prediction_snapshots (ws, id, run_id, bout_id)` | assessment mixing run/snapshot/bout |
+| `betting_assessments (ws, market_snapshot_id, bout_id)` | `market_snapshots (ws, id, bout_id)` | market from another bout |
+| `tracked_positions`/`wagers (ws, assessment_id, bout_id)` | `betting_assessments (ws, id, bout_id)` | assessment from another bout |
+| `tracked_positions`/`wagers (ws, market_snapshot_id, bout_id)` | `market_snapshots (ws, id, bout_id)` | price from another bout |
+| `props (ws, target_bout_id, event_id)` | `bouts (ws, id, event_id)` | prop event ≠ bout event |
+
+Nullable composite FKs use default `MATCH SIMPLE`, so a NULL id skips the check —
+the desired nullable-FK behaviour.
+
+### The run ↔ snapshot cycle
+
+`prediction_runs.decision_snapshot_id → prediction_snapshots` and
+`prediction_snapshots.run_id → prediction_runs` form a genuine cycle, so under
+`ON DELETE RESTRICT` neither can be deleted first. **Only** the constraints
+closing that cycle (plus the two assessment FKs that participate) are
+`DEFERRABLE INITIALLY IMMEDIATE`; unrelated FKs stay non-deferrable.
+
+```sql
+SET CONSTRAINTS app_private.run_decision_snapshot_fk,
+                app_private.prediction_snapshots_run_fk,
+                app_private.betting_assessments_run_fk,
+                app_private.betting_assessments_snapshot_fk DEFERRED;
+-- delete position → assessment → markets → snapshots → run
+-- constraints re-checked at COMMIT; a surviving reference aborts
+```
+
+`SET CONSTRAINTS` is transaction-local, so deferral never leaks.
+
+### Settlement contract (deferred constraint triggers)
+
+`app_private.assert_settlement_row` enforces, for both tracked positions and
+wagers, each against **its own** `market_snapshot_id`:
+
+- bout pending ⟺ dependent row open
+- resolved `A`/`B` ⟹ settled as won/lost **by the selected corner**
+- `draw` ⟹ push · `noContest` ⟹ void
+- push/void ⟹ computed profit exactly `0`
+- selected corner priced ⟹ `computed`; unpriced ⟹ `uncomputable`
+- computed profit equals `stake × (decimal − 1)` on a win, `−stake` on a loss
+
+A deferred trigger on `bouts` re-checks **every** dependent position and wager
+after grading or return-to-pending.
+
+Profit equality is exact (`<>`, no epsilon) because recomputing all 152 stored
+computed rows in JS reproduced them bit-for-bit, deviation `0`. **Gate 2 re-runs
+this in real Postgres; if any row deviates, the smallest sufficient bound is
+measured there and only that comparison changes.**
+
+Likewise `CHECK (prob_a + prob_b = 1)` is retained **provisionally** — all 237
+stored pairs satisfy it exactly. Gate 2 tests the full path (browser JSON →
+PostgREST → `float8` → response → JS) before it is accepted as final.
+
+---
+
+## 5. Read surfaces
+
+| Surface | Owner | Audience | Contains |
+|---|---|---|---|
+| `fm_read_*` | `fm_public_reader` | anon + anyone | **public workspaces only** — sanitized projections |
+| `fm_member_*` | `fm_member_api` | members | same fields **plus `revision` tokens and editable fields** |
+| `fm_member_export_store` | `fm_member_api` | members | the complete Stage 6 store, export only |
+
+An `fm_public_reader`-owned function can only ever see public workspaces, so
+`fm_read_*` returns nothing for a private workspace **even to a member**. That is
+its documented contract. Members use `fm_member_*`.
+
+**Routing is by resolved membership, not session presence.** The repository calls
+`public.fm_member_whoami(p_slug)` once per session; signed-in **non-members read
+through the public fallback**, exactly like anonymous visitors.
+
+Public surfaces expose: events `id,name,date,promotion`; bouts
+`id,event_id,division,corner_a_name,corner_b_name,result_*,board_order`;
+roi/upcoming `tracked_position_id,bout_id,event_id,event_name,event_date,
+division,corner names,tracked_corner,stake_units::text,prob_a,prob_b,
+winner_corner,tier,recommended_corner,fair_line_*,edge_*,ev_*,kelly_*,
+tracked_odds_*,result_*,settlement fields,review_status,finish_*`; plus props and
+parlays.
+
+**Excluded from every public surface:** `feature_vector`, `source_manifest`,
+`reconstruction*`, `fight_history_cutoff`, `model_coef_hash`, `legacy_entry_id`,
+`notes`, `fighter_key`, `fighter_id`, `external_ids`, `origin`, `stake_source`,
+`row_updated_at`, `revision`, `workspace_members`, `seed_items`, `undo_log`.
+Finish projections, fair lines, edge, EV and Kelly **are** public — the app
+already displays them.
+
+Return columns are enumerated, never `SELECT *`, so an added base column cannot
+leak. Each public function's returned key set is asserted to equal its documented
+list exactly.
+
+### Statistics stay in JavaScript
+
+`fm_read_statistics_input` returns a **sanitized projection shaped like the legacy
+entry** — the contract the existing domain readers already consume. **No ROI,
+calibration, tier, probability, settlement or frozen value is ever computed in
+SQL.** `src/domain/statistics` remains the single implementation, so the existing
+tests keep their meaning.
+
+---
+
+## 6. RPCs
+
+Every mutation: `SECURITY DEFINER`, empty `search_path`, fully qualified,
+explicit role check, `p_expected_revision`, `EXECUTE` revoked from `anon`,
+returns `revision text`.
+
+| RPC | Auth | Transaction scope | Undo | Tombstone |
+|---|---|---|---|---|
+| `fm_rpc_seed_store` | owner | 13 tables + `seed_items` + `seed_version` | ✗ | creates 164 roots |
+| `fm_rpc_save_prediction_run` | owner/editor | event+bout+run+snapshots+market+assessment+position | ✓ delete | ✗ |
+| `fm_rpc_grade_bout` | owner/editor | bout result + every settlement on it | ✓ vector | ✗ |
+| `fm_rpc_return_bout_to_pending` | owner/editor | inverse of grade | ✓ vector | ✗ |
+| `fm_rpc_change_tracked_corner` | owner/editor | `corner` only | ✓ | ✗ |
+| `fm_rpc_amend_tracked_price` | owner/editor | new market + repoint position | ✓ | ✗ |
+| `fm_rpc_update_stake` / `_notes` | owner/editor | one column | ✓ | ✗ |
+| `fm_rpc_confirm_entry` | owner/editor | review → confirmed + timestamp | ✓ | ✗ |
+| `fm_rpc_confirm_all_pending` | owner/editor | all pending positions | ✓ vector | ✗ |
+| `fm_rpc_delete_pending_run` | owner/editor | aggregate + proven orphans | ✓ re-INSERT | root |
+| `fm_rpc_delete_tracked_position` | owner/editor | as above | ✓ | root |
+| `fm_rpc_clear_graded` | owner | all graded aggregates | ✓ vector | all cleared roots |
+| `fm_rpc_save_prop` / `_settle_prop` / `_delete_prop` | owner/editor | prop | ✓ | root on delete |
+| `fm_rpc_save_parlay` / `_delete_parlay` | owner/editor | parlay + legs | ✓ | root on delete |
+| `fm_rpc_import_store` | owner | delete-all + insert-all + ledger reset | ✗ backup | reset |
+| `fm_rpc_reset_workspace` | owner | entities + ledger + `seed_version := NULL` | ✗ backup | cleared |
+| `fm_rpc_undo` | owner/editor | inverse of one entry | single-use | restores |
+| `fm_rpc_claim_workspace_ownership` | authenticated | membership insert under row lock | ✗ | ✗ |
+
+### Zero-owner claim
+
+`fm_member_api`'s own `SELECT … FOR UPDATE` on `workspaces` is filtered by the
+member policy and finds nothing before membership exists. A narrow table-owner
+helper resolves it:
+
+```sql
+app_private.lock_unclaimed_workspace(p_slug)
+  RETURNS TABLE (workspace_id uuid, status text)   -- 'unknown' | 'claimed' | 'unclaimed'
+```
+
+DEFINER-owned by `fm_table_owner` so it bypasses RLS, granted only to
+`fm_member_api`. It discloses **only** whether a slug exists and is unclaimed —
+never the contents of a private workspace. The `FOR UPDATE` row lock serializes
+concurrent claims: the second blocks, then observes `claimed` and raises `42501`.
+An unknown slug raises `42704`, distinguishable.
+
+### Conflict detection
+
+`revision bigint` bumped by a `BEFORE UPDATE` trigger, **exposed and accepted as
+decimal strings everywhere** — `JSON.parse('{"r":9007199254740993}')` yields
+`9007199254740992`, silent corruption. Repository types use opaque
+`revision: string` including `conflict.serverRevision`; the UI never does
+arithmetic on it.
+
+### Undo
+
+`undo_log(workspace_id, id, user_id, op, prior_state, revision_vector,
+absent_ids, created_at, expires_at, consumed_at)` — single-use, 15-minute TTL,
+creator-only, workspace-scoped. **Server-side, so it survives refresh.**
+
+`revision_vector` stores the post-operation revision for **every surviving
+mutable row touched**; `absent_ids` lists every deleted row. Undo verifies the
+whole vector, asserts deleted IDs are still absent, and checks shared
+dependencies remain compatible. Any drift → conflict. Deleted immutable rows are
+restored with plain `INSERT` — **never** `ON CONFLICT DO UPDATE`, which would
+mutate an immutable row. Not offered for `import_store` or `reset_workspace`,
+which rely on the mandatory backup.
+
+---
+
+## 7. Seed ledger and pruning
+
+164 logical roots: 160 prediction runs + 4 props + 0 parlays.
+
+```sql
+seed_items(workspace_id, root_type, root_id, first_seed_version, removed_at)
+  root_type IN ('predictionRun','prop','parlay')
+```
+
+**Events and Bouts are never tombstoned** — they are shared card structure. This
+is not hypothetical: 4 bouts are already referenced by both a prop and a
+prediction run, and all 16 events carry multiple bouts.
+
+Rules, all in one transaction with the inserts *and* the `seed_version` write:
+
+- `seed_version IS NULL` → initial seed, ledger row per root
+- stale version → insert only roots **absent from the ledger**; ledger
+  membership is the test, not table membership
+- any delete/clear stamps `removed_at`
+- a tombstoned root is never re-inserted by any later seed
+- `fm_rpc_reset_workspace` clears entities, ledger and `seed_version`
+- correcting a seeded record goes through `fm_rpc_import_store`, never a silent
+  seed overwrite
+
+`ON CONFLICT DO NOTHING` alone is insufficient: after clearing ROI the IDs no
+longer conflict, so a stale seed would re-insert them.
+
+### Pruning
+
+Deletes remove **only proven orphans**, checked by counted reference:
+
+```sql
+DELETE FROM app_private.betting_assessments a
+WHERE a.workspace_id = v_ws AND a.id = v_assessment_id
+  AND NOT EXISTS (SELECT 1 FROM app_private.tracked_positions t
+                  WHERE t.workspace_id = v_ws AND t.assessment_id = a.id)
+  AND NOT EXISTS (SELECT 1 FROM app_private.wagers g
+                  WHERE g.workspace_id = v_ws AND g.assessment_id = a.id);
+```
+
+Order: position → assessment → market snapshots → prediction snapshots → run →
+**stop**. Events and Bouts always remain as legitimate card history.
+`ON DELETE RESTRICT` makes a mistake an error rather than a silent cascade.
+
+---
+
+## 8. Repository layer
+
+The UI imports repositories only; Supabase types never reach `src/App.js`.
+
+```
+Result<T> = { ok: true, data: T, revision?: string }
+          | { ok: false, error: RepositoryError }
+
+RepositoryError =
+  | { kind: 'offline' }
+  | { kind: 'unauthenticated' }
+  | { kind: 'forbidden' }
+  | { kind: 'conflict', serverRevision: string }
+  | { kind: 'validation', issues: unknown[] }
+  | { kind: 'notFound' }
+  | { kind: 'server', code: string, message: string }
+```
+
+Error mapping: `42501` → `forbidden`; `P0001 stale_write` → `conflict`;
+`23505/23503/23514` → `validation`; network → `offline`; missing JWT →
+`unauthenticated`.
+
+Repositories: `eventRepository`, `boutRepository`, `predictionRepository`,
+`wagerRepository`, `propRepository`, `parlayRepository`, `statisticsRepository`,
+`workspaceRepository`, `undoRepository`, `authRepository`.
+
+### Numeric transport
+
+Never rely on PostgREST defaults. Every read and RPC emits `revision::text` and
+`stake_units::text`; writes accept validated decimal strings. The JS adapter
+throws unless `Number.isFinite(n) && n > 0 && !Object.is(n, -0)`, then returns
+`String(n)`; reads return `Number(s)`. Verified `Object.is` round-trip over a
+699,826-value seeded corpus: **0 failures**.
+
+---
+
+## 9. UI states
+
+`idle · loading · saving · saved · offline · failed(retry) · conflict · read-only`
+
+Reads optimistic; **writes confirmed-only** — "Saved" appears strictly after the
+RPC returns. **Retry** re-sends the identical write (network fault).
+**Conflict** re-reads server state and asks the user to re-apply — the
+phone-graded-while-desktop-open case. Signed-out visitors see a read-only badge,
+never an error or a login wall. Undo surfaces for 15 minutes and survives
+refresh.
+
+Event renames are **card-wide** after normalization and require explicit UI
+wording: "Applies to all N bouts on this card."
+
+---
+
+## 10. Authentication
+
+`authRepository` + provider exposing `{ session, status, signIn(email), signOut() }`.
+Magic-link/OTP with `shouldCreateUser: false`; **open signup disabled at project
+level** — the client flag is UX, not the security boundary. `persistSession`,
+`detectSessionInUrl`, `autoRefreshToken` all true. Unobtrusive sign-in link in
+the Info footer, **no login wall**. `onAuthStateChange` refetches on
+sign-in/sign-out; `visibilitychange` + `focus` drive refetch-on-focus; each
+successful write refreshes affected queries. Expired link → `/` with a
+dismissible notice. Redirects: `localhost:3001`, Vercel preview wildcard,
+production. **No Realtime in Stage 7** — refetch-on-focus plus post-write refresh
+is sufficient and simpler.
+
+---
+
+## 11. Export / import / reset
+
+Strictly sequenced, because a database transaction cannot prove a user kept a file:
+
+1. Client fetches the store, validates against Stage 6, writes the file, and
+   **waits for the download to resolve**.
+2. User **explicitly confirms** they have the backup.
+3. Only then may `fm_rpc_import_store` / `fm_rpc_reset_workspace` run.
+
+Import shows a per-table count diff, rejects unknown future versions, and is one
+transaction — no partial import. `Store.meta` reconstructs from
+`workspaces.schema_version` and `workspaces.migrated_at`. Export excludes
+`workspace_id`, `revision`, `row_updated_at`, `seed_items`, `undo_log`,
+`workspace_members`.
+
+Round-trip is verified by a **recursive semantic comparator using `Object.is`
+only at numeric leaves** — `Object.is` on two objects compares identity and would
+prove nothing. The current store has 3,799 numeric leaves and 0 negative zeros.
+
+---
+
+## 12. Testing
+
+| Tier | Runs where |
+|---|---|
+| Repository contract vs in-memory fake | every `npm test`, offline |
+| SQL + RLS + RPC via **local Supabase** | `npm run test:db`, CI service job |
+| API-level repository tests vs local URL/key | `npm run test:api` |
+| Manual acceptance (phone/desktop, hard refresh) | pre-merge checklist |
+
+```
+supabase/config.toml            committed, CLI version pinned
+supabase/migrations/<ts>_*.sql  timestamped, forward-only
+supabase/tests/*.test.sql       pgTAP
+```
+
+Scripts: `db:start`, `db:reset`, `test:db`, `test:api`. CI adds a **separate**
+job using `supabase/setup-cli@v1` with a pinned `version:`; the existing
+Vitest/build job is unchanged and stays fast. **CI never depends on a hosted
+project or committed credentials.**
+
+### Required rejection tests
+
+Snapshot naming run X with bout Y · run's `decision_snapshot_id` pointing at
+another run's snapshot · assessment combining run/snapshot/market from different
+bouts · position or wager using an assessment or market from another bout · bout
+prop disagreeing with `prop.event_id` · `prob_a+prob_b <> 1` · `winner_corner` ≠
+argmax · NaN/±Infinity in every nullable double · fair line `|n| < 100` ·
+`external_ids` with a non-string value · non-reconstructed snapshot carrying
+reconstruction fields · `legacyTrackedOverride` + timestamp and `manual` + null
+(all four pairings) · finish leaders not equal to argmax, duplicated, empty, or
+unknown label · settled position whose selected corner is unpriced but claims
+`computed` · settled position on a pending bout · decisive result settled against
+the wrong corner · draw settling as anything but push · prospect-OR mismatch ·
+`appCreated` with null `settled_at`/`confirmed_at` · stake strings that are
+negative, zero, malformed or over 32 characters.
+
+### Required behavioural tests
+
+Deletion-cycle (succeeds orphaned, fails when still referenced, unrelated FK
+still immediate) · undo revision-vector conflict · undo expiry and single-use ·
+seed resurrection (clear ROI → advance `seed_version` → nothing returns) ·
+**the four shared bouts**, deleting each root and asserting the bout, its event
+and the sibling root all survive with only the deleted root tombstoned · claim
+concurrency (simultaneous claimants, exactly one wins) · unknown slug
+distinguishable from claimed · authenticated non-member still reads a public
+workspace through the public fallback · `anon` receives `permission denied` on
+every `app_private` table · neither client role can `SET ROLE`.
+
+### Gate 2 measurements
+
+- browser → PostgREST → `float8` probability complementarity
+- Postgres profit recomputation across all 152 computed rows
+- negative-zero probe via `encode(pg_catalog.float8send(v),'hex') =
+  '8000000000000000'`, over every persisted double column and a jsonb `-0`
+  round-trip
+- the full seeded stake corpus through `parse_positive_decimal` itself
+
+Exact equality is retained only if the first two pass in the real stack;
+otherwise the smallest sufficient bound is measured there.
+
+---
+
+## 13. Production rollout (Gate 5)
+
+No database password, service-role key or access token ever enters the bundle or
+the repository.
+
+| # | Step | Who |
+|---|---|---|
+| 1 | Create hosted project; **disable open signup** | Alex |
+| 2 | `supabase login`; `supabase link --project-ref <ref>` | Alex |
+| 3 | `supabase db push --dry-run` — review output | Alex runs, Claude reviews |
+| 4 | `supabase db push` (committed migrations only) | Alex |
+| 5 | **Never** `db reset --linked`; never `--include-seed` on production | — |
+| 6 | Vercel `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY` (preview + production) | Alex |
+| 7 | Site URL + redirect URLs | Alex |
+| 8 | Verify empty workspace; invite owner; sign in; call ownership claim | Alex |
+| 9 | Seed via the reviewed transactional RPC, after explicit approval | Alex triggers |
+| 10 | Deploy runtime rewire; phone + desktop acceptance | both |
+
+---
+
+## 14. Rollback
+
+The seed JS files and clipboard export buttons remain through Stage 7, so `main`
+is always independently runnable. Gate 1 is pure addition; Gate 2 touches no
+runtime; Gate 6 is the reversible-risk commit — reverting it restores the
+in-memory repositories and the app runs from seed files again, with Supabase data
+untouched and recoverable via export. A failed repository migration is restored
+by importing the pre-replacement backup export.
+
+---
+
+## 15. Standing decisions
+
+Immutable lowercase slug `fightmetrics` · `viewer` role retained · 15-minute undo
+TTL · full Store export members-only · `stake_units numeric` with a tested
+transport adapter · card-wide event-edit warning · `notes` retained · deletes
+prune only proven orphans · Events/Bouts left as card history · dead handlers
+(`handleSavePrediction`, `handleUpdateParlay`) removed only during the Gate 6
+runtime rewire, after proving zero call sites.
