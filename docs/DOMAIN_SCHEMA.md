@@ -103,12 +103,40 @@ so migration parses it separately and reconciles:
 
 The override snapshot uses the deterministic id
 `uuidv5(NS.MARKET, "${runId}|tracked-market")` and `source:
-'legacyTrackedOverride'`. Its **`capturedAt` is `null`**: the legacy row records
-the corrected price but never when it was edited, and `entry.createdAt` is the
-original save, not the correction. `capturedAt` may be null **only** for that
-source; every other snapshot still requires a real timestamp, enforced by the
-schema. Settlement is scored at the tracked price, so historical profit is never
-computed at a discarded one.
+'legacyTrackedOverride'`. Settlement is scored at the tracked price, so
+historical profit is never computed at a discarded one.
+
+**`source` and `capturedAt` are bound biconditionally:**
+
+```
+source = 'legacyTrackedOverride'  ⟺  capturedAt IS NULL
+source = 'manual'                 ⟺  capturedAt IS NOT NULL
+```
+
+| `source` | `capturedAt` | |
+|---|---|---|
+| `manual` | timestamp | ✅ |
+| `manual` | `null` | ❌ |
+| `legacyTrackedOverride` | `null` | ✅ |
+| `legacyTrackedOverride` | timestamp | ❌ |
+
+Only the first direction was enforced initially, which let an override carry a
+real timestamp — a contradiction, because the sole thing that source asserts is
+that no edit time was ever recorded. A one-way rule made the label
+unfalsifiable. The schema now asserts both directions as separate checks, so a
+future third source inherits the timestamp requirement rather than the
+exemption.
+
+**Stage 7 Postgres must carry the same bidirectional constraint**, not just the
+nullable column:
+
+```sql
+ALTER TABLE market_snapshots ADD CONSTRAINT market_snapshot_capture_provenance
+  CHECK ((source = 'legacyTrackedOverride') = (captured_at IS NULL));
+```
+
+Client-side Zod cannot protect a database with a public API, so this belongs in
+the schema itself alongside the other JSONB and range CHECKs.
 
 ### Review state
 

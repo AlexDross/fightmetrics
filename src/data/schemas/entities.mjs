@@ -155,11 +155,30 @@ export const MarketSnapshotSchema = z
   .check((ctx) => {
     const v = ctx.value;
     if (!v) return;
+    // BICONDITIONAL, both directions asserted separately.
+    //
+    // Only the first direction was enforced originally, which let a
+    // legacyTrackedOverride carry a real timestamp — a contradiction, since the
+    // whole meaning of that source is that no edit time was ever recorded. A
+    // one-way rule made the source label unfalsifiable.
+    //
+    // Written as two explicit checks rather than a single equality so it stays
+    // correct if a third source is ever added: a new source would then require
+    // a timestamp by default, rather than silently inheriting the exemption.
     if (v.capturedAt === null && v.source !== 'legacyTrackedOverride') {
       ctx.issues.push({
         code: 'custom',
         input: v,
-        message: 'capturedAt may only be null for source "legacyTrackedOverride"',
+        message: `capturedAt may only be null for source "legacyTrackedOverride" (got "${v.source}")`,
+      });
+    }
+    if (v.source === 'legacyTrackedOverride' && v.capturedAt !== null) {
+      ctx.issues.push({
+        code: 'custom',
+        input: v,
+        message:
+          'source "legacyTrackedOverride" requires capturedAt null: the legacy row records the ' +
+          'corrected price but never when it was edited, so any timestamp here would be invented',
       });
     }
   });

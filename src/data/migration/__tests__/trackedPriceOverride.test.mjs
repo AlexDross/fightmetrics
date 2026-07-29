@@ -91,8 +91,6 @@ describe('an independently edited marketOdds is preserved', () => {
     // the ORIGINAL save, not the correction.
     expect(trackedMarket.capturedAt).toBe(null);
     expect(trackedMarket.source).toBe('legacyTrackedOverride');
-    // And a null capturedAt is legal ONLY for that source.
-    expect(MarketSnapshotSchema.safeParse({ ...trackedMarket, source: 'manual' }).success).toBe(false);
     expect(MarketSnapshotSchema.safeParse(trackedMarket).success).toBe(true);
   });
 
@@ -119,6 +117,50 @@ describe('an independently edited marketOdds is preserved', () => {
     // Explicitly NOT the assessment price.
     const atAssessmentPrice = 1 * ((1 + 100 / 150) - 1);
     expect(tracked.settlement.financialResult.profitUnits).not.toBeCloseTo(atAssessmentPrice, 12);
+  });
+});
+
+describe('source and capturedAt are bound biconditionally', () => {
+  // The source label must be falsifiable in BOTH directions. A one-way rule let
+  // a legacyTrackedOverride carry a real timestamp, contradicting the only
+  // thing that source asserts: that no edit time was ever recorded.
+  const snapshot = (source, capturedAt) => ({
+    id: '00000000-0000-7000-8000-0000000000d1',
+    boutId: '00000000-0000-7000-8000-0000000000d2',
+    capturedAt, source, oddsA: -150, oddsB: 130,
+  });
+  const TS = '2026-12-01T00:00:00.000Z';
+
+  const CASES = [
+    ['manual + timestamp', 'manual', TS, true],
+    ['manual + null', 'manual', null, false],
+    ['legacyTrackedOverride + null', 'legacyTrackedOverride', null, true],
+    ['legacyTrackedOverride + timestamp', 'legacyTrackedOverride', TS, false],
+  ];
+
+  for (const [label, source, capturedAt, valid] of CASES) {
+    it(`${valid ? 'accepts' : 'rejects'} ${label}`, () => {
+      expect(MarketSnapshotSchema.safeParse(snapshot(source, capturedAt)).success).toBe(valid);
+    });
+  }
+
+  it('reports a reason naming the contradiction', () => {
+    const r = MarketSnapshotSchema.safeParse(snapshot('legacyTrackedOverride', TS));
+    expect(r.success).toBe(false);
+    expect(JSON.stringify(r.error.issues)).toMatch(/requires capturedAt null/);
+    const r2 = MarketSnapshotSchema.safeParse(snapshot('manual', null));
+    expect(JSON.stringify(r2.error.issues)).toMatch(/may only be null for source/);
+  });
+
+  it('holds across the whole migrated store', () => {
+    const withOverride = run().store;
+    for (const m of withOverride.marketSnapshots) {
+      expect(m.source === 'legacyTrackedOverride', `${m.id} source/capturedAt disagree`)
+        .toBe(m.capturedAt === null);
+    }
+    // Non-vacuous: this store really does contain both kinds.
+    expect(withOverride.marketSnapshots.some((m) => m.source === 'legacyTrackedOverride')).toBe(true);
+    expect(withOverride.marketSnapshots.some((m) => m.source === 'manual')).toBe(true);
   });
 });
 
