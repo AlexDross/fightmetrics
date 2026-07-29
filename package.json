@@ -9,14 +9,16 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:ci": "vitest run --reporter=verbose"
+    "test:ci": "vitest run --reporter=verbose",
+    "probe:browser": "vite build --config vite.browser-probe.config.mjs"
   },
   "dependencies": {
     "lucide-react": "0.577.0",
     "react": "19.2.6",
     "react-dom": "19.2.6",
     "react-router-dom": "7.18.2",
-    "recharts": "3.8.1"
+    "recharts": "3.8.1",
+    "zod": "4.4.3"
   },
   "devDependencies": {
     "@tailwindcss/vite": "4.3.3",

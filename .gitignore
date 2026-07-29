@@ -20,3 +20,6 @@ backtest_results_momentum.json
 #   python3 patch_atd.py --out src/fightersData_test.js
 # Intentional artifact, never imported by the app. Kept on disk, not tracked.
 src/fightersData_test.js
+
+# Stage 6 browser-compatibility probe output
+build-browser-probe
