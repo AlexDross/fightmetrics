@@ -937,6 +937,45 @@ every `app_private` table · neither client role can `SET ROLE`.
 Exact equality is retained only if the first two pass in the real stack;
 otherwise the smallest sufficient bound is measured there.
 
+### Gate 2 measurement results
+
+Run in `supabase/tests/02_measurements.test.sql` (17 assertions).
+
+**Both provisional constraints survive.** `prob_a + prob_b = 1` holds exactly for
+all 9,999 four-decimal probabilities, and still holds after the jsonb round-trip
+PostgREST performs. Non-vacuity is asserted alongside it: `0.1 + 0.2 <> 0.3` in
+this database, so float8 addition is genuinely inexact and the result is not a
+tautology. The profit expression is self-consistent across the full observed
+odds range (±100…±1600) at three stake magnitudes, so the exact `<>` comparison
+in `assert_settlement_row` stays. The stored-value recomputation over the 152
+computed rows cannot run until Gate 3 loads the seed and is deferred to it.
+
+**The `-0` guard in `is_js_double_map` is UNREACHABLE.** jsonb numbers are
+`numeric`, and Postgres `numeric` has no negative zero, so the parser normalises
+`-0.0` to `0.0` before any CHECK runs:
+
+```
+('{"x": -0.0}'::jsonb -> 'x') #>> '{}'   =>  '0.0'
+'{"x": -0.0}'::jsonb::text               =>  '{"x": 0.0}'
+```
+
+The regex never sees a leading minus and cannot fire. The **only** real defence
+against persisting `-0` is the repository adapter, which rejects
+`Object.is(n, -0)` before serialising. The SQL branch is retained as
+belt-and-braces but must not be counted as protection, and the measurement suite
+asserts the accepting behaviour so the gap stays visible rather than looking
+like a regression later.
+
+Related parser note: `(-0.0)::double precision` is constant-folded to `+0`
+(measured — it sends `0000000000000000`), so a `-0` test literal must arrive as
+text. Every persisted double column is probed with
+`encode(float8send(v),'hex') = '8000000000000000'`; zero negative zeros.
+
+The stake corpus is exercised through `parse_positive_decimal` itself, including
+the measured 24-character maximum `0.0000057692833136856875`, `5e-324`,
+`1.7976931348623157e+308`, and rejection of `0`, negatives and an over-length
+mantissa.
+
 ---
 
 ## 13. Production rollout (Gate 5)
