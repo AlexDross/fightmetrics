@@ -5,7 +5,7 @@
 -- step 0 and the re-grant in step 1.
 BEGIN;
 CREATE EXTENSION IF NOT EXISTS pgtap;
-SELECT plan(44);
+SELECT plan(50);
 
 -- ── Ownership ───────────────────────────────────────────────────────────────
 SELECT is(pg_catalog.pg_get_userbyid(nspowner), 'fm_table_owner',
@@ -264,6 +264,65 @@ SELECT set_eq(
            ('fm_member_statistics_input'),('fm_member_export_store'),
            ('fm_rpc_claim_workspace_ownership')$$,
   'the public API surface is exactly the documented function set');
+
+-- ── The deferred-NO-ACTION exception ────────────────────────────────────────
+-- RESTRICT is the default everywhere. Exactly two FKs — the genuinely cyclic
+-- run <-> decision-snapshot pair — are the exception, because RESTRICT is always
+-- checked immediately and therefore cannot participate in a deferred delete.
+SELECT set_eq(
+  $$SELECT con.conname FROM pg_catalog.pg_constraint con
+      JOIN pg_catalog.pg_class rel ON rel.oid = con.conrelid
+      JOIN pg_catalog.pg_namespace n ON n.oid = rel.relnamespace
+     WHERE n.nspname = 'app_private' AND con.contype = 'f' AND con.condeferrable$$,
+  $$VALUES ('prediction_snapshots_run_fk'),('run_decision_snapshot_fk')$$,
+  'exactly the two cyclic FKs are deferrable');
+
+SELECT set_eq(
+  $$SELECT con.conname FROM pg_catalog.pg_constraint con
+      JOIN pg_catalog.pg_class rel ON rel.oid = con.conrelid
+      JOIN pg_catalog.pg_namespace n ON n.oid = rel.relnamespace
+     WHERE n.nspname = 'app_private' AND con.contype = 'f' AND con.confdeltype = 'a'$$,
+  $$VALUES ('prediction_snapshots_run_fk'),('run_decision_snapshot_fk')$$,
+  'exactly the two cyclic FKs use NO ACTION on delete');
+
+-- Every other FK stays an immediate RESTRICT, including the assessment ones,
+-- which are NOT cyclic and no longer claim deferrability they never needed.
+SELECT is((SELECT count(*) FROM pg_catalog.pg_constraint con
+             JOIN pg_catalog.pg_class rel ON rel.oid = con.conrelid
+             JOIN pg_catalog.pg_namespace n ON n.oid = rel.relnamespace
+            WHERE n.nspname = 'app_private' AND con.contype = 'f'
+              AND con.conname NOT IN ('prediction_snapshots_run_fk',
+                                      'run_decision_snapshot_fk')
+              AND (con.condeferrable OR con.confdeltype <> 'r')
+              -- The ONLY cascades in the schema are the two references to
+              -- auth.users: a deleted auth user takes its membership and its
+              -- undo entries with it, by design.
+              AND con.conname NOT IN ('workspace_members_user_id_fkey',
+                                      'undo_log_user_id_fkey')),
+          0::bigint, 'every non-cyclic FK is an immediate RESTRICT');
+
+SELECT set_eq(
+  $$SELECT con.conname FROM pg_catalog.pg_constraint con
+      JOIN pg_catalog.pg_class rel ON rel.oid = con.conrelid
+      JOIN pg_catalog.pg_namespace n ON n.oid = rel.relnamespace
+     WHERE n.nspname = 'app_private' AND con.contype = 'f' AND con.confdeltype = 'c'$$,
+  $$VALUES ('workspace_members_user_id_fkey'),('undo_log_user_id_fkey')$$,
+  'exactly the two auth.users references cascade');
+
+SELECT is((SELECT count(*) FROM pg_catalog.pg_constraint con
+             JOIN pg_catalog.pg_class rel ON rel.oid = con.conrelid
+             JOIN pg_catalog.pg_namespace n ON n.oid = rel.relnamespace
+            WHERE n.nspname = 'app_private' AND con.contype = 'f'
+              AND con.condeferred),
+          0::bigint, 'no FK is INITIALLY DEFERRED — deferral is opt-in per write');
+
+-- ── Numeric output fidelity ─────────────────────────────────────────────────
+-- Asserted from the database default, which a fresh connection inherits.
+SELECT is((SELECT setconfig FROM pg_catalog.pg_db_role_setting s
+             JOIN pg_catalog.pg_database d ON d.oid = s.setdatabase
+            WHERE d.datname = current_database() AND s.setrole = 0)
+            @> ARRAY['extra_float_digits=3'],
+          true, 'the database pins extra_float_digits = 3');
 
 -- ── Role attributes ─────────────────────────────────────────────────────────
 SELECT is((SELECT count(*) FROM pg_catalog.pg_roles

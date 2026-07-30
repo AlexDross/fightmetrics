@@ -453,6 +453,61 @@ SET CONSTRAINTS app_private.run_decision_snapshot_fk,
 
 `SET CONSTRAINTS` is transaction-local, so deferral never leaks.
 
+**The cyclic pair is `ON DELETE NO ACTION`, not `RESTRICT`.** Corrected at Gate 2.
+`RESTRICT` is checked **immediately even when the constraint is declared
+`DEFERRABLE`** — that is exactly what distinguishes it from `NO ACTION` — so a
+deferrable `RESTRICT` is a contradiction and the deletion ordering above could
+never have worked. Measured, after `SET CONSTRAINTS … DEFERRED`:
+
+```
+ERROR: update or delete on table "prediction_snapshots" violates foreign key
+constraint "run_decision_snapshot_fk" on table "prediction_runs"
+```
+
+`RESTRICT` remains the default for every FK in the schema. The exception is
+exactly two constraints — `prediction_snapshots_run_fk` and
+`run_decision_snapshot_fk`, the genuinely cyclic pair — which are
+`ON UPDATE RESTRICT ON DELETE NO ACTION DEFERRABLE INITIALLY IMMEDIATE`.
+
+The two assessment FKs are **no longer deferrable**. Assessments are not part of
+the cycle: they are inserted after their run and snapshot and deleted before
+them, so immediate `RESTRICT` is sufficient, and declaring them deferrable
+advertised a capability that was never needed or tested.
+
+The catalog suite asserts that exactly those two FKs are deferrable, exactly
+those two use `NO ACTION`, no FK is `INITIALLY DEFERRED`, every other FK is an
+immediate `RESTRICT`, and exactly the two `auth.users` references cascade. The
+behavioural suite proves an isolated cycle deletes in the documented order when
+deferred, and that a genuinely surviving reference still aborts (`23503`) when
+the constraints are forced immediate.
+
+### Numeric output fidelity: `extra_float_digits = 3`
+
+PostgREST returns `float8` using `extra_float_digits`, and at the default `0`
+Postgres emits a shortened representation rather than the round-trip-exact one.
+Measured on one stored probability:
+
+| | bits |
+|---|---|
+| stored `pB` | `3fdd3c07fb4c98e4` |
+| over HTTP, `extra_float_digits = 0` | `3fdd3c07fb4c98e3` |
+| over HTTP, `extra_float_digits = 3` | `3fdd3c07fb4c98e4` |
+
+One ULP, silently, on **every numeric leaf that crosses the API** — which would
+break the export round-trip and the complementarity contract without any error.
+The migration therefore sets it on the database, so a fresh connection inherits
+it:
+
+```sql
+DO $$ BEGIN
+  EXECUTE format('ALTER DATABASE %I SET extra_float_digits = 3', current_database());
+END $$;
+```
+
+The identifier is quoted through `format(%I)` rather than hard-coded. The catalog
+suite asserts the database setting, and it is part of the reset-to-reset
+fingerprint.
+
 ### Settlement contract (deferred constraint triggers)
 
 `app_private.assert_settlement_row` enforces, for both tracked positions and

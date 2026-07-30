@@ -75,6 +75,12 @@ SELECT r.rolname AS fm_role, m.rolname AS member, g.rolname AS grantor,
   JOIN pg_catalog.pg_roles g ON g.oid = am.grantor
  WHERE r.rolname LIKE 'fm\_%' ORDER BY 1, 2, 3;
 
+\echo == DATABASE SETTINGS ==
+SELECT d.datname, s.setconfig
+  FROM pg_catalog.pg_db_role_setting s
+  JOIN pg_catalog.pg_database d ON d.oid = s.setdatabase
+ WHERE s.setrole = 0 ORDER BY 1;
+
 \echo == SCHEMA PRIVILEGES ==
 SELECT rolname,
        has_schema_privilege(rolname, 'public', 'CREATE')     AS public_create,

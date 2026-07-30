@@ -33,6 +33,25 @@ END $$;
 -- ── (2) temporary CREATE for the two function owners ────────────────────────
 GRANT CREATE ON SCHEMA public TO fm_public_reader, fm_member_api;
 
+-- ── Numeric output fidelity ─────────────────────────────────────────────────
+-- WITHOUT THIS, PostgREST SILENTLY LOSES A BIT.
+--
+-- float8 output uses `extra_float_digits`; at the default 0 Postgres emits the
+-- shortest-ish representation rather than the round-trip-exact one. Measured on
+-- one stored probability:
+--
+--   stored pB bits : 3fdd3c07fb4c98e4
+--   HTTP   pB bits : 3fdd3c07fb4c98e3   extra_float_digits = 0
+--   HTTP   pB bits : 3fdd3c07fb4c98e4   extra_float_digits = 3
+--
+-- One ULP, invisibly, on every numeric leaf that crosses the API — which would
+-- silently break the export round-trip and the complementarity contract.
+-- Set on the DATABASE so a fresh connection inherits it; the identifier is
+-- quoted through format(%I) rather than hard-coded.
+DO $$ BEGIN
+  EXECUTE format('ALTER DATABASE %I SET extra_float_digits = 3', current_database());
+END $$;
+
 -- ── (3) schema, helpers, tables ─────────────────────────────────────────────
 CREATE SCHEMA IF NOT EXISTS app_private;
 
@@ -370,20 +389,31 @@ CREATE TABLE app_private.prediction_snapshots (
     (capture_mode = 'reconstructed') = (reconstruction_type IS NOT NULL)),
   -- Composite FK carrying the discriminator: a snapshot cannot name one run
   -- while carrying another run's bout.
+  -- NO ACTION, not RESTRICT. RESTRICT is checked IMMEDIATELY even when the
+  -- constraint is declared DEFERRABLE — that is precisely what distinguishes the
+  -- two — so a deferrable RESTRICT is a contradiction and the documented
+  -- deletion ordering could never work. Measured:
+  --   ERROR: update or delete on table "prediction_snapshots" violates foreign
+  --   key constraint "run_decision_snapshot_fk" on table "prediction_runs"
+  -- even after SET CONSTRAINTS ... DEFERRED. Only NO ACTION can be deferred.
+  --
+  -- This exception applies to the two GENUINELY CYCLIC constraints only; every
+  -- other FK in the schema stays an immediate RESTRICT.
   CONSTRAINT prediction_snapshots_run_fk
     FOREIGN KEY (workspace_id, run_id, bout_id)
     REFERENCES app_private.prediction_runs(workspace_id, id, bout_id)
-    ON UPDATE RESTRICT ON DELETE RESTRICT DEFERRABLE INITIALLY IMMEDIATE,
+    ON UPDATE RESTRICT ON DELETE NO ACTION DEFERRABLE INITIALLY IMMEDIATE,
   UNIQUE (workspace_id, id, run_id, bout_id),
   UNIQUE (workspace_id, run_id, basis)
 );
 
--- Closes the run <-> snapshot cycle. DEFERRABLE so a delete can order itself.
+-- Closes the run <-> snapshot cycle. NO ACTION + DEFERRABLE for the same reason
+-- as its partner above: a deferrable RESTRICT cannot actually be deferred.
 ALTER TABLE app_private.prediction_runs
   ADD CONSTRAINT run_decision_snapshot_fk
   FOREIGN KEY (workspace_id, decision_snapshot_id, id, bout_id)
   REFERENCES app_private.prediction_snapshots(workspace_id, id, run_id, bout_id)
-  ON UPDATE RESTRICT ON DELETE RESTRICT DEFERRABLE INITIALLY IMMEDIATE;
+  ON UPDATE RESTRICT ON DELETE NO ACTION DEFERRABLE INITIALLY IMMEDIATE;
 
 CREATE TABLE app_private.market_snapshots (
   workspace_id uuid NOT NULL,
@@ -432,14 +462,18 @@ CREATE TABLE app_private.betting_assessments (
   recommended_corner_provenance text NOT NULL
     CHECK (recommended_corner_provenance IN ('stored','absentInLegacy')),
   PRIMARY KEY (workspace_id, id),
+  -- NOT deferrable. Assessments are not part of the cycle: they are inserted
+  -- after their run and snapshot and deleted before them, so ordinary immediate
+  -- RESTRICT is both sufficient and honest. Declaring them deferrable implied a
+  -- capability that was never needed and never tested.
   CONSTRAINT betting_assessments_run_fk
     FOREIGN KEY (workspace_id, run_id, bout_id)
     REFERENCES app_private.prediction_runs(workspace_id, id, bout_id)
-    ON UPDATE RESTRICT ON DELETE RESTRICT DEFERRABLE INITIALLY IMMEDIATE,
+    ON UPDATE RESTRICT ON DELETE RESTRICT,
   CONSTRAINT betting_assessments_snapshot_fk
     FOREIGN KEY (workspace_id, prediction_snapshot_id, run_id, bout_id)
     REFERENCES app_private.prediction_snapshots(workspace_id, id, run_id, bout_id)
-    ON UPDATE RESTRICT ON DELETE RESTRICT DEFERRABLE INITIALLY IMMEDIATE,
+    ON UPDATE RESTRICT ON DELETE RESTRICT,
   CONSTRAINT betting_assessments_market_fk
     FOREIGN KEY (workspace_id, market_snapshot_id, bout_id)
     REFERENCES app_private.market_snapshots(workspace_id, id, bout_id)

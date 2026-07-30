@@ -12,7 +12,7 @@ SELECT pg_catalog.set_config('search_path',
   'public, ' || (SELECT n.nspname FROM pg_catalog.pg_extension e
                    JOIN pg_catalog.pg_namespace n ON n.oid = e.extnamespace
                   WHERE e.extname = 'pgtap'), true);
-SELECT plan(86);
+SELECT plan(88);
 
 -- ── Fixture ─────────────────────────────────────────────────────────────────
 -- auth.users FIRST, as postgres, before any role change: FK checks against it
@@ -648,6 +648,52 @@ SELECT throws_ok($$SELECT * FROM public.fm_member_statistics_input('fightmetrics
 SET LOCAL ROLE fm_table_owner;
 SET LOCAL search_path = public, extensions;
 UPDATE app_private.workspaces SET is_public = true WHERE slug = 'fightmetrics';
+
+-- ── The run <-> snapshot cycle can actually be deleted ──────────────────────
+-- This is what NO ACTION buys. Under the previous deferrable RESTRICT the very
+-- same sequence failed, because RESTRICT is checked immediately regardless of
+-- SET CONSTRAINTS — neither side of the cycle could go first.
+SET LOCAL ROLE fm_table_owner;
+SET LOCAL search_path = public, extensions;
+
+-- An isolated cycle with nothing else referencing it.
+SET CONSTRAINTS app_private.run_decision_snapshot_fk,
+                app_private.prediction_snapshots_run_fk DEFERRED;
+INSERT INTO app_private.prediction_runs (workspace_id, id, bout_id, created_at,
+  decision_snapshot_id, target_event_date_at_capture, finish_status,
+  provenance_completeness, corner_a_is_prospect_at_capture,
+  corner_b_is_prospect_at_capture, includes_prospect_at_capture)
+VALUES ('aaaaaaaa-0000-4000-8000-000000000001', '1700000000099-aaaaaa',
+        'bbbb0000-0000-4000-8000-000000000001', now(),
+        'dd990000-0000-4000-8000-000000000001', '2026-03-01', 'absent', 'full',
+        false, false, false);
+INSERT INTO app_private.prediction_snapshots (workspace_id, id, run_id, bout_id,
+  basis, prob_a, prob_b, winner_corner, captured_at, capture_mode)
+VALUES ('aaaaaaaa-0000-4000-8000-000000000001',
+        'dd990000-0000-4000-8000-000000000001', '1700000000099-aaaaaa',
+        'bbbb0000-0000-4000-8000-000000000001', 'v2', 0.7, 0.3, 'A', now(), 'live');
+
+SAVEPOINT cycle_delete;
+SELECT lives_ok($$
+  DELETE FROM app_private.prediction_snapshots
+   WHERE id = 'dd990000-0000-4000-8000-000000000001';
+  DELETE FROM app_private.prediction_runs WHERE id = '1700000000099-aaaaaa'$$,
+  'an isolated run/snapshot cycle deletes in the documented order when deferred');
+ROLLBACK TO SAVEPOINT cycle_delete;
+
+-- A genuinely surviving reference still fails when the constraints are forced
+-- immediate, so the deferral is a window, not a hole.
+SAVEPOINT cycle_surviving;
+SELECT throws_ok($q$
+  DO $x$ BEGIN
+    DELETE FROM app_private.prediction_snapshots
+     WHERE id = 'dd990000-0000-4000-8000-000000000001';
+    -- the run is deliberately NOT deleted, so its decision_snapshot_id dangles
+    SET CONSTRAINTS app_private.run_decision_snapshot_fk,
+                    app_private.prediction_snapshots_run_fk IMMEDIATE;
+  END $x$
+$q$, '23503', NULL, 'a surviving reference still aborts when forced immediate');
+ROLLBACK TO SAVEPOINT cycle_surviving;
 
 -- ── The ACL negatives BIND ──────────────────────────────────────────────────
 -- Both checks previously ran against information_schema.role_table_grants,
