@@ -5,7 +5,7 @@
 -- step 0 and the re-grant in step 1.
 BEGIN;
 CREATE EXTENSION IF NOT EXISTS pgtap;
-SELECT plan(39);
+SELECT plan(44);
 
 -- ── Ownership ───────────────────────────────────────────────────────────────
 SELECT is(pg_catalog.pg_get_userbyid(nspowner), 'fm_table_owner',
@@ -218,6 +218,50 @@ SELECT is((SELECT count(*) FROM pg_catalog.pg_proc p
             WHERE n.nspname = 'app_private'
               AND pg_catalog.pg_get_userbyid(a.grantee) IN ('anon','authenticated','public')),
           0::bigint, 'no app_private helper is callable by a client role');
+
+-- ── The audience rule holds for EVERY public function, not just a sample ────
+SELECT is((SELECT count(*) FROM pg_catalog.pg_proc p
+             JOIN pg_catalog.pg_namespace n ON n.oid = p.pronamespace
+            WHERE n.nspname = 'public' AND p.proname LIKE 'fm\_read\_%'
+              AND NOT (has_function_privilege('anon', p.oid, 'EXECUTE')
+                   AND has_function_privilege('authenticated', p.oid, 'EXECUTE'))),
+          0::bigint, 'every fm_read_* is executable by anon AND authenticated');
+
+-- The load-bearing half: a mutation or member surface must NEVER be reachable
+-- by anon. A loop-driven grant makes forgetting one impossible, but only this
+-- asserts it.
+SELECT is((SELECT count(*) FROM pg_catalog.pg_proc p
+             JOIN pg_catalog.pg_namespace n ON n.oid = p.pronamespace
+            WHERE n.nspname = 'public'
+              AND (p.proname LIKE 'fm\_member\_%' OR p.proname LIKE 'fm\_rpc\_%')
+              AND has_function_privilege('anon', p.oid, 'EXECUTE')),
+          0::bigint, 'no fm_member_* or fm_rpc_* is executable by anon');
+
+SELECT is((SELECT count(*) FROM pg_catalog.pg_proc p
+             JOIN pg_catalog.pg_namespace n ON n.oid = p.pronamespace
+            WHERE n.nspname = 'public'
+              AND (p.proname LIKE 'fm\_member\_%' OR p.proname LIKE 'fm\_rpc\_%')
+              AND NOT has_function_privilege('authenticated', p.oid, 'EXECUTE')),
+          0::bigint, 'every fm_member_*/fm_rpc_* is executable by authenticated');
+
+-- No public fm_ function may retain the default PUBLIC EXECUTE.
+SELECT is((SELECT count(*) FROM pg_catalog.pg_proc p
+             JOIN pg_catalog.pg_namespace n ON n.oid = p.pronamespace,
+                  LATERAL pg_catalog.aclexplode(p.proacl) a
+            WHERE n.nspname = 'public' AND p.proname LIKE 'fm\_%'
+              AND a.grantee = 0),
+          0::bigint, 'no public fm_ function retains PUBLIC EXECUTE');
+
+SELECT set_eq(
+  $$SELECT p.proname FROM pg_catalog.pg_proc p
+      JOIN pg_catalog.pg_namespace n ON n.oid = p.pronamespace
+     WHERE n.nspname = 'public' AND p.proname LIKE 'fm\_%'$$,
+  $$VALUES ('fm_read_events'),('fm_read_bouts'),('fm_read_roi'),
+           ('fm_read_upcoming'),('fm_read_props'),('fm_read_parlays'),
+           ('fm_read_statistics_input'),('fm_member_whoami'),('fm_member_roi'),
+           ('fm_member_events'),('fm_member_bouts'),('fm_member_export_store'),
+           ('fm_rpc_claim_workspace_ownership')$$,
+  'the public API surface is exactly the documented function set');
 
 -- ── Role attributes ─────────────────────────────────────────────────────────
 SELECT is((SELECT count(*) FROM pg_catalog.pg_roles

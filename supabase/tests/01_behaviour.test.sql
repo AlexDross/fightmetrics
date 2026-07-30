@@ -12,7 +12,7 @@ SELECT pg_catalog.set_config('search_path',
   'public, ' || (SELECT n.nspname FROM pg_catalog.pg_extension e
                    JOIN pg_catalog.pg_namespace n ON n.oid = e.extnamespace
                   WHERE e.extname = 'pgtap'), true);
-SELECT plan(42);
+SELECT plan(59);
 
 -- ── Fixture ─────────────────────────────────────────────────────────────────
 -- auth.users FIRST, as postgres, before any role change: FK checks against it
@@ -383,6 +383,78 @@ SELECT lives_ok($$
           'cccc0000-0000-4000-8000-000000000001', 'appCreated', 'A', 1, 'explicit',
           now(), 'open', 'notRequired')$$,
   'an OPEN position on a pending bout is accepted');
+
+-- ── Read surfaces: audience and the public/private contract ─────────────────
+-- The claimant (user 1) is the owner; user 2 is a signed-in non-member.
+SET LOCAL ROLE authenticated;
+SET LOCAL search_path = public, extensions;
+SET LOCAL request.jwt.claim.sub = '11111111-1111-4111-8111-111111111111';
+
+SELECT is((SELECT count(*) FROM public.fm_read_events('fightmetrics')), 1::bigint,
+          'fm_read_events returns the public card');
+SELECT is((SELECT count(*) FROM public.fm_read_bouts('fightmetrics')), 1::bigint,
+          'fm_read_bouts returns the public bout');
+SELECT is((SELECT count(*) FROM public.fm_read_upcoming('fightmetrics')), 1::bigint,
+          'fm_read_upcoming returns the open position');
+SELECT is((SELECT count(*) FROM public.fm_read_roi('fightmetrics')), 0::bigint,
+          'fm_read_roi returns nothing while the bout is pending');
+SELECT is((SELECT count(*) FROM public.fm_read_statistics_input('fightmetrics')),
+          1::bigint, 'fm_read_statistics_input projects the legacy entry shape');
+
+-- anon reaches the public surfaces and nothing else.
+SET LOCAL ROLE anon;
+SET LOCAL search_path = public, extensions;
+SELECT is((SELECT count(*) FROM public.fm_read_events('fightmetrics')), 1::bigint,
+          'anon can read the public event surface');
+SELECT throws_ok($$SELECT * FROM public.fm_member_roi('fightmetrics')$$,
+                 '42501', NULL, 'anon cannot execute a member surface');
+SELECT throws_ok($$SELECT public.fm_member_export_store('fightmetrics')$$,
+                 '42501', NULL, 'anon cannot export the store');
+
+-- A signed-in NON-member gets the public surface and no member data.
+SET LOCAL ROLE authenticated;
+SET LOCAL search_path = public, extensions;
+SET LOCAL request.jwt.claim.sub = '22222222-2222-4222-8222-222222222222';
+SELECT is((SELECT count(*) FROM public.fm_read_events('fightmetrics')), 1::bigint,
+          'a signed-in non-member still reads through the public fallback');
+SELECT is((SELECT count(*) FROM public.fm_member_events('fightmetrics')), 0::bigint,
+          'a signed-in non-member gets nothing from a member surface');
+SELECT is(public.fm_member_export_store('fightmetrics'), NULL::jsonb,
+          'a signed-in non-member cannot export the store');
+
+-- The member gets revision tokens the public surface never exposes.
+SET LOCAL request.jwt.claim.sub = '11111111-1111-4111-8111-111111111111';
+SELECT is((SELECT count(*) FROM public.fm_member_events('fightmetrics')), 1::bigint,
+          'the owner sees the member event surface');
+SELECT isnt((SELECT revision FROM public.fm_member_events('fightmetrics')), NULL,
+            'the member surface carries a revision token');
+SELECT ok((public.fm_member_export_store('fightmetrics')) ? 'meta',
+          'the owner can export a store with reconstructed meta');
+
+-- Excluded fields never appear in a public projection.
+SELECT is((SELECT count(*) FROM information_schema.columns
+            WHERE table_schema = 'public'
+              AND column_name IN ('feature_vector','source_manifest',
+                    'fight_history_cutoff','model_coef_hash','legacy_entry_id',
+                    'notes','fighter_key','external_ids','origin','stake_source',
+                    'row_updated_at','revision')
+              AND table_name IN ('fm_read_roi','fm_read_upcoming','fm_read_events',
+                                 'fm_read_bouts','fm_read_props','fm_read_parlays')),
+          0::bigint, 'no excluded field appears in any fm_read_* return shape');
+
+-- THE fm_read_* contract: a private workspace yields nothing even to its owner.
+SET LOCAL ROLE fm_table_owner;
+SET LOCAL search_path = public, extensions;
+UPDATE app_private.workspaces SET is_public = false WHERE slug = 'fightmetrics';
+SET LOCAL ROLE authenticated;
+SET LOCAL search_path = public, extensions;
+SELECT is((SELECT count(*) FROM public.fm_read_events('fightmetrics')), 0::bigint,
+          'fm_read_* returns nothing for a private workspace, even to a member');
+SELECT is((SELECT count(*) FROM public.fm_member_events('fightmetrics')), 1::bigint,
+          '…while the member surface still serves that same member');
+SET LOCAL ROLE fm_table_owner;
+SET LOCAL search_path = public, extensions;
+UPDATE app_private.workspaces SET is_public = true WHERE slug = 'fightmetrics';
 
 -- ── The ACL negatives BIND ──────────────────────────────────────────────────
 -- Both checks previously ran against information_schema.role_table_grants,

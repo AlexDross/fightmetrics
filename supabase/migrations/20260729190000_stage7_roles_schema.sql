@@ -1087,6 +1087,329 @@ BEGIN
   RETURN QUERY SELECT v_id, 'owner'::text;
 END $$;
 
+-- Position projection, shared by the roi/upcoming surfaces. An app_private
+-- helper, never granted to a client role: the public functions select from it
+-- and enumerate their own columns, so an added column here cannot leak.
+CREATE FUNCTION app_private.position_rows(p_workspace uuid)
+RETURNS TABLE (
+  tracked_position_id uuid, bout_id uuid, event_id uuid, event_name text,
+  event_date date, division text, corner_a_name text, corner_b_name text,
+  tracked_corner text, stake_units text, prob_a double precision,
+  prob_b double precision, winner_corner text, tier text,
+  recommended_corner text, fair_line_a int, fair_line_b int,
+  edge_a double precision, edge_b double precision, ev_a double precision,
+  ev_b double precision, kelly_a double precision, kelly_b double precision,
+  tracked_odds_a int, tracked_odds_b int, result_status text,
+  result_outcome text, result_method text, settlement_status text,
+  settlement_outcome text, financial_status text, financial_reason text,
+  profit_units double precision, settled_at timestamptz, review_status text,
+  finish_status text, finish_ko_pct int, finish_sub_pct int, finish_dec_pct int,
+  finish_leaders text[], revision text)
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = '' AS $$
+  SELECT t.id, t.bout_id, e.id, e.name, e.date, b.division,
+         b.corner_a_display_name, b.corner_b_display_name,
+         t.corner, t.stake_units::text, s.prob_a, s.prob_b, s.winner_corner,
+         a.tier, a.recommended_corner, a.fair_line_a, a.fair_line_b,
+         a.edge_a, a.edge_b, a.ev_a, a.ev_b, a.kelly_a, a.kelly_b,
+         m.odds_a, m.odds_b,
+         b.result_status, b.result_outcome, b.result_method,
+         t.settlement_status, t.settlement_outcome, t.financial_status,
+         t.financial_reason, t.profit_units, t.settled_at, t.review_status,
+         r.finish_status, r.finish_ko_pct, r.finish_sub_pct, r.finish_dec_pct,
+         r.finish_leaders, t.revision::text
+    FROM app_private.tracked_positions t
+    JOIN app_private.betting_assessments a
+      ON a.workspace_id = t.workspace_id AND a.id = t.assessment_id
+    JOIN app_private.prediction_runs r
+      ON r.workspace_id = a.workspace_id AND r.id = a.run_id
+    JOIN app_private.prediction_snapshots s
+      ON s.workspace_id = r.workspace_id AND s.id = r.decision_snapshot_id
+    JOIN app_private.bouts b
+      ON b.workspace_id = t.workspace_id AND b.id = t.bout_id
+    JOIN app_private.events e
+      ON e.workspace_id = b.workspace_id AND e.id = b.event_id
+    LEFT JOIN app_private.market_snapshots m
+      ON m.workspace_id = t.workspace_id AND m.id = t.market_snapshot_id
+   WHERE t.workspace_id = p_workspace
+$$;
+
+-- Public read surfaces. Every one is filtered to public workspaces, so an
+-- fm_public_reader-owned function returns nothing for a private workspace even
+-- to a member. That is its documented contract; members use fm_member_*.
+CREATE FUNCTION public.fm_read_roi(p_slug text)
+RETURNS TABLE (
+  tracked_position_id uuid, bout_id uuid, event_id uuid, event_name text,
+  event_date date, division text, corner_a_name text, corner_b_name text,
+  tracked_corner text, stake_units text, prob_a double precision,
+  prob_b double precision, winner_corner text, tier text,
+  recommended_corner text, fair_line_a int, fair_line_b int,
+  edge_a double precision, edge_b double precision, ev_a double precision,
+  ev_b double precision, kelly_a double precision, kelly_b double precision,
+  tracked_odds_a int, tracked_odds_b int, result_status text,
+  result_outcome text, result_method text, settlement_status text,
+  settlement_outcome text, financial_status text, financial_reason text,
+  profit_units double precision, settled_at timestamptz, review_status text,
+  finish_status text, finish_ko_pct int, finish_sub_pct int, finish_dec_pct int,
+  finish_leaders text[])
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = '' AS $$
+  SELECT p.tracked_position_id, p.bout_id, p.event_id, p.event_name, p.event_date,
+         p.division, p.corner_a_name, p.corner_b_name, p.tracked_corner,
+         p.stake_units, p.prob_a, p.prob_b, p.winner_corner, p.tier,
+         p.recommended_corner, p.fair_line_a, p.fair_line_b, p.edge_a, p.edge_b,
+         p.ev_a, p.ev_b, p.kelly_a, p.kelly_b, p.tracked_odds_a, p.tracked_odds_b,
+         p.result_status, p.result_outcome, p.result_method, p.settlement_status,
+         p.settlement_outcome, p.financial_status, p.financial_reason,
+         p.profit_units, p.settled_at, p.review_status, p.finish_status,
+         p.finish_ko_pct, p.finish_sub_pct, p.finish_dec_pct, p.finish_leaders
+    FROM app_private.workspaces w
+    CROSS JOIN LATERAL app_private.position_rows(w.id) p
+   WHERE w.slug = p_slug AND w.is_public AND p.settlement_status = 'settled'
+$$;
+
+CREATE FUNCTION public.fm_read_upcoming(p_slug text)
+RETURNS TABLE (
+  tracked_position_id uuid, bout_id uuid, event_id uuid, event_name text,
+  event_date date, division text, corner_a_name text, corner_b_name text,
+  tracked_corner text, stake_units text, prob_a double precision,
+  prob_b double precision, winner_corner text, tier text,
+  recommended_corner text, fair_line_a int, fair_line_b int,
+  edge_a double precision, edge_b double precision, ev_a double precision,
+  ev_b double precision, kelly_a double precision, kelly_b double precision,
+  tracked_odds_a int, tracked_odds_b int, result_status text,
+  review_status text, finish_status text, finish_ko_pct int,
+  finish_sub_pct int, finish_dec_pct int, finish_leaders text[])
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = '' AS $$
+  SELECT p.tracked_position_id, p.bout_id, p.event_id, p.event_name, p.event_date,
+         p.division, p.corner_a_name, p.corner_b_name, p.tracked_corner,
+         p.stake_units, p.prob_a, p.prob_b, p.winner_corner, p.tier,
+         p.recommended_corner, p.fair_line_a, p.fair_line_b, p.edge_a, p.edge_b,
+         p.ev_a, p.ev_b, p.kelly_a, p.kelly_b, p.tracked_odds_a, p.tracked_odds_b,
+         p.result_status, p.review_status, p.finish_status, p.finish_ko_pct,
+         p.finish_sub_pct, p.finish_dec_pct, p.finish_leaders
+    FROM app_private.workspaces w
+    CROSS JOIN LATERAL app_private.position_rows(w.id) p
+   WHERE w.slug = p_slug AND w.is_public AND p.settlement_status = 'open'
+$$;
+
+CREATE FUNCTION public.fm_read_props(p_slug text)
+RETURNS TABLE (id text, event_id uuid, target_kind text, target_bout_id uuid,
+               target_corner text, method text, prop_type text, label text,
+               odds int, stake_units text, result text, pick_source text)
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = '' AS $$
+  SELECT pr.id, pr.event_id, pr.target_kind, pr.target_bout_id, pr.target_corner,
+         pr.method, pr.prop_type, pr.label, pr.odds, pr.stake_units::text,
+         pr.result, pr.pick_source
+    FROM app_private.props pr
+    JOIN app_private.workspaces w ON w.id = pr.workspace_id
+   WHERE w.slug = p_slug AND w.is_public
+   ORDER BY pr.created_at, pr.id
+$$;
+
+CREATE FUNCTION public.fm_read_parlays(p_slug text)
+RETURNS TABLE (id text, event_id uuid, combined_odds int, stake_units text,
+               pick_source text, leg_index int, bout_id uuid,
+               picked_corner text, model_default_corner text,
+               model_prob_at_build double precision, overridden boolean)
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = '' AS $$
+  SELECT pa.id, pa.event_id, pa.combined_odds, pa.stake_units::text,
+         pa.pick_source, l.leg_index, l.bout_id, l.picked_corner,
+         l.model_default_corner, l.model_prob_at_build, l.overridden
+    FROM app_private.parlays pa
+    JOIN app_private.workspaces w ON w.id = pa.workspace_id
+    JOIN app_private.parlay_legs l
+      ON l.workspace_id = pa.workspace_id AND l.parlay_id = pa.id
+   WHERE w.slug = p_slug AND w.is_public
+   ORDER BY pa.created_at, pa.id, l.leg_index
+$$;
+
+-- The legacy-entry shape src/domain/statistics already consumes. ASSEMBLED,
+-- never computed: no ROI, calibration, tier, probability or settlement value is
+-- derived here. src/domain/statistics stays the single implementation.
+CREATE FUNCTION public.fm_read_statistics_input(p_slug text)
+RETURNS TABLE (id text, fighter_a text, fighter_b text, event_name text,
+               event_date date, actual_winner text, market_odds text,
+               tracked_side text, units_wagered text, predicted_winner text,
+               fighter_a_prob double precision, fighter_b_prob double precision,
+               v2_p_a double precision, v2_p_b double precision,
+               bet_action text, includes_prospect boolean,
+               fighter_a_is_prospect boolean, fighter_b_is_prospect boolean,
+               confirmed_by_user boolean, capture_mode text)
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = '' AS $$
+  SELECT coalesce(r.legacy_entry_id, r.id),
+         b.corner_a_display_name, b.corner_b_display_name, e.name, e.date,
+         CASE WHEN b.result_status <> 'resolved' THEN ''
+              WHEN b.result_outcome = 'draw' THEN 'DRAW'
+              WHEN b.result_outcome = 'noContest' THEN 'NC'
+              WHEN b.result_outcome = 'A' THEN b.corner_a_display_name
+              ELSE b.corner_b_display_name END,
+         CASE WHEN m.id IS NULL THEN ''
+              ELSE coalesce((CASE WHEN t.corner = 'A' THEN m.odds_a
+                                  ELSE m.odds_b END)::text, '') END,
+         CASE WHEN t.corner = 'A' THEN b.corner_a_display_name
+              ELSE b.corner_b_display_name END,
+         t.stake_units::text,
+         CASE WHEN v1.winner_corner = 'A' THEN b.corner_a_display_name
+              ELSE b.corner_b_display_name END,
+         v1.prob_a, v1.prob_b, v2.prob_a, v2.prob_b,
+         a.tier, r.includes_prospect_at_capture,
+         r.corner_a_is_prospect_at_capture, r.corner_b_is_prospect_at_capture,
+         -- Statistics exclude ONLY the pending review state.
+         (t.review_status <> 'pending'),
+         coalesce(v2.capture_mode, v1.capture_mode)
+    FROM app_private.tracked_positions t
+    JOIN app_private.workspaces w ON w.id = t.workspace_id
+    JOIN app_private.betting_assessments a
+      ON a.workspace_id = t.workspace_id AND a.id = t.assessment_id
+    JOIN app_private.prediction_runs r
+      ON r.workspace_id = a.workspace_id AND r.id = a.run_id
+    JOIN app_private.bouts b
+      ON b.workspace_id = t.workspace_id AND b.id = t.bout_id
+    JOIN app_private.events e
+      ON e.workspace_id = b.workspace_id AND e.id = b.event_id
+    JOIN app_private.prediction_snapshots v1
+      ON v1.workspace_id = r.workspace_id AND v1.run_id = r.id
+     AND v1.basis = 'legacy-v1-unversioned'
+    LEFT JOIN app_private.prediction_snapshots v2
+      ON v2.workspace_id = r.workspace_id AND v2.run_id = r.id AND v2.basis = 'v2'
+    LEFT JOIN app_private.market_snapshots m
+      ON m.workspace_id = t.workspace_id AND m.id = t.market_snapshot_id
+   WHERE w.slug = p_slug AND w.is_public
+$$;
+
+-- Member surfaces: the same fields PLUS revision tokens and editable fields,
+-- and not restricted to public workspaces.
+CREATE FUNCTION public.fm_member_roi(p_slug text)
+RETURNS TABLE (
+  tracked_position_id uuid, bout_id uuid, event_id uuid, event_name text,
+  event_date date, division text, corner_a_name text, corner_b_name text,
+  tracked_corner text, stake_units text, prob_a double precision,
+  prob_b double precision, winner_corner text, tier text,
+  recommended_corner text, fair_line_a int, fair_line_b int,
+  edge_a double precision, edge_b double precision, ev_a double precision,
+  ev_b double precision, kelly_a double precision, kelly_b double precision,
+  tracked_odds_a int, tracked_odds_b int, result_status text,
+  result_outcome text, result_method text, settlement_status text,
+  settlement_outcome text, financial_status text, financial_reason text,
+  profit_units double precision, settled_at timestamptz, review_status text,
+  finish_status text, finish_ko_pct int, finish_sub_pct int, finish_dec_pct int,
+  finish_leaders text[], revision text, notes text)
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = '' AS $$
+  SELECT p.tracked_position_id, p.bout_id, p.event_id, p.event_name, p.event_date,
+         p.division, p.corner_a_name, p.corner_b_name, p.tracked_corner,
+         p.stake_units, p.prob_a, p.prob_b, p.winner_corner, p.tier,
+         p.recommended_corner, p.fair_line_a, p.fair_line_b, p.edge_a, p.edge_b,
+         p.ev_a, p.ev_b, p.kelly_a, p.kelly_b, p.tracked_odds_a, p.tracked_odds_b,
+         p.result_status, p.result_outcome, p.result_method, p.settlement_status,
+         p.settlement_outcome, p.financial_status, p.financial_reason,
+         p.profit_units, p.settled_at, p.review_status, p.finish_status,
+         p.finish_ko_pct, p.finish_sub_pct, p.finish_dec_pct, p.finish_leaders,
+         p.revision, t.notes
+    FROM app_private.workspaces w
+    CROSS JOIN LATERAL app_private.position_rows(w.id) p
+    JOIN app_private.tracked_positions t
+      ON t.workspace_id = w.id AND t.id = p.tracked_position_id
+   WHERE w.slug = p_slug
+     AND app_private.is_member(w.id, ARRAY['owner','editor','viewer'])
+     AND p.settlement_status = 'settled'
+$$;
+
+CREATE FUNCTION public.fm_member_events(p_slug text)
+RETURNS TABLE (id uuid, name text, date date, promotion text,
+               bout_count bigint, revision text)
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = '' AS $$
+  SELECT e.id, e.name, e.date, e.promotion,
+         (SELECT count(*) FROM app_private.bouts b
+           WHERE b.workspace_id = e.workspace_id AND b.event_id = e.id),
+         e.revision::text
+    FROM app_private.events e
+    JOIN app_private.workspaces w ON w.id = e.workspace_id
+   WHERE w.slug = p_slug
+     AND app_private.is_member(w.id, ARRAY['owner','editor','viewer'])
+   ORDER BY e.date DESC, e.name
+$$;
+
+CREATE FUNCTION public.fm_member_bouts(p_slug text)
+RETURNS TABLE (id uuid, event_id uuid, division text, corner_a_name text,
+               corner_b_name text, result_status text, result_outcome text,
+               result_method text, board_order int, revision text)
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = '' AS $$
+  SELECT b.id, b.event_id, b.division, b.corner_a_display_name,
+         b.corner_b_display_name, b.result_status, b.result_outcome,
+         b.result_method, b.board_order, b.revision::text
+    FROM app_private.bouts b
+    JOIN app_private.workspaces w ON w.id = b.workspace_id
+   WHERE w.slug = p_slug
+     AND app_private.is_member(w.id, ARRAY['owner','editor','viewer'])
+   ORDER BY b.board_order NULLS LAST, b.id
+$$;
+
+-- Members only: the complete Stage 6 store, export only. Store.meta is
+-- reconstructed from workspaces.schema_version and migrated_at; workspace_id,
+-- revision, row_updated_at, seed_items, undo_log and workspace_members are
+-- excluded.
+CREATE FUNCTION public.fm_member_export_store(p_slug text)
+RETURNS jsonb
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = '' AS $$
+  SELECT jsonb_build_object(
+    'meta', jsonb_build_object('schemaVersion', w.schema_version,
+                               'migratedAt', w.migrated_at),
+    'events', coalesce((SELECT jsonb_agg(jsonb_build_object(
+        'id', e.id, 'promotion', e.promotion, 'name', e.name,
+        'date', e.date, 'externalIds', e.external_ids,
+        'createdAt', e.created_at, 'updatedAt', e.updated_at) ORDER BY e.id)
+      FROM app_private.events e WHERE e.workspace_id = w.id), '[]'::jsonb),
+    'bouts', coalesce((SELECT jsonb_agg(jsonb_build_object(
+        'id', b.id, 'eventId', b.event_id,
+        'cornerA', jsonb_build_object('displayName', b.corner_a_display_name,
+          'fighterKey', b.corner_a_fighter_key, 'fighterId', b.corner_a_fighter_id),
+        'cornerB', jsonb_build_object('displayName', b.corner_b_display_name,
+          'fighterKey', b.corner_b_fighter_key, 'fighterId', b.corner_b_fighter_id),
+        'division', b.division, 'boardOrder', b.board_order,
+        'scheduledRounds', b.scheduled_rounds,
+        'result', CASE WHEN b.result_status = 'pending'
+                       THEN jsonb_build_object('status', 'pending')
+                       ELSE jsonb_build_object('status', 'resolved',
+                              'outcome', b.result_outcome,
+                              'method', b.result_method) END,
+        'externalIds', b.external_ids, 'createdAt', b.created_at,
+        'updatedAt', b.updated_at) ORDER BY b.id)
+      FROM app_private.bouts b WHERE b.workspace_id = w.id), '[]'::jsonb),
+    'predictionRuns', coalesce((SELECT jsonb_agg(jsonb_build_object(
+        'id', r.id, 'boutId', r.bout_id, 'legacyEntryId', r.legacy_entry_id,
+        'createdAt', r.created_at, 'decisionSnapshotId', r.decision_snapshot_id,
+        'targetEventDateAtCapture', r.target_event_date_at_capture,
+        'finishProjection', CASE WHEN r.finish_status = 'absent'
+          THEN jsonb_build_object('status','absent')
+          ELSE jsonb_build_object('status','computed','koPct',r.finish_ko_pct,
+                 'subPct',r.finish_sub_pct,'decPct',r.finish_dec_pct,
+                 'leaders',to_jsonb(r.finish_leaders)) END,
+        'cornerAIsProspectAtCapture', r.corner_a_is_prospect_at_capture,
+        'cornerBIsProspectAtCapture', r.corner_b_is_prospect_at_capture,
+        'includesProspectAtCapture', r.includes_prospect_at_capture,
+        'provenanceCompleteness', r.provenance_completeness) ORDER BY r.id)
+      FROM app_private.prediction_runs r WHERE r.workspace_id = w.id), '[]'::jsonb),
+    'marketSnapshots', coalesce((SELECT jsonb_agg(jsonb_build_object(
+        'id', m.id, 'boutId', m.bout_id, 'capturedAt', m.captured_at,
+        'source', m.source, 'oddsA', m.odds_a, 'oddsB', m.odds_b) ORDER BY m.id)
+      FROM app_private.market_snapshots m WHERE m.workspace_id = w.id), '[]'::jsonb),
+    'wagers', coalesce((SELECT jsonb_agg(jsonb_build_object(
+        'id', g.id, 'boutId', g.bout_id, 'assessmentId', g.assessment_id,
+        'marketSnapshotId', g.market_snapshot_id, 'corner', g.corner,
+        'stakeUnits', g.stake_units, 'placedAt', g.placed_at,
+        'settlement', CASE WHEN g.settlement_status = 'open'
+          THEN jsonb_build_object('status','open')
+          ELSE jsonb_build_object('status','settled','outcome',g.settlement_outcome,
+                 'financialResult', CASE WHEN g.financial_status = 'computed'
+                   THEN jsonb_build_object('status','computed','profitUnits',g.profit_units)
+                   ELSE jsonb_build_object('status','uncomputable','reason',g.financial_reason) END,
+                 'settledAt', g.settled_at) END,
+        'notes', g.notes, 'externalIds', g.external_ids) ORDER BY g.id)
+      FROM app_private.wagers g WHERE g.workspace_id = w.id), '[]'::jsonb))
+    FROM app_private.workspaces w
+   WHERE w.slug = p_slug
+     AND app_private.is_member(w.id, ARRAY['owner','editor','viewer'])
+$$;
+
 -- ── (4) transfer ownership ──────────────────────────────────────────────────
 ALTER SCHEMA app_private OWNER TO fm_table_owner;
 DO $$ DECLARE r record; BEGIN
@@ -1136,16 +1459,24 @@ DO $$ DECLARE t text; BEGIN
   END LOOP;
 END $$;
 
--- One explicit REVOKE/GRANT pair per public function.
-REVOKE EXECUTE ON FUNCTION public.fm_read_events(text) FROM PUBLIC;
-GRANT  EXECUTE ON FUNCTION public.fm_read_events(text) TO anon, authenticated;
-REVOKE EXECUTE ON FUNCTION public.fm_read_bouts(text) FROM PUBLIC;
-GRANT  EXECUTE ON FUNCTION public.fm_read_bouts(text) TO anon, authenticated;
-REVOKE EXECUTE ON FUNCTION public.fm_member_whoami(text) FROM PUBLIC;
-GRANT  EXECUTE ON FUNCTION public.fm_member_whoami(text) TO authenticated;
--- Mutations: EXECUTE revoked from anon.
-REVOKE EXECUTE ON FUNCTION public.fm_rpc_claim_workspace_ownership(text) FROM PUBLIC;
-GRANT  EXECUTE ON FUNCTION public.fm_rpc_claim_workspace_ownership(text) TO authenticated;
+-- An explicit REVOKE/GRANT pair per public function, driven by the naming
+-- contract so a newly added function cannot be forgotten and silently inherit
+-- PUBLIC EXECUTE. The audience rule is the plan's:
+--   fm_read_*   -> anon + authenticated   (public surfaces)
+--   fm_member_* -> authenticated          (membership resolved inside)
+--   fm_rpc_*    -> authenticated          (mutations; EXECUTE revoked from anon)
+DO $$ DECLARE r record; BEGIN
+  FOR r IN SELECT p.oid::regprocedure AS sig, p.proname FROM pg_catalog.pg_proc p
+             JOIN pg_catalog.pg_namespace n ON n.oid = p.pronamespace
+            WHERE n.nspname = 'public' AND p.proname LIKE 'fm\_%' LOOP
+    EXECUTE format('REVOKE ALL ON FUNCTION %s FROM PUBLIC', r.sig);
+    IF r.proname LIKE 'fm\_read\_%' THEN
+      EXECUTE format('GRANT EXECUTE ON FUNCTION %s TO anon, authenticated', r.sig);
+    ELSE
+      EXECUTE format('GRANT EXECUTE ON FUNCTION %s TO authenticated', r.sig);
+    END IF;
+  END LOOP;
+END $$;
 
 -- app_private helpers are never callable by clients.
 DO $$ DECLARE r record; BEGIN
@@ -1161,6 +1492,8 @@ GRANT EXECUTE ON FUNCTION app_private.is_member(uuid, text[])
   TO fm_member_api, fm_public_reader;
 GRANT EXECUTE ON FUNCTION app_private.workspace_has_owner(uuid) TO fm_member_api;
 GRANT EXECUTE ON FUNCTION app_private.current_user_id()
+  TO fm_member_api, fm_public_reader;
+GRANT EXECUTE ON FUNCTION app_private.position_rows(uuid)
   TO fm_member_api, fm_public_reader;
 
 -- NO role is granted anything on the auth schema — not even fm_table_owner.
