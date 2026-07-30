@@ -260,6 +260,9 @@ CREATE TABLE app_private.bouts (
   CONSTRAINT bouts_result_union CHECK (
     (result_status = 'pending'  AND result_outcome IS NULL AND result_method IS NULL)
  OR (result_status = 'resolved' AND result_outcome IS NOT NULL)),
+  -- Mirrors the Stage 6 BOUT_SAME_CORNERS invariant, which compares displayName.
+  CONSTRAINT bouts_distinct_corners CHECK (
+    corner_a_display_name <> corner_b_display_name),
   -- Referenced by the composite FK from props.
   UNIQUE (workspace_id, id, event_id)
 );
@@ -302,9 +305,15 @@ CREATE TABLE app_private.prediction_runs (
       AND finish_ko_pct + finish_sub_pct + finish_dec_pct BETWEEN 99 AND 101
       AND finish_leaders
           = app_private.finish_leaders_expected(finish_ko_pct, finish_sub_pct, finish_dec_pct))),
-  -- includesProspect is the OR of the two corner flags when both are known.
+  -- includesProspect is the exact OR ONLY when BOTH corner flags are known.
+  -- With either flag NULL the value is unverified and anything is allowed:
+  -- `a OR b` is NULL when one side is NULL and the other is false, so the
+  -- unguarded IS NOT DISTINCT FROM silently forced includes_prospect to NULL in
+  -- exactly the case the legacy data cannot speak to.
   CONSTRAINT prediction_runs_prospect_or CHECK (
-    includes_prospect_at_capture IS NOT DISTINCT FROM
+    corner_a_is_prospect_at_capture IS NULL
+ OR corner_b_is_prospect_at_capture IS NULL
+ OR includes_prospect_at_capture IS NOT DISTINCT FROM
       (corner_a_is_prospect_at_capture OR corner_b_is_prospect_at_capture)),
   UNIQUE (workspace_id, id, bout_id)
 );
@@ -348,9 +357,17 @@ CREATE TABLE app_private.prediction_snapshots (
       -- priorV2 is a nullable PAIR: both present or both absent.
       AND (reconstruction_prior_v2_p_a IS NULL)
         = (reconstruction_prior_v2_p_b IS NULL))),
-  CONSTRAINT prediction_snapshots_prior_finite CHECK (
-    app_private.is_finite_or_null(reconstruction_prior_v2_p_a)
-    AND app_private.is_finite_or_null(reconstruction_prior_v2_p_b)),
+  -- priorV2 values are PROBABILITIES: bounded, not merely finite. `finite` alone
+  -- admitted 42 and -3.
+  CONSTRAINT prediction_snapshots_prior_probability CHECK (
+    (reconstruction_prior_v2_p_a IS NULL
+      OR (reconstruction_prior_v2_p_a >= 0 AND reconstruction_prior_v2_p_a <= 1))
+    AND (reconstruction_prior_v2_p_b IS NULL
+      OR (reconstruction_prior_v2_p_b >= 0 AND reconstruction_prior_v2_p_b <= 1))),
+  -- BICONDITIONAL. A 'reconstructed' capture_mode with no reconstruction record,
+  -- or reconstruction fields on a 'live' snapshot, were both accepted before.
+  CONSTRAINT prediction_snapshots_capture_mode_biconditional CHECK (
+    (capture_mode = 'reconstructed') = (reconstruction_type IS NOT NULL)),
   -- Composite FK carrying the discriminator: a snapshot cannot name one run
   -- while carrying another run's bout.
   CONSTRAINT prediction_snapshots_run_fk
@@ -383,6 +400,9 @@ CREATE TABLE app_private.market_snapshots (
   -- label unfalsifiable.
   CONSTRAINT market_snapshots_captured_at_biconditional CHECK (
     (captured_at IS NULL) = (source = 'legacyTrackedOverride')),
+  -- A snapshot with neither corner priced records no market fact at all.
+  CONSTRAINT market_snapshots_at_least_one_price CHECK (
+    odds_a IS NOT NULL OR odds_b IS NOT NULL),
   CONSTRAINT market_snapshots_bout_fk FOREIGN KEY (workspace_id, bout_id)
     REFERENCES app_private.bouts(workspace_id, id)
     ON UPDATE RESTRICT ON DELETE RESTRICT,
@@ -424,6 +444,15 @@ CREATE TABLE app_private.betting_assessments (
     FOREIGN KEY (workspace_id, market_snapshot_id, bout_id)
     REFERENCES app_private.market_snapshots(workspace_id, id, bout_id)
     ON UPDATE RESTRICT ON DELETE RESTRICT,
+  -- Fair line, edge, EV and Kelly are all model x MARKET derivations. With no
+  -- market there is nothing to derive them from, so a value here would be
+  -- fabricated. Previously any number was accepted alongside a NULL market.
+  CONSTRAINT betting_assessments_market_derived_null CHECK (
+    market_snapshot_id IS NOT NULL
+ OR (fair_line_a IS NULL AND fair_line_b IS NULL
+     AND edge_a IS NULL AND edge_b IS NULL
+     AND ev_a IS NULL AND ev_b IS NULL
+     AND kelly_a IS NULL AND kelly_b IS NULL)),
   UNIQUE (workspace_id, id, bout_id)
 );
 
@@ -526,7 +555,12 @@ CREATE TABLE app_private.wagers (
       AND ((financial_status = 'computed'
             AND profit_units IS NOT NULL AND financial_reason IS NULL)
         OR (financial_status = 'uncomputable'
-            AND profit_units IS NULL AND financial_reason IS NOT NULL))))
+            AND profit_units IS NULL AND financial_reason IS NOT NULL)))),
+  -- Wagers have NO legacy-null concession. Migration creates zero of them, so
+  -- every wager is app-created and must carry a real settlement time. Only
+  -- tracked_positions may omit it, and only for origin 'legacyMigration'.
+  CONSTRAINT wagers_settled_at_required CHECK (
+    settlement_status <> 'settled' OR settled_at IS NOT NULL)
 );
 
 CREATE TABLE app_private.props (
@@ -600,7 +634,10 @@ CREATE TABLE app_private.parlay_legs (
     ON UPDATE RESTRICT ON DELETE RESTRICT,
   CONSTRAINT parlay_legs_bout_fk FOREIGN KEY (workspace_id, bout_id)
     REFERENCES app_private.bouts(workspace_id, id)
-    ON UPDATE RESTRICT ON DELETE RESTRICT
+    ON UPDATE RESTRICT ON DELETE RESTRICT,
+  -- A parlay cannot stake the same bout twice: the legs would not be
+  -- independent and the combined odds would be meaningless.
+  CONSTRAINT parlay_legs_bout_unique UNIQUE (workspace_id, parlay_id, bout_id)
 );
 
 -- Seed ledger. Events and Bouts are NEVER tombstoned: they are shared card
@@ -645,11 +682,28 @@ CREATE INDEX undo_log_expiry_idx        ON app_private.undo_log (workspace_id, e
 -- workspace_members and the membership policies are NON-RECURSIVE. auth.uid()
 -- resolves inside DEFINER functions because PostgREST sets request.jwt.claims
 -- as a per-request GUC.
+-- Resolves the caller WITHOUT touching the auth schema.
+--
+-- Calling auth.uid() from these functions failed with `permission denied for
+-- schema auth`: neither fm_member_api nor fm_table_owner holds USAGE on auth,
+-- so the entire authenticated API was unusable. Granting USAGE on auth to the
+-- API roles would be far wider than needed — auth.uid() only reads a GUC. This
+-- reimplements exactly what auth.uid() does, from the request GUCs alone, so no
+-- role needs auth access in order to identify the caller.
+CREATE FUNCTION app_private.current_user_id() RETURNS uuid
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = '' AS $$
+  SELECT nullif(
+    coalesce(
+      nullif(pg_catalog.current_setting('request.jwt.claim.sub', true), ''),
+      nullif(pg_catalog.current_setting('request.jwt.claims', true), '')::jsonb ->> 'sub'
+    ), '')::uuid
+$$;
+
 CREATE FUNCTION app_private.is_member(p_workspace uuid, p_roles text[])
 RETURNS boolean LANGUAGE sql STABLE SECURITY DEFINER SET search_path = '' AS $$
   SELECT EXISTS (SELECT 1 FROM app_private.workspace_members m
                   WHERE m.workspace_id = p_workspace
-                    AND m.user_id = (SELECT auth.uid())
+                    AND m.user_id = app_private.current_user_id()
                     AND m.role = ANY (p_roles))
 $$;
 
@@ -678,6 +732,38 @@ BEGIN
     RETURN QUERY SELECT v_id, 'claimed'::text; RETURN;
   END IF;
   RETURN QUERY SELECT v_id, 'unclaimed'::text;
+END $$;
+
+-- The whole bootstrap — lock, re-check, insert — in ONE table-owner helper.
+--
+-- Splitting it was unworkable: workspace_members_write requires an owner to
+-- already exist, so fm_member_api could never insert the FIRST owner and the
+-- claim failed with `new row violates row-level security policy for table
+-- workspace_members`. This runs as fm_table_owner, which owns the table and is
+-- therefore not subject to its policies (RLS is enabled, deliberately not
+-- FORCEd), so the bootstrap insert succeeds while every other path stays bound.
+--
+-- Concurrency is preserved BECAUSE the re-check happens inside the same
+-- transaction as the FOR UPDATE row lock taken on the workspace: a second
+-- claimant blocks on the lock, and once it proceeds it observes the owner the
+-- first one inserted and gets 'claimed'. Exactly one claimant wins.
+CREATE FUNCTION app_private.claim_workspace_ownership(p_slug text, p_user uuid)
+RETURNS TABLE (workspace_id uuid, status text)
+LANGUAGE plpgsql VOLATILE SECURITY DEFINER SET search_path = '' AS $$
+DECLARE v_id uuid;
+BEGIN
+  SELECT w.id INTO v_id FROM app_private.workspaces w
+   WHERE w.slug = p_slug FOR UPDATE;
+  IF v_id IS NULL THEN
+    RETURN QUERY SELECT NULL::uuid, 'unknown'::text; RETURN;
+  END IF;
+  IF EXISTS (SELECT 1 FROM app_private.workspace_members m
+              WHERE m.workspace_id = v_id AND m.role = 'owner') THEN
+    RETURN QUERY SELECT v_id, 'claimed'::text; RETURN;
+  END IF;
+  INSERT INTO app_private.workspace_members (workspace_id, user_id, role)
+       VALUES (v_id, p_user, 'owner');
+  RETURN QUERY SELECT v_id, 'claimed_now'::text;
 END $$;
 
 -- ── Triggers ────────────────────────────────────────────────────────────────
@@ -838,6 +924,27 @@ CREATE CONSTRAINT TRIGGER bouts_dependents_settlement
   DEFERRABLE INITIALLY DEFERRED
   FOR EACH ROW EXECUTE FUNCTION app_private.trg_assert_bout_dependents();
 
+-- ParlaySchema requires legs.min(1). A plain CHECK cannot express it — the legs
+-- live in another table — and a non-deferred trigger would make a parlay
+-- impossible to insert at all, since the parent must exist before its legs.
+-- DEFERRED means parlay + legs land atomically and the count is asserted at
+-- COMMIT, which is exactly the Stage 6 rule.
+CREATE FUNCTION app_private.trg_assert_parlay_has_legs() RETURNS trigger
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = '' AS $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM app_private.parlay_legs l
+                  WHERE l.workspace_id = NEW.workspace_id
+                    AND l.parlay_id = NEW.id) THEN
+    RAISE EXCEPTION 'parlay % has no legs', NEW.id;
+  END IF;
+  RETURN NULL;
+END $$;
+
+CREATE CONSTRAINT TRIGGER parlays_have_legs
+  AFTER INSERT OR UPDATE ON app_private.parlays
+  DEFERRABLE INITIALLY DEFERRED
+  FOR EACH ROW EXECUTE FUNCTION app_private.trg_assert_parlay_has_legs();
+
 -- ── RLS ─────────────────────────────────────────────────────────────────────
 -- Enabled, NOT blanket-FORCEd: fm_table_owner owns the tables and owns no
 -- callable function, so the two roles API functions actually run as are
@@ -909,9 +1016,9 @@ CREATE POLICY seed_items_all ON app_private.seed_items FOR ALL
   WITH CHECK (app_private.is_member(workspace_id, ARRAY['owner']));
 
 CREATE POLICY undo_log_own ON app_private.undo_log FOR ALL
-  USING (user_id = (SELECT auth.uid())
+  USING (user_id = app_private.current_user_id()
          AND app_private.is_member(workspace_id, ARRAY['owner','editor']))
-  WITH CHECK (user_id = (SELECT auth.uid())
+  WITH CHECK (user_id = app_private.current_user_id()
          AND app_private.is_member(workspace_id, ARRAY['owner','editor']));
 
 -- ── Public API functions ────────────────────────────────────────────────────
@@ -952,7 +1059,8 @@ RETURNS TABLE (workspace_id uuid, role text)
 LANGUAGE sql STABLE SECURITY DEFINER SET search_path = '' AS $$
   SELECT w.id,
          (SELECT m.role FROM app_private.workspace_members m
-           WHERE m.workspace_id = w.id AND m.user_id = (SELECT auth.uid()))
+           WHERE m.workspace_id = w.id
+             AND m.user_id = app_private.current_user_id())
     FROM app_private.workspaces w
    WHERE w.slug = p_slug
 $$;
@@ -962,12 +1070,13 @@ RETURNS TABLE (workspace_id uuid, role text)
 LANGUAGE plpgsql VOLATILE SECURITY DEFINER SET search_path = '' AS $$
 DECLARE v_id uuid; v_status text; v_uid uuid;
 BEGIN
-  v_uid := (SELECT auth.uid());
+  v_uid := app_private.current_user_id();
   IF v_uid IS NULL THEN
     RAISE EXCEPTION 'authentication required' USING ERRCODE = '42501';
   END IF;
-  SELECT l.workspace_id, l.status INTO v_id, v_status
-    FROM app_private.lock_unclaimed_workspace(p_slug) l;
+  -- Lock, re-check and insert happen atomically inside the table-owner helper.
+  SELECT c.workspace_id, c.status INTO v_id, v_status
+    FROM app_private.claim_workspace_ownership(p_slug, v_uid) c;
   -- An unknown slug is distinguishable from a claimed one.
   IF v_status = 'unknown' THEN
     RAISE EXCEPTION 'unknown workspace slug' USING ERRCODE = '42704';
@@ -975,8 +1084,6 @@ BEGIN
   IF v_status = 'claimed' THEN
     RAISE EXCEPTION 'workspace already claimed' USING ERRCODE = '42501';
   END IF;
-  INSERT INTO app_private.workspace_members (workspace_id, user_id, role)
-       VALUES (v_id, v_uid, 'owner');
   RETURN QUERY SELECT v_id, 'owner'::text;
 END $$;
 
@@ -1049,9 +1156,56 @@ DO $$ DECLARE r record; BEGIN
   END LOOP;
 END $$;
 GRANT EXECUTE ON FUNCTION app_private.lock_unclaimed_workspace(text) TO fm_member_api;
+GRANT EXECUTE ON FUNCTION app_private.claim_workspace_ownership(text, uuid) TO fm_member_api;
 GRANT EXECUTE ON FUNCTION app_private.is_member(uuid, text[])
   TO fm_member_api, fm_public_reader;
 GRANT EXECUTE ON FUNCTION app_private.workspace_has_owner(uuid) TO fm_member_api;
+GRANT EXECUTE ON FUNCTION app_private.current_user_id()
+  TO fm_member_api, fm_public_reader;
+
+-- NO role is granted anything on the auth schema — not even fm_table_owner.
+--
+-- The `permission denied for schema auth` failure came from auth.uid(), which
+-- app_private.current_user_id() now replaces by reading the request GUCs
+-- directly. Referential integrity against auth.users needs no grant either:
+-- Postgres executes RI checks internally and skips ACL checks, which the
+-- membership-insert tests exercise directly.
+--
+-- Attempting the grant anyway is not merely unnecessary but impossible here:
+-- auth is owned by supabase_admin and `postgres` holds USAGE without GRANT
+-- OPTION, so `GRANT USAGE ON SCHEMA auth TO fm_table_owner` silently emits
+-- WARNING 01007 "no privileges were granted for auth" and changes nothing.
+
+-- The migration/operator role keeps direct access, explicitly.
+--
+-- `postgres` already has BYPASSRLS and can grant itself any fm_ role via the
+-- unavoidable ADMIN OPTION, so this adds no reachable privilege — it makes the
+-- operator's existing reach explicit and auditable, and lets migrations,
+-- backfills and the pgTAP harness run without SET ROLE. anon and authenticated
+-- still hold nothing: see the catalog assertions.
+-- UPDATE is withheld on the immutable tables even here, so "denied twice" stays
+-- literally true of every grant in the database rather than only of the API
+-- roles.
+GRANT USAGE ON SCHEMA app_private TO postgres;
+DO $$ DECLARE r record; BEGIN
+  FOR r IN SELECT c.relname FROM pg_catalog.pg_class c
+             JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
+            WHERE n.nspname = 'app_private' AND c.relkind = 'r' LOOP
+    IF r.relname IN ('prediction_runs','prediction_snapshots','market_snapshots',
+                     'betting_assessments','parlays','parlay_legs') THEN
+      EXECUTE format('GRANT SELECT, INSERT, DELETE ON app_private.%I TO postgres',
+                     r.relname);
+    ELSE
+      EXECUTE format('GRANT SELECT, INSERT, UPDATE, DELETE ON app_private.%I TO postgres',
+                     r.relname);
+    END IF;
+  END LOOP;
+  FOR r IN SELECT p.oid::regprocedure AS sig FROM pg_catalog.pg_proc p
+             JOIN pg_catalog.pg_namespace n ON n.oid = p.pronamespace
+            WHERE n.nspname = 'app_private' LOOP
+    EXECUTE format('GRANT EXECUTE ON FUNCTION %s TO postgres', r.sig);
+  END LOOP;
+END $$;
 
 -- ── (7) drop the temporary memberships LAST ─────────────────────────────────
 -- Plain REVOKE: it deletes the temporary INHERIT/SET row outright. It cannot

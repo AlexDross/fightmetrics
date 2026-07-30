@@ -14,7 +14,7 @@ Base: `main` @ `89f6c45`. Backend decision: Supabase/Postgres.
 | 0 · Preflight | Docker runtime present and running; ports 54321–54324 free; Node supports the pinned CLI | ✅ |
 | 1 | This document + `feat(data): add repository interfaces over the durable schema` — in-memory only | ✅ |
 | 2 | `feat(data): add Postgres schema, roles, policies and RPCs` — pinned Supabase CLI as devDependency, committed `supabase/`, full local stack, all SQL/API tests. **No hosted project.** | ✅ |
-| 2 · status | **PARTIAL.** Landed: roles, ownership transfer, ACLs, `app_private` schema, all 15 tables with composite FKs and the deferrable run↔snapshot cycle, revision/slug/settlement triggers, RLS on every table, the 32-assertion catalog suite, and the two-reset repeatability proof. **Outstanding:** the full `fm_read_*`/`fm_member_*` surfaces (4 of ~15 exist), the `fm_rpc_*` matrix (1 of ~20 exists — the ownership claim), the rejection and behavioural pgTAP suites, the Gate 2 measurements, and `test:api`. | |
+| 2 · status | **PARTIAL.** Landed: roles, ownership transfer, ACLs, `app_private` schema, all 15 tables with composite FKs and the deferrable run↔snapshot cycle, revision/slug/settlement triggers, RLS on every table, a working authenticated path (caller resolution + zero-owner bootstrap), the 67-assertion catalog+behavioural suite green under `npm run test:db`, and the two-reset repeatability proof. **Outstanding:** the full `fm_read_*`/`fm_member_*` surfaces (4 of ~15 exist), the `fm_rpc_*` matrix (1 of ~20 exists — the ownership claim), the remaining rejection suite, real API/auth tests over PostgREST, and the Gate 2 measurements. | |
 | 3 | `feat(data): migrate seed data into the durable schema` | ✅ |
 | 4 | `feat(auth): add magic-link sign-in and read-only public state` | ✅ |
 | 5 | **Hosted rollout** — Alex creates/links the project, `db push --dry-run` → `db push`, Vercel vars, invite owner, claim, approve seed | ✅ |
@@ -61,8 +61,46 @@ non-owners and are fully bound by policy.
 
 `app_private.is_member` is `SECURITY DEFINER` owned by `fm_table_owner`, so it
 bypasses RLS on `workspace_members` and the membership policies are
-**non-recursive**. `auth.uid()` resolves correctly inside DEFINER functions
-because PostgREST sets `request.jwt.claims` as a per-request GUC.
+**non-recursive**.
+
+**`auth.uid()` is NOT used — nothing in the schema touches the `auth` schema.**
+Corrected at Gate 2, where calling it made the entire authenticated API
+unusable: every `fm_` function raised `permission denied for schema auth`,
+because no `fm_` role holds `USAGE` on `auth`. Granting it was both wider than
+needed and impossible — `auth` is owned by `supabase_admin` and `postgres` holds
+`USAGE` without `GRANT OPTION`, so the grant silently emits
+`WARNING 01007 no privileges were granted for "auth"` and changes nothing.
+`app_private.current_user_id()` reads the same request GUCs `auth.uid()` reads
+(`request.jwt.claim.sub`, falling back to `request.jwt.claims ->> 'sub'`) and
+needs no schema access at all. Referential integrity against `auth.users` needs
+no grant either: Postgres runs RI checks internally and skips ACL checks, which
+the membership-insert tests prove directly.
+
+### The zero-owner bootstrap must be one table-owner operation
+
+`workspace_members_write` requires an owner to already exist, so `fm_member_api`
+can never insert the **first** owner: the claim failed with `new row violates
+row-level security policy for table workspace_members`. Splitting "lock" from
+"insert" cannot fix it — the insert is the part RLS refuses.
+
+`app_private.claim_workspace_ownership(slug, user)` therefore performs the whole
+bootstrap — `SELECT … FOR UPDATE`, re-check, `INSERT` — as `fm_table_owner`,
+which owns `workspace_members` and so is not subject to its policies (RLS is
+enabled, deliberately **not** `FORCE`d). Granted only to `fm_member_api`.
+
+The concurrency guarantee is preserved *because* the re-check sits inside the
+same transaction as the row lock: a second claimant blocks on the lock, then
+observes the owner the first one inserted and receives `claimed`. Exactly one
+claimant wins, bound by a behavioural test rather than a catalog assertion.
+
+### `postgres` retains explicit DML on `app_private`
+
+The operator role already has `BYPASSRLS` and can grant itself any `fm_` role
+through the unavoidable `ADMIN OPTION`, so an explicit grant adds no reachable
+privilege — it makes the existing reach auditable and lets migrations, backfills
+and the pgTAP harness run without `SET ROLE`. `UPDATE` is still withheld on the
+six immutable tables, so "denied twice" remains literally true of every grant in
+the database. `anon` and `authenticated` continue to hold nothing.
 
 ### Workspace identity
 
@@ -786,21 +824,18 @@ prove nothing. The current store has 3,799 numeric leaves and 0 negative zeros.
 ```
 supabase/config.toml            committed, CLI version pinned
 supabase/migrations/<ts>_*.sql  timestamped, forward-only
-supabase/tests/*.test.sql       pgTAP
-supabase/tests/catalog_snapshot.sql  reset-to-reset catalog fingerprint
+supabase/tests/*.test.sql       pgTAP, auto-discovered by `supabase test db`
+scripts/db/catalog_snapshot.sql reset-to-reset fingerprint (NOT a TAP test)
 ```
 
-**Running the suite.** `supabase test db` fails on this stack with
-`failed to connect to postgres: PgClient: Failed to connect`, so the suites are
-executed directly against the database container:
+**Running the suite.** `npm run test:db` is the committed command and passes.
+The earlier "cannot connect" note is withdrawn — it was transient, before the
+`pg_prove` image had been pulled.
 
-```
-docker cp supabase/tests/00_catalog.test.sql supabase_db_fightmetrics:/tmp/
-docker exec supabase_db_fightmetrics psql -U postgres -d postgres -Atf /tmp/00_catalog.test.sql
-```
-
-Same SQL, same pgTAP, same assertions — only the transport differs. Diagnosing
-the CLI's connection path is deferred; it does not affect what is proven.
+`catalog_snapshot.sql` lives in `scripts/db/`, **not** `supabase/tests/`.
+Everything under `supabase/tests/` is auto-discovered as a TAP test, and a
+fingerprint utility emits no plan, so it failed the run with
+`No subtests run · Parse errors: No plan found in TAP output · Result: FAIL`.
 
 **Repeatability is compared, not asserted.** `catalog_snapshot.sql` emits an
 explicitly ORDERed fingerprint of owners, function ACLs, table ACLs, policies,
