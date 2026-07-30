@@ -176,8 +176,12 @@ ON CONFLICT DO NOTHING;`;
 const IDS = `'${WS_PUBLIC}','${WS_PRIVATE}','${WS_CLAIM}'`;
 
 /**
- * Deterministic fixture. Idempotent: it tears its own workspaces down first, so
- * repeated runs and a fresh `supabase db reset` both leave the same state.
+ * Deterministic fixture, applied to a CLEAN database.
+ *
+ * `npm run test:api` runs `db:reset` first, so every run starts from the
+ * migration alone and these rows are known to match the current schema. The
+ * `ON CONFLICT DO NOTHING` clauses are defensive only — they are NOT the
+ * isolation mechanism and must not be relied on as one.
  *
  * postgres holds no app_private privilege, so this takes the same
  * transaction-local membership the pgTAP suites use — and REVOKEs it before

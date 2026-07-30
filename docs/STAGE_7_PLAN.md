@@ -939,8 +939,10 @@ SQL is used only to build fixtures, never as a substitute for the request path.
   `StoreSchema`**, with every mismatch reported by JSON path. The schema is not
   weakened to make it pass. Every entity section is non-empty and the parlay
   exports its nested leg.
-- **Probabilities**: `pA` and `pB` are generated independently in JavaScript,
-  stored, and read back over HTTP as JS numbers — `Object.is` bit-identical on
+- **Probabilities**: `pA` and `pB` are both computed in JavaScript,
+  independently **of SQL** — the database derives neither. `pB` is deliberately
+  `1 - pA`, which is what the domain means by complementary; the point is that
+  the PAIR is serialized together, stored, and read back over HTTP as JS numbers — `Object.is` bit-identical on
   both, summing to exactly 1. A one-ULP perturbation is rejected by the `CHECK`.
   **Still PROVISIONAL**: the write leg goes in via fixture SQL, because no
   save-prediction RPC exists yet. Only an HTTP write closes this.
@@ -955,9 +957,11 @@ SQL is used only to build fixtures, never as a substitute for the request path.
 - **anon denial is HTTP 401**, not 404 as first assumed, with
   `code = 42501` and `permission denied for function …`. Both status and
   SQLSTATE are asserted.
-- Fixtures are idempotent (`ON CONFLICT DO NOTHING`) and the suite passes twice
-  consecutively with no manual preparation. A full teardown is not possible while
-  the run↔snapshot cycle exists; `supabase db reset` is the clean-slate path.
+- **`npm run test:api` resets the local database first** (`db:reset && vitest`),
+  so every run starts from the migration alone and the fixture rows are known to
+  match the current schema. `ON CONFLICT DO NOTHING` remains as defensive
+  idempotency but is **not** the isolation mechanism. Two consecutive
+  invocations each perform their own reset and each pass 14/14.
 
 The membership assertion uses a **catalog-only** scalar that grants nothing, so
 it cannot measure its own contamination — the fixture helper takes an
@@ -981,7 +985,7 @@ prove nothing. The current store has 3,799 numeric leaves and 0 negative zeros.
 |---|---|
 | Repository contract vs in-memory fake | every `npm test`, offline |
 | SQL + RLS + RPC via **local Supabase** | `npm run test:db`, CI service job |
-| API-level repository tests vs local URL/key | `npm run test:api` — **14 assertions, real HTTP** |
+| API-level repository tests vs local URL/key | `npm run test:api` — **14 assertions, real HTTP, self-resetting** |
 | Manual acceptance (phone/desktop, hard refresh) | pre-merge checklist |
 
 ```
@@ -999,6 +1003,17 @@ The earlier "cannot connect" note is withdrawn — it was transient, before the
 Everything under `supabase/tests/` is auto-discovered as a TAP test, and a
 fingerprint utility emits no plan, so it failed the run with
 `No subtests run · Parse errors: No plan found in TAP output · Result: FAIL`.
+
+**Independently reproduced by Codex on the current schema**, after Commit A's
+deferred-`NO ACTION` correction and the `extra_float_digits` pin:
+
+| | |
+|---|---|
+| reset 1 | `test:db` 157 PASS |
+| reset 2 | `test:db` 157 PASS |
+| fingerprint | 663 lines |
+| SHA-256, both runs | `a4d432277cc76582443b909ad90089d32a1de4ccb7322ea0474dac2d86c5390a` |
+| diff | empty |
 
 **Repeatability is compared, not asserted.** `catalog_snapshot.sql` emits an
 explicitly ORDERed fingerprint of owners, function ACLs, table ACLs, policies,

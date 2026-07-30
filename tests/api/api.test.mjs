@@ -10,8 +10,14 @@ import {
   USER_MEMBER, USER_OUTSIDER, CLAIMANT_A, CLAIMANT_B,
 } from './helpers.mjs';
 
-// Generated in JavaScript, INDEPENDENTLY of each other, then serialized
-// together. This is the pair the complementarity test follows end to end.
+// Both values are computed in JavaScript, independently OF SQL — the database
+// never derives either one. pB is deliberately `1 - pA`, which is what the
+// domain means by complementary; the point is that the PAIR is serialized
+// together and must survive the transport unchanged.
+//
+// The write leg still enters through fixture SQL, so this does not yet close the
+// full browser -> PostgREST -> float8 -> response -> JS loop. Complementarity
+// stays PROVISIONAL until a save-prediction RPC allows an HTTP write.
 const probA = 0.5432109876543210;
 const probB = 1 - probA;
 
