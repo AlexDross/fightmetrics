@@ -14,7 +14,7 @@ Base: `main` @ `89f6c45`. Backend decision: Supabase/Postgres.
 | 0 · Preflight | Docker runtime present and running; ports 54321–54324 free; Node supports the pinned CLI | ✅ |
 | 1 | This document + `feat(data): add repository interfaces over the durable schema` — in-memory only | ✅ |
 | 2 | `feat(data): add Postgres schema, roles, policies and RPCs` — pinned Supabase CLI as devDependency, committed `supabase/`, full local stack, all SQL/API tests. **No hosted project.** | ✅ |
-| 2 · status | **PARTIAL.** Landed: roles, ownership transfer, ACLs, `app_private` schema, all 15 tables with composite FKs and the deferrable run↔snapshot cycle, revision/slug/settlement triggers, RLS on every table, a working authenticated path (caller resolution + zero-owner bootstrap), the `fm_read_*`/`fm_member_*` surfaces **for everything the current app renders**, SQL-side measurements, and a 149-assertion suite green under `npm run test:db`. **Outstanding:** the `fm_rpc_*` mutation matrix (1 of ~20 exists — the ownership claim), and with it revision-vector conflict handling, the undo log and stable error markers; five contract reads deferred alongside it (`getAggregate`, `workspace.current`, `seedVersion`, `wager.listByBout`, `undo.list` — see §5); strict `StoreSchema` validation of the export; `test:api` against local PostgREST; genuine two-session claim concurrency; and the 152-row stored-profit recomputation, which needs Gate 3's seed. Both float constraints remain **provisional**. | |
+| 2 · status | **PARTIAL.** Landed: roles, ownership transfer, ACLs, `app_private` schema, all 15 tables with composite FKs and the deferrable run↔snapshot cycle, revision/slug/settlement triggers, RLS on every table, a working authenticated path (caller resolution + zero-owner bootstrap), the `fm_read_*`/`fm_member_*` surfaces **for everything the current app renders**, SQL-side measurements, and 157 assertions green under `npm run test:db` and 14 under `npm run test:api`, including StoreSchema validation of the export and genuine two-client claim concurrency. **Outstanding:** the `fm_rpc_*` mutation matrix (1 of ~20 exists — the ownership claim), and with it revision-vector conflict handling, the undo log and stable error markers; five contract reads deferred alongside it (`getAggregate`, `workspace.current`, `seedVersion`, `wager.listByBout`, `undo.list` — see §5); and the 152-row stored-profit recomputation, which needs Gate 3's seed. Both float constraints remain **provisional**. | |
 | 3 | `feat(data): migrate seed data into the durable schema` | ✅ |
 | 4 | `feat(auth): add magic-link sign-in and read-only public state` | ✅ |
 | 5 | **Hosted rollout** — Alex creates/links the project, `db push --dry-run` → `db push`, Vercel vars, invite owner, claim, approve seed | ✅ |
@@ -587,7 +587,7 @@ here is described as complete unless the SQL exists today.
 | `propRepository.list` | `fm_read_props` / `fm_member_props` | ✅ |
 | `parlayRepository.list` | `fm_read_parlays` / `fm_member_parlays` | ✅ |
 | `statisticsRepository.statisticsInput` | `fm_read_statistics_input` / `fm_member_statistics_input` | ✅ |
-| `workspaceRepository.exportStore` | `fm_member_export_store` | ⚠️ shape asserted in SQL; **strict `StoreSchema` validation outstanding** |
+| `workspaceRepository.exportStore` | `fm_member_export_store` | ✅ validated against the real `StoreSchema` over HTTP in `test:api` |
 | `authRepository.whoami` | `fm_member_whoami` | ✅ |
 | `authRepository.session` | client-side; Supabase session, no SQL surface | ✅ n/a |
 | `wagerRepository.listByBout` | **no surface yet** — wagers are exported but have no dedicated read function | ❌ deferred |
@@ -928,13 +928,46 @@ transaction — no partial import. `Store.meta` reconstructs from
 `workspace_id`, `revision`, `row_updated_at`, `seed_items`, `undo_log`,
 `workspace_members`.
 
-**`fm_member_export_store` is NOT yet proven complete.** It now emits all eleven
-`StoreSchema` sections including nested parlay legs, and the pgTAP suite asserts
-the exact top-level key set, an eleven-section count, a non-empty array per
-entity, and representative nested fields. What is still missing is the decisive
-check: parsing the returned JSON with the **actual JavaScript `StoreSchema`**.
-That needs a Node client against a committed fixture and is **outstanding with
-`test:api`**. Until it passes, the export is "shape-asserted", not "validated".
+### `test:api` results (local PostgREST)
+
+Real HTTP with anon and authenticated JWT contexts; the JWT is minted HS256
+against the local `JWT_SECRET`, so PostgREST verifies it, switches role and
+publishes the claims as the GUCs `app_private.current_user_id()` reads. Direct
+SQL is used only to build fixtures, never as a substitute for the request path.
+
+- **Export**: `fm_member_export_store` **parses against the real JavaScript
+  `StoreSchema`**, with every mismatch reported by JSON path. The schema is not
+  weakened to make it pass. Every entity section is non-empty and the parlay
+  exports its nested leg.
+- **Probabilities**: `pA` and `pB` are generated independently in JavaScript,
+  stored, and read back over HTTP as JS numbers — `Object.is` bit-identical on
+  both, summing to exactly 1. A one-ULP perturbation is rejected by the `CHECK`.
+  **Still PROVISIONAL**: the write leg goes in via fixture SQL, because no
+  save-prediction RPC exists yet. Only an HTTP write closes this.
+- **Concurrency**: two clients claim the same zero-owner workspace with both
+  requests in flight (`Promise.all`). Exactly one succeeds, exactly one owner row
+  survives, and the loser gets the documented stable error — HTTP **401/403**
+  with `code = 42501` and `already claimed`.
+- **Routing**: anon public read; signed-in non-member reads the public fallback
+  and gets zero rows plus `role: null` from member surfaces; a member reads a
+  private workspace across all six member surfaces while the public ones return
+  nothing; anon is denied every member function.
+- **anon denial is HTTP 401**, not 404 as first assumed, with
+  `code = 42501` and `permission denied for function …`. Both status and
+  SQLSTATE are asserted.
+- Fixtures are idempotent (`ON CONFLICT DO NOTHING`) and the suite passes twice
+  consecutively with no manual preparation. A full teardown is not possible while
+  the run↔snapshot cycle exists; `supabase db reset` is the clean-slate path.
+
+The membership assertion uses a **catalog-only** scalar that grants nothing, so
+it cannot measure its own contamination — the fixture helper takes an
+`fm_table_owner` membership and revokes it before COMMIT.
+
+**`fm_member_export_store` is now VALIDATED**, not merely shape-asserted: the
+`test:api` suite parses the HTTP response with the real JavaScript `StoreSchema`
+and reports any mismatch by JSON path. The pgTAP suite continues to assert the
+exact top-level key set, the eleven-section count, a non-empty array per entity
+and representative nested fields.
 
 Round-trip is verified by a **recursive semantic comparator using `Object.is`
 only at numeric leaves** — `Object.is` on two objects compares identity and would
@@ -948,7 +981,7 @@ prove nothing. The current store has 3,799 numeric leaves and 0 negative zeros.
 |---|---|
 | Repository contract vs in-memory fake | every `npm test`, offline |
 | SQL + RLS + RPC via **local Supabase** | `npm run test:db`, CI service job |
-| API-level repository tests vs local URL/key | `npm run test:api` |
+| API-level repository tests vs local URL/key | `npm run test:api` — **14 assertions, real HTTP** |
 | Manual acceptance (phone/desktop, hard refresh) | pre-merge checklist |
 
 ```

@@ -127,8 +127,12 @@ SELECT is((SELECT count(*) FROM pg_catalog.pg_class c
 -- This is the second failure: `new row violates row-level security policy for
 -- table workspace_members`, because the write policy required an owner to
 -- already exist and so no first owner could ever be inserted.
-SELECT is((SELECT count(*) FROM app_private.workspace_members), 0::bigint,
-          'the workspace starts with zero owners');
+-- Scoped to THIS fixture's workspace. An unscoped count was implicitly global
+-- and silently depended on the database being otherwise empty — it broke the
+-- moment the API fixture committed workspaces of its own.
+SELECT is((SELECT count(*) FROM app_private.workspace_members
+            WHERE workspace_id = 'aaaaaaaa-0000-4000-8000-000000000001'),
+          0::bigint, 'the workspace starts with zero owners');
 
 -- RPCs are exercised as `authenticated`, the role PostgREST actually uses, not
 -- as postgres. Calling them as the operator would prove nothing about the
@@ -176,7 +180,9 @@ SELECT throws_ok($$SELECT public.fm_rpc_claim_workspace_ownership('fightmetrics'
 
 SET LOCAL ROLE fm_table_owner;
 SET LOCAL search_path = public, extensions;
-SELECT is((SELECT count(*) FROM app_private.workspace_members WHERE role = 'owner'),
+SELECT is((SELECT count(*) FROM app_private.workspace_members
+            WHERE role = 'owner'
+              AND workspace_id = 'aaaaaaaa-0000-4000-8000-000000000001'),
           1::bigint, 'still exactly one owner after every refused claim');
 
 -- ── 3. Corrected Stage 6 invariants — positive and negative each ────────────
