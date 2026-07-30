@@ -5,7 +5,7 @@
 -- step 0 and the re-grant in step 1.
 BEGIN;
 CREATE EXTENSION IF NOT EXISTS pgtap;
-SELECT plan(32);
+SELECT plan(36);
 
 -- ── Ownership ───────────────────────────────────────────────────────────────
 SELECT is(pg_catalog.pg_get_userbyid(nspowner), 'fm_table_owner',
@@ -100,14 +100,50 @@ SELECT is((SELECT count(*) FROM information_schema.role_table_grants
           0::bigint, 'no UPDATE grant exists on any immutable table');
 
 -- ── Client roles reach no table directly ────────────────────────────────────
+-- NO non-fm_ role holds any app_private table privilege — postgres included.
+-- A permanent grant to postgres would be immediate DML, not a capability it has
+-- to deliberately exercise, and would collapse the distinction this contract
+-- preserves. The pgTAP suites take a transaction-local membership instead.
 SELECT is((SELECT count(*) FROM information_schema.role_table_grants
-            WHERE table_schema = 'app_private' AND grantee IN ('anon','authenticated')),
-          0::bigint, 'anon and authenticated hold no privilege on any app_private table');
+            WHERE table_schema = 'app_private' AND grantee NOT LIKE 'fm\_%'),
+          0::bigint, 'no non-fm_ role holds any privilege on any app_private table');
 
 SELECT ok(NOT has_schema_privilege('anon', 'app_private', 'USAGE'),
           'anon has no USAGE on app_private');
 SELECT ok(NOT has_schema_privilege('authenticated', 'app_private', 'USAGE'),
           'authenticated has no USAGE on app_private');
+SELECT is((SELECT count(*) FROM pg_catalog.pg_namespace n,
+                  LATERAL pg_catalog.aclexplode(n.nspacl) a
+            WHERE n.nspname = 'app_private'
+              AND pg_catalog.pg_get_userbyid(a.grantee) NOT LIKE 'fm\_%'),
+          0::bigint, 'app_private schema ACL names only fm_ roles');
+
+SELECT is((SELECT count(*) FROM pg_catalog.pg_proc p
+             JOIN pg_catalog.pg_namespace n ON n.oid = p.pronamespace,
+                  LATERAL pg_catalog.aclexplode(p.proacl) a
+            WHERE n.nspname = 'app_private'
+              AND pg_catalog.pg_get_userbyid(a.grantee) = 'postgres'),
+          0::bigint, 'postgres holds EXECUTE on no app_private helper');
+
+-- WRITE is the privilege this schema controls and the one an earlier revision
+-- wrongly granted. It must be unreachable without a deliberate re-grant.
+--
+-- Read is NOT asserted false here: Supabase makes `postgres` an INHERITING
+-- member of the built-in `pg_read_all_data`, which confers USAGE on every schema
+-- and SELECT on every table cluster-wide. That is a pre-existing platform grant
+-- on the operator role, read-only, outside this migration's control, and not
+-- something the schema may revoke. The fingerprint records it rather than
+-- pretending otherwise.
+SELECT is((SELECT count(*) FROM pg_catalog.pg_class c
+             JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
+            WHERE n.nspname = 'app_private' AND c.relkind = 'r'
+              AND (has_table_privilege('postgres', c.oid, 'INSERT')
+                OR has_table_privilege('postgres', c.oid, 'UPDATE')
+                OR has_table_privilege('postgres', c.oid, 'DELETE'))),
+          0::bigint, 'postgres cannot immediately write to any app_private table');
+
+SELECT ok(pg_catalog.pg_has_role('postgres', 'pg_read_all_data', 'USAGE'),
+          'the residual read access is pg_read_all_data, a platform grant');
 
 -- ── Function ACLs, compared as normalized aclexplode rows ───────────────────
 -- Never array_to_string(proacl): its ordering is not a stable contract.

@@ -1176,36 +1176,17 @@ GRANT EXECUTE ON FUNCTION app_private.current_user_id()
 -- OPTION, so `GRANT USAGE ON SCHEMA auth TO fm_table_owner` silently emits
 -- WARNING 01007 "no privileges were granted for auth" and changes nothing.
 
--- The migration/operator role keeps direct access, explicitly.
+-- `postgres` receives NO permanent privilege on app_private: no schema USAGE,
+-- no table DML, no helper EXECUTE.
 --
--- `postgres` already has BYPASSRLS and can grant itself any fm_ role via the
--- unavoidable ADMIN OPTION, so this adds no reachable privilege — it makes the
--- operator's existing reach explicit and auditable, and lets migrations,
--- backfills and the pgTAP harness run without SET ROLE. anon and authenticated
--- still hold nothing: see the catalog assertions.
--- UPDATE is withheld on the immutable tables even here, so "denied twice" stays
--- literally true of every grant in the database rather than only of the API
--- roles.
-GRANT USAGE ON SCHEMA app_private TO postgres;
-DO $$ DECLARE r record; BEGIN
-  FOR r IN SELECT c.relname FROM pg_catalog.pg_class c
-             JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
-            WHERE n.nspname = 'app_private' AND c.relkind = 'r' LOOP
-    IF r.relname IN ('prediction_runs','prediction_snapshots','market_snapshots',
-                     'betting_assessments','parlays','parlay_legs') THEN
-      EXECUTE format('GRANT SELECT, INSERT, DELETE ON app_private.%I TO postgres',
-                     r.relname);
-    ELSE
-      EXECUTE format('GRANT SELECT, INSERT, UPDATE, DELETE ON app_private.%I TO postgres',
-                     r.relname);
-    END IF;
-  END LOOP;
-  FOR r IN SELECT p.oid::regprocedure AS sig FROM pg_catalog.pg_proc p
-             JOIN pg_catalog.pg_namespace n ON n.oid = p.pronamespace
-            WHERE n.nspname = 'app_private' LOOP
-    EXECUTE format('GRANT EXECUTE ON FUNCTION %s TO postgres', r.sig);
-  END LOOP;
-END $$;
+-- An earlier revision granted them so the pgTAP harness could build fixtures
+-- without SET ROLE, arguing that ADMIN OPTION made the grants free. That was
+-- wrong. ADMIN OPTION is a CAPABILITY the operator must deliberately exercise —
+-- it confers no table DML by itself. Granting DML permanently widens what
+-- postgres can do RIGHT NOW, in every session, and collapses exactly the
+-- distinction this contract exists to preserve. Test convenience is not a
+-- reason to hold a production privilege: the suites take a transaction-local
+-- membership instead, which vanishes on ROLLBACK.
 
 -- ── (7) drop the temporary memberships LAST ─────────────────────────────────
 -- Plain REVOKE: it deletes the temporary INHERIT/SET row outright. It cannot

@@ -88,19 +88,53 @@ bootstrap — `SELECT … FOR UPDATE`, re-check, `INSERT` — as `fm_table_owner
 which owns `workspace_members` and so is not subject to its policies (RLS is
 enabled, deliberately **not** `FORCE`d). Granted only to `fm_member_api`.
 
-The concurrency guarantee is preserved *because* the re-check sits inside the
-same transaction as the row lock: a second claimant blocks on the lock, then
-observes the owner the first one inserted and receives `claimed`. Exactly one
-claimant wins, bound by a behavioural test rather than a catalog assertion.
+The design preserves the concurrency guarantee *because* the re-check sits inside
+the same transaction as the row lock: a second claimant blocks on the lock, then
+observes the owner the first one inserted and receives `claimed`.
 
-### `postgres` retains explicit DML on `app_private`
+**That guarantee is not yet tested.** The Gate 2 behavioural test is
+**sequential** — claimant A completes, then claimant B is attempted — so it
+proves only that *a later claimant is refused once an owner exists*. Genuine
+two-session concurrency, in which one transaction blocks on the lock and exactly
+one of two overlapping claimants wins, requires two connections and is
+**outstanding for `test:api`**. It must not be described as concurrency-tested
+until two sessions actually overlap.
 
-The operator role already has `BYPASSRLS` and can grant itself any `fm_` role
-through the unavoidable `ADMIN OPTION`, so an explicit grant adds no reachable
-privilege — it makes the existing reach auditable and lets migrations, backfills
-and the pgTAP harness run without `SET ROLE`. `UPDATE` is still withheld on the
-six immutable tables, so "denied twice" remains literally true of every grant in
-the database. `anon` and `authenticated` continue to hold nothing.
+### `postgres` receives no `app_private` privilege from this migration
+
+**No schema `USAGE`, no table DML, no helper `EXECUTE`.** An earlier revision
+granted all three so the pgTAP harness could build fixtures without `SET ROLE`,
+on the argument that `ADMIN OPTION` already made them free. That was wrong.
+`ADMIN OPTION` is a **capability the operator must deliberately exercise**; it
+confers no table DML by itself. A permanent grant widens what `postgres` can do
+*right now, in every session*, and collapses precisely the distinction this
+contract exists to preserve. Test convenience is never a reason to hold a
+production privilege.
+
+Residual `SELECT` visibility for `postgres` is **not** from this migration:
+Supabase makes `postgres` an inheriting member of the platform-owned built-in
+role `pg_read_all_data`, which confers `USAGE` on every schema and `SELECT` on
+every table cluster-wide. It is read-only, pre-existing, outside this schema's
+control, and the catalog suite names it explicitly rather than quietly dropping
+the assertion. What the suite *does* assert is that `postgres` holds **no write**
+on any `app_private` table and appears in **no** `app_private` ACL entry.
+
+The pgTAP suites obtain what they need **transaction-locally**:
+
+```sql
+GRANT USAGE ON SCHEMA extensions TO fm_table_owner;   -- pgTAP lives there
+GRANT fm_table_owner TO postgres WITH SET TRUE, INHERIT FALSE;
+SET LOCAL ROLE fm_table_owner;
+```
+
+`ROLLBACK` at the end of each file removes both, leaving the automatic
+admin-only membership row untouched. The `extensions` `USAGE` grant is
+load-bearing and easy to misdiagnose: **a schema on the `search_path` is still
+skipped during function lookup when the active role lacks `USAGE` on it**, so
+the missing grant surfaces as `function is(text, text, unknown) does not exist`
+— which reads like a resolution failure, not a privilege one. Neither grant
+belongs in the production migration; no `fm_` role needs `extensions` at
+runtime.
 
 ### Workspace identity
 

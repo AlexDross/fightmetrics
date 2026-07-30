@@ -5,9 +5,18 @@
 -- structural check and still made the authenticated API unusable.
 BEGIN;
 CREATE EXTENSION IF NOT EXISTS pgtap;
-SELECT plan(35);
+-- Under `supabase test db` pgTAP is installed in `extensions`, not `public`, so
+-- the schema is named explicitly. Transaction-local. Note this alone is NOT
+-- sufficient — see the USAGE grant below, which is the load-bearing part.
+SELECT pg_catalog.set_config('search_path',
+  'public, ' || (SELECT n.nspname FROM pg_catalog.pg_extension e
+                   JOIN pg_catalog.pg_namespace n ON n.oid = e.extnamespace
+                  WHERE e.extname = 'pgtap'), true);
+SELECT plan(38);
 
 -- ── Fixture ─────────────────────────────────────────────────────────────────
+-- auth.users FIRST, as postgres, before any role change: FK checks against it
+-- need no grant, which is itself part of what this suite proves.
 INSERT INTO auth.users (id, instance_id, aud, role, email,
                         encrypted_password, created_at, updated_at)
 VALUES ('11111111-1111-4111-8111-111111111111',
@@ -16,6 +25,28 @@ VALUES ('11111111-1111-4111-8111-111111111111',
        ('22222222-2222-4222-8222-222222222222',
         '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated',
         'rival@example.com', '', now(), now());
+
+-- ── Transaction-local privileges, taken deliberately by the operator ────────
+-- pgTAP lives in `extensions`, and fm_table_owner has no USAGE on that schema.
+--
+-- THIS is why every assertion after the role switch failed with
+-- `function is(text, text, unknown) does not exist`. It is not a search_path
+-- problem: a schema on the search_path is still SKIPPED during function lookup
+-- when the active role lacks USAGE on it, so the lookup reports "does not
+-- exist" rather than "permission denied" and reads like a resolution failure.
+-- Direct psql passed only because pgTAP resolved from a different schema there.
+--
+-- Transaction-local, like the membership below. It is deliberately NOT in the
+-- production migration: no fm_ role needs `extensions` at runtime.
+GRANT USAGE ON SCHEMA extensions TO fm_table_owner;
+
+-- The working membership itself. postgres holds ADMIN OPTION but neither SET nor
+-- INHERIT, so it must deliberately grant itself the capability before it can
+-- touch app_private — exercised here rather than side-stepped by a permanent
+-- production grant. ROLLBACK removes both this and the USAGE grant above.
+GRANT fm_table_owner TO postgres WITH SET TRUE, INHERIT FALSE;
+SET LOCAL ROLE fm_table_owner;
+SET LOCAL search_path = public, extensions;
 
 INSERT INTO app_private.workspaces (id, slug, is_public, schema_version, migrated_at)
 VALUES ('aaaaaaaa-0000-4000-8000-000000000001', 'fightmetrics', true, 1, now());
@@ -39,15 +70,17 @@ VALUES ('aaaaaaaa-0000-4000-8000-000000000001',
 -- from every function, so the authenticated API could not be used at all.
 SET LOCAL request.jwt.claim.sub = '11111111-1111-4111-8111-111111111111';
 
-SELECT is(app_private.current_user_id(),
-          '11111111-1111-4111-8111-111111111111'::uuid,
+-- ::text on both sides: pgTAP's polymorphic is() does not resolve for uuid
+-- under the search_path pg_prove uses, though it does under a bare psql.
+SELECT is(app_private.current_user_id()::text,
+          '11111111-1111-4111-8111-111111111111'::text,
           'current_user_id resolves the caller from the request GUC alone');
 
 SELECT lives_ok($$SELECT app_private.current_user_id()$$,
                 'resolving the caller touches no auth object');
 
 SET LOCAL request.jwt.claim.sub = '';
-SELECT is(app_private.current_user_id(), NULL,
+SELECT is(app_private.current_user_id()::text, NULL::text,
           'an absent claim yields NULL rather than raising');
 SET LOCAL request.jwt.claim.sub = '11111111-1111-4111-8111-111111111111';
 
@@ -64,11 +97,20 @@ SELECT ok(NOT has_schema_privilege('fm_table_owner', 'auth', 'USAGE'),
 SELECT is((SELECT count(*) FROM information_schema.role_table_grants
             WHERE table_schema = 'auth' AND grantee LIKE 'fm\_%'),
           0::bigint, 'no fm_ role holds any privilege on any auth table');
+-- No PERMANENT grant exists for the operator. The membership this file takes is
+-- transaction-local and disappears with the ROLLBACK.
 SELECT is((SELECT count(*) FROM information_schema.role_table_grants
-            WHERE table_schema = 'app_private' AND grantee NOT LIKE 'fm\_%'
-              AND grantee <> 'postgres'),
-          0::bigint,
-          'the only non-fm_ role with app_private table privileges is postgres');
+            WHERE table_schema = 'app_private' AND grantee NOT LIKE 'fm\_%'),
+          0::bigint, 'no non-fm_ role holds a permanent app_private table grant');
+-- Write is what this schema controls. Residual READ comes from the platform's
+-- pg_read_all_data grant on the operator role, not from anything here.
+SELECT is((SELECT count(*) FROM pg_catalog.pg_class c
+             JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
+            WHERE n.nspname = 'app_private' AND c.relkind = 'r'
+              AND (has_table_privilege('postgres', c.oid, 'INSERT')
+                OR has_table_privilege('postgres', c.oid, 'UPDATE')
+                OR has_table_privilege('postgres', c.oid, 'DELETE'))),
+          0::bigint, 'postgres holds no permanent write on any app_private table');
 
 -- ── 2. The first owner can actually be created ──────────────────────────────
 -- This is the second failure: `new row violates row-level security policy for
@@ -77,25 +119,34 @@ SELECT is((SELECT count(*) FROM information_schema.role_table_grants
 SELECT is((SELECT count(*) FROM app_private.workspace_members), 0::bigint,
           'the workspace starts with zero owners');
 
+-- RPCs are exercised as `authenticated`, the role PostgREST actually uses, not
+-- as postgres. Calling them as the operator would prove nothing about the
+-- privilege boundary the browser hits.
+SET LOCAL ROLE authenticated;
+SET LOCAL search_path = public, extensions;
 SELECT lives_ok(
   $$SELECT public.fm_rpc_claim_workspace_ownership('fightmetrics')$$,
-  'the zero-owner claim succeeds');
-
-SELECT is((SELECT role FROM app_private.workspace_members
-            WHERE user_id = '11111111-1111-4111-8111-111111111111'),
-          'owner', 'the claimant is now the owner');
+  'the zero-owner claim succeeds for an authenticated caller');
 
 SELECT is((SELECT role FROM public.fm_member_whoami('fightmetrics')),
           'owner', 'whoami reports the resolved membership');
 
--- Exactly one claimant wins. The second sees the owner the first inserted.
+SET LOCAL ROLE fm_table_owner;
+SET LOCAL search_path = public, extensions;
+SELECT is((SELECT role FROM app_private.workspace_members
+            WHERE user_id = '11111111-1111-4111-8111-111111111111'),
+          'owner', 'the claimant is now the owner');
+
+-- SEQUENTIAL, not concurrent. This proves a LATER claimant is refused once an
+-- owner exists. It does NOT prove two overlapping transactions serialize — that
+-- needs two sessions and is explicitly outstanding for test:api.
+SET LOCAL ROLE authenticated;
+SET LOCAL search_path = public, extensions;
 SET LOCAL request.jwt.claim.sub = '22222222-2222-4222-8222-222222222222';
 SELECT throws_ok($$SELECT public.fm_rpc_claim_workspace_ownership('fightmetrics')$$,
-                 '42501', NULL, 'a second claimant is refused: exactly one wins');
-SELECT is((SELECT count(*) FROM app_private.workspace_members WHERE role = 'owner'),
-          1::bigint, 'still exactly one owner after the losing claim');
+                 '42501', NULL, 'a later claimant is refused once an owner exists');
 SELECT is((SELECT role FROM public.fm_member_whoami('fightmetrics')), NULL,
-          'the losing claimant resolves to no membership');
+          'the refused claimant resolves to no membership');
 
 -- An unknown slug stays distinguishable from a claimed one.
 SELECT throws_ok($$SELECT public.fm_rpc_claim_workspace_ownership('nope')$$,
@@ -105,6 +156,17 @@ SET LOCAL request.jwt.claim.sub = '';
 SELECT throws_ok($$SELECT public.fm_rpc_claim_workspace_ownership('fightmetrics')$$,
                  '42501', NULL, 'an unauthenticated claim is refused');
 SET LOCAL request.jwt.claim.sub = '11111111-1111-4111-8111-111111111111';
+
+-- anon must not reach the mutation at all.
+SET LOCAL ROLE anon;
+SET LOCAL search_path = public, extensions;
+SELECT throws_ok($$SELECT public.fm_rpc_claim_workspace_ownership('fightmetrics')$$,
+                 '42501', NULL, 'anon cannot execute the claim RPC');
+
+SET LOCAL ROLE fm_table_owner;
+SET LOCAL search_path = public, extensions;
+SELECT is((SELECT count(*) FROM app_private.workspace_members WHERE role = 'owner'),
+          1::bigint, 'still exactly one owner after every refused claim');
 
 -- ── 3. Corrected Stage 6 invariants — positive and negative each ────────────
 
@@ -311,5 +373,20 @@ SELECT lives_ok($$
           now(), 'open', 'notRequired')$$,
   'an OPEN position on a pending bout is accepted');
 
+-- Back to the operator, and confirm the working membership was a real grant
+-- rather than an inherited one — i.e. the contract genuinely required a
+-- deliberate act to get here.
+RESET ROLE;
+SET LOCAL search_path = public, extensions;
+SELECT is((SELECT count(*) FROM pg_catalog.pg_auth_members am
+             JOIN pg_catalog.pg_roles r ON r.oid = am.roleid
+             JOIN pg_catalog.pg_roles m ON m.oid = am.member
+            WHERE r.rolname = 'fm_table_owner' AND m.rolname = 'postgres'
+              AND am.set_option),
+          1::bigint,
+          'the working membership exists only because this transaction granted it');
+
 SELECT * FROM finish();
+-- ROLLBACK discards the working membership; the automatic admin-only row that
+-- the next reset needs is untouched, which the catalog suite re-verifies.
 ROLLBACK;
