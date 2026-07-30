@@ -5,7 +5,7 @@
 -- step 0 and the re-grant in step 1.
 BEGIN;
 CREATE EXTENSION IF NOT EXISTS pgtap;
-SELECT plan(36);
+SELECT plan(39);
 
 -- ── Ownership ───────────────────────────────────────────────────────────────
 SELECT is(pg_catalog.pg_get_userbyid(nspowner), 'fm_table_owner',
@@ -91,22 +91,67 @@ SELECT is((SELECT count(*) FROM pg_catalog.pg_policies
               AND cmd = 'UPDATE'),
           0::bigint, 'no UPDATE policy exists on any immutable table');
 
-SELECT is((SELECT count(*) FROM information_schema.role_table_grants
-            WHERE table_schema = 'app_private'
-              AND table_name IN ('prediction_runs','prediction_snapshots',
-                                 'market_snapshots','betting_assessments',
-                                 'parlays','parlay_legs')
-              AND privilege_type = 'UPDATE'),
-          0::bigint, 'no UPDATE grant exists on any immutable table');
+-- pg_catalog, NOT information_schema.role_table_grants. That view only exposes
+-- grants involving roles ENABLED for the current user, so under this connection
+-- it returns zero rows for app_private and every assertion built on it passed
+-- vacuously while fm_member_api in fact held SELECT/INSERT/DELETE on 15 tables
+-- and UPDATE on 9.
+--
+-- "No UPDATE grant" is also literally false as stated: an owner inherently has
+-- UPDATE, so fm_table_owner always appears. The real rule is that no NON-OWNER
+-- grantee — fm_member_api above all — may update an immutable table.
+SELECT is((SELECT count(*) FROM pg_catalog.pg_class c
+             JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
+             CROSS JOIN LATERAL pg_catalog.aclexplode(c.relacl) a
+            WHERE n.nspname = 'app_private' AND c.relkind = 'r'
+              AND c.relname IN ('prediction_runs','prediction_snapshots',
+                                'market_snapshots','betting_assessments',
+                                'parlays','parlay_legs')
+              AND a.privilege_type = 'UPDATE'
+              AND a.grantee <> c.relowner),
+          0::bigint, 'no non-owner grantee has UPDATE on any immutable table');
 
 -- ── Client roles reach no table directly ────────────────────────────────────
 -- NO non-fm_ role holds any app_private table privilege — postgres included.
 -- A permanent grant to postgres would be immediate DML, not a capability it has
 -- to deliberately exercise, and would collapse the distinction this contract
 -- preserves. The pgTAP suites take a transaction-local membership instead.
-SELECT is((SELECT count(*) FROM information_schema.role_table_grants
-            WHERE table_schema = 'app_private' AND grantee NOT LIKE 'fm\_%'),
-          0::bigint, 'no non-fm_ role holds any privilege on any app_private table');
+-- grantee = 0 is PUBLIC, for which pg_get_userbyid raises; a CASE keeps the
+-- PUBLIC case a violation without evaluating the lookup.
+SELECT is((SELECT count(*) FROM pg_catalog.pg_class c
+             JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
+             CROSS JOIN LATERAL pg_catalog.aclexplode(c.relacl) a
+            WHERE n.nspname = 'app_private' AND c.relkind = 'r'
+              AND CASE WHEN a.grantee = 0 THEN true
+                       ELSE pg_catalog.pg_get_userbyid(a.grantee) NOT LIKE 'fm\_%' END),
+          0::bigint, 'no non-fm_ grantee holds any privilege on any app_private table');
+
+-- POSITIVE CONTROLS. Without these the two assertions above would pass just as
+-- happily against an ACL query that sees nothing at all — which is exactly how
+-- the information_schema version failed silently.
+SELECT is((SELECT count(*) FROM pg_catalog.pg_class c
+             JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
+             CROSS JOIN LATERAL pg_catalog.aclexplode(c.relacl) a
+            WHERE n.nspname = 'app_private' AND c.relkind = 'r'
+              AND a.privilege_type = 'SELECT'
+              AND pg_catalog.pg_get_userbyid(a.grantee) = 'fm_member_api'),
+          15::bigint, 'control: fm_member_api has SELECT on exactly 15 tables');
+
+SELECT is((SELECT count(*) FROM pg_catalog.pg_class c
+             JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
+             CROSS JOIN LATERAL pg_catalog.aclexplode(c.relacl) a
+            WHERE n.nspname = 'app_private' AND c.relkind = 'r'
+              AND a.privilege_type = 'SELECT'
+              AND pg_catalog.pg_get_userbyid(a.grantee) = 'fm_public_reader'),
+          15::bigint, 'control: fm_public_reader has SELECT on exactly 15 tables');
+
+SELECT is((SELECT count(*) FROM pg_catalog.pg_class c
+             JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
+             CROSS JOIN LATERAL pg_catalog.aclexplode(c.relacl) a
+            WHERE n.nspname = 'app_private' AND c.relkind = 'r'
+              AND a.privilege_type = 'UPDATE'
+              AND pg_catalog.pg_get_userbyid(a.grantee) = 'fm_member_api'),
+          9::bigint, 'control: fm_member_api has UPDATE on exactly the 9 mutable tables');
 
 SELECT ok(NOT has_schema_privilege('anon', 'app_private', 'USAGE'),
           'anon has no USAGE on app_private');

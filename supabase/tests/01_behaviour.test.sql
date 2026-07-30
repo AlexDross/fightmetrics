@@ -12,7 +12,7 @@ SELECT pg_catalog.set_config('search_path',
   'public, ' || (SELECT n.nspname FROM pg_catalog.pg_extension e
                    JOIN pg_catalog.pg_namespace n ON n.oid = e.extnamespace
                   WHERE e.extname = 'pgtap'), true);
-SELECT plan(38);
+SELECT plan(42);
 
 -- ── Fixture ─────────────────────────────────────────────────────────────────
 -- auth.users FIRST, as postgres, before any role change: FK checks against it
@@ -94,14 +94,25 @@ SELECT ok(NOT has_schema_privilege('fm_public_reader', 'auth', 'USAGE'),
 -- by Postgres and skip ACL checks. The membership insert below proves it.
 SELECT ok(NOT has_schema_privilege('fm_table_owner', 'auth', 'USAGE'),
           'fm_table_owner has no USAGE on auth either — no role does');
-SELECT is((SELECT count(*) FROM information_schema.role_table_grants
-            WHERE table_schema = 'auth' AND grantee LIKE 'fm\_%'),
+-- pg_catalog, not information_schema.role_table_grants: that view shows only
+-- grants involving roles enabled for the current user and is empty here, so it
+-- made this assertion vacuous.
+SELECT is((SELECT count(*) FROM pg_catalog.pg_class c
+             JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
+             CROSS JOIN LATERAL pg_catalog.aclexplode(c.relacl) a
+            WHERE n.nspname = 'auth' AND c.relkind = 'r'
+              AND a.grantee <> 0
+              AND pg_catalog.pg_get_userbyid(a.grantee) LIKE 'fm\_%'),
           0::bigint, 'no fm_ role holds any privilege on any auth table');
 -- No PERMANENT grant exists for the operator. The membership this file takes is
 -- transaction-local and disappears with the ROLLBACK.
-SELECT is((SELECT count(*) FROM information_schema.role_table_grants
-            WHERE table_schema = 'app_private' AND grantee NOT LIKE 'fm\_%'),
-          0::bigint, 'no non-fm_ role holds a permanent app_private table grant');
+SELECT is((SELECT count(*) FROM pg_catalog.pg_class c
+             JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
+             CROSS JOIN LATERAL pg_catalog.aclexplode(c.relacl) a
+            WHERE n.nspname = 'app_private' AND c.relkind = 'r'
+              AND CASE WHEN a.grantee = 0 THEN true
+                       ELSE pg_catalog.pg_get_userbyid(a.grantee) NOT LIKE 'fm\_%' END),
+          0::bigint, 'no non-fm_ grantee holds a permanent app_private table grant');
 -- Write is what this schema controls. Residual READ comes from the platform's
 -- pg_read_all_data grant on the operator role, not from anything here.
 SELECT is((SELECT count(*) FROM pg_catalog.pg_class c
@@ -372,6 +383,61 @@ SELECT lives_ok($$
           'cccc0000-0000-4000-8000-000000000001', 'appCreated', 'A', 1, 'explicit',
           now(), 'open', 'notRequired')$$,
   'an OPEN position on a pending bout is accepted');
+
+-- ── The ACL negatives BIND ──────────────────────────────────────────────────
+-- Both checks previously ran against information_schema.role_table_grants,
+-- which is empty under this connection, so they were satisfied by an absent
+-- result set rather than by an absent grant. These probes introduce the exact
+-- violation each one is supposed to catch and confirm it is caught, then roll
+-- back and confirm the check passes again. fm_table_owner owns the tables, so it
+-- can issue and revoke the probe grants itself.
+SET LOCAL ROLE fm_table_owner;
+SET LOCAL search_path = public, extensions;
+
+SAVEPOINT acl_probe_immutable;
+GRANT UPDATE ON app_private.prediction_runs TO fm_member_api;
+SELECT is((SELECT count(*) FROM pg_catalog.pg_class c
+             JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
+             CROSS JOIN LATERAL pg_catalog.aclexplode(c.relacl) a
+            WHERE n.nspname = 'app_private' AND c.relkind = 'r'
+              AND c.relname IN ('prediction_runs','prediction_snapshots',
+                                'market_snapshots','betting_assessments',
+                                'parlays','parlay_legs')
+              AND a.privilege_type = 'UPDATE'
+              AND a.grantee <> c.relowner),
+          1::bigint,
+          'probe: granting UPDATE on an immutable table to fm_member_api is SEEN');
+ROLLBACK TO SAVEPOINT acl_probe_immutable;
+
+SELECT is((SELECT count(*) FROM pg_catalog.pg_class c
+             JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
+             CROSS JOIN LATERAL pg_catalog.aclexplode(c.relacl) a
+            WHERE n.nspname = 'app_private' AND c.relkind = 'r'
+              AND c.relname IN ('prediction_runs','prediction_snapshots',
+                                'market_snapshots','betting_assessments',
+                                'parlays','parlay_legs')
+              AND a.privilege_type = 'UPDATE'
+              AND a.grantee <> c.relowner),
+          0::bigint, 'probe rolled back: the immutable assertion passes again');
+
+SAVEPOINT acl_probe_nonfm;
+GRANT SELECT ON app_private.events TO postgres;
+SELECT is((SELECT count(*) FROM pg_catalog.pg_class c
+             JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
+             CROSS JOIN LATERAL pg_catalog.aclexplode(c.relacl) a
+            WHERE n.nspname = 'app_private' AND c.relkind = 'r'
+              AND CASE WHEN a.grantee = 0 THEN true
+                       ELSE pg_catalog.pg_get_userbyid(a.grantee) NOT LIKE 'fm\_%' END),
+          1::bigint, 'probe: granting a table privilege to postgres is SEEN');
+ROLLBACK TO SAVEPOINT acl_probe_nonfm;
+
+SELECT is((SELECT count(*) FROM pg_catalog.pg_class c
+             JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
+             CROSS JOIN LATERAL pg_catalog.aclexplode(c.relacl) a
+            WHERE n.nspname = 'app_private' AND c.relkind = 'r'
+              AND CASE WHEN a.grantee = 0 THEN true
+                       ELSE pg_catalog.pg_get_userbyid(a.grantee) NOT LIKE 'fm\_%' END),
+          0::bigint, 'probe rolled back: the non-fm_ assertion passes again');
 
 -- Back to the operator, and confirm the working membership was a real grant
 -- rather than an inherited one — i.e. the contract genuinely required a
