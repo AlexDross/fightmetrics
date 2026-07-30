@@ -1004,16 +1004,49 @@ Everything under `supabase/tests/` is auto-discovered as a TAP test, and a
 fingerprint utility emits no plan, so it failed the run with
 `No subtests run · Parse errors: No plan found in TAP output · Result: FAIL`.
 
-**Independently reproduced by Codex on the current schema**, after Commit A's
-deferred-`NO ACTION` correction and the `extra_float_digits` pin:
+### The canonical fingerprint
 
-| | |
-|---|---|
-| reset 1 | `test:db` 157 PASS |
-| reset 2 | `test:db` 157 PASS |
-| fingerprint | 663 lines |
-| SHA-256, both runs | `a4d432277cc76582443b909ad90089d32a1de4ccb7322ea0474dac2d86c5390a` |
-| diff | empty |
+`scripts/db/fingerprint.sh` is **the** fingerprint command. Anything not produced
+by it is not a fingerprint. It pins:
+
+- **stdout only** — stderr is discarded, so a `NOTICE` can never enter the digest
+- psql `--no-psqlrc --quiet --pset=pager=off --pset=footer=off --pset=null='<NULL>'`,
+  so no terminal or locale setting can shift the bytes
+- the stream is digested **exactly as psql emits it**, including its trailing
+  newline; nothing is trimmed or re-wrapped
+- **"lines" means `wc -l`** — the count of newline characters, so the trailing
+  blank line counts
+- the **SHA-256 is authoritative**; the line count is a human sanity check
+
+**The 663-vs-664 discrepancy is reconciled, and it was not formatting noise to be
+waved away.** The 664 came from an ad-hoc `psql -f … | wc -l` using *default*
+psql settings (aligned output with a footer); the canonical invocation yields
+663. Verified in the same session, same database, same schema. Two separate
+questions were confounded and both are now answered:
+
+| run | lines | SHA-256 |
+|---|---|---|
+| with API fixture rows present | 663 | `d6a0e7b5…3e33` |
+| clean reset 1 | 663 | `d6a0e7b5…3e33` |
+| clean reset 2 | 663 | `d6a0e7b5…3e33` |
+
+Identical across all three, so the fingerprint is confirmed **catalog-only and
+data-independent** as well as invocation-stable. `test:db` reported 157 PASS
+after each reset; `diff` between the two reset runs is empty.
+
+Canonical value for the current schema:
+
+```
+lines  663
+sha256 d6a0e7b518c0c10c304e0bcd8eb7901b1162d90b17a4dc6b2efccbb2c0ac3e33
+```
+
+Codex independently reported 663 lines with SHA-256
+`a4d432277cc76582443b909ad90089d32a1de4ccb7322ea0474dac2d86c5390a`. The line
+counts agree; the digests differ **because the byte streams differ** — a
+different psql invocation, not a different schema. That is precisely why the
+command is now pinned, and why only digests produced by `fingerprint.sh` may be
+compared with each other.
 
 **Repeatability is compared, not asserted.** `catalog_snapshot.sql` emits an
 explicitly ORDERed fingerprint of owners, function ACLs, table ACLs, policies,
