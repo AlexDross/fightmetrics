@@ -12,7 +12,7 @@ SELECT pg_catalog.set_config('search_path',
   'public, ' || (SELECT n.nspname FROM pg_catalog.pg_extension e
                    JOIN pg_catalog.pg_namespace n ON n.oid = e.extnamespace
                   WHERE e.extname = 'pgtap'), true);
-SELECT plan(81);
+SELECT plan(86);
 
 -- ── Fixture ─────────────────────────────────────────────────────────────────
 -- auth.users FIRST, as postgres, before any role change: FK checks against it
@@ -394,6 +394,37 @@ SET CONSTRAINTS app_private.tracked_positions_settlement,
                 app_private.bouts_dependents_settlement IMMEDIATE;
 SET CONSTRAINTS app_private.tracked_positions_settlement,
                 app_private.bouts_dependents_settlement DEFERRED;
+
+-- ── Private Upcoming, with the position actually still open ─────────────────
+-- The later private-workspace block runs after grading, when the only position
+-- has settled — so its fm_member_upcoming assertion is satisfied by an empty
+-- set either way. This one runs HERE, while the bout is pending and the position
+-- is open, so it proves a member really can reach Upcoming data in a private
+-- workspace rather than proving nothing.
+UPDATE app_private.workspaces SET is_public = false WHERE slug = 'fightmetrics';
+
+SET LOCAL ROLE authenticated;
+SET LOCAL search_path = public, extensions;
+SET LOCAL request.jwt.claim.sub = '11111111-1111-4111-8111-111111111111';
+
+SELECT is((SELECT count(*) FROM public.fm_read_upcoming('fightmetrics')), 0::bigint,
+          'private + open position: fm_read_upcoming returns zero');
+SELECT is((SELECT count(*) FROM public.fm_member_upcoming('fightmetrics')), 1::bigint,
+          'private + open position: the owner sees exactly one upcoming row');
+SELECT is((SELECT tracked_position_id FROM public.fm_member_upcoming('fightmetrics')),
+          '77770000-0000-4000-8000-000000000001'::uuid,
+          'private: the upcoming row is the expected position');
+SELECT isnt((SELECT revision FROM public.fm_member_upcoming('fightmetrics')), NULL,
+            'private: the upcoming row carries a non-null revision');
+
+SET LOCAL request.jwt.claim.sub = '22222222-2222-4222-8222-222222222222';
+SELECT is((SELECT count(*) FROM public.fm_member_upcoming('fightmetrics')), 0::bigint,
+          'private: a signed-in non-member sees no upcoming rows');
+SET LOCAL request.jwt.claim.sub = '11111111-1111-4111-8111-111111111111';
+
+SET LOCAL ROLE fm_table_owner;
+SET LOCAL search_path = public, extensions;
+UPDATE app_private.workspaces SET is_public = true WHERE slug = 'fightmetrics';
 
 -- ── Settlement: correct profit accepted, perturbed profit rejected ──────────
 -- SET CONSTRAINTS ... IMMEDIATE is essential. The triggers are DEFERRED and this

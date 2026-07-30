@@ -14,7 +14,7 @@ Base: `main` @ `89f6c45`. Backend decision: Supabase/Postgres.
 | 0 · Preflight | Docker runtime present and running; ports 54321–54324 free; Node supports the pinned CLI | ✅ |
 | 1 | This document + `feat(data): add repository interfaces over the durable schema` — in-memory only | ✅ |
 | 2 | `feat(data): add Postgres schema, roles, policies and RPCs` — pinned Supabase CLI as devDependency, committed `supabase/`, full local stack, all SQL/API tests. **No hosted project.** | ✅ |
-| 2 · status | **PARTIAL.** Landed: roles, ownership transfer, ACLs, `app_private` schema, all 15 tables with composite FKs and the deferrable run↔snapshot cycle, revision/slug/settlement triggers, RLS on every table, a working authenticated path (caller resolution + zero-owner bootstrap), the `fm_read_*`/`fm_member_*` surfaces **for everything the current app renders**, SQL-side measurements, and a 144-assertion suite green under `npm run test:db`. **Outstanding:** the `fm_rpc_*` mutation matrix (1 of ~20 exists — the ownership claim), and with it revision-vector conflict handling, the undo log and stable error markers; five contract reads deferred alongside it (`getAggregate`, `workspace.current`, `seedVersion`, `wager.listByBout`, `undo.list` — see §5); strict `StoreSchema` validation of the export; `test:api` against local PostgREST; genuine two-session claim concurrency; and the 152-row stored-profit recomputation, which needs Gate 3's seed. Both float constraints remain **provisional**. | |
+| 2 · status | **PARTIAL.** Landed: roles, ownership transfer, ACLs, `app_private` schema, all 15 tables with composite FKs and the deferrable run↔snapshot cycle, revision/slug/settlement triggers, RLS on every table, a working authenticated path (caller resolution + zero-owner bootstrap), the `fm_read_*`/`fm_member_*` surfaces **for everything the current app renders**, SQL-side measurements, and a 149-assertion suite green under `npm run test:db`. **Outstanding:** the `fm_rpc_*` mutation matrix (1 of ~20 exists — the ownership claim), and with it revision-vector conflict handling, the undo log and stable error markers; five contract reads deferred alongside it (`getAggregate`, `workspace.current`, `seedVersion`, `wager.listByBout`, `undo.list` — see §5); strict `StoreSchema` validation of the export; `test:api` against local PostgREST; genuine two-session claim concurrency; and the 152-row stored-profit recomputation, which needs Gate 3's seed. Both float constraints remain **provisional**. | |
 | 3 | `feat(data): migrate seed data into the durable schema` | ✅ |
 | 4 | `feat(auth): add magic-link sign-in and read-only public state` | ✅ |
 | 5 | **Hosted rollout** — Alex creates/links the project, `db push --dry-run` → `db push`, Vercel vars, invite owner, claim, approve seed | ✅ |
@@ -523,10 +523,10 @@ here is described as complete unless the SQL exists today.
 |---|---|---|
 | `eventRepository.list` | `fm_read_events` / `fm_member_events` | ✅ |
 | `eventRepository.get` | client-side filter of the list surfaces | ✅ |
-| `eventRepository.listWithBoutCounts` | `fm_member_events.bout_count` | ✅ |
+| `eventRepository.listWithBoutCounts` | public: derive counts from `fm_read_events` + `fm_read_bouts`; members: `fm_member_events.bout_count` | ✅ |
 | `boutRepository.listByEvent` | `fm_read_bouts` / `fm_member_bouts` | ✅ |
 | `boutRepository.get` | client-side filter of the bout surfaces | ✅ |
-| `boutRepository.listPendingResults` | `fm_member_bouts` where `result_status='pending'` | ✅ |
+| `boutRepository.listPendingResults` | filter `result_status='pending'` on `fm_read_bouts` (public) or `fm_member_bouts` (members) | ✅ |
 | `predictionRepository.listPending` | `fm_read_upcoming` / `fm_member_upcoming` | ✅ |
 | `predictionRepository.listGraded` | `fm_read_roi` / `fm_member_roi` | ✅ |
 | `propRepository.list` | `fm_read_props` / `fm_member_props` | ✅ |

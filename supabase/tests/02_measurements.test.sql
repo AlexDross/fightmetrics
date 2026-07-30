@@ -21,9 +21,11 @@ SET LOCAL ROLE fm_table_owner;
 SET LOCAL search_path = public, extensions;
 
 -- ── 1. float8 probability complementarity ───────────────────────────────────
--- The path that matters is browser JSON -> PostgREST -> float8 -> response.
--- jsonb is PostgREST's actual wire representation, so the round-trip is
--- exercised through jsonb rather than asserted on a bare literal.
+-- BOTH of the next two are SQL-ONLY DIAGNOSTICS. The path that matters is
+-- browser JSON -> PostgREST -> float8 -> response -> JS, and neither touches
+-- PostgREST: an in-database jsonb cast models part of the numeric conversion but
+-- exercises none of the transport. They also derive pB as (1 - pA) in SQL, so
+-- they test one serialized value rather than two. See the note below.
 SELECT is((SELECT count(*) FROM generate_series(1, 9999) g
             CROSS JOIN LATERAL (SELECT (g / 10000.0)::double precision AS pa) s
            WHERE s.pa + (1 - s.pa)::double precision <> 1),
