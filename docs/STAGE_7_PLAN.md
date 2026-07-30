@@ -14,7 +14,7 @@ Base: `main` @ `89f6c45`. Backend decision: Supabase/Postgres.
 | 0 · Preflight | Docker runtime present and running; ports 54321–54324 free; Node supports the pinned CLI | ✅ |
 | 1 | This document + `feat(data): add repository interfaces over the durable schema` — in-memory only | ✅ |
 | 2 | `feat(data): add Postgres schema, roles, policies and RPCs` — pinned Supabase CLI as devDependency, committed `supabase/`, full local stack, all SQL/API tests. **No hosted project.** | ✅ |
-| 2 · status | **PARTIAL.** Landed: roles, ownership transfer, ACLs, `app_private` schema, all 15 tables with composite FKs and the deferrable run↔snapshot cycle, revision/slug/settlement triggers, RLS on every table, a working authenticated path (caller resolution + zero-owner bootstrap), the complete `fm_read_*`/`fm_member_*` read surfaces, the Gate 2 measurements, a 120-assertion suite green under `npm run test:db`, and the two-reset repeatability proof. **Outstanding:** the `fm_rpc_*` mutation matrix (1 of ~20 exists — the ownership claim), and with it revision-vector conflict handling, the undo log and stable error markers; the remaining rejection coverage that depends on those RPCs; `test:api` against local PostgREST; genuine two-session claim concurrency; and the 152-row stored-profit recomputation, which needs Gate 3's seed. | |
+| 2 · status | **PARTIAL.** Landed: roles, ownership transfer, ACLs, `app_private` schema, all 15 tables with composite FKs and the deferrable run↔snapshot cycle, revision/slug/settlement triggers, RLS on every table, a working authenticated path (caller resolution + zero-owner bootstrap), the `fm_read_*`/`fm_member_*` surfaces **for everything the current app renders**, SQL-side measurements, and a 144-assertion suite green under `npm run test:db`. **Outstanding:** the `fm_rpc_*` mutation matrix (1 of ~20 exists — the ownership claim), and with it revision-vector conflict handling, the undo log and stable error markers; five contract reads deferred alongside it (`getAggregate`, `workspace.current`, `seedVersion`, `wager.listByBout`, `undo.list` — see §5); strict `StoreSchema` validation of the export; `test:api` against local PostgREST; genuine two-session claim concurrency; and the 152-row stored-profit recomputation, which needs Gate 3's seed. Both float constraints remain **provisional**. | |
 | 3 | `feat(data): migrate seed data into the durable schema` | ✅ |
 | 4 | `feat(auth): add magic-link sign-in and read-only public state` | ✅ |
 | 5 | **Hosted rollout** — Alex creates/links the project, `db push --dry-run` → `db push`, Vercel vars, invite owner, claim, approve seed | ✅ |
@@ -514,6 +514,39 @@ Return columns are enumerated, never `SELECT *`, so an added base column cannot
 leak. Each public function's returned key set is asserted to equal its documented
 list exactly.
 
+### REPOSITORY_CONTRACT → SQL source (non-mutation methods)
+
+Every read method in the Gate 1 contract, and where it is served from. Nothing
+here is described as complete unless the SQL exists today.
+
+| Contract method | SQL source | Status |
+|---|---|---|
+| `eventRepository.list` | `fm_read_events` / `fm_member_events` | ✅ |
+| `eventRepository.get` | client-side filter of the list surfaces | ✅ |
+| `eventRepository.listWithBoutCounts` | `fm_member_events.bout_count` | ✅ |
+| `boutRepository.listByEvent` | `fm_read_bouts` / `fm_member_bouts` | ✅ |
+| `boutRepository.get` | client-side filter of the bout surfaces | ✅ |
+| `boutRepository.listPendingResults` | `fm_member_bouts` where `result_status='pending'` | ✅ |
+| `predictionRepository.listPending` | `fm_read_upcoming` / `fm_member_upcoming` | ✅ |
+| `predictionRepository.listGraded` | `fm_read_roi` / `fm_member_roi` | ✅ |
+| `propRepository.list` | `fm_read_props` / `fm_member_props` | ✅ |
+| `parlayRepository.list` | `fm_read_parlays` / `fm_member_parlays` | ✅ |
+| `statisticsRepository.statisticsInput` | `fm_read_statistics_input` / `fm_member_statistics_input` | ✅ |
+| `workspaceRepository.exportStore` | `fm_member_export_store` | ⚠️ shape asserted in SQL; **strict `StoreSchema` validation outstanding** |
+| `authRepository.whoami` | `fm_member_whoami` | ✅ |
+| `authRepository.session` | client-side; Supabase session, no SQL surface | ✅ n/a |
+| `wagerRepository.listByBout` | **no surface yet** — wagers are exported but have no dedicated read function | ❌ deferred |
+| `workspaceRepository.current` | **no surface yet** — slug/isPublic/schemaVersion/migratedAt | ❌ deferred |
+| `workspaceRepository.seedVersion` | **no surface yet** — `seed_items` ledger unexposed | ❌ deferred |
+| `predictionRepository.getAggregate` | **no surface yet** — run + snapshots + assessment + position | ❌ deferred |
+| `undoRepository.list` | **no surface yet** — depends on the undo log | ❌ deferred with the mutation work |
+
+The five deferred rows are deliberately grouped with the `fm_rpc_*` matrix: four
+of them (`getAggregate`, `seedVersion`, `current`, `undo.list`) are the read
+halves of mutations that do not exist yet, and `listByBout` is only meaningful
+once wagers can be created. The read layer is therefore **not complete** — it is
+complete for the surfaces the current app renders.
+
 ### Statistics stay in JavaScript
 
 `fm_read_statistics_input` returns a **sanitized projection shaped like the legacy
@@ -840,6 +873,14 @@ transaction — no partial import. `Store.meta` reconstructs from
 `workspace_id`, `revision`, `row_updated_at`, `seed_items`, `undo_log`,
 `workspace_members`.
 
+**`fm_member_export_store` is NOT yet proven complete.** It now emits all eleven
+`StoreSchema` sections including nested parlay legs, and the pgTAP suite asserts
+the exact top-level key set, an eleven-section count, a non-empty array per
+entity, and representative nested fields. What is still missing is the decisive
+check: parsing the returned JSON with the **actual JavaScript `StoreSchema`**.
+That needs a Node client against a committed fixture and is **outstanding with
+`test:api`**. Until it passes, the export is "shape-asserted", not "validated".
+
 Round-trip is verified by a **recursive semantic comparator using `Object.is`
 only at numeric leaves** — `Object.is` on two objects compares identity and would
 prove nothing. The current store has 3,799 numeric leaves and 0 negative zeros.
@@ -941,14 +982,36 @@ otherwise the smallest sufficient bound is measured there.
 
 Run in `supabase/tests/02_measurements.test.sql` (17 assertions).
 
-**Both provisional constraints survive.** `prob_a + prob_b = 1` holds exactly for
-all 9,999 four-decimal probabilities, and still holds after the jsonb round-trip
-PostgREST performs. Non-vacuity is asserted alongside it: `0.1 + 0.2 <> 0.3` in
-this database, so float8 addition is genuinely inexact and the result is not a
-tautology. The profit expression is self-consistent across the full observed
-odds range (±100…±1600) at three stake magnitudes, so the exact `<>` comparison
-in `assert_settlement_row` stays. The stored-value recomputation over the 152
-computed rows cannot run until Gate 3 loads the seed and is deferred to it.
+**Both constraints remain PROVISIONAL.** Nothing measured so far exercises the
+real browser → PostgREST → `float8` → response → JavaScript path.
+
+- Complementarity: the in-database checks derive `pB` as `(1 - pA)` in SQL, so
+  they test one serialized value, not two. They are labelled **SQL-only
+  diagnostics**. The strongest available SQL check — two *independently parsed*
+  text doubles summing to exactly 1 — passes for every pair tried, and the
+  `CHECK` is proven to bind by rejecting a perturbed pair. Real two-value
+  round-trip is outstanding with `test:api`.
+- Profit: the exact `<>` comparison binds, proven against a real stored row —
+  the correct value is accepted and a value **one ULP off is rejected**. The
+  recomputation over the 152 stored computed rows needs Gate 3's seed.
+
+**Postgres and V8 agree bit-for-bit** on `decimal_from_american` for `-150`,
+`+250`, `-110` and `+100`, compared as `float8send` hex against constants dumped
+from Node. This caught a real error: the intuitive literal `1.6666666666666667`
+is `3ffaaaaaaaaaaaab`, one ULP from what **both** engines compute
+(`3ffaaaaaaaaaaaaa`). The database was right; the hand-written constant was wrong.
+
+A second trap, worth stating because it invalidated an earlier test: the
+production profit expression is `stake * ((1 + 100/|odds|) - 1)`, and for 1u at
+-150 that is `0.6666666666666665`, **not** the `0.6666666666666666` that
+`100/150` displays as. The subtraction after the addition loses the last bit.
+
+Both settlement fixtures now force `SET CONSTRAINTS … IMMEDIATE`. Without it a
+`lives_ok` around a deferred-trigger write proves nothing, because the test
+transaction never commits — measured: it passed with a profit one ULP off. The
+fixture also flushes the queued open-position event *before* grading, since
+forcing a stale `status='open'` event after the bout resolves makes the trigger
+correctly complain about a state the test itself created.
 
 **The `-0` guard in `is_js_double_map` is UNREACHABLE.** jsonb numbers are
 `numeric`, and Postgres `numeric` has no negative zero, so the parser normalises

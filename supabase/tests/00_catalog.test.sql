@@ -259,7 +259,9 @@ SELECT set_eq(
   $$VALUES ('fm_read_events'),('fm_read_bouts'),('fm_read_roi'),
            ('fm_read_upcoming'),('fm_read_props'),('fm_read_parlays'),
            ('fm_read_statistics_input'),('fm_member_whoami'),('fm_member_roi'),
-           ('fm_member_events'),('fm_member_bouts'),('fm_member_export_store'),
+           ('fm_member_upcoming'),('fm_member_events'),('fm_member_bouts'),
+           ('fm_member_props'),('fm_member_parlays'),
+           ('fm_member_statistics_input'),('fm_member_export_store'),
            ('fm_rpc_claim_workspace_ownership')$$,
   'the public API surface is exactly the documented function set');
 

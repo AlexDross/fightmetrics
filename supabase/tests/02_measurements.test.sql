@@ -10,7 +10,7 @@ SELECT pg_catalog.set_config('search_path',
   'public, ' || (SELECT n.nspname FROM pg_catalog.pg_extension e
                    JOIN pg_catalog.pg_namespace n ON n.oid = e.extnamespace
                   WHERE e.extname = 'pgtap'), true);
-SELECT plan(17);
+SELECT plan(19);
 
 -- Same transaction-local privileges as the behavioural suite: postgres holds no
 -- EXECUTE on app_private helpers, deliberately, so it must grant itself the
@@ -28,7 +28,7 @@ SELECT is((SELECT count(*) FROM generate_series(1, 9999) g
             CROSS JOIN LATERAL (SELECT (g / 10000.0)::double precision AS pa) s
            WHERE s.pa + (1 - s.pa)::double precision <> 1),
           0::bigint,
-          'complementarity holds exactly for all 9,999 four-decimal probabilities');
+          'SQL-only diagnostic: pA + (1-pA) = 1 for 9,999 four-decimal values');
 
 SELECT is((SELECT count(*) FROM generate_series(1, 9999) g
             CROSS JOIN LATERAL (
@@ -36,39 +36,72 @@ SELECT is((SELECT count(*) FROM generate_series(1, 9999) g
             ) s
            WHERE s.pa + (1 - s.pa)::double precision <> 1),
           0::bigint,
-          'complementarity survives the jsonb round-trip PostgREST performs');
+          'SQL-only diagnostic: the same holds after a jsonb cast in-database');
 
--- Non-vacuity: complementarity is NOT a tautology of float8. If it were, the
--- provisional constraint would be worthless. A three-way split breaks it.
-SELECT isnt((SELECT count(*) FROM generate_series(1, 999) g
-              CROSS JOIN LATERAL (SELECT (g / 3000.0)::double precision AS pa) s
-             WHERE s.pa + (1 - s.pa)::double precision <> 1),
-            NULL, 'control: the complementarity probe is a real computation');
+-- THE ABOVE ARE NOT THE REQUIRED MEASUREMENT. Both derive pB as (1 - pA) inside
+-- Postgres, so they test one serialized value, not two. The real question is
+-- whether TWO independently serialized browser doubles still sum to exactly 1
+-- after the browser -> PostgREST -> float8 -> response -> JS round trip. That
+-- needs the outstanding test:api harness; until then the constraint stays
+-- PROVISIONAL. What follows is the strongest check available in SQL alone:
+-- both sides arrive as independently parsed text, as they would over the wire.
+SELECT is((SELECT count(*) FROM (VALUES
+             ('0.5','0.5'),('0.6','0.4'),('0.55','0.45'),('0.3333','0.6667'),
+             ('0.1','0.9'),('0.01','0.99'),('0.123456789','0.876543211'))
+             AS c(a, b)
+           WHERE c.a::text::double precision + c.b::text::double precision <> 1),
+          0::bigint,
+          'two INDEPENDENTLY parsed text doubles still sum to exactly 1');
 
 SELECT ok((0.1::double precision + 0.2::double precision) <> 0.3::double precision,
           'control: float8 addition is genuinely inexact in this database');
 
--- ── 2. Profit recomputation ─────────────────────────────────────────────────
--- assert_settlement_row compares profit with `<>` and no epsilon. This
--- re-derives the same expression across the full observed American-odds range
--- and confirms the identity is stable in Postgres float8.
-SELECT is((SELECT count(*) FROM generate_series(100, 1600) o
-            CROSS JOIN LATERAL (VALUES (o), (-o)) AS s(odds)
-            CROSS JOIN LATERAL (VALUES (1::numeric), (0.5), (2.75)) AS k(stake)
-           WHERE k.stake::double precision
-                 * (app_private.decimal_from_american(s.odds) - 1)
-             <> k.stake::double precision
-                 * (app_private.decimal_from_american(s.odds) - 1)),
-          0::bigint,
-          'profit expression is self-consistent across the full odds range');
+-- The constraint BINDS: a non-complementary pair is rejected by the database,
+-- not merely by arithmetic in a test.
+SELECT throws_ok($$
+  INSERT INTO app_private.prediction_snapshots (workspace_id, id, run_id, bout_id,
+    basis, prob_a, prob_b, winner_corner, captured_at, capture_mode)
+  VALUES ('00000000-0000-4000-8000-00000000000f',
+          'dddd0000-0000-4000-8000-00000000000f', 'x',
+          'bbbb0000-0000-4000-8000-00000000000f',
+          'v2', 0.6, 0.41, 'A', now(), 'live')$$,
+  '23514', NULL, 'the complementarity CHECK rejects a perturbed pair');
 
--- The stored-value check the plan requires over the 152 computed rows cannot run
--- until Gate 3 loads the seed, so it is asserted here as a schema-level identity
--- and re-run against real rows at Gate 3.
-SELECT is(app_private.decimal_from_american(-150),
-          1 + 100 / 150.0::double precision, 'negative odds decimal is exact');
-SELECT is(app_private.decimal_from_american(250),
-          1 + 250 / 100.0::double precision, 'positive odds decimal is exact');
+-- ── 2. Profit recomputation ─────────────────────────────────────────────────
+-- An earlier revision compared `stake * expr` with `stake * expr` — the same
+-- expression on both sides — which cannot detect drift of any kind. These
+-- compare the database's decimal conversion against INDEPENDENTLY computed
+-- constants, worked out from the IEEE-754 definition rather than by calling the
+-- function under test.
+-- Compared as BIT PATTERNS via float8send. pgTAP's is() renders float8 through
+-- the session's extra_float_digits, so a genuine mismatch can print as two
+-- identical-looking strings — measured: 1.66666666666667 vs 1.66666666666667.
+-- Hex is exact and unambiguous.
+-- The expected bit patterns come from NODE, computing the same expression the
+-- repository uses (`o > 0 ? 1 + o/100 : 1 + 100/Math.abs(o)`) and dumping
+-- Buffer.writeDoubleBE. They are cross-language constants, not a restatement of
+-- the SQL. Postgres and V8 agree bit-for-bit on all four.
+--
+-- This caught a real error in an earlier revision of this test: the "obvious"
+-- decimal literal 1.6666666666666667 is 3ffaaaaaaaaaaaab, one ULP away from
+-- what BOTH engines actually compute (3ffaaaaaaaaaaaaa). The database was right
+-- and the hand-written constant was wrong.
+SELECT is(encode(pg_catalog.float8send(app_private.decimal_from_american(-150)), 'hex'),
+          '3ffaaaaaaaaaaaaa', 'decimal_from_american(-150) matches V8 bit-for-bit');
+SELECT is(encode(pg_catalog.float8send(app_private.decimal_from_american(250)), 'hex'),
+          '400c000000000000', 'decimal_from_american(+250) matches V8 bit-for-bit');
+SELECT is(encode(pg_catalog.float8send(app_private.decimal_from_american(-110)), 'hex'),
+          '3ffe8ba2e8ba2e8c', 'decimal_from_american(-110) matches V8 bit-for-bit');
+SELECT is(encode(pg_catalog.float8send(app_private.decimal_from_american(100)), 'hex'),
+          '4000000000000000', 'decimal_from_american(+100) matches V8 bit-for-bit');
+
+-- The settlement contract's accept/reject behaviour against a REAL stored row —
+-- correct profit accepted, perturbed profit rejected — needs a settled fixture
+-- and lives in 01_behaviour.test.sql.
+--
+-- NOTE: the plan's recomputation across the 152 stored computed rows needs
+-- Gate 3's seed and is NOT done here, so the exact `<>` comparison remains
+-- PROVISIONAL.
 
 -- ── 3. Negative-zero probe ──────────────────────────────────────────────────
 -- IEEE-754 -0.0 is 0x8000000000000000. JSON.stringify writes it as "0" and

@@ -1343,6 +1343,127 @@ LANGUAGE sql STABLE SECURITY DEFINER SET search_path = '' AS $$
    ORDER BY b.board_order NULLS LAST, b.id
 $$;
 
+-- A private workspace must not lose normal app functionality, so every public
+-- read surface has a member equivalent. Without these, Upcoming, Props, Parlays
+-- and Statistics simply vanish once is_public is turned off.
+CREATE FUNCTION public.fm_member_upcoming(p_slug text)
+RETURNS TABLE (
+  tracked_position_id uuid, bout_id uuid, event_id uuid, event_name text,
+  event_date date, division text, corner_a_name text, corner_b_name text,
+  tracked_corner text, stake_units text, prob_a double precision,
+  prob_b double precision, winner_corner text, tier text,
+  recommended_corner text, fair_line_a int, fair_line_b int,
+  edge_a double precision, edge_b double precision, ev_a double precision,
+  ev_b double precision, kelly_a double precision, kelly_b double precision,
+  tracked_odds_a int, tracked_odds_b int, result_status text,
+  review_status text, finish_status text, finish_ko_pct int,
+  finish_sub_pct int, finish_dec_pct int, finish_leaders text[],
+  revision text, notes text)
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = '' AS $$
+  SELECT p.tracked_position_id, p.bout_id, p.event_id, p.event_name, p.event_date,
+         p.division, p.corner_a_name, p.corner_b_name, p.tracked_corner,
+         p.stake_units, p.prob_a, p.prob_b, p.winner_corner, p.tier,
+         p.recommended_corner, p.fair_line_a, p.fair_line_b, p.edge_a, p.edge_b,
+         p.ev_a, p.ev_b, p.kelly_a, p.kelly_b, p.tracked_odds_a, p.tracked_odds_b,
+         p.result_status, p.review_status, p.finish_status, p.finish_ko_pct,
+         p.finish_sub_pct, p.finish_dec_pct, p.finish_leaders, p.revision, t.notes
+    FROM app_private.workspaces w
+    CROSS JOIN LATERAL app_private.position_rows(w.id) p
+    JOIN app_private.tracked_positions t
+      ON t.workspace_id = w.id AND t.id = p.tracked_position_id
+   WHERE w.slug = p_slug
+     AND app_private.is_member(w.id, ARRAY['owner','editor','viewer'])
+     AND p.settlement_status = 'open'
+$$;
+
+CREATE FUNCTION public.fm_member_props(p_slug text)
+RETURNS TABLE (id text, event_id uuid, target_kind text, target_bout_id uuid,
+               target_corner text, method text, prop_type text, label text,
+               odds int, stake_units text, result text, pick_source text,
+               revision text)
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = '' AS $$
+  SELECT pr.id, pr.event_id, pr.target_kind, pr.target_bout_id, pr.target_corner,
+         pr.method, pr.prop_type, pr.label, pr.odds, pr.stake_units::text,
+         pr.result, pr.pick_source, pr.revision::text
+    FROM app_private.props pr
+    JOIN app_private.workspaces w ON w.id = pr.workspace_id
+   WHERE w.slug = p_slug
+     AND app_private.is_member(w.id, ARRAY['owner','editor','viewer'])
+   ORDER BY pr.created_at, pr.id
+$$;
+
+-- Parlays are immutable, so there is no revision token to expose.
+CREATE FUNCTION public.fm_member_parlays(p_slug text)
+RETURNS TABLE (id text, event_id uuid, combined_odds int, stake_units text,
+               pick_source text, leg_index int, bout_id uuid,
+               picked_corner text, model_default_corner text,
+               model_prob_at_build double precision, overridden boolean)
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = '' AS $$
+  SELECT pa.id, pa.event_id, pa.combined_odds, pa.stake_units::text,
+         pa.pick_source, l.leg_index, l.bout_id, l.picked_corner,
+         l.model_default_corner, l.model_prob_at_build, l.overridden
+    FROM app_private.parlays pa
+    JOIN app_private.workspaces w ON w.id = pa.workspace_id
+    JOIN app_private.parlay_legs l
+      ON l.workspace_id = pa.workspace_id AND l.parlay_id = pa.id
+   WHERE w.slug = p_slug
+     AND app_private.is_member(w.id, ARRAY['owner','editor','viewer'])
+   ORDER BY pa.created_at, pa.id, l.leg_index
+$$;
+
+-- Same assembled legacy-entry shape as the public surface, membership-gated.
+-- Still computes nothing: src/domain/statistics remains the implementation.
+CREATE FUNCTION public.fm_member_statistics_input(p_slug text)
+RETURNS TABLE (id text, fighter_a text, fighter_b text, event_name text,
+               event_date date, actual_winner text, market_odds text,
+               tracked_side text, units_wagered text, predicted_winner text,
+               fighter_a_prob double precision, fighter_b_prob double precision,
+               v2_p_a double precision, v2_p_b double precision,
+               bet_action text, includes_prospect boolean,
+               fighter_a_is_prospect boolean, fighter_b_is_prospect boolean,
+               confirmed_by_user boolean, capture_mode text)
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = '' AS $$
+  SELECT coalesce(r.legacy_entry_id, r.id),
+         b.corner_a_display_name, b.corner_b_display_name, e.name, e.date,
+         CASE WHEN b.result_status <> 'resolved' THEN ''
+              WHEN b.result_outcome = 'draw' THEN 'DRAW'
+              WHEN b.result_outcome = 'noContest' THEN 'NC'
+              WHEN b.result_outcome = 'A' THEN b.corner_a_display_name
+              ELSE b.corner_b_display_name END,
+         CASE WHEN m.id IS NULL THEN ''
+              ELSE coalesce((CASE WHEN t.corner = 'A' THEN m.odds_a
+                                  ELSE m.odds_b END)::text, '') END,
+         CASE WHEN t.corner = 'A' THEN b.corner_a_display_name
+              ELSE b.corner_b_display_name END,
+         t.stake_units::text,
+         CASE WHEN v1.winner_corner = 'A' THEN b.corner_a_display_name
+              ELSE b.corner_b_display_name END,
+         v1.prob_a, v1.prob_b, v2.prob_a, v2.prob_b,
+         a.tier, r.includes_prospect_at_capture,
+         r.corner_a_is_prospect_at_capture, r.corner_b_is_prospect_at_capture,
+         (t.review_status <> 'pending'),
+         coalesce(v2.capture_mode, v1.capture_mode)
+    FROM app_private.tracked_positions t
+    JOIN app_private.workspaces w ON w.id = t.workspace_id
+    JOIN app_private.betting_assessments a
+      ON a.workspace_id = t.workspace_id AND a.id = t.assessment_id
+    JOIN app_private.prediction_runs r
+      ON r.workspace_id = a.workspace_id AND r.id = a.run_id
+    JOIN app_private.bouts b
+      ON b.workspace_id = t.workspace_id AND b.id = t.bout_id
+    JOIN app_private.events e
+      ON e.workspace_id = b.workspace_id AND e.id = b.event_id
+    JOIN app_private.prediction_snapshots v1
+      ON v1.workspace_id = r.workspace_id AND v1.run_id = r.id
+     AND v1.basis = 'legacy-v1-unversioned'
+    LEFT JOIN app_private.prediction_snapshots v2
+      ON v2.workspace_id = r.workspace_id AND v2.run_id = r.id AND v2.basis = 'v2'
+    LEFT JOIN app_private.market_snapshots m
+      ON m.workspace_id = t.workspace_id AND m.id = t.market_snapshot_id
+   WHERE w.slug = p_slug
+     AND app_private.is_member(w.id, ARRAY['owner','editor','viewer'])
+$$;
+
 -- Members only: the complete Stage 6 store, export only. Store.meta is
 -- reconstructed from workspaces.schema_version and migrated_at; workspace_id,
 -- revision, row_updated_at, seed_items, undo_log and workspace_members are
@@ -1404,7 +1525,75 @@ LANGUAGE sql STABLE SECURITY DEFINER SET search_path = '' AS $$
                    ELSE jsonb_build_object('status','uncomputable','reason',g.financial_reason) END,
                  'settledAt', g.settled_at) END,
         'notes', g.notes, 'externalIds', g.external_ids) ORDER BY g.id)
-      FROM app_private.wagers g WHERE g.workspace_id = w.id), '[]'::jsonb))
+      FROM app_private.wagers g WHERE g.workspace_id = w.id), '[]'::jsonb),
+    'predictionSnapshots', coalesce((SELECT jsonb_agg(jsonb_build_object(
+        'id', s.id, 'runId', s.run_id, 'boutId', s.bout_id, 'basis', s.basis,
+        'modelVersion', s.model_version, 'modelCoefHash', s.model_coef_hash,
+        'probA', s.prob_a, 'probB', s.prob_b, 'winnerCorner', s.winner_corner,
+        'capturedAt', s.captured_at, 'captureMode', s.capture_mode,
+        'reconstruction', CASE WHEN s.reconstruction_type IS NULL THEN 'null'::jsonb
+          ELSE jsonb_build_object('type', s.reconstruction_type,
+                 'sourceCommit', s.reconstruction_source_commit,
+                 'priorV2', CASE WHEN s.reconstruction_prior_v2_p_a IS NULL
+                   THEN 'null'::jsonb
+                   ELSE jsonb_build_object('v2pA', s.reconstruction_prior_v2_p_a,
+                                           'v2pB', s.reconstruction_prior_v2_p_b) END) END,
+        'featureVector', coalesce(s.feature_vector, 'null'::jsonb),
+        'fightHistoryCutoff', coalesce(s.fight_history_cutoff, 'null'::jsonb),
+        'sourceManifest', coalesce(s.source_manifest, 'null'::jsonb)) ORDER BY s.id)
+      FROM app_private.prediction_snapshots s WHERE s.workspace_id = w.id), '[]'::jsonb),
+    'bettingAssessments', coalesce((SELECT jsonb_agg(jsonb_build_object(
+        'id', a.id, 'boutId', a.bout_id, 'runId', a.run_id,
+        'predictionSnapshotId', a.prediction_snapshot_id,
+        'marketSnapshotId', a.market_snapshot_id, 'frozenAt', a.frozen_at,
+        'fairLineA', a.fair_line_a, 'fairLineB', a.fair_line_b,
+        'edgeA', a.edge_a, 'edgeB', a.edge_b, 'evA', a.ev_a, 'evB', a.ev_b,
+        'kellyA', a.kelly_a, 'kellyB', a.kelly_b, 'tier', a.tier,
+        'recommendedCorner', a.recommended_corner,
+        'tierProvenance', a.tier_provenance,
+        'recommendedCornerProvenance', a.recommended_corner_provenance) ORDER BY a.id)
+      FROM app_private.betting_assessments a WHERE a.workspace_id = w.id), '[]'::jsonb),
+    'trackedPositions', coalesce((SELECT jsonb_agg(jsonb_build_object(
+        'id', t.id, 'boutId', t.bout_id, 'assessmentId', t.assessment_id,
+        'marketSnapshotId', t.market_snapshot_id, 'origin', t.origin,
+        'corner', t.corner, 'stakeUnits', t.stake_units,
+        'stakeSource', t.stake_source, 'openedAt', t.opened_at,
+        'settlement', CASE WHEN t.settlement_status = 'open'
+          THEN jsonb_build_object('status','open')
+          ELSE jsonb_build_object('status','settled','outcome',t.settlement_outcome,
+                 'financialResult', CASE WHEN t.financial_status = 'computed'
+                   THEN jsonb_build_object('status','computed','profitUnits',t.profit_units)
+                   ELSE jsonb_build_object('status','uncomputable','reason',t.financial_reason) END,
+                 'settledAt', t.settled_at) END,
+        'reviewState', CASE t.review_status
+          WHEN 'notRequired' THEN jsonb_build_object('status','notRequired')
+          WHEN 'pending' THEN jsonb_build_object('status','pending','reason',t.review_reason)
+          ELSE jsonb_build_object('status','confirmed','reason',t.review_reason,
+                                  'confirmedAt', t.confirmed_at) END,
+        'notes', t.notes) ORDER BY t.id)
+      FROM app_private.tracked_positions t WHERE t.workspace_id = w.id), '[]'::jsonb),
+    'props', coalesce((SELECT jsonb_agg(jsonb_build_object(
+        'id', pr.id, 'eventId', pr.event_id,
+        'target', CASE WHEN pr.target_kind = 'bout'
+          THEN jsonb_build_object('kind','bout','boutId',pr.target_bout_id,
+                                  'corner', pr.target_corner)
+          ELSE jsonb_build_object('kind','event','eventId',pr.target_event_id) END,
+        'method', pr.method, 'propType', pr.prop_type, 'label', pr.label,
+        'odds', pr.odds, 'stakeUnits', pr.stake_units, 'result', pr.result,
+        'pickSource', pr.pick_source, 'createdAt', pr.created_at) ORDER BY pr.id)
+      FROM app_private.props pr WHERE pr.workspace_id = w.id), '[]'::jsonb),
+    'parlays', coalesce((SELECT jsonb_agg(jsonb_build_object(
+        'id', pa.id, 'eventId', pa.event_id, 'combinedOdds', pa.combined_odds,
+        'stakeUnits', pa.stake_units, 'pickSource', pa.pick_source,
+        'createdAt', pa.created_at,
+        'legs', (SELECT jsonb_agg(jsonb_build_object(
+            'boutId', l.bout_id, 'pickedCorner', l.picked_corner,
+            'modelDefaultCorner', l.model_default_corner,
+            'modelProbAtBuild', l.model_prob_at_build,
+            'overridden', l.overridden) ORDER BY l.leg_index)
+          FROM app_private.parlay_legs l
+         WHERE l.workspace_id = pa.workspace_id AND l.parlay_id = pa.id)) ORDER BY pa.id)
+      FROM app_private.parlays pa WHERE pa.workspace_id = w.id), '[]'::jsonb))
     FROM app_private.workspaces w
    WHERE w.slug = p_slug
      AND app_private.is_member(w.id, ARRAY['owner','editor','viewer'])

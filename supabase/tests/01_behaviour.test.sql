@@ -12,7 +12,7 @@ SELECT pg_catalog.set_config('search_path',
   'public, ' || (SELECT n.nspname FROM pg_catalog.pg_extension e
                    JOIN pg_catalog.pg_namespace n ON n.oid = e.extnamespace
                   WHERE e.extname = 'pgtap'), true);
-SELECT plan(59);
+SELECT plan(81);
 
 -- ── Fixture ─────────────────────────────────────────────────────────────────
 -- auth.users FIRST, as postgres, before any role change: FK checks against it
@@ -384,6 +384,89 @@ SELECT lives_ok($$
           now(), 'open', 'notRequired')$$,
   'an OPEN position on a pending bout is accepted');
 
+-- FLUSH the queued deferred events while the state is still internally
+-- consistent (bout pending, position open). Without this, the INSERT's
+-- NEW.status = 'open' event stays queued and is forced later — after grading —
+-- where it correctly reports `settlement disagrees with bout result status`.
+-- That is the trigger doing its job on a stale event, not a schema defect, so
+-- the fixture lifecycle is what has to change, never the production trigger.
+SET CONSTRAINTS app_private.tracked_positions_settlement,
+                app_private.bouts_dependents_settlement IMMEDIATE;
+SET CONSTRAINTS app_private.tracked_positions_settlement,
+                app_private.bouts_dependents_settlement DEFERRED;
+
+-- ── Settlement: correct profit accepted, perturbed profit rejected ──────────
+-- SET CONSTRAINTS ... IMMEDIATE is essential. The triggers are DEFERRED and this
+-- file never commits, so a plain lives_ok around the UPDATE proves nothing — it
+-- passed even with a profit one ULP off. Forcing the check is what makes the
+-- assertion real, and BOTH sides are forced so the position and the bout are
+-- validated together in their final state.
+--
+-- The expected profit is 0.6666666666666665 (3fe5555555555554), which is what
+-- Node produces for the expression production actually evaluates:
+--   1 * ((1 + 100/150) - 1)
+-- `100/150` alone conventionally displays as 0.6666666666666666, but that is a
+-- DIFFERENT double: the subtraction after the addition loses the last bit. The
+-- conventional value is rejected — see the one-ULP test below.
+SELECT lives_ok($q$
+  DO $x$ BEGIN
+    UPDATE app_private.tracked_positions
+       SET settlement_status = 'settled', settlement_outcome = 'won',
+           financial_status = 'computed', profit_units = 0.6666666666666665,
+           settled_at = now()
+     WHERE id = '77770000-0000-4000-8000-000000000001';
+    UPDATE app_private.bouts
+       SET result_status = 'resolved', result_outcome = 'A', result_method = 'DEC'
+     WHERE id = 'bbbb0000-0000-4000-8000-000000000001';
+    SET CONSTRAINTS app_private.tracked_positions_settlement,
+                    app_private.bouts_dependents_settlement IMMEDIATE;
+  END $x$
+$q$, 'a settled position carrying the V8-computed profit is accepted');
+
+-- One ULP is enough to be rejected: the comparison really is exact.
+SELECT throws_ok($q$
+  DO $x$ BEGIN
+    UPDATE app_private.tracked_positions SET profit_units = 0.6666666666666666
+     WHERE id = '77770000-0000-4000-8000-000000000001';
+    SET CONSTRAINTS app_private.tracked_positions_settlement IMMEDIATE;
+  END $x$
+$q$, 'P0001', NULL, 'a profit ONE ULP off is rejected — the check is exact');
+
+SELECT throws_ok($q$
+  DO $x$ BEGIN
+    UPDATE app_private.tracked_positions SET profit_units = 0.9
+     WHERE id = '77770000-0000-4000-8000-000000000001';
+    SET CONSTRAINTS app_private.tracked_positions_settlement IMMEDIATE;
+  END $x$
+$q$, 'P0001', NULL, 'a PERTURBED stored profit is rejected by the settlement check');
+
+-- ── A complete fixture for the export: one row of every entity type ─────────
+INSERT INTO app_private.wagers (workspace_id, id, bout_id, assessment_id,
+  market_snapshot_id, corner, stake_units, placed_at, settlement_status,
+  settlement_outcome, financial_status, profit_units, settled_at, notes)
+VALUES ('aaaaaaaa-0000-4000-8000-000000000001',
+        '99990000-0000-4000-8000-000000000001',
+        'bbbb0000-0000-4000-8000-000000000001',
+        'ffff0000-0000-4000-8000-000000000001',
+        -- 2 * ((1 + 100/150) - 1) = 1.333333333333333 = 3ff5555555555554 in Node.
+        -- 1.3333333333333333 is a different double and is rejected.
+        'cccc0000-0000-4000-8000-000000000001', 'A', 2, now(),
+        'settled', 'won', 'computed', 1.333333333333333, now(), 'a real bet');
+
+-- Forced, so the wager fixture cannot pass vacuously the way the position one
+-- did: its trigger is deferred too, and this file never commits.
+SELECT lives_ok($$SET CONSTRAINTS app_private.wagers_settlement IMMEDIATE$$,
+                'the settled 2u wager satisfies the settlement contract');
+SET CONSTRAINTS app_private.wagers_settlement DEFERRED;
+
+INSERT INTO app_private.props (workspace_id, id, event_id, target_kind,
+  target_bout_id, target_corner, method, prop_type, label, odds, stake_units,
+  result, pick_source, created_at)
+VALUES ('aaaaaaaa-0000-4000-8000-000000000001', '1700000000020-cccccc',
+        'eeee0000-0000-4000-8000-000000000001', 'bout',
+        'bbbb0000-0000-4000-8000-000000000001', 'A', 'KO/TKO', 'method',
+        'Alpha by KO', 300, 1, 'PENDING', 'model', now());
+
 -- ── Read surfaces: audience and the public/private contract ─────────────────
 -- The claimant (user 1) is the owner; user 2 is a signed-in non-member.
 SET LOCAL ROLE authenticated;
@@ -394,10 +477,11 @@ SELECT is((SELECT count(*) FROM public.fm_read_events('fightmetrics')), 1::bigin
           'fm_read_events returns the public card');
 SELECT is((SELECT count(*) FROM public.fm_read_bouts('fightmetrics')), 1::bigint,
           'fm_read_bouts returns the public bout');
-SELECT is((SELECT count(*) FROM public.fm_read_upcoming('fightmetrics')), 1::bigint,
-          'fm_read_upcoming returns the open position');
-SELECT is((SELECT count(*) FROM public.fm_read_roi('fightmetrics')), 0::bigint,
-          'fm_read_roi returns nothing while the bout is pending');
+-- The bout was graded above, so the position has moved from Upcoming to ROI.
+SELECT is((SELECT count(*) FROM public.fm_read_upcoming('fightmetrics')), 0::bigint,
+          'fm_read_upcoming is empty once the position has settled');
+SELECT is((SELECT count(*) FROM public.fm_read_roi('fightmetrics')), 1::bigint,
+          'fm_read_roi returns the settled position');
 SELECT is((SELECT count(*) FROM public.fm_read_statistics_input('fightmetrics')),
           1::bigint, 'fm_read_statistics_input projects the legacy entry shape');
 
@@ -428,8 +512,43 @@ SELECT is((SELECT count(*) FROM public.fm_member_events('fightmetrics')), 1::big
           'the owner sees the member event surface');
 SELECT isnt((SELECT revision FROM public.fm_member_events('fightmetrics')), NULL,
             'the member surface carries a revision token');
-SELECT ok((public.fm_member_export_store('fightmetrics')) ? 'meta',
-          'the owner can export a store with reconstructed meta');
+-- EXACT top-level key set. `? 'meta'` passed happily while five required
+-- sections were missing entirely.
+SELECT set_eq(
+  $$SELECT jsonb_object_keys(public.fm_member_export_store('fightmetrics'))$$,
+  $$VALUES ('meta'),('events'),('bouts'),('predictionRuns'),
+           ('predictionSnapshots'),('marketSnapshots'),('bettingAssessments'),
+           ('trackedPositions'),('wagers'),('props'),('parlays')$$,
+  'the export top-level key set is exactly StoreSchema''s eleven sections');
+
+SELECT is((SELECT count(*) FROM jsonb_object_keys(
+             public.fm_member_export_store('fightmetrics'))), 11::bigint,
+          'the export has exactly eleven sections, no extras');
+
+-- Every entity type has at least one row, so no section is vacuously empty.
+SELECT is((SELECT count(*) FROM (
+             SELECT k, jsonb_array_length(
+               public.fm_member_export_store('fightmetrics') -> k) AS n
+               FROM unnest(ARRAY['events','bouts','predictionRuns',
+                 'predictionSnapshots','marketSnapshots','bettingAssessments',
+                 'trackedPositions','wagers','props','parlays']) k) c
+           WHERE c.n < 1),
+          0::bigint, 'every entity section of the export is non-empty');
+
+-- Representative fields, including the nested parlay legs.
+SELECT is(public.fm_member_export_store('fightmetrics') #>> '{meta,schemaVersion}',
+          '1', 'export meta.schemaVersion is reconstructed from the workspace');
+SELECT is(public.fm_member_export_store('fightmetrics') #>> '{bouts,0,cornerA,displayName}',
+          'Alpha Fighter', 'export bouts carry the nested cornerA object');
+SELECT is(public.fm_member_export_store('fightmetrics') #>> '{trackedPositions,0,settlement,status}',
+          'settled', 'export tracked positions carry the settlement union');
+SELECT is(public.fm_member_export_store('fightmetrics') #>> '{parlays,0,legs,0,pickedCorner}',
+          'A', 'export parlays carry their nested legs');
+SELECT is(jsonb_array_length(
+            public.fm_member_export_store('fightmetrics') #> '{parlays,0,legs}'),
+          1, 'the parlay exports exactly its one leg');
+SELECT is(public.fm_member_export_store('fightmetrics') #>> '{props,0,target,kind}',
+          'bout', 'export props carry the discriminated target union');
 
 -- Excluded fields never appear in a public projection.
 SELECT is((SELECT count(*) FROM information_schema.columns
@@ -448,10 +567,53 @@ SET LOCAL search_path = public, extensions;
 UPDATE app_private.workspaces SET is_public = false WHERE slug = 'fightmetrics';
 SET LOCAL ROLE authenticated;
 SET LOCAL search_path = public, extensions;
-SELECT is((SELECT count(*) FROM public.fm_read_events('fightmetrics')), 0::bigint,
-          'fm_read_* returns nothing for a private workspace, even to a member');
+-- EVERY public surface goes dark…
+SELECT is((SELECT count(*) FROM public.fm_read_events('fightmetrics'))
+        + (SELECT count(*) FROM public.fm_read_bouts('fightmetrics'))
+        + (SELECT count(*) FROM public.fm_read_roi('fightmetrics'))
+        + (SELECT count(*) FROM public.fm_read_upcoming('fightmetrics'))
+        + (SELECT count(*) FROM public.fm_read_props('fightmetrics'))
+        + (SELECT count(*) FROM public.fm_read_parlays('fightmetrics'))
+        + (SELECT count(*) FROM public.fm_read_statistics_input('fightmetrics')),
+          0::bigint, 'every fm_read_* returns zero rows for a private workspace');
+
+-- …and every member equivalent keeps working, so a private workspace loses no
+-- app functionality. Before this commit there were no member equivalents for
+-- Upcoming, Props, Parlays or Statistics, so those four tabs went blank.
 SELECT is((SELECT count(*) FROM public.fm_member_events('fightmetrics')), 1::bigint,
-          '…while the member surface still serves that same member');
+          'private: fm_member_events still serves the member');
+SELECT is((SELECT count(*) FROM public.fm_member_bouts('fightmetrics')), 1::bigint,
+          'private: fm_member_bouts still serves the member');
+SELECT is((SELECT count(*) FROM public.fm_member_roi('fightmetrics')), 1::bigint,
+          'private: fm_member_roi returns the settled position');
+SELECT is((SELECT count(*) FROM public.fm_member_props('fightmetrics')), 1::bigint,
+          'private: fm_member_props returns the prop');
+SELECT is((SELECT count(*) FROM public.fm_member_parlays('fightmetrics')), 1::bigint,
+          'private: fm_member_parlays returns the parlay leg');
+SELECT is((SELECT count(*) FROM public.fm_member_statistics_input('fightmetrics')),
+          1::bigint, 'private: fm_member_statistics_input returns the entry');
+SELECT ok((public.fm_member_export_store('fightmetrics') -> 'wagers') <> '[]'::jsonb,
+          'private: the export still carries wager data');
+SELECT isnt((SELECT revision FROM public.fm_member_props('fightmetrics')), NULL,
+            'private: the member prop surface carries a revision token');
+
+-- A signed-in NON-member gets nothing from any of them, private or not.
+SET LOCAL request.jwt.claim.sub = '22222222-2222-4222-8222-222222222222';
+SELECT is((SELECT count(*) FROM public.fm_member_props('fightmetrics'))
+        + (SELECT count(*) FROM public.fm_member_parlays('fightmetrics'))
+        + (SELECT count(*) FROM public.fm_member_upcoming('fightmetrics'))
+        + (SELECT count(*) FROM public.fm_member_statistics_input('fightmetrics')),
+          0::bigint, 'private: a signed-in non-member gets nothing from members surfaces');
+SET LOCAL request.jwt.claim.sub = '11111111-1111-4111-8111-111111111111';
+
+-- anon cannot execute the new member surfaces at all.
+SET LOCAL ROLE anon;
+SET LOCAL search_path = public, extensions;
+SELECT throws_ok($$SELECT * FROM public.fm_member_props('fightmetrics')$$,
+                 '42501', NULL, 'anon cannot execute fm_member_props');
+SELECT throws_ok($$SELECT * FROM public.fm_member_statistics_input('fightmetrics')$$,
+                 '42501', NULL, 'anon cannot execute fm_member_statistics_input');
+
 SET LOCAL ROLE fm_table_owner;
 SET LOCAL search_path = public, extensions;
 UPDATE app_private.workspaces SET is_public = true WHERE slug = 'fightmetrics';
