@@ -5,7 +5,7 @@
 -- step 0 and the re-grant in step 1.
 BEGIN;
 CREATE EXTENSION IF NOT EXISTS pgtap;
-SELECT plan(50);
+SELECT plan(52);
 
 -- ── Ownership ───────────────────────────────────────────────────────────────
 SELECT is(pg_catalog.pg_get_userbyid(nspowner), 'fm_table_owner',
@@ -262,8 +262,42 @@ SELECT set_eq(
            ('fm_member_upcoming'),('fm_member_events'),('fm_member_bouts'),
            ('fm_member_props'),('fm_member_parlays'),
            ('fm_member_statistics_input'),('fm_member_export_store'),
-           ('fm_rpc_claim_workspace_ownership')$$,
+           ('fm_member_undo_list'),
+           ('fm_rpc_claim_workspace_ownership'),
+           ('fm_rpc_change_tracked_corner'),('fm_rpc_amend_tracked_price'),
+           ('fm_rpc_confirm_entry')$$,
   'the public API surface is exactly the documented function set');
+
+-- ── Constraint helpers reachable by the writing role ────────────────────────
+-- A CHECK constraint's function is executed as the role PERFORMING THE WRITE,
+-- not as the table owner. Blanket-revoking app_private therefore broke every
+-- mutation with `42501 permission denied for function is_finite_or_null` — from
+-- the CHECK, not from RLS. Exactly the helpers reachable from a constraint on a
+-- table fm_member_api writes are granted to it, and to nothing else.
+SELECT set_eq(
+  $$SELECT p.proname FROM pg_catalog.pg_proc p
+      JOIN pg_catalog.pg_namespace n ON n.oid = p.pronamespace
+     WHERE n.nspname = 'app_private'
+       AND has_function_privilege('fm_member_api', p.oid, 'EXECUTE')
+       AND p.proname IN ('is_finite_or_null','is_american_odds_or_null',
+                         'decimal_from_american','is_string_map',
+                         'is_js_double_map','is_cutoff','is_source_manifest',
+                         'finish_leaders_expected','array_is_distinct',
+                         'jsonb_key_count','parse_positive_decimal')$$,
+  $$VALUES ('is_finite_or_null'),('is_american_odds_or_null'),
+           ('decimal_from_american')$$,
+  'fm_member_api holds EXECUTE on exactly the three constraint helpers it needs');
+
+SELECT is((SELECT count(*) FROM pg_catalog.pg_proc p
+             JOIN pg_catalog.pg_namespace n ON n.oid = p.pronamespace
+            WHERE n.nspname = 'app_private'
+              AND p.proname IN ('is_finite_or_null','is_american_odds_or_null',
+                                'decimal_from_american')
+              AND (has_function_privilege('fm_public_reader', p.oid, 'EXECUTE')
+                OR has_function_privilege('anon', p.oid, 'EXECUTE')
+                OR has_function_privilege('authenticated', p.oid, 'EXECUTE'))),
+          0::bigint,
+          'those three helpers are unreachable by fm_public_reader, anon and authenticated');
 
 -- ── The deferred-NO-ACTION exception ────────────────────────────────────────
 -- RESTRICT is the default everywhere. Exactly two FKs — the genuinely cyclic

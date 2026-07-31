@@ -695,7 +695,13 @@ CREATE TABLE app_private.undo_log (
   op           text NOT NULL CHECK (length(op) > 0),
   prior_state     jsonb NOT NULL,
   revision_vector jsonb NOT NULL,
+  -- Rows the operation DELETED. An undo re-inserts these and asserts they are
+  -- still absent beforehand.
   absent_ids      jsonb NOT NULL,
+  -- Rows the operation CREATED. An undo removes these. Distinct from
+  -- absent_ids: storing an appended snapshot there would tell undo to
+  -- re-insert a row that already exists.
+  created_ids     jsonb NOT NULL DEFAULT '[]'::jsonb,
   created_at   timestamptz NOT NULL DEFAULT now(),
   expires_at   timestamptz NOT NULL,
   consumed_at  timestamptz,
@@ -1633,6 +1639,367 @@ LANGUAGE sql STABLE SECURITY DEFINER SET search_path = '' AS $$
      AND app_private.is_member(w.id, ARRAY['owner','editor','viewer'])
 $$;
 
+-- ── Mutation plumbing ───────────────────────────────────────────────────────
+-- Resolve the workspace a mutation targets and check the caller's role in ONE
+-- place, so an RPC cannot accidentally skip either half.
+CREATE FUNCTION app_private.require_role(p_slug text, p_roles text[])
+RETURNS uuid LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path = '' AS $$
+DECLARE v_id uuid;
+BEGIN
+  IF app_private.current_user_id() IS NULL THEN
+    RAISE EXCEPTION 'authentication required' USING ERRCODE = '42501';
+  END IF;
+  SELECT w.id INTO v_id FROM app_private.workspaces w WHERE w.slug = p_slug;
+  IF v_id IS NULL THEN
+    RAISE EXCEPTION 'unknown workspace slug' USING ERRCODE = '42704';
+  END IF;
+  IF NOT app_private.is_member(v_id, p_roles) THEN
+    RAISE EXCEPTION 'insufficient workspace role' USING ERRCODE = '42501';
+  END IF;
+  RETURN v_id;
+END $$;
+
+-- THE stale-write signal. The repository maps P0001 to `conflict` only when the
+-- message carries the literal `stale_write` marker AND a parseable in-range
+-- revision — so both are emitted here, from one place, and a revision is never
+-- fabricated: it is read from the row the caller tried to write.
+CREATE FUNCTION app_private.raise_stale_write(p_current bigint)
+RETURNS void LANGUAGE plpgsql IMMUTABLE SET search_path = '' AS $$
+BEGIN
+  RAISE EXCEPTION 'stale_write revision=%', p_current USING ERRCODE = 'P0001';
+END $$;
+
+-- Revisions cross the boundary as decimal STRINGS: a bigint cannot survive JSON
+-- as a JS number. Parsed here, once, with the same bound the client applies.
+-- NOT STRICT. A STRICT function returns NULL for NULL input WITHOUT running,
+-- so `p_expected_revision: null` silently skipped the conflict check entirely —
+-- a null-revision bypass. NULL is now an explicit 22P02, and the signed-bigint
+-- bound is enforced BEFORE the cast so 9999999999999999999 cannot reach it.
+CREATE FUNCTION app_private.parse_revision(t text)
+RETURNS bigint LANGUAGE plpgsql IMMUTABLE SET search_path = '' AS $$
+BEGIN
+  IF t IS NULL THEN
+    RAISE EXCEPTION 'revision is required' USING ERRCODE = '22P02';
+  END IF;
+  IF t !~ '^(0|[1-9][0-9]{0,18})$' THEN
+    RAISE EXCEPTION 'malformed revision: %', t USING ERRCODE = '22P02';
+  END IF;
+  IF t::numeric > 9223372036854775807::numeric THEN
+    RAISE EXCEPTION 'revision out of signed bigint range: %', t USING ERRCODE = '22P02';
+  END IF;
+  RETURN t::bigint;
+END $$;
+
+-- Single-use, 15-minute, creator-only, workspace-scoped. `revision_vector`
+-- holds the POST-operation revision of every surviving mutable row touched;
+-- `absent_ids` lists every row the operation deleted.
+CREATE FUNCTION app_private.write_undo(
+  p_workspace uuid, p_op text, p_prior jsonb,
+  p_revisions jsonb, p_absent jsonb, p_created jsonb DEFAULT '[]'::jsonb)
+RETURNS uuid LANGUAGE plpgsql VOLATILE SECURITY DEFINER SET search_path = '' AS $$
+DECLARE v_id uuid;
+BEGIN
+  INSERT INTO app_private.undo_log (workspace_id, user_id, op, prior_state,
+                                    revision_vector, absent_ids, created_ids,
+                                    expires_at)
+  VALUES (p_workspace, app_private.current_user_id(), p_op, p_prior,
+          p_revisions, coalesce(p_absent, '[]'::jsonb),
+          coalesce(p_created, '[]'::jsonb),
+          pg_catalog.now() + interval '15 minutes')
+  RETURNING id INTO v_id;
+  RETURN v_id;
+END $$;
+
+-- Load a tracked position, check the expected revision, and return the row.
+-- Every position mutation goes through this, so none of them can forget the
+-- conflict check.
+CREATE FUNCTION app_private.lock_position(
+  p_workspace uuid, p_id uuid, p_expected text)
+RETURNS app_private.tracked_positions
+LANGUAGE plpgsql VOLATILE SECURITY DEFINER SET search_path = '' AS $$
+DECLARE v_row app_private.tracked_positions;
+BEGIN
+  SELECT * INTO v_row FROM app_private.tracked_positions t
+   WHERE t.workspace_id = p_workspace AND t.id = p_id FOR UPDATE;
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'tracked position not found' USING ERRCODE = '42704';
+  END IF;
+  IF v_row.revision <> app_private.parse_revision(p_expected) THEN
+    PERFORM app_private.raise_stale_write(v_row.revision);
+  END IF;
+  RETURN v_row;
+END $$;
+
+
+-- Settlement is scored at the TRACKED price, so an edit to corner or price on a
+-- settled position must change the settlement WITH it, in the SAME statement.
+--
+-- This is deliberately a PURE function: it computes and returns, it does not
+-- write. An earlier version issued its own UPDATE, which queued a SECOND
+-- deferred event — the first, carrying the pre-recompute state, then fired at
+-- COMMIT and the trigger correctly refused it:
+--   tracked_positions profit 0.6666666666666665 <> expected 0.8333333333333335
+-- The trigger was right both times; the writer has to produce one final state.
+CREATE FUNCTION app_private.settlement_for(
+  p_ws uuid, p_bout uuid, p_corner text, p_market uuid, p_stake numeric)
+RETURNS TABLE (settlement_status text, settlement_outcome text,
+               financial_status text, financial_reason text,
+               profit_units double precision)
+LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path = '' AS $$
+DECLARE v_status text; v_result text; v_odds int; v_outcome text;
+BEGIN
+  SELECT b.result_status, b.result_outcome INTO v_status, v_result
+    FROM app_private.bouts b
+   WHERE b.workspace_id = p_ws AND b.id = p_bout;
+
+  IF v_status = 'pending' THEN
+    RETURN QUERY SELECT 'open'::text, NULL::text, NULL::text, NULL::text,
+                        NULL::double precision;
+    RETURN;
+  END IF;
+
+  v_outcome := CASE v_result WHEN 'draw' THEN 'push' WHEN 'noContest' THEN 'void'
+                             WHEN p_corner THEN 'won' ELSE 'lost' END;
+
+  IF v_outcome IN ('push','void') THEN
+    RETURN QUERY SELECT 'settled'::text, v_outcome, 'computed'::text, NULL::text,
+                        0::double precision;
+    RETURN;
+  END IF;
+
+  SELECT CASE WHEN p_corner = 'A' THEN m.odds_a ELSE m.odds_b END INTO v_odds
+    FROM app_private.market_snapshots m
+   WHERE m.workspace_id = p_ws AND m.id = p_market;
+
+  IF v_odds IS NULL THEN
+    RETURN QUERY SELECT 'settled'::text, v_outcome, 'uncomputable'::text,
+                        'missingSelectedCornerOdds'::text, NULL::double precision;
+    RETURN;
+  END IF;
+
+  RETURN QUERY SELECT 'settled'::text, v_outcome, 'computed'::text, NULL::text,
+    CASE WHEN v_outcome = 'won'
+      THEN p_stake::double precision
+           * (app_private.decimal_from_american(v_odds) - 1)
+      ELSE -p_stake::double precision END;
+END $$;
+
+-- Settlement is scored at the TRACKED price, so any edit to corner or price on a
+-- settled position must recompute the outcome and financial result atomically —
+-- otherwise the row instantly violates its own settlement invariant. Measured:
+-- amending -150 to -120 left profit 0.6666666666666665 while the contract
+-- required 0.8333333333333335, and the deferred trigger correctly refused it.
+-- The assessment and its frozen market are never touched.
+CREATE FUNCTION app_private.recompute_position_settlement(p_ws uuid, p_id uuid)
+RETURNS void LANGUAGE plpgsql VOLATILE SECURITY DEFINER SET search_path = '' AS $$
+DECLARE
+  v_row app_private.tracked_positions; v_status text; v_result text;
+  v_odds int; v_outcome text; v_profit double precision;
+BEGIN
+  SELECT * INTO v_row FROM app_private.tracked_positions t
+   WHERE t.workspace_id = p_ws AND t.id = p_id;
+  SELECT b.result_status, b.result_outcome INTO v_status, v_result
+    FROM app_private.bouts b
+   WHERE b.workspace_id = p_ws AND b.id = v_row.bout_id;
+
+  IF v_status = 'pending' THEN
+    UPDATE app_private.tracked_positions t
+       SET settlement_status = 'open', settlement_outcome = NULL,
+           financial_status = NULL, financial_reason = NULL,
+           profit_units = NULL, settled_at = NULL
+     WHERE t.workspace_id = p_ws AND t.id = p_id
+       AND t.settlement_status IS DISTINCT FROM 'open';
+    RETURN;
+  END IF;
+
+  v_outcome := CASE v_result WHEN 'draw' THEN 'push' WHEN 'noContest' THEN 'void'
+                             WHEN v_row.corner THEN 'won' ELSE 'lost' END;
+
+  IF v_outcome IN ('push','void') THEN
+    UPDATE app_private.tracked_positions t
+       SET settlement_status = 'settled', settlement_outcome = v_outcome,
+           financial_status = 'computed', financial_reason = NULL,
+           profit_units = 0, settled_at = coalesce(t.settled_at, pg_catalog.now())
+     WHERE t.workspace_id = p_ws AND t.id = p_id
+       AND (t.settlement_status, t.settlement_outcome, t.financial_status,
+            t.financial_reason, t.profit_units)
+           IS DISTINCT FROM ('settled', v_outcome, 'computed', NULL, 0::double precision);
+    RETURN;
+  END IF;
+
+  SELECT CASE WHEN v_row.corner = 'A' THEN m.odds_a ELSE m.odds_b END INTO v_odds
+    FROM app_private.market_snapshots m
+   WHERE m.workspace_id = p_ws AND m.id = v_row.market_snapshot_id;
+
+  IF v_odds IS NULL THEN
+    UPDATE app_private.tracked_positions t
+       SET settlement_status = 'settled', settlement_outcome = v_outcome,
+           financial_status = 'uncomputable',
+           financial_reason = 'missingSelectedCornerOdds', profit_units = NULL,
+           settled_at = coalesce(t.settled_at, pg_catalog.now())
+     WHERE t.workspace_id = p_ws AND t.id = p_id
+       AND (t.settlement_status, t.settlement_outcome, t.financial_status,
+            t.financial_reason, t.profit_units)
+           IS DISTINCT FROM ('settled', v_outcome, 'uncomputable',
+                             'missingSelectedCornerOdds', NULL::double precision);
+    RETURN;
+  END IF;
+
+  v_profit := CASE WHEN v_outcome = 'won'
+    THEN v_row.stake_units::double precision
+         * (app_private.decimal_from_american(v_odds) - 1)
+    ELSE -v_row.stake_units::double precision END;
+
+  UPDATE app_private.tracked_positions t
+     SET settlement_status = 'settled', settlement_outcome = v_outcome,
+         financial_status = 'computed', financial_reason = NULL,
+         profit_units = v_profit,
+         settled_at = coalesce(t.settled_at, pg_catalog.now())
+   WHERE t.workspace_id = p_ws AND t.id = p_id
+     AND (t.settlement_status, t.settlement_outcome, t.financial_status,
+          t.financial_reason, t.profit_units)
+         IS DISTINCT FROM ('settled', v_outcome, 'computed', NULL, v_profit);
+END $$;
+
+-- ── Cluster 1: tracked-position edits ───────────────────────────────────────
+-- Every one: owner/editor only, expected-revision checked, undo recorded, new
+-- revision returned as text.
+
+CREATE FUNCTION public.fm_rpc_change_tracked_corner(
+  p_slug text, p_position_id uuid, p_corner text, p_expected_revision text)
+RETURNS TABLE (id uuid, revision text)
+LANGUAGE plpgsql VOLATILE SECURITY DEFINER SET search_path = '' AS $$
+DECLARE v_ws uuid; v_row app_private.tracked_positions; v_new bigint;
+BEGIN
+  v_ws := app_private.require_role(p_slug, ARRAY['owner','editor']);
+  -- Revision BEFORE input validation, matching the in-memory contract: a stale
+  -- caller is told to re-read rather than being told its input is bad.
+  v_row := app_private.lock_position(v_ws, p_position_id, p_expected_revision);
+  IF p_corner NOT IN ('A','B') THEN
+    RAISE EXCEPTION 'corner must be A or B' USING ERRCODE = '23514';
+  END IF;
+
+  -- ONE statement: the corner AND the settlement it implies. The price
+  -- re-derives from the SAME tracked market; nothing frozen moves.
+  UPDATE app_private.tracked_positions t
+     SET corner = p_corner,
+         settlement_status = s.settlement_status,
+         settlement_outcome = s.settlement_outcome,
+         financial_status = s.financial_status,
+         financial_reason = s.financial_reason,
+         profit_units = s.profit_units,
+         settled_at = CASE WHEN s.settlement_status = 'settled'
+                           THEN coalesce(t.settled_at, pg_catalog.now()) END
+    FROM app_private.settlement_for(v_ws, v_row.bout_id, p_corner,
+                                    v_row.market_snapshot_id, v_row.stake_units) s
+   WHERE t.workspace_id = v_ws AND t.id = p_position_id
+   RETURNING t.revision INTO v_new;
+
+  PERFORM app_private.write_undo(v_ws, 'change_tracked_corner',
+    jsonb_build_object('trackedPositions',
+      jsonb_build_array(jsonb_build_object('id', v_row.id, 'corner', v_row.corner))),
+    jsonb_build_object(v_row.id::text, v_new::text), NULL);
+
+  RETURN QUERY SELECT p_position_id, v_new::text;
+END $$;
+
+CREATE FUNCTION public.fm_rpc_amend_tracked_price(
+  p_slug text, p_position_id uuid, p_odds int, p_expected_revision text)
+RETURNS TABLE (id uuid, market_snapshot_id uuid, revision text)
+LANGUAGE plpgsql VOLATILE SECURITY DEFINER SET search_path = '' AS $$
+DECLARE
+  v_ws uuid; v_row app_private.tracked_positions; v_new bigint;
+  v_market uuid; v_prev app_private.market_snapshots;
+BEGIN
+  v_ws := app_private.require_role(p_slug, ARRAY['owner','editor']);
+  v_row := app_private.lock_position(v_ws, p_position_id, p_expected_revision);
+  IF p_odds IS NULL OR abs(p_odds) < 100 THEN
+    RAISE EXCEPTION 'american odds must satisfy |odds| >= 100' USING ERRCODE = '23514';
+  END IF;
+
+  SELECT * INTO v_prev FROM app_private.market_snapshots m
+   WHERE m.workspace_id = v_ws AND m.id = v_row.market_snapshot_id;
+
+  -- APPEND a new immutable snapshot and repoint only the position. The
+  -- assessment and its original market stay frozen, so the analysis that
+  -- justified the position is never rewritten.
+  v_market := gen_random_uuid();
+  INSERT INTO app_private.market_snapshots
+    (workspace_id, id, bout_id, captured_at, source, odds_a, odds_b)
+  VALUES (v_ws, v_market, v_row.bout_id, pg_catalog.now(), 'manual',
+          CASE WHEN v_row.corner = 'A' THEN p_odds ELSE v_prev.odds_a END,
+          CASE WHEN v_row.corner = 'B' THEN p_odds ELSE v_prev.odds_b END);
+
+  UPDATE app_private.tracked_positions t
+     SET market_snapshot_id = v_market,
+         settlement_status = s.settlement_status,
+         settlement_outcome = s.settlement_outcome,
+         financial_status = s.financial_status,
+         financial_reason = s.financial_reason,
+         profit_units = s.profit_units,
+         settled_at = CASE WHEN s.settlement_status = 'settled'
+                           THEN coalesce(t.settled_at, pg_catalog.now()) END
+    FROM app_private.settlement_for(v_ws, v_row.bout_id, v_row.corner,
+                                    v_market, v_row.stake_units) s
+   WHERE t.workspace_id = v_ws AND t.id = p_position_id
+   RETURNING t.revision INTO v_new;
+
+  PERFORM app_private.write_undo(v_ws, 'amend_tracked_price',
+    jsonb_build_object('trackedPositions', jsonb_build_array(jsonb_build_object(
+      'id', v_row.id, 'marketSnapshotId', v_row.market_snapshot_id))),
+    jsonb_build_object(v_row.id::text, v_new::text), NULL,
+    -- CREATED, not absent: an undo must REMOVE the appended snapshot. Recording
+    -- it under absent_ids would have told undo to re-insert a row that exists.
+    jsonb_build_array(jsonb_build_object('table', 'market_snapshots', 'id', v_market)));
+
+  RETURN QUERY SELECT p_position_id, v_market, v_new::text;
+END $$;
+
+CREATE FUNCTION public.fm_rpc_confirm_entry(
+  p_slug text, p_position_id uuid, p_expected_revision text)
+RETURNS TABLE (id uuid, revision text)
+LANGUAGE plpgsql VOLATILE SECURITY DEFINER SET search_path = '' AS $$
+DECLARE v_ws uuid; v_row app_private.tracked_positions; v_new bigint;
+BEGIN
+  v_ws := app_private.require_role(p_slug, ARRAY['owner','editor']);
+  v_row := app_private.lock_position(v_ws, p_position_id, p_expected_revision);
+  IF v_row.review_status <> 'pending' THEN
+    RAISE EXCEPTION 'review state is %, not pending', v_row.review_status
+      USING ERRCODE = '23514';
+  END IF;
+
+  UPDATE app_private.tracked_positions t
+     SET review_status = 'confirmed', confirmed_at = pg_catalog.now()
+   WHERE t.workspace_id = v_ws AND t.id = p_position_id
+   RETURNING t.revision INTO v_new;
+
+  PERFORM app_private.write_undo(v_ws, 'confirm_entry',
+    jsonb_build_object('trackedPositions', jsonb_build_array(jsonb_build_object(
+      'id', v_row.id, 'reviewStatus', v_row.review_status,
+      'confirmedAt', v_row.confirmed_at))),
+    jsonb_build_object(v_row.id::text, v_new::text), NULL);
+
+  RETURN QUERY SELECT p_position_id, v_new::text;
+END $$;
+
+-- The undo READ surface. Creator-only and unexpired, enforced here as well as
+-- by the undo_log policy.
+CREATE FUNCTION public.fm_member_undo_list(p_slug text)
+RETURNS TABLE (id uuid, op text, created_at timestamptz, expires_at timestamptz,
+               revision_vector jsonb, absent_ids jsonb, created_ids jsonb)
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = '' AS $$
+  SELECT u.id, u.op, u.created_at, u.expires_at, u.revision_vector, u.absent_ids,
+         u.created_ids
+    FROM app_private.undo_log u
+    JOIN app_private.workspaces w ON w.id = u.workspace_id
+   WHERE w.slug = p_slug
+     AND app_private.is_member(w.id, ARRAY['owner','editor'])
+     AND u.user_id = app_private.current_user_id()
+     AND u.consumed_at IS NULL
+     AND u.expires_at > pg_catalog.now()
+   ORDER BY u.created_at DESC
+$$;
+
 -- ── (4) transfer ownership ──────────────────────────────────────────────────
 ALTER SCHEMA app_private OWNER TO fm_table_owner;
 DO $$ DECLARE r record; BEGIN
@@ -1718,6 +2085,28 @@ GRANT EXECUTE ON FUNCTION app_private.current_user_id()
   TO fm_member_api, fm_public_reader;
 GRANT EXECUTE ON FUNCTION app_private.position_rows(uuid)
   TO fm_member_api, fm_public_reader;
+-- Mutation plumbing: fm_member_api only. fm_public_reader must never reach it.
+GRANT EXECUTE ON FUNCTION app_private.require_role(text, text[]) TO fm_member_api;
+GRANT EXECUTE ON FUNCTION app_private.raise_stale_write(bigint) TO fm_member_api;
+GRANT EXECUTE ON FUNCTION app_private.parse_revision(text) TO fm_member_api;
+GRANT EXECUTE ON FUNCTION app_private.write_undo(uuid, text, jsonb, jsonb, jsonb, jsonb)
+  TO fm_member_api;
+GRANT EXECUTE ON FUNCTION app_private.lock_position(uuid, uuid, text) TO fm_member_api;
+GRANT EXECUTE ON FUNCTION app_private.recompute_position_settlement(uuid, uuid)
+  TO fm_member_api;
+GRANT EXECUTE ON FUNCTION app_private.settlement_for(uuid, uuid, text, uuid, numeric)
+  TO fm_member_api;
+-- CHECK-constraint helpers are evaluated as the role PERFORMING THE WRITE, not
+-- as the table owner, so fm_member_api needs EXECUTE on every helper reachable
+-- from a constraint on a table it writes. Without these the cluster failed with
+-- `42501 permission denied for function is_finite_or_null` — from the CHECK, not
+-- from RLS or the role gate. Granted to fm_member_api ONLY: fm_public_reader
+-- writes nothing, and anon/authenticated reach no app_private function at all.
+GRANT EXECUTE ON FUNCTION app_private.is_finite_or_null(double precision)
+  TO fm_member_api;
+GRANT EXECUTE ON FUNCTION app_private.is_american_odds_or_null(int)
+  TO fm_member_api;
+GRANT EXECUTE ON FUNCTION app_private.decimal_from_american(int) TO fm_member_api;
 
 -- NO role is granted anything on the auth schema — not even fm_table_owner.
 --

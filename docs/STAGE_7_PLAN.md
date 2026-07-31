@@ -14,7 +14,7 @@ Base: `main` @ `89f6c45`. Backend decision: Supabase/Postgres.
 | 0 · Preflight | Docker runtime present and running; ports 54321–54324 free; Node supports the pinned CLI | ✅ |
 | 1 | This document + `feat(data): add repository interfaces over the durable schema` — in-memory only | ✅ |
 | 2 | `feat(data): add Postgres schema, roles, policies and RPCs` — pinned Supabase CLI as devDependency, committed `supabase/`, full local stack, all SQL/API tests. **No hosted project.** | ✅ |
-| 2 · status | **PARTIAL.** Landed: roles, ownership transfer, ACLs, `app_private` schema, all 15 tables with composite FKs and the deferrable run↔snapshot cycle, revision/slug/settlement triggers, RLS on every table, a working authenticated path (caller resolution + zero-owner bootstrap), the `fm_read_*`/`fm_member_*` surfaces **for everything the current app renders**, SQL-side measurements, and 157 assertions green under `npm run test:db` and 14 under `npm run test:api`, including StoreSchema validation of the export and genuine two-client claim concurrency. **Outstanding:** the `fm_rpc_*` mutation matrix (1 of ~20 exists — the ownership claim), and with it revision-vector conflict handling, the undo log and stable error markers; five contract reads deferred alongside it (`getAggregate`, `workspace.current`, `seedVersion`, `wager.listByBout`, `undo.list` — see §5); and the 152-row stored-profit recomputation, which needs Gate 3's seed. Both float constraints remain **provisional**. | |
+| 2 · status | **PARTIAL — RPC cluster 1 of N landed.** Landed: roles, ownership transfer, ACLs, `app_private` schema, all 15 tables with composite FKs and the deferrable run↔snapshot cycle, revision/slug/settlement triggers, RLS on every table, a working authenticated path (caller resolution + zero-owner bootstrap), the `fm_read_*`/`fm_member_*` surfaces **for everything the current app renders**, SQL-side measurements, and 157 assertions green under `npm run test:db` and 14 under `npm run test:api`, including StoreSchema validation of the export and genuine two-client claim concurrency. **RPC cluster 1 (tracked-position edits)** is complete: `fm_rpc_change_tracked_corner`, `fm_rpc_amend_tracked_price`, `fm_rpc_confirm_entry` and `fm_member_undo_list`, with authorization, expected-revision conflicts, `stale_write` carrying the live server revision, undo records, settled-edit recomputation and rollback proof — 40 API assertions and 159 pgTAP. **Outstanding:** the rest of the `fm_rpc_*` matrix (4 of ~20 exist); four contract reads still deferred (`getAggregate`, `workspace.current`, `seedVersion`, `wager.listByBout` — see §5); and the 152-row stored-profit recomputation, which needs Gate 3's seed. Both float constraints remain **provisional**. | |
 | 3 | `feat(data): migrate seed data into the durable schema` | ✅ |
 | 4 | `feat(auth): add magic-link sign-in and read-only public state` | ✅ |
 | 5 | **Hosted rollout** — Alex creates/links the project, `db push --dry-run` → `db push`, Vercel vars, invite owner, claim, approve seed | ✅ |
@@ -667,11 +667,38 @@ arithmetic on it.
 ### Undo
 
 `undo_log(workspace_id, id, user_id, op, prior_state, revision_vector,
-absent_ids, created_at, expires_at, consumed_at)` — single-use, 15-minute TTL,
+absent_ids, created_ids, created_at, expires_at, consumed_at)` — single-use, 15-minute TTL,
 creator-only, workspace-scoped. **Server-side, so it survives refresh.**
 
 `revision_vector` stores the post-operation revision for **every surviving
-mutable row touched**; `absent_ids` lists every deleted row. Undo verifies the
+mutable row touched**; `absent_ids` lists every row the operation **deleted**;
+`created_ids` lists every row it **created**.
+
+`created_ids` was added at Gate 2. `absent_ids` is defined as forward-deleted
+rows, which an undo re-inserts after asserting they are still absent — so an
+appended market snapshot cannot live there: it would tell undo to re-insert a
+row that already exists. `fm_rpc_amend_tracked_price` appends a snapshot, so the
+forward-created case needed its own representation. Undo removes `created_ids`
+and re-inserts `absent_ids`.
+
+**Constraint helpers must be executable by the WRITING role.** A CHECK
+constraint's function runs as the role performing the write, not as the table
+owner, so blanket-revoking `app_private` from everything broke every mutation
+with `42501 permission denied for function is_finite_or_null` — from the CHECK,
+not from RLS or the role gate. `fm_member_api` is granted `EXECUTE` on exactly
+the helpers reachable from a constraint on a table it writes
+(`is_finite_or_null`, `is_american_odds_or_null`, `decimal_from_american`) and on
+nothing else; the catalog suite asserts both the exact set and that
+`fm_public_reader`, `anon` and `authenticated` cannot reach them.
+
+**Settlement is scored at the tracked price**, so a corner or price edit on a
+settled position recomputes outcome and financial result **atomically** with the
+edit — otherwise the row instantly violates its own settlement invariant.
+Measured: amending -150 to -120 left profit `0.6666666666666665` where the
+contract required `0.8333333333333335`, and the deferred trigger correctly
+refused it. The assessment and its frozen market are never touched. The
+recompute is a no-op when the settlement already matches, so an edit bumps the
+revision exactly once. Undo verifies the
 whole vector, asserts deleted IDs are still absent, and checks shared
 dependencies remain compatible. Any drift → conflict. Deleted immutable rows are
 restored with plain `INSERT` — **never** `ON CONFLICT DO UPDATE`, which would
