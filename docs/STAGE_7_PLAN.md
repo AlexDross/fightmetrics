@@ -14,7 +14,7 @@ Base: `main` @ `89f6c45`. Backend decision: Supabase/Postgres.
 | 0 · Preflight | Docker runtime present and running; ports 54321–54324 free; Node supports the pinned CLI | ✅ |
 | 1 | This document + `feat(data): add repository interfaces over the durable schema` — in-memory only | ✅ |
 | 2 | `feat(data): add Postgres schema, roles, policies and RPCs` — pinned Supabase CLI as devDependency, committed `supabase/`, full local stack, all SQL/API tests. **No hosted project.** | ✅ |
-| 2 · status | **PARTIAL — RPC cluster 1 of N landed.** Landed: roles, ownership transfer, ACLs, `app_private` schema, all 15 tables with composite FKs and the deferrable run↔snapshot cycle, revision/slug/settlement triggers, RLS on every table, a working authenticated path (caller resolution + zero-owner bootstrap), the `fm_read_*`/`fm_member_*` surfaces **for everything the current app renders**, SQL-side measurements, and 157 assertions green under `npm run test:db` and 14 under `npm run test:api`, including StoreSchema validation of the export and genuine two-client claim concurrency. **RPC cluster 1 (tracked-position edits)** is complete: `fm_rpc_change_tracked_corner`, `fm_rpc_amend_tracked_price`, `fm_rpc_confirm_entry` and `fm_member_undo_list`, with authorization, expected-revision conflicts, `stale_write` carrying the live server revision, undo records, settled-edit recomputation and rollback proof — 40 API assertions and 159 pgTAP. **Outstanding:** the rest of the `fm_rpc_*` matrix (4 of ~20 exist); four contract reads still deferred (`getAggregate`, `workspace.current`, `seedVersion`, `wager.listByBout` — see §5); and the 152-row stored-profit recomputation, which needs Gate 3's seed. Both float constraints remain **provisional**. | |
+| 2 · status | **PARTIAL — RPC clusters 1–2 landed.** Landed: roles, ownership transfer, ACLs, `app_private` schema, all 15 tables with composite FKs and the deferrable run↔snapshot cycle, revision/slug/settlement triggers, RLS on every table, a working authenticated path (caller resolution + zero-owner bootstrap), the `fm_read_*`/`fm_member_*` surfaces **for everything the current app renders**, SQL-side measurements, and 157 assertions green under `npm run test:db` and 14 under `npm run test:api`, including StoreSchema validation of the export and genuine two-client claim concurrency. **RPC cluster 1 (tracked-position edits)** is complete: `fm_rpc_change_tracked_corner`, `fm_rpc_amend_tracked_price`, `fm_rpc_confirm_entry` and `fm_member_undo_list`, with authorization, expected-revision conflicts, `stale_write` carrying the live server revision, undo records, settled-edit recomputation and rollback proof — 40 API assertions and 159 pgTAP. **RPC cluster 2 (bout lifecycle)** is complete: `fm_rpc_grade_bout`, `fm_rpc_return_bout_to_pending` and the deferred `fm_member_wagers_by_bout` read, with full revision-vector validation, `stale_write` carrying the real server revision, undo prior-state, mixed outcomes, and grade/return proven true inverses — 64 API assertions. **Outstanding:** the rest of the `fm_rpc_*` matrix (6 of ~20 exist); three contract reads still deferred (`getAggregate`, `workspace.current`, `seedVersion` — see §5); and the 152-row stored-profit recomputation, which needs Gate 3's seed. Both float constraints remain **provisional**. | |
 | 3 | `feat(data): migrate seed data into the durable schema` | ✅ |
 | 4 | `feat(auth): add magic-link sign-in and read-only public state` | ✅ |
 | 5 | **Hosted rollout** — Alex creates/links the project, `db push --dry-run` → `db push`, Vercel vars, invite owner, claim, approve seed | ✅ |
@@ -590,7 +590,7 @@ here is described as complete unless the SQL exists today.
 | `workspaceRepository.exportStore` | `fm_member_export_store` | ✅ validated against the real `StoreSchema` over HTTP in `test:api` |
 | `authRepository.whoami` | `fm_member_whoami` | ✅ |
 | `authRepository.session` | client-side; Supabase session, no SQL surface | ✅ n/a |
-| `wagerRepository.listByBout` | **no surface yet** — wagers are exported but have no dedicated read function | ❌ deferred |
+| `wagerRepository.listByBout` | `fm_member_wagers_by_bout`, carrying `revision` | ✅ |
 | `workspaceRepository.current` | **no surface yet** — slug/isPublic/schemaVersion/migratedAt | ❌ deferred |
 | `workspaceRepository.seedVersion` | **no surface yet** — `seed_items` ledger unexposed | ❌ deferred |
 | `predictionRepository.getAggregate` | **no surface yet** — run + snapshots + assessment + position | ❌ deferred |
@@ -669,6 +669,22 @@ arithmetic on it.
 `undo_log(workspace_id, id, user_id, op, prior_state, revision_vector,
 absent_ids, created_ids, created_at, expires_at, consumed_at)` — single-use, 15-minute TTL,
 creator-only, workspace-scoped. **Server-side, so it survives refresh.**
+
+**Bout-lifecycle vectors.** `fm_rpc_grade_bout` and
+`fm_rpc_return_bout_to_pending` take an ID-keyed vector covering the bout **and**
+every tracked position **and** every wager on it. The whole vector is validated
+before anything mutates, in a fixed order so the error is deterministic:
+structural problems (`revisionVectorRequired`, `malformedRevisionEntry`,
+`duplicateRevisionEntry`, `missingRevisionEntry`, `unknownRevisionEntry`) raise
+`23514`; malformed or out-of-range values raise `22P02`; only a genuinely stale
+entry raises `stale_write` with the row's real revision. Ordering is irrelevant.
+Both return the complete `touched` vector. `app_private.apply_bout_result`
+writes each row **once**, carrying its final settlement, so no obsolete deferred
+event is ever queued — the same discipline cluster 1 established.
+
+An UPDATE cannot reference its own target alias inside its `FROM` clause:
+`settlement_for(…, t.corner, …)` fails with `42P10 invalid reference to
+FROM-clause entry for table "t"`. The row's columns are read into a record first.
 
 `revision_vector` stores the post-operation revision for **every surviving
 mutable row touched**; `absent_ids` lists every row the operation **deleted**;

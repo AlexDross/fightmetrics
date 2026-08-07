@@ -2000,6 +2000,247 @@ LANGUAGE sql STABLE SECURITY DEFINER SET search_path = '' AS $$
    ORDER BY u.created_at DESC
 $$;
 
+-- ── Cluster 2: bout lifecycle ───────────────────────────────────────────────
+-- A bout-result write cascades to EVERY tracked position and wager on the bout,
+-- so it takes an ID-KEYED revision vector covering all of them. The whole vector
+-- is validated BEFORE anything mutates: a bare bout revision would let a
+-- concurrently-edited dependent be re-settled against a stake the caller never
+-- saw.
+CREATE FUNCTION app_private.bout_dependents(p_ws uuid, p_bout uuid)
+RETURNS TABLE (kind text, id text, revision bigint)
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = '' AS $$
+  SELECT 'bouts', b.id::text, b.revision FROM app_private.bouts b
+   WHERE b.workspace_id = p_ws AND b.id = p_bout
+  UNION ALL
+  SELECT 'tracked_positions', t.id::text, t.revision
+    FROM app_private.tracked_positions t
+   WHERE t.workspace_id = p_ws AND t.bout_id = p_bout
+  UNION ALL
+  SELECT 'wagers', g.id::text, g.revision FROM app_private.wagers g
+   WHERE g.workspace_id = p_ws AND g.bout_id = p_bout
+$$;
+
+-- Validates the vector in full and raises on the FIRST problem, in a fixed
+-- order, so the error a caller sees is deterministic. Structural problems are
+-- 23514, malformed/out-of-range values are 22P02, and only a genuinely stale
+-- entry produces stale_write.
+CREATE FUNCTION app_private.check_revision_vector(
+  p_ws uuid, p_bout uuid, p_provided jsonb)
+RETURNS void LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path = '' AS $$
+DECLARE r record; v_dup text; v_missing text; v_unknown text;
+BEGIN
+  IF p_provided IS NULL OR pg_catalog.jsonb_typeof(p_provided) <> 'array' THEN
+    RAISE EXCEPTION 'revisionVectorRequired: a revision vector is required'
+      USING ERRCODE = '23514';
+  END IF;
+
+  -- every entry must be an object with an id and a well-formed revision
+  FOR r IN SELECT e.value AS v FROM pg_catalog.jsonb_array_elements(p_provided) e LOOP
+    IF pg_catalog.jsonb_typeof(r.v) <> 'object'
+       OR NOT (r.v ? 'id') OR NOT (r.v ? 'revision')
+       OR pg_catalog.jsonb_typeof(r.v -> 'id') <> 'string' THEN
+      RAISE EXCEPTION 'malformedRevisionEntry: %', r.v USING ERRCODE = '23514';
+    END IF;
+    -- raises 22P02 for null, malformed or out-of-signed-bigint-range
+    PERFORM app_private.parse_revision(r.v ->> 'revision');
+  END LOOP;
+
+  SELECT e.value ->> 'id' INTO v_dup
+    FROM pg_catalog.jsonb_array_elements(p_provided) e
+   GROUP BY e.value ->> 'id' HAVING count(*) > 1 ORDER BY 1 LIMIT 1;
+  IF v_dup IS NOT NULL THEN
+    RAISE EXCEPTION 'duplicateRevisionEntry: %', v_dup USING ERRCODE = '23514';
+  END IF;
+
+  SELECT d.id INTO v_missing FROM app_private.bout_dependents(p_ws, p_bout) d
+   WHERE NOT EXISTS (SELECT 1 FROM pg_catalog.jsonb_array_elements(p_provided) e
+                      WHERE e.value ->> 'id' = d.id)
+   ORDER BY d.id LIMIT 1;
+  IF v_missing IS NOT NULL THEN
+    RAISE EXCEPTION 'missingRevisionEntry: %', v_missing USING ERRCODE = '23514';
+  END IF;
+
+  SELECT e.value ->> 'id' INTO v_unknown
+    FROM pg_catalog.jsonb_array_elements(p_provided) e
+   WHERE NOT EXISTS (SELECT 1 FROM app_private.bout_dependents(p_ws, p_bout) d
+                      WHERE d.id = e.value ->> 'id')
+   ORDER BY 1 LIMIT 1;
+  IF v_unknown IS NOT NULL THEN
+    RAISE EXCEPTION 'unknownRevisionEntry: %', v_unknown USING ERRCODE = '23514';
+  END IF;
+
+  -- Ordering of the vector is irrelevant: lookup is by id, never by index.
+  FOR r IN SELECT d.id, d.revision FROM app_private.bout_dependents(p_ws, p_bout) d
+            JOIN pg_catalog.jsonb_array_elements(p_provided) e
+              ON e.value ->> 'id' = d.id
+           WHERE app_private.parse_revision(e.value ->> 'revision') <> d.revision
+           ORDER BY d.id LIMIT 1 LOOP
+    PERFORM app_private.raise_stale_write(r.revision);
+  END LOOP;
+END $$;
+
+-- Applies a bout result and settles EVERY dependent in one pass. Each row is
+-- written once, carrying its final settlement, so no obsolete deferred event is
+-- ever queued.
+CREATE FUNCTION app_private.apply_bout_result(
+  p_ws uuid, p_bout uuid, p_status text, p_outcome text, p_method text)
+RETURNS jsonb LANGUAGE plpgsql VOLATILE SECURITY DEFINER SET search_path = '' AS $$
+DECLARE v_touched jsonb := '[]'::jsonb; r record; v_rev bigint;
+BEGIN
+  UPDATE app_private.bouts b
+     SET result_status = p_status, result_outcome = p_outcome,
+         result_method = p_method
+   WHERE b.workspace_id = p_ws AND b.id = p_bout
+   RETURNING b.revision INTO v_rev;
+  v_touched := v_touched || jsonb_build_object(
+    'table', 'bouts', 'id', p_bout, 'revision', v_rev::text);
+
+  -- The row's own columns are read into `r` FIRST. An UPDATE cannot reference
+  -- its target alias inside its FROM clause — `settlement_for(..., t.corner, ...)`
+  -- fails with 42P10 invalid reference to FROM-clause entry for table "t".
+  FOR r IN SELECT t.id, t.bout_id, t.corner, t.market_snapshot_id, t.stake_units
+             FROM app_private.tracked_positions t
+            WHERE t.workspace_id = p_ws AND t.bout_id = p_bout ORDER BY t.id LOOP
+    UPDATE app_private.tracked_positions t
+       SET settlement_status = s.settlement_status,
+           settlement_outcome = s.settlement_outcome,
+           financial_status = s.financial_status,
+           financial_reason = s.financial_reason,
+           profit_units = s.profit_units,
+           settled_at = CASE WHEN s.settlement_status = 'settled'
+                             THEN coalesce(t.settled_at, pg_catalog.now()) END
+      FROM app_private.settlement_for(p_ws, r.bout_id, r.corner,
+                                      r.market_snapshot_id, r.stake_units) s
+     WHERE t.workspace_id = p_ws AND t.id = r.id
+     RETURNING t.revision INTO v_rev;
+    v_touched := v_touched || jsonb_build_object(
+      'table', 'tracked_positions', 'id', r.id, 'revision', v_rev::text);
+  END LOOP;
+
+  FOR r IN SELECT g.id, g.bout_id, g.corner, g.market_snapshot_id, g.stake_units
+             FROM app_private.wagers g
+            WHERE g.workspace_id = p_ws AND g.bout_id = p_bout ORDER BY g.id LOOP
+    UPDATE app_private.wagers g
+       SET settlement_status = s.settlement_status,
+           settlement_outcome = s.settlement_outcome,
+           financial_status = s.financial_status,
+           financial_reason = s.financial_reason,
+           profit_units = s.profit_units,
+           settled_at = CASE WHEN s.settlement_status = 'settled'
+                             THEN coalesce(g.settled_at, pg_catalog.now()) END
+      FROM app_private.settlement_for(p_ws, r.bout_id, r.corner,
+                                      r.market_snapshot_id, r.stake_units) s
+     WHERE g.workspace_id = p_ws AND g.id = r.id
+     RETURNING g.revision INTO v_rev;
+    v_touched := v_touched || jsonb_build_object(
+      'table', 'wagers', 'id', r.id, 'revision', v_rev::text);
+  END LOOP;
+
+  RETURN v_touched;
+END $$;
+
+-- Snapshot of everything a bout-result write is about to change, for undo.
+CREATE FUNCTION app_private.bout_prior_state(p_ws uuid, p_bout uuid)
+RETURNS jsonb LANGUAGE sql STABLE SECURITY DEFINER SET search_path = '' AS $$
+  SELECT jsonb_build_object(
+    'bout', (SELECT jsonb_build_object('id', b.id, 'resultStatus', b.result_status,
+               'resultOutcome', b.result_outcome, 'resultMethod', b.result_method)
+               FROM app_private.bouts b
+              WHERE b.workspace_id = p_ws AND b.id = p_bout),
+    'trackedPositions', coalesce((SELECT jsonb_agg(jsonb_build_object(
+        'id', t.id, 'settlementStatus', t.settlement_status,
+        'settlementOutcome', t.settlement_outcome,
+        'financialStatus', t.financial_status, 'financialReason', t.financial_reason,
+        'profitUnits', t.profit_units, 'settledAt', t.settled_at) ORDER BY t.id)
+      FROM app_private.tracked_positions t
+     WHERE t.workspace_id = p_ws AND t.bout_id = p_bout), '[]'::jsonb),
+    'wagers', coalesce((SELECT jsonb_agg(jsonb_build_object(
+        'id', g.id, 'settlementStatus', g.settlement_status,
+        'settlementOutcome', g.settlement_outcome,
+        'financialStatus', g.financial_status, 'financialReason', g.financial_reason,
+        'profitUnits', g.profit_units, 'settledAt', g.settled_at) ORDER BY g.id)
+      FROM app_private.wagers g
+     WHERE g.workspace_id = p_ws AND g.bout_id = p_bout), '[]'::jsonb))
+$$;
+
+CREATE FUNCTION public.fm_rpc_grade_bout(
+  p_slug text, p_bout_id uuid, p_outcome text, p_method text, p_revisions jsonb)
+RETURNS TABLE (bout_id uuid, revision text, touched jsonb)
+LANGUAGE plpgsql VOLATILE SECURITY DEFINER SET search_path = '' AS $$
+DECLARE v_ws uuid; v_prior jsonb; v_touched jsonb; v_revs jsonb;
+BEGIN
+  v_ws := app_private.require_role(p_slug, ARRAY['owner','editor']);
+  IF NOT EXISTS (SELECT 1 FROM app_private.bouts b
+                  WHERE b.workspace_id = v_ws AND b.id = p_bout_id) THEN
+    RAISE EXCEPTION 'bout not found' USING ERRCODE = '42704';
+  END IF;
+  -- Vector BEFORE input validation, matching the in-memory precedence.
+  PERFORM app_private.check_revision_vector(v_ws, p_bout_id, p_revisions);
+  IF p_outcome NOT IN ('A','B','draw','noContest') THEN
+    RAISE EXCEPTION 'outcome must be A, B, draw or noContest' USING ERRCODE = '23514';
+  END IF;
+  IF p_method IS NOT NULL AND p_method NOT IN ('KO/TKO','SUB','DEC') THEN
+    RAISE EXCEPTION 'method must be KO/TKO, SUB or DEC' USING ERRCODE = '23514';
+  END IF;
+
+  v_prior := app_private.bout_prior_state(v_ws, p_bout_id);
+  v_touched := app_private.apply_bout_result(v_ws, p_bout_id, 'resolved',
+                                             p_outcome, p_method);
+  SELECT jsonb_object_agg(e.value ->> 'id', e.value ->> 'revision') INTO v_revs
+    FROM pg_catalog.jsonb_array_elements(v_touched) e;
+  PERFORM app_private.write_undo(v_ws, 'grade_bout', v_prior, v_revs, NULL);
+
+  RETURN QUERY SELECT p_bout_id,
+    (SELECT e.value ->> 'revision' FROM pg_catalog.jsonb_array_elements(v_touched) e
+      WHERE e.value ->> 'table' = 'bouts'), v_touched;
+END $$;
+
+CREATE FUNCTION public.fm_rpc_return_bout_to_pending(
+  p_slug text, p_bout_id uuid, p_revisions jsonb)
+RETURNS TABLE (bout_id uuid, revision text, touched jsonb)
+LANGUAGE plpgsql VOLATILE SECURITY DEFINER SET search_path = '' AS $$
+DECLARE v_ws uuid; v_prior jsonb; v_touched jsonb; v_revs jsonb;
+BEGIN
+  v_ws := app_private.require_role(p_slug, ARRAY['owner','editor']);
+  IF NOT EXISTS (SELECT 1 FROM app_private.bouts b
+                  WHERE b.workspace_id = v_ws AND b.id = p_bout_id) THEN
+    RAISE EXCEPTION 'bout not found' USING ERRCODE = '42704';
+  END IF;
+  PERFORM app_private.check_revision_vector(v_ws, p_bout_id, p_revisions);
+
+  v_prior := app_private.bout_prior_state(v_ws, p_bout_id);
+  v_touched := app_private.apply_bout_result(v_ws, p_bout_id, 'pending', NULL, NULL);
+  SELECT jsonb_object_agg(e.value ->> 'id', e.value ->> 'revision') INTO v_revs
+    FROM pg_catalog.jsonb_array_elements(v_touched) e;
+  PERFORM app_private.write_undo(v_ws, 'return_bout_to_pending', v_prior, v_revs, NULL);
+
+  RETURN QUERY SELECT p_bout_id,
+    (SELECT e.value ->> 'revision' FROM pg_catalog.jsonb_array_elements(v_touched) e
+      WHERE e.value ->> 'table' = 'bouts'), v_touched;
+END $$;
+
+-- The deferred wagerRepository.listByBout read. It carries `revision` because a
+-- caller cannot assemble the vector fm_rpc_grade_bout demands without one per
+-- dependent — the same reason the in-memory projection carries it.
+CREATE FUNCTION public.fm_member_wagers_by_bout(p_slug text, p_bout_id uuid)
+RETURNS TABLE (id uuid, bout_id uuid, assessment_id uuid,
+               market_snapshot_id uuid, corner text, stake_units text,
+               placed_at timestamptz, settlement_status text,
+               settlement_outcome text, financial_status text,
+               financial_reason text, profit_units double precision,
+               settled_at timestamptz, notes text, revision text)
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = '' AS $$
+  SELECT g.id, g.bout_id, g.assessment_id, g.market_snapshot_id, g.corner,
+         g.stake_units::text, g.placed_at, g.settlement_status,
+         g.settlement_outcome, g.financial_status, g.financial_reason,
+         g.profit_units, g.settled_at, g.notes, g.revision::text
+    FROM app_private.wagers g
+    JOIN app_private.workspaces w ON w.id = g.workspace_id
+   WHERE w.slug = p_slug AND g.bout_id = p_bout_id
+     AND app_private.is_member(w.id, ARRAY['owner','editor','viewer'])
+   ORDER BY g.id
+$$;
+
 -- ── (4) transfer ownership ──────────────────────────────────────────────────
 ALTER SCHEMA app_private OWNER TO fm_table_owner;
 DO $$ DECLARE r record; BEGIN
@@ -2096,6 +2337,12 @@ GRANT EXECUTE ON FUNCTION app_private.recompute_position_settlement(uuid, uuid)
   TO fm_member_api;
 GRANT EXECUTE ON FUNCTION app_private.settlement_for(uuid, uuid, text, uuid, numeric)
   TO fm_member_api;
+GRANT EXECUTE ON FUNCTION app_private.bout_dependents(uuid, uuid) TO fm_member_api;
+GRANT EXECUTE ON FUNCTION app_private.check_revision_vector(uuid, uuid, jsonb)
+  TO fm_member_api;
+GRANT EXECUTE ON FUNCTION app_private.apply_bout_result(uuid, uuid, text, text, text)
+  TO fm_member_api;
+GRANT EXECUTE ON FUNCTION app_private.bout_prior_state(uuid, uuid) TO fm_member_api;
 -- CHECK-constraint helpers are evaluated as the role PERFORMING THE WRITE, not
 -- as the table owner, so fm_member_api needs EXECUTE on every helper reachable
 -- from a constraint on a table it writes. Without these the cluster failed with

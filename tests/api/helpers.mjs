@@ -95,6 +95,9 @@ export const WS_CLAIM = '11110000-0000-4000-8000-000000000003';
 // transition every dependent row and never mutate the shared API fixture.
 // Cross-file contamination is impossible because nothing else references it.
 export const WS_RPC = '11110000-0000-4000-8000-000000000004';
+// Cluster 2's own aggregate. It KEEPS its wager, because a bout-lifecycle write
+// must transition every dependent row — the wager is the point.
+export const WS_BOUT = '11110000-0000-4000-8000-000000000005';
 
 const workspace = (id, slug, isPublic) => `
 INSERT INTO app_private.workspaces (id, slug, is_public, schema_version, migrated_at)
@@ -178,7 +181,7 @@ VALUES ('${wsId}', '170000000020${n}-bbbbbb', 0,
         '${n}bb00000-0000-4000-8000-000000000001', 'A', false)
 ON CONFLICT DO NOTHING;`;
 
-const IDS = `'${WS_PUBLIC}','${WS_PRIVATE}','${WS_CLAIM}','${WS_RPC}'`;
+const IDS = `'${WS_PUBLIC}','${WS_PRIVATE}','${WS_CLAIM}','${WS_RPC}','${WS_BOUT}'`;
 
 /**
  * Deterministic fixture, applied to a CLEAN database.
@@ -225,6 +228,7 @@ ${workspace(WS_PUBLIC, 'api-public', true)}
 ${workspace(WS_PRIVATE, 'api-private', false)}
 ${workspace(WS_CLAIM, 'api-claim', true)}
 ${workspace(WS_RPC, 'api-rpc', false)}
+${workspace(WS_BOUT, 'api-bout', false)}
 
 INSERT INTO app_private.workspace_members (workspace_id, user_id, role)
 VALUES ('${WS_PUBLIC}', '${USER_MEMBER}', 'owner'),
@@ -235,13 +239,16 @@ ON CONFLICT DO NOTHING;
 INSERT INTO app_private.workspace_members (workspace_id, user_id, role)
 VALUES ('${WS_PRIVATE}', '${USER_VIEWER}', 'viewer'),
        ('${WS_RPC}', '${USER_MEMBER}', 'owner'),
-       ('${WS_RPC}', '${USER_VIEWER}', 'viewer')
+       ('${WS_RPC}', '${USER_VIEWER}', 'viewer'),
+       ('${WS_BOUT}', '${USER_MEMBER}', 'owner'),
+       ('${WS_BOUT}', '${USER_VIEWER}', 'viewer')
 ON CONFLICT DO NOTHING;
 -- api-claim is deliberately left with ZERO owners for the concurrency test.
 
 ${aggregate(WS_PUBLIC, 2, probA, probB)}
 ${aggregate(WS_PRIVATE, 3, 0.5, 0.5)}
 ${aggregate(WS_RPC, 4, 0.5, 0.5, false)}
+${aggregate(WS_BOUT, 5, 0.5, 0.5)}
 
 -- The RPC cluster's own position starts review-pending. confirmed_at is NULLed
 -- explicitly: leaving it populated violates tracked_positions_review_union, and
