@@ -107,6 +107,9 @@ export const WS_UNDO = '11110000-0000-4000-8000-000000000006';
 // goes — the two halves of the logical-vs-physical delete.
 export const WS_DELETE = '11110000-0000-4000-8000-000000000007';
 export const WS_DELETE_PIN = '11110000-0000-4000-8000-000000000008';
+// Cluster 5's workspace: an event and a pending bout but NO aggregate, so
+// fm_rpc_save_prediction_run authors the first one over real HTTP.
+export const WS_SAVE = '11110000-0000-4000-8000-000000000009';
 
 const workspace = (id, slug, isPublic) => `
 INSERT INTO app_private.workspaces (id, slug, is_public, schema_version, migrated_at)
@@ -190,7 +193,23 @@ VALUES ('${wsId}', '170000000020${n}-bbbbbb', 0,
         '${n}bb00000-0000-4000-8000-000000000001', 'A', false)
 ON CONFLICT DO NOTHING;`;
 
-const IDS = `'${WS_PUBLIC}','${WS_PRIVATE}','${WS_CLAIM}','${WS_RPC}','${WS_BOUT}','${WS_UNDO}','${WS_DELETE}','${WS_DELETE_PIN}'`;
+// Just an event and a pending bout — no aggregate. Cluster 5's save RPC creates
+// the aggregate against this bout.
+const eventAndBout = (wsId, n) => `
+INSERT INTO app_private.events (workspace_id, id, promotion, name, date, created_at)
+VALUES ('${wsId}', '${n}ee00000-0000-4000-8000-000000000001', 'UFC',
+        'API Card ${n}', '2026-04-0${n}', now())
+ON CONFLICT DO NOTHING;
+INSERT INTO app_private.bouts (workspace_id, id, event_id,
+  corner_a_display_name, corner_a_fighter_key,
+  corner_b_display_name, corner_b_fighter_key, division, result_status, created_at)
+VALUES ('${wsId}', '${n}bb00000-0000-4000-8000-000000000001',
+        '${n}ee00000-0000-4000-8000-000000000001',
+        'Api Alpha ${n}', 'api-alpha-${n}', 'Api Beta ${n}', 'api-beta-${n}',
+        'Lightweight', 'pending', now())
+ON CONFLICT DO NOTHING;`;
+
+const IDS = `'${WS_PUBLIC}','${WS_PRIVATE}','${WS_CLAIM}','${WS_RPC}','${WS_BOUT}','${WS_UNDO}','${WS_DELETE}','${WS_DELETE_PIN}','${WS_SAVE}'`;
 
 /**
  * Deterministic fixture, applied to a CLEAN database.
@@ -241,6 +260,7 @@ ${workspace(WS_BOUT, 'api-bout', false)}
 ${workspace(WS_UNDO, 'api-undo', false)}
 ${workspace(WS_DELETE, 'api-delete', false)}
 ${workspace(WS_DELETE_PIN, 'api-delete-pin', false)}
+${workspace(WS_SAVE, 'api-save', false)}
 
 INSERT INTO app_private.workspace_members (workspace_id, user_id, role)
 VALUES ('${WS_PUBLIC}', '${USER_MEMBER}', 'owner'),
@@ -261,7 +281,10 @@ VALUES ('${WS_PRIVATE}', '${USER_VIEWER}', 'viewer'),
        ('${WS_DELETE}', '${USER_OUTSIDER}', 'editor'),
        ('${WS_DELETE}', '${USER_VIEWER}', 'viewer'),
        ('${WS_DELETE_PIN}', '${USER_MEMBER}', 'owner'),
-       ('${WS_DELETE_PIN}', '${USER_VIEWER}', 'viewer')
+       ('${WS_DELETE_PIN}', '${USER_VIEWER}', 'viewer'),
+       ('${WS_SAVE}', '${USER_MEMBER}', 'owner'),
+       ('${WS_SAVE}', '${USER_OUTSIDER}', 'editor'),
+       ('${WS_SAVE}', '${USER_VIEWER}', 'viewer')
 ON CONFLICT DO NOTHING;
 -- api-claim is deliberately left with ZERO owners for the concurrency test.
 
@@ -272,6 +295,7 @@ ${aggregate(WS_BOUT, 5, 0.5, 0.5)}
 ${aggregate(WS_UNDO, 6, 0.5, 0.5)}
 ${aggregate(WS_DELETE, 7, 0.5, 0.5, false)}
 ${aggregate(WS_DELETE_PIN, 8, 0.5, 0.5)}
+${eventAndBout(WS_SAVE, 9)}
 
 -- The RPC cluster's own position starts review-pending. confirmed_at is NULLed
 -- explicitly: leaving it populated violates tracked_positions_review_union, and

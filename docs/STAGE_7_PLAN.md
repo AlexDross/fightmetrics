@@ -14,7 +14,7 @@ Base: `main` @ `89f6c45`. Backend decision: Supabase/Postgres.
 | 0 · Preflight | Docker runtime present and running; ports 54321–54324 free; Node supports the pinned CLI | ✅ |
 | 1 | This document + `feat(data): add repository interfaces over the durable schema` — in-memory only | ✅ |
 | 2 | `feat(data): add Postgres schema, roles, policies and RPCs` — pinned Supabase CLI as devDependency, committed `supabase/`, full local stack, all SQL/API tests. **No hosted project.** | ✅ |
-| 2 · status | **PARTIAL — RPC clusters 1–4 landed.** Landed: roles, ownership transfer, ACLs, `app_private` schema, all 15 tables with composite FKs and the deferrable run↔snapshot cycle, revision/slug/settlement triggers, RLS on every table, a working authenticated path (caller resolution + zero-owner bootstrap), the `fm_read_*`/`fm_member_*` surfaces **for everything the current app renders**, SQL-side measurements, and 157 assertions green under `npm run test:db` and 14 under `npm run test:api`, including StoreSchema validation of the export and genuine two-client claim concurrency. **RPC cluster 1 (tracked-position edits)** is complete: `fm_rpc_change_tracked_corner`, `fm_rpc_amend_tracked_price`, `fm_rpc_confirm_entry` and `fm_member_undo_list`, with authorization, expected-revision conflicts, `stale_write` carrying the live server revision, undo records, settled-edit recomputation and rollback proof — 40 API assertions and 159 pgTAP. **RPC cluster 2 (bout lifecycle)** is complete: `fm_rpc_grade_bout`, `fm_rpc_return_bout_to_pending` and the deferred `fm_member_wagers_by_bout` read, with full revision-vector validation under row locks, `stale_write` carrying the real server revision, undo prior-state, mixed outcomes, and grade/return proven true inverses — 66 API assertions. **RPC cluster 3 (undo foundation)** is complete: `fm_rpc_undo` for all five implemented operations (tracked-corner change, price amendment, confirmation, grade, return-to-pending), with the table-owner `lock_undo_row`/`current_revision`/`check_undo_vector`/`remove_created_rows`/`restore_position` helpers, creator/role/workspace/TTL/single-use/consumed enforcement, undo-row-lock serialization of concurrent undos, `stale_write` naming every drifted row, atomic rollback, safe removal of forward-created market snapshots, exact prior-state round trips for every operation, no undo-of-undo, `prior_state` withheld from the read surface, and `absent_ids` validated with restoration reserved for cluster 4 — **19 API assertions, 85 API total**. `is_string_map` is now `EXECUTE`-granted to `fm_member_api` (four constraint helpers, not three), because settling a wager during grade/undo re-evaluates its `external_ids` CHECK. **RPC cluster 4 (deletion)** is complete: `fm_rpc_delete_pending_run` and `fm_rpc_clear_graded`, with the table-owner `delete_aggregate`/`check_graded_vector`/`deleted_row_exists`/`assert_ids_absent`/`restore_deleted_aggregate`/`untombstone_roots` helpers; proven-orphan pruning in the documented order (position → assessment → market → snapshots → run → stop), the run-survives-iff-a-wager-pins-its-assessment rule, unconditional root tombstoning with tombstone-as-authoritative `notFound` (no double delete), conflict-checked on the tracked position (delete) and an owner-only graded vector (clear), and the `absent_ids` restoration path in `fm_rpc_undo` that re-inserts a deleted aggregate column-complete (`to_jsonb`/`jsonb_populate_record`, immutable rows via plain `INSERT`, run↔snapshot cycle deferred) after `assert_ids_absent`, then un-tombstones — **10 API assertions, 95 API total**. Deletion is by run root only, matching the frozen contract and the in-memory reference; the stray `delete_tracked_position` RPC was withdrawn (see §5/§6). **Outstanding:** 16 of the contract's 25 mutation methods, plus the 3 deferred reads (`getAggregate`, `workspace.current`, `seedVersion` — see §5) and the non-contract `fm_rpc_seed_store`; and the 152-row stored-profit recomputation, which needs Gate 3's seed. Both float constraints remain **provisional**. | |
+| 2 · status | **PARTIAL — RPC clusters 1–5 landed.** Landed: roles, ownership transfer, ACLs, `app_private` schema, all 15 tables with composite FKs and the deferrable run↔snapshot cycle, revision/slug/settlement triggers, RLS on every table, a working authenticated path (caller resolution + zero-owner bootstrap), the `fm_read_*`/`fm_member_*` surfaces **for everything the current app renders**, SQL-side measurements, and 157 assertions green under `npm run test:db` and 14 under `npm run test:api`, including StoreSchema validation of the export and genuine two-client claim concurrency. **RPC cluster 1 (tracked-position edits)** is complete: `fm_rpc_change_tracked_corner`, `fm_rpc_amend_tracked_price`, `fm_rpc_confirm_entry` and `fm_member_undo_list`, with authorization, expected-revision conflicts, `stale_write` carrying the live server revision, undo records, settled-edit recomputation and rollback proof — 40 API assertions and 159 pgTAP. **RPC cluster 2 (bout lifecycle)** is complete: `fm_rpc_grade_bout`, `fm_rpc_return_bout_to_pending` and the deferred `fm_member_wagers_by_bout` read, with full revision-vector validation under row locks, `stale_write` carrying the real server revision, undo prior-state, mixed outcomes, and grade/return proven true inverses — 66 API assertions. **RPC cluster 3 (undo foundation)** is complete: `fm_rpc_undo` for all five implemented operations (tracked-corner change, price amendment, confirmation, grade, return-to-pending), with the table-owner `lock_undo_row`/`current_revision`/`check_undo_vector`/`remove_created_rows`/`restore_position` helpers, creator/role/workspace/TTL/single-use/consumed enforcement, undo-row-lock serialization of concurrent undos, `stale_write` naming every drifted row, atomic rollback, safe removal of forward-created market snapshots, exact prior-state round trips for every operation, no undo-of-undo, `prior_state` withheld from the read surface, and `absent_ids` validated with restoration reserved for cluster 4 — **19 API assertions, 85 API total**. `is_string_map` is now `EXECUTE`-granted to `fm_member_api` (four constraint helpers, not three), because settling a wager during grade/undo re-evaluates its `external_ids` CHECK. **RPC cluster 4 (deletion)** is complete: `fm_rpc_delete_pending_run` and `fm_rpc_clear_graded`, with the table-owner `delete_aggregate`/`check_graded_vector`/`deleted_row_exists`/`assert_ids_absent`/`restore_deleted_aggregate`/`untombstone_roots` helpers; proven-orphan pruning in the documented order (position → assessment → market → snapshots → run → stop), the run-survives-iff-a-wager-pins-its-assessment rule, unconditional root tombstoning with tombstone-as-authoritative `notFound` (no double delete), conflict-checked on the tracked position (delete) and an owner-only graded vector (clear), and the `absent_ids` restoration path in `fm_rpc_undo` that re-inserts a deleted aggregate column-complete (`to_jsonb`/`jsonb_populate_record`, immutable rows via plain `INSERT`, run↔snapshot cycle deferred) after `assert_ids_absent`, then un-tombstones — **10 API assertions, 95 API total**. Deletion is by run root only, matching the frozen contract and the in-memory reference; the stray `delete_tracked_position` RPC was withdrawn (see §5/§6). **RPC cluster 5 (prediction save)** is complete: `fm_rpc_save_prediction_run` and `fm_member_prediction_aggregate`, with the table-owner `insert_prediction_aggregate` (domain-shape → columns, reconstructing the finishProjection/settlement/reviewState/reconstruction unions, cyclic pair deferred, live ledger root written as owner) and `remove_created_aggregate` helpers; owner/editor with the bout lock (it creates a dependent), and a `save_prediction_run` branch in `fm_rpc_undo` that removes exactly the created rows and the ledger row after `check_undo_vector` proves the created position is untouched. This **closes the HTTP write leg for complementarity**: `probA`/`probB` cross PostgREST as JS numbers on the way in and read back `Object.is`-identical, summing to exactly 1 — **7 API assertions, 102 API total**. **Outstanding:** 15 of the contract's 25 mutation methods, plus the 2 deferred reads (`workspace.current`, `seedVersion` — see §5) and the non-contract `fm_rpc_seed_store`; and the 152-row stored-profit recomputation, which needs Gate 3's seed. The complementarity constraint is now validated over real HTTP writes; the profit-equality constraint remains **provisional** pending Gate 3's seed. | |
 | 3 | `feat(data): migrate seed data into the durable schema` | ✅ |
 | 4 | `feat(auth): add magic-link sign-in and read-only public state` | ✅ |
 | 5 | **Hosted rollout** — Alex creates/links the project, `db push --dry-run` → `db push`, Vercel vars, invite owner, claim, approve seed | ✅ |
@@ -592,8 +592,8 @@ Legend — **SQL**: implemented and tested · **RPC**: planned server mutation �
 | 7 | `boutRepository.listPendingResults` | client | filter `result_status='pending'` on either bout surface |
 | 8 | `predictionRepository.listPending` | SQL | `fm_read_upcoming` / `fm_member_upcoming` |
 | 9 | `predictionRepository.listGraded` | SQL | `fm_read_roi` / `fm_member_roi` |
-| 10 | `predictionRepository.getAggregate` | RPC | **`fm_member_prediction_aggregate`** — cluster 4, with `save_prediction_run` |
-| 11 | `predictionRepository.savePrediction` | RPC | **`fm_rpc_save_prediction_run`** — cluster 4. Also closes the HTTP write leg for complementarity |
+| 10 | `predictionRepository.getAggregate` | SQL | ✅ `fm_member_prediction_aggregate` — cluster 5; returns `{run,snapshots,assessment,trackedPosition}` in domain shape, or `null` when tombstoned/incomplete |
+| 11 | `predictionRepository.savePrediction` | SQL | ✅ `fm_rpc_save_prediction_run` — cluster 5; authors the whole aggregate from the domain shape, closes the HTTP write leg for complementarity, undo removes it |
 | 12 | `predictionRepository.remove` | SQL | ✅ `fm_rpc_delete_pending_run` — cluster 4; conflict-checked on the tracked position, prunes proven orphans, tombstones the root, undo-restores via `absent_ids` |
 | 13 | `predictionRepository.clearGraded` | SQL | ✅ `fm_rpc_clear_graded` — cluster 4; owner-only, vector over every graded position, one undo entry restores the whole clear |
 | 14 | `predictionRepository.grade` | SQL | ✅ `fm_rpc_grade_bout` |
@@ -634,9 +634,9 @@ Legend — **SQL**: implemented and tested · **RPC**: planned server mutation �
 
 | Class | Count |
 |---|---|
-| Implemented, SQL-backed contract methods | **21** |
-| Planned read surfaces (`getAggregate`, `workspace.current`, `seedVersion`) | **3** |
-| Planned mutation methods | **16** |
+| Implemented, SQL-backed contract methods | **23** |
+| Planned read surfaces (`workspace.current`, `seedVersion`) | **2** |
+| Planned mutation methods | **15** |
 | Client-only (no SQL surface of their own) | **6** |
 | **Total contract methods** | **46** |
 
@@ -656,7 +656,7 @@ after all of them:
 |---|---|---|
 | 3 | **Undo foundation** | `fm_rpc_undo` covering every operation already implemented — tracked-corner change, price amendment, confirmation, grade, return-to-pending. Consumes and validates the existing `revision_vector`, `created_ids` and `prior_state`; enforces TTL, creator and workspace scope, single use, conflict detection and atomic rollback. |
 | 4 | **Deletion** | ✅ `delete_pending_run`, `clear_graded`, and the `absent_ids` restoration path added to undo here, where the first rows are actually deleted. **Reconciled at cluster 4:** deletion is by RUN ROOT only, per the frozen `REPOSITORY_CONTRACT` (`predictionRepository.remove` and `clearGraded`) and the in-memory reference (`deleteAggregate(runId)`). There is no `delete_tracked_position` — a position is 1:1 with its aggregate root and has no independent delete in the contract, so the earlier §6 line for it was withdrawn (see §6). §5 already fixes `fm_rpc_seed_store` as the *only* non-contract RPC. |
-| 5 | **Prediction save** | `save_prediction_run`, `getAggregate`. Closes the HTTP write leg for complementarity. Takes the bout lock: it creates dependents. |
+| 5 | **Prediction save** | ✅ `save_prediction_run`, `getAggregate`. Closes the HTTP write leg for complementarity — probabilities now cross PostgREST as JS numbers on the way IN, are stored and read back Object.is-identical, summing to exactly 1. Takes the bout lock: it creates a dependent. Creates run+snapshots+(optional)market+assessment+position referencing an EXISTING event/bout (per the frozen reference, which does not author events or bouts); undo removes exactly what it created and its ledger row. |
 | 6 | **Wagers** | `create`, `updateStake`, `updateNotes`, `settle`, `remove`. Bout-lock-bound. |
 | 7 | **Props, parlays, rename** | `confirm_all_pending`, prop and parlay mutations, `rename_event`. |
 | 8 | **Workspace** | `current`, `seedVersion`, `setSeedVersion`, `import_store`, `reset_workspace`. |
@@ -678,10 +678,11 @@ raises `0A000` `undoUnsupportedRestore`.
 
 ### Mutation progress, stated exactly
 
-- **9 of the contract's 25 mutation methods are implemented**:
+- **10 of the contract's 25 mutation methods are implemented**:
   `grade`, `returnToPending`, `changeTrackedCorner`, `amendTrackedPrice`,
-  `confirmEntry`, `claimOwnership`, `undo`, `remove`, `clearGraded`.
-- **16 contract mutation methods remain.**
+  `confirmEntry`, `claimOwnership`, `undo`, `remove`, `clearGraded`,
+  `savePrediction`.
+- **15 contract mutation methods remain.**
 - **Outside the repository contract** there is one further planned RPC,
   `fm_rpc_seed_store` (Gate 3), which no contract method maps to — it exists to
   populate a workspace, not to serve the repository. It must not be counted
@@ -712,7 +713,7 @@ returns `revision text`.
 | RPC | Auth | Transaction scope | Undo | Tombstone |
 |---|---|---|---|---|
 | `fm_rpc_seed_store` | owner | 13 tables + `seed_items` + `seed_version` | ✗ | creates 164 roots |
-| `fm_rpc_save_prediction_run` | owner/editor | event+bout+run+snapshots+market+assessment+position | ✓ delete | ✗ |
+| `fm_rpc_save_prediction_run` ✅ | owner/editor | run+snapshots+market+assessment+position (event/bout must pre-exist) | ✓ delete | ✗ |
 | `fm_rpc_grade_bout` | owner/editor | bout result + every settlement on it | ✓ vector | ✗ |
 | `fm_rpc_return_bout_to_pending` | owner/editor | inverse of grade | ✓ vector | ✗ |
 | `fm_rpc_change_tracked_corner` | owner/editor | `corner` only | ✓ | ✗ |
@@ -1100,8 +1101,14 @@ SQL is used only to build fixtures, never as a substitute for the request path.
   `1 - pA`, which is what the domain means by complementary; the point is that
   the PAIR is serialized together, stored, and read back over HTTP as JS numbers — `Object.is` bit-identical on
   both, summing to exactly 1. A one-ULP perturbation is rejected by the `CHECK`.
-  **Still PROVISIONAL**: the write leg goes in via fixture SQL, because no
-  save-prediction RPC exists yet. Only an HTTP write closes this.
+  **The write leg is now CLOSED (cluster 5).** `fm_rpc_save_prediction_run`
+  accepts `probA`/`probB` as JS numbers over PostgREST, stores them, and
+  `fm_member_prediction_aggregate` reads them back `Object.is`-identical and
+  summing to exactly 1 — the full browser→PostgREST→`float8`→response→JS path,
+  no fixture SQL on the write side. The `prob_complementary` CHECK is therefore
+  now validated over real HTTP writes and may be treated as final for the
+  transport path; only the 152-row stored-profit recomputation (Gate 3 seed)
+  keeps the profit-equality constraint provisional.
 - **Concurrency**: two clients claim the same zero-owner workspace with both
   requests in flight (`Promise.all`). Exactly one succeeds, exactly one owner row
   survives, and the loser gets the documented stable error — HTTP **401/403**
@@ -1117,9 +1124,10 @@ SQL is used only to build fixtures, never as a substitute for the request path.
   so every run starts from the migration alone and the fixture rows are known to
   match the current schema. `ON CONFLICT DO NOTHING` remains as defensive
   idempotency but is **not** the isolation mechanism. Two consecutive
-  invocations each perform their own reset and each pass in full (95/95 as of
-  cluster 4, across five files: export, routing/concurrency, cluster 1–2 RPCs,
-  the cluster-3 undo suite and the cluster-4 deletion suite).
+  invocations each perform their own reset and each pass in full (102/102 as of
+  cluster 5, across six files: export, routing/concurrency, cluster 1–2 RPCs,
+  the cluster-3 undo suite, the cluster-4 deletion suite and the cluster-5
+  prediction-save suite).
 
 The membership assertion uses a **catalog-only** scalar that grants nothing, so
 it cannot measure its own contamination — the fixture helper takes an
@@ -1143,7 +1151,7 @@ prove nothing. The current store has 3,799 numeric leaves and 0 negative zeros.
 |---|---|
 | Repository contract vs in-memory fake | every `npm test`, offline |
 | SQL + RLS + RPC via **local Supabase** | `npm run test:db`, CI service job |
-| API-level repository tests vs local URL/key | `npm run test:api` — **95 assertions, real HTTP, self-resetting** |
+| API-level repository tests vs local URL/key | `npm run test:api` — **102 assertions, real HTTP, self-resetting** |
 | Manual acceptance (phone/desktop, hard refresh) | pre-merge checklist |
 
 ```
@@ -1215,13 +1223,23 @@ deletion helpers (`delete_aggregate`, `check_graded_vector`, `deleted_row_exists
 | clean reset 1 | 766 | `1b0af954…bf78` |
 | clean reset 2 | 766 | `1b0af954…bf78` |
 
-Byte-identical across both resets (`diff` empty), `test:db` 159 PASS after each.
+**Cluster 5** adds `fm_rpc_save_prediction_run`, `fm_member_prediction_aggregate`,
+the two save helpers (`insert_prediction_aggregate`, `remove_created_aggregate`)
+and their grants, growing it again:
 
-Canonical value for the current (cluster-4) schema:
+| run | lines | SHA-256 |
+|---|---|---|
+| clean reset 1 | 778 | `1b2a379b…56cb` |
+| clean reset 2 | 778 | `1b2a379b…56cb` |
+
+Byte-identical across both resets (`diff` empty), and both resets exited 0;
+`test:db` 159 PASS after each.
+
+Canonical value for the current (cluster-5) schema:
 
 ```
-lines  766
-sha256 1b0af954c19b4bfb0b94ca3a841425df4796b661a378f7a53105bcc336ccbf78
+lines  778
+sha256 1b2a379b21137fa76f37d9979024d468069c7ce645b1ee9b5d251d34323456cb
 ```
 
 Codex independently reported 663 lines with SHA-256

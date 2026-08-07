@@ -2350,9 +2350,13 @@ BEGIN
   END IF;
 
   -- Bout operations lock the whole dependent set before the vector is compared,
-  -- for the same reason grading does.
+  -- for the same reason grading does. Undoing a save removes a dependent, so it
+  -- takes the same lock — its bout is recorded under prior_state.run.
   IF v_undo.op IN ('grade_bout','return_bout_to_pending') THEN
     v_bout := (v_undo.prior_state #>> '{bout,id}')::uuid;
+    PERFORM app_private.lock_bout_dependents(v_ws, v_bout);
+  ELSIF v_undo.op = 'save_prediction_run' THEN
+    v_bout := (v_undo.prior_state #>> '{run,boutId}')::uuid;
     PERFORM app_private.lock_bout_dependents(v_ws, v_bout);
   END IF;
 
@@ -2463,6 +2467,13 @@ BEGIN
     -- The tombstone is the authoritative logical-existence flag, so undo must
     -- clear it or the restored root would stay invisible to every read surface.
     PERFORM app_private.untombstone_roots(v_ws, v_undo.prior_state -> 'seedItems');
+
+  ELSIF v_undo.op = 'save_prediction_run' THEN
+    -- The inverse of a create is a delete. check_undo_vector above already proved
+    -- the created position is untouched (bout locked just above), so removing the
+    -- whole created aggregate — and its ledger row — is safe.
+    v_restored := app_private.remove_created_aggregate(v_ws, v_undo.created_ids,
+                    v_undo.prior_state #>> '{run,id}');
 
   ELSE
     RAISE EXCEPTION 'undoUnsupportedOp: %', v_undo.op USING ERRCODE = '0A000';
@@ -2977,6 +2988,296 @@ BEGIN
   RETURN QUERY SELECT v_removed, v_roots, v_phys;
 END $$;
 
+-- ── Cluster 5: prediction save ──────────────────────────────────────────────
+-- fm_rpc_save_prediction_run creates a whole prediction aggregate — run,
+-- snapshots, an optional market snapshot, assessment and tracked position — from
+-- the domain Store shape that fm_member_export_store emits and
+-- fm_member_prediction_aggregate returns. It closes the HTTP WRITE leg for the
+-- complementarity contract: probabilities now cross PostgREST as JS numbers on
+-- the way IN, are stored, and read back, all summing to exactly 1 — previously
+-- only fixture SQL ever wrote them.
+
+-- Insert one domain-shaped aggregate, mapping camelCase domain fields to columns
+-- and reconstructing the normalized union columns (finishProjection, settlement,
+-- reviewState, reconstruction) from their nested objects. Returns the created_ids
+-- vector [{table,id}] so undo removes exactly what the save created.
+CREATE FUNCTION app_private.insert_prediction_aggregate(p_ws uuid, p_agg jsonb)
+RETURNS jsonb LANGUAGE plpgsql VOLATILE SECURITY DEFINER SET search_path = '' AS $$
+DECLARE
+  v_run jsonb := p_agg -> 'run'; v_fp jsonb;
+  v_market jsonb := p_agg -> 'marketSnapshot';
+  v_assess jsonb := p_agg -> 'assessment'; v_pos jsonb := p_agg -> 'trackedPosition';
+  v_created jsonb := '[]'::jsonb; r record; s jsonb; v_rec jsonb; v_prior jsonb;
+  v_set jsonb; v_fin jsonb; v_review jsonb;
+BEGIN
+  -- run.decisionSnapshotId references a snapshot inserted in the same call, and
+  -- that snapshot's run_id references the run: the cyclic pair is deferred so
+  -- both land before the check at COMMIT.
+  SET CONSTRAINTS app_private.run_decision_snapshot_fk,
+                  app_private.prediction_snapshots_run_fk DEFERRED;
+
+  v_fp := v_run -> 'finishProjection';
+  INSERT INTO app_private.prediction_runs (workspace_id, id, bout_id,
+    legacy_entry_id, created_at, decision_snapshot_id,
+    target_event_date_at_capture, finish_status, finish_ko_pct, finish_sub_pct,
+    finish_dec_pct, finish_leaders, corner_a_is_prospect_at_capture,
+    corner_b_is_prospect_at_capture, includes_prospect_at_capture,
+    provenance_completeness)
+  VALUES (p_ws, v_run ->> 'id', (v_run ->> 'boutId')::uuid,
+    v_run ->> 'legacyEntryId', (v_run ->> 'createdAt')::timestamptz,
+    (v_run ->> 'decisionSnapshotId')::uuid,
+    (v_run ->> 'targetEventDateAtCapture')::date, v_fp ->> 'status',
+    CASE WHEN v_fp ->> 'status' = 'computed' THEN (v_fp ->> 'koPct')::int END,
+    CASE WHEN v_fp ->> 'status' = 'computed' THEN (v_fp ->> 'subPct')::int END,
+    CASE WHEN v_fp ->> 'status' = 'computed' THEN (v_fp ->> 'decPct')::int END,
+    CASE WHEN v_fp ->> 'status' = 'computed'
+         THEN ARRAY(SELECT pg_catalog.jsonb_array_elements_text(v_fp -> 'leaders')) END,
+    (v_run ->> 'cornerAIsProspectAtCapture')::boolean,
+    (v_run ->> 'cornerBIsProspectAtCapture')::boolean,
+    (v_run ->> 'includesProspectAtCapture')::boolean,
+    v_run ->> 'provenanceCompleteness');
+  v_created := v_created || jsonb_build_object('table','prediction_runs','id',v_run ->> 'id');
+
+  FOR r IN SELECT e.value AS v
+             FROM pg_catalog.jsonb_array_elements(coalesce(p_agg -> 'snapshots', '[]'::jsonb)) e LOOP
+    s := r.v; v_rec := s -> 'reconstruction';
+    v_prior := CASE WHEN v_rec IS NULL OR v_rec = 'null'::jsonb THEN NULL ELSE v_rec -> 'priorV2' END;
+    INSERT INTO app_private.prediction_snapshots (workspace_id, id, run_id, bout_id,
+      basis, model_version, model_coef_hash, prob_a, prob_b, winner_corner,
+      captured_at, capture_mode, reconstruction_type, reconstruction_source_commit,
+      reconstruction_prior_v2_p_a, reconstruction_prior_v2_p_b, feature_vector,
+      fight_history_cutoff, source_manifest)
+    VALUES (p_ws, (s ->> 'id')::uuid, s ->> 'runId', (s ->> 'boutId')::uuid,
+      s ->> 'basis', s ->> 'modelVersion', s ->> 'modelCoefHash',
+      (s ->> 'probA')::double precision, (s ->> 'probB')::double precision,
+      s ->> 'winnerCorner', (s ->> 'capturedAt')::timestamptz, s ->> 'captureMode',
+      CASE WHEN v_rec IS NULL OR v_rec = 'null'::jsonb THEN NULL ELSE v_rec ->> 'type' END,
+      CASE WHEN v_rec IS NULL OR v_rec = 'null'::jsonb THEN NULL ELSE v_rec ->> 'sourceCommit' END,
+      CASE WHEN v_prior IS NULL OR v_prior = 'null'::jsonb THEN NULL ELSE (v_prior ->> 'v2pA')::double precision END,
+      CASE WHEN v_prior IS NULL OR v_prior = 'null'::jsonb THEN NULL ELSE (v_prior ->> 'v2pB')::double precision END,
+      CASE WHEN s -> 'featureVector' IS NULL OR s -> 'featureVector' = 'null'::jsonb THEN NULL ELSE s -> 'featureVector' END,
+      CASE WHEN s -> 'fightHistoryCutoff' IS NULL OR s -> 'fightHistoryCutoff' = 'null'::jsonb THEN NULL ELSE s -> 'fightHistoryCutoff' END,
+      CASE WHEN s -> 'sourceManifest' IS NULL OR s -> 'sourceManifest' = 'null'::jsonb THEN NULL ELSE s -> 'sourceManifest' END);
+    v_created := v_created || jsonb_build_object('table','prediction_snapshots','id',s ->> 'id');
+  END LOOP;
+
+  IF v_market IS NOT NULL AND v_market <> 'null'::jsonb THEN
+    INSERT INTO app_private.market_snapshots (workspace_id, id, bout_id,
+      captured_at, source, odds_a, odds_b)
+    VALUES (p_ws, (v_market ->> 'id')::uuid, (v_market ->> 'boutId')::uuid,
+      (v_market ->> 'capturedAt')::timestamptz, v_market ->> 'source',
+      (v_market ->> 'oddsA')::int, (v_market ->> 'oddsB')::int);
+    v_created := v_created || jsonb_build_object('table','market_snapshots','id',v_market ->> 'id');
+  END IF;
+
+  INSERT INTO app_private.betting_assessments (workspace_id, id, bout_id, run_id,
+    prediction_snapshot_id, market_snapshot_id, frozen_at, fair_line_a, fair_line_b,
+    edge_a, edge_b, ev_a, ev_b, kelly_a, kelly_b, tier, recommended_corner,
+    tier_provenance, recommended_corner_provenance)
+  VALUES (p_ws, (v_assess ->> 'id')::uuid, (v_assess ->> 'boutId')::uuid,
+    v_assess ->> 'runId', (v_assess ->> 'predictionSnapshotId')::uuid,
+    (v_assess ->> 'marketSnapshotId')::uuid, (v_assess ->> 'frozenAt')::timestamptz,
+    (v_assess ->> 'fairLineA')::int, (v_assess ->> 'fairLineB')::int,
+    (v_assess ->> 'edgeA')::double precision, (v_assess ->> 'edgeB')::double precision,
+    (v_assess ->> 'evA')::double precision, (v_assess ->> 'evB')::double precision,
+    (v_assess ->> 'kellyA')::double precision, (v_assess ->> 'kellyB')::double precision,
+    v_assess ->> 'tier', v_assess ->> 'recommendedCorner',
+    v_assess ->> 'tierProvenance', v_assess ->> 'recommendedCornerProvenance');
+  v_created := v_created || jsonb_build_object('table','betting_assessments','id',v_assess ->> 'id');
+
+  v_set := v_pos -> 'settlement'; v_fin := v_set -> 'financialResult';
+  v_review := v_pos -> 'reviewState';
+  INSERT INTO app_private.tracked_positions (workspace_id, id, bout_id, assessment_id,
+    market_snapshot_id, origin, corner, stake_units, stake_source, opened_at,
+    settlement_status, settlement_outcome, financial_status, financial_reason,
+    profit_units, settled_at, review_status, review_reason, confirmed_at, notes)
+  VALUES (p_ws, (v_pos ->> 'id')::uuid, (v_pos ->> 'boutId')::uuid,
+    (v_pos ->> 'assessmentId')::uuid, (v_pos ->> 'marketSnapshotId')::uuid,
+    v_pos ->> 'origin', v_pos ->> 'corner', (v_pos ->> 'stakeUnits')::numeric,
+    v_pos ->> 'stakeSource', (v_pos ->> 'openedAt')::timestamptz, v_set ->> 'status',
+    CASE WHEN v_set ->> 'status' = 'settled' THEN v_set ->> 'outcome' END,
+    CASE WHEN v_set ->> 'status' = 'settled' THEN v_fin ->> 'status' END,
+    CASE WHEN v_fin ->> 'status' = 'uncomputable' THEN v_fin ->> 'reason' END,
+    CASE WHEN v_fin ->> 'status' = 'computed' THEN (v_fin ->> 'profitUnits')::double precision END,
+    CASE WHEN v_set ->> 'status' = 'settled' THEN (v_set ->> 'settledAt')::timestamptz END,
+    v_review ->> 'status',
+    CASE WHEN v_review ->> 'status' <> 'notRequired' THEN v_review ->> 'reason' END,
+    CASE WHEN v_review ->> 'status' = 'confirmed' THEN (v_review ->> 'confirmedAt')::timestamptz END,
+    v_pos ->> 'notes');
+  v_created := v_created || jsonb_build_object('table','tracked_positions','id',v_pos ->> 'id');
+
+  -- A live ledger root: savePrediction authors a new root. Written HERE, as the
+  -- table owner, because the seed_items RLS policy is owner-only and this RPC is
+  -- owner/editor — an editor's write would otherwise be refused by RLS.
+  INSERT INTO app_private.seed_items (workspace_id, root_type, root_id,
+    first_seed_version, removed_at)
+  VALUES (p_ws, 'predictionRun', v_run ->> 'id', NULL, NULL)
+  ON CONFLICT (workspace_id, root_type, root_id) DO UPDATE SET removed_at = NULL;
+
+  RETURN v_created;
+END $$;
+
+-- Undo of a save REMOVES what it created, in reverse-dependency order, plus the
+-- ledger row. The cyclic pair is deferred so run and snapshots can both go. A
+-- wager created against the aggregate since the save keeps its assessment via an
+-- immediate RESTRICT FK, so the undo aborts cleanly rather than orphaning it.
+CREATE FUNCTION app_private.remove_created_aggregate(p_ws uuid, p_created jsonb, p_run_id text)
+RETURNS jsonb LANGUAGE plpgsql VOLATILE SECURITY DEFINER SET search_path = '' AS $$
+BEGIN
+  SET CONSTRAINTS app_private.run_decision_snapshot_fk,
+                  app_private.prediction_snapshots_run_fk DEFERRED;
+  DELETE FROM app_private.tracked_positions t WHERE t.workspace_id = p_ws
+    AND t.id IN (SELECT (e.value ->> 'id')::uuid
+                   FROM pg_catalog.jsonb_array_elements(p_created) e
+                  WHERE e.value ->> 'table' = 'tracked_positions');
+  DELETE FROM app_private.betting_assessments a WHERE a.workspace_id = p_ws
+    AND a.id IN (SELECT (e.value ->> 'id')::uuid
+                   FROM pg_catalog.jsonb_array_elements(p_created) e
+                  WHERE e.value ->> 'table' = 'betting_assessments');
+  DELETE FROM app_private.market_snapshots m WHERE m.workspace_id = p_ws
+    AND m.id IN (SELECT (e.value ->> 'id')::uuid
+                   FROM pg_catalog.jsonb_array_elements(p_created) e
+                  WHERE e.value ->> 'table' = 'market_snapshots');
+  DELETE FROM app_private.prediction_snapshots s WHERE s.workspace_id = p_ws
+    AND s.id IN (SELECT (e.value ->> 'id')::uuid
+                   FROM pg_catalog.jsonb_array_elements(p_created) e
+                  WHERE e.value ->> 'table' = 'prediction_snapshots');
+  DELETE FROM app_private.prediction_runs pr WHERE pr.workspace_id = p_ws
+    AND pr.id IN (SELECT e.value ->> 'id'
+                    FROM pg_catalog.jsonb_array_elements(p_created) e
+                   WHERE e.value ->> 'table' = 'prediction_runs');
+  DELETE FROM app_private.seed_items si WHERE si.workspace_id = p_ws
+    AND si.root_type = 'predictionRun' AND si.root_id = p_run_id;
+  RETURN p_created;
+END $$;
+
+-- predictionRepository.savePrediction: create a whole aggregate. Owner/editor.
+-- Takes the bout lock because it creates a dependent (a tracked position) of a
+-- bout that may be grading.
+CREATE FUNCTION public.fm_rpc_save_prediction_run(p_slug text, p_aggregate jsonb)
+RETURNS TABLE (run_id text)
+LANGUAGE plpgsql VOLATILE SECURITY DEFINER SET search_path = '' AS $$
+DECLARE v_ws uuid; v_run jsonb; v_bout uuid; v_run_id text; v_pos uuid;
+  v_created jsonb; v_rev bigint;
+BEGIN
+  v_ws := app_private.require_role(p_slug, ARRAY['owner','editor']);
+  v_run := p_aggregate -> 'run';
+  IF v_run IS NULL OR (v_run ->> 'id') IS NULL THEN
+    RAISE EXCEPTION 'run.id is required' USING ERRCODE = '23514';
+  END IF;
+  v_run_id := v_run ->> 'id';
+  v_bout := (v_run ->> 'boutId')::uuid;
+  IF v_bout IS NULL THEN
+    RAISE EXCEPTION 'run.boutId is required' USING ERRCODE = '23514';
+  END IF;
+  PERFORM app_private.lock_bout_dependents(v_ws, v_bout);
+
+  -- insert_prediction_aggregate writes the rows AND the live ledger root, as the
+  -- table owner (the seed_items policy is owner-only; this RPC is owner/editor).
+  v_created := app_private.insert_prediction_aggregate(v_ws, p_aggregate);
+  v_pos := (p_aggregate -> 'trackedPosition' ->> 'id')::uuid;
+
+  -- Undo removes the created rows. revision_vector pins the new position, so an
+  -- edit or a grade after the save turns undo into a conflict rather than a
+  -- silent removal of a row the caller no longer recognises.
+  SELECT t.revision INTO v_rev FROM app_private.tracked_positions t
+   WHERE t.workspace_id = v_ws AND t.id = v_pos;
+  PERFORM app_private.write_undo(v_ws, 'save_prediction_run',
+    jsonb_build_object('run', jsonb_build_object('id', v_run_id, 'boutId', v_bout)),
+    jsonb_build_object(v_pos::text, v_rev::text), '[]'::jsonb, v_created);
+
+  RETURN QUERY SELECT v_run_id;
+END $$;
+
+-- predictionRepository.getAggregate. Member read; returns the domain-shaped
+-- aggregate {run, snapshots, assessment, trackedPosition} or SQL NULL when the
+-- root is tombstoned, absent, or missing its assessment or tracked position — a
+-- PredictionAggregate REQUIRES all three, so a partial one is notFound.
+CREATE FUNCTION public.fm_member_prediction_aggregate(p_slug text, p_run_id text)
+RETURNS jsonb LANGUAGE sql STABLE SECURITY DEFINER SET search_path = '' AS $$
+  SELECT jsonb_build_object(
+    'run', (SELECT jsonb_build_object(
+        'id', r.id, 'boutId', r.bout_id, 'legacyEntryId', r.legacy_entry_id,
+        'createdAt', r.created_at, 'decisionSnapshotId', r.decision_snapshot_id,
+        'targetEventDateAtCapture', r.target_event_date_at_capture,
+        'finishProjection', CASE WHEN r.finish_status = 'absent'
+          THEN jsonb_build_object('status','absent')
+          ELSE jsonb_build_object('status','computed','koPct',r.finish_ko_pct,
+                 'subPct',r.finish_sub_pct,'decPct',r.finish_dec_pct,
+                 'leaders',to_jsonb(r.finish_leaders)) END,
+        'cornerAIsProspectAtCapture', r.corner_a_is_prospect_at_capture,
+        'cornerBIsProspectAtCapture', r.corner_b_is_prospect_at_capture,
+        'includesProspectAtCapture', r.includes_prospect_at_capture,
+        'provenanceCompleteness', r.provenance_completeness)
+      FROM app_private.prediction_runs r
+     WHERE r.workspace_id = w.id AND r.id = p_run_id),
+    'snapshots', coalesce((SELECT jsonb_agg(jsonb_build_object(
+        'id', s.id, 'runId', s.run_id, 'boutId', s.bout_id, 'basis', s.basis,
+        'modelVersion', s.model_version, 'modelCoefHash', s.model_coef_hash,
+        'probA', s.prob_a, 'probB', s.prob_b, 'winnerCorner', s.winner_corner,
+        'capturedAt', s.captured_at, 'captureMode', s.capture_mode,
+        'reconstruction', CASE WHEN s.reconstruction_type IS NULL THEN 'null'::jsonb
+          ELSE jsonb_build_object('type', s.reconstruction_type,
+                 'sourceCommit', s.reconstruction_source_commit,
+                 'priorV2', CASE WHEN s.reconstruction_prior_v2_p_a IS NULL
+                   THEN 'null'::jsonb
+                   ELSE jsonb_build_object('v2pA', s.reconstruction_prior_v2_p_a,
+                                           'v2pB', s.reconstruction_prior_v2_p_b) END) END,
+        'featureVector', coalesce(s.feature_vector, 'null'::jsonb),
+        'fightHistoryCutoff', coalesce(s.fight_history_cutoff, 'null'::jsonb),
+        'sourceManifest', coalesce(s.source_manifest, 'null'::jsonb)) ORDER BY s.id)
+      FROM app_private.prediction_snapshots s
+     WHERE s.workspace_id = w.id AND s.run_id = p_run_id), '[]'::jsonb),
+    'assessment', (SELECT jsonb_build_object(
+        'id', a.id, 'boutId', a.bout_id, 'runId', a.run_id,
+        'predictionSnapshotId', a.prediction_snapshot_id,
+        'marketSnapshotId', a.market_snapshot_id, 'frozenAt', a.frozen_at,
+        'fairLineA', a.fair_line_a, 'fairLineB', a.fair_line_b,
+        'edgeA', a.edge_a, 'edgeB', a.edge_b, 'evA', a.ev_a, 'evB', a.ev_b,
+        'kellyA', a.kelly_a, 'kellyB', a.kelly_b, 'tier', a.tier,
+        'recommendedCorner', a.recommended_corner,
+        'tierProvenance', a.tier_provenance,
+        'recommendedCornerProvenance', a.recommended_corner_provenance)
+      FROM app_private.betting_assessments a
+     WHERE a.workspace_id = w.id AND a.run_id = p_run_id ORDER BY a.id LIMIT 1),
+    'trackedPosition', (SELECT jsonb_build_object(
+        'id', t.id, 'boutId', t.bout_id, 'assessmentId', t.assessment_id,
+        'marketSnapshotId', t.market_snapshot_id, 'origin', t.origin,
+        'corner', t.corner, 'stakeUnits', t.stake_units,
+        'stakeSource', t.stake_source, 'openedAt', t.opened_at,
+        'settlement', CASE WHEN t.settlement_status = 'open'
+          THEN jsonb_build_object('status','open')
+          ELSE jsonb_build_object('status','settled','outcome',t.settlement_outcome,
+                 'financialResult', CASE WHEN t.financial_status = 'computed'
+                   THEN jsonb_build_object('status','computed','profitUnits',t.profit_units)
+                   ELSE jsonb_build_object('status','uncomputable','reason',t.financial_reason) END,
+                 'settledAt', t.settled_at) END,
+        'reviewState', CASE t.review_status
+          WHEN 'notRequired' THEN jsonb_build_object('status','notRequired')
+          WHEN 'pending' THEN jsonb_build_object('status','pending','reason',t.review_reason)
+          ELSE jsonb_build_object('status','confirmed','reason',t.review_reason,
+                                  'confirmedAt', t.confirmed_at) END,
+        'notes', t.notes)
+      FROM app_private.tracked_positions t
+      JOIN app_private.betting_assessments a2
+        ON a2.workspace_id = t.workspace_id AND a2.id = t.assessment_id
+     WHERE t.workspace_id = w.id AND a2.run_id = p_run_id ORDER BY t.id LIMIT 1))
+    FROM app_private.workspaces w
+   WHERE w.slug = p_slug
+     AND app_private.is_member(w.id, ARRAY['owner','editor','viewer'])
+     AND EXISTS (SELECT 1 FROM app_private.prediction_runs r
+                  WHERE r.workspace_id = w.id AND r.id = p_run_id)
+     AND NOT EXISTS (SELECT 1 FROM app_private.seed_items si
+                      WHERE si.workspace_id = w.id AND si.root_type = 'predictionRun'
+                        AND si.root_id = p_run_id AND si.removed_at IS NOT NULL)
+     AND EXISTS (SELECT 1 FROM app_private.betting_assessments a
+                  WHERE a.workspace_id = w.id AND a.run_id = p_run_id)
+     AND EXISTS (SELECT 1 FROM app_private.tracked_positions t
+                  JOIN app_private.betting_assessments a3
+                    ON a3.workspace_id = t.workspace_id AND a3.id = t.assessment_id
+                  WHERE t.workspace_id = w.id AND a3.run_id = p_run_id)
+$$;
+
 -- ── (4) transfer ownership ──────────────────────────────────────────────────
 ALTER SCHEMA app_private OWNER TO fm_table_owner;
 DO $$ DECLARE r record; BEGIN
@@ -3093,6 +3394,9 @@ GRANT EXECUTE ON FUNCTION app_private.deleted_row_exists(uuid, text, text) TO fm
 GRANT EXECUTE ON FUNCTION app_private.assert_ids_absent(uuid, jsonb) TO fm_member_api;
 GRANT EXECUTE ON FUNCTION app_private.restore_deleted_aggregate(uuid, jsonb) TO fm_member_api;
 GRANT EXECUTE ON FUNCTION app_private.untombstone_roots(uuid, jsonb) TO fm_member_api;
+-- Cluster 5 prediction-save plumbing: fm_member_api only.
+GRANT EXECUTE ON FUNCTION app_private.insert_prediction_aggregate(uuid, jsonb) TO fm_member_api;
+GRANT EXECUTE ON FUNCTION app_private.remove_created_aggregate(uuid, jsonb, text) TO fm_member_api;
 -- CHECK-constraint helpers are evaluated as the role PERFORMING THE WRITE, not
 -- as the table owner, so fm_member_api needs EXECUTE on every helper reachable
 -- from a constraint on a table it writes. Without these the cluster failed with
