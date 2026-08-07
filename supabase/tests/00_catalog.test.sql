@@ -267,7 +267,8 @@ SELECT set_eq(
            ('fm_rpc_change_tracked_corner'),('fm_rpc_amend_tracked_price'),
            ('fm_rpc_confirm_entry'),('fm_rpc_grade_bout'),
            ('fm_rpc_return_bout_to_pending'),('fm_member_wagers_by_bout'),
-           ('fm_rpc_undo')$$,
+           ('fm_rpc_undo'),
+           ('fm_rpc_delete_pending_run'),('fm_rpc_clear_graded')$$,
   'the public API surface is exactly the documented function set');
 
 -- ── Constraint helpers reachable by the writing role ────────────────────────

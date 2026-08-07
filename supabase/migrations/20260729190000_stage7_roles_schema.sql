@@ -2358,12 +2358,16 @@ BEGIN
 
   -- Nothing has changed underneath the operation being reversed.
   PERFORM app_private.check_undo_vector(v_ws, v_undo.revision_vector);
-  -- absent_ids is validated even though these five operations never populate
-  -- it; deleted-row restoration arrives with the deletion cluster.
+  -- absent_ids must always be a well-formed array. The deletion cluster
+  -- (delete_pending_run, clear_graded) populates it with the rows the operation
+  -- physically removed, and its undo branch re-inserts them. Every OTHER op
+  -- leaves it empty; a populated absent_ids on one of those is refused rather
+  -- than silently ignored, because those branches have no restoration path.
   IF pg_catalog.jsonb_typeof(v_undo.absent_ids) <> 'array' THEN
     RAISE EXCEPTION 'undoMalformedAbsentIds' USING ERRCODE = '23514';
   END IF;
-  IF pg_catalog.jsonb_array_length(v_undo.absent_ids) > 0 THEN
+  IF v_undo.op NOT IN ('delete_pending_run','clear_graded')
+     AND pg_catalog.jsonb_array_length(v_undo.absent_ids) > 0 THEN
     RAISE EXCEPTION 'undoUnsupportedRestore: absent_ids restoration is not implemented'
       USING ERRCODE = '0A000';
   END IF;
@@ -2445,6 +2449,20 @@ BEGIN
       v_restored := v_restored || jsonb_build_object(
         'table','wagers','id',r.v ->> 'id','revision',v_rev::text);
     END LOOP;
+
+  ELSIF v_undo.op IN ('delete_pending_run','clear_graded') THEN
+    -- A deletion is undone by RE-INSERTING the rows it removed. First prove each
+    -- is still absent: if anything re-created a row under one of those ids, the
+    -- world has moved on and re-inserting would either collide or resurrect a
+    -- stale copy over a live one. Any such reappearance aborts the undo.
+    PERFORM app_private.assert_ids_absent(v_ws, v_undo.absent_ids);
+    -- Immutable rows are restored with plain INSERT, never ON CONFLICT DO UPDATE,
+    -- which would mutate an immutable row. The run<->snapshot cycle is deferred
+    -- inside the helper so the aggregate lands atomically.
+    v_restored := app_private.restore_deleted_aggregate(v_ws, v_undo.prior_state);
+    -- The tombstone is the authoritative logical-existence flag, so undo must
+    -- clear it or the restored root would stay invisible to every read surface.
+    PERFORM app_private.untombstone_roots(v_ws, v_undo.prior_state -> 'seedItems');
 
   ELSE
     RAISE EXCEPTION 'undoUnsupportedOp: %', v_undo.op USING ERRCODE = '0A000';
@@ -2542,6 +2560,422 @@ LANGUAGE sql STABLE SECURITY DEFINER SET search_path = '' AS $$
      AND app_private.is_member(w.id, ARRAY['owner','editor','viewer'])
    ORDER BY g.id
 $$;
+
+-- ── Cluster 4: deletion ─────────────────────────────────────────────────────
+-- Deleting a prediction root is a LOGICAL delete (the root is always tombstoned
+-- in seed_items) plus a PHYSICAL delete of everything it provably orphans. The
+-- two come apart whenever a wager pins the shared assessment: the run row then
+-- survives, so the response reports `physically_removed` and a `retained`
+-- breakdown separately.
+--
+-- These helpers do all their table writes as app_private functions — owned by
+-- fm_table_owner after the ownership transfer — so they bypass RLS. The role gate
+-- is enforced once, in the public RPC, by require_role. This is the same division
+-- the bout-lifecycle cluster uses (public RPC gates; app_private helper writes).
+
+-- Existence probe across every physically-deletable table, so undo can assert a
+-- removed row is still absent before re-inserting it.
+CREATE FUNCTION app_private.deleted_row_exists(p_ws uuid, p_table text, p_id text)
+RETURNS boolean LANGUAGE sql STABLE SECURITY DEFINER SET search_path = '' AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM app_private.prediction_runs r
+      WHERE p_table = 'prediction_runs' AND r.workspace_id = p_ws AND r.id = p_id
+    UNION ALL SELECT 1 FROM app_private.prediction_snapshots s
+      WHERE p_table = 'prediction_snapshots' AND s.workspace_id = p_ws AND s.id::text = p_id
+    UNION ALL SELECT 1 FROM app_private.market_snapshots m
+      WHERE p_table = 'market_snapshots' AND m.workspace_id = p_ws AND m.id::text = p_id
+    UNION ALL SELECT 1 FROM app_private.betting_assessments a
+      WHERE p_table = 'betting_assessments' AND a.workspace_id = p_ws AND a.id::text = p_id
+    UNION ALL SELECT 1 FROM app_private.tracked_positions t
+      WHERE p_table = 'tracked_positions' AND t.workspace_id = p_ws AND t.id::text = p_id)
+$$;
+
+-- Delete ONE prediction aggregate in the documented order — position ->
+-- assessment -> market snapshots -> prediction snapshots -> run -> STOP — where
+-- every step past the position is a PROVEN-ORPHAN check by counted reference,
+-- wagers included. Events and Bouts are shared card history and always remain.
+--
+-- Captures every row it physically removes into `prior` (via to_jsonb, so all
+-- columns round-trip through jsonb_populate_record on undo) and lists them in
+-- `absent`. Tombstones the root unconditionally. Returns the bundle the RPC
+-- needs to build its undo entry and its response.
+CREATE FUNCTION app_private.delete_aggregate(p_ws uuid, p_run_id text)
+RETURNS jsonb LANGUAGE plpgsql VOLATILE SECURITY DEFINER SET search_path = '' AS $$
+DECLARE
+  v_assessment uuid; v_assessment_market uuid;
+  v_pos_ids uuid[]; v_market_candidates uuid[]; m uuid; r record;
+  v_positions jsonb := '[]'::jsonb; v_assessment_json jsonb := '[]'::jsonb;
+  v_markets jsonb := '[]'::jsonb; v_snapshots jsonb := '[]'::jsonb;
+  v_run_json jsonb := '[]'::jsonb; v_absent jsonb := '[]'::jsonb;
+  v_run_survives boolean; v_physically_removed boolean := false;
+BEGIN
+  -- Deleting the run's own decision snapshot violates run_decision_snapshot_fk
+  -- IMMEDIATELY unless the cyclic pair is deferred; both are checked at COMMIT.
+  SET CONSTRAINTS app_private.run_decision_snapshot_fk,
+                  app_private.prediction_snapshots_run_fk DEFERRED;
+
+  SELECT a.id, a.market_snapshot_id INTO v_assessment, v_assessment_market
+    FROM app_private.betting_assessments a
+   WHERE a.workspace_id = p_ws AND a.run_id = p_run_id ORDER BY a.id LIMIT 1;
+
+  IF v_assessment IS NOT NULL THEN
+    SELECT array_agg(t.id ORDER BY t.id) INTO v_pos_ids
+      FROM app_private.tracked_positions t
+     WHERE t.workspace_id = p_ws AND t.assessment_id = v_assessment;
+  END IF;
+  v_pos_ids := coalesce(v_pos_ids, ARRAY[]::uuid[]);
+
+  SELECT coalesce(array_agg(DISTINCT mid), ARRAY[]::uuid[]) INTO v_market_candidates FROM (
+    SELECT t.market_snapshot_id AS mid FROM app_private.tracked_positions t
+      WHERE t.workspace_id = p_ws AND t.id = ANY(v_pos_ids)
+        AND t.market_snapshot_id IS NOT NULL
+    UNION
+    SELECT v_assessment_market WHERE v_assessment_market IS NOT NULL) x;
+
+  -- 1. tracked positions
+  SELECT coalesce(jsonb_agg(to_jsonb(t.*) ORDER BY t.id), '[]'::jsonb) INTO v_positions
+    FROM app_private.tracked_positions t
+   WHERE t.workspace_id = p_ws AND t.id = ANY(v_pos_ids);
+  DELETE FROM app_private.tracked_positions t
+   WHERE t.workspace_id = p_ws AND t.id = ANY(v_pos_ids);
+  FOR r IN SELECT e.value ->> 'id' AS id FROM pg_catalog.jsonb_array_elements(v_positions) e LOOP
+    v_absent := v_absent || jsonb_build_object('table','tracked_positions','id',r.id);
+  END LOOP;
+
+  -- 2. assessment — only if no position AND no wager still references it
+  IF v_assessment IS NOT NULL
+     AND NOT EXISTS (SELECT 1 FROM app_private.tracked_positions t
+                      WHERE t.workspace_id = p_ws AND t.assessment_id = v_assessment)
+     AND NOT EXISTS (SELECT 1 FROM app_private.wagers g
+                      WHERE g.workspace_id = p_ws AND g.assessment_id = v_assessment) THEN
+    SELECT jsonb_agg(to_jsonb(a.*)) INTO v_assessment_json
+      FROM app_private.betting_assessments a
+     WHERE a.workspace_id = p_ws AND a.id = v_assessment;
+    DELETE FROM app_private.betting_assessments a
+     WHERE a.workspace_id = p_ws AND a.id = v_assessment;
+    v_absent := v_absent || jsonb_build_object('table','betting_assessments','id',v_assessment);
+  END IF;
+
+  -- 3. market snapshots — each candidate nothing surviving points at
+  FOREACH m IN ARRAY v_market_candidates LOOP
+    IF NOT EXISTS (SELECT 1 FROM app_private.betting_assessments a
+                    WHERE a.workspace_id = p_ws AND a.market_snapshot_id = m)
+       AND NOT EXISTS (SELECT 1 FROM app_private.tracked_positions t
+                    WHERE t.workspace_id = p_ws AND t.market_snapshot_id = m)
+       AND NOT EXISTS (SELECT 1 FROM app_private.wagers g
+                    WHERE g.workspace_id = p_ws AND g.market_snapshot_id = m) THEN
+      v_markets := v_markets || (SELECT to_jsonb(ms.*) FROM app_private.market_snapshots ms
+                                  WHERE ms.workspace_id = p_ws AND ms.id = m);
+      DELETE FROM app_private.market_snapshots ms
+       WHERE ms.workspace_id = p_ws AND ms.id = m;
+      v_absent := v_absent || jsonb_build_object('table','market_snapshots','id',m);
+    END IF;
+  END LOOP;
+
+  -- 4. prediction snapshots — but only if the run itself will not survive.
+  -- Snapshots hang off the run by run_id; if the run survives (an assessment
+  -- still pins it), NONE of its snapshots are orphans, whatever else points at
+  -- them. A surviving run still requires its decision_snapshot_id, and the rest
+  -- of its snapshot set is immutable model output belonging to a live row.
+  v_run_survives := EXISTS (SELECT 1 FROM app_private.betting_assessments a
+                             WHERE a.workspace_id = p_ws AND a.run_id = p_run_id);
+  IF NOT v_run_survives THEN
+    FOR r IN SELECT s.id FROM app_private.prediction_snapshots s
+              WHERE s.workspace_id = p_ws AND s.run_id = p_run_id ORDER BY s.id LOOP
+      IF NOT EXISTS (SELECT 1 FROM app_private.betting_assessments a
+                      WHERE a.workspace_id = p_ws AND a.prediction_snapshot_id = r.id)
+         AND NOT EXISTS (SELECT 1 FROM app_private.prediction_runs pr
+                      WHERE pr.workspace_id = p_ws AND pr.id <> p_run_id
+                        AND pr.decision_snapshot_id = r.id) THEN
+        v_snapshots := v_snapshots || (SELECT to_jsonb(s.*)
+          FROM app_private.prediction_snapshots s
+          WHERE s.workspace_id = p_ws AND s.id = r.id);
+        DELETE FROM app_private.prediction_snapshots s
+         WHERE s.workspace_id = p_ws AND s.id = r.id;
+        v_absent := v_absent || jsonb_build_object('table','prediction_snapshots','id',r.id);
+      END IF;
+    END LOOP;
+  END IF;
+
+  -- 5. run — physically removed only if nothing surviving points at it. The
+  -- snapshot clause is the structural guard ON DELETE RESTRICT would enforce.
+  IF NOT v_run_survives
+     AND NOT EXISTS (SELECT 1 FROM app_private.prediction_snapshots s
+                      WHERE s.workspace_id = p_ws AND s.run_id = p_run_id) THEN
+    SELECT jsonb_agg(to_jsonb(pr.*)) INTO v_run_json
+      FROM app_private.prediction_runs pr
+     WHERE pr.workspace_id = p_ws AND pr.id = p_run_id;
+    DELETE FROM app_private.prediction_runs pr
+     WHERE pr.workspace_id = p_ws AND pr.id = p_run_id;
+    v_physically_removed := true;
+    v_absent := v_absent || jsonb_build_object('table','prediction_runs','id',p_run_id);
+  END IF;
+
+  -- 6. tombstone the root, ALWAYS — whether or not the row physically went.
+  INSERT INTO app_private.seed_items
+    (workspace_id, root_type, root_id, first_seed_version, removed_at)
+  VALUES (p_ws, 'predictionRun', p_run_id, NULL, pg_catalog.now())
+  ON CONFLICT (workspace_id, root_type, root_id)
+    DO UPDATE SET removed_at = pg_catalog.now();
+
+  RETURN jsonb_build_object(
+    'physicallyRemoved', v_physically_removed,
+    'retained', jsonb_build_object(
+      'run', NOT v_physically_removed,
+      'assessment', v_assessment IS NOT NULL AND EXISTS (
+        SELECT 1 FROM app_private.betting_assessments a
+         WHERE a.workspace_id = p_ws AND a.id = v_assessment),
+      'marketSnapshots', (SELECT count(*) FROM unnest(v_market_candidates) mm
+                           WHERE EXISTS (SELECT 1 FROM app_private.market_snapshots ms
+                                          WHERE ms.workspace_id = p_ws AND ms.id = mm)),
+      'predictionSnapshots', (SELECT count(*) FROM app_private.prediction_snapshots s
+                               WHERE s.workspace_id = p_ws AND s.run_id = p_run_id)),
+    'prior', jsonb_build_object(
+      'predictionRuns', v_run_json, 'predictionSnapshots', v_snapshots,
+      'marketSnapshots', v_markets, 'bettingAssessments', v_assessment_json,
+      'trackedPositions', v_positions),
+    'absent', v_absent);
+END $$;
+
+-- clearGraded takes an ID-keyed vector covering EVERY graded tracked position,
+-- validated in full before anything is deleted. Same fixed error order as the
+-- bout vector: structural problems 23514, malformed/out-of-range 22P02, a
+-- genuinely stale entry stale_write.
+CREATE FUNCTION app_private.check_graded_vector(p_ws uuid, p_provided jsonb)
+RETURNS void LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path = '' AS $$
+DECLARE r record; v_dup text; v_missing text; v_unknown text;
+BEGIN
+  IF p_provided IS NULL OR pg_catalog.jsonb_typeof(p_provided) <> 'array' THEN
+    RAISE EXCEPTION 'revisionVectorRequired: a revision vector is required'
+      USING ERRCODE = '23514';
+  END IF;
+  FOR r IN SELECT e.value AS v FROM pg_catalog.jsonb_array_elements(p_provided) e LOOP
+    IF pg_catalog.jsonb_typeof(r.v) <> 'object'
+       OR NOT (r.v ? 'id') OR NOT (r.v ? 'revision')
+       OR pg_catalog.jsonb_typeof(r.v -> 'id') <> 'string' THEN
+      RAISE EXCEPTION 'malformedRevisionEntry: %', r.v USING ERRCODE = '23514';
+    END IF;
+    PERFORM app_private.parse_revision(r.v ->> 'revision');
+  END LOOP;
+
+  SELECT e.value ->> 'id' INTO v_dup
+    FROM pg_catalog.jsonb_array_elements(p_provided) e
+   GROUP BY e.value ->> 'id' HAVING count(*) > 1 ORDER BY 1 LIMIT 1;
+  IF v_dup IS NOT NULL THEN
+    RAISE EXCEPTION 'duplicateRevisionEntry: %', v_dup USING ERRCODE = '23514';
+  END IF;
+
+  SELECT t.id::text INTO v_missing FROM app_private.tracked_positions t
+   WHERE t.workspace_id = p_ws AND t.settlement_status = 'settled'
+     AND NOT EXISTS (SELECT 1 FROM pg_catalog.jsonb_array_elements(p_provided) e
+                      WHERE e.value ->> 'id' = t.id::text)
+   ORDER BY t.id LIMIT 1;
+  IF v_missing IS NOT NULL THEN
+    RAISE EXCEPTION 'missingRevisionEntry: %', v_missing USING ERRCODE = '23514';
+  END IF;
+
+  SELECT e.value ->> 'id' INTO v_unknown
+    FROM pg_catalog.jsonb_array_elements(p_provided) e
+   WHERE NOT EXISTS (SELECT 1 FROM app_private.tracked_positions t
+                      WHERE t.workspace_id = p_ws AND t.settlement_status = 'settled'
+                        AND t.id::text = e.value ->> 'id')
+   ORDER BY 1 LIMIT 1;
+  IF v_unknown IS NOT NULL THEN
+    RAISE EXCEPTION 'unknownRevisionEntry: %', v_unknown USING ERRCODE = '23514';
+  END IF;
+
+  FOR r IN SELECT t.revision FROM app_private.tracked_positions t
+            JOIN pg_catalog.jsonb_array_elements(p_provided) e
+              ON e.value ->> 'id' = t.id::text
+           WHERE t.workspace_id = p_ws AND t.settlement_status = 'settled'
+             AND app_private.parse_revision(e.value ->> 'revision') <> t.revision
+           ORDER BY t.id LIMIT 1 LOOP
+    PERFORM app_private.raise_stale_write(r.revision);
+  END LOOP;
+END $$;
+
+-- Undo of a deletion: prove every removed id is still absent before re-inserting.
+CREATE FUNCTION app_private.assert_ids_absent(p_ws uuid, p_absent jsonb)
+RETURNS void LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path = '' AS $$
+DECLARE r record;
+BEGIN
+  FOR r IN SELECT e.value ->> 'table' AS tbl, e.value ->> 'id' AS id
+             FROM pg_catalog.jsonb_array_elements(p_absent) e LOOP
+    IF app_private.deleted_row_exists(p_ws, r.tbl, r.id) THEN
+      RAISE EXCEPTION 'undoRowReappeared: % % exists again', r.tbl, r.id
+        USING ERRCODE = '55000';
+    END IF;
+  END LOOP;
+END $$;
+
+-- Re-insert a deleted aggregate. Immutable rows go back with plain INSERT, never
+-- ON CONFLICT DO UPDATE. to_jsonb captured every column, so jsonb_populate_record
+-- reconstructs each row exactly, arrays and jsonb bags included. The run<->snapshot
+-- cycle is deferred so run and its decision snapshot can both land before the
+-- check at COMMIT.
+CREATE FUNCTION app_private.restore_deleted_aggregate(p_ws uuid, p_prior jsonb)
+RETURNS jsonb LANGUAGE plpgsql VOLATILE SECURITY DEFINER SET search_path = '' AS $$
+DECLARE v_restored jsonb := '[]'::jsonb; r record;
+BEGIN
+  SET CONSTRAINTS app_private.run_decision_snapshot_fk,
+                  app_private.prediction_snapshots_run_fk DEFERRED;
+
+  INSERT INTO app_private.prediction_runs
+  SELECT (pg_catalog.jsonb_populate_record(NULL::app_private.prediction_runs, e.value)).*
+    FROM pg_catalog.jsonb_array_elements(coalesce(p_prior -> 'predictionRuns', '[]'::jsonb)) e;
+  INSERT INTO app_private.prediction_snapshots
+  SELECT (pg_catalog.jsonb_populate_record(NULL::app_private.prediction_snapshots, e.value)).*
+    FROM pg_catalog.jsonb_array_elements(coalesce(p_prior -> 'predictionSnapshots', '[]'::jsonb)) e;
+  INSERT INTO app_private.market_snapshots
+  SELECT (pg_catalog.jsonb_populate_record(NULL::app_private.market_snapshots, e.value)).*
+    FROM pg_catalog.jsonb_array_elements(coalesce(p_prior -> 'marketSnapshots', '[]'::jsonb)) e;
+  INSERT INTO app_private.betting_assessments
+  SELECT (pg_catalog.jsonb_populate_record(NULL::app_private.betting_assessments, e.value)).*
+    FROM pg_catalog.jsonb_array_elements(coalesce(p_prior -> 'bettingAssessments', '[]'::jsonb)) e;
+  INSERT INTO app_private.tracked_positions
+  SELECT (pg_catalog.jsonb_populate_record(NULL::app_private.tracked_positions, e.value)).*
+    FROM pg_catalog.jsonb_array_elements(coalesce(p_prior -> 'trackedPositions', '[]'::jsonb)) e;
+
+  FOR r IN
+    SELECT 'prediction_runs' AS tbl, e.value ->> 'id' AS id
+      FROM pg_catalog.jsonb_array_elements(coalesce(p_prior -> 'predictionRuns', '[]'::jsonb)) e
+    UNION ALL SELECT 'prediction_snapshots', e.value ->> 'id'
+      FROM pg_catalog.jsonb_array_elements(coalesce(p_prior -> 'predictionSnapshots', '[]'::jsonb)) e
+    UNION ALL SELECT 'market_snapshots', e.value ->> 'id'
+      FROM pg_catalog.jsonb_array_elements(coalesce(p_prior -> 'marketSnapshots', '[]'::jsonb)) e
+    UNION ALL SELECT 'betting_assessments', e.value ->> 'id'
+      FROM pg_catalog.jsonb_array_elements(coalesce(p_prior -> 'bettingAssessments', '[]'::jsonb)) e
+    UNION ALL SELECT 'tracked_positions', e.value ->> 'id'
+      FROM pg_catalog.jsonb_array_elements(coalesce(p_prior -> 'trackedPositions', '[]'::jsonb)) e
+  LOOP
+    v_restored := v_restored || jsonb_build_object('table', r.tbl, 'id', r.id);
+  END LOOP;
+  RETURN v_restored;
+END $$;
+
+-- Undo of a deletion clears the tombstone so the restored root is live again.
+CREATE FUNCTION app_private.untombstone_roots(p_ws uuid, p_roots jsonb)
+RETURNS void LANGUAGE plpgsql VOLATILE SECURITY DEFINER SET search_path = '' AS $$
+DECLARE r record;
+BEGIN
+  FOR r IN SELECT e.value ->> 'rootType' AS rt, e.value ->> 'rootId' AS rid
+             FROM pg_catalog.jsonb_array_elements(coalesce(p_roots, '[]'::jsonb)) e LOOP
+    UPDATE app_private.seed_items s SET removed_at = NULL
+     WHERE s.workspace_id = p_ws AND s.root_type = r.rt AND s.root_id = r.rid;
+  END LOOP;
+END $$;
+
+-- predictionRepository.remove: delete ONE prediction root and its aggregate.
+-- Owner/editor, conflict-checked on the tracked position (the aggregate's only
+-- mutable row). A tombstoned root is notFound, so it cannot be deleted twice.
+CREATE FUNCTION public.fm_rpc_delete_pending_run(
+  p_slug text, p_run_id text, p_expected_revision text)
+RETURNS TABLE (removed text, physically_removed boolean, retained jsonb)
+LANGUAGE plpgsql VOLATILE SECURITY DEFINER SET search_path = '' AS $$
+DECLARE v_ws uuid; v_bout uuid; v_assessment uuid; v_pos uuid; v_bundle jsonb;
+BEGIN
+  v_ws := app_private.require_role(p_slug, ARRAY['owner','editor']);
+
+  -- Tombstone is authoritative: a logically deleted root is notFound.
+  IF EXISTS (SELECT 1 FROM app_private.seed_items s
+              WHERE s.workspace_id = v_ws AND s.root_type = 'predictionRun'
+                AND s.root_id = p_run_id AND s.removed_at IS NOT NULL) THEN
+    RAISE EXCEPTION 'prediction run not found' USING ERRCODE = '42704';
+  END IF;
+
+  SELECT pr.bout_id INTO v_bout FROM app_private.prediction_runs pr
+   WHERE pr.workspace_id = v_ws AND pr.id = p_run_id;
+  IF v_bout IS NULL THEN
+    RAISE EXCEPTION 'prediction run not found' USING ERRCODE = '42704';
+  END IF;
+  -- An aggregate REQUIRES an assessment and a tracked position, matching
+  -- getAggregate: a run with neither is notFound, never a malformed success.
+  SELECT a.id INTO v_assessment FROM app_private.betting_assessments a
+   WHERE a.workspace_id = v_ws AND a.run_id = p_run_id ORDER BY a.id LIMIT 1;
+  IF v_assessment IS NULL THEN
+    RAISE EXCEPTION 'prediction run not found' USING ERRCODE = '42704';
+  END IF;
+  SELECT t.id INTO v_pos FROM app_private.tracked_positions t
+   WHERE t.workspace_id = v_ws AND t.assessment_id = v_assessment ORDER BY t.id LIMIT 1;
+  IF v_pos IS NULL THEN
+    RAISE EXCEPTION 'prediction run not found' USING ERRCODE = '42704';
+  END IF;
+
+  -- Lock the bout's dependents (bout, then positions, then wagers) BEFORE the
+  -- conflict check, so a concurrent grade cannot settle the position this delete
+  -- is about to remove. Then the expected-revision check on the position itself.
+  PERFORM app_private.lock_bout_dependents(v_ws, v_bout);
+  PERFORM app_private.lock_position(v_ws, v_pos, p_expected_revision);
+
+  v_bundle := app_private.delete_aggregate(v_ws, p_run_id);
+
+  -- absent_ids drives the undo re-insert; revision_vector is empty because the
+  -- deletion leaves no surviving mutable row it touched. seedItems records the
+  -- root to untombstone.
+  PERFORM app_private.write_undo(v_ws, 'delete_pending_run',
+    (v_bundle -> 'prior') || jsonb_build_object('seedItems',
+      jsonb_build_array(jsonb_build_object('rootType','predictionRun','rootId',p_run_id))),
+    '{}'::jsonb, v_bundle -> 'absent', '[]'::jsonb);
+
+  RETURN QUERY SELECT p_run_id, (v_bundle ->> 'physicallyRemoved')::boolean,
+                      v_bundle -> 'retained';
+END $$;
+
+-- predictionRepository.clearGraded: delete EVERY graded aggregate. Owner-only.
+-- The vector covers every graded position and is validated in full before any
+-- deletion. One undo entry restores the whole clear.
+CREATE FUNCTION public.fm_rpc_clear_graded(p_slug text, p_revisions jsonb)
+RETURNS TABLE (removed int, roots_tombstoned int, physically_removed int)
+LANGUAGE plpgsql VOLATILE SECURITY DEFINER SET search_path = '' AS $$
+DECLARE
+  v_ws uuid; r record; v_bundle jsonb;
+  v_removed int; v_roots int := 0; v_phys int := 0;
+  v_prior_runs jsonb := '[]'::jsonb; v_prior_snaps jsonb := '[]'::jsonb;
+  v_prior_markets jsonb := '[]'::jsonb; v_prior_assess jsonb := '[]'::jsonb;
+  v_prior_pos jsonb := '[]'::jsonb; v_absent jsonb := '[]'::jsonb;
+  v_roots_json jsonb := '[]'::jsonb;
+BEGIN
+  v_ws := app_private.require_role(p_slug, ARRAY['owner']);
+
+  -- Lock every affected bout's dependents before comparing the vector, then the
+  -- vector, then delete — the same lock-before-compare discipline as grading.
+  FOR r IN SELECT DISTINCT t.bout_id FROM app_private.tracked_positions t
+            WHERE t.workspace_id = v_ws AND t.settlement_status = 'settled'
+            ORDER BY t.bout_id LOOP
+    PERFORM app_private.lock_bout_dependents(v_ws, r.bout_id);
+  END LOOP;
+  PERFORM app_private.check_graded_vector(v_ws, p_revisions);
+
+  SELECT count(*) INTO v_removed FROM app_private.tracked_positions t
+   WHERE t.workspace_id = v_ws AND t.settlement_status = 'settled';
+
+  FOR r IN SELECT DISTINCT a.run_id FROM app_private.tracked_positions t
+             JOIN app_private.betting_assessments a
+               ON a.workspace_id = t.workspace_id AND a.id = t.assessment_id
+            WHERE t.workspace_id = v_ws AND t.settlement_status = 'settled'
+            ORDER BY a.run_id LOOP
+    v_bundle := app_private.delete_aggregate(v_ws, r.run_id);
+    v_roots := v_roots + 1;
+    IF (v_bundle ->> 'physicallyRemoved')::boolean THEN v_phys := v_phys + 1; END IF;
+    v_prior_runs   := v_prior_runs   || (v_bundle -> 'prior' -> 'predictionRuns');
+    v_prior_snaps  := v_prior_snaps  || (v_bundle -> 'prior' -> 'predictionSnapshots');
+    v_prior_markets:= v_prior_markets|| (v_bundle -> 'prior' -> 'marketSnapshots');
+    v_prior_assess := v_prior_assess || (v_bundle -> 'prior' -> 'bettingAssessments');
+    v_prior_pos    := v_prior_pos    || (v_bundle -> 'prior' -> 'trackedPositions');
+    v_absent       := v_absent       || (v_bundle -> 'absent');
+    v_roots_json   := v_roots_json   ||
+      jsonb_build_object('rootType','predictionRun','rootId',r.run_id);
+  END LOOP;
+
+  PERFORM app_private.write_undo(v_ws, 'clear_graded',
+    jsonb_build_object('predictionRuns', v_prior_runs,
+      'predictionSnapshots', v_prior_snaps, 'marketSnapshots', v_prior_markets,
+      'bettingAssessments', v_prior_assess, 'trackedPositions', v_prior_pos,
+      'seedItems', v_roots_json),
+    '{}'::jsonb, v_absent, '[]'::jsonb);
+
+  RETURN QUERY SELECT v_removed, v_roots, v_phys;
+END $$;
 
 -- ── (4) transfer ownership ──────────────────────────────────────────────────
 ALTER SCHEMA app_private OWNER TO fm_table_owner;
@@ -2652,6 +3086,13 @@ GRANT EXECUTE ON FUNCTION app_private.check_revision_vector(uuid, uuid, jsonb)
 GRANT EXECUTE ON FUNCTION app_private.apply_bout_result(uuid, uuid, text, text, text)
   TO fm_member_api;
 GRANT EXECUTE ON FUNCTION app_private.bout_prior_state(uuid, uuid) TO fm_member_api;
+-- Cluster 4 deletion plumbing: fm_member_api only.
+GRANT EXECUTE ON FUNCTION app_private.delete_aggregate(uuid, text) TO fm_member_api;
+GRANT EXECUTE ON FUNCTION app_private.check_graded_vector(uuid, jsonb) TO fm_member_api;
+GRANT EXECUTE ON FUNCTION app_private.deleted_row_exists(uuid, text, text) TO fm_member_api;
+GRANT EXECUTE ON FUNCTION app_private.assert_ids_absent(uuid, jsonb) TO fm_member_api;
+GRANT EXECUTE ON FUNCTION app_private.restore_deleted_aggregate(uuid, jsonb) TO fm_member_api;
+GRANT EXECUTE ON FUNCTION app_private.untombstone_roots(uuid, jsonb) TO fm_member_api;
 -- CHECK-constraint helpers are evaluated as the role PERFORMING THE WRITE, not
 -- as the table owner, so fm_member_api needs EXECUTE on every helper reachable
 -- from a constraint on a table it writes. Without these the cluster failed with
