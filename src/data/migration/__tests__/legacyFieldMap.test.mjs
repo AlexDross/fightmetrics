@@ -60,9 +60,10 @@ describe('legacy field map is exhaustive', () => {
     expect(paths.size).toBe(15);
   });
 
-  it('covers the parlay runtime shape even though parlayData.js is empty', () => {
-    expect(PARLAY_ENTRIES).toEqual([]);
-    // Shape taken from BuildParlayModal.handleConfirm and the Parlays readers.
+  it('covers every field path in parlayData.js and the complete runtime shape', () => {
+    // The exemplar keeps the full runtime contract covered even when there are
+    // no pending parlays in the data file. Real entries are included so any new
+    // persisted field must also be mapped.
     const runtimeParlay = {
       id: 'x', createdAt: 'x', pickSource: 'human', eventName: 'x', eventDate: 'x',
       combinedOdds: '+300', unitsWagered: 1, status: 'PENDING', result: null,
@@ -71,9 +72,12 @@ describe('legacy field map is exhaustive', () => {
         pickedFighter: 'x', v2DefaultFighter: 'x', v2ProbAtBuild: 0.5, overridden: false,
       }],
     };
-    const paths = collectPaths([runtimeParlay]);
+    const paths = collectPaths([...PARLAY_ENTRIES, runtimeParlay]);
     const uncovered = [...paths].filter((p) => !isCovered(LEGACY_FIELD_MAP.parlay, p));
     expect(uncovered).toEqual([]);
+    // Non-vacuous regardless of whether the current event has a saved parlay.
+    expect(paths.has('legs[].pickedFighter')).toBe(true);
+    expect(paths.has('combinedOdds')).toBe(true);
   });
 
   it('gives every mapping a destination or a documented reason', () => {

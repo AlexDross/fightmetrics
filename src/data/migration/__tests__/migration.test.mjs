@@ -58,12 +58,20 @@ describe('migration runs clean', () => {
       trackedPositions: 160,
       wagers: 0,
       props: 4,
-      parlays: 0,
+      // Pending parlays are live data, so this count changes as the user adds
+      // and grades events. Migration must preserve every current entry.
+      parlays: PARLAY_ENTRIES.length,
     });
   });
 
   it('creates ZERO wagers — legacy data cannot prove cash placement', () => {
     expect(store.wagers).toEqual([]);
+  });
+
+  it('preserves every current parlay and every leg', () => {
+    expect(store.parlays).toHaveLength(PARLAY_ENTRIES.length);
+    expect(store.parlays.reduce((n, p) => n + p.legs.length, 0))
+      .toBe(PARLAY_ENTRIES.reduce((n, p) => n + p.legs.length, 0));
   });
 });
 
