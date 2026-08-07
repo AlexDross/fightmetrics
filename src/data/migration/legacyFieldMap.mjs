@@ -29,19 +29,19 @@ export const LEGACY_FIELD_MAP = Object.freeze({
     fighterBProb: { to: 'PredictionSnapshot[basis=legacy-v1-unversioned].probB' },
     v2pA: { to: 'PredictionSnapshot[basis=v2].probA' },
     v2pB: { to: 'PredictionSnapshot[basis=v2].probB' },
-    predictedWinner: { derived: 'v1 snapshot winnerCorner; equals the v1 argmax on 160/160' },
-    predictedProb: { derived: 'max(fighterAProb, fighterBProb) on 160/160' },
+    predictedWinner: { derived: 'v1 snapshot winnerCorner; equals the v1 argmax on every committed row' },
+    predictedProb: { derived: 'max(fighterAProb, fighterBProb) on every committed row' },
     modelUsed: { to: 'PredictionRun.decisionSnapshotId (points at the v2 snapshot when present)' },
 
     trackedSide: { to: 'TrackedPosition.corner' },
-    trackedProb: { derived: 'decision-basis snapshot prob for TrackedPosition.corner; reproduces the stored value on 160/160' },
+    trackedProb: { derived: 'decision-basis snapshot prob for TrackedPosition.corner; reproduces every stored value' },
 
     oddsA: { to: 'MarketSnapshot.oddsA (parsed to integer; "" -> no snapshot side)' },
     oddsB: { to: 'MarketSnapshot.oddsB (parsed to integer; "" -> no snapshot side)' },
     // NOT derived. App.js edits marketOdds independently (:7890) and rewrites it
     // separately when the tracked side changes (:7868), so it can legitimately
-    // disagree with oddsA/oddsB. That it equals the selected corner on 160/160
-    // rows is a characterisation of TODAY'S SEED, not a migration rule —
+    // disagree with oddsA/oddsB. That it matched the selected corner throughout
+    // the original Stage 6 capture is a seed property, not a migration rule —
     // deriving it would silently discard a real price correction.
     marketOdds: {
       to: 'the selected corner of TrackedPosition.marketSnapshotId. Equal to the selected assessment odds => reuse that snapshot; different => a new immutable MarketSnapshot (source "legacyTrackedOverride", capturedAt null) with only the tracked corner replaced; explicitly blank => that corner is explicitly unpriced, never a fallback to oddsA/oddsB',
@@ -55,18 +55,18 @@ export const LEGACY_FIELD_MAP = Object.freeze({
     evB: { to: 'BettingAssessment.evB' },
     kellyA: { to: 'BettingAssessment.kellyA' },
     kellyB: { to: 'BettingAssessment.kellyB' },
-    fairLine: { derived: 'tracked corner fairLine; 160/160' },
-    edge: { derived: 'tracked corner edge; 160/160' },
-    ev: { derived: 'tracked corner EV; 160/160' },
-    kelly: { derived: 'tracked corner Kelly; 160/160' },
+    fairLine: { derived: 'tracked corner fairLine; verified across the committed corpus' },
+    edge: { derived: 'tracked corner edge; verified across the committed corpus' },
+    ev: { derived: 'tracked corner EV; verified across the committed corpus' },
+    kelly: { derived: 'tracked corner Kelly; verified across the committed corpus' },
 
-    betAction: { to: 'BettingAssessment.tier (+ tierProvenance "stored"; absent on 10 rows -> null + "absent")' },
-    bestBet: { to: 'BettingAssessment.recommendedCorner (+ recommendedCornerProvenance; null on 109 kept distinct from absent on 10)' },
-    betRecommendedFighter: { derived: 'recommendedCorner + Bout corners; "" on 109 rows' },
-    betRecommendedOdds: { derived: 'recommendedCorner + MarketSnapshot; "" on 109 rows' },
+    betAction: { to: 'BettingAssessment.tier (+ tierProvenance "stored"; absent -> null + "absent")' },
+    bestBet: { to: 'BettingAssessment.recommendedCorner (+ recommendedCornerProvenance; stored null kept distinct from absence)' },
+    betRecommendedFighter: { derived: 'recommendedCorner + Bout corners; "" when there is no recommendation' },
+    betRecommendedOdds: { derived: 'recommendedCorner + MarketSnapshot; "" when there is no recommendation' },
 
-    unitsWagered: { to: 'TrackedPosition.stakeUnits (+ stakeSource; absent on 138 -> 1 / defaultedFlat1u)' },
-    notes: { to: 'TrackedPosition.notes ("" -> null on all 160)' },
+    unitsWagered: { to: 'TrackedPosition.stakeUnits (+ stakeSource; absent -> 1 / defaultedFlat1u)' },
+    notes: { to: 'TrackedPosition.notes ("" -> null)' },
 
     actualWinner: { to: 'Bout.result ("" -> pending; NC -> noContest; DRAW -> draw; else resolved + corner)' },
     actualFinish: { to: 'Bout.result.method ("" -> null; "Submission" -> "SUB")' },
@@ -74,14 +74,14 @@ export const LEGACY_FIELD_MAP = Object.freeze({
     projectedKO: { to: 'PredictionRun.finishProjection.koPct' },
     projectedSUB: { to: 'PredictionRun.finishProjection.subPct' },
     projectedDEC: { to: 'PredictionRun.finishProjection.decPct' },
-    projectedFinish: { to: 'PredictionRun.finishProjection.leaders (split on " / "); equals the argmax set on 160/160' },
+    projectedFinish: { to: 'PredictionRun.finishProjection.leaders (split on " / "); equals the argmax set on every committed row' },
 
     fighterAIsProspect: { to: 'PredictionRun.cornerAIsProspectAtCapture (absent -> null, never false)' },
     fighterBIsProspect: { to: 'PredictionRun.cornerBIsProspectAtCapture (absent -> null, never false)' },
     includesProspect: { to: 'PredictionRun.includesProspectAtCapture' },
 
     _provenance: { to: 'PredictionSnapshot fields + PredictionRun.provenanceCompleteness' },
-    '_provenance.captureMode': { to: 'PredictionSnapshot.captureMode (absent on 83 -> "unknown", never "reconstructed")' },
+    '_provenance.captureMode': { to: 'PredictionSnapshot.captureMode (absent -> "unknown", never "reconstructed")' },
     '_provenance.modelVersion': { to: 'PredictionSnapshot[basis=v2].modelVersion' },
     '_provenance.modelCoefHash': { to: 'PredictionSnapshot[basis=v2].modelCoefHash' },
     '_provenance.predictionTimestamp': { to: 'PredictionSnapshot[basis=v2].capturedAt' },
@@ -97,7 +97,7 @@ export const LEGACY_FIELD_MAP = Object.freeze({
     '_provenance.featureVector.v2': { to: 'PredictionSnapshot[basis=v2].featureVector' },
     '_provenance.featureVector.v1.*': { pattern: true, to: 'PredictionSnapshot[basis=legacy-v1-unversioned].featureVector.<key> (all 26 keys verbatim)' },
     '_provenance.featureVector.v2.*': { pattern: true, to: 'PredictionSnapshot[basis=v2].featureVector.<key> (all 16 keys verbatim)' },
-    // Attached to BOTH snapshots of a full live record (22 rows). These describe
+    // Attached to BOTH snapshots of every full live record. These describe
     // the DATA the live calculation read, not one model's coefficients, and
     // several manifest modules are explicitly feedsV2:true — so writing them
     // only onto v1 would make the v2 snapshot look unprovenanced. Deliberate
@@ -128,8 +128,8 @@ export const LEGACY_FIELD_MAP = Object.freeze({
     result: { to: 'Prop.result' },
   },
 
-  // ── Parlay runtime shape (PARLAY_ENTRIES is empty; shape from the
-  //    BuildParlayModal constructor and the Parlays readers) ───────────────
+  // ── Parlay runtime shape (persisted rows plus the BuildParlayModal
+  //    constructor and readers, independent of the current row count) ─────
   parlay: {
     id: { to: 'Parlay.id (verbatim)' },
     createdAt: { to: 'Parlay.createdAt' },
@@ -154,11 +154,11 @@ export const LEGACY_FIELD_MAP = Object.freeze({
 });
 
 /**
- * ACTIVE App.js UI state that is absent from every current seed row.
+ * ACTIVE App.js UI state that was absent from the original Stage 6 seed.
  *
  * CORRECTION: an earlier revision filed `confirmedByUser` under
- * "reader-only phantoms" on the strength of it being written 0/160 times in the
- * data and never assigned in src/domain. That was wrong — it only looked at the
+ * "reader-only phantoms" on the strength of its absence from that seed and no
+ * assignment in src/domain. That was wrong — it only looked at the
  * data and the domain modules. App.js WRITES it (":7389" Confirm All, ":7688"
  * Confirm Pick) and READS `autoGenerated` (":7384", ":7388", ":7654", ":7686").
  * Together they are a real feature: auto-generated ROI entries awaiting review.
@@ -170,11 +170,11 @@ export const LEGACY_FIELD_MAP = Object.freeze({
 export const UI_STATE_FIELDS = Object.freeze({
   autoGenerated: {
     to: 'TrackedPosition.reviewState (status pending|confirmed implies the entry was auto-generated)',
-    note: 'read at App.js:7384, :7388, :7654, :7686; absent from all 160 seed rows',
+    note: 'read at App.js:7384, :7388, :7654, :7686; absent from the original Stage 6 seed capture',
   },
   confirmedByUser: {
     to: 'TrackedPosition.reviewState (false -> pending, true -> confirmed)',
-    note: 'written at App.js:7389 and :7688; read 6x in src/domain/statistics as a population filter; absent from all 160 seed rows',
+    note: 'written at App.js:7389 and :7688; read 6x in src/domain/statistics as a population filter; absent from the original Stage 6 seed capture',
   },
 });
 
@@ -191,7 +191,7 @@ export const REVIEW_STATE_LEGACY_RULES = Object.freeze([
 
 /** v1 fields with no direct legacy source, and where their value comes from. */
 export const GENERATED_FIELD_SOURCES = Object.freeze({
-  'Event.promotion': 'derived: /^UFC\\b/ -> "UFC" (15 events); otherwise null + a migration-manifest entry (1 event: "Freedom 250")',
+  'Event.promotion': 'derived: /^UFC\\b/ -> "UFC"; otherwise null + a migration-manifest entry (including "Freedom 250")',
   'Event.externalIds': 'canonical default {}',
   'Event.updatedAt': 'null — no legacy source; never invented',
   'Event.createdAt': 'earliest createdAt among the event\'s legacy rows',
@@ -204,21 +204,21 @@ export const GENERATED_FIELD_SOURCES = Object.freeze({
   'Bout.cornerB.fighterKey': 'derived: NFC + trim + collapse whitespace + lowercase of displayName (non-authoritative join hint)',
   'Bout.cornerA.fighterId': 'null until Stage 9 identity work',
   'Bout.cornerB.fighterId': 'null until Stage 9 identity work',
-  'PredictionRun.provenanceCompleteness': 'derived: none (83 rows, no _provenance) / partial (55) / full (22, has featureVector)',
+  'PredictionRun.provenanceCompleteness': 'derived per row: none (no _provenance) / partial / full (has featureVector)',
   'PredictionSnapshot.captureMode': 'legacy _provenance.captureMode, else "unknown" — never assumed "reconstructed"',
   'PredictionSnapshot[basis=legacy-v1-unversioned].capturedAt': 'legacy createdAt (no separate v1 timestamp exists in any generation)',
   'PredictionSnapshot.basis': 'derived: "legacy-v1-unversioned" for the original output, "v2" when v2pA/v2pB exist',
-  'PredictionSnapshot.sourceManifest': 'legacy _provenance.sourceManifest, copied to BOTH bases of the 22 full live records; null for the other 193 snapshots',
-  'PredictionSnapshot.fightHistoryCutoff': 'legacy _provenance.fightHistoryCutoff, orientation-mapped and copied to BOTH bases of the 22 full live records; null elsewhere',
+  'PredictionSnapshot.sourceManifest': 'legacy _provenance.sourceManifest, copied to BOTH bases of every full live record; null elsewhere',
+  'PredictionSnapshot.fightHistoryCutoff': 'legacy _provenance.fightHistoryCutoff, orientation-mapped and copied to BOTH bases of every full live record; null elsewhere',
   'MarketSnapshot.source': '"manual" for the assessment market; "legacyTrackedOverride" for a snapshot reconstructed from a divergent legacy marketOdds',
   'MarketSnapshot.capturedAt': 'legacy createdAt for the assessment market (the odds belong to the original save, not a later v2 reconstruction); NULL for a legacyTrackedOverride, because the legacy row records the corrected price but never when it was edited',
   'BettingAssessment.tierProvenance': 'derived: stored / frozenTier / absent',
   'BettingAssessment.recommendedCornerProvenance': 'derived: stored / absentInLegacy',
-  'TrackedPosition.marketSnapshotId': 'reconciled from the legacy marketOdds field: the assessment market when it agrees or is absent, otherwise a distinct legacyTrackedOverride snapshot. On the current seed all 160 agree, so 158 link and 2 are null',
-  'TrackedPosition.reviewState': 'derived from the legacy UI fields autoGenerated/confirmedByUser; all 160 seed rows carry neither and become { status: "notRequired" }',
+  'TrackedPosition.marketSnapshotId': 'reconciled from the legacy marketOdds field: the assessment market when it agrees or is absent, otherwise a distinct legacyTrackedOverride snapshot',
+  'TrackedPosition.reviewState': 'derived from the legacy UI fields autoGenerated/confirmedByUser; rows carrying neither become { status: "notRequired" }',
   'TrackedPosition.origin': 'constant "legacyMigration" — legacy data cannot prove cash placement',
-  'TrackedPosition.stakeSource': 'derived: explicit (22 rows) / defaultedFlat1u (138 rows)',
-  'TrackedPosition.settlement.settledAt': 'null for all 153 settled legacy positions — the real settlement time is unknown and migratedAt must not be substituted',
+  'TrackedPosition.stakeSource': 'derived per row: explicit / defaultedFlat1u',
+  'TrackedPosition.settlement.settledAt': 'null for every settled legacy position — the real settlement time is unknown and migratedAt must not be substituted',
   'TrackedPosition.settlement.financialResult': 'computed from the SELECTED corner odds; push/void are always computed 0; uncomputable when that corner has no price',
   'meta.schemaVersion': 'constant 1',
   'meta.migratedAt': 'injected deps.migratedAt (the only place the migration clock appears)',

@@ -18,10 +18,10 @@ Backend-agnostic: the shape works unchanged on IndexedDB or Supabase/Postgres.
 2. **Snapshots are immutable.** Grading writes `Bout.result` and
    `TrackedPosition.settlement`. It can never reach a PredictionSnapshot or
    MarketSnapshot, because no write path exposes them.
-3. **The historical track record is preserved exactly.** All 160 legacy rows
-   become TrackedPositions — including all 114 `NO BET` rows and the 10 with no
-   tier at all. `computeROISummary` already counts them; dropping any would
-   silently rewrite the record.
+3. **The historical track record is preserved exactly.** Every committed ROI
+   and Upcoming row becomes a TrackedPosition — including `NO BET` rows and
+   rows with no tier at all. `computeROISummary` already counts them; dropping
+   any would silently rewrite the record.
 4. **Absence is explicit.** `null`, never `undefined`. Nothing is invented to
    fill a gap.
 
@@ -89,9 +89,9 @@ existing market.
 **Legacy `marketOdds` is a source field, not a derivation.** App.js edits it
 independently (`:7890`) and rewrites it separately when the tracked side changes
 (`:7868`), so it can legitimately disagree with `oddsA`/`oddsB`. It equals the
-selected corner on all 160 current rows — but that is a characterisation of
-today's seed, not a rule. Deriving it would silently discard a real correction,
-so migration parses it separately and reconciles:
+selected corner on every row in the original Stage 6 capture — but that is a
+characterisation of that seed, not a rule. Deriving it would silently discard a
+real correction, so migration parses it separately and reconciles:
 
 | legacy `marketOdds` | result |
 |---|---|
@@ -176,8 +176,8 @@ out of the statistics population:
 | `true` | absent / non-boolean | **abort** |
 | non-boolean | any | **abort** |
 
-**One `PredictionSnapshot` per model basis.** 43 legacy rows carry a v2
-probability that was reconstructed *after* a v1 decision — so capture mode
+**One `PredictionSnapshot` per model basis.** Some legacy rows carry a v2
+probability reconstructed *after* a v1 decision — so capture mode
 differs per basis within a single row. A single `probA`/`probB` pair could not
 represent that. `fighterAProb`/`fighterBProb` are never overwritten by
 `v2pA`/`v2pB`.
@@ -191,9 +191,9 @@ with it.
 `sourceManifest` and `fightHistoryCutoff` describe the *data* the live
 calculation read, and several manifest modules are explicitly `feedsV2: true` —
 so writing them only onto v1 made the v2 snapshot look unprovenanced when the
-legacy record had supplied it. Both are copied to both bases for the 22 full
-live records: deliberate immutable duplication, not contradictory state. The 43
-reconstructed records supply neither and keep `null` on both.
+legacy record had supplied it. Both are copied to both bases for every full
+live record: deliberate immutable duplication, not contradictory state.
+Reconstructed records supply neither and keep `null` on both.
 
 ## Validation
 
@@ -252,9 +252,10 @@ would excuse a position or wager whose own market never did.
 
 ## Odds
 
-Stored as **integers**, never presentation strings. All 952 non-blank legacy
-values parse cleanly; observed range −1600…900 (fair lines −472…472), nothing
-inside (−100, 100), no zeros. The `+` is added by the UI.
+Stored as **integers**, never presentation strings. In the original Stage 6
+audit, every non-blank legacy value parsed cleanly; observed range was
+−1600…900 (fair lines −472…472), with nothing inside (−100, 100) and no zeros.
+The `+` is added by the UI.
 
 ## finishProjection
 
@@ -263,11 +264,11 @@ inside (−100, 100), no zeros. The `+` is added by the UI.
 { status: 'computed', koPct, subPct, decPct, leaders: [...] }
 ```
 
-- Sum ∈ **[99, 101]**. Measured: 99×16, 100×126, 101×18 — three independent
-  roundings of values totalling 100.
+- Sum ∈ **[99, 101]**. The original Stage 6 audit observed all three totals —
+  independent roundings of values totalling 100.
 - `leaders` is **exactly** the argmax set, canonical order KO/TKO → SUB → DEC,
-  1–3 entries, no duplicates. Reproduces the legacy `projectedFinish` string on
-  160/160, including `"KO/TKO / DEC"` and `"SUB / DEC"`.
+  1–3 entries, no duplicates. Reproduces every committed legacy
+  `projectedFinish` string, including `"KO/TKO / DEC"` and `"SUB / DEC"`.
 
 ## Results and settlement
 
@@ -290,7 +291,7 @@ survives an unknown price. One real record needs it: a DRAW with
 snapshot exists — a partial market can price one corner and not the other.
 Push and void are always a computed `0`.
 
-`settledAt` is `null` for all 153 migrated settled positions. Legacy data never
+`settledAt` is `null` for every migrated settled position. Legacy data never
 recorded one, and substituting the migration clock would turn the moment of data
 conversion into a false historical event. Only `origin: 'legacyMigration'`
 records may use `null`; anything the app settles must supply a real timestamp.
@@ -379,7 +380,7 @@ Every value comes from legacy data or the injected clock. Nothing invented.
 | `Event`/`Bout.createdAt` | earliest related legacy `createdAt` |
 | `updatedAt` | `null` everywhere |
 | `settledAt` | `null` for all migrated settled positions |
-| `targetEventDateAtCapture` | `_provenance.targetEventDate` (77 rows) else `eventDate` (83); equal wherever both exist |
+| `targetEventDateAtCapture` | `_provenance.targetEventDate` when present, otherwise `eventDate`; equal wherever both exist |
 
 ## Versioning
 
@@ -408,24 +409,31 @@ forward migration, per the contract below.
 
 ## Migration result
 
-| Entity | Count |
-|---|---|
-| Events | 16 |
-| Bouts | 160 |
-| PredictionRuns | 160 |
-| PredictionSnapshots | **237** (160 v1 + 77 v2) |
-| MarketSnapshots | 158 (160 − 2 with no odds) |
-| BettingAssessments | 160 |
-| TrackedPositions | 160 — **153 settled, 7 open** |
-| **Wagers** | **0** |
-| Props | 4 |
-| Parlays | 0 |
+The legacy data files are active application state and change when an event is
+saved or graded, so migration tests do not pin a weekly row total. They assert
+the following source-to-store equations on every run:
 
-Decision basis: 126 `legacy-v1-unversioned`, 34 `v2`.
-Capture mode: 160 `unknown`, 43 `reconstructed`, 34 `live`.
-**No provenance-less row is ever marked reconstructed** — the reconstructed set
-is exactly the 43 that say so; the 83 without `_provenance` become `unknown`
-with `provenanceCompleteness: 'none'`.
+| Entity | Required result |
+|---|---|
+| Events | one per unique event identity |
+| Bouts | one per event + unordered fighter pair |
+| PredictionRuns | one per ROI or Upcoming row |
+| PredictionSnapshots | one v1 per row, plus one v2 wherever v2 output is stored |
+| MarketSnapshots | one prediction-time market when priced, plus any independent tracked-price override |
+| BettingAssessments | one per ROI or Upcoming row |
+| TrackedPositions | one per ROI or Upcoming row; settlement status follows the source result |
+| **Wagers** | **0** — legacy data cannot prove cash placement |
+| Props | one per resolvable prop entry |
+| Parlays | one per parlay entry, preserving every leg |
+
+Decision basis and capture mode are compared to the corresponding source fields
+rather than to a fixed count. **No provenance-less row is ever marked
+reconstructed**; it becomes `unknown` with
+`provenanceCompleteness: 'none'`.
+
+ROI and Upcoming IDs must be unique and disjoint. A grading handoff that leaves
+the same ID in both files aborts with a source-specific error; the two files
+must be updated in the same commit.
 
 ## Tailwind CSS safety
 
@@ -454,11 +462,8 @@ because `.fixed`, `.block`, `.hidden` and `.flex` **are** already emitted while
 - **`Freedom 250` has `promotion: null`.** The saved name proves only that it
   lacks a UFC prefix, not which promotion ran the card. Recorded in the
   migration manifest as unresolved.
-- **`confirmedByUser` is not introduced.** Read 6× in `src/domain/statistics`
-  but written 0/160 times. Recorded as a reader-only phantom so Stage 8 can
-  implement or remove it deliberately.
 - `Bout.division` stays free text, including 23 catchweight `"X / Y"` strings.
-- Parlay coverage is derived from the constructor and readers, since
-  `PARLAY_ENTRIES` is empty.
+- Parlay coverage combines persisted entries with a complete runtime exemplar,
+  so it remains binding whether the current event has zero or several parlays.
 - Cross-event rematch handling and `computeV2Summary`'s missing live-only filter
   are **accommodated** by this schema but deliberately **not fixed** here.
