@@ -98,6 +98,9 @@ export const WS_RPC = '11110000-0000-4000-8000-000000000004';
 // Cluster 2's own aggregate. It KEEPS its wager, because a bout-lifecycle write
 // must transition every dependent row — the wager is the point.
 export const WS_BOUT = '11110000-0000-4000-8000-000000000005';
+// Cluster 3's own aggregate, with a wager so grade/return undo has a full
+// dependent set to restore.
+export const WS_UNDO = '11110000-0000-4000-8000-000000000006';
 
 const workspace = (id, slug, isPublic) => `
 INSERT INTO app_private.workspaces (id, slug, is_public, schema_version, migrated_at)
@@ -181,7 +184,7 @@ VALUES ('${wsId}', '170000000020${n}-bbbbbb', 0,
         '${n}bb00000-0000-4000-8000-000000000001', 'A', false)
 ON CONFLICT DO NOTHING;`;
 
-const IDS = `'${WS_PUBLIC}','${WS_PRIVATE}','${WS_CLAIM}','${WS_RPC}','${WS_BOUT}'`;
+const IDS = `'${WS_PUBLIC}','${WS_PRIVATE}','${WS_CLAIM}','${WS_RPC}','${WS_BOUT}','${WS_UNDO}'`;
 
 /**
  * Deterministic fixture, applied to a CLEAN database.
@@ -229,6 +232,7 @@ ${workspace(WS_PRIVATE, 'api-private', false)}
 ${workspace(WS_CLAIM, 'api-claim', true)}
 ${workspace(WS_RPC, 'api-rpc', false)}
 ${workspace(WS_BOUT, 'api-bout', false)}
+${workspace(WS_UNDO, 'api-undo', false)}
 
 INSERT INTO app_private.workspace_members (workspace_id, user_id, role)
 VALUES ('${WS_PUBLIC}', '${USER_MEMBER}', 'owner'),
@@ -241,7 +245,10 @@ VALUES ('${WS_PRIVATE}', '${USER_VIEWER}', 'viewer'),
        ('${WS_RPC}', '${USER_MEMBER}', 'owner'),
        ('${WS_RPC}', '${USER_VIEWER}', 'viewer'),
        ('${WS_BOUT}', '${USER_MEMBER}', 'owner'),
-       ('${WS_BOUT}', '${USER_VIEWER}', 'viewer')
+       ('${WS_BOUT}', '${USER_VIEWER}', 'viewer'),
+       ('${WS_UNDO}', '${USER_MEMBER}', 'owner'),
+       ('${WS_UNDO}', '${USER_VIEWER}', 'viewer'),
+       ('${WS_UNDO}', '${USER_OUTSIDER}', 'editor')
 ON CONFLICT DO NOTHING;
 -- api-claim is deliberately left with ZERO owners for the concurrency test.
 
@@ -249,6 +256,7 @@ ${aggregate(WS_PUBLIC, 2, probA, probB)}
 ${aggregate(WS_PRIVATE, 3, 0.5, 0.5)}
 ${aggregate(WS_RPC, 4, 0.5, 0.5, false)}
 ${aggregate(WS_BOUT, 5, 0.5, 0.5)}
+${aggregate(WS_UNDO, 6, 0.5, 0.5)}
 
 -- The RPC cluster's own position starts review-pending. confirmed_at is NULLed
 -- explicitly: leaving it populated violates tracked_positions_review_union, and

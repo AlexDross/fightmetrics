@@ -266,7 +266,8 @@ SELECT set_eq(
            ('fm_rpc_claim_workspace_ownership'),
            ('fm_rpc_change_tracked_corner'),('fm_rpc_amend_tracked_price'),
            ('fm_rpc_confirm_entry'),('fm_rpc_grade_bout'),
-           ('fm_rpc_return_bout_to_pending'),('fm_member_wagers_by_bout')$$,
+           ('fm_rpc_return_bout_to_pending'),('fm_member_wagers_by_bout'),
+           ('fm_rpc_undo')$$,
   'the public API surface is exactly the documented function set');
 
 -- ── Constraint helpers reachable by the writing role ────────────────────────
@@ -286,19 +287,19 @@ SELECT set_eq(
                          'finish_leaders_expected','array_is_distinct',
                          'jsonb_key_count','parse_positive_decimal')$$,
   $$VALUES ('is_finite_or_null'),('is_american_odds_or_null'),
-           ('decimal_from_american')$$,
-  'fm_member_api holds EXECUTE on exactly the three constraint helpers it needs');
+           ('decimal_from_american'),('is_string_map')$$,
+  'fm_member_api holds EXECUTE on exactly the constraint helpers it needs');
 
 SELECT is((SELECT count(*) FROM pg_catalog.pg_proc p
              JOIN pg_catalog.pg_namespace n ON n.oid = p.pronamespace
             WHERE n.nspname = 'app_private'
               AND p.proname IN ('is_finite_or_null','is_american_odds_or_null',
-                                'decimal_from_american')
+                                'decimal_from_american','is_string_map')
               AND (has_function_privilege('fm_public_reader', p.oid, 'EXECUTE')
                 OR has_function_privilege('anon', p.oid, 'EXECUTE')
                 OR has_function_privilege('authenticated', p.oid, 'EXECUTE'))),
           0::bigint,
-          'those three helpers are unreachable by fm_public_reader, anon and authenticated');
+          'those helpers are unreachable by fm_public_reader, anon and authenticated');
 
 -- ── The deferred-NO-ACTION exception ────────────────────────────────────────
 -- RESTRICT is the default everywhere. Exactly two FKs — the genuinely cyclic
