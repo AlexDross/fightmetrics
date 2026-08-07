@@ -14,7 +14,7 @@ Base: `main` @ `89f6c45`. Backend decision: Supabase/Postgres.
 | 0 · Preflight | Docker runtime present and running; ports 54321–54324 free; Node supports the pinned CLI | ✅ |
 | 1 | This document + `feat(data): add repository interfaces over the durable schema` — in-memory only | ✅ |
 | 2 | `feat(data): add Postgres schema, roles, policies and RPCs` — pinned Supabase CLI as devDependency, committed `supabase/`, full local stack, all SQL/API tests. **No hosted project.** | ✅ |
-| 2 · status | **PARTIAL — RPC clusters 1–2 landed.** Landed: roles, ownership transfer, ACLs, `app_private` schema, all 15 tables with composite FKs and the deferrable run↔snapshot cycle, revision/slug/settlement triggers, RLS on every table, a working authenticated path (caller resolution + zero-owner bootstrap), the `fm_read_*`/`fm_member_*` surfaces **for everything the current app renders**, SQL-side measurements, and 157 assertions green under `npm run test:db` and 14 under `npm run test:api`, including StoreSchema validation of the export and genuine two-client claim concurrency. **RPC cluster 1 (tracked-position edits)** is complete: `fm_rpc_change_tracked_corner`, `fm_rpc_amend_tracked_price`, `fm_rpc_confirm_entry` and `fm_member_undo_list`, with authorization, expected-revision conflicts, `stale_write` carrying the live server revision, undo records, settled-edit recomputation and rollback proof — 40 API assertions and 159 pgTAP. **RPC cluster 2 (bout lifecycle)** is complete: `fm_rpc_grade_bout`, `fm_rpc_return_bout_to_pending` and the deferred `fm_member_wagers_by_bout` read, with full revision-vector validation, `stale_write` carrying the real server revision, undo prior-state, mixed outcomes, and grade/return proven true inverses — 64 API assertions. **Outstanding:** the rest of the `fm_rpc_*` matrix (6 of ~20 exist); three contract reads still deferred (`getAggregate`, `workspace.current`, `seedVersion` — see §5); and the 152-row stored-profit recomputation, which needs Gate 3's seed. Both float constraints remain **provisional**. | |
+| 2 · status | **PARTIAL — RPC clusters 1–2 landed.** Landed: roles, ownership transfer, ACLs, `app_private` schema, all 15 tables with composite FKs and the deferrable run↔snapshot cycle, revision/slug/settlement triggers, RLS on every table, a working authenticated path (caller resolution + zero-owner bootstrap), the `fm_read_*`/`fm_member_*` surfaces **for everything the current app renders**, SQL-side measurements, and 157 assertions green under `npm run test:db` and 14 under `npm run test:api`, including StoreSchema validation of the export and genuine two-client claim concurrency. **RPC cluster 1 (tracked-position edits)** is complete: `fm_rpc_change_tracked_corner`, `fm_rpc_amend_tracked_price`, `fm_rpc_confirm_entry` and `fm_member_undo_list`, with authorization, expected-revision conflicts, `stale_write` carrying the live server revision, undo records, settled-edit recomputation and rollback proof — 40 API assertions and 159 pgTAP. **RPC cluster 2 (bout lifecycle)** is complete: `fm_rpc_grade_bout`, `fm_rpc_return_bout_to_pending` and the deferred `fm_member_wagers_by_bout` read, with full revision-vector validation under row locks, `stale_write` carrying the real server revision, undo prior-state, mixed outcomes, and grade/return proven true inverses — 66 API assertions. **Outstanding:** 19 of the contract's 25 mutation methods, plus the 3 deferred reads (`getAggregate`, `workspace.current`, `seedVersion` — see §5) and the non-contract `fm_rpc_seed_store`; and the 152-row stored-profit recomputation, which needs Gate 3's seed. Both float constraints remain **provisional**. | |
 | 3 | `feat(data): migrate seed data into the durable schema` | ✅ |
 | 4 | `feat(auth): add magic-link sign-in and read-only public state` | ✅ |
 | 5 | **Hosted rollout** — Alex creates/links the project, `db push --dry-run` → `db push`, Vercel vars, invite owner, claim, approve seed | ✅ |
@@ -630,10 +630,60 @@ Legend — **SQL**: implemented and tested · **RPC**: planned server mutation �
 | 45 | `authRepository.signOut` | client | Supabase session — Gate 4 |
 | 46 | `authRepository.claimOwnership` | SQL | ✅ `fm_rpc_claim_workspace_ownership` |
 
-**Totals:** 14 implemented in SQL, 22 planned RPC/read, 6 client-only, 4 read
-surfaces already shipped beyond the strict contract (`fm_read_*` public
-variants). No method is classified `contract` — nothing in the contract is
-currently unimplementable as written.
+**Totals — these are the authoritative numbers, and they sum to 46:**
+
+| Class | Count |
+|---|---|
+| Implemented, SQL-backed contract methods | **18** |
+| Planned read surfaces (`getAggregate`, `workspace.current`, `seedVersion`) | **3** |
+| Planned mutation methods | **19** |
+| Client-only (no SQL surface of their own) | **6** |
+| **Total contract methods** | **46** |
+
+An earlier revision of this table reported 14 / 22 / 6 plus "4 extra read
+surfaces". That was wrong twice over: it undercounted the implemented methods,
+and it treated the public/member variants as if they were additional contract
+entries. **The `fm_read_*` and `fm_member_*` pairs are implementation surfaces
+for a single contract method, not separate methods.** `eventRepository.list` is
+one contract method served by two functions; it is counted once.
+
+### Cluster order
+
+Revised so undo is **built with** the operations it must invert rather than
+after all of them:
+
+| # | Cluster | Contents |
+|---|---|---|
+| 3 | **Undo foundation** | `fm_rpc_undo` covering every operation already implemented — tracked-corner change, price amendment, confirmation, grade, return-to-pending. Consumes and validates the existing `revision_vector`, `created_ids` and `prior_state`; enforces TTL, creator and workspace scope, single use, conflict detection and atomic rollback. |
+| 4 | **Deletion** | `delete_pending_run`, `delete_tracked_position`, `clear_graded` — and the `absent_ids` restoration path added to undo here, where the first rows are actually deleted. |
+| 5 | **Prediction save** | `save_prediction_run`, `getAggregate`. Closes the HTTP write leg for complementarity. Takes the bout lock: it creates dependents. |
+| 6 | **Wagers** | `create`, `updateStake`, `updateNotes`, `settle`, `remove`. Bout-lock-bound. |
+| 7 | **Props, parlays, rename** | `confirm_all_pending`, prop and parlay mutations, `rename_event`. |
+| 8 | **Workspace** | `current`, `seedVersion`, `setSeedVersion`, `import_store`, `reset_workspace`. |
+
+**Every cluster from 4 onward extends `fm_rpc_undo` and its tests in the same
+commit.** Undo is never left as a trailing obligation. The reason is concrete:
+`revision_vector`, `created_ids` and `absent_ids` are currently written but never
+consumed, so the undo contract is unproven — and building three destructive
+operations on top of undo records that have never been shown sufficient would
+mean discovering any inadequacy after the hardest code depends on it.
+
+### Mutation progress, stated exactly
+
+- **6 of the contract's 25 mutation methods are implemented**:
+  `grade`, `returnToPending`, `changeTrackedCorner`, `amendTrackedPrice`,
+  `confirmEntry`, `claimOwnership`.
+- **19 contract mutation methods remain.**
+- **Outside the repository contract** there is one further planned RPC,
+  `fm_rpc_seed_store` (Gate 3), which no contract method maps to — it exists to
+  populate a workspace, not to serve the repository. It must not be counted
+  against the 46.
+
+The loose phrase "6 of ~20 RPCs" is withdrawn: it conflated contract methods
+with SQL functions and had no stable denominator.
+
+No method is classified `contract` — nothing in the contract is currently
+unimplementable as written.
 
 ### Statistics stay in JavaScript
 
