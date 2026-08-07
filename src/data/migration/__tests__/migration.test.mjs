@@ -10,12 +10,61 @@ import {
 } from '../dispatcher.mjs';
 import { StoreSchema } from '../../schemas/entities.mjs';
 import { checkInvariants } from '../../schemas/invariants.mjs';
+import { eventNameKey, fighterKey } from '../ids.mjs';
 
 const LEGACY = {
   roiEntries: ROI_ENTRIES,
   upcomingEntries: UPCOMING_ENTRIES,
   propPicks: PROP_PICKS,
   parlayEntries: PARLAY_ENTRIES,
+};
+const ALL_ENTRIES = [...ROI_ENTRIES, ...UPCOMING_ENTRIES];
+const has = (o, k) => Object.prototype.hasOwnProperty.call(o, k);
+const blank = (v) => v === undefined || v === null || v === '';
+const countBy = (items, keyOf) => Object.fromEntries(
+  items.reduce((counts, item) => {
+    const key = keyOf(item);
+    counts.set(key, (counts.get(key) ?? 0) + 1);
+    return counts;
+  }, new Map())
+);
+const sourceEventCount = () => new Set(
+  ALL_ENTRIES.map((e) => `${e.eventDate}\u0000${eventNameKey(e.eventName)}`)
+).size;
+const sourceBoutCount = () => new Set(
+  ALL_ENTRIES.map((e) =>
+    `${e.eventDate}\u0000${eventNameKey(e.eventName)}\u0000` +
+    [fighterKey(e.fighterA), fighterKey(e.fighterB)].sort().join('\u0000')
+  )
+).size;
+const sourceMarketSnapshotCount = () => ALL_ENTRIES.reduce((total, entry) => {
+  const oddsA = blank(entry.oddsA) ? null : Number(entry.oddsA);
+  const oddsB = blank(entry.oddsB) ? null : Number(entry.oddsB);
+  const assessmentCount = oddsA !== null || oddsB !== null ? 1 : 0;
+  if (!has(entry, 'marketOdds')) return total + assessmentCount;
+
+  const trackedIsA = entry.trackedSide === entry.fighterA;
+  const assessmentSelected = trackedIsA ? oddsA : oddsB;
+  const explicitlyBlank = entry.marketOdds === '' || entry.marketOdds === null;
+  const trackedOdds = explicitlyBlank ? null : Number(entry.marketOdds);
+  if (!explicitlyBlank && trackedOdds === assessmentSelected) return total + assessmentCount;
+
+  const trackedA = trackedIsA ? trackedOdds : oddsA;
+  const trackedB = trackedIsA ? oddsB : trackedOdds;
+  const overrideCount = trackedA !== null || trackedB !== null ? 1 : 0;
+  return total + assessmentCount + overrideCount;
+}, 0);
+const sourceSettlementStatus = (entry) => blank(entry.actualWinner) ? 'open' : 'settled';
+const sourceOutcome = (entry) => {
+  if (entry.actualWinner === 'NC') return 'void';
+  if (entry.actualWinner === 'DRAW') return 'push';
+  return entry.actualWinner === entry.trackedSide ? 'won' : 'lost';
+};
+const sourceTrackedOdds = (entry) => {
+  if (has(entry, 'marketOdds')) return blank(entry.marketOdds) ? null : Number(entry.marketOdds);
+  return entry.trackedSide === entry.fighterA
+    ? (blank(entry.oddsA) ? null : Number(entry.oddsA))
+    : (blank(entry.oddsB) ? null : Number(entry.oddsB));
 };
 
 // Injected clock and ID provider: the migration must be pure, so nothing here
@@ -45,19 +94,20 @@ describe('migration runs clean', () => {
     expect(checkInvariants(store)).toEqual([]);
   });
 
-  it('produces the exact expected entity totals', () => {
+  it('preserves the complete committed source without fixed weekly counts', () => {
+    const entryCount = ALL_ENTRIES.length;
+    const v2Count = ALL_ENTRIES.filter((e) => has(e, 'v2pA')).length;
     expect(manifest.counts).toEqual({
-      events: 16,
-      bouts: 160,
-      predictionRuns: 160,
-      // 160 v1 + 77 v2: one snapshot per model basis, never overwritten.
-      predictionSnapshots: 237,
-      // 160 minus the 2 rows with no odds on either corner.
-      marketSnapshots: 158,
-      bettingAssessments: 160,
-      trackedPositions: 160,
+      events: sourceEventCount(),
+      bouts: sourceBoutCount(),
+      predictionRuns: entryCount,
+      // One v1 per row plus one v2 wherever the legacy row stores v2 output.
+      predictionSnapshots: entryCount + v2Count,
+      marketSnapshots: sourceMarketSnapshotCount(),
+      bettingAssessments: entryCount,
+      trackedPositions: entryCount,
       wagers: 0,
-      props: 4,
+      props: PROP_PICKS.length,
       // Pending parlays are live data, so this count changes as the user adds
       // and grades events. Migration must preserve every current entry.
       parlays: PARLAY_ENTRIES.length,
@@ -73,6 +123,33 @@ describe('migration runs clean', () => {
     expect(store.parlays.reduce((n, p) => n + p.legs.length, 0))
       .toBe(PARLAY_ENTRIES.reduce((n, p) => n + p.legs.length, 0));
   });
+
+  it('requires ROI and Upcoming ids to be unique and disjoint', () => {
+    const seen = new Map();
+    const duplicates = [];
+    for (const [source, entries] of [['roi', ROI_ENTRIES], ['upcoming', UPCOMING_ENTRIES]]) {
+      for (const entry of entries) {
+        const id = String(entry.id);
+        if (seen.has(id)) duplicates.push(`${id} (${seen.get(id)} and ${source})`);
+        else seen.set(id, source);
+      }
+    }
+    expect(
+      duplicates,
+      'A grading handoff must update roiData.js and upcomingData.js in the same commit.'
+    ).toEqual([]);
+  });
+
+  it('aborts with a clear error when a legacy id appears in both sources', () => {
+    const duplicate = ROI_ENTRIES[0];
+    const broken = { ...LEGACY, upcomingEntries: [duplicate, ...UPCOMING_ENTRIES] };
+    const out = migrateV0ToV1(broken, makeDeps());
+    expect(out.errors).toContain(
+      `legacy entry id ${JSON.stringify(String(duplicate.id))} appears more than once ` +
+      '(roi and upcoming); ROI and Upcoming updates must be committed together'
+    );
+    expect(() => migrateAndValidate(broken, makeDeps())).toThrow(/ROI and Upcoming updates must be committed together/);
+  });
 });
 
 describe('the complete track record is preserved', () => {
@@ -83,11 +160,12 @@ describe('the complete track record is preserved', () => {
       const k = a.tier === null ? '<none>' : a.tier;
       tiers.set(k, (tiers.get(k) ?? 0) + 1);
     }
-    // Measured legacy distribution — dropping NO BET rows would silently
-    // rewrite the historical ROI record, which computeROISummary already counts.
-    expect(Object.fromEntries(tiers)).toEqual({
-      'NO BET': 114, LEAN: 23, BET: 4, 'STRONG BET': 9, '<none>': 10,
-    });
+    // Compare to the committed source rather than a stale weekly total. Dropping
+    // NO BET rows would still change this distribution and fail.
+    const expected = countBy(ALL_ENTRIES, (entry) =>
+      has(entry, 'betAction') ? entry.betAction : entry._provenance?.frozenTier ?? '<none>'
+    );
+    expect(Object.fromEntries(tiers)).toEqual(expected);
     const noTier = store.bettingAssessments.filter((a) => a.tier === null);
     expect(noTier.every((a) => a.tierProvenance === 'absent')).toBe(true);
     for (const a of noTier) {
@@ -95,11 +173,24 @@ describe('the complete track record is preserved', () => {
     }
   });
 
-  it('has 153 settled and 7 open positions', () => {
+  it('preserves the source settlement-status population', () => {
     const settled = store.trackedPositions.filter((t) => t.settlement.status === 'settled');
     const open = store.trackedPositions.filter((t) => t.settlement.status === 'open');
-    expect(settled).toHaveLength(153);
-    expect(open).toHaveLength(7);
+    const expected = countBy(ALL_ENTRIES, sourceSettlementStatus);
+    expect(settled).toHaveLength(expected.settled ?? 0);
+    expect(open).toHaveLength(expected.open ?? 0);
+    const resolvedSource = ALL_ENTRIES.filter((entry) => sourceSettlementStatus(entry) === 'settled');
+    expect(countBy(settled, (t) => t.settlement.outcome)).toEqual(
+      countBy(resolvedSource, sourceOutcome)
+    );
+    expect(countBy(settled, (t) => t.settlement.financialResult.status)).toEqual(
+      countBy(resolvedSource, (entry) => {
+        const outcome = sourceOutcome(entry);
+        return ['push', 'void'].includes(outcome) || sourceTrackedOdds(entry) !== null
+          ? 'computed'
+          : 'uncomputable';
+      })
+    );
   });
 
   it('records null settledAt only for legacy-migrated settlements', () => {
@@ -116,10 +207,18 @@ describe('the complete track record is preserved', () => {
     for (const a of store.bettingAssessments) {
       byProv.set(a.recommendedCornerProvenance, (byProv.get(a.recommendedCornerProvenance) ?? 0) + 1);
     }
-    expect(Object.fromEntries(byProv)).toEqual({ stored: 150, absentInLegacy: 10 });
+    expect(Object.fromEntries(byProv)).toEqual(countBy(
+      ALL_ENTRIES,
+      (entry) => has(entry, 'bestBet') ? 'stored' : 'absentInLegacy'
+    ));
     const stored = store.bettingAssessments.filter((a) => a.recommendedCornerProvenance === 'stored');
-    expect(stored.filter((a) => a.recommendedCorner === null)).toHaveLength(109);
-    expect(stored.filter((a) => a.recommendedCorner !== null)).toHaveLength(41);
+    const sourceStored = ALL_ENTRIES.filter((entry) => has(entry, 'bestBet'));
+    expect(stored.filter((a) => a.recommendedCorner === null)).toHaveLength(
+      sourceStored.filter((entry) => entry.bestBet === null).length
+    );
+    expect(stored.filter((a) => a.recommendedCorner !== null)).toHaveLength(
+      sourceStored.filter((entry) => entry.bestBet !== null).length
+    );
   });
 });
 
@@ -127,7 +226,10 @@ describe('v1 / v2 are both preserved', () => {
   it('splits snapshots by basis without overwriting either', () => {
     const byBasis = new Map();
     for (const s of store.predictionSnapshots) byBasis.set(s.basis, (byBasis.get(s.basis) ?? 0) + 1);
-    expect(Object.fromEntries(byBasis)).toEqual({ 'legacy-v1-unversioned': 160, v2: 77 });
+    expect(Object.fromEntries(byBasis)).toEqual({
+      'legacy-v1-unversioned': ALL_ENTRIES.length,
+      v2: ALL_ENTRIES.filter((entry) => has(entry, 'v2pA')).length,
+    });
   });
 
   it('records the decision basis through decisionSnapshotId only', () => {
@@ -137,8 +239,10 @@ describe('v1 / v2 are both preserved', () => {
       const basis = byId.get(r.decisionSnapshotId).basis;
       counts.set(basis, (counts.get(basis) ?? 0) + 1);
     }
-    // modelUsed present => v2 decided (34); absent => the original v1 stood (126).
-    expect(Object.fromEntries(counts)).toEqual({ 'legacy-v1-unversioned': 126, v2: 34 });
+    expect(Object.fromEntries(counts)).toEqual(countBy(
+      ALL_ENTRIES,
+      (entry) => has(entry, 'modelUsed') ? 'v2' : 'legacy-v1-unversioned'
+    ));
     // No duplicated basis flags exist to disagree with this.
     for (const r of store.predictionRuns) expect('decisionBasis' in r).toBe(false);
     for (const s of store.predictionSnapshots) expect('isDecisionBasis' in s).toBe(false);
@@ -175,8 +279,8 @@ describe('v1 / v2 are both preserved', () => {
     // calculation read, not one model's coefficients — several manifest modules
     // are explicitly feedsV2:true. Attaching them only to v1 made the v2
     // snapshot look like it had no provenance when the legacy record supplied it.
-    const full = [...ROI_ENTRIES, ...UPCOMING_ENTRIES].filter((e) => e._provenance?.sourceManifest);
-    expect(full).toHaveLength(22);
+    const full = ALL_ENTRIES.filter((e) => e._provenance?.sourceManifest);
+    expect(full.length).toBeGreaterThan(0);
 
     const byRun = new Map();
     for (const s of store.predictionSnapshots) {
@@ -201,7 +305,7 @@ describe('v1 / v2 are both preserved', () => {
       expect(Object.values(v1.sourceManifest).some((m) => m.feedsV2 === true)).toBe(true);
       pairs++;
     }
-    expect(pairs).toBe(22);
+    expect(pairs).toBe(full.length);
 
     const v1WithManifest = store.predictionSnapshots.filter(
       (s) => s.basis === 'legacy-v1-unversioned' && s.sourceManifest !== null
@@ -209,14 +313,17 @@ describe('v1 / v2 are both preserved', () => {
     const v2WithManifest = store.predictionSnapshots.filter(
       (s) => s.basis === 'v2' && s.sourceManifest !== null
     );
-    expect(v1WithManifest).toHaveLength(22);
-    expect(v2WithManifest).toHaveLength(22);
-    expect(store.predictionSnapshots.filter((s) => s.fightHistoryCutoff !== null)).toHaveLength(44);
+    expect(v1WithManifest).toHaveLength(full.length);
+    expect(v2WithManifest).toHaveLength(full.length);
+    expect(store.predictionSnapshots.filter((s) => s.fightHistoryCutoff !== null)).toHaveLength(full.length * 2);
   });
 
   it('does not invent provenance for reconstructed records', () => {
     const reconstructed = store.predictionSnapshots.filter((s) => s.captureMode === 'reconstructed');
-    expect(reconstructed).toHaveLength(43);
+    expect(reconstructed).toHaveLength(
+      ALL_ENTRIES.filter((entry) => entry._provenance?.captureMode === 'reconstructed').length
+    );
+    expect(reconstructed.length).toBeGreaterThan(0);
     for (const s of reconstructed) {
       expect(s.sourceManifest, 'reconstructed snapshots must not gain a manifest').toBe(null);
       expect(s.fightHistoryCutoff, 'reconstructed snapshots must not gain a cutoff').toBe(null);
@@ -232,7 +339,7 @@ describe('v1 / v2 are both preserved', () => {
   it('keeps corner cutoffs orientation-correct on both snapshots', () => {
     const bouts = new Map(store.bouts.map((b) => [b.id, b]));
     let checked = 0;
-    for (const entry of [...ROI_ENTRIES, ...UPCOMING_ENTRIES]) {
+    for (const entry of ALL_ENTRIES) {
       const cutoff = entry._provenance?.fightHistoryCutoff;
       if (!cutoff) continue;
       const run = store.predictionRuns.find((r) => r.legacyEntryId === entry.id);
@@ -246,15 +353,21 @@ describe('v1 / v2 are both preserved', () => {
       }
       checked++;
     }
-    expect(checked).toBe(22);
+    expect(checked).toBe(ALL_ENTRIES.filter((e) => e._provenance?.fightHistoryCutoff).length);
   });
 
   it('never marks a provenance-less row as reconstructed', () => {
     const modes = new Map();
     for (const s of store.predictionSnapshots) modes.set(s.captureMode, (modes.get(s.captureMode) ?? 0) + 1);
-    expect(Object.fromEntries(modes)).toEqual({ unknown: 160, reconstructed: 43, live: 34 });
-    const noProv = [...ROI_ENTRIES, ...UPCOMING_ENTRIES].filter((e) => !('_provenance' in e));
-    expect(noProv).toHaveLength(83);
+    const expectedModes = countBy([
+      ...ALL_ENTRIES.map(() => ({ mode: 'unknown' })),
+      ...ALL_ENTRIES
+        .filter((entry) => has(entry, 'v2pA'))
+        .map((entry) => ({ mode: entry._provenance?.captureMode ?? 'unknown' })),
+    ], (item) => item.mode);
+    expect(Object.fromEntries(modes)).toEqual(expectedModes);
+    const noProv = ALL_ENTRIES.filter((e) => !('_provenance' in e));
+    expect(noProv.length).toBeGreaterThan(0);
     for (const e of noProv) {
       const run = store.predictionRuns.find((r) => r.legacyEntryId === e.id);
       expect(run.provenanceCompleteness).toBe('none');
@@ -270,7 +383,8 @@ describe('results and settlement', () => {
 
   it('preserves DRAW with its resolved method, settling as push', () => {
     const draw = resolved().filter((b) => b.result.outcome === 'draw');
-    expect(draw).toHaveLength(1);
+    expect(draw).toHaveLength(ALL_ENTRIES.filter((entry) => entry.actualWinner === 'DRAW').length);
+    expect(draw.length).toBeGreaterThan(0);
     // The real record: a DRAW that still went to decision.
     expect(draw[0].result.method).toBe('DEC');
     const t = store.trackedPositions.find((x) => x.boutId === draw[0].id);
@@ -280,7 +394,8 @@ describe('results and settlement', () => {
 
   it('maps no-contest to void with a computed zero', () => {
     const nc = resolved().filter((b) => b.result.outcome === 'noContest');
-    expect(nc).toHaveLength(2);
+    expect(nc).toHaveLength(ALL_ENTRIES.filter((entry) => entry.actualWinner === 'NC').length);
+    expect(nc.length).toBeGreaterThan(0);
     expect(nc.every((b) => b.result.method === null)).toBe(true);
     for (const b of nc) {
       const t = store.trackedPositions.find((x) => x.boutId === b.id);
@@ -289,24 +404,41 @@ describe('results and settlement', () => {
     }
   });
 
-  it('handles the no-odds settled and no-odds open rows', () => {
+  it('preserves every currently unpriced row without inventing market values', () => {
     const noMarket = store.bettingAssessments.filter((a) => a.marketSnapshotId === null);
-    expect(noMarket).toHaveLength(2);
+    const sourceNoMarket = ALL_ENTRIES.filter((entry) => blank(entry.oddsA) && blank(entry.oddsB));
+    expect(noMarket).toHaveLength(sourceNoMarket.length);
+    expect(noMarket.length).toBeGreaterThan(0);
     for (const a of noMarket) {
       for (const k of ['fairLineA', 'fairLineB', 'edgeA', 'edgeB', 'evA', 'evB', 'kellyA', 'kellyB']) {
         expect(a[k], `${k} must be null without a market`).toBe(null);
       }
     }
     const positions = noMarket.map((a) => store.trackedPositions.find((t) => t.assessmentId === a.id));
-    const settled = positions.filter((t) => t.settlement.status === 'settled');
-    const open = positions.filter((t) => t.settlement.status === 'open');
-    expect(settled).toHaveLength(1);
-    expect(open).toHaveLength(1);
-    // Known sporting outcome, unknown price.
-    expect(settled[0].settlement.outcome).toBe('won');
-    expect(settled[0].settlement.financialResult).toEqual({
-      status: 'uncomputable', reason: 'missingSelectedCornerOdds',
-    });
+    for (const t of positions) {
+      if (t.settlement.status === 'open') continue;
+      if (t.settlement.outcome === 'push' || t.settlement.outcome === 'void') {
+        expect(t.settlement.financialResult).toEqual({ status: 'computed', profitUnits: 0 });
+      } else {
+        expect(t.settlement.financialResult).toEqual({
+          status: 'uncomputable', reason: 'missingSelectedCornerOdds',
+        });
+      }
+    }
+  });
+
+  it('keeps a synthetic pending row open when both market corners are blank', () => {
+    const source = UPCOMING_ENTRIES[0];
+    const entry = { ...source, id: '1790000000010-noodds', oddsA: '', oddsB: '', marketOdds: '' };
+    const out = migrateV0ToV1({
+      roiEntries: [], upcomingEntries: [entry], propPicks: [], parlayEntries: [],
+    }, makeDeps());
+    expect(out.errors).toEqual([]);
+    expect(out.store.marketSnapshots).toEqual([]);
+    expect(out.store.bettingAssessments[0].marketSnapshotId).toBe(null);
+    expect(out.store.trackedPositions[0].marketSnapshotId).toBe(null);
+    expect(out.store.trackedPositions[0].settlement).toEqual({ status: 'open' });
+    expect(checkInvariants(out.store)).toEqual([]);
   });
 
   it('computability follows the selected corner, not snapshot existence', () => {
@@ -339,11 +471,16 @@ describe('results and settlement', () => {
 
 describe('promotion and events', () => {
   it('derives UFC and leaves the unknown promotion null', () => {
-    expect(store.events).toHaveLength(16);
+    expect(store.events).toHaveLength(sourceEventCount());
     const freedom = store.events.find((e) => e.name === 'Freedom 250');
     // The saved name proves only that it lacks a UFC prefix — not who ran it.
     expect(freedom.promotion).toBe(null);
-    expect(store.events.filter((e) => e.promotion === 'UFC')).toHaveLength(15);
+    expect(store.events.filter((e) => e.promotion === 'UFC')).toHaveLength(
+      store.events.filter((e) => /^UFC\b/.test(e.name)).length
+    );
+    expect(store.events.filter((e) => e.promotion === null)).toHaveLength(
+      store.events.filter((e) => !/^UFC\b/.test(e.name)).length
+    );
     const entry = manifest.unresolved.find((u) => u.entity === 'Event' && u.field === 'promotion');
     expect(entry).toBeTruthy();
     expect(entry.id).toBe(freedom.id);
@@ -362,12 +499,12 @@ describe('promotion and events', () => {
 });
 
 describe('props', () => {
-  it('resolves all four, including both with a null upcomingId', () => {
-    expect(store.props).toHaveLength(4);
+  it('resolves every current prop, including null upcomingId references', () => {
+    expect(store.props).toHaveLength(PROP_PICKS.length);
     expect(store.props.every((p) => p.target.kind === 'bout')).toBe(true);
     expect(store.props.every((p) => typeof p.target.boutId === 'string')).toBe(true);
     const legacyNull = PROP_PICKS.filter((p) => p.upcomingId === null);
-    expect(legacyNull).toHaveLength(2);
+    expect(legacyNull.length).toBeGreaterThan(0);
     for (const lp of legacyNull) {
       const migrated = store.props.find((p) => p.id === lp.id);
       const bout = store.bouts.find((b) => b.id === migrated.target.boutId);
@@ -420,7 +557,6 @@ describe('determinism, orientation and idempotence', () => {
     const runById = new Map(store.predictionRuns.map((r) => [r.id, r]));
 
     let checked = 0;
-    let flippedSeen = 0;
     for (const t of store.trackedPositions) {
       const run = runById.get(runByAssessment.get(t.assessmentId));
       const entry = entryById.get(run.legacyEntryId);
@@ -430,17 +566,12 @@ describe('determinism, orientation and idempotence', () => {
       expect([bout.cornerA.displayName, bout.cornerB.displayName].sort())
         .toEqual([entry.fighterA, entry.fighterB].sort());
 
-      if (bout.cornerA.displayName !== entry.fighterA) flippedSeen++;
       expect(t.corner).toBe(bout.cornerA.displayName === entry.trackedSide ? 'A' : 'B');
       checked++;
     }
     // Guards against a vacuous pass: every position was examined.
     expect(checked).toBe(store.trackedPositions.length);
-    expect(checked).toBe(160);
-    // With 160 distinct bouts there is nothing to re-orient, so flipping must
-    // never occur here. If a future dataset shares a bout across rows this
-    // asserts the remap is exercised rather than silently skipped.
-    expect(flippedSeen).toBe(0);
+    expect(checked).toBe(ALL_ENTRIES.length);
   });
 
   it('remaps a second row for the same bout into the established orientation', () => {
@@ -468,7 +599,7 @@ describe('determinism, orientation and idempotence', () => {
     const firstRun = runs.find((r) => r.legacyEntryId === base.id);
     const swapRun = runs.find((r) => r.legacyEntryId === swapped.id);
     expect(swapRun.boutId).toBe(firstRun.boutId);
-    expect(out.store.bouts).toHaveLength(160);
+    expect(out.store.bouts).toHaveLength(store.bouts.length);
 
     const bout = out.store.bouts.find((b) => b.id === firstRun.boutId);
     expect(bout.cornerA.displayName).toBe(base.fighterA);
@@ -510,7 +641,7 @@ describe('determinism, orientation and idempotence', () => {
     const a = runs.find((r) => r.legacyEntryId === first.id).boutId;
     const b = runs.find((r) => r.legacyEntryId === rematch.id).boutId;
     expect(a).not.toBe(b);
-    expect(out.store.bouts).toHaveLength(161);
+    expect(out.store.bouts).toHaveLength(store.bouts.length + 1);
   });
 
   it('round-trips through JSON with deep Object.is equality', () => {
