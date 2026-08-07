@@ -307,3 +307,77 @@ describe('grade and return-to-pending are true inverses', () => {
     await unGrade(await vector());
   });
 });
+
+describe('concurrent grading is serialized by the bout lock', () => {
+  it('two clients with the SAME vector: exactly one wins', async () => {
+    await unGrade(await vector()).catch(() => {});
+    const v = await vector();
+    const undoBefore = undoCount();
+
+    // Both requests carry the identical, fully valid vector and are in flight
+    // before either resolves. Without the lock both would validate against the
+    // same revisions and the second would overwrite rows it never re-checked.
+    const [a, b] = await Promise.all([grade(v, 'A', 'DEC'), grade(v, 'B', 'SUB')]);
+
+    const winners = [a, b].filter((r) => r.status === 200);
+    const losers = [a, b].filter((r) => r.status !== 200);
+    expect(winners.length, `statuses ${a.status}/${b.status}`).toBe(1);
+    expect(losers.length).toBe(1);
+
+    // The loser is told to re-read, with a REAL revision — not a generic error.
+    expect(losers[0].body.code).toBe('P0001');
+    expect(losers[0].body.message).toMatch(/\bstale_write\b/);
+    const reported = losers[0].body.message.match(/revision=(\d+)/)[1];
+    expect(BigInt(reported)).toBeGreaterThan(0n);
+
+    // Exactly ONE undo row, and every affected revision advanced exactly once.
+    expect(undoCount()).toBe(undoBefore + 1);
+    for (const entry of v) {
+      const now = catalogScalar(
+        `SELECT revision FROM (
+           SELECT id::text, revision FROM app_private.bouts
+           UNION ALL SELECT id::text, revision FROM app_private.tracked_positions
+           UNION ALL SELECT id::text, revision FROM app_private.wagers) x
+          WHERE x.id = '${entry.id}';`);
+      expect(BigInt(now), entry.id).toBe(BigInt(entry.revision) + 1n);
+    }
+    // The reported revision is the bout's real current value.
+    expect(reported).toBe(catalogScalar(
+      `SELECT revision FROM app_private.bouts WHERE id='${BOUT}';`));
+
+    await unGrade(await vector());
+  });
+
+  it('a cluster-1 dependent edit racing a grade cannot be lost', async () => {
+    const v = await vector();
+    const pos = v.find((e) => e.id === POS);
+
+    // A corner change and a grade, both in flight, both against the same
+    // pre-read revisions. Either order is acceptable — what is NOT acceptable is
+    // both succeeding, because the grade would then have settled a corner it
+    // never validated.
+    const [edit, graded] = await Promise.all([
+      rpc('fm_rpc_change_tracked_corner',
+        { p_slug: SLUG, p_position_id: POS, p_corner: 'B',
+          p_expected_revision: pos.revision }, { as: USER_MEMBER }),
+      grade(v, 'A', 'DEC'),
+    ]);
+
+    const ok = [edit, graded].filter((r) => r.status === 200);
+    expect(ok.length, `edit ${edit.status} / grade ${graded.status}`).toBe(1);
+    const loser = [edit, graded].find((r) => r.status !== 200);
+    expect(loser.body.code).toBe('P0001');
+    expect(loser.body.message).toMatch(/\bstale_write\b/);
+
+    // Whatever won, the settlement matches the corner actually stored.
+    const corner = catalogScalar(
+      `SELECT corner FROM app_private.tracked_positions WHERE id='${POS}';`);
+    const outcome = catalogScalar(
+      `SELECT coalesce(settlement_outcome,'-') FROM app_private.tracked_positions
+        WHERE id='${POS}';`);
+    if (outcome !== '-') expect(outcome).toBe(corner === 'A' ? 'won' : 'lost');
+
+    await unGrade(await vector()).catch(() => {});
+    scalar(`UPDATE app_private.tracked_positions SET corner='A' WHERE id='${POS}';`);
+  });
+});

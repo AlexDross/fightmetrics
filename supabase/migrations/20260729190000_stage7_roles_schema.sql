@@ -2163,6 +2163,47 @@ RETURNS jsonb LANGUAGE sql STABLE SECURITY DEFINER SET search_path = '' AS $$
      WHERE g.workspace_id = p_ws AND g.bout_id = p_bout), '[]'::jsonb))
 $$;
 
+-- Take row locks on EVERY row a bout-result write will touch, in a fixed order,
+-- BEFORE the revision vector is compared.
+--
+-- Without this the vector check was a time-of-check/time-of-use race: it read
+-- revisions, released nothing, and apply_bout_result then wrote rows whose
+-- revisions could already have moved. A concurrent cluster-1 edit landing in
+-- that window would be silently overwritten by a grade that never validated it.
+--
+-- The order is bout, then tracked positions by id, then wagers by id, and each
+-- row is locked individually so the order is genuinely deterministic —
+-- `ORDER BY ... FOR UPDATE` locks in SCAN order, not sort order, which would not
+-- be enough to keep two concurrent graders from deadlocking.
+--
+-- The locks are held for the rest of the transaction, i.e. through settlement
+-- and undo creation.
+--
+-- ANY FUTURE RPC THAT CREATES A DEPENDENT of a bout — a tracked position, a
+-- wager, or anything else a grade would have to settle — MUST take this same
+-- bout lock first. Otherwise it can insert a row into a bout that is
+-- concurrently being graded, and that row is a phantom the grade never saw and
+-- never settled.
+CREATE FUNCTION app_private.lock_bout_dependents(p_ws uuid, p_bout uuid)
+RETURNS void LANGUAGE plpgsql VOLATILE SECURITY DEFINER SET search_path = '' AS $$
+DECLARE r record;
+BEGIN
+  PERFORM 1 FROM app_private.bouts b
+   WHERE b.workspace_id = p_ws AND b.id = p_bout FOR UPDATE;
+
+  FOR r IN SELECT t.id FROM app_private.tracked_positions t
+            WHERE t.workspace_id = p_ws AND t.bout_id = p_bout ORDER BY t.id LOOP
+    PERFORM 1 FROM app_private.tracked_positions x
+     WHERE x.workspace_id = p_ws AND x.id = r.id FOR UPDATE;
+  END LOOP;
+
+  FOR r IN SELECT g.id FROM app_private.wagers g
+            WHERE g.workspace_id = p_ws AND g.bout_id = p_bout ORDER BY g.id LOOP
+    PERFORM 1 FROM app_private.wagers x
+     WHERE x.workspace_id = p_ws AND x.id = r.id FOR UPDATE;
+  END LOOP;
+END $$;
+
 CREATE FUNCTION public.fm_rpc_grade_bout(
   p_slug text, p_bout_id uuid, p_outcome text, p_method text, p_revisions jsonb)
 RETURNS TABLE (bout_id uuid, revision text, touched jsonb)
@@ -2174,6 +2215,9 @@ BEGIN
                   WHERE b.workspace_id = v_ws AND b.id = p_bout_id) THEN
     RAISE EXCEPTION 'bout not found' USING ERRCODE = '42704';
   END IF;
+  -- Lock first, THEN compare: the vector is only authoritative once no
+  -- concurrent writer can move a dependent underneath it.
+  PERFORM app_private.lock_bout_dependents(v_ws, p_bout_id);
   -- Vector BEFORE input validation, matching the in-memory precedence.
   PERFORM app_private.check_revision_vector(v_ws, p_bout_id, p_revisions);
   IF p_outcome NOT IN ('A','B','draw','noContest') THEN
@@ -2206,6 +2250,7 @@ BEGIN
                   WHERE b.workspace_id = v_ws AND b.id = p_bout_id) THEN
     RAISE EXCEPTION 'bout not found' USING ERRCODE = '42704';
   END IF;
+  PERFORM app_private.lock_bout_dependents(v_ws, p_bout_id);
   PERFORM app_private.check_revision_vector(v_ws, p_bout_id, p_revisions);
 
   v_prior := app_private.bout_prior_state(v_ws, p_bout_id);
@@ -2338,6 +2383,7 @@ GRANT EXECUTE ON FUNCTION app_private.recompute_position_settlement(uuid, uuid)
 GRANT EXECUTE ON FUNCTION app_private.settlement_for(uuid, uuid, text, uuid, numeric)
   TO fm_member_api;
 GRANT EXECUTE ON FUNCTION app_private.bout_dependents(uuid, uuid) TO fm_member_api;
+GRANT EXECUTE ON FUNCTION app_private.lock_bout_dependents(uuid, uuid) TO fm_member_api;
 GRANT EXECUTE ON FUNCTION app_private.check_revision_vector(uuid, uuid, jsonb)
   TO fm_member_api;
 GRANT EXECUTE ON FUNCTION app_private.apply_bout_result(uuid, uuid, text, text, text)

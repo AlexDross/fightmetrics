@@ -569,38 +569,71 @@ Return columns are enumerated, never `SELECT *`, so an added base column cannot
 leak. Each public function's returned key set is asserted to equal its documented
 list exactly.
 
-### REPOSITORY_CONTRACT → SQL source (non-mutation methods)
+### REPOSITORY_CONTRACT → implementation: EXHAUSTIVE audit
 
-Every read method in the Gate 1 contract, and where it is served from. Nothing
-here is described as complete unless the SQL exists today.
+All **46** methods of `REPOSITORY_CONTRACT`, every one classified. An earlier
+partial version listed only the non-mutation methods and silently omitted
+`eventRepository.rename`, `wagerRepository.create/settle/remove` and
+`workspaceRepository.setSeedVersion`; this table exists so no contract method can
+disappear again.
 
-| Contract method | SQL source | Status |
-|---|---|---|
-| `eventRepository.list` | `fm_read_events` / `fm_member_events` | ✅ |
-| `eventRepository.get` | client-side filter of the list surfaces | ✅ |
-| `eventRepository.listWithBoutCounts` | public: derive counts from `fm_read_events` + `fm_read_bouts`; members: `fm_member_events.bout_count` | ✅ |
-| `boutRepository.listByEvent` | `fm_read_bouts` / `fm_member_bouts` | ✅ |
-| `boutRepository.get` | client-side filter of the bout surfaces | ✅ |
-| `boutRepository.listPendingResults` | filter `result_status='pending'` on `fm_read_bouts` (public) or `fm_member_bouts` (members) | ✅ |
-| `predictionRepository.listPending` | `fm_read_upcoming` / `fm_member_upcoming` | ✅ |
-| `predictionRepository.listGraded` | `fm_read_roi` / `fm_member_roi` | ✅ |
-| `propRepository.list` | `fm_read_props` / `fm_member_props` | ✅ |
-| `parlayRepository.list` | `fm_read_parlays` / `fm_member_parlays` | ✅ |
-| `statisticsRepository.statisticsInput` | `fm_read_statistics_input` / `fm_member_statistics_input` | ✅ |
-| `workspaceRepository.exportStore` | `fm_member_export_store` | ✅ validated against the real `StoreSchema` over HTTP in `test:api` |
-| `authRepository.whoami` | `fm_member_whoami` | ✅ |
-| `authRepository.session` | client-side; Supabase session, no SQL surface | ✅ n/a |
-| `wagerRepository.listByBout` | `fm_member_wagers_by_bout`, carrying `revision` | ✅ |
-| `workspaceRepository.current` | **no surface yet** — slug/isPublic/schemaVersion/migratedAt | ❌ deferred |
-| `workspaceRepository.seedVersion` | **no surface yet** — `seed_items` ledger unexposed | ❌ deferred |
-| `predictionRepository.getAggregate` | **no surface yet** — run + snapshots + assessment + position | ❌ deferred |
-| `undoRepository.list` | **no surface yet** — depends on the undo log | ❌ deferred with the mutation work |
+Legend — **SQL**: implemented and tested · **RPC**: planned server mutation ·
+**client**: satisfied client-side from an existing surface, no SQL of its own ·
+**contract**: needs a contract change before it can be implemented.
 
-The five deferred rows are deliberately grouped with the `fm_rpc_*` matrix: four
-of them (`getAggregate`, `seedVersion`, `current`, `undo.list`) are the read
-halves of mutations that do not exist yet, and `listByBout` is only meaningful
-once wagers can be created. The read layer is therefore **not complete** — it is
-complete for the surfaces the current app renders.
+| # | Contract method | Class | Implementation / plan |
+|---|---|---|---|
+| 1 | `eventRepository.list` | SQL | `fm_read_events` / `fm_member_events` |
+| 2 | `eventRepository.get` | client | filter of the list surfaces |
+| 3 | `eventRepository.listWithBoutCounts` | SQL | public: `fm_read_events` + `fm_read_bouts`; members: `fm_member_events.bout_count` |
+| 4 | `eventRepository.rename` | RPC | **`fm_rpc_rename_event`** — cluster 6. Card-wide; must return `affectedBouts` for the required UI warning |
+| 5 | `boutRepository.listByEvent` | SQL | `fm_read_bouts` / `fm_member_bouts` |
+| 6 | `boutRepository.get` | client | filter of the bout surfaces |
+| 7 | `boutRepository.listPendingResults` | client | filter `result_status='pending'` on either bout surface |
+| 8 | `predictionRepository.listPending` | SQL | `fm_read_upcoming` / `fm_member_upcoming` |
+| 9 | `predictionRepository.listGraded` | SQL | `fm_read_roi` / `fm_member_roi` |
+| 10 | `predictionRepository.getAggregate` | RPC | **`fm_member_prediction_aggregate`** — cluster 4, with `save_prediction_run` |
+| 11 | `predictionRepository.savePrediction` | RPC | **`fm_rpc_save_prediction_run`** — cluster 4. Also closes the HTTP write leg for complementarity |
+| 12 | `predictionRepository.remove` | RPC | **`fm_rpc_delete_pending_run`** — cluster 3 |
+| 13 | `predictionRepository.clearGraded` | RPC | **`fm_rpc_clear_graded`** — cluster 3 |
+| 14 | `predictionRepository.grade` | SQL | ✅ `fm_rpc_grade_bout` |
+| 15 | `predictionRepository.returnToPending` | SQL | ✅ `fm_rpc_return_bout_to_pending` |
+| 16 | `predictionRepository.changeTrackedCorner` | SQL | ✅ `fm_rpc_change_tracked_corner` |
+| 17 | `predictionRepository.amendTrackedPrice` | SQL | ✅ `fm_rpc_amend_tracked_price` |
+| 18 | `predictionRepository.confirmEntry` | SQL | ✅ `fm_rpc_confirm_entry` |
+| 19 | `predictionRepository.confirmAllPending` | RPC | **`fm_rpc_confirm_all_pending`** — cluster 5; vector over every pending position |
+| 20 | `wagerRepository.listByBout` | SQL | ✅ `fm_member_wagers_by_bout` |
+| 21 | `wagerRepository.create` | RPC | **`fm_rpc_create_wager`** — cluster 5. **Must take the bout lock**: it creates a dependent of a bout that may be grading |
+| 22 | `wagerRepository.updateStake` | RPC | **`fm_rpc_update_stake`** — cluster 5 |
+| 23 | `wagerRepository.updateNotes` | RPC | **`fm_rpc_update_notes`** — cluster 5 |
+| 24 | `wagerRepository.settle` | RPC | **`fm_rpc_settle_wager`** — cluster 5; must respect the settlement contract |
+| 25 | `wagerRepository.remove` | RPC | **`fm_rpc_delete_wager`** — cluster 5 |
+| 26 | `propRepository.list` | SQL | `fm_read_props` / `fm_member_props` |
+| 27 | `propRepository.create` | RPC | **`fm_rpc_save_prop`** — cluster 6 |
+| 28 | `propRepository.settle` | RPC | **`fm_rpc_settle_prop`** — cluster 6 |
+| 29 | `propRepository.remove` | RPC | **`fm_rpc_delete_prop`** — cluster 6; tombstones the root |
+| 30 | `parlayRepository.list` | SQL | `fm_read_parlays` / `fm_member_parlays` |
+| 31 | `parlayRepository.create` | RPC | **`fm_rpc_save_parlay`** — cluster 6; parlay + legs atomically |
+| 32 | `parlayRepository.remove` | RPC | **`fm_rpc_delete_parlay`** — cluster 6; tombstones the root |
+| 33 | `statisticsRepository.statisticsInput` | SQL | `fm_read_statistics_input` / `fm_member_statistics_input` |
+| 34 | `workspaceRepository.current` | RPC | **`fm_member_workspace`** — cluster 7 |
+| 35 | `workspaceRepository.seedVersion` | RPC | **`fm_member_seed_version`** — cluster 7 |
+| 36 | `workspaceRepository.setSeedVersion` | RPC | **`fm_rpc_set_seed_version`** — cluster 7, owner-only; pairs with `fm_rpc_seed_store` at Gate 3 |
+| 37 | `workspaceRepository.exportStore` | SQL | ✅ `fm_member_export_store`, validated against the real `StoreSchema` |
+| 38 | `workspaceRepository.importStore` | RPC | **`fm_rpc_import_store`** — cluster 7; backup-confirmed, one transaction |
+| 39 | `workspaceRepository.reset` | RPC | **`fm_rpc_reset_workspace`** — cluster 7; backup-confirmed |
+| 40 | `undoRepository.list` | SQL | ✅ `fm_member_undo_list` (`prior_state` deliberately withheld — server-only restore data) |
+| 41 | `undoRepository.undo` | RPC | **`fm_rpc_undo`** — cluster 8; consumes `revision_vector`, `absent_ids`, `created_ids` |
+| 42 | `authRepository.session` | client | Supabase session; no SQL surface |
+| 43 | `authRepository.whoami` | SQL | ✅ `fm_member_whoami` |
+| 44 | `authRepository.signIn` | client | Supabase magic link — Gate 4 |
+| 45 | `authRepository.signOut` | client | Supabase session — Gate 4 |
+| 46 | `authRepository.claimOwnership` | SQL | ✅ `fm_rpc_claim_workspace_ownership` |
+
+**Totals:** 14 implemented in SQL, 22 planned RPC/read, 6 client-only, 4 read
+surfaces already shipped beyond the strict contract (`fm_read_*` public
+variants). No method is classified `contract` — nothing in the contract is
+currently unimplementable as written.
 
 ### Statistics stay in JavaScript
 
@@ -681,6 +714,24 @@ entry raises `stale_write` with the row's real revision. Ordering is irrelevant.
 Both return the complete `touched` vector. `app_private.apply_bout_result`
 writes each row **once**, carrying its final settlement, so no obsolete deferred
 event is ever queued — the same discipline cluster 1 established.
+
+**Locks precede the comparison.** `app_private.lock_bout_dependents` takes row
+locks on the bout, then each tracked position by id, then each wager by id,
+BEFORE the vector is compared, and holds them through settlement and undo
+creation. Without this the check was a time-of-check/time-of-use race: it read
+revisions, held nothing, and `apply_bout_result` then wrote rows whose revisions
+could already have moved — a concurrent cluster-1 edit landing in that window was
+silently overwritten by a grade that never validated it.
+
+Each row is locked individually in sorted order, because `ORDER BY … FOR UPDATE`
+locks in **scan** order rather than sort order, which is not enough to stop two
+concurrent graders deadlocking.
+
+**Any future RPC that CREATES a dependent of a bout — a tracked position, a
+wager, anything a grade would have to settle — must take this same bout lock
+first**, or it can insert into a bout that is concurrently being graded and leave
+a phantom the grade never saw and never settled. `wagerRepository.create` is the
+first such RPC.
 
 An UPDATE cannot reference its own target alias inside its `FROM` clause:
 `settlement_for(…, t.corner, …)` fails with `42P10 invalid reference to
