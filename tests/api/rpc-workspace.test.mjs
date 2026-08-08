@@ -86,6 +86,7 @@ describe('import envelope validation (destructive-bypass fix)', () => {
   // destructive clear, leaving the exported store EXACTLY unchanged. The first
   // case is the exact bypass Codex reproduced: a meta-only payload that failed
   // StoreSchema but cleared every collection and returned 200.
+  const withMeta = (s, meta) => ({ ...s, meta });
   const rejected = {
     'meta-only payload (the reported bypass)': { meta: { schemaVersion: 1, migratedAt: null } },
     'a missing collection': (s) => { const c = { ...s }; delete c.wagers; return c; },
@@ -94,6 +95,16 @@ describe('import envelope validation (destructive-bypass fix)', () => {
     'meta missing schemaVersion': (s) => ({ ...s, meta: { migratedAt: null } }),
     'meta with an extra key': (s) => ({ ...s, meta: { ...s.meta, extra: 1 } }),
     'a non-object store': [],
+    // schemaVersion must be an integer >= 1 within int4 range (MetaSchema).
+    'a fractional schemaVersion': (s) => withMeta(s, { ...s.meta, schemaVersion: 1.5 }),
+    'a zero schemaVersion': (s) => withMeta(s, { ...s.meta, schemaVersion: 0 }),
+    'a negative schemaVersion': (s) => withMeta(s, { ...s.meta, schemaVersion: -1 }),
+    'an oversized schemaVersion': (s) => withMeta(s, { ...s.meta, schemaVersion: 2147483648 }),
+    'a string schemaVersion': (s) => withMeta(s, { ...s.meta, schemaVersion: 'x' }),
+    // migratedAt must be null or an ISO-8601 datetime WITH offset that casts.
+    'a malformed migratedAt': (s) => withMeta(s, { ...s.meta, migratedAt: 'not-a-date' }),
+    'an impossible migratedAt': (s) => withMeta(s, { ...s.meta, migratedAt: '2026-13-45T00:00:00Z' }),
+    'a no-offset migratedAt': (s) => withMeta(s, { ...s.meta, migratedAt: '2026-08-08T05:28:39' }),
   };
 
   for (const [label, make] of Object.entries(rejected)) {

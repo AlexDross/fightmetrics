@@ -4287,10 +4287,16 @@ END $$;
 -- workspace for a payload that fails StoreSchema. Deep per-row validation still
 -- belongs to the JS adapter (Gate 6) and to the DB's own CHECK/FK/triggers on
 -- insert; this is the envelope gate that must run BEFORE clear_workspace_entities.
+-- STABLE, not IMMUTABLE: it anchors migratedAt with a ::timestamptz cast (a
+-- STABLE operation). Every failure — including the deep meta value checks that
+-- would otherwise surface later as 22P02 / 22007 / a column CHECK — is converted
+-- to a single stable 23514 invalidStoreEnvelope BEFORE any clear runs, so the
+-- MetaSchema contract (schemaVersion integer >= 1; migratedAt an ISO-8601
+-- datetime WITH offset, or null) is enforced here rather than by a later cast.
 CREATE FUNCTION app_private.assert_store_envelope(p_store jsonb)
-RETURNS void LANGUAGE plpgsql IMMUTABLE SET search_path = '' AS $$
+RETURNS void LANGUAGE plpgsql STABLE SET search_path = '' AS $$
 DECLARE
-  v_keys text[]; c text; v_meta jsonb;
+  v_keys text[]; c text; v_meta jsonb; v_sv numeric; v_ts text;
   v_expected text[] := ARRAY['meta','events','bouts','predictionRuns',
     'predictionSnapshots','marketSnapshots','bettingAssessments',
     'trackedPositions','wagers','props','parlays'];
@@ -4305,7 +4311,7 @@ BEGIN
     RAISE EXCEPTION 'invalidStoreEnvelope: top-level keys must be exactly %', v_expected
       USING ERRCODE = '23514';
   END IF;
-  -- meta: exactly {schemaVersion (number), migratedAt (string|null)}.
+  -- meta: exactly {schemaVersion, migratedAt}.
   v_meta := p_store -> 'meta';
   IF pg_catalog.jsonb_typeof(v_meta) <> 'object'
      OR (SELECT count(*) FROM pg_catalog.jsonb_object_keys(v_meta)) <> 2
@@ -4313,12 +4319,43 @@ BEGIN
     RAISE EXCEPTION 'invalidStoreEnvelope: meta must be exactly {schemaVersion, migratedAt}'
       USING ERRCODE = '23514';
   END IF;
+
+  -- schemaVersion: MetaSchema integer >= 1, and within int4 so the later ::int
+  -- cast (and the workspaces_schema_version_positive CHECK) cannot be reached
+  -- with a bad value. Fractional (1.5), zero, negative and oversized all fail here.
   IF pg_catalog.jsonb_typeof(v_meta -> 'schemaVersion') <> 'number' THEN
     RAISE EXCEPTION 'invalidStoreEnvelope: meta.schemaVersion must be a number' USING ERRCODE = '23514';
   END IF;
+  v_sv := (v_meta ->> 'schemaVersion')::numeric;
+  IF v_sv <> pg_catalog.trunc(v_sv) THEN
+    RAISE EXCEPTION 'invalidStoreEnvelope: meta.schemaVersion must be an integer, got %', v_sv
+      USING ERRCODE = '23514';
+  END IF;
+  IF v_sv < 1 OR v_sv > 2147483647 THEN
+    RAISE EXCEPTION 'invalidStoreEnvelope: meta.schemaVersion must be between 1 and 2147483647, got %', v_sv
+      USING ERRCODE = '23514';
+  END IF;
+
+  -- migratedAt: null, or an ISO-8601 datetime WITH a required offset (Z or
+  -- ±HH:MM) — matching z.iso.datetime({offset:true}) — whose timestamptz cast
+  -- succeeds. Malformed, no-offset and impossible dates all fail here.
   IF pg_catalog.jsonb_typeof(v_meta -> 'migratedAt') NOT IN ('null','string') THEN
     RAISE EXCEPTION 'invalidStoreEnvelope: meta.migratedAt must be a string or null' USING ERRCODE = '23514';
   END IF;
+  IF pg_catalog.jsonb_typeof(v_meta -> 'migratedAt') = 'string' THEN
+    v_ts := v_meta ->> 'migratedAt';
+    IF v_ts !~ '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})$' THEN
+      RAISE EXCEPTION 'invalidStoreEnvelope: meta.migratedAt must be an ISO-8601 datetime with an offset, got %', v_ts
+        USING ERRCODE = '23514';
+    END IF;
+    BEGIN
+      PERFORM v_ts::timestamptz;
+    EXCEPTION WHEN others THEN
+      RAISE EXCEPTION 'invalidStoreEnvelope: meta.migratedAt is not a valid timestamp, got %', v_ts
+        USING ERRCODE = '23514';
+    END;
+  END IF;
+
   -- Every collection must be present and a JSON array.
   FOREACH c IN ARRAY ARRAY['events','bouts','predictionRuns','predictionSnapshots',
     'marketSnapshots','bettingAssessments','trackedPositions','wagers','props','parlays'] LOOP
