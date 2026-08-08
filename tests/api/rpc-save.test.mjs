@@ -21,13 +21,13 @@ const POS = '99700000-0000-4000-8000-0000000000a1';
 
 // The same non-trivial probability the export/complementarity tests use, whose
 // float8 pair sums to exactly 1. This time it crosses PostgREST on the way IN.
+// This file's OWN explicit probability, written into the WS_SAVE snapshot it
+// authors over HTTP and asserted below. It never touches WS_PUBLIC: applyFixture
+// is parameterless and WS_PUBLIC's probability is centrally owned in helpers.
 const probA = 0.5432109876543210;
 const probB = 1 - probA;
 
-// The applyFixture probability argument seeds WS_PUBLIC's snapshot, which
-// api.test.mjs's complementarity test reads back; pass the canonical pair so the
-// shared fixture is identical no matter which file's beforeAll runs first.
-beforeAll(() => { applyFixture({ probA, probB }); }, 120_000);
+beforeAll(() => { applyFixture(); }, 120_000);
 
 const now = () => new Date().toISOString();
 

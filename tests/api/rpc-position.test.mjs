@@ -17,8 +17,7 @@ const WS   = '11110000-0000-4000-8000-000000000004';
 const ASSESSMENT = '4ff00000-0000-4000-8000-000000000001';
 const MARKET = '4cc00000-0000-4000-8000-000000000001';
 
-const probA = 0.5432109876543210;
-beforeAll(() => { applyFixture({ probA, probB: 1 - probA }); }, 120_000);
+beforeAll(() => { applyFixture(); }, 120_000);
 
 /**
  * Current revision from whichever member surface holds the row.

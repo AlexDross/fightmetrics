@@ -27,7 +27,7 @@ const PIN_POS = '87700000-0000-4000-8000-000000000001';
 const PIN_WAG = '89900000-0000-4000-8000-000000000001';
 const PIN_ASSESS = '8ff00000-0000-4000-8000-000000000001';
 
-beforeAll(() => { applyFixture({ probA: 0.5, probB: 0.5 }); }, 120_000);
+beforeAll(() => { applyFixture(); }, 120_000);
 
 const count = (table, ws) => Number(catalogScalar(
   `SELECT count(*) FROM app_private.${table} WHERE workspace_id='${ws}';`));

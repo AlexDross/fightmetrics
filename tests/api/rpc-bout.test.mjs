@@ -17,8 +17,7 @@ const BOUT = '5bb00000-0000-4000-8000-000000000001';
 const POS  = '57700000-0000-4000-8000-000000000001';
 const WAG  = '59900000-0000-4000-8000-000000000001';
 
-const probA = 0.5432109876543210;
-beforeAll(() => { applyFixture({ probA, probB: 1 - probA }); }, 120_000);
+beforeAll(() => { applyFixture(); }, 120_000);
 
 /** The complete dependency set, assembled the way the UI must: bout + every
  *  tracked position + every wager, each read from a member surface. */

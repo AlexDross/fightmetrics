@@ -19,11 +19,9 @@ const POS = '17700000-0000-4000-8000-000000000001';
 const WAG = '19900000-0000-4000-8000-000000000001';       // the fixture wager (corner A, open, stake 2)
 const NEW = '1aa00000-0000-4000-8000-000000000001';       // created by the create test
 
-// The applyFixture probability argument seeds WS_PUBLIC's snapshot, which
-// api.test.mjs's complementarity test reads; pass the canonical pair so the
-// shared fixture is identical no matter which file's beforeAll runs first.
-const probA = 0.5432109876543210;
-beforeAll(() => { applyFixture({ probA, probB: 1 - probA }); }, 120_000);
+// applyFixture is parameterless; WS_PUBLIC's probability is centrally owned in
+// helpers, and this file only touches its own WS_WAGER workspace.
+beforeAll(() => { applyFixture(); }, 120_000);
 
 const now = () => new Date().toISOString();
 const wagerCount = () => Number(catalogScalar(

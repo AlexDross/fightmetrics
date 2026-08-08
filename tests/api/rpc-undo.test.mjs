@@ -15,8 +15,7 @@ const POS  = '67700000-0000-4000-8000-000000000001';
 const WAG  = '69900000-0000-4000-8000-000000000001';
 const MARKET = '6cc00000-0000-4000-8000-000000000001';
 
-const probA = 0.5432109876543210;
-beforeAll(() => { applyFixture({ probA, probB: 1 - probA }); }, 120_000);
+beforeAll(() => { applyFixture(); }, 120_000);
 
 /** Everything the five operations can change, for exact before/after equality. */
 const snapshot = () => catalogScalar(`

@@ -113,6 +113,20 @@ export const WS_SAVE = '11110000-0000-4000-8000-000000000009';
 // Cluster 6's workspace: a full aggregate WITH a wager, so wager mutations have
 // an assessment/market to reference and a persistent wager to edit.
 export const WS_WAGER = '11110000-0000-4000-8000-00000000000c';
+// A workspace ONLY the fixture-isolation test seeds, via seedComplement, to prove
+// a file can select an explicit probability on a clean database without touching
+// WS_PUBLIC or depending on which file runs first.
+export const WS_COMPLEMENT = '11110000-0000-4000-8000-00000000000d';
+
+// WS_PUBLIC's snapshot probability is CENTRALLY OWNED here — a fixed, deliberately
+// non-trivial float8 pair whose complement survives the transport exactly. It is
+// NOT a parameter of applyFixture: no test file supplies it, so no file can
+// create or overwrite WS_PUBLIC with a different value, and the complementarity
+// test (api.test.mjs) reads it back from this single source of truth. A test that
+// wants to verify a DIFFERENT explicit probability seeds its own isolated
+// workspace with seedComplement instead.
+export const PUBLIC_PROB_A = 0.5432109876543210;
+export const PUBLIC_PROB_B = 1 - PUBLIC_PROB_A;
 
 const workspace = (id, slug, isPublic) => `
 INSERT INTO app_private.workspaces (id, slug, is_public, schema_version, migrated_at)
@@ -226,9 +240,13 @@ const IDS = `'${WS_PUBLIC}','${WS_PRIVATE}','${WS_CLAIM}','${WS_RPC}','${WS_BOUT
  * transaction-local membership the pgTAP suites use — and REVOKEs it before
  * COMMIT, so the catalog contract still holds afterwards. The suite asserts that.
  *
- * probA/probB are generated in JavaScript by the caller.
+ * Takes NO arguments: WS_PUBLIC's probability is the centrally-owned constant
+ * PUBLIC_PROB_A/PUBLIC_PROB_B, so the fixture is fully deterministic and no
+ * caller — in any file order — can create or overwrite WS_PUBLIC with a
+ * different value. A test that needs a different explicit probability seeds its
+ * own isolated workspace with seedComplement.
  */
-export function applyFixture({ probA, probB }) {
+export function applyFixture() {
   sql(`
 BEGIN;
 GRANT fm_table_owner TO postgres WITH SET TRUE, INHERIT FALSE;
@@ -295,7 +313,7 @@ VALUES ('${WS_PRIVATE}', '${USER_VIEWER}', 'viewer'),
 ON CONFLICT DO NOTHING;
 -- api-claim is deliberately left with ZERO owners for the concurrency test.
 
-${aggregate(WS_PUBLIC, 2, probA, probB)}
+${aggregate(WS_PUBLIC, 2, PUBLIC_PROB_A, PUBLIC_PROB_B)}
 ${aggregate(WS_PRIVATE, 3, 0.5, 0.5)}
 ${aggregate(WS_RPC, 4, 0.5, 0.5, false)}
 ${aggregate(WS_BOUT, 5, 0.5, 0.5)}
@@ -314,6 +332,72 @@ UPDATE app_private.tracked_positions
        confirmed_at = NULL
  WHERE workspace_id = '${WS_RPC}';
 
+RESET ROLE;
+REVOKE fm_table_owner FROM postgres;
+COMMIT;
+`);
+}
+
+/**
+ * Seed ONE public workspace (api-complement, WS_COMPLEMENT) with a full aggregate
+ * whose snapshot carries an EXPLICITLY chosen probability pair. Only the
+ * fixture-isolation test calls this, so the workspace is created independently on
+ * the clean database and never touches WS_PUBLIC — demonstrating that a test can
+ * verify complementarity for a probability of its own choosing, order-independent.
+ */
+export function seedComplement({ probA, probB }) {
+  const W = (id) => `'${WS_COMPLEMENT}', '${id}'`;
+  sql(`
+BEGIN;
+GRANT fm_table_owner TO postgres WITH SET TRUE, INHERIT FALSE;
+SET LOCAL ROLE fm_table_owner;
+SET CONSTRAINTS app_private.run_decision_snapshot_fk,
+                app_private.prediction_snapshots_run_fk DEFERRED;
+INSERT INTO app_private.workspaces (id, slug, is_public, schema_version, migrated_at)
+VALUES ('${WS_COMPLEMENT}', 'api-complement', true, 1, now()) ON CONFLICT DO NOTHING;
+INSERT INTO app_private.events (workspace_id, id, promotion, name, date, created_at)
+VALUES (${W('cee00000-0000-4000-8000-000000000001')}, 'UFC', 'API Complement',
+        '2026-05-01', now()) ON CONFLICT DO NOTHING;
+INSERT INTO app_private.bouts (workspace_id, id, event_id, corner_a_display_name,
+  corner_a_fighter_key, corner_b_display_name, corner_b_fighter_key, division,
+  result_status, created_at)
+VALUES (${W('cbb00000-0000-4000-8000-000000000001')},
+        'cee00000-0000-4000-8000-000000000001', 'Comp Alpha', 'comp-alpha',
+        'Comp Beta', 'comp-beta', 'Lightweight', 'pending', now()) ON CONFLICT DO NOTHING;
+INSERT INTO app_private.prediction_runs (workspace_id, id, bout_id, created_at,
+  decision_snapshot_id, target_event_date_at_capture, finish_status,
+  provenance_completeness, corner_a_is_prospect_at_capture,
+  corner_b_is_prospect_at_capture, includes_prospect_at_capture)
+VALUES (${W('1700000000010-cccccc')}, 'cbb00000-0000-4000-8000-000000000001', now(),
+        'cdd00000-0000-4000-8000-000000000001', '2026-05-01', 'absent', 'full',
+        false, false, false) ON CONFLICT DO NOTHING;
+INSERT INTO app_private.prediction_snapshots (workspace_id, id, run_id, bout_id,
+  basis, prob_a, prob_b, winner_corner, captured_at, capture_mode)
+VALUES (${W('cdd00000-0000-4000-8000-000000000001')}, '1700000000010-cccccc',
+        'cbb00000-0000-4000-8000-000000000001', 'legacy-v1-unversioned',
+        ${probA}, ${probB}, '${probA >= probB ? 'A' : 'B'}', now(), 'live')
+ON CONFLICT DO NOTHING;
+INSERT INTO app_private.market_snapshots (workspace_id, id, bout_id, captured_at,
+  source, odds_a, odds_b)
+VALUES (${W('ccc00000-0000-4000-8000-000000000001')},
+        'cbb00000-0000-4000-8000-000000000001', now(), 'manual', -150, 130)
+ON CONFLICT DO NOTHING;
+INSERT INTO app_private.betting_assessments (workspace_id, id, bout_id, run_id,
+  prediction_snapshot_id, market_snapshot_id, frozen_at, tier_provenance,
+  recommended_corner_provenance)
+VALUES (${W('cff00000-0000-4000-8000-000000000001')},
+        'cbb00000-0000-4000-8000-000000000001', '1700000000010-cccccc',
+        'cdd00000-0000-4000-8000-000000000001',
+        'ccc00000-0000-4000-8000-000000000001', now(), 'stored', 'stored')
+ON CONFLICT DO NOTHING;
+INSERT INTO app_private.tracked_positions (workspace_id, id, bout_id, assessment_id,
+  market_snapshot_id, origin, corner, stake_units, stake_source, opened_at,
+  settlement_status, review_status)
+VALUES (${W('c7700000-0000-4000-8000-000000000001')},
+        'cbb00000-0000-4000-8000-000000000001',
+        'cff00000-0000-4000-8000-000000000001',
+        'ccc00000-0000-4000-8000-000000000001', 'appCreated', 'A', 1, 'explicit',
+        now(), 'open', 'notRequired') ON CONFLICT DO NOTHING;
 RESET ROLE;
 REVOKE fm_table_owner FROM postgres;
 COMMIT;

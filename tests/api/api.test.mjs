@@ -7,21 +7,20 @@ import { describe, it, expect, beforeAll } from 'vitest';
 import { StoreSchema } from '../../src/data/schemas/entities.mjs';
 import {
   rpc, applyFixture, resetClaimWorkspace, scalar, catalogScalar, WS_PUBLIC,
+  PUBLIC_PROB_A, PUBLIC_PROB_B,
   USER_MEMBER, USER_OUTSIDER, CLAIMANT_A, CLAIMANT_B,
 } from './helpers.mjs';
 
-// Both values are computed in JavaScript, independently OF SQL — the database
-// never derives either one. pB is deliberately `1 - pA`, which is what the
-// domain means by complementary; the point is that the PAIR is serialized
-// together and must survive the transport unchanged.
-//
-// The write leg still enters through fixture SQL, so this does not yet close the
-// full browser -> PostgREST -> float8 -> response -> JS loop. Complementarity
-// stays PROVISIONAL until a save-prediction RPC allows an HTTP write.
-const probA = 0.5432109876543210;
-const probB = 1 - probA;
+// WS_PUBLIC's probability is CENTRALLY OWNED in helpers (PUBLIC_PROB_A/B): no
+// test file supplies it, so none — in any order — can create or overwrite it.
+// This test reads that same deliberately non-trivial pair back over HTTP and
+// proves the float8 complement survives the transport. pB is `1 - pA`, which is
+// what the domain means by complementary; the point is that the PAIR is
+// serialized together and must come back unchanged, summing to exactly 1.
+const probA = PUBLIC_PROB_A;
+const probB = PUBLIC_PROB_B;
 
-beforeAll(() => { applyFixture({ probA, probB }); }, 120_000);
+beforeAll(() => { applyFixture(); }, 120_000);
 
 describe('1. the export parses as a real Stage 6 Store', () => {
   it('fm_member_export_store validates against the actual StoreSchema', async () => {
