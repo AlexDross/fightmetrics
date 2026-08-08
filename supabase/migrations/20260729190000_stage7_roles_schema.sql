@@ -2375,7 +2375,8 @@ BEGIN
   IF pg_catalog.jsonb_typeof(v_undo.absent_ids) <> 'array' THEN
     RAISE EXCEPTION 'undoMalformedAbsentIds' USING ERRCODE = '23514';
   END IF;
-  IF v_undo.op NOT IN ('delete_pending_run','clear_graded','delete_wager')
+  IF v_undo.op NOT IN ('delete_pending_run','clear_graded','delete_wager',
+                       'delete_prop','delete_parlay')
      AND pg_catalog.jsonb_array_length(v_undo.absent_ids) > 0 THEN
     RAISE EXCEPTION 'undoUnsupportedRestore: absent_ids restoration is not implemented'
       USING ERRCODE = '0A000';
@@ -2535,6 +2536,84 @@ BEGIN
     v_restored := jsonb_build_array(jsonb_build_object(
       'table','wagers','id', v_undo.prior_state #>> '{wager,id}'));
 
+  ELSIF v_undo.op = 'rename_event' THEN
+    UPDATE app_private.events e
+       SET name = v_undo.prior_state #>> '{event,name}',
+           date = (v_undo.prior_state #>> '{event,date}')::date,
+           promotion = v_undo.prior_state #>> '{event,promotion}'
+     WHERE e.workspace_id = v_ws AND e.id = (v_undo.prior_state #>> '{event,id}')::uuid
+     RETURNING e.revision INTO v_rev;
+    v_restored := v_restored || jsonb_build_object(
+      'table','events','id',v_undo.prior_state #>> '{event,id}','revision',v_rev::text);
+
+  ELSIF v_undo.op = 'confirm_all_pending' THEN
+    FOR r IN SELECT e.value AS v FROM pg_catalog.jsonb_array_elements(
+                    v_undo.prior_state -> 'trackedPositions') e LOOP
+      UPDATE app_private.tracked_positions t
+         SET review_status = r.v ->> 'reviewStatus',
+             review_reason = r.v ->> 'reviewReason',
+             confirmed_at = (r.v ->> 'confirmedAt')::timestamptz
+       WHERE t.workspace_id = v_ws AND t.id = (r.v ->> 'id')::uuid
+       RETURNING t.revision INTO v_rev;
+      v_restored := v_restored || jsonb_build_object(
+        'table','tracked_positions','id',r.v ->> 'id','revision',v_rev::text);
+    END LOOP;
+
+  ELSIF v_undo.op = 'settle_prop' THEN
+    FOR r IN SELECT e.value AS v FROM pg_catalog.jsonb_array_elements(
+                    v_undo.prior_state -> 'props') e LOOP
+      UPDATE app_private.props pr SET result = r.v ->> 'result'
+       WHERE pr.workspace_id = v_ws AND pr.id = r.v ->> 'id'
+       RETURNING pr.revision INTO v_rev;
+      v_restored := v_restored || jsonb_build_object(
+        'table','props','id',r.v ->> 'id','revision',v_rev::text);
+    END LOOP;
+
+  ELSIF v_undo.op = 'save_prop' THEN
+    -- inverse of create: drop the created prop and its ledger row
+    DELETE FROM app_private.props pr WHERE pr.workspace_id = v_ws
+      AND pr.id IN (SELECT e.value ->> 'id'
+                      FROM pg_catalog.jsonb_array_elements(v_undo.created_ids) e
+                     WHERE e.value ->> 'table' = 'props');
+    DELETE FROM app_private.seed_items si WHERE si.workspace_id = v_ws
+      AND si.root_type = 'prop' AND si.root_id = v_undo.prior_state #>> '{prop,id}';
+    v_restored := v_undo.created_ids;
+
+  ELSIF v_undo.op = 'delete_prop' THEN
+    PERFORM app_private.assert_ids_absent(v_ws, v_undo.absent_ids);
+    INSERT INTO app_private.props
+    SELECT (pg_catalog.jsonb_populate_record(NULL::app_private.props,
+              v_undo.prior_state -> 'prop')).*;
+    PERFORM app_private.untombstone_roots(v_ws, v_undo.prior_state -> 'seedItems');
+    v_restored := jsonb_build_array(jsonb_build_object(
+      'table','props','id', v_undo.prior_state #>> '{prop,id}'));
+
+  ELSIF v_undo.op = 'save_parlay' THEN
+    -- inverse of create: drop the created parlay's legs, the parlay, its ledger
+    DELETE FROM app_private.parlay_legs l WHERE l.workspace_id = v_ws
+      AND l.parlay_id IN (SELECT e.value ->> 'id'
+                            FROM pg_catalog.jsonb_array_elements(v_undo.created_ids) e
+                           WHERE e.value ->> 'table' = 'parlays');
+    DELETE FROM app_private.parlays pa WHERE pa.workspace_id = v_ws
+      AND pa.id IN (SELECT e.value ->> 'id'
+                      FROM pg_catalog.jsonb_array_elements(v_undo.created_ids) e
+                     WHERE e.value ->> 'table' = 'parlays');
+    DELETE FROM app_private.seed_items si WHERE si.workspace_id = v_ws
+      AND si.root_type = 'parlay' AND si.root_id = v_undo.prior_state #>> '{parlay,id}';
+    v_restored := v_undo.created_ids;
+
+  ELSIF v_undo.op = 'delete_parlay' THEN
+    PERFORM app_private.assert_ids_absent(v_ws, v_undo.absent_ids);
+    INSERT INTO app_private.parlays
+    SELECT (pg_catalog.jsonb_populate_record(NULL::app_private.parlays,
+              v_undo.prior_state -> 'parlay')).*;
+    INSERT INTO app_private.parlay_legs
+    SELECT (pg_catalog.jsonb_populate_record(NULL::app_private.parlay_legs, e.value)).*
+      FROM pg_catalog.jsonb_array_elements(coalesce(v_undo.prior_state -> 'legs', '[]'::jsonb)) e;
+    PERFORM app_private.untombstone_roots(v_ws, v_undo.prior_state -> 'seedItems');
+    v_restored := jsonb_build_array(jsonb_build_object(
+      'table','parlays','id', v_undo.prior_state #>> '{parlay,id}'));
+
   ELSE
     RAISE EXCEPTION 'undoUnsupportedOp: %', v_undo.op USING ERRCODE = '0A000';
   END IF;
@@ -2660,7 +2739,11 @@ RETURNS boolean LANGUAGE sql STABLE SECURITY DEFINER SET search_path = '' AS $$
     UNION ALL SELECT 1 FROM app_private.tracked_positions t
       WHERE p_table = 'tracked_positions' AND t.workspace_id = p_ws AND t.id::text = p_id
     UNION ALL SELECT 1 FROM app_private.wagers g
-      WHERE p_table = 'wagers' AND g.workspace_id = p_ws AND g.id::text = p_id)
+      WHERE p_table = 'wagers' AND g.workspace_id = p_ws AND g.id::text = p_id
+    UNION ALL SELECT 1 FROM app_private.props pr
+      WHERE p_table = 'props' AND pr.workspace_id = p_ws AND pr.id = p_id
+    UNION ALL SELECT 1 FROM app_private.parlays pa
+      WHERE p_table = 'parlays' AND pa.workspace_id = p_ws AND pa.id = p_id)
 $$;
 
 -- Delete ONE prediction aggregate in the documented order — position ->
@@ -3570,6 +3653,329 @@ BEGIN
   RETURN QUERY SELECT p_wager_id;
 END $$;
 
+-- ── Cluster 7: props, parlays, event rename, confirm-all ────────────────────
+-- Props and parlays are ROOTS with a seed_items ledger row, like prediction
+-- runs. The seed_items policy is owner-only and these RPCs are owner/editor, so
+-- the ledger writes go through table-owner helpers that bypass RLS — the same
+-- division cluster 4 used for tombstoning. None of these operations is a bout
+-- grade dependent (grade settles only tracked positions and wagers), so none
+-- takes the bout lock.
+
+-- Mark a root live (create) — UPSERT so re-creating a previously-tombstoned root
+-- makes it live again, matching the reference ledger.set overwrite.
+CREATE FUNCTION app_private.write_ledger_root(p_ws uuid, p_type text, p_id text)
+RETURNS void LANGUAGE plpgsql VOLATILE SECURITY DEFINER SET search_path = '' AS $$
+BEGIN
+  INSERT INTO app_private.seed_items (workspace_id, root_type, root_id,
+    first_seed_version, removed_at)
+  VALUES (p_ws, p_type, p_id, NULL, NULL)
+  ON CONFLICT (workspace_id, root_type, root_id) DO UPDATE SET removed_at = NULL;
+END $$;
+
+-- Tombstone a root (delete) — authoritative logical delete, whether or not the
+-- physical row went (it always does for props/parlays; nothing references them).
+CREATE FUNCTION app_private.tombstone_root(p_ws uuid, p_type text, p_id text)
+RETURNS void LANGUAGE plpgsql VOLATILE SECURITY DEFINER SET search_path = '' AS $$
+BEGIN
+  INSERT INTO app_private.seed_items (workspace_id, root_type, root_id,
+    first_seed_version, removed_at)
+  VALUES (p_ws, p_type, p_id, NULL, pg_catalog.now())
+  ON CONFLICT (workspace_id, root_type, root_id)
+    DO UPDATE SET removed_at = pg_catalog.now();
+END $$;
+
+-- eventRepository.rename. Card-wide: renaming an event changes it for every bout
+-- on the card, so the RPC returns affectedBouts for the required UI warning. Only
+-- name/date/promotion move; a NULL patch key leaves that column unchanged. Undo
+-- restores the prior three.
+CREATE FUNCTION public.fm_rpc_rename_event(
+  p_slug text, p_event_id uuid, p_patch jsonb, p_expected_revision text)
+RETURNS TABLE (id uuid, affected_bouts int, revision text)
+LANGUAGE plpgsql VOLATILE SECURITY DEFINER SET search_path = '' AS $$
+DECLARE v_ws uuid; v_row app_private.events; v_new bigint; v_count int;
+BEGIN
+  v_ws := app_private.require_role(p_slug, ARRAY['owner','editor']);
+  SELECT * INTO v_row FROM app_private.events e
+   WHERE e.workspace_id = v_ws AND e.id = p_event_id FOR UPDATE;
+  IF NOT FOUND THEN RAISE EXCEPTION 'event not found' USING ERRCODE = '42704'; END IF;
+  IF v_row.revision <> app_private.parse_revision(p_expected_revision) THEN
+    PERFORM app_private.raise_stale_write(v_row.revision);
+  END IF;
+  IF p_patch ? 'name' AND coalesce(p_patch ->> 'name', '') = '' THEN
+    RAISE EXCEPTION 'event name must be non-empty' USING ERRCODE = '23514';
+  END IF;
+
+  UPDATE app_private.events e
+     SET name = coalesce(p_patch ->> 'name', e.name),
+         date = coalesce((p_patch ->> 'date')::date, e.date),
+         promotion = coalesce(p_patch ->> 'promotion', e.promotion)
+   WHERE e.workspace_id = v_ws AND e.id = p_event_id
+   RETURNING e.revision INTO v_new;
+
+  SELECT count(*) INTO v_count FROM app_private.bouts b
+   WHERE b.workspace_id = v_ws AND b.event_id = p_event_id;
+
+  PERFORM app_private.write_undo(v_ws, 'rename_event',
+    jsonb_build_object('event', jsonb_build_object('id', v_row.id,
+      'name', v_row.name, 'date', v_row.date, 'promotion', v_row.promotion)),
+    jsonb_build_object(v_row.id::text, v_new::text), '[]'::jsonb);
+
+  RETURN QUERY SELECT p_event_id, v_count, v_new::text;
+END $$;
+
+-- Validates a vector over EVERY review-pending tracked position, same fixed error
+-- order as the graded vector.
+CREATE FUNCTION app_private.check_pending_vector(p_ws uuid, p_provided jsonb)
+RETURNS void LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path = '' AS $$
+DECLARE r record; v_dup text; v_missing text; v_unknown text;
+BEGIN
+  IF p_provided IS NULL OR pg_catalog.jsonb_typeof(p_provided) <> 'array' THEN
+    RAISE EXCEPTION 'revisionVectorRequired: a revision vector is required'
+      USING ERRCODE = '23514';
+  END IF;
+  FOR r IN SELECT e.value AS v FROM pg_catalog.jsonb_array_elements(p_provided) e LOOP
+    IF pg_catalog.jsonb_typeof(r.v) <> 'object'
+       OR NOT (r.v ? 'id') OR NOT (r.v ? 'revision')
+       OR pg_catalog.jsonb_typeof(r.v -> 'id') <> 'string' THEN
+      RAISE EXCEPTION 'malformedRevisionEntry: %', r.v USING ERRCODE = '23514';
+    END IF;
+    PERFORM app_private.parse_revision(r.v ->> 'revision');
+  END LOOP;
+  SELECT e.value ->> 'id' INTO v_dup
+    FROM pg_catalog.jsonb_array_elements(p_provided) e
+   GROUP BY e.value ->> 'id' HAVING count(*) > 1 ORDER BY 1 LIMIT 1;
+  IF v_dup IS NOT NULL THEN
+    RAISE EXCEPTION 'duplicateRevisionEntry: %', v_dup USING ERRCODE = '23514';
+  END IF;
+  SELECT t.id::text INTO v_missing FROM app_private.tracked_positions t
+   WHERE t.workspace_id = p_ws AND t.review_status = 'pending'
+     AND NOT EXISTS (SELECT 1 FROM pg_catalog.jsonb_array_elements(p_provided) e
+                      WHERE e.value ->> 'id' = t.id::text)
+   ORDER BY t.id LIMIT 1;
+  IF v_missing IS NOT NULL THEN
+    RAISE EXCEPTION 'missingRevisionEntry: %', v_missing USING ERRCODE = '23514';
+  END IF;
+  SELECT e.value ->> 'id' INTO v_unknown
+    FROM pg_catalog.jsonb_array_elements(p_provided) e
+   WHERE NOT EXISTS (SELECT 1 FROM app_private.tracked_positions t
+                      WHERE t.workspace_id = p_ws AND t.review_status = 'pending'
+                        AND t.id::text = e.value ->> 'id')
+   ORDER BY 1 LIMIT 1;
+  IF v_unknown IS NOT NULL THEN
+    RAISE EXCEPTION 'unknownRevisionEntry: %', v_unknown USING ERRCODE = '23514';
+  END IF;
+  FOR r IN SELECT t.revision FROM app_private.tracked_positions t
+            JOIN pg_catalog.jsonb_array_elements(p_provided) e
+              ON e.value ->> 'id' = t.id::text
+           WHERE t.workspace_id = p_ws AND t.review_status = 'pending'
+             AND app_private.parse_revision(e.value ->> 'revision') <> t.revision
+           ORDER BY t.id LIMIT 1 LOOP
+    PERFORM app_private.raise_stale_write(r.revision);
+  END LOOP;
+END $$;
+
+-- predictionRepository.confirmAllPending. Confirms every review-pending position
+-- under a full vector. Locks the pending set FOR UPDATE (id order) before the
+-- vector check, so a concurrent edit turns into a conflict rather than a lost
+-- write. Undo restores each position's prior review state.
+CREATE FUNCTION public.fm_rpc_confirm_all_pending(p_slug text, p_revisions jsonb)
+RETURNS TABLE (confirmed int, touched jsonb)
+LANGUAGE plpgsql VOLATILE SECURITY DEFINER SET search_path = '' AS $$
+DECLARE v_ws uuid; r record; v_rev bigint;
+  v_touched jsonb := '[]'::jsonb; v_prior jsonb := '[]'::jsonb; v_n int := 0;
+BEGIN
+  v_ws := app_private.require_role(p_slug, ARRAY['owner','editor']);
+  FOR r IN SELECT t.id FROM app_private.tracked_positions t
+            WHERE t.workspace_id = v_ws AND t.review_status = 'pending'
+            ORDER BY t.id LOOP
+    PERFORM 1 FROM app_private.tracked_positions x
+     WHERE x.workspace_id = v_ws AND x.id = r.id FOR UPDATE;
+  END LOOP;
+  PERFORM app_private.check_pending_vector(v_ws, p_revisions);
+
+  FOR r IN SELECT t.id, t.review_status, t.review_reason, t.confirmed_at
+             FROM app_private.tracked_positions t
+            WHERE t.workspace_id = v_ws AND t.review_status = 'pending'
+            ORDER BY t.id LOOP
+    v_prior := v_prior || jsonb_build_object('id', r.id, 'reviewStatus',
+      r.review_status, 'reviewReason', r.review_reason, 'confirmedAt', r.confirmed_at);
+    UPDATE app_private.tracked_positions t
+       SET review_status = 'confirmed', confirmed_at = pg_catalog.now()
+     WHERE t.workspace_id = v_ws AND t.id = r.id
+     RETURNING t.revision INTO v_rev;
+    v_touched := v_touched || jsonb_build_object(
+      'table','tracked_positions','id',r.id,'revision',v_rev::text);
+    v_n := v_n + 1;
+  END LOOP;
+
+  IF v_n > 0 THEN
+    PERFORM app_private.write_undo(v_ws, 'confirm_all_pending',
+      jsonb_build_object('trackedPositions', v_prior),
+      (SELECT jsonb_object_agg(e.value ->> 'id', e.value ->> 'revision')
+         FROM pg_catalog.jsonb_array_elements(v_touched) e), '[]'::jsonb);
+  END IF;
+
+  RETURN QUERY SELECT v_n, v_touched;
+END $$;
+
+-- propRepository.create. Owner/editor. Undo removes the created prop and its
+-- ledger row.
+CREATE FUNCTION public.fm_rpc_save_prop(p_slug text, p_prop jsonb)
+RETURNS TABLE (id text)
+LANGUAGE plpgsql VOLATILE SECURITY DEFINER SET search_path = '' AS $$
+DECLARE v_ws uuid; v_id text; v_target jsonb; v_rev bigint;
+BEGIN
+  v_ws := app_private.require_role(p_slug, ARRAY['owner','editor']);
+  IF p_prop IS NULL OR (p_prop ->> 'id') IS NULL THEN
+    RAISE EXCEPTION 'prop.id is required' USING ERRCODE = '23514';
+  END IF;
+  v_id := p_prop ->> 'id'; v_target := p_prop -> 'target';
+  INSERT INTO app_private.props (workspace_id, id, event_id, target_kind,
+    target_bout_id, target_corner, target_event_id, method, prop_type, label,
+    odds, stake_units, result, pick_source, created_at)
+  VALUES (v_ws, v_id, (p_prop ->> 'eventId')::uuid, v_target ->> 'kind',
+    CASE WHEN v_target ->> 'kind' = 'bout' THEN (v_target ->> 'boutId')::uuid END,
+    CASE WHEN v_target ->> 'kind' = 'bout' THEN v_target ->> 'corner' END,
+    CASE WHEN v_target ->> 'kind' = 'event' THEN (v_target ->> 'eventId')::uuid END,
+    p_prop ->> 'method', p_prop ->> 'propType', p_prop ->> 'label',
+    (p_prop ->> 'odds')::int, (p_prop ->> 'stakeUnits')::numeric,
+    p_prop ->> 'result', p_prop ->> 'pickSource', (p_prop ->> 'createdAt')::timestamptz);
+
+  PERFORM app_private.write_ledger_root(v_ws, 'prop', v_id);
+  SELECT pr.revision INTO v_rev FROM app_private.props pr
+   WHERE pr.workspace_id = v_ws AND pr.id = v_id;
+  PERFORM app_private.write_undo(v_ws, 'save_prop',
+    jsonb_build_object('prop', jsonb_build_object('id', v_id)),
+    jsonb_build_object(v_id, v_rev::text), '[]'::jsonb,
+    jsonb_build_array(jsonb_build_object('table','props','id',v_id)));
+
+  RETURN QUERY SELECT v_id;
+END $$;
+
+-- propRepository.settle. Owner/editor, revision-checked. Undo restores the result.
+CREATE FUNCTION public.fm_rpc_settle_prop(
+  p_slug text, p_prop_id text, p_result text, p_expected_revision text)
+RETURNS TABLE (id text, revision text)
+LANGUAGE plpgsql VOLATILE SECURITY DEFINER SET search_path = '' AS $$
+DECLARE v_ws uuid; v_row app_private.props; v_new bigint;
+BEGIN
+  v_ws := app_private.require_role(p_slug, ARRAY['owner','editor']);
+  SELECT * INTO v_row FROM app_private.props pr
+   WHERE pr.workspace_id = v_ws AND pr.id = p_prop_id FOR UPDATE;
+  IF NOT FOUND THEN RAISE EXCEPTION 'prop not found' USING ERRCODE = '42704'; END IF;
+  IF v_row.revision <> app_private.parse_revision(p_expected_revision) THEN
+    PERFORM app_private.raise_stale_write(v_row.revision);
+  END IF;
+  IF p_result NOT IN ('PENDING','WON','LOST','PUSH') THEN
+    RAISE EXCEPTION 'result must be PENDING, WON, LOST or PUSH' USING ERRCODE = '23514';
+  END IF;
+
+  UPDATE app_private.props pr SET result = p_result
+   WHERE pr.workspace_id = v_ws AND pr.id = p_prop_id
+   RETURNING pr.revision INTO v_new;
+
+  PERFORM app_private.write_undo(v_ws, 'settle_prop',
+    jsonb_build_object('props', jsonb_build_array(
+      jsonb_build_object('id', v_row.id, 'result', v_row.result))),
+    jsonb_build_object(v_row.id, v_new::text), '[]'::jsonb);
+
+  RETURN QUERY SELECT p_prop_id, v_new::text;
+END $$;
+
+-- propRepository.remove. Owner/editor, revision-checked. Tombstones the root; the
+-- bout it referenced always remains. Undo re-inserts the prop and un-tombstones.
+CREATE FUNCTION public.fm_rpc_delete_prop(
+  p_slug text, p_prop_id text, p_expected_revision text)
+RETURNS TABLE (removed text)
+LANGUAGE plpgsql VOLATILE SECURITY DEFINER SET search_path = '' AS $$
+DECLARE v_ws uuid; v_row app_private.props;
+BEGIN
+  v_ws := app_private.require_role(p_slug, ARRAY['owner','editor']);
+  SELECT * INTO v_row FROM app_private.props pr
+   WHERE pr.workspace_id = v_ws AND pr.id = p_prop_id FOR UPDATE;
+  IF NOT FOUND THEN RAISE EXCEPTION 'prop not found' USING ERRCODE = '42704'; END IF;
+  IF v_row.revision <> app_private.parse_revision(p_expected_revision) THEN
+    PERFORM app_private.raise_stale_write(v_row.revision);
+  END IF;
+
+  DELETE FROM app_private.props pr WHERE pr.workspace_id = v_ws AND pr.id = p_prop_id;
+  PERFORM app_private.tombstone_root(v_ws, 'prop', p_prop_id);
+
+  PERFORM app_private.write_undo(v_ws, 'delete_prop',
+    jsonb_build_object('prop', to_jsonb(v_row), 'seedItems',
+      jsonb_build_array(jsonb_build_object('rootType','prop','rootId',p_prop_id))),
+    '{}'::jsonb, jsonb_build_array(jsonb_build_object('table','props','id',p_prop_id)));
+
+  RETURN QUERY SELECT p_prop_id;
+END $$;
+
+-- parlayRepository.create. Owner/editor. Parlay + legs land atomically — the
+-- deferred parlays_have_legs trigger checks the leg count at COMMIT. Parlays are
+-- immutable (no revision). Undo removes the legs, the parlay and the ledger row.
+CREATE FUNCTION public.fm_rpc_save_parlay(p_slug text, p_parlay jsonb)
+RETURNS TABLE (id text)
+LANGUAGE plpgsql VOLATILE SECURITY DEFINER SET search_path = '' AS $$
+DECLARE v_ws uuid; v_id text;
+BEGIN
+  v_ws := app_private.require_role(p_slug, ARRAY['owner','editor']);
+  IF p_parlay IS NULL OR (p_parlay ->> 'id') IS NULL THEN
+    RAISE EXCEPTION 'parlay.id is required' USING ERRCODE = '23514';
+  END IF;
+  v_id := p_parlay ->> 'id';
+  INSERT INTO app_private.parlays (workspace_id, id, event_id, combined_odds,
+    stake_units, pick_source, created_at)
+  VALUES (v_ws, v_id, (p_parlay ->> 'eventId')::uuid, (p_parlay ->> 'combinedOdds')::int,
+    (p_parlay ->> 'stakeUnits')::numeric, p_parlay ->> 'pickSource',
+    (p_parlay ->> 'createdAt')::timestamptz);
+  INSERT INTO app_private.parlay_legs (workspace_id, parlay_id, leg_index, bout_id,
+    picked_corner, model_default_corner, model_prob_at_build, overridden)
+  SELECT v_ws, v_id, (leg.ord - 1)::int, (leg.v ->> 'boutId')::uuid,
+         leg.v ->> 'pickedCorner', leg.v ->> 'modelDefaultCorner',
+         (leg.v ->> 'modelProbAtBuild')::double precision,
+         (leg.v ->> 'overridden')::boolean
+    FROM pg_catalog.jsonb_array_elements(coalesce(p_parlay -> 'legs', '[]'::jsonb))
+         WITH ORDINALITY AS leg(v, ord);
+
+  PERFORM app_private.write_ledger_root(v_ws, 'parlay', v_id);
+  PERFORM app_private.write_undo(v_ws, 'save_parlay',
+    jsonb_build_object('parlay', jsonb_build_object('id', v_id)),
+    '{}'::jsonb, '[]'::jsonb,
+    jsonb_build_array(jsonb_build_object('table','parlays','id',v_id)));
+
+  RETURN QUERY SELECT v_id;
+END $$;
+
+-- parlayRepository.remove. Owner/editor, NO expected revision (parlays are
+-- immutable). Legs go before the parlay under the RESTRICT FK. Undo re-inserts
+-- the parlay and its legs, then un-tombstones.
+CREATE FUNCTION public.fm_rpc_delete_parlay(p_slug text, p_parlay_id text)
+RETURNS TABLE (removed text)
+LANGUAGE plpgsql VOLATILE SECURITY DEFINER SET search_path = '' AS $$
+DECLARE v_ws uuid; v_row app_private.parlays; v_legs jsonb;
+BEGIN
+  v_ws := app_private.require_role(p_slug, ARRAY['owner','editor']);
+  SELECT * INTO v_row FROM app_private.parlays pa
+   WHERE pa.workspace_id = v_ws AND pa.id = p_parlay_id;
+  IF NOT FOUND THEN RAISE EXCEPTION 'parlay not found' USING ERRCODE = '42704'; END IF;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(l.*) ORDER BY l.leg_index), '[]'::jsonb)
+    INTO v_legs FROM app_private.parlay_legs l
+   WHERE l.workspace_id = v_ws AND l.parlay_id = p_parlay_id;
+
+  DELETE FROM app_private.parlay_legs l
+   WHERE l.workspace_id = v_ws AND l.parlay_id = p_parlay_id;
+  DELETE FROM app_private.parlays pa
+   WHERE pa.workspace_id = v_ws AND pa.id = p_parlay_id;
+  PERFORM app_private.tombstone_root(v_ws, 'parlay', p_parlay_id);
+
+  PERFORM app_private.write_undo(v_ws, 'delete_parlay',
+    jsonb_build_object('parlay', to_jsonb(v_row), 'legs', v_legs, 'seedItems',
+      jsonb_build_array(jsonb_build_object('rootType','parlay','rootId',p_parlay_id))),
+    '{}'::jsonb, jsonb_build_array(jsonb_build_object('table','parlays','id',p_parlay_id)));
+
+  RETURN QUERY SELECT p_parlay_id;
+END $$;
+
 -- ── (4) transfer ownership ──────────────────────────────────────────────────
 ALTER SCHEMA app_private OWNER TO fm_table_owner;
 DO $$ DECLARE r record; BEGIN
@@ -3691,6 +4097,10 @@ GRANT EXECUTE ON FUNCTION app_private.insert_prediction_aggregate(uuid, jsonb) T
 GRANT EXECUTE ON FUNCTION app_private.remove_created_aggregate(uuid, jsonb, text) TO fm_member_api;
 -- Cluster 6 wager plumbing: fm_member_api only.
 GRANT EXECUTE ON FUNCTION app_private.lock_wager(uuid, uuid, text) TO fm_member_api;
+-- Cluster 7 prop/parlay/rename/confirm-all plumbing: fm_member_api only.
+GRANT EXECUTE ON FUNCTION app_private.write_ledger_root(uuid, text, text) TO fm_member_api;
+GRANT EXECUTE ON FUNCTION app_private.tombstone_root(uuid, text, text) TO fm_member_api;
+GRANT EXECUTE ON FUNCTION app_private.check_pending_vector(uuid, jsonb) TO fm_member_api;
 -- CHECK-constraint helpers are evaluated as the role PERFORMING THE WRITE, not
 -- as the table owner, so fm_member_api needs EXECUTE on every helper reachable
 -- from a constraint on a table it writes. Without these the cluster failed with
