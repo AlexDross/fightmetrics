@@ -3976,6 +3976,344 @@ BEGIN
   RETURN QUERY SELECT p_parlay_id;
 END $$;
 
+-- ── Cluster 8: workspace (current, seedVersion, setSeedVersion, import, reset) ─
+-- seed_version, revisions and the seed_items ledger are WORKSPACE STORAGE, never
+-- Store content. current/seedVersion are member reads; setSeedVersion/import/reset
+-- are owner-only. import and reset are guarded by an explicit backup confirmation
+-- rather than undo, because a database transaction cannot prove a user kept a
+-- file. Both do their bulk work through a table-owner helper (bypassing RLS) so
+-- they can clear another user's undo entries and write the owner-only seed_items;
+-- the owner gate is enforced once, in the public RPC.
+
+-- workspaceRepository.current. Member read; carries revision so setSeedVersion has
+-- an expected-revision token. Non-members get nothing (fm_member_* boundary).
+CREATE FUNCTION public.fm_member_workspace(p_slug text)
+RETURNS TABLE (id uuid, slug text, is_public boolean, schema_version int,
+               seed_version text, migrated_at timestamptz, revision text)
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = '' AS $$
+  SELECT w.id, w.slug, w.is_public, w.schema_version, w.seed_version,
+         w.migrated_at, w.revision::text
+    FROM app_private.workspaces w
+   WHERE w.slug = p_slug
+     AND app_private.is_member(w.id, ARRAY['owner','editor','viewer'])
+$$;
+
+-- workspaceRepository.seedVersion. Member read of the storage-only seed version.
+CREATE FUNCTION public.fm_member_seed_version(p_slug text)
+RETURNS text LANGUAGE sql STABLE SECURITY DEFINER SET search_path = '' AS $$
+  SELECT w.seed_version FROM app_private.workspaces w
+   WHERE w.slug = p_slug
+     AND app_private.is_member(w.id, ARRAY['owner','editor','viewer'])
+$$;
+
+-- workspaceRepository.setSeedVersion. Owner-only, revision-checked on the
+-- workspace row. Writes storage metadata only; no undo entry (it is not Store
+-- content and the reference records none).
+CREATE FUNCTION public.fm_rpc_set_seed_version(
+  p_slug text, p_version text, p_expected_revision text)
+RETURNS TABLE (seed_version text, revision text)
+LANGUAGE plpgsql VOLATILE SECURITY DEFINER SET search_path = '' AS $$
+DECLARE v_ws uuid; v_row app_private.workspaces; v_new bigint;
+BEGIN
+  v_ws := app_private.require_role(p_slug, ARRAY['owner']);
+  SELECT * INTO v_row FROM app_private.workspaces w
+   WHERE w.id = v_ws FOR UPDATE;
+  IF v_row.revision <> app_private.parse_revision(p_expected_revision) THEN
+    PERFORM app_private.raise_stale_write(v_row.revision);
+  END IF;
+  UPDATE app_private.workspaces w SET seed_version = p_version
+   WHERE w.id = v_ws RETURNING w.revision INTO v_new;
+  RETURN QUERY SELECT p_version, v_new::text;
+END $$;
+
+-- Delete EVERY entity, the ledger and the undo log for a workspace, in FK-safe
+-- order with the run<->snapshot cycle deferred. Table-owner so it clears rows
+-- (undo of other users, owner-only seed_items) regardless of RLS. The workspaces
+-- row and its identity (slug, is_public) are left untouched.
+CREATE FUNCTION app_private.clear_workspace_entities(p_ws uuid)
+RETURNS void LANGUAGE plpgsql VOLATILE SECURITY DEFINER SET search_path = '' AS $$
+BEGIN
+  SET CONSTRAINTS app_private.run_decision_snapshot_fk,
+                  app_private.prediction_snapshots_run_fk DEFERRED;
+  DELETE FROM app_private.tracked_positions   WHERE workspace_id = p_ws;
+  DELETE FROM app_private.wagers              WHERE workspace_id = p_ws;
+  DELETE FROM app_private.betting_assessments WHERE workspace_id = p_ws;
+  DELETE FROM app_private.market_snapshots    WHERE workspace_id = p_ws;
+  DELETE FROM app_private.prediction_snapshots WHERE workspace_id = p_ws;
+  DELETE FROM app_private.prediction_runs     WHERE workspace_id = p_ws;
+  DELETE FROM app_private.parlay_legs         WHERE workspace_id = p_ws;
+  DELETE FROM app_private.parlays             WHERE workspace_id = p_ws;
+  DELETE FROM app_private.props               WHERE workspace_id = p_ws;
+  DELETE FROM app_private.bouts               WHERE workspace_id = p_ws;
+  DELETE FROM app_private.events              WHERE workspace_id = p_ws;
+  DELETE FROM app_private.seed_items          WHERE workspace_id = p_ws;
+  DELETE FROM app_private.undo_log            WHERE workspace_id = p_ws;
+END $$;
+
+-- workspaceRepository.reset. Owner-only, backup-confirmed. Clears entities, the
+-- ledger and seed_version; a reset workspace is re-seedable from scratch so
+-- nothing may stay tombstoned. meta (schema_version, migrated_at) is Store
+-- content and stays exactly as it was.
+CREATE FUNCTION public.fm_rpc_reset_workspace(p_slug text, p_backup_confirmed boolean)
+RETURNS TABLE (reset boolean)
+LANGUAGE plpgsql VOLATILE SECURITY DEFINER SET search_path = '' AS $$
+DECLARE v_ws uuid;
+BEGIN
+  v_ws := app_private.require_role(p_slug, ARRAY['owner']);
+  IF p_backup_confirmed IS NOT TRUE THEN
+    RAISE EXCEPTION 'backupConfirmed: a confirmed backup is required' USING ERRCODE = '23514';
+  END IF;
+  PERFORM app_private.clear_workspace_entities(v_ws);
+  UPDATE app_private.workspaces w SET seed_version = NULL WHERE w.id = v_ws;
+  RETURN QUERY SELECT true;
+END $$;
+
+-- Insert every entity of a domain Store into a (cleared) workspace, mapping the
+-- camelCase domain shape to columns and reconstructing every normalized union.
+-- FK-safe insert order; the run<->snapshot cycle deferred. Rebuilds the ledger
+-- with one live root per predictionRun / prop / parlay. Table-owner: bypasses
+-- RLS for the bulk load. The store's structural validity is enforced by the
+-- CHECKs, FKs and triggers here — anything invalid aborts the whole import.
+CREATE FUNCTION app_private.import_store_entities(p_ws uuid, p_store jsonb)
+RETURNS void LANGUAGE plpgsql VOLATILE SECURITY DEFINER SET search_path = '' AS $$
+DECLARE fp jsonb; rc jsonb; pv jsonb; st jsonb; fr jsonb; rv jsonb; tg jsonb;
+BEGIN
+  SET CONSTRAINTS app_private.run_decision_snapshot_fk,
+                  app_private.prediction_snapshots_run_fk DEFERRED;
+
+  INSERT INTO app_private.events (workspace_id, id, promotion, name, date,
+    external_ids, created_at, updated_at)
+  SELECT p_ws, (e.value ->> 'id')::uuid, e.value ->> 'promotion', e.value ->> 'name',
+    (e.value ->> 'date')::date,
+    CASE WHEN e.value -> 'externalIds' IS NULL OR e.value -> 'externalIds' = 'null'::jsonb
+         THEN '{}'::jsonb ELSE e.value -> 'externalIds' END,
+    (e.value ->> 'createdAt')::timestamptz, (e.value ->> 'updatedAt')::timestamptz
+  FROM pg_catalog.jsonb_array_elements(coalesce(p_store -> 'events', '[]'::jsonb)) e;
+
+  INSERT INTO app_private.bouts (workspace_id, id, event_id,
+    corner_a_display_name, corner_a_fighter_key, corner_a_fighter_id,
+    corner_b_display_name, corner_b_fighter_key, corner_b_fighter_id,
+    division, board_order, scheduled_rounds, result_status, result_outcome,
+    result_method, external_ids, created_at, updated_at)
+  SELECT p_ws, (b.value ->> 'id')::uuid, (b.value ->> 'eventId')::uuid,
+    b.value -> 'cornerA' ->> 'displayName', b.value -> 'cornerA' ->> 'fighterKey',
+    (b.value -> 'cornerA' ->> 'fighterId')::uuid,
+    b.value -> 'cornerB' ->> 'displayName', b.value -> 'cornerB' ->> 'fighterKey',
+    (b.value -> 'cornerB' ->> 'fighterId')::uuid,
+    b.value ->> 'division', (b.value ->> 'boardOrder')::int,
+    (b.value ->> 'scheduledRounds')::int, b.value -> 'result' ->> 'status',
+    CASE WHEN b.value -> 'result' ->> 'status' = 'resolved' THEN b.value -> 'result' ->> 'outcome' END,
+    CASE WHEN b.value -> 'result' ->> 'status' = 'resolved' THEN b.value -> 'result' ->> 'method' END,
+    CASE WHEN b.value -> 'externalIds' IS NULL OR b.value -> 'externalIds' = 'null'::jsonb
+         THEN '{}'::jsonb ELSE b.value -> 'externalIds' END,
+    (b.value ->> 'createdAt')::timestamptz, (b.value ->> 'updatedAt')::timestamptz
+  FROM pg_catalog.jsonb_array_elements(coalesce(p_store -> 'bouts', '[]'::jsonb)) b;
+
+  INSERT INTO app_private.prediction_runs (workspace_id, id, bout_id,
+    legacy_entry_id, created_at, decision_snapshot_id,
+    target_event_date_at_capture, finish_status, finish_ko_pct, finish_sub_pct,
+    finish_dec_pct, finish_leaders, corner_a_is_prospect_at_capture,
+    corner_b_is_prospect_at_capture, includes_prospect_at_capture,
+    provenance_completeness)
+  SELECT p_ws, r.value ->> 'id', (r.value ->> 'boutId')::uuid,
+    r.value ->> 'legacyEntryId', (r.value ->> 'createdAt')::timestamptz,
+    (r.value ->> 'decisionSnapshotId')::uuid,
+    (r.value ->> 'targetEventDateAtCapture')::date,
+    (r.value -> 'finishProjection') ->> 'status',
+    CASE WHEN (r.value -> 'finishProjection') ->> 'status' = 'computed'
+         THEN ((r.value -> 'finishProjection') ->> 'koPct')::int END,
+    CASE WHEN (r.value -> 'finishProjection') ->> 'status' = 'computed'
+         THEN ((r.value -> 'finishProjection') ->> 'subPct')::int END,
+    CASE WHEN (r.value -> 'finishProjection') ->> 'status' = 'computed'
+         THEN ((r.value -> 'finishProjection') ->> 'decPct')::int END,
+    CASE WHEN (r.value -> 'finishProjection') ->> 'status' = 'computed'
+         THEN (SELECT array_agg(v ORDER BY ord)
+                 FROM pg_catalog.jsonb_array_elements_text(
+                        (r.value -> 'finishProjection') -> 'leaders')
+                      WITH ORDINALITY AS t(v, ord)) END,
+    (r.value ->> 'cornerAIsProspectAtCapture')::boolean,
+    (r.value ->> 'cornerBIsProspectAtCapture')::boolean,
+    (r.value ->> 'includesProspectAtCapture')::boolean,
+    r.value ->> 'provenanceCompleteness'
+  FROM pg_catalog.jsonb_array_elements(coalesce(p_store -> 'predictionRuns', '[]'::jsonb)) r;
+
+  INSERT INTO app_private.prediction_snapshots (workspace_id, id, run_id, bout_id,
+    basis, model_version, model_coef_hash, prob_a, prob_b, winner_corner,
+    captured_at, capture_mode, reconstruction_type, reconstruction_source_commit,
+    reconstruction_prior_v2_p_a, reconstruction_prior_v2_p_b, feature_vector,
+    fight_history_cutoff, source_manifest)
+  SELECT p_ws, (s.value ->> 'id')::uuid, s.value ->> 'runId', (s.value ->> 'boutId')::uuid,
+    s.value ->> 'basis', s.value ->> 'modelVersion', s.value ->> 'modelCoefHash',
+    (s.value ->> 'probA')::double precision, (s.value ->> 'probB')::double precision,
+    s.value ->> 'winnerCorner', (s.value ->> 'capturedAt')::timestamptz,
+    s.value ->> 'captureMode',
+    CASE WHEN s.value -> 'reconstruction' = 'null'::jsonb OR s.value -> 'reconstruction' IS NULL
+         THEN NULL ELSE s.value -> 'reconstruction' ->> 'type' END,
+    CASE WHEN s.value -> 'reconstruction' = 'null'::jsonb OR s.value -> 'reconstruction' IS NULL
+         THEN NULL ELSE s.value -> 'reconstruction' ->> 'sourceCommit' END,
+    CASE WHEN s.value -> 'reconstruction' = 'null'::jsonb OR s.value -> 'reconstruction' IS NULL
+           OR s.value -> 'reconstruction' -> 'priorV2' = 'null'::jsonb
+         THEN NULL ELSE (s.value -> 'reconstruction' -> 'priorV2' ->> 'v2pA')::double precision END,
+    CASE WHEN s.value -> 'reconstruction' = 'null'::jsonb OR s.value -> 'reconstruction' IS NULL
+           OR s.value -> 'reconstruction' -> 'priorV2' = 'null'::jsonb
+         THEN NULL ELSE (s.value -> 'reconstruction' -> 'priorV2' ->> 'v2pB')::double precision END,
+    CASE WHEN s.value -> 'featureVector' = 'null'::jsonb OR s.value -> 'featureVector' IS NULL
+         THEN NULL ELSE s.value -> 'featureVector' END,
+    CASE WHEN s.value -> 'fightHistoryCutoff' = 'null'::jsonb OR s.value -> 'fightHistoryCutoff' IS NULL
+         THEN NULL ELSE s.value -> 'fightHistoryCutoff' END,
+    CASE WHEN s.value -> 'sourceManifest' = 'null'::jsonb OR s.value -> 'sourceManifest' IS NULL
+         THEN NULL ELSE s.value -> 'sourceManifest' END
+  FROM pg_catalog.jsonb_array_elements(coalesce(p_store -> 'predictionSnapshots', '[]'::jsonb)) s;
+
+  INSERT INTO app_private.market_snapshots (workspace_id, id, bout_id, captured_at,
+    source, odds_a, odds_b)
+  SELECT p_ws, (m.value ->> 'id')::uuid, (m.value ->> 'boutId')::uuid,
+    (m.value ->> 'capturedAt')::timestamptz, m.value ->> 'source',
+    (m.value ->> 'oddsA')::int, (m.value ->> 'oddsB')::int
+  FROM pg_catalog.jsonb_array_elements(coalesce(p_store -> 'marketSnapshots', '[]'::jsonb)) m;
+
+  INSERT INTO app_private.betting_assessments (workspace_id, id, bout_id, run_id,
+    prediction_snapshot_id, market_snapshot_id, frozen_at, fair_line_a, fair_line_b,
+    edge_a, edge_b, ev_a, ev_b, kelly_a, kelly_b, tier, recommended_corner,
+    tier_provenance, recommended_corner_provenance)
+  SELECT p_ws, (a.value ->> 'id')::uuid, (a.value ->> 'boutId')::uuid,
+    a.value ->> 'runId', (a.value ->> 'predictionSnapshotId')::uuid,
+    (a.value ->> 'marketSnapshotId')::uuid, (a.value ->> 'frozenAt')::timestamptz,
+    (a.value ->> 'fairLineA')::int, (a.value ->> 'fairLineB')::int,
+    (a.value ->> 'edgeA')::double precision, (a.value ->> 'edgeB')::double precision,
+    (a.value ->> 'evA')::double precision, (a.value ->> 'evB')::double precision,
+    (a.value ->> 'kellyA')::double precision, (a.value ->> 'kellyB')::double precision,
+    a.value ->> 'tier', a.value ->> 'recommendedCorner',
+    a.value ->> 'tierProvenance', a.value ->> 'recommendedCornerProvenance'
+  FROM pg_catalog.jsonb_array_elements(coalesce(p_store -> 'bettingAssessments', '[]'::jsonb)) a;
+
+  INSERT INTO app_private.tracked_positions (workspace_id, id, bout_id, assessment_id,
+    market_snapshot_id, origin, corner, stake_units, stake_source, opened_at,
+    settlement_status, settlement_outcome, financial_status, financial_reason,
+    profit_units, settled_at, review_status, review_reason, confirmed_at, notes)
+  SELECT p_ws, (t.value ->> 'id')::uuid, (t.value ->> 'boutId')::uuid,
+    (t.value ->> 'assessmentId')::uuid, (t.value ->> 'marketSnapshotId')::uuid,
+    t.value ->> 'origin', t.value ->> 'corner', (t.value ->> 'stakeUnits')::numeric,
+    t.value ->> 'stakeSource', (t.value ->> 'openedAt')::timestamptz,
+    (t.value -> 'settlement') ->> 'status',
+    CASE WHEN (t.value -> 'settlement') ->> 'status' = 'settled'
+         THEN (t.value -> 'settlement') ->> 'outcome' END,
+    CASE WHEN (t.value -> 'settlement') ->> 'status' = 'settled'
+         THEN (t.value -> 'settlement' -> 'financialResult') ->> 'status' END,
+    CASE WHEN (t.value -> 'settlement' -> 'financialResult') ->> 'status' = 'uncomputable'
+         THEN (t.value -> 'settlement' -> 'financialResult') ->> 'reason' END,
+    CASE WHEN (t.value -> 'settlement' -> 'financialResult') ->> 'status' = 'computed'
+         THEN ((t.value -> 'settlement' -> 'financialResult') ->> 'profitUnits')::double precision END,
+    CASE WHEN (t.value -> 'settlement') ->> 'status' = 'settled'
+         THEN ((t.value -> 'settlement') ->> 'settledAt')::timestamptz END,
+    (t.value -> 'reviewState') ->> 'status',
+    CASE WHEN (t.value -> 'reviewState') ->> 'status' <> 'notRequired'
+         THEN (t.value -> 'reviewState') ->> 'reason' END,
+    CASE WHEN (t.value -> 'reviewState') ->> 'status' = 'confirmed'
+         THEN ((t.value -> 'reviewState') ->> 'confirmedAt')::timestamptz END,
+    t.value ->> 'notes'
+  FROM pg_catalog.jsonb_array_elements(coalesce(p_store -> 'trackedPositions', '[]'::jsonb)) t;
+
+  INSERT INTO app_private.wagers (workspace_id, id, bout_id, assessment_id,
+    market_snapshot_id, corner, stake_units, placed_at, settlement_status,
+    settlement_outcome, financial_status, financial_reason, profit_units,
+    settled_at, notes, external_ids)
+  SELECT p_ws, (g.value ->> 'id')::uuid, (g.value ->> 'boutId')::uuid,
+    (g.value ->> 'assessmentId')::uuid, (g.value ->> 'marketSnapshotId')::uuid,
+    g.value ->> 'corner', (g.value ->> 'stakeUnits')::numeric,
+    (g.value ->> 'placedAt')::timestamptz, (g.value -> 'settlement') ->> 'status',
+    CASE WHEN (g.value -> 'settlement') ->> 'status' = 'settled'
+         THEN (g.value -> 'settlement') ->> 'outcome' END,
+    CASE WHEN (g.value -> 'settlement') ->> 'status' = 'settled'
+         THEN (g.value -> 'settlement' -> 'financialResult') ->> 'status' END,
+    CASE WHEN (g.value -> 'settlement' -> 'financialResult') ->> 'status' = 'uncomputable'
+         THEN (g.value -> 'settlement' -> 'financialResult') ->> 'reason' END,
+    CASE WHEN (g.value -> 'settlement' -> 'financialResult') ->> 'status' = 'computed'
+         THEN ((g.value -> 'settlement' -> 'financialResult') ->> 'profitUnits')::double precision END,
+    CASE WHEN (g.value -> 'settlement') ->> 'status' = 'settled'
+         THEN ((g.value -> 'settlement') ->> 'settledAt')::timestamptz END,
+    g.value ->> 'notes',
+    CASE WHEN g.value -> 'externalIds' IS NULL OR g.value -> 'externalIds' = 'null'::jsonb
+         THEN '{}'::jsonb ELSE g.value -> 'externalIds' END
+  FROM pg_catalog.jsonb_array_elements(coalesce(p_store -> 'wagers', '[]'::jsonb)) g;
+
+  INSERT INTO app_private.props (workspace_id, id, event_id, target_kind,
+    target_bout_id, target_corner, target_event_id, method, prop_type, label,
+    odds, stake_units, result, pick_source, created_at)
+  SELECT p_ws, pr.value ->> 'id', (pr.value ->> 'eventId')::uuid,
+    (pr.value -> 'target') ->> 'kind',
+    CASE WHEN (pr.value -> 'target') ->> 'kind' = 'bout' THEN ((pr.value -> 'target') ->> 'boutId')::uuid END,
+    CASE WHEN (pr.value -> 'target') ->> 'kind' = 'bout' THEN (pr.value -> 'target') ->> 'corner' END,
+    CASE WHEN (pr.value -> 'target') ->> 'kind' = 'event' THEN ((pr.value -> 'target') ->> 'eventId')::uuid END,
+    pr.value ->> 'method', pr.value ->> 'propType', pr.value ->> 'label',
+    (pr.value ->> 'odds')::int, (pr.value ->> 'stakeUnits')::numeric,
+    pr.value ->> 'result', pr.value ->> 'pickSource', (pr.value ->> 'createdAt')::timestamptz
+  FROM pg_catalog.jsonb_array_elements(coalesce(p_store -> 'props', '[]'::jsonb)) pr;
+
+  INSERT INTO app_private.parlays (workspace_id, id, event_id, combined_odds,
+    stake_units, pick_source, created_at)
+  SELECT p_ws, pa.value ->> 'id', (pa.value ->> 'eventId')::uuid,
+    (pa.value ->> 'combinedOdds')::int, (pa.value ->> 'stakeUnits')::numeric,
+    pa.value ->> 'pickSource', (pa.value ->> 'createdAt')::timestamptz
+  FROM pg_catalog.jsonb_array_elements(coalesce(p_store -> 'parlays', '[]'::jsonb)) pa;
+
+  INSERT INTO app_private.parlay_legs (workspace_id, parlay_id, leg_index, bout_id,
+    picked_corner, model_default_corner, model_prob_at_build, overridden)
+  SELECT p_ws, pa.value ->> 'id', (leg.ord - 1)::int, (leg.v ->> 'boutId')::uuid,
+    leg.v ->> 'pickedCorner', leg.v ->> 'modelDefaultCorner',
+    (leg.v ->> 'modelProbAtBuild')::double precision, (leg.v ->> 'overridden')::boolean
+  FROM pg_catalog.jsonb_array_elements(coalesce(p_store -> 'parlays', '[]'::jsonb)) pa,
+       pg_catalog.jsonb_array_elements(coalesce(pa.value -> 'legs', '[]'::jsonb))
+         WITH ORDINALITY AS leg(v, ord);
+
+  -- Rebuild the seed ledger: one live root per predictionRun / prop / parlay.
+  INSERT INTO app_private.seed_items (workspace_id, root_type, root_id,
+    first_seed_version, removed_at)
+  SELECT p_ws, 'predictionRun', r.value ->> 'id', NULL::text, NULL::timestamptz
+    FROM pg_catalog.jsonb_array_elements(coalesce(p_store -> 'predictionRuns', '[]'::jsonb)) r
+  UNION ALL SELECT p_ws, 'prop', pr.value ->> 'id', NULL::text, NULL::timestamptz
+    FROM pg_catalog.jsonb_array_elements(coalesce(p_store -> 'props', '[]'::jsonb)) pr
+  UNION ALL SELECT p_ws, 'parlay', pa.value ->> 'id', NULL::text, NULL::timestamptz
+    FROM pg_catalog.jsonb_array_elements(coalesce(p_store -> 'parlays', '[]'::jsonb)) pa
+  ON CONFLICT (workspace_id, root_type, root_id) DO NOTHING;
+END $$;
+
+-- workspaceRepository.importStore. Owner-only, backup-confirmed, rejects an
+-- unknown future schema version. ATOMIC whole-store replacement: clear then
+-- insert in one transaction, so a store that violates any CHECK/FK/trigger aborts
+-- with NO partial write. StoreSchema validation proper lives in the JS adapter
+-- (Gate 6) ahead of this call; here the schema is enforced structurally by the
+-- database. seed_version is cleared: imported content is no product of a seed.
+CREATE FUNCTION public.fm_rpc_import_store(
+  p_slug text, p_store jsonb, p_backup_confirmed boolean)
+RETURNS TABLE (imported boolean)
+LANGUAGE plpgsql VOLATILE SECURITY DEFINER SET search_path = '' AS $$
+DECLARE v_ws uuid; v_schema int; v_incoming int;
+BEGIN
+  v_ws := app_private.require_role(p_slug, ARRAY['owner']);
+  IF p_backup_confirmed IS NOT TRUE THEN
+    RAISE EXCEPTION 'backupConfirmed: a confirmed backup is required' USING ERRCODE = '23514';
+  END IF;
+  IF p_store IS NULL OR pg_catalog.jsonb_typeof(p_store) <> 'object' THEN
+    RAISE EXCEPTION 'store must be an object' USING ERRCODE = '23514';
+  END IF;
+  SELECT w.schema_version INTO v_schema FROM app_private.workspaces w WHERE w.id = v_ws;
+  v_incoming := (p_store #>> '{meta,schemaVersion}')::int;
+  IF v_incoming IS NOT NULL AND v_incoming > v_schema THEN
+    RAISE EXCEPTION 'unknownFutureVersion: incoming schema % exceeds %', v_incoming, v_schema
+      USING ERRCODE = '23514';
+  END IF;
+
+  PERFORM app_private.clear_workspace_entities(v_ws);
+  PERFORM app_private.import_store_entities(v_ws, p_store);
+  UPDATE app_private.workspaces w
+     SET schema_version = coalesce(v_incoming, w.schema_version),
+         migrated_at = (p_store #>> '{meta,migratedAt}')::timestamptz,
+         seed_version = NULL
+   WHERE w.id = v_ws;
+  RETURN QUERY SELECT true;
+END $$;
+
 -- ── (4) transfer ownership ──────────────────────────────────────────────────
 ALTER SCHEMA app_private OWNER TO fm_table_owner;
 DO $$ DECLARE r record; BEGIN
@@ -4101,6 +4439,9 @@ GRANT EXECUTE ON FUNCTION app_private.lock_wager(uuid, uuid, text) TO fm_member_
 GRANT EXECUTE ON FUNCTION app_private.write_ledger_root(uuid, text, text) TO fm_member_api;
 GRANT EXECUTE ON FUNCTION app_private.tombstone_root(uuid, text, text) TO fm_member_api;
 GRANT EXECUTE ON FUNCTION app_private.check_pending_vector(uuid, jsonb) TO fm_member_api;
+-- Cluster 8 workspace plumbing: fm_member_api only.
+GRANT EXECUTE ON FUNCTION app_private.clear_workspace_entities(uuid) TO fm_member_api;
+GRANT EXECUTE ON FUNCTION app_private.import_store_entities(uuid, jsonb) TO fm_member_api;
 -- CHECK-constraint helpers are evaluated as the role PERFORMING THE WRITE, not
 -- as the table owner, so fm_member_api needs EXECUTE on every helper reachable
 -- from a constraint on a table it writes. Without these the cluster failed with

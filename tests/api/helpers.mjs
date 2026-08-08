@@ -122,6 +122,10 @@ export const WS_COMPLEMENT = '11110000-0000-4000-8000-00000000000d';
 // and an event to rename. Seeded in applyFixture with explicit ids because every
 // single-digit template slot is taken.
 export const WS_PROP = '11110000-0000-4000-8000-00000000000e';
+// Cluster 8's workspace: a full aggregate to export, reset and re-import. It
+// reuses the cluster-7 aggregate's ids — legal because every key is composite
+// (workspace_id, id), so identical ids in a different workspace are distinct rows.
+export const WS_WS = '11110000-0000-4000-8000-00000000000f';
 
 // WS_PUBLIC's snapshot probability is CENTRALLY OWNED here — a fixed, deliberately
 // non-trivial float8 pair whose complement survives the transport exactly. It is
@@ -291,7 +295,7 @@ INSERT INTO app_private.parlay_legs (workspace_id, parlay_id, leg_index, bout_id
 VALUES ('${wsId}', '1700000000120-bbbbbb', 0,
         'abb00000-0000-4000-8000-000000000001', 'A', false) ON CONFLICT DO NOTHING;`;
 
-const IDS = `'${WS_PUBLIC}','${WS_PRIVATE}','${WS_CLAIM}','${WS_RPC}','${WS_BOUT}','${WS_UNDO}','${WS_DELETE}','${WS_DELETE_PIN}','${WS_SAVE}','${WS_WAGER}','${WS_PROP}'`;
+const IDS = `'${WS_PUBLIC}','${WS_PRIVATE}','${WS_CLAIM}','${WS_RPC}','${WS_BOUT}','${WS_UNDO}','${WS_DELETE}','${WS_DELETE_PIN}','${WS_SAVE}','${WS_WAGER}','${WS_PROP}','${WS_WS}'`;
 
 /**
  * Deterministic fixture, applied to a CLEAN database.
@@ -349,6 +353,7 @@ ${workspace(WS_DELETE_PIN, 'api-delete-pin', false)}
 ${workspace(WS_SAVE, 'api-save', false)}
 ${workspace(WS_WAGER, 'api-wager', false)}
 ${workspace(WS_PROP, 'api-prop', false)}
+${workspace(WS_WS, 'api-ws', false)}
 
 INSERT INTO app_private.workspace_members (workspace_id, user_id, role)
 VALUES ('${WS_PUBLIC}', '${USER_MEMBER}', 'owner'),
@@ -378,7 +383,10 @@ VALUES ('${WS_PRIVATE}', '${USER_VIEWER}', 'viewer'),
        ('${WS_WAGER}', '${USER_VIEWER}', 'viewer'),
        ('${WS_PROP}', '${USER_MEMBER}', 'owner'),
        ('${WS_PROP}', '${USER_OUTSIDER}', 'editor'),
-       ('${WS_PROP}', '${USER_VIEWER}', 'viewer')
+       ('${WS_PROP}', '${USER_VIEWER}', 'viewer'),
+       ('${WS_WS}', '${USER_MEMBER}', 'owner'),
+       ('${WS_WS}', '${USER_OUTSIDER}', 'editor'),
+       ('${WS_WS}', '${USER_VIEWER}', 'viewer')
 ON CONFLICT DO NOTHING;
 -- api-claim is deliberately left with ZERO owners for the concurrency test.
 
@@ -392,6 +400,7 @@ ${aggregate(WS_DELETE_PIN, 8, 0.5, 0.5)}
 ${eventAndBout(WS_SAVE, 9)}
 ${aggregate(WS_WAGER, 1, 0.5, 0.5)}
 ${cluster7Aggregate(WS_PROP)}
+${cluster7Aggregate(WS_WS)}
 
 -- The RPC cluster's own position starts review-pending. confirmed_at is NULLed
 -- explicitly: leaving it populated violates tracked_positions_review_union, and

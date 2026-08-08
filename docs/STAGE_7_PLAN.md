@@ -14,7 +14,7 @@ Base: `main` @ `89f6c45`. Backend decision: Supabase/Postgres.
 | 0 · Preflight | Docker runtime present and running; ports 54321–54324 free; Node supports the pinned CLI | ✅ |
 | 1 | This document + `feat(data): add repository interfaces over the durable schema` — in-memory only | ✅ |
 | 2 | `feat(data): add Postgres schema, roles, policies and RPCs` — pinned Supabase CLI as devDependency, committed `supabase/`, full local stack, all SQL/API tests. **No hosted project.** | ✅ |
-| 2 · status | **PARTIAL — RPC clusters 1–7 landed.** Landed: roles, ownership transfer, ACLs, `app_private` schema, all 15 tables with composite FKs and the deferrable run↔snapshot cycle, revision/slug/settlement triggers, RLS on every table, a working authenticated path (caller resolution + zero-owner bootstrap), the `fm_read_*`/`fm_member_*` surfaces **for everything the current app renders**, SQL-side measurements, and — as of cluster 7 — 159 assertions green under `npm run test:db` and 129 under `npm run test:api`, including StoreSchema validation of the export and genuine two-client claim concurrency. (The per-cluster API/pgTAP counts below are the historical measurements at each cluster's landing.) **RPC cluster 1 (tracked-position edits)** is complete: `fm_rpc_change_tracked_corner`, `fm_rpc_amend_tracked_price`, `fm_rpc_confirm_entry` and `fm_member_undo_list`, with authorization, expected-revision conflicts, `stale_write` carrying the live server revision, undo records, settled-edit recomputation and rollback proof — 40 API assertions and 159 pgTAP. **RPC cluster 2 (bout lifecycle)** is complete: `fm_rpc_grade_bout`, `fm_rpc_return_bout_to_pending` and the deferred `fm_member_wagers_by_bout` read, with full revision-vector validation under row locks, `stale_write` carrying the real server revision, undo prior-state, mixed outcomes, and grade/return proven true inverses — 66 API assertions. **RPC cluster 3 (undo foundation)** is complete: `fm_rpc_undo` for all five implemented operations (tracked-corner change, price amendment, confirmation, grade, return-to-pending), with the table-owner `lock_undo_row`/`current_revision`/`check_undo_vector`/`remove_created_rows`/`restore_position` helpers, creator/role/workspace/TTL/single-use/consumed enforcement, undo-row-lock serialization of concurrent undos, `stale_write` naming every drifted row, atomic rollback, safe removal of forward-created market snapshots, exact prior-state round trips for every operation, no undo-of-undo, `prior_state` withheld from the read surface, and `absent_ids` validated with restoration reserved for cluster 4 — **19 API assertions, 85 API total**. `is_string_map` is now `EXECUTE`-granted to `fm_member_api` (four constraint helpers, not three), because settling a wager during grade/undo re-evaluates its `external_ids` CHECK. **RPC cluster 4 (deletion)** is complete: `fm_rpc_delete_pending_run` and `fm_rpc_clear_graded`, with the table-owner `delete_aggregate`/`check_graded_vector`/`deleted_row_exists`/`assert_ids_absent`/`restore_deleted_aggregate`/`untombstone_roots` helpers; proven-orphan pruning in the documented order (position → assessment → market → snapshots → run → stop), the run-survives-iff-a-wager-pins-its-assessment rule, unconditional root tombstoning with tombstone-as-authoritative `notFound` (no double delete), conflict-checked on the tracked position (delete) and an owner-only graded vector (clear), and the `absent_ids` restoration path in `fm_rpc_undo` that re-inserts a deleted aggregate column-complete (`to_jsonb`/`jsonb_populate_record`, immutable rows via plain `INSERT`, run↔snapshot cycle deferred) after `assert_ids_absent`, then un-tombstones — **10 API assertions, 95 API total**. Deletion is by run root only, matching the frozen contract and the in-memory reference; the stray `delete_tracked_position` RPC was withdrawn (see §5/§6). **RPC cluster 5 (prediction save)** is complete: `fm_rpc_save_prediction_run` and `fm_member_prediction_aggregate`, with the table-owner `insert_prediction_aggregate` (domain-shape → columns, reconstructing the finishProjection/settlement/reviewState/reconstruction unions, cyclic pair deferred, live ledger root written as owner) and `remove_created_aggregate` helpers; owner/editor with the bout lock (it creates a dependent), and a `save_prediction_run` branch in `fm_rpc_undo` that removes exactly the created rows and the ledger row after `check_undo_vector` proves the created position is untouched. This **closes the HTTP write leg for complementarity**: `probA`/`probB` cross PostgREST as JS numbers on the way in and read back `Object.is`-identical, summing to exactly 1 — **7 API assertions, 102 API total**. **RPC cluster 6 (wagers)** is complete: `fm_rpc_create_wager`, `fm_rpc_update_stake`, `fm_rpc_update_notes`, `fm_rpc_settle_wager` and `fm_rpc_delete_wager`, with the `lock_wager` helper and five new `fm_rpc_undo` branches; every one is bout-lock-bound (reads the wager's bout, locks the dependent set, then checks the wager's expected revision), `settle` takes a forced outcome the deferred settlement trigger validates against the bout, `updateStake` refuses a settled wager and validates the decimal string inline, and undo covers create→delete, delete→re-insert and stake/notes/settle→restore — **13 API assertions, 115 API total**. **Cluster 6 follow-up (fixture isolation):** the recurring shared-fixture coupling — save and wager beforeAll blocks seeding the shared WS_PUBLIC through the parameterized `applyFixture` — was eliminated at its root: `applyFixture()` is now parameterless and WS_PUBLIC's probability is the centrally-owned `PUBLIC_PROB_A`/`PUBLIC_PROB_B` constant no caller can override; a test that needs a different explicit probability seeds its own isolated workspace via `seedComplement`, and a new `fixture-isolation.test.mjs` proves both WS_PUBLIC's caller-independence and self-contained explicit-probability selection (**+3 assertions, 118 API total across eight files**). The exact self-resetting `npm run test:api` was run end-to-end: `db:reset` exit 0, then 118/118. **RPC cluster 7 (props, parlays, rename, confirm-all)** is complete: `fm_rpc_rename_event`, `fm_rpc_confirm_all_pending`, `fm_rpc_save_prop`/`_settle_prop`/`_delete_prop`, `fm_rpc_save_parlay`/`_delete_parlay`, with the table-owner `write_ledger_root`/`tombstone_root` and `check_pending_vector` helpers and seven new `fm_rpc_undo` branches; rename is card-wide and returns `affectedBouts`; confirm-all validates a vector over every pending position under row locks; props are ledger roots (create→live, settle→revision-checked, delete→tombstone) and parlays are immutable ledger roots (create with legs under the deferred leg-count trigger, delete removes legs+parlay); none is a bout-grade dependent so none takes the bout lock; undo covers every operation (rename/confirm-all/settle→restore, create→delete, delete→re-insert) — **11 API assertions, 129 API total**. The exact self-resetting `npm run test:api` was run end-to-end again: `db:reset` exit 0, then 129/129 across nine files. **Outstanding:** 3 of the contract's 25 mutation methods — all workspace-level (`setSeedVersion`, `importStore`, `reset`, cluster 8) — plus the 2 deferred reads (`workspace.current`, `seedVersion` — see §5) and the non-contract `fm_rpc_seed_store`; and the 152-row stored-profit recomputation, which needs Gate 3's seed. The complementarity constraint is validated over real HTTP writes; the profit-equality constraint remains **provisional** pending Gate 3's seed. | |
+| 2 · status | **PARTIAL — RPC clusters 1–8 landed (all contract SQL surfaces complete).** Landed: roles, ownership transfer, ACLs, `app_private` schema, all 15 tables with composite FKs and the deferrable run↔snapshot cycle, revision/slug/settlement triggers, RLS on every table, a working authenticated path (caller resolution + zero-owner bootstrap), the `fm_read_*`/`fm_member_*` surfaces **for everything the current app renders**, SQL-side measurements, and — as of cluster 7 — 159 assertions green under `npm run test:db` and 129 under `npm run test:api`, including StoreSchema validation of the export and genuine two-client claim concurrency. (The per-cluster API/pgTAP counts below are the historical measurements at each cluster's landing.) **RPC cluster 1 (tracked-position edits)** is complete: `fm_rpc_change_tracked_corner`, `fm_rpc_amend_tracked_price`, `fm_rpc_confirm_entry` and `fm_member_undo_list`, with authorization, expected-revision conflicts, `stale_write` carrying the live server revision, undo records, settled-edit recomputation and rollback proof — 40 API assertions and 159 pgTAP. **RPC cluster 2 (bout lifecycle)** is complete: `fm_rpc_grade_bout`, `fm_rpc_return_bout_to_pending` and the deferred `fm_member_wagers_by_bout` read, with full revision-vector validation under row locks, `stale_write` carrying the real server revision, undo prior-state, mixed outcomes, and grade/return proven true inverses — 66 API assertions. **RPC cluster 3 (undo foundation)** is complete: `fm_rpc_undo` for all five implemented operations (tracked-corner change, price amendment, confirmation, grade, return-to-pending), with the table-owner `lock_undo_row`/`current_revision`/`check_undo_vector`/`remove_created_rows`/`restore_position` helpers, creator/role/workspace/TTL/single-use/consumed enforcement, undo-row-lock serialization of concurrent undos, `stale_write` naming every drifted row, atomic rollback, safe removal of forward-created market snapshots, exact prior-state round trips for every operation, no undo-of-undo, `prior_state` withheld from the read surface, and `absent_ids` validated with restoration reserved for cluster 4 — **19 API assertions, 85 API total**. `is_string_map` is now `EXECUTE`-granted to `fm_member_api` (four constraint helpers, not three), because settling a wager during grade/undo re-evaluates its `external_ids` CHECK. **RPC cluster 4 (deletion)** is complete: `fm_rpc_delete_pending_run` and `fm_rpc_clear_graded`, with the table-owner `delete_aggregate`/`check_graded_vector`/`deleted_row_exists`/`assert_ids_absent`/`restore_deleted_aggregate`/`untombstone_roots` helpers; proven-orphan pruning in the documented order (position → assessment → market → snapshots → run → stop), the run-survives-iff-a-wager-pins-its-assessment rule, unconditional root tombstoning with tombstone-as-authoritative `notFound` (no double delete), conflict-checked on the tracked position (delete) and an owner-only graded vector (clear), and the `absent_ids` restoration path in `fm_rpc_undo` that re-inserts a deleted aggregate column-complete (`to_jsonb`/`jsonb_populate_record`, immutable rows via plain `INSERT`, run↔snapshot cycle deferred) after `assert_ids_absent`, then un-tombstones — **10 API assertions, 95 API total**. Deletion is by run root only, matching the frozen contract and the in-memory reference; the stray `delete_tracked_position` RPC was withdrawn (see §5/§6). **RPC cluster 5 (prediction save)** is complete: `fm_rpc_save_prediction_run` and `fm_member_prediction_aggregate`, with the table-owner `insert_prediction_aggregate` (domain-shape → columns, reconstructing the finishProjection/settlement/reviewState/reconstruction unions, cyclic pair deferred, live ledger root written as owner) and `remove_created_aggregate` helpers; owner/editor with the bout lock (it creates a dependent), and a `save_prediction_run` branch in `fm_rpc_undo` that removes exactly the created rows and the ledger row after `check_undo_vector` proves the created position is untouched. This **closes the HTTP write leg for complementarity**: `probA`/`probB` cross PostgREST as JS numbers on the way in and read back `Object.is`-identical, summing to exactly 1 — **7 API assertions, 102 API total**. **RPC cluster 6 (wagers)** is complete: `fm_rpc_create_wager`, `fm_rpc_update_stake`, `fm_rpc_update_notes`, `fm_rpc_settle_wager` and `fm_rpc_delete_wager`, with the `lock_wager` helper and five new `fm_rpc_undo` branches; every one is bout-lock-bound (reads the wager's bout, locks the dependent set, then checks the wager's expected revision), `settle` takes a forced outcome the deferred settlement trigger validates against the bout, `updateStake` refuses a settled wager and validates the decimal string inline, and undo covers create→delete, delete→re-insert and stake/notes/settle→restore — **13 API assertions, 115 API total**. **Cluster 6 follow-up (fixture isolation):** the recurring shared-fixture coupling — save and wager beforeAll blocks seeding the shared WS_PUBLIC through the parameterized `applyFixture` — was eliminated at its root: `applyFixture()` is now parameterless and WS_PUBLIC's probability is the centrally-owned `PUBLIC_PROB_A`/`PUBLIC_PROB_B` constant no caller can override; a test that needs a different explicit probability seeds its own isolated workspace via `seedComplement`, and a new `fixture-isolation.test.mjs` proves both WS_PUBLIC's caller-independence and self-contained explicit-probability selection (**+3 assertions, 118 API total across eight files**). The exact self-resetting `npm run test:api` was run end-to-end: `db:reset` exit 0, then 118/118. **RPC cluster 7 (props, parlays, rename, confirm-all)** is complete: `fm_rpc_rename_event`, `fm_rpc_confirm_all_pending`, `fm_rpc_save_prop`/`_settle_prop`/`_delete_prop`, `fm_rpc_save_parlay`/`_delete_parlay`, with the table-owner `write_ledger_root`/`tombstone_root` and `check_pending_vector` helpers and seven new `fm_rpc_undo` branches; rename is card-wide and returns `affectedBouts`; confirm-all validates a vector over every pending position under row locks; props are ledger roots (create→live, settle→revision-checked, delete→tombstone) and parlays are immutable ledger roots (create with legs under the deferred leg-count trigger, delete removes legs+parlay); none is a bout-grade dependent so none takes the bout lock; undo covers every operation (rename/confirm-all/settle→restore, create→delete, delete→re-insert) — **11 API assertions, 129 API total**. The exact self-resetting `npm run test:api` was run end-to-end again: `db:reset` exit 0, then 129/129 across nine files. **RPC cluster 8 (workspace)** is complete: `fm_member_workspace` and `fm_member_seed_version` (member reads; current carries the workspace revision), `fm_rpc_set_seed_version` (owner-only, revision-checked), `fm_rpc_import_store` and `fm_rpc_reset_workspace` (owner-only, backup-confirmed), with the table-owner `clear_workspace_entities` and `import_store_entities` helpers; import is an ATOMIC whole-store replacement — clear then insert in one transaction, so a store violating any CHECK/FK/trigger aborts with no partial write — rejects an unknown future schema version, clears seed_version, and rebuilds the ledger; both import and reset bypass RLS in the helper (to clear other users' undo and the owner-only ledger) while the owner gate is enforced in the public RPC; StoreSchema round-trip is proven by export→reset→import→export equality — **9 API assertions, 138 API total**. The exact self-resetting `npm run test:api` was run end-to-end: `db:reset` exit 0, then 138/138 across ten files. **All 25 contract mutation methods and all 40 SQL-backed contract methods are now implemented.** **Outstanding for Gate 2:** only the non-contract `fm_rpc_seed_store` (Gate 3) and the 152-row stored-profit recomputation, which needs Gate 3's seed. The complementarity constraint is validated over real HTTP writes; the profit-equality constraint remains **provisional** pending Gate 3's seed. | |
 | 3 | `feat(data): migrate seed data into the durable schema` | ✅ |
 | 4 | `feat(auth): add magic-link sign-in and read-only public state` | ✅ |
 | 5 | **Hosted rollout** — Alex creates/links the project, `db push --dry-run` → `db push`, Vercel vars, invite owner, claim, approve seed | ✅ |
@@ -616,12 +616,12 @@ Legend — **SQL**: implemented and tested · **RPC**: planned server mutation �
 | 31 | `parlayRepository.create` | SQL | ✅ `fm_rpc_save_parlay` — cluster 7; parlay + legs atomically (deferred leg-count trigger), undo removes both |
 | 32 | `parlayRepository.remove` | SQL | ✅ `fm_rpc_delete_parlay` — cluster 7; immutable (no revision), tombstones the root, undo re-inserts parlay + legs |
 | 33 | `statisticsRepository.statisticsInput` | SQL | `fm_read_statistics_input` / `fm_member_statistics_input` |
-| 34 | `workspaceRepository.current` | RPC | **`fm_member_workspace`** — cluster 8 (not yet implemented) |
-| 35 | `workspaceRepository.seedVersion` | RPC | **`fm_member_seed_version`** — cluster 8 (not yet implemented) |
-| 36 | `workspaceRepository.setSeedVersion` | RPC | **`fm_rpc_set_seed_version`** — cluster 8, owner-only; pairs with `fm_rpc_seed_store` at Gate 3 (not yet implemented) |
+| 34 | `workspaceRepository.current` | SQL | ✅ `fm_member_workspace` — cluster 8; member read carrying revision for setSeedVersion |
+| 35 | `workspaceRepository.seedVersion` | SQL | ✅ `fm_member_seed_version` — cluster 8; member read of the storage-only seed version |
+| 36 | `workspaceRepository.setSeedVersion` | SQL | ✅ `fm_rpc_set_seed_version` — cluster 8, owner-only, revision-checked; pairs with `fm_rpc_seed_store` at Gate 3 |
 | 37 | `workspaceRepository.exportStore` | SQL | ✅ `fm_member_export_store`, validated against the real `StoreSchema` |
-| 38 | `workspaceRepository.importStore` | RPC | **`fm_rpc_import_store`** — cluster 8; backup-confirmed, one transaction (not yet implemented) |
-| 39 | `workspaceRepository.reset` | RPC | **`fm_rpc_reset_workspace`** — cluster 8; backup-confirmed (not yet implemented) |
+| 38 | `workspaceRepository.importStore` | SQL | ✅ `fm_rpc_import_store` — cluster 8; owner-only, backup-confirmed, atomic clear+insert in one transaction, no partial write |
+| 39 | `workspaceRepository.reset` | SQL | ✅ `fm_rpc_reset_workspace` — cluster 8; owner-only, backup-confirmed |
 | 40 | `undoRepository.list` | SQL | ✅ `fm_member_undo_list` (`prior_state` deliberately withheld — server-only restore data) |
 | 41 | `undoRepository.undo` | SQL | ✅ `fm_rpc_undo` — cluster 3, extended in cluster 4; consumes `revision_vector`, `created_ids` and (cluster 4) `absent_ids`, re-inserting deleted aggregates |
 | 42 | `authRepository.session` | client | Supabase session; no SQL surface |
@@ -634,9 +634,9 @@ Legend — **SQL**: implemented and tested · **RPC**: planned server mutation �
 
 | Class | Count |
 |---|---|
-| Implemented, SQL-backed contract methods | **35** |
-| Planned read surfaces (`workspace.current`, `seedVersion`) | **2** |
-| Planned mutation methods | **3** |
+| Implemented, SQL-backed contract methods | **40** |
+| Planned read surfaces | **0** |
+| Planned mutation methods | **0** |
 | Client-only (no SQL surface of their own) | **6** |
 | **Total contract methods** | **46** |
 
@@ -659,7 +659,7 @@ after all of them:
 | 5 | **Prediction save** | ✅ `save_prediction_run`, `getAggregate`. Closes the HTTP write leg for complementarity — probabilities now cross PostgREST as JS numbers on the way IN, are stored and read back Object.is-identical, summing to exactly 1. Takes the bout lock: it creates a dependent. Creates run+snapshots+(optional)market+assessment+position referencing an EXISTING event/bout (per the frozen reference, which does not author events or bouts); undo removes exactly what it created and its ledger row. |
 | 6 | **Wagers** | ✅ `create`, `updateStake`, `updateNotes`, `settle`, `remove`. All bout-lock-bound (each reads the wager's bout, locks the whole dependent set in canonical order, then checks the wager's expected revision). `settle` takes a forced outcome and relies on the deferred settlement trigger to reject any outcome the bout result and selected corner contradict; `updateStake` refuses a settled wager and validates the decimal string inline; undo covers all five (create→delete, delete→re-insert, the rest→restore). |
 | 7 | **Props, parlays, rename** | ✅ `confirm_all_pending`, prop mutations (`save`/`settle`/`delete`), parlay mutations (`save`/`delete`), `rename_event`. Props/parlays are ledger roots (owner-only seed_items written via table-owner helpers); none is a bout-grade dependent so none takes the bout lock; parlays are immutable (no revision); undo covers rename→restore, confirm-all→restore, prop create→delete / settle→restore / delete→re-insert, parlay create→delete / delete→re-insert. |
-| 8 | **Workspace** | `current`, `seedVersion`, `setSeedVersion`, `import_store`, `reset_workspace`. |
+| 8 | **Workspace** | ✅ `current`, `seedVersion`, `setSeedVersion`, `import_store`, `reset_workspace`. seed_version/revisions/ledger are workspace STORAGE, never Store content; current/seedVersion are member reads, the three mutations are owner-only; import/reset are backup-confirmed (not undoable) and do their bulk clear+insert through table-owner helpers; import is an atomic whole-store replacement (no partial write) and clears seed_version. |
 
 **Every cluster from 4 onward extends `fm_rpc_undo` and its tests in the same
 commit.** Undo is never left as a trailing obligation. The reason was concrete:
@@ -678,15 +678,11 @@ raises `0A000` `undoUnsupportedRestore`.
 
 ### Mutation progress, stated exactly
 
-- **22 of the contract's 25 mutation methods are implemented**:
-  `grade`, `returnToPending`, `changeTrackedCorner`, `amendTrackedPrice`,
-  `confirmEntry`, `claimOwnership`, `undo`, `remove`, `clearGraded`,
-  `savePrediction`, the five wager methods (`create`, `updateStake`,
-  `updateNotes`, `settle`, `remove`), and the seven cluster-7 methods
-  (`rename`, `confirmAllPending`, prop `create`/`settle`/`remove`, parlay
-  `create`/`remove`).
-- **3 contract mutation methods remain** — all workspace-level (cluster 8):
-  `setSeedVersion`, `importStore`, `reset`.
+- **All 25 of the contract's mutation methods are implemented** (clusters 1–8):
+  the cluster-1–7 set plus the three workspace methods `setSeedVersion`,
+  `importStore`, `reset`.
+- **0 contract mutation methods remain.** All 40 SQL-backed contract methods
+  (18 reads + 22 mutations) exist; the 6 client-only methods need no SQL.
 - **Outside the repository contract** there is one further planned RPC,
   `fm_rpc_seed_store` (Gate 3), which no contract method maps to — it exists to
   populate a workspace, not to serve the repository. It must not be counted
@@ -733,8 +729,9 @@ returns `revision text`.
 | `fm_rpc_clear_graded` ✅ | owner | all graded aggregates | ✓ re-INSERT | all cleared roots |
 | `fm_rpc_save_prop` / `_settle_prop` / `_delete_prop` ✅ | owner/editor | prop | ✓ | root on delete |
 | `fm_rpc_save_parlay` / `_delete_parlay` ✅ | owner/editor | parlay + legs | ✓ | root on delete |
-| `fm_rpc_import_store` | owner | delete-all + insert-all + ledger reset | ✗ backup | reset |
-| `fm_rpc_reset_workspace` | owner | entities + ledger + `seed_version := NULL` | ✗ backup | cleared |
+| `fm_rpc_set_seed_version` ✅ | owner | `seed_version` only | ✗ | ✗ |
+| `fm_rpc_import_store` ✅ | owner | delete-all + insert-all + ledger reset | ✗ backup | reset |
+| `fm_rpc_reset_workspace` ✅ | owner | entities + ledger + `seed_version := NULL` | ✗ backup | cleared |
 | `fm_rpc_undo` | owner/editor | inverse of one entry | single-use | restores |
 | `fm_rpc_claim_workspace_ownership` | authenticated | membership insert under row lock | ✗ | ✗ |
 
@@ -1135,11 +1132,11 @@ SQL is used only to build fixtures, never as a substitute for the request path.
   so every run starts from the migration alone and the fixture rows are known to
   match the current schema. `ON CONFLICT DO NOTHING` remains as defensive
   idempotency but is **not** the isolation mechanism. Two consecutive
-  invocations each perform their own reset and each pass in full (129/129 as of
-  cluster 7, across nine files: export, routing/concurrency, cluster 1–2 RPCs,
+  invocations each perform their own reset and each pass in full (138/138 as of
+  cluster 8, across ten files: export, routing/concurrency, cluster 1–2 RPCs,
   the cluster-3 undo suite, the cluster-4 deletion suite, the cluster-5
-  prediction-save suite, the cluster-6 wager suite, the fixture-isolation suite
-  and the cluster-7 props/parlays suite). The probability of the shared WS_PUBLIC snapshot is
+  prediction-save suite, the cluster-6 wager suite, the fixture-isolation suite,
+  the cluster-7 props/parlays suite and the cluster-8 workspace suite). The probability of the shared WS_PUBLIC snapshot is
   centrally owned (`PUBLIC_PROB_A`/`PUBLIC_PROB_B`), not a fixture argument, so no
   file — in any order — can create or overwrite it; the fixture-isolation suite
   proves the decoupling and that a test can still select its own explicit
@@ -1167,7 +1164,7 @@ prove nothing. The current store has 3,799 numeric leaves and 0 negative zeros.
 |---|---|
 | Repository contract vs in-memory fake | every `npm test`, offline |
 | SQL + RLS + RPC via **local Supabase** | `npm run test:db`, CI service job |
-| API-level repository tests vs local URL/key | `npm run test:api` — **129 assertions, real HTTP, self-resetting** |
+| API-level repository tests vs local URL/key | `npm run test:api` — **138 assertions, real HTTP, self-resetting** |
 | Manual acceptance (phone/desktop, hard refresh) | pre-merge checklist |
 
 ```
@@ -1267,14 +1264,24 @@ and their grants, growing it again:
 | clean reset 1 | 826 | `c7e772bd…f84` |
 | clean reset 2 | 826 | `c7e772bd…f84` |
 
+**Cluster 8** adds `fm_member_workspace`, `fm_member_seed_version`,
+`fm_rpc_set_seed_version`, `fm_rpc_import_store`, `fm_rpc_reset_workspace`, the
+`clear_workspace_entities`/`import_store_entities` helpers and their grants,
+growing it again:
+
+| run | lines | SHA-256 |
+|---|---|---|
+| clean reset 1 | 847 | `5e50a7b8…6874` |
+| clean reset 2 | 847 | `5e50a7b8…6874` |
+
 Byte-identical across both resets (`diff` empty), and both resets exited 0;
 `test:db` 159 PASS after each.
 
-Canonical value for the current (cluster-7) schema:
+Canonical value for the current (cluster-8) schema:
 
 ```
-lines  826
-sha256 c7e772bd0752d75c67de7becc2690de43be2414f2288cc234b839a6ada098f84
+lines  847
+sha256 5e50a7b8e33481abb52a6137532e1b9a8ba68ed2ce33750613da30cfc7166874
 ```
 
 Codex independently reported 663 lines with SHA-256
