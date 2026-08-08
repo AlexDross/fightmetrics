@@ -269,7 +269,9 @@ SELECT set_eq(
            ('fm_rpc_return_bout_to_pending'),('fm_member_wagers_by_bout'),
            ('fm_rpc_undo'),
            ('fm_rpc_delete_pending_run'),('fm_rpc_clear_graded'),
-           ('fm_rpc_save_prediction_run'),('fm_member_prediction_aggregate')$$,
+           ('fm_rpc_save_prediction_run'),('fm_member_prediction_aggregate'),
+           ('fm_rpc_create_wager'),('fm_rpc_update_stake'),('fm_rpc_update_notes'),
+           ('fm_rpc_settle_wager'),('fm_rpc_delete_wager')$$,
   'the public API surface is exactly the documented function set');
 
 -- ── Constraint helpers reachable by the writing role ────────────────────────

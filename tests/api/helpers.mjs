@@ -110,6 +110,9 @@ export const WS_DELETE_PIN = '11110000-0000-4000-8000-000000000008';
 // Cluster 5's workspace: an event and a pending bout but NO aggregate, so
 // fm_rpc_save_prediction_run authors the first one over real HTTP.
 export const WS_SAVE = '11110000-0000-4000-8000-000000000009';
+// Cluster 6's workspace: a full aggregate WITH a wager, so wager mutations have
+// an assessment/market to reference and a persistent wager to edit.
+export const WS_WAGER = '11110000-0000-4000-8000-00000000000c';
 
 const workspace = (id, slug, isPublic) => `
 INSERT INTO app_private.workspaces (id, slug, is_public, schema_version, migrated_at)
@@ -209,7 +212,7 @@ VALUES ('${wsId}', '${n}bb00000-0000-4000-8000-000000000001',
         'Lightweight', 'pending', now())
 ON CONFLICT DO NOTHING;`;
 
-const IDS = `'${WS_PUBLIC}','${WS_PRIVATE}','${WS_CLAIM}','${WS_RPC}','${WS_BOUT}','${WS_UNDO}','${WS_DELETE}','${WS_DELETE_PIN}','${WS_SAVE}'`;
+const IDS = `'${WS_PUBLIC}','${WS_PRIVATE}','${WS_CLAIM}','${WS_RPC}','${WS_BOUT}','${WS_UNDO}','${WS_DELETE}','${WS_DELETE_PIN}','${WS_SAVE}','${WS_WAGER}'`;
 
 /**
  * Deterministic fixture, applied to a CLEAN database.
@@ -261,6 +264,7 @@ ${workspace(WS_UNDO, 'api-undo', false)}
 ${workspace(WS_DELETE, 'api-delete', false)}
 ${workspace(WS_DELETE_PIN, 'api-delete-pin', false)}
 ${workspace(WS_SAVE, 'api-save', false)}
+${workspace(WS_WAGER, 'api-wager', false)}
 
 INSERT INTO app_private.workspace_members (workspace_id, user_id, role)
 VALUES ('${WS_PUBLIC}', '${USER_MEMBER}', 'owner'),
@@ -284,7 +288,10 @@ VALUES ('${WS_PRIVATE}', '${USER_VIEWER}', 'viewer'),
        ('${WS_DELETE_PIN}', '${USER_VIEWER}', 'viewer'),
        ('${WS_SAVE}', '${USER_MEMBER}', 'owner'),
        ('${WS_SAVE}', '${USER_OUTSIDER}', 'editor'),
-       ('${WS_SAVE}', '${USER_VIEWER}', 'viewer')
+       ('${WS_SAVE}', '${USER_VIEWER}', 'viewer'),
+       ('${WS_WAGER}', '${USER_MEMBER}', 'owner'),
+       ('${WS_WAGER}', '${USER_OUTSIDER}', 'editor'),
+       ('${WS_WAGER}', '${USER_VIEWER}', 'viewer')
 ON CONFLICT DO NOTHING;
 -- api-claim is deliberately left with ZERO owners for the concurrency test.
 
@@ -296,6 +303,7 @@ ${aggregate(WS_UNDO, 6, 0.5, 0.5)}
 ${aggregate(WS_DELETE, 7, 0.5, 0.5, false)}
 ${aggregate(WS_DELETE_PIN, 8, 0.5, 0.5)}
 ${eventAndBout(WS_SAVE, 9)}
+${aggregate(WS_WAGER, 1, 0.5, 0.5)}
 
 -- The RPC cluster's own position starts review-pending. confirmed_at is NULLed
 -- explicitly: leaving it populated violates tracked_positions_review_union, and

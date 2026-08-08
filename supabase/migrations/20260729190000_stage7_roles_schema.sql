@@ -2358,6 +2358,11 @@ BEGIN
   ELSIF v_undo.op = 'save_prediction_run' THEN
     v_bout := (v_undo.prior_state #>> '{run,boutId}')::uuid;
     PERFORM app_private.lock_bout_dependents(v_ws, v_bout);
+  ELSIF v_undo.op IN ('create_wager','update_stake','update_notes',
+                      'settle_wager','delete_wager') THEN
+    -- Every wager op is a bout dependent, so its undo takes the same lock.
+    v_bout := (v_undo.prior_state ->> 'boutId')::uuid;
+    PERFORM app_private.lock_bout_dependents(v_ws, v_bout);
   END IF;
 
   -- Nothing has changed underneath the operation being reversed.
@@ -2370,7 +2375,7 @@ BEGIN
   IF pg_catalog.jsonb_typeof(v_undo.absent_ids) <> 'array' THEN
     RAISE EXCEPTION 'undoMalformedAbsentIds' USING ERRCODE = '23514';
   END IF;
-  IF v_undo.op NOT IN ('delete_pending_run','clear_graded')
+  IF v_undo.op NOT IN ('delete_pending_run','clear_graded','delete_wager')
      AND pg_catalog.jsonb_array_length(v_undo.absent_ids) > 0 THEN
     RAISE EXCEPTION 'undoUnsupportedRestore: absent_ids restoration is not implemented'
       USING ERRCODE = '0A000';
@@ -2474,6 +2479,61 @@ BEGIN
     -- whole created aggregate — and its ledger row — is safe.
     v_restored := app_private.remove_created_aggregate(v_ws, v_undo.created_ids,
                     v_undo.prior_state #>> '{run,id}');
+
+  ELSIF v_undo.op = 'create_wager' THEN
+    -- The inverse of a create is a delete; the vector already proved the created
+    -- wager is untouched.
+    DELETE FROM app_private.wagers g WHERE g.workspace_id = v_ws
+      AND g.id IN (SELECT (e.value ->> 'id')::uuid
+                     FROM pg_catalog.jsonb_array_elements(v_undo.created_ids) e
+                    WHERE e.value ->> 'table' = 'wagers');
+    v_restored := v_undo.created_ids;
+
+  ELSIF v_undo.op = 'update_stake' THEN
+    FOR r IN SELECT e.value AS v FROM pg_catalog.jsonb_array_elements(
+                    v_undo.prior_state -> 'wagers') e LOOP
+      UPDATE app_private.wagers g SET stake_units = (r.v ->> 'stakeUnits')::numeric
+       WHERE g.workspace_id = v_ws AND g.id = (r.v ->> 'id')::uuid
+       RETURNING g.revision INTO v_rev;
+      v_restored := v_restored || jsonb_build_object(
+        'table','wagers','id',r.v ->> 'id','revision',v_rev::text);
+    END LOOP;
+
+  ELSIF v_undo.op = 'update_notes' THEN
+    FOR r IN SELECT e.value AS v FROM pg_catalog.jsonb_array_elements(
+                    v_undo.prior_state -> 'wagers') e LOOP
+      UPDATE app_private.wagers g SET notes = r.v ->> 'notes'
+       WHERE g.workspace_id = v_ws AND g.id = (r.v ->> 'id')::uuid
+       RETURNING g.revision INTO v_rev;
+      v_restored := v_restored || jsonb_build_object(
+        'table','wagers','id',r.v ->> 'id','revision',v_rev::text);
+    END LOOP;
+
+  ELSIF v_undo.op = 'settle_wager' THEN
+    FOR r IN SELECT e.value AS v FROM pg_catalog.jsonb_array_elements(
+                    v_undo.prior_state -> 'wagers') e LOOP
+      UPDATE app_private.wagers g
+         SET settlement_status = r.v ->> 'settlementStatus',
+             settlement_outcome = r.v ->> 'settlementOutcome',
+             financial_status = r.v ->> 'financialStatus',
+             financial_reason = r.v ->> 'financialReason',
+             profit_units = (r.v ->> 'profitUnits')::double precision,
+             settled_at = (r.v ->> 'settledAt')::timestamptz
+       WHERE g.workspace_id = v_ws AND g.id = (r.v ->> 'id')::uuid
+       RETURNING g.revision INTO v_rev;
+      v_restored := v_restored || jsonb_build_object(
+        'table','wagers','id',r.v ->> 'id','revision',v_rev::text);
+    END LOOP;
+
+  ELSIF v_undo.op = 'delete_wager' THEN
+    -- Re-insert the removed wager after proving it is still absent. Plain INSERT;
+    -- the deferred settlement trigger re-validates it against the (unchanged) bout.
+    PERFORM app_private.assert_ids_absent(v_ws, v_undo.absent_ids);
+    INSERT INTO app_private.wagers
+    SELECT (pg_catalog.jsonb_populate_record(NULL::app_private.wagers,
+              v_undo.prior_state -> 'wager')).*;
+    v_restored := jsonb_build_array(jsonb_build_object(
+      'table','wagers','id', v_undo.prior_state #>> '{wager,id}'));
 
   ELSE
     RAISE EXCEPTION 'undoUnsupportedOp: %', v_undo.op USING ERRCODE = '0A000';
@@ -2598,7 +2658,9 @@ RETURNS boolean LANGUAGE sql STABLE SECURITY DEFINER SET search_path = '' AS $$
     UNION ALL SELECT 1 FROM app_private.betting_assessments a
       WHERE p_table = 'betting_assessments' AND a.workspace_id = p_ws AND a.id::text = p_id
     UNION ALL SELECT 1 FROM app_private.tracked_positions t
-      WHERE p_table = 'tracked_positions' AND t.workspace_id = p_ws AND t.id::text = p_id)
+      WHERE p_table = 'tracked_positions' AND t.workspace_id = p_ws AND t.id::text = p_id
+    UNION ALL SELECT 1 FROM app_private.wagers g
+      WHERE p_table = 'wagers' AND g.workspace_id = p_ws AND g.id::text = p_id)
 $$;
 
 -- Delete ONE prediction aggregate in the documented order — position ->
@@ -3278,6 +3340,236 @@ RETURNS jsonb LANGUAGE sql STABLE SECURITY DEFINER SET search_path = '' AS $$
                   WHERE t.workspace_id = w.id AND a3.run_id = p_run_id)
 $$;
 
+-- ── Cluster 6: wagers ───────────────────────────────────────────────────────
+-- create / updateStake / updateNotes / settle / remove. Every one is
+-- BOUT-LOCK-BOUND: a wager is a dependent of a bout that may be grading, so each
+-- takes lock_bout_dependents first (bout id read WITHOUT a lock, then the whole
+-- dependent set locked in the canonical order) before the wager's own
+-- expected-revision check — the same discipline grade and save established.
+
+-- Load a wager, check the expected revision, return the row. The wager analogue
+-- of lock_position, so no wager mutation can forget the conflict check.
+CREATE FUNCTION app_private.lock_wager(p_workspace uuid, p_id uuid, p_expected text)
+RETURNS app_private.wagers
+LANGUAGE plpgsql VOLATILE SECURITY DEFINER SET search_path = '' AS $$
+DECLARE v_row app_private.wagers;
+BEGIN
+  SELECT * INTO v_row FROM app_private.wagers g
+   WHERE g.workspace_id = p_workspace AND g.id = p_id FOR UPDATE;
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'wager not found' USING ERRCODE = '42704';
+  END IF;
+  IF v_row.revision <> app_private.parse_revision(p_expected) THEN
+    PERFORM app_private.raise_stale_write(v_row.revision);
+  END IF;
+  RETURN v_row;
+END $$;
+
+-- wagerRepository.create. Owner/editor, no expected revision (it creates a row).
+-- The deferred settlement trigger validates the provided settlement against the
+-- bout, so a wager on a pending bout must be open and one on a resolved bout must
+-- carry the settlement the result implies. Undo removes exactly the created row.
+CREATE FUNCTION public.fm_rpc_create_wager(p_slug text, p_wager jsonb)
+RETURNS TABLE (id uuid)
+LANGUAGE plpgsql VOLATILE SECURITY DEFINER SET search_path = '' AS $$
+DECLARE v_ws uuid; v_bout uuid; v_id uuid; v_set jsonb; v_fin jsonb;
+  v_ext jsonb; v_rev bigint;
+BEGIN
+  v_ws := app_private.require_role(p_slug, ARRAY['owner','editor']);
+  IF p_wager IS NULL OR (p_wager ->> 'id') IS NULL THEN
+    RAISE EXCEPTION 'wager.id is required' USING ERRCODE = '23514';
+  END IF;
+  v_id := (p_wager ->> 'id')::uuid;
+  v_bout := (p_wager ->> 'boutId')::uuid;
+  IF v_bout IS NULL THEN
+    RAISE EXCEPTION 'wager.boutId is required' USING ERRCODE = '23514';
+  END IF;
+  PERFORM app_private.lock_bout_dependents(v_ws, v_bout);
+
+  v_set := p_wager -> 'settlement'; v_fin := v_set -> 'financialResult';
+  v_ext := CASE WHEN p_wager -> 'externalIds' IS NULL
+                  OR p_wager -> 'externalIds' = 'null'::jsonb
+                THEN '{}'::jsonb ELSE p_wager -> 'externalIds' END;
+  INSERT INTO app_private.wagers (workspace_id, id, bout_id, assessment_id,
+    market_snapshot_id, corner, stake_units, placed_at, settlement_status,
+    settlement_outcome, financial_status, financial_reason, profit_units,
+    settled_at, notes, external_ids)
+  VALUES (v_ws, v_id, v_bout, (p_wager ->> 'assessmentId')::uuid,
+    (p_wager ->> 'marketSnapshotId')::uuid, p_wager ->> 'corner',
+    (p_wager ->> 'stakeUnits')::numeric, (p_wager ->> 'placedAt')::timestamptz,
+    v_set ->> 'status',
+    CASE WHEN v_set ->> 'status' = 'settled' THEN v_set ->> 'outcome' END,
+    CASE WHEN v_set ->> 'status' = 'settled' THEN v_fin ->> 'status' END,
+    CASE WHEN v_fin ->> 'status' = 'uncomputable' THEN v_fin ->> 'reason' END,
+    CASE WHEN v_fin ->> 'status' = 'computed' THEN (v_fin ->> 'profitUnits')::double precision END,
+    CASE WHEN v_set ->> 'status' = 'settled' THEN (v_set ->> 'settledAt')::timestamptz END,
+    p_wager ->> 'notes', v_ext);
+
+  SELECT g.revision INTO v_rev FROM app_private.wagers g
+   WHERE g.workspace_id = v_ws AND g.id = v_id;
+  PERFORM app_private.write_undo(v_ws, 'create_wager',
+    jsonb_build_object('boutId', v_bout),
+    jsonb_build_object(v_id::text, v_rev::text), '[]'::jsonb,
+    jsonb_build_array(jsonb_build_object('table','wagers','id',v_id)));
+
+  RETURN QUERY SELECT v_id;
+END $$;
+
+-- wagerRepository.updateStake. Open wagers only — a settled wager's stake feeds a
+-- frozen financial result. The stake arrives as a decimal string and is validated
+-- inline against the same grammar as parse_positive_decimal, which is deliberately
+-- NOT granted to fm_member_api.
+CREATE FUNCTION public.fm_rpc_update_stake(
+  p_slug text, p_wager_id uuid, p_stake_units text, p_expected_revision text)
+RETURNS TABLE (id uuid, revision text)
+LANGUAGE plpgsql VOLATILE SECURITY DEFINER SET search_path = '' AS $$
+DECLARE v_ws uuid; v_bout uuid; v_row app_private.wagers; v_new bigint; v_stake numeric;
+BEGIN
+  v_ws := app_private.require_role(p_slug, ARRAY['owner','editor']);
+  SELECT g.bout_id INTO v_bout FROM app_private.wagers g
+   WHERE g.workspace_id = v_ws AND g.id = p_wager_id;
+  IF NOT FOUND THEN RAISE EXCEPTION 'wager not found' USING ERRCODE = '42704'; END IF;
+  PERFORM app_private.lock_bout_dependents(v_ws, v_bout);
+  v_row := app_private.lock_wager(v_ws, p_wager_id, p_expected_revision);
+
+  IF v_row.settlement_status = 'settled' THEN
+    RAISE EXCEPTION 'cannot change the stake of a settled wager' USING ERRCODE = '23514';
+  END IF;
+  IF p_stake_units IS NULL THEN
+    RAISE EXCEPTION 'stake is required' USING ERRCODE = '23514'; END IF;
+  IF length(p_stake_units) > 32 THEN
+    RAISE EXCEPTION 'stake string too long' USING ERRCODE = '23514'; END IF;
+  IF p_stake_units !~ '^(0|[1-9][0-9]*)(\.[0-9]+)?([eE][+-]?[0-9]+)?$' THEN
+    RAISE EXCEPTION 'not a canonical positive decimal: %', p_stake_units USING ERRCODE = '23514'; END IF;
+  v_stake := p_stake_units::numeric;
+  IF v_stake <= 0 THEN
+    RAISE EXCEPTION 'stake must be > 0: %', p_stake_units USING ERRCODE = '23514'; END IF;
+
+  UPDATE app_private.wagers g SET stake_units = v_stake
+   WHERE g.workspace_id = v_ws AND g.id = p_wager_id
+   RETURNING g.revision INTO v_new;
+
+  PERFORM app_private.write_undo(v_ws, 'update_stake',
+    jsonb_build_object('boutId', v_bout, 'wagers', jsonb_build_array(
+      jsonb_build_object('id', v_row.id, 'stakeUnits', v_row.stake_units::text))),
+    jsonb_build_object(v_row.id::text, v_new::text), '[]'::jsonb);
+  RETURN QUERY SELECT p_wager_id, v_new::text;
+END $$;
+
+-- wagerRepository.updateNotes. Empty string normalizes to NULL, as in the
+-- reference. Notes do not touch the settlement, so it is allowed on any wager.
+CREATE FUNCTION public.fm_rpc_update_notes(
+  p_slug text, p_wager_id uuid, p_notes text, p_expected_revision text)
+RETURNS TABLE (id uuid, revision text)
+LANGUAGE plpgsql VOLATILE SECURITY DEFINER SET search_path = '' AS $$
+DECLARE v_ws uuid; v_bout uuid; v_row app_private.wagers; v_new bigint;
+BEGIN
+  v_ws := app_private.require_role(p_slug, ARRAY['owner','editor']);
+  SELECT g.bout_id INTO v_bout FROM app_private.wagers g
+   WHERE g.workspace_id = v_ws AND g.id = p_wager_id;
+  IF NOT FOUND THEN RAISE EXCEPTION 'wager not found' USING ERRCODE = '42704'; END IF;
+  PERFORM app_private.lock_bout_dependents(v_ws, v_bout);
+  v_row := app_private.lock_wager(v_ws, p_wager_id, p_expected_revision);
+
+  UPDATE app_private.wagers g SET notes = nullif(p_notes, '')
+   WHERE g.workspace_id = v_ws AND g.id = p_wager_id
+   RETURNING g.revision INTO v_new;
+
+  PERFORM app_private.write_undo(v_ws, 'update_notes',
+    jsonb_build_object('boutId', v_bout, 'wagers', jsonb_build_array(
+      jsonb_build_object('id', v_row.id, 'notes', v_row.notes))),
+    jsonb_build_object(v_row.id::text, v_new::text), '[]'::jsonb);
+  RETURN QUERY SELECT p_wager_id, v_new::text;
+END $$;
+
+-- wagerRepository.settle. Mirrors settleAgainst with a forced outcome: an
+-- unresolved bout leaves the wager open; otherwise the caller's outcome drives
+-- the financial result, and the deferred settlement trigger rejects any outcome
+-- inconsistent with the bout result and selected corner.
+CREATE FUNCTION public.fm_rpc_settle_wager(
+  p_slug text, p_wager_id uuid, p_outcome text, p_expected_revision text)
+RETURNS TABLE (id uuid, revision text)
+LANGUAGE plpgsql VOLATILE SECURITY DEFINER SET search_path = '' AS $$
+DECLARE
+  v_ws uuid; v_bout uuid; v_row app_private.wagers; v_new bigint;
+  v_status text; v_odds int; v_ss text; v_so text; v_fs text; v_fr text;
+  v_profit double precision; v_settled timestamptz;
+BEGIN
+  v_ws := app_private.require_role(p_slug, ARRAY['owner','editor']);
+  IF p_outcome NOT IN ('won','lost','push','void') THEN
+    RAISE EXCEPTION 'outcome must be won, lost, push or void' USING ERRCODE = '23514';
+  END IF;
+  SELECT g.bout_id INTO v_bout FROM app_private.wagers g
+   WHERE g.workspace_id = v_ws AND g.id = p_wager_id;
+  IF NOT FOUND THEN RAISE EXCEPTION 'wager not found' USING ERRCODE = '42704'; END IF;
+  PERFORM app_private.lock_bout_dependents(v_ws, v_bout);
+  v_row := app_private.lock_wager(v_ws, p_wager_id, p_expected_revision);
+
+  SELECT b.result_status INTO v_status FROM app_private.bouts b
+   WHERE b.workspace_id = v_ws AND b.id = v_bout;
+
+  IF v_status = 'pending' THEN
+    v_ss := 'open';
+  ELSIF p_outcome IN ('push','void') THEN
+    v_ss := 'settled'; v_so := p_outcome; v_fs := 'computed';
+    v_profit := 0; v_settled := pg_catalog.now();
+  ELSE
+    SELECT CASE WHEN v_row.corner = 'A' THEN m.odds_a ELSE m.odds_b END INTO v_odds
+      FROM app_private.market_snapshots m
+     WHERE m.workspace_id = v_ws AND m.id = v_row.market_snapshot_id;
+    v_ss := 'settled'; v_so := p_outcome; v_settled := pg_catalog.now();
+    IF v_odds IS NULL THEN
+      v_fs := 'uncomputable'; v_fr := 'missingSelectedCornerOdds';
+    ELSE
+      v_fs := 'computed';
+      v_profit := CASE WHEN p_outcome = 'won'
+        THEN v_row.stake_units::double precision * (app_private.decimal_from_american(v_odds) - 1)
+        ELSE -v_row.stake_units::double precision END;
+    END IF;
+  END IF;
+
+  UPDATE app_private.wagers g
+     SET settlement_status = v_ss,
+         settlement_outcome = CASE WHEN v_ss = 'settled' THEN v_so END,
+         financial_status = CASE WHEN v_ss = 'settled' THEN v_fs END,
+         financial_reason = v_fr, profit_units = v_profit,
+         settled_at = CASE WHEN v_ss = 'settled' THEN v_settled END
+   WHERE g.workspace_id = v_ws AND g.id = p_wager_id
+   RETURNING g.revision INTO v_new;
+
+  PERFORM app_private.write_undo(v_ws, 'settle_wager',
+    jsonb_build_object('boutId', v_bout, 'wagers', jsonb_build_array(jsonb_build_object(
+      'id', v_row.id, 'settlementStatus', v_row.settlement_status,
+      'settlementOutcome', v_row.settlement_outcome,
+      'financialStatus', v_row.financial_status, 'financialReason', v_row.financial_reason,
+      'profitUnits', v_row.profit_units, 'settledAt', v_row.settled_at))),
+    jsonb_build_object(v_row.id::text, v_new::text), '[]'::jsonb);
+  RETURN QUERY SELECT p_wager_id, v_new::text;
+END $$;
+
+-- wagerRepository.remove. Undo re-inserts the whole captured row via
+-- jsonb_populate_record after proving it is still absent.
+CREATE FUNCTION public.fm_rpc_delete_wager(
+  p_slug text, p_wager_id uuid, p_expected_revision text)
+RETURNS TABLE (removed uuid)
+LANGUAGE plpgsql VOLATILE SECURITY DEFINER SET search_path = '' AS $$
+DECLARE v_ws uuid; v_bout uuid; v_row app_private.wagers;
+BEGIN
+  v_ws := app_private.require_role(p_slug, ARRAY['owner','editor']);
+  SELECT g.bout_id INTO v_bout FROM app_private.wagers g
+   WHERE g.workspace_id = v_ws AND g.id = p_wager_id;
+  IF NOT FOUND THEN RAISE EXCEPTION 'wager not found' USING ERRCODE = '42704'; END IF;
+  PERFORM app_private.lock_bout_dependents(v_ws, v_bout);
+  v_row := app_private.lock_wager(v_ws, p_wager_id, p_expected_revision);
+
+  DELETE FROM app_private.wagers g WHERE g.workspace_id = v_ws AND g.id = p_wager_id;
+
+  PERFORM app_private.write_undo(v_ws, 'delete_wager',
+    jsonb_build_object('boutId', v_bout, 'wager', to_jsonb(v_row)),
+    '{}'::jsonb, jsonb_build_array(jsonb_build_object('table','wagers','id',p_wager_id)));
+  RETURN QUERY SELECT p_wager_id;
+END $$;
+
 -- ── (4) transfer ownership ──────────────────────────────────────────────────
 ALTER SCHEMA app_private OWNER TO fm_table_owner;
 DO $$ DECLARE r record; BEGIN
@@ -3397,6 +3689,8 @@ GRANT EXECUTE ON FUNCTION app_private.untombstone_roots(uuid, jsonb) TO fm_membe
 -- Cluster 5 prediction-save plumbing: fm_member_api only.
 GRANT EXECUTE ON FUNCTION app_private.insert_prediction_aggregate(uuid, jsonb) TO fm_member_api;
 GRANT EXECUTE ON FUNCTION app_private.remove_created_aggregate(uuid, jsonb, text) TO fm_member_api;
+-- Cluster 6 wager plumbing: fm_member_api only.
+GRANT EXECUTE ON FUNCTION app_private.lock_wager(uuid, uuid, text) TO fm_member_api;
 -- CHECK-constraint helpers are evaluated as the role PERFORMING THE WRITE, not
 -- as the table owner, so fm_member_api needs EXECUTE on every helper reachable
 -- from a constraint on a table it writes. Without these the cluster failed with
