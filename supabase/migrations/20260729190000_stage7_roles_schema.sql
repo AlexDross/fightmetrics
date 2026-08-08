@@ -4344,7 +4344,10 @@ BEGIN
   END IF;
   IF pg_catalog.jsonb_typeof(v_meta -> 'migratedAt') = 'string' THEN
     v_ts := v_meta ->> 'migratedAt';
-    IF v_ts !~ '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})$' THEN
+    -- z.iso.datetime({offset:true}): date T time, where time is HH:MM, HH:MM:SS
+    -- or HH:MM:SS.fraction (seconds and fraction both optional), then a required
+    -- Z or ±HH:MM. Calendar validity is left to the timestamptz cast below.
+    IF v_ts !~ '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:\d{2})$' THEN
       RAISE EXCEPTION 'invalidStoreEnvelope: meta.migratedAt must be an ISO-8601 datetime with an offset, got %', v_ts
         USING ERRCODE = '23514';
     END IF;
