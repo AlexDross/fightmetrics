@@ -29,6 +29,16 @@ const entityCount = () => Number(catalogScalar(`
        + (SELECT count(*) FROM app_private.tracked_positions WHERE workspace_id='${WS}')
        + (SELECT count(*) FROM app_private.props WHERE workspace_id='${WS}')
        + (SELECT count(*) FROM app_private.parlays WHERE workspace_id='${WS}');`));
+const tableCount = (t) => Number(catalogScalar(
+  `SELECT count(*) FROM app_private.${t} WHERE workspace_id='${WS}';`));
+// Every Store collection maps to its base table; parlay_legs and the seed_items
+// ledger are storage the reset must also clear.
+const STORE_TABLES = ['events', 'bouts', 'prediction_runs', 'prediction_snapshots',
+  'market_snapshots', 'betting_assessments', 'tracked_positions', 'wagers',
+  'props', 'parlays'];
+const ALL_SECTIONS = ['events', 'bouts', 'predictionRuns', 'predictionSnapshots',
+  'marketSnapshots', 'bettingAssessments', 'trackedPositions', 'wagers',
+  'props', 'parlays'];
 
 describe('current / seedVersion / setSeedVersion', () => {
   it('current returns workspace metadata; seedVersion starts null', async () => {
@@ -67,17 +77,51 @@ describe('current / seedVersion / setSeedVersion', () => {
   });
 });
 
+describe('import envelope validation (destructive-bypass fix)', () => {
+  let S0;
+  // Captured while the workspace is fully populated, BEFORE any reset/import.
+  beforeAll(async () => { S0 = await exportStore(); });
+
+  // Each rejected payload must be refused with a stable 23514 marker BEFORE the
+  // destructive clear, leaving the exported store EXACTLY unchanged. The first
+  // case is the exact bypass Codex reproduced: a meta-only payload that failed
+  // StoreSchema but cleared every collection and returned 200.
+  const rejected = {
+    'meta-only payload (the reported bypass)': { meta: { schemaVersion: 1, migratedAt: null } },
+    'a missing collection': (s) => { const c = { ...s }; delete c.wagers; return c; },
+    'an extra top-level key': (s) => ({ ...s, surprise: [] }),
+    'a collection of the wrong type': (s) => ({ ...s, props: {} }),
+    'meta missing schemaVersion': (s) => ({ ...s, meta: { migratedAt: null } }),
+    'meta with an extra key': (s) => ({ ...s, meta: { ...s.meta, extra: 1 } }),
+    'a non-object store': [],
+  };
+
+  for (const [label, make] of Object.entries(rejected)) {
+    it(`rejects ${label} and leaves the store unchanged`, async () => {
+      const before = JSON.stringify(await exportStore());
+      const payload = typeof make === 'function' ? make(S0) : make;
+      const res = await rpc('fm_rpc_import_store',
+        { p_slug: SLUG, p_store: payload, p_backup_confirmed: true }, { as: USER_MEMBER });
+      expect(res.status, JSON.stringify(res.body)).not.toBe(200);
+      expect(res.body.code).toBe('23514');
+      expect(res.body.message).toMatch(/invalidStoreEnvelope/);
+      // Nothing was cleared: the exported store is byte-for-byte identical.
+      expect(JSON.stringify(await exportStore())).toBe(before);
+    });
+  }
+});
+
 describe('export → reset → import: atomicity and round-trip', () => {
   let S0;
   beforeAll(async () => { S0 = await exportStore(); });
 
-  it('the exported store is a valid Stage 6 Store with non-empty sections', () => {
+  it('the exported store is a valid Stage 6 Store with all ten sections non-empty', () => {
     expect(StoreSchema.safeParse(S0).success).toBe(true);
-    for (const k of ['events', 'bouts', 'predictionRuns', 'predictionSnapshots',
-                     'marketSnapshots', 'bettingAssessments', 'trackedPositions',
-                     'props', 'parlays']) {
+    for (const k of ALL_SECTIONS) {
       expect(S0[k].length, `${k} empty`).toBeGreaterThan(0);
     }
+    // The fixture must exercise wager import specifically.
+    expect(S0.wagers.length).toBeGreaterThan(0);
   });
 
   it('reset requires a confirmed backup and is owner-only', async () => {
@@ -91,19 +135,21 @@ describe('export → reset → import: atomicity and round-trip', () => {
     expect(entityCount()).toBeGreaterThan(0); // nothing was cleared
   });
 
-  it('reset clears entities and seed_version but keeps the workspace row', async () => {
+  it('reset clears all ten collections, parlay legs, ledger and seed_version', async () => {
     const res = await rpc('fm_rpc_reset_workspace',
       { p_slug: SLUG, p_backup_confirmed: true }, { as: USER_MEMBER });
     expect(res.status, JSON.stringify(res.body)).toBe(200);
-    expect(entityCount()).toBe(0);
+    // Every Store base table is empty…
+    for (const t of STORE_TABLES) expect(tableCount(t), `${t} not cleared`).toBe(0);
+    // …plus parlay legs and the seed_items ledger (storage the reset must clear).
+    expect(tableCount('parlay_legs')).toBe(0);
+    expect(tableCount('seed_items')).toBe(0);
     expect(await seedVersion()).toBeNull();
     const c = await current();
     expect(c.slug).toBe(SLUG); // identity preserved
+    // …and every export collection reads back empty.
     const empty = await exportStore();
-    for (const k of ['events', 'bouts', 'predictionRuns', 'trackedPositions',
-                     'props', 'parlays']) {
-      expect(empty[k]).toEqual([]);
-    }
+    for (const k of ALL_SECTIONS) expect(empty[k], `${k} not empty`).toEqual([]);
   });
 
   it('import requires a confirmed backup and rejects a future schema version', async () => {
@@ -126,6 +172,10 @@ describe('export → reset → import: atomicity and round-trip', () => {
     expect(StoreSchema.safeParse(reexport).success).toBe(true);
     // Exact whole-store round trip: what was exported is what comes back.
     expect(JSON.stringify(reexport)).toBe(JSON.stringify(S0));
+    // The wager specifically survived the import round trip.
+    expect(reexport.wagers.length).toBe(S0.wagers.length);
+    expect(reexport.wagers[0]).toEqual(S0.wagers[0]);
+    expect(tableCount('wagers')).toBe(S0.wagers.length);
     expect(await seedVersion()).toBeNull(); // imported content is not a seed product
   });
 
@@ -151,5 +201,48 @@ describe('export → reset → import: atomicity and round-trip', () => {
     const anon = await rpc('fm_rpc_import_store',
       { p_slug: SLUG, p_store: S0, p_backup_confirmed: true });
     expect(anon.status).toBe(401);
+  });
+});
+
+describe('import/reset serialize on the workspace row', () => {
+  let S0;
+  beforeAll(async () => { S0 = await exportStore(); });
+
+  // Two owners fire destructive replacements at the same workspace with both
+  // requests in flight. The FOR UPDATE lock on the workspace row serializes them:
+  // one runs its whole clear+insert to COMMIT before the other begins, so neither
+  // observes the other's half-applied state. Without the lock the interleaved
+  // clear/insert would deadlock or hit duplicate-key / FK errors mid-flight.
+  it('two concurrent imports of the same store both succeed and leave it intact', async () => {
+    const [a, b] = await Promise.all([
+      rpc('fm_rpc_import_store', { p_slug: SLUG, p_store: S0, p_backup_confirmed: true }, { as: USER_MEMBER }),
+      rpc('fm_rpc_import_store', { p_slug: SLUG, p_store: S0, p_backup_confirmed: true }, { as: USER_MEMBER }),
+    ]);
+    expect(a.status, JSON.stringify(a.body)).toBe(200);
+    expect(b.status, JSON.stringify(b.body)).toBe(200);
+    // Serialized, not interleaved: the final store is exactly S0, StoreSchema-valid.
+    const reexport = await exportStore();
+    expect(StoreSchema.safeParse(reexport).success).toBe(true);
+    expect(JSON.stringify(reexport)).toBe(JSON.stringify(S0));
+  });
+
+  it('a concurrent import and reset serialize to one consistent outcome', async () => {
+    const [imp, rst] = await Promise.all([
+      rpc('fm_rpc_import_store', { p_slug: SLUG, p_store: S0, p_backup_confirmed: true }, { as: USER_MEMBER }),
+      rpc('fm_rpc_reset_workspace', { p_slug: SLUG, p_backup_confirmed: true }, { as: USER_MEMBER }),
+    ]);
+    expect(imp.status, JSON.stringify(imp.body)).toBe(200);
+    expect(rst.status, JSON.stringify(rst.body)).toBe(200);
+    // Whichever committed last wins wholesale — the store is either exactly S0 or
+    // exactly empty, never a mixture; StoreSchema holds either way.
+    const reexport = await exportStore();
+    expect(StoreSchema.safeParse(reexport).success).toBe(true);
+    const isS0 = JSON.stringify(reexport) === JSON.stringify(S0);
+    const isEmpty = ALL_SECTIONS.every((k) => reexport[k].length === 0);
+    expect(isS0 || isEmpty).toBe(true);
+    // Restore S0 so the file leaves the fixture as it found it.
+    if (isEmpty) {
+      await rpc('fm_rpc_import_store', { p_slug: SLUG, p_store: S0, p_backup_confirmed: true }, { as: USER_MEMBER });
+    }
   });
 });

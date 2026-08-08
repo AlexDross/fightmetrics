@@ -4060,6 +4060,8 @@ LANGUAGE plpgsql VOLATILE SECURITY DEFINER SET search_path = '' AS $$
 DECLARE v_ws uuid;
 BEGIN
   v_ws := app_private.require_role(p_slug, ARRAY['owner']);
+  -- Serialize against a concurrent import/reset (see import for the scope note).
+  PERFORM 1 FROM app_private.workspaces w WHERE w.id = v_ws FOR UPDATE;
   IF p_backup_confirmed IS NOT TRUE THEN
     RAISE EXCEPTION 'backupConfirmed: a confirmed backup is required' USING ERRCODE = '23514';
   END IF;
@@ -4278,12 +4280,61 @@ BEGIN
   ON CONFLICT (workspace_id, root_type, root_id) DO NOTHING;
 END $$;
 
--- workspaceRepository.importStore. Owner-only, backup-confirmed, rejects an
--- unknown future schema version. ATOMIC whole-store replacement: clear then
--- insert in one transaction, so a store that violates any CHECK/FK/trigger aborts
--- with NO partial write. StoreSchema validation proper lives in the JS adapter
--- (Gate 6) ahead of this call; here the schema is enforced structurally by the
--- database. seed_version is cleared: imported content is no product of a seed.
+-- Enforce the complete Store ENVELOPE before any destructive work. StoreSchema
+-- is a strictObject of meta + exactly ten collection arrays; a payload missing
+-- collections (or carrying extra keys, or wrong types) must be REJECTED, not
+-- coalesced. Without this the empty-collection default silently cleared the whole
+-- workspace for a payload that fails StoreSchema. Deep per-row validation still
+-- belongs to the JS adapter (Gate 6) and to the DB's own CHECK/FK/triggers on
+-- insert; this is the envelope gate that must run BEFORE clear_workspace_entities.
+CREATE FUNCTION app_private.assert_store_envelope(p_store jsonb)
+RETURNS void LANGUAGE plpgsql IMMUTABLE SET search_path = '' AS $$
+DECLARE
+  v_keys text[]; c text; v_meta jsonb;
+  v_expected text[] := ARRAY['meta','events','bouts','predictionRuns',
+    'predictionSnapshots','marketSnapshots','bettingAssessments',
+    'trackedPositions','wagers','props','parlays'];
+BEGIN
+  IF p_store IS NULL OR pg_catalog.jsonb_typeof(p_store) <> 'object' THEN
+    RAISE EXCEPTION 'invalidStoreEnvelope: store must be an object' USING ERRCODE = '23514';
+  END IF;
+  -- Exact top-level key set: reject missing AND extra keys.
+  SELECT array_agg(k ORDER BY k) INTO v_keys
+    FROM pg_catalog.jsonb_object_keys(p_store) k;
+  IF NOT (v_keys @> v_expected AND v_expected @> v_keys) THEN
+    RAISE EXCEPTION 'invalidStoreEnvelope: top-level keys must be exactly %', v_expected
+      USING ERRCODE = '23514';
+  END IF;
+  -- meta: exactly {schemaVersion (number), migratedAt (string|null)}.
+  v_meta := p_store -> 'meta';
+  IF pg_catalog.jsonb_typeof(v_meta) <> 'object'
+     OR (SELECT count(*) FROM pg_catalog.jsonb_object_keys(v_meta)) <> 2
+     OR NOT (v_meta ? 'schemaVersion') OR NOT (v_meta ? 'migratedAt') THEN
+    RAISE EXCEPTION 'invalidStoreEnvelope: meta must be exactly {schemaVersion, migratedAt}'
+      USING ERRCODE = '23514';
+  END IF;
+  IF pg_catalog.jsonb_typeof(v_meta -> 'schemaVersion') <> 'number' THEN
+    RAISE EXCEPTION 'invalidStoreEnvelope: meta.schemaVersion must be a number' USING ERRCODE = '23514';
+  END IF;
+  IF pg_catalog.jsonb_typeof(v_meta -> 'migratedAt') NOT IN ('null','string') THEN
+    RAISE EXCEPTION 'invalidStoreEnvelope: meta.migratedAt must be a string or null' USING ERRCODE = '23514';
+  END IF;
+  -- Every collection must be present and a JSON array.
+  FOREACH c IN ARRAY ARRAY['events','bouts','predictionRuns','predictionSnapshots',
+    'marketSnapshots','bettingAssessments','trackedPositions','wagers','props','parlays'] LOOP
+    IF pg_catalog.jsonb_typeof(p_store -> c) <> 'array' THEN
+      RAISE EXCEPTION 'invalidStoreEnvelope: % must be a JSON array', c USING ERRCODE = '23514';
+    END IF;
+  END LOOP;
+END $$;
+
+-- workspaceRepository.importStore. Owner-only, backup-confirmed, envelope-checked
+-- BEFORE any clear, rejects an unknown future schema version. ATOMIC whole-store
+-- replacement: clear then insert in one transaction, so a store that violates any
+-- CHECK/FK/trigger aborts with NO partial write. Deep per-row StoreSchema
+-- validation lives in the JS adapter (Gate 6) ahead of this call; the envelope
+-- gate here refuses a structurally incomplete payload before it can be
+-- destructive. seed_version is cleared: imported content is no product of a seed.
 CREATE FUNCTION public.fm_rpc_import_store(
   p_slug text, p_store jsonb, p_backup_confirmed boolean)
 RETURNS TABLE (imported boolean)
@@ -4291,15 +4342,18 @@ LANGUAGE plpgsql VOLATILE SECURITY DEFINER SET search_path = '' AS $$
 DECLARE v_ws uuid; v_schema int; v_incoming int;
 BEGIN
   v_ws := app_private.require_role(p_slug, ARRAY['owner']);
+  -- Serialize destructive workspace replacement against a concurrent import/reset
+  -- by locking the workspace row first. (This does NOT serialize against the
+  -- per-entity mutations, which lock at row granularity — see the plan note.)
+  PERFORM 1 FROM app_private.workspaces w WHERE w.id = v_ws FOR UPDATE;
   IF p_backup_confirmed IS NOT TRUE THEN
     RAISE EXCEPTION 'backupConfirmed: a confirmed backup is required' USING ERRCODE = '23514';
   END IF;
-  IF p_store IS NULL OR pg_catalog.jsonb_typeof(p_store) <> 'object' THEN
-    RAISE EXCEPTION 'store must be an object' USING ERRCODE = '23514';
-  END IF;
+  -- FULL envelope validation BEFORE anything is cleared.
+  PERFORM app_private.assert_store_envelope(p_store);
   SELECT w.schema_version INTO v_schema FROM app_private.workspaces w WHERE w.id = v_ws;
   v_incoming := (p_store #>> '{meta,schemaVersion}')::int;
-  IF v_incoming IS NOT NULL AND v_incoming > v_schema THEN
+  IF v_incoming > v_schema THEN
     RAISE EXCEPTION 'unknownFutureVersion: incoming schema % exceeds %', v_incoming, v_schema
       USING ERRCODE = '23514';
   END IF;
@@ -4307,7 +4361,7 @@ BEGIN
   PERFORM app_private.clear_workspace_entities(v_ws);
   PERFORM app_private.import_store_entities(v_ws, p_store);
   UPDATE app_private.workspaces w
-     SET schema_version = coalesce(v_incoming, w.schema_version),
+     SET schema_version = v_incoming,
          migrated_at = (p_store #>> '{meta,migratedAt}')::timestamptz,
          seed_version = NULL
    WHERE w.id = v_ws;
@@ -4442,6 +4496,7 @@ GRANT EXECUTE ON FUNCTION app_private.check_pending_vector(uuid, jsonb) TO fm_me
 -- Cluster 8 workspace plumbing: fm_member_api only.
 GRANT EXECUTE ON FUNCTION app_private.clear_workspace_entities(uuid) TO fm_member_api;
 GRANT EXECUTE ON FUNCTION app_private.import_store_entities(uuid, jsonb) TO fm_member_api;
+GRANT EXECUTE ON FUNCTION app_private.assert_store_envelope(jsonb) TO fm_member_api;
 -- CHECK-constraint helpers are evaluated as the role PERFORMING THE WRITE, not
 -- as the table owner, so fm_member_api needs EXECUTE on every helper reachable
 -- from a constraint on a table it writes. Without these the cluster failed with

@@ -401,6 +401,15 @@ ${eventAndBout(WS_SAVE, 9)}
 ${aggregate(WS_WAGER, 1, 0.5, 0.5)}
 ${cluster7Aggregate(WS_PROP)}
 ${cluster7Aggregate(WS_WS)}
+-- WS_WS also carries a WAGER, so the cluster-8 import round-trip exercises every
+-- one of the ten Store collections (cluster7Aggregate omits wagers).
+INSERT INTO app_private.wagers (workspace_id, id, bout_id, assessment_id,
+  market_snapshot_id, corner, stake_units, placed_at, settlement_status, notes)
+VALUES ('${WS_WS}', 'a9900000-0000-4000-8000-000000000001',
+        'abb00000-0000-4000-8000-000000000001',
+        'aff00000-0000-4000-8000-000000000001',
+        'acc00000-0000-4000-8000-000000000001', 'A', 2, now(), 'open', 'ws bet')
+ON CONFLICT DO NOTHING;
 
 -- The RPC cluster's own position starts review-pending. confirmed_at is NULLed
 -- explicitly: leaving it populated violates tracked_positions_review_union, and
