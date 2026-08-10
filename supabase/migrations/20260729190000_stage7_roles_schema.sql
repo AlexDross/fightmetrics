@@ -4355,6 +4355,15 @@ BEGIN
       RAISE EXCEPTION 'invalidStoreEnvelope: meta.migratedAt must be an ISO-8601 datetime with an offset, got %', v_ts
         USING ERRCODE = '23514';
     END IF;
+    -- Year range: PostgreSQL's proleptic Gregorian calendar has no year zero
+    -- (it runs 1 BC -> 1 AD), so `0000-…` casts fail with `date/time field value
+    -- out of range`, while Zod alone accepts it. 0001 and 9999 both cast, so the
+    -- shared range is 0001-9999. POSIX regex has no lookahead, hence this
+    -- explicit check rather than a pattern.
+    IF pg_catalog.left(v_ts, 4) = '0000' THEN
+      RAISE EXCEPTION 'invalidStoreEnvelope: meta.migratedAt year must be between 0001 and 9999, got %', v_ts
+        USING ERRCODE = '23514';
+    END IF;
     -- Offset range: PostgreSQL timestamptz represents only ±15:59, while Zod
     -- alone would accept up to ±23:59. Rejected HERE as a stable 23514 rather
     -- than reaching the cast's `time zone displacement out of range`.

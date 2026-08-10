@@ -275,12 +275,15 @@ describe('MetaSchema and the HTTP import agree on migratedAt (paired conformance
   const store = (iso) => ({ ...S0, meta: { ...S0.meta, migratedAt: iso } });
   const accepted = [
     ['minute precision, Z', '2026-08-08T05:28Z'],
+    ['minute precision, explicit offset', '2026-08-08T05:28+03:15'],
     ['seconds, Z', '2026-08-08T05:28:39Z'],
     ['fractional seconds', '2026-08-08T05:28:39.900566Z'],
     ['seconds, explicit offset', '2026-08-08T05:28:39+03:15'],
     ['23:59 clock', '2026-08-08T23:59:59.999Z'],
     ['offset +15:59 (PostgreSQL max)', '2026-08-08T05:28+15:59'],
     ['offset -15:59 (PostgreSQL min)', '2026-08-08T05:28-15:59'],
+    ['year 0001 (PostgreSQL min)', '0001-01-01T00:00Z'],
+    ['year 9999 (PostgreSQL max)', '9999-12-31T23:59:59Z'],
   ];
   const refused = [
     ['hour 24', '2026-08-08T24:00Z'],
@@ -288,6 +291,8 @@ describe('MetaSchema and the HTTP import agree on migratedAt (paired conformance
     ['offset +16:00 (beyond timestamptz)', '2026-08-08T05:28+16:00'],
     ['offset +23:59 (beyond timestamptz)', '2026-08-08T05:28+23:59'],
     ['offset -16:00 (beyond timestamptz)', '2026-08-08T05:28-16:00'],
+    // PostgreSQL's proleptic Gregorian calendar has no year zero (1 BC -> 1 AD).
+    ['year 0000 (no year zero in PostgreSQL)', '0000-01-01T00:00Z'],
     ['impossible calendar date', '2026-13-45T00:00:00Z'],
   ];
 
@@ -298,8 +303,12 @@ describe('MetaSchema and the HTTP import agree on migratedAt (paired conformance
         { p_slug: SLUG, p_store: store(iso), p_backup_confirmed: true }, { as: USER_MEMBER });
       expect(res.status, JSON.stringify(res.body)).toBe(200);
       // Stored as timestamptz: the same INSTANT, normalized to UTC text.
-      expect(new Date((await exportStore()).meta.migratedAt).getTime())
-        .toBe(new Date(iso).getTime());
+      const reexport = await exportStore();
+      expect(new Date(reexport.meta.migratedAt).getTime()).toBe(new Date(iso).getTime());
+      // …and the rest of the store round-trips untouched.
+      for (const k of ALL_SECTIONS) {
+        expect(JSON.stringify(reexport[k]), `${k} changed`).toBe(JSON.stringify(S0[k]));
+      }
     });
   }
 
@@ -314,47 +323,6 @@ describe('MetaSchema and the HTTP import agree on migratedAt (paired conformance
       expect(res.body.message).toMatch(/invalidStoreEnvelope/);
       // Rejected before the clear: the store is untouched.
       expect(JSON.stringify(await exportStore())).toBe(before);
-    });
-  }
-});
-
-describe('migratedAt accepts every z.iso.datetime({offset:true}) form', () => {
-  let S0;
-  beforeAll(async () => { S0 = await exportStore(); });
-  // Restore the canonical backup so the file leaves the fixture as it found it.
-  afterAll(async () => {
-    await rpc('fm_rpc_import_store', { p_slug: SLUG, p_store: S0, p_backup_confirmed: true }, { as: USER_MEMBER });
-  });
-
-  // Zod permits minute precision and any offset; the ISO shape check must accept
-  // each of these, and the timestamptz cast normalizes them to one instant.
-  const forms = [
-    '2026-08-08T05:28Z',            // minute precision, Z
-    '2026-08-08T05:28+03:15',       // minute precision, explicit offset
-    '2026-08-08T05:28:39Z',         // seconds, Z
-    '2026-08-08T05:28:39.900566Z',  // fractional seconds
-    '2026-08-08T05:28:39+03:15',    // seconds, explicit offset
-  ];
-
-  for (const iso of forms) {
-    it(`accepts migratedAt=${iso} and preserves the instant`, async () => {
-      // Sanity: MetaSchema (Zod) accepts this exact spelling.
-      expect(StoreSchema.safeParse({ ...S0, meta: { ...S0.meta, migratedAt: iso } }).success).toBe(true);
-
-      const res = await rpc('fm_rpc_import_store',
-        { p_slug: SLUG, p_store: { ...S0, meta: { ...S0.meta, migratedAt: iso } },
-          p_backup_confirmed: true }, { as: USER_MEMBER });
-      expect(res.status, JSON.stringify(res.body)).toBe(200);
-
-      // timestamptz normalizes the offset/precision, so the exported spelling
-      // differs; assert the same INSTANT, not identical text.
-      const got = (await exportStore()).meta.migratedAt;
-      expect(new Date(got).getTime()).toBe(new Date(iso).getTime());
-      // The rest of the store round-trips untouched.
-      const reexport = await exportStore();
-      for (const k of ALL_SECTIONS) {
-        expect(JSON.stringify(reexport[k])).toBe(JSON.stringify(S0[k]));
-      }
     });
   }
 });

@@ -225,18 +225,22 @@ days such as `2024-02-29` are accepted; `2023-02-29` is not.
 
 Stage 7 persists every timestamp as PostgreSQL `timestamptz`, so `isoDateTime()`
 must accept **exactly** what the database can store — no wider, no narrower.
-Bare `z.iso.datetime({ offset: true })` is wider in one direction and the SQL
-side was wider in another; both gaps are closed and pinned by paired conformance
-tests that assert the JS schema and the HTTP import agree case for case.
+Bare `z.iso.datetime({ offset: true })` is wider in two directions (it accepts
+offsets beyond ±15:59, and year `0000`), and the SQL side was wider in another
+(unbounded `\d{2}` clock fields let hour 24 and second 60 through). All three
+gaps are closed and pinned by paired conformance tests that assert the JS schema
+and the HTTP import agree case for case.
 
 | Form | Accepted | Why |
 |---|---|---|
 | `…T05:28Z`, `…T05:28:39Z`, `…T05:28:39.900566Z` | ✅ | minute, second and fractional precision |
 | `…T23:59:59.999Z` | ✅ | the 23:59 clock is legal |
 | `…T05:28+15:59` / `-15:59` | ✅ | the widest offset `timestamptz` represents |
+| `0001-01-01T00:00Z`, `9999-12-31T23:59:59Z` | ✅ | the year range `timestamptz` represents |
 | `…T24:00Z` | ❌ | hour must be 00–23. Zod rejects it; **PostgreSQL would silently normalise** it to the next day, so the SQL grammar carries the bound explicitly |
 | `…T23:59:60Z` | ❌ | second must be 00–59 (no leap second). Same silent-normalisation hazard |
 | `…T05:28+16:00`, `+23:59` | ❌ | beyond `timestamptz`'s range — the cast raises `time zone displacement out of range`, so `isoDateTime()` is **refined** to reject them up front |
+| `0000-01-01T00:00Z` | ❌ | there is **no year zero** in PostgreSQL's proleptic Gregorian calendar (1 BC → 1 AD); the cast raises `date/time field value out of range`, while Zod alone accepts it — so `isoDateTime()` is refined to the shared range 0001–9999 |
 | `2026-13-45T00:00:00Z` | ❌ | impossible calendar date |
 | `…T05:28:39` (no offset) | ❌ | the offset is required |
 
