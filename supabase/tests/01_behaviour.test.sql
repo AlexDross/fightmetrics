@@ -12,7 +12,7 @@ SELECT pg_catalog.set_config('search_path',
   'public, ' || (SELECT n.nspname FROM pg_catalog.pg_extension e
                    JOIN pg_catalog.pg_namespace n ON n.oid = e.extnamespace
                   WHERE e.extname = 'pgtap'), true);
-SELECT plan(88);
+SELECT plan(103);
 
 -- ── Fixture ─────────────────────────────────────────────────────────────────
 -- auth.users FIRST, as postgres, before any role change: FK checks against it
@@ -700,6 +700,448 @@ SELECT throws_ok($q$
   END $x$
 $q$, '23503', NULL, 'a surviving reference still aborts when forced immediate');
 ROLLBACK TO SAVEPOINT cycle_surviving;
+
+-- ── Gate 3: the seed LEDGER decides what a seed may insert ──────────────────
+-- The API suite proves this over real HTTP on the full 182-root corpus; this is
+-- the SQL-tier proof of the same three rules on a small real slice of it (two
+-- pending runs from one card, a prop and a parlay), so the ledger contract holds
+-- even if the JS harness is not what is running.
+SET LOCAL ROLE fm_table_owner;
+SET LOCAL search_path = public, extensions;
+
+INSERT INTO app_private.workspaces (id, slug, is_public, schema_version, migrated_at)
+VALUES ('aaaaaaaa-0000-4000-8000-000000000002', 'seedspace', false, 1, now());
+INSERT INTO app_private.workspace_members (workspace_id, user_id, role)
+VALUES ('aaaaaaaa-0000-4000-8000-000000000002',
+        '11111111-1111-4111-8111-111111111111', 'owner'),
+       ('aaaaaaaa-0000-4000-8000-000000000002',
+        '22222222-2222-4222-8222-222222222222', 'editor');
+
+-- Transaction-local payload. A real slice of the migrated corpus, so the shapes
+-- and the normalized unions are the genuine ones rather than hand-written.
+CREATE TEMP TABLE seed_payload (store jsonb);
+INSERT INTO seed_payload VALUES ($seed${
+ "meta": {
+  "schemaVersion": 1,
+  "migratedAt": "2026-07-28T00:00:00.000Z"
+ },
+ "events": [
+  {
+   "id": "879ed6b9-f4dd-557b-892e-b56eb7259a3c",
+   "promotion": "UFC",
+   "name": "UFC 330",
+   "date": "2026-08-15",
+   "externalIds": {},
+   "createdAt": "2026-08-10T14:35:44.152Z",
+   "updatedAt": null
+  }
+ ],
+ "bouts": [
+  {
+   "id": "3898b1b2-2a82-5f86-834f-b52864661a39",
+   "eventId": "879ed6b9-f4dd-557b-892e-b56eb7259a3c",
+   "cornerA": {
+    "displayName": "Jeremiah Wells",
+    "fighterKey": "jeremiah wells",
+    "fighterId": null
+   },
+   "cornerB": {
+    "displayName": "Myktybek Orolbai",
+    "fighterKey": "myktybek orolbai",
+    "fighterId": null
+   },
+   "division": "Welterweight",
+   "boardOrder": null,
+   "scheduledRounds": null,
+   "result": {
+    "status": "pending"
+   },
+   "externalIds": {},
+   "createdAt": "2026-08-10T14:35:44.152Z",
+   "updatedAt": null
+  },
+  {
+   "id": "56658e54-268a-58f3-9656-84bc63899228",
+   "eventId": "879ed6b9-f4dd-557b-892e-b56eb7259a3c",
+   "cornerA": {
+    "displayName": "Neil Magny",
+    "fighterKey": "neil magny",
+    "fighterId": null
+   },
+   "cornerB": {
+    "displayName": "Ramiz Brahimaj",
+    "fighterKey": "ramiz brahimaj",
+    "fighterId": null
+   },
+   "division": "Welterweight",
+   "boardOrder": null,
+   "scheduledRounds": null,
+   "result": {
+    "status": "pending"
+   },
+   "externalIds": {},
+   "createdAt": "2026-08-10T14:38:19.097Z",
+   "updatedAt": null
+  }
+ ],
+ "predictionRuns": [
+  {
+   "id": "1786372544151-9dv4e6",
+   "boutId": "3898b1b2-2a82-5f86-834f-b52864661a39",
+   "legacyEntryId": "1786372544151-9dv4e6",
+   "createdAt": "2026-08-10T14:35:44.152Z",
+   "decisionSnapshotId": "18fece26-754f-5c3f-9613-80e2be8c6bfd",
+   "targetEventDateAtCapture": "2026-08-15",
+   "finishProjection": {
+    "status": "computed",
+    "koPct": 31,
+    "subPct": 23,
+    "decPct": 46,
+    "leaders": [
+     "DEC"
+    ]
+   },
+   "cornerAIsProspectAtCapture": false,
+   "cornerBIsProspectAtCapture": false,
+   "includesProspectAtCapture": false,
+   "provenanceCompleteness": "full"
+  },
+  {
+   "id": "1786372699097-y5wnwx",
+   "boutId": "56658e54-268a-58f3-9656-84bc63899228",
+   "legacyEntryId": "1786372699097-y5wnwx",
+   "createdAt": "2026-08-10T14:38:19.097Z",
+   "decisionSnapshotId": "ce97ed36-69aa-5ab4-80e8-31d8aa817e80",
+   "targetEventDateAtCapture": "2026-08-15",
+   "finishProjection": {
+    "status": "computed",
+    "koPct": 29,
+    "subPct": 31,
+    "decPct": 40,
+    "leaders": [
+     "DEC"
+    ]
+   },
+   "cornerAIsProspectAtCapture": false,
+   "cornerBIsProspectAtCapture": false,
+   "includesProspectAtCapture": false,
+   "provenanceCompleteness": "full"
+  }
+ ],
+ "predictionSnapshots": [
+  {
+   "id": "74f78379-3e1f-548f-b836-4536c66833f7",
+   "runId": "1786372544151-9dv4e6",
+   "boutId": "3898b1b2-2a82-5f86-834f-b52864661a39",
+   "basis": "legacy-v1-unversioned",
+   "modelVersion": null,
+   "modelCoefHash": null,
+   "probA": 0.21641016469593574,
+   "probB": 0.7835898353040642,
+   "winnerCorner": "B",
+   "capturedAt": "2026-08-10T14:35:44.152Z",
+   "captureMode": "unknown",
+   "reconstruction": null,
+   "featureVector": null,
+   "fightHistoryCutoff": null,
+   "sourceManifest": null
+  },
+  {
+   "id": "18fece26-754f-5c3f-9613-80e2be8c6bfd",
+   "runId": "1786372544151-9dv4e6",
+   "boutId": "3898b1b2-2a82-5f86-834f-b52864661a39",
+   "basis": "v2",
+   "modelVersion": "logistic_v2.0_20260709",
+   "modelCoefHash": "256f866e",
+   "probA": 0.20839483559433586,
+   "probB": 0.7916051644056641,
+   "winnerCorner": "B",
+   "capturedAt": "2026-08-10T14:35:44.154Z",
+   "captureMode": "live",
+   "reconstruction": null,
+   "featureVector": null,
+   "fightHistoryCutoff": null,
+   "sourceManifest": null
+  },
+  {
+   "id": "ec99a3ca-b6c3-57ca-b236-1eac74bfc9ae",
+   "runId": "1786372699097-y5wnwx",
+   "boutId": "56658e54-268a-58f3-9656-84bc63899228",
+   "basis": "legacy-v1-unversioned",
+   "modelVersion": null,
+   "modelCoefHash": null,
+   "probA": 0.5748972073075925,
+   "probB": 0.42510279269240747,
+   "winnerCorner": "A",
+   "capturedAt": "2026-08-10T14:38:19.097Z",
+   "captureMode": "unknown",
+   "reconstruction": null,
+   "featureVector": null,
+   "fightHistoryCutoff": null,
+   "sourceManifest": null
+  },
+  {
+   "id": "ce97ed36-69aa-5ab4-80e8-31d8aa817e80",
+   "runId": "1786372699097-y5wnwx",
+   "boutId": "56658e54-268a-58f3-9656-84bc63899228",
+   "basis": "v2",
+   "modelVersion": "logistic_v2.0_20260709",
+   "modelCoefHash": "256f866e",
+   "probA": 0.5291850851441658,
+   "probB": 0.47081491485583415,
+   "winnerCorner": "A",
+   "capturedAt": "2026-08-10T14:38:19.102Z",
+   "captureMode": "live",
+   "reconstruction": null,
+   "featureVector": null,
+   "fightHistoryCutoff": null,
+   "sourceManifest": null
+  }
+ ],
+ "marketSnapshots": [
+  {
+   "id": "c9426821-b887-5053-9e2f-589cbfd70fdc",
+   "boutId": "3898b1b2-2a82-5f86-834f-b52864661a39",
+   "capturedAt": "2026-08-10T14:35:44.152Z",
+   "source": "manual",
+   "oddsA": 525,
+   "oddsB": -700
+  },
+  {
+   "id": "8ddf3f9a-f728-5c5e-9a38-ce5dd0489933",
+   "boutId": "56658e54-268a-58f3-9656-84bc63899228",
+   "capturedAt": "2026-08-10T14:38:19.097Z",
+   "source": "manual",
+   "oddsA": 105,
+   "oddsB": -125
+  }
+ ],
+ "bettingAssessments": [
+  {
+   "id": "d07cc735-843b-51b4-bd03-9620ad460c8c",
+   "boutId": "3898b1b2-2a82-5f86-834f-b52864661a39",
+   "runId": "1786372544151-9dv4e6",
+   "predictionSnapshotId": "18fece26-754f-5c3f-9613-80e2be8c6bfd",
+   "marketSnapshotId": "c9426821-b887-5053-9e2f-589cbfd70fdc",
+   "frozenAt": "2026-08-10T14:35:44.152Z",
+   "fairLineA": 380,
+   "fairLineB": -380,
+   "edgeA": 0.05380546361365951,
+   "edgeB": -0.053805463613659676,
+   "evA": 30.246772246459912,
+   "evB": -9.530838353638396,
+   "kellyA": 0.05761289951706649,
+   "kellyB": 0,
+   "tier": "NO BET",
+   "recommendedCorner": null,
+   "tierProvenance": "stored",
+   "recommendedCornerProvenance": "stored"
+  },
+  {
+   "id": "756d6b6a-c033-5899-8823-56acecaff648",
+   "boutId": "56658e54-268a-58f3-9656-84bc63899228",
+   "runId": "1786372699097-y5wnwx",
+   "predictionSnapshotId": "ce97ed36-69aa-5ab4-80e8-31d8aa817e80",
+   "marketSnapshotId": "8ddf3f9a-f728-5c5e-9a38-ce5dd0489933",
+   "frozenAt": "2026-08-10T14:38:19.097Z",
+   "fairLineA": -112,
+   "fairLineB": 112,
+   "edgeA": 0.061652617611698324,
+   "edgeB": -0.06165261761169838,
+   "evA": 8.482942454553992,
+   "evB": -15.253315325949856,
+   "kellyA": 0.08078992813860943,
+   "kellyB": 0,
+   "tier": "NO BET",
+   "recommendedCorner": null,
+   "tierProvenance": "stored",
+   "recommendedCornerProvenance": "stored"
+  }
+ ],
+ "trackedPositions": [
+  {
+   "id": "fd72f70e-9500-5ed0-9f39-888bcaea8a76",
+   "boutId": "3898b1b2-2a82-5f86-834f-b52864661a39",
+   "assessmentId": "d07cc735-843b-51b4-bd03-9620ad460c8c",
+   "marketSnapshotId": "c9426821-b887-5053-9e2f-589cbfd70fdc",
+   "origin": "legacyMigration",
+   "corner": "B",
+   "stakeUnits": 1,
+   "stakeSource": "explicit",
+   "openedAt": "2026-08-10T14:35:44.152Z",
+   "settlement": {
+    "status": "open"
+   },
+   "reviewState": {
+    "status": "notRequired"
+   },
+   "notes": null
+  },
+  {
+   "id": "6e47fe97-a724-547d-adfc-8f2a85291f8e",
+   "boutId": "56658e54-268a-58f3-9656-84bc63899228",
+   "assessmentId": "756d6b6a-c033-5899-8823-56acecaff648",
+   "marketSnapshotId": "8ddf3f9a-f728-5c5e-9a38-ce5dd0489933",
+   "origin": "legacyMigration",
+   "corner": "A",
+   "stakeUnits": 1,
+   "stakeSource": "explicit",
+   "openedAt": "2026-08-10T14:38:19.097Z",
+   "settlement": {
+    "status": "open"
+   },
+   "reviewState": {
+    "status": "notRequired"
+   },
+   "notes": null
+  }
+ ],
+ "wagers": [],
+ "props": [
+  {
+   "id": "1700000000211-cccccc",
+   "eventId": "879ed6b9-f4dd-557b-892e-b56eb7259a3c",
+   "target": {
+    "kind": "bout",
+    "boutId": "3898b1b2-2a82-5f86-834f-b52864661a39",
+    "corner": "A"
+   },
+   "method": "KO/TKO",
+   "propType": "method",
+   "label": "Seed Prop",
+   "odds": 300,
+   "stakeUnits": "1",
+   "result": "PENDING",
+   "pickSource": "model",
+   "createdAt": "2026-07-28T00:00:00.000Z"
+  }
+ ],
+ "parlays": [
+  {
+   "id": "1700000000221-bbbbbb",
+   "eventId": "879ed6b9-f4dd-557b-892e-b56eb7259a3c",
+   "combinedOdds": 250,
+   "stakeUnits": "1",
+   "pickSource": "human",
+   "createdAt": "2026-07-28T00:00:00.000Z",
+   "legs": [
+    {
+     "boutId": "3898b1b2-2a82-5f86-834f-b52864661a39",
+     "pickedCorner": "A",
+     "modelDefaultCorner": null,
+     "modelProbAtBuild": null,
+     "overridden": false
+    },
+    {
+     "boutId": "56658e54-268a-58f3-9656-84bc63899228",
+     "pickedCorner": "A",
+     "modelDefaultCorner": null,
+     "modelProbAtBuild": null,
+     "overridden": false
+    }
+   ]
+  }
+ ]
+}$seed$::jsonb);
+GRANT SELECT ON seed_payload TO authenticated;
+
+SET LOCAL ROLE authenticated;
+SET LOCAL search_path = public, extensions;
+SET LOCAL request.jwt.claim.sub = '11111111-1111-4111-8111-111111111111';
+
+SELECT is((SELECT roots_seeded FROM public.fm_rpc_seed_store('seedspace',
+            (SELECT store FROM seed_payload), 'seed-1',
+            (SELECT revision FROM public.fm_member_workspace('seedspace')))),
+          4, 'the initial seed creates every root: 2 runs + 1 prop + 1 parlay');
+
+SET LOCAL ROLE fm_table_owner;
+SET LOCAL search_path = public, extensions;
+SELECT is((SELECT count(*) FROM app_private.prediction_runs
+            WHERE workspace_id = 'aaaaaaaa-0000-4000-8000-000000000002'),
+          2::bigint, 'the run rows landed');
+SELECT is((SELECT count(*) FROM app_private.tracked_positions
+            WHERE workspace_id = 'aaaaaaaa-0000-4000-8000-000000000002'),
+          2::bigint, 'the descendant tracked positions landed');
+SELECT is((SELECT count(*) FROM app_private.parlay_legs
+            WHERE workspace_id = 'aaaaaaaa-0000-4000-8000-000000000002'),
+          2::bigint, 'nested parlay legs landed with their root');
+SELECT is((SELECT count(*) FILTER (WHERE removed_at IS NULL) || '/' ||
+                  count(*) FILTER (WHERE first_seed_version = 'seed-1')
+             FROM app_private.seed_items
+            WHERE workspace_id = 'aaaaaaaa-0000-4000-8000-000000000002'),
+          '4/4', 'the ledger carries one LIVE row per root, stamped seed-1');
+
+-- Rule 1: a root with a LIVE ledger row is skipped entirely.
+SET LOCAL ROLE authenticated;
+SET LOCAL search_path = public, extensions;
+SELECT is((SELECT roots_seeded || '/' || roots_skipped_live || '/' ||
+                  roots_skipped_tombstoned
+             FROM public.fm_rpc_seed_store('seedspace',
+               (SELECT store FROM seed_payload), 'seed-1',
+               (SELECT revision FROM public.fm_member_workspace('seedspace')))),
+          '0/4/0', 're-applying the same seed is a no-op: 0 seeded, 4 already live');
+
+SET LOCAL ROLE fm_table_owner;
+SET LOCAL search_path = public, extensions;
+SELECT is((SELECT count(*) FROM app_private.prediction_runs
+            WHERE workspace_id = 'aaaaaaaa-0000-4000-8000-000000000002'),
+          2::bigint, 'the idempotent re-seed duplicated nothing');
+
+-- Rule 2: a TOMBSTONED root is never resurrected, at any later seed version.
+SET LOCAL ROLE authenticated;
+SET LOCAL search_path = public, extensions;
+SELECT lives_ok($$SELECT public.fm_rpc_delete_pending_run('seedspace',
+  '1786372544151-9dv4e6',
+  (SELECT revision FROM public.fm_member_upcoming('seedspace')
+    WHERE tracked_position_id = 'fd72f70e-9500-5ed0-9f39-888bcaea8a76'))$$,
+  'the owner deletes one seeded pending run root');
+
+SET LOCAL ROLE fm_table_owner;
+SET LOCAL search_path = public, extensions;
+SELECT is((SELECT removed_at IS NOT NULL FROM app_private.seed_items
+            WHERE workspace_id = 'aaaaaaaa-0000-4000-8000-000000000002'
+              AND root_type = 'predictionRun' AND root_id = '1786372544151-9dv4e6'),
+          true, 'the deleted root is TOMBSTONED in the ledger');
+
+SET LOCAL ROLE authenticated;
+SET LOCAL search_path = public, extensions;
+SELECT is((SELECT roots_seeded || '/' || roots_skipped_live || '/' ||
+                  roots_skipped_tombstoned
+             FROM public.fm_rpc_seed_store('seedspace',
+               (SELECT store FROM seed_payload), 'seed-2',
+               (SELECT revision FROM public.fm_member_workspace('seedspace')))),
+          '0/3/1', 'advancing the seed version re-seeds nothing and sees 1 tombstone');
+
+SET LOCAL ROLE fm_table_owner;
+SET LOCAL search_path = public, extensions;
+SELECT is((SELECT count(*) FROM app_private.prediction_runs
+            WHERE workspace_id = 'aaaaaaaa-0000-4000-8000-000000000002'
+              AND id = '1786372544151-9dv4e6'),
+          0::bigint, 'the tombstoned RUN row is not resurrected');
+-- The rule has to reach DESCENDANTS, not only roots: after the delete the ids no
+-- longer conflict, so ON CONFLICT DO NOTHING alone would have re-inserted these.
+SELECT is((SELECT count(*) FROM app_private.prediction_snapshots
+            WHERE workspace_id = 'aaaaaaaa-0000-4000-8000-000000000002'
+              AND run_id = '1786372544151-9dv4e6'),
+          0::bigint, 'its prediction snapshots are not resurrected either');
+SELECT is((SELECT count(*) FROM app_private.tracked_positions
+            WHERE workspace_id = 'aaaaaaaa-0000-4000-8000-000000000002'),
+          1::bigint, 'only the surviving root keeps its tracked position');
+-- Rule 3: events and bouts are shared card structure and are NEVER tombstoned.
+SELECT is((SELECT count(*) FROM app_private.events
+            WHERE workspace_id = 'aaaaaaaa-0000-4000-8000-000000000002')
+       || '/' || (SELECT count(*) FROM app_private.bouts
+            WHERE workspace_id = 'aaaaaaaa-0000-4000-8000-000000000002'),
+          '1/2', 'the card structure survives the deletion of a root on it');
+
+-- Owner-only: an editor cannot seed.
+SET LOCAL ROLE authenticated;
+SET LOCAL search_path = public, extensions;
+SET LOCAL request.jwt.claim.sub = '22222222-2222-4222-8222-222222222222';
+SELECT throws_ok($$SELECT public.fm_rpc_seed_store('seedspace',
+  (SELECT store FROM seed_payload), 'seed-3', '1')$$,
+  '42501', NULL, 'seeding is owner-only: an editor is refused');
+SET LOCAL request.jwt.claim.sub = '11111111-1111-4111-8111-111111111111';
 
 -- ── The ACL negatives BIND ──────────────────────────────────────────────────
 -- Both checks previously ran against information_schema.role_table_grants,

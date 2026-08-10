@@ -126,6 +126,13 @@ export const WS_PROP = '11110000-0000-4000-8000-00000000000e';
 // reuses the cluster-7 aggregate's ids — legal because every key is composite
 // (workspace_id, id), so identical ids in a different workspace are distinct rows.
 export const WS_WS = '11110000-0000-4000-8000-00000000000f';
+// Gate 3's workspaces: deliberately EMPTY — no aggregate, no event, no bout.
+// fm_rpc_seed_store authors every row in them from the real migrated corpus, so
+// nothing the seed produces can be confused with fixture SQL. Two of them,
+// because determinism is proven by seeding the same store into two independent
+// workspaces and comparing their content digests.
+export const WS_SEED = '11110000-0000-4000-8000-000000000010';
+export const WS_SEED_B = '11110000-0000-4000-8000-000000000011';
 
 // WS_PUBLIC's snapshot probability is CENTRALLY OWNED here — a fixed, deliberately
 // non-trivial float8 pair whose complement survives the transport exactly. It is
@@ -354,6 +361,8 @@ ${workspace(WS_SAVE, 'api-save', false)}
 ${workspace(WS_WAGER, 'api-wager', false)}
 ${workspace(WS_PROP, 'api-prop', false)}
 ${workspace(WS_WS, 'api-ws', false)}
+${workspace(WS_SEED, 'api-seed', false)}
+${workspace(WS_SEED_B, 'api-seed-b', false)}
 
 INSERT INTO app_private.workspace_members (workspace_id, user_id, role)
 VALUES ('${WS_PUBLIC}', '${USER_MEMBER}', 'owner'),
@@ -386,7 +395,11 @@ VALUES ('${WS_PRIVATE}', '${USER_VIEWER}', 'viewer'),
        ('${WS_PROP}', '${USER_VIEWER}', 'viewer'),
        ('${WS_WS}', '${USER_MEMBER}', 'owner'),
        ('${WS_WS}', '${USER_OUTSIDER}', 'editor'),
-       ('${WS_WS}', '${USER_VIEWER}', 'viewer')
+       ('${WS_WS}', '${USER_VIEWER}', 'viewer'),
+       ('${WS_SEED}', '${USER_MEMBER}', 'owner'),
+       ('${WS_SEED}', '${USER_OUTSIDER}', 'editor'),
+       ('${WS_SEED}', '${USER_VIEWER}', 'viewer'),
+       ('${WS_SEED_B}', '${USER_MEMBER}', 'owner')
 ON CONFLICT DO NOTHING;
 -- api-claim is deliberately left with ZERO owners for the concurrency test.
 

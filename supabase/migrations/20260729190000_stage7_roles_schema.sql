@@ -4431,6 +4431,440 @@ BEGIN
   RETURN QUERY SELECT true;
 END $$;
 
+-- ── Gate 3: seeding the migrated corpus ─────────────────────────────────────
+-- fm_rpc_seed_store is the ONE non-contract RPC (§5): it exists to POPULATE a
+-- workspace from the migrated Stage 6 store, and no repository method maps to
+-- it. It must not be counted against the contract's 46.
+--
+-- A seed is NOT an import. Import is a destructive whole-store REPLACEMENT that
+-- clears first; a seed is ADDITIVE and has to stay safe to re-run against a
+-- workspace the user has since edited. The LEDGER decides what a seed may
+-- insert — never table membership (§7):
+--
+--   root with NO seed_items row           -> never seeded; insert it
+--   root with a LIVE seed_items row       -> already seeded; skip entirely
+--   root with a TOMBSTONED seed_items row -> the user deleted it; NEVER resurrect
+--
+-- `ON CONFLICT DO NOTHING` alone is insufficient, and that is precisely the
+-- point: after a delete the rows are physically gone, so their ids no longer
+-- conflict and a later seed would silently re-insert exactly what the user
+-- removed. The eligibility filter therefore reaches every DESCENDANT row —
+-- prediction snapshots, market snapshots, assessments, tracked positions,
+-- wagers, parlay legs — not merely the root row.
+--
+-- Events and bouts are the documented exception (§7): shared card structure,
+-- never tombstoned, and referenced by roots that may be seeded at different
+-- times — 4 bouts already carry both a prop and a prediction run. They are
+-- inserted ON CONFLICT DO NOTHING, which is also what stops a seed overwriting
+-- a user's rename: correcting a seeded record goes through fm_rpc_import_store,
+-- never a silent seed overwrite.
+--
+-- Table-owner, so the bulk load bypasses RLS and can write the owner-only
+-- ledger; the owner gate lives in the public RPC.
+CREATE FUNCTION app_private.seed_store_entities(
+  p_ws uuid, p_store jsonb, p_seed_version text)
+RETURNS jsonb LANGUAGE plpgsql VOLATILE SECURITY DEFINER SET search_path = '' AS $$
+DECLARE
+  v_runs text[]; v_props text[]; v_parlays text[];
+  v_assessments uuid[]; v_markets uuid[];
+  v_live int; v_tomb int; v_rows jsonb := '{}'::jsonb; n int;
+BEGIN
+  SET CONSTRAINTS app_private.run_decision_snapshot_fk,
+                  app_private.prediction_snapshots_run_fk DEFERRED;
+
+  -- (1) ELIGIBLE ROOTS — in the store, absent from the ledger. One NOT EXISTS
+  -- covers both skip cases at once: a live row and a tombstoned row are equally
+  -- disqualifying, which is exactly the rule "ledger membership is the test".
+  SELECT coalesce(array_agg(x.id ORDER BY x.id), ARRAY[]::text[]) INTO v_runs
+    FROM (SELECT r.value ->> 'id' AS id
+            FROM pg_catalog.jsonb_array_elements(
+                   coalesce(p_store -> 'predictionRuns', '[]'::jsonb)) r) x
+   WHERE NOT EXISTS (SELECT 1 FROM app_private.seed_items s
+                      WHERE s.workspace_id = p_ws
+                        AND s.root_type = 'predictionRun' AND s.root_id = x.id);
+
+  SELECT coalesce(array_agg(x.id ORDER BY x.id), ARRAY[]::text[]) INTO v_props
+    FROM (SELECT pr.value ->> 'id' AS id
+            FROM pg_catalog.jsonb_array_elements(
+                   coalesce(p_store -> 'props', '[]'::jsonb)) pr) x
+   WHERE NOT EXISTS (SELECT 1 FROM app_private.seed_items s
+                      WHERE s.workspace_id = p_ws
+                        AND s.root_type = 'prop' AND s.root_id = x.id);
+
+  SELECT coalesce(array_agg(x.id ORDER BY x.id), ARRAY[]::text[]) INTO v_parlays
+    FROM (SELECT pa.value ->> 'id' AS id
+            FROM pg_catalog.jsonb_array_elements(
+                   coalesce(p_store -> 'parlays', '[]'::jsonb)) pa) x
+   WHERE NOT EXISTS (SELECT 1 FROM app_private.seed_items s
+                      WHERE s.workspace_id = p_ws
+                        AND s.root_type = 'parlay' AND s.root_id = x.id);
+
+  -- Skip breakdown, reported so a caller can tell "already seeded" from
+  -- "deliberately deleted" instead of inferring it from a bare count.
+  SELECT count(*) FILTER (WHERE s.removed_at IS NULL),
+         count(*) FILTER (WHERE s.removed_at IS NOT NULL)
+    INTO v_live, v_tomb
+    FROM (SELECT 'predictionRun' AS t, r.value ->> 'id' AS id
+            FROM pg_catalog.jsonb_array_elements(
+                   coalesce(p_store -> 'predictionRuns', '[]'::jsonb)) r
+          UNION ALL SELECT 'prop', pr.value ->> 'id'
+            FROM pg_catalog.jsonb_array_elements(
+                   coalesce(p_store -> 'props', '[]'::jsonb)) pr
+          UNION ALL SELECT 'parlay', pa.value ->> 'id'
+            FROM pg_catalog.jsonb_array_elements(
+                   coalesce(p_store -> 'parlays', '[]'::jsonb)) pa) x
+    JOIN app_private.seed_items s
+      ON s.workspace_id = p_ws AND s.root_type = x.t AND s.root_id = x.id;
+
+  -- (2) The DESCENDANT CLOSURE of the eligible run roots, resolved from the
+  -- store itself: assessments by runId, positions and wagers by assessmentId,
+  -- and market snapshots by whichever of those references them. A market
+  -- snapshot shared with an already-seeded root simply conflicts and is skipped;
+  -- one referenced ONLY by a tombstoned root is never reached at all.
+  SELECT coalesce(array_agg(DISTINCT (a.value ->> 'id')::uuid), ARRAY[]::uuid[])
+    INTO v_assessments
+    FROM pg_catalog.jsonb_array_elements(
+           coalesce(p_store -> 'bettingAssessments', '[]'::jsonb)) a
+   WHERE (a.value ->> 'runId') = ANY (v_runs);
+
+  SELECT coalesce(array_agg(DISTINCT x.m), ARRAY[]::uuid[]) INTO v_markets FROM (
+      SELECT (a.value ->> 'marketSnapshotId')::uuid AS m
+        FROM pg_catalog.jsonb_array_elements(
+               coalesce(p_store -> 'bettingAssessments', '[]'::jsonb)) a
+       WHERE (a.value ->> 'runId') = ANY (v_runs)
+    UNION ALL
+      SELECT (t.value ->> 'marketSnapshotId')::uuid
+        FROM pg_catalog.jsonb_array_elements(
+               coalesce(p_store -> 'trackedPositions', '[]'::jsonb)) t
+       WHERE (t.value ->> 'assessmentId')::uuid = ANY (v_assessments)
+    UNION ALL
+      SELECT (g.value ->> 'marketSnapshotId')::uuid
+        FROM pg_catalog.jsonb_array_elements(
+               coalesce(p_store -> 'wagers', '[]'::jsonb)) g
+       WHERE (g.value ->> 'assessmentId')::uuid = ANY (v_assessments)
+  ) x WHERE x.m IS NOT NULL;
+
+  -- (3) INSERTS. Column mapping is identical to import_store_entities — the same
+  -- domain shape reconstructing the same normalized unions — with the
+  -- eligibility predicate added and ON CONFLICT DO NOTHING throughout. FK-safe
+  -- order, the run<->snapshot cycle deferred above.
+
+  -- Shared card structure: never tombstoned, so always offered, never overwritten.
+  INSERT INTO app_private.events (workspace_id, id, promotion, name, date,
+    external_ids, created_at, updated_at)
+  SELECT p_ws, (e.value ->> 'id')::uuid, e.value ->> 'promotion', e.value ->> 'name',
+    (e.value ->> 'date')::date,
+    CASE WHEN e.value -> 'externalIds' IS NULL OR e.value -> 'externalIds' = 'null'::jsonb
+         THEN '{}'::jsonb ELSE e.value -> 'externalIds' END,
+    (e.value ->> 'createdAt')::timestamptz, (e.value ->> 'updatedAt')::timestamptz
+  FROM pg_catalog.jsonb_array_elements(coalesce(p_store -> 'events', '[]'::jsonb)) e
+  ON CONFLICT DO NOTHING;
+  GET DIAGNOSTICS n = ROW_COUNT; v_rows := v_rows || jsonb_build_object('events', n);
+
+  INSERT INTO app_private.bouts (workspace_id, id, event_id,
+    corner_a_display_name, corner_a_fighter_key, corner_a_fighter_id,
+    corner_b_display_name, corner_b_fighter_key, corner_b_fighter_id,
+    division, board_order, scheduled_rounds, result_status, result_outcome,
+    result_method, external_ids, created_at, updated_at)
+  SELECT p_ws, (b.value ->> 'id')::uuid, (b.value ->> 'eventId')::uuid,
+    b.value -> 'cornerA' ->> 'displayName', b.value -> 'cornerA' ->> 'fighterKey',
+    (b.value -> 'cornerA' ->> 'fighterId')::uuid,
+    b.value -> 'cornerB' ->> 'displayName', b.value -> 'cornerB' ->> 'fighterKey',
+    (b.value -> 'cornerB' ->> 'fighterId')::uuid,
+    b.value ->> 'division', (b.value ->> 'boardOrder')::int,
+    (b.value ->> 'scheduledRounds')::int, b.value -> 'result' ->> 'status',
+    CASE WHEN b.value -> 'result' ->> 'status' = 'resolved' THEN b.value -> 'result' ->> 'outcome' END,
+    CASE WHEN b.value -> 'result' ->> 'status' = 'resolved' THEN b.value -> 'result' ->> 'method' END,
+    CASE WHEN b.value -> 'externalIds' IS NULL OR b.value -> 'externalIds' = 'null'::jsonb
+         THEN '{}'::jsonb ELSE b.value -> 'externalIds' END,
+    (b.value ->> 'createdAt')::timestamptz, (b.value ->> 'updatedAt')::timestamptz
+  FROM pg_catalog.jsonb_array_elements(coalesce(p_store -> 'bouts', '[]'::jsonb)) b
+  ON CONFLICT DO NOTHING;
+  GET DIAGNOSTICS n = ROW_COUNT; v_rows := v_rows || jsonb_build_object('bouts', n);
+
+  INSERT INTO app_private.prediction_runs (workspace_id, id, bout_id,
+    legacy_entry_id, created_at, decision_snapshot_id,
+    target_event_date_at_capture, finish_status, finish_ko_pct, finish_sub_pct,
+    finish_dec_pct, finish_leaders, corner_a_is_prospect_at_capture,
+    corner_b_is_prospect_at_capture, includes_prospect_at_capture,
+    provenance_completeness)
+  SELECT p_ws, r.value ->> 'id', (r.value ->> 'boutId')::uuid,
+    r.value ->> 'legacyEntryId', (r.value ->> 'createdAt')::timestamptz,
+    (r.value ->> 'decisionSnapshotId')::uuid,
+    (r.value ->> 'targetEventDateAtCapture')::date,
+    (r.value -> 'finishProjection') ->> 'status',
+    CASE WHEN (r.value -> 'finishProjection') ->> 'status' = 'computed'
+         THEN ((r.value -> 'finishProjection') ->> 'koPct')::int END,
+    CASE WHEN (r.value -> 'finishProjection') ->> 'status' = 'computed'
+         THEN ((r.value -> 'finishProjection') ->> 'subPct')::int END,
+    CASE WHEN (r.value -> 'finishProjection') ->> 'status' = 'computed'
+         THEN ((r.value -> 'finishProjection') ->> 'decPct')::int END,
+    CASE WHEN (r.value -> 'finishProjection') ->> 'status' = 'computed'
+         THEN (SELECT array_agg(v ORDER BY ord)
+                 FROM pg_catalog.jsonb_array_elements_text(
+                        (r.value -> 'finishProjection') -> 'leaders')
+                      WITH ORDINALITY AS t(v, ord)) END,
+    (r.value ->> 'cornerAIsProspectAtCapture')::boolean,
+    (r.value ->> 'cornerBIsProspectAtCapture')::boolean,
+    (r.value ->> 'includesProspectAtCapture')::boolean,
+    r.value ->> 'provenanceCompleteness'
+  FROM pg_catalog.jsonb_array_elements(coalesce(p_store -> 'predictionRuns', '[]'::jsonb)) r
+  WHERE (r.value ->> 'id') = ANY (v_runs)
+  ON CONFLICT DO NOTHING;
+  GET DIAGNOSTICS n = ROW_COUNT; v_rows := v_rows || jsonb_build_object('predictionRuns', n);
+
+  INSERT INTO app_private.prediction_snapshots (workspace_id, id, run_id, bout_id,
+    basis, model_version, model_coef_hash, prob_a, prob_b, winner_corner,
+    captured_at, capture_mode, reconstruction_type, reconstruction_source_commit,
+    reconstruction_prior_v2_p_a, reconstruction_prior_v2_p_b, feature_vector,
+    fight_history_cutoff, source_manifest)
+  SELECT p_ws, (s.value ->> 'id')::uuid, s.value ->> 'runId', (s.value ->> 'boutId')::uuid,
+    s.value ->> 'basis', s.value ->> 'modelVersion', s.value ->> 'modelCoefHash',
+    (s.value ->> 'probA')::double precision, (s.value ->> 'probB')::double precision,
+    s.value ->> 'winnerCorner', (s.value ->> 'capturedAt')::timestamptz,
+    s.value ->> 'captureMode',
+    CASE WHEN s.value -> 'reconstruction' = 'null'::jsonb OR s.value -> 'reconstruction' IS NULL
+         THEN NULL ELSE s.value -> 'reconstruction' ->> 'type' END,
+    CASE WHEN s.value -> 'reconstruction' = 'null'::jsonb OR s.value -> 'reconstruction' IS NULL
+         THEN NULL ELSE s.value -> 'reconstruction' ->> 'sourceCommit' END,
+    CASE WHEN s.value -> 'reconstruction' = 'null'::jsonb OR s.value -> 'reconstruction' IS NULL
+           OR s.value -> 'reconstruction' -> 'priorV2' = 'null'::jsonb
+         THEN NULL ELSE (s.value -> 'reconstruction' -> 'priorV2' ->> 'v2pA')::double precision END,
+    CASE WHEN s.value -> 'reconstruction' = 'null'::jsonb OR s.value -> 'reconstruction' IS NULL
+           OR s.value -> 'reconstruction' -> 'priorV2' = 'null'::jsonb
+         THEN NULL ELSE (s.value -> 'reconstruction' -> 'priorV2' ->> 'v2pB')::double precision END,
+    CASE WHEN s.value -> 'featureVector' = 'null'::jsonb OR s.value -> 'featureVector' IS NULL
+         THEN NULL ELSE s.value -> 'featureVector' END,
+    CASE WHEN s.value -> 'fightHistoryCutoff' = 'null'::jsonb OR s.value -> 'fightHistoryCutoff' IS NULL
+         THEN NULL ELSE s.value -> 'fightHistoryCutoff' END,
+    CASE WHEN s.value -> 'sourceManifest' = 'null'::jsonb OR s.value -> 'sourceManifest' IS NULL
+         THEN NULL ELSE s.value -> 'sourceManifest' END
+  FROM pg_catalog.jsonb_array_elements(coalesce(p_store -> 'predictionSnapshots', '[]'::jsonb)) s
+  WHERE (s.value ->> 'runId') = ANY (v_runs)
+  ON CONFLICT DO NOTHING;
+  GET DIAGNOSTICS n = ROW_COUNT; v_rows := v_rows || jsonb_build_object('predictionSnapshots', n);
+
+  INSERT INTO app_private.market_snapshots (workspace_id, id, bout_id, captured_at,
+    source, odds_a, odds_b)
+  SELECT p_ws, (m.value ->> 'id')::uuid, (m.value ->> 'boutId')::uuid,
+    (m.value ->> 'capturedAt')::timestamptz, m.value ->> 'source',
+    (m.value ->> 'oddsA')::int, (m.value ->> 'oddsB')::int
+  FROM pg_catalog.jsonb_array_elements(coalesce(p_store -> 'marketSnapshots', '[]'::jsonb)) m
+  WHERE (m.value ->> 'id')::uuid = ANY (v_markets)
+  ON CONFLICT DO NOTHING;
+  GET DIAGNOSTICS n = ROW_COUNT; v_rows := v_rows || jsonb_build_object('marketSnapshots', n);
+
+  INSERT INTO app_private.betting_assessments (workspace_id, id, bout_id, run_id,
+    prediction_snapshot_id, market_snapshot_id, frozen_at, fair_line_a, fair_line_b,
+    edge_a, edge_b, ev_a, ev_b, kelly_a, kelly_b, tier, recommended_corner,
+    tier_provenance, recommended_corner_provenance)
+  SELECT p_ws, (a.value ->> 'id')::uuid, (a.value ->> 'boutId')::uuid,
+    a.value ->> 'runId', (a.value ->> 'predictionSnapshotId')::uuid,
+    (a.value ->> 'marketSnapshotId')::uuid, (a.value ->> 'frozenAt')::timestamptz,
+    (a.value ->> 'fairLineA')::int, (a.value ->> 'fairLineB')::int,
+    (a.value ->> 'edgeA')::double precision, (a.value ->> 'edgeB')::double precision,
+    (a.value ->> 'evA')::double precision, (a.value ->> 'evB')::double precision,
+    (a.value ->> 'kellyA')::double precision, (a.value ->> 'kellyB')::double precision,
+    a.value ->> 'tier', a.value ->> 'recommendedCorner',
+    a.value ->> 'tierProvenance', a.value ->> 'recommendedCornerProvenance'
+  FROM pg_catalog.jsonb_array_elements(coalesce(p_store -> 'bettingAssessments', '[]'::jsonb)) a
+  WHERE (a.value ->> 'runId') = ANY (v_runs)
+  ON CONFLICT DO NOTHING;
+  GET DIAGNOSTICS n = ROW_COUNT; v_rows := v_rows || jsonb_build_object('bettingAssessments', n);
+
+  INSERT INTO app_private.tracked_positions (workspace_id, id, bout_id, assessment_id,
+    market_snapshot_id, origin, corner, stake_units, stake_source, opened_at,
+    settlement_status, settlement_outcome, financial_status, financial_reason,
+    profit_units, settled_at, review_status, review_reason, confirmed_at, notes)
+  SELECT p_ws, (t.value ->> 'id')::uuid, (t.value ->> 'boutId')::uuid,
+    (t.value ->> 'assessmentId')::uuid, (t.value ->> 'marketSnapshotId')::uuid,
+    t.value ->> 'origin', t.value ->> 'corner', (t.value ->> 'stakeUnits')::numeric,
+    t.value ->> 'stakeSource', (t.value ->> 'openedAt')::timestamptz,
+    (t.value -> 'settlement') ->> 'status',
+    CASE WHEN (t.value -> 'settlement') ->> 'status' = 'settled'
+         THEN (t.value -> 'settlement') ->> 'outcome' END,
+    CASE WHEN (t.value -> 'settlement') ->> 'status' = 'settled'
+         THEN (t.value -> 'settlement' -> 'financialResult') ->> 'status' END,
+    CASE WHEN (t.value -> 'settlement' -> 'financialResult') ->> 'status' = 'uncomputable'
+         THEN (t.value -> 'settlement' -> 'financialResult') ->> 'reason' END,
+    CASE WHEN (t.value -> 'settlement' -> 'financialResult') ->> 'status' = 'computed'
+         THEN ((t.value -> 'settlement' -> 'financialResult') ->> 'profitUnits')::double precision END,
+    CASE WHEN (t.value -> 'settlement') ->> 'status' = 'settled'
+         THEN ((t.value -> 'settlement') ->> 'settledAt')::timestamptz END,
+    (t.value -> 'reviewState') ->> 'status',
+    CASE WHEN (t.value -> 'reviewState') ->> 'status' <> 'notRequired'
+         THEN (t.value -> 'reviewState') ->> 'reason' END,
+    CASE WHEN (t.value -> 'reviewState') ->> 'status' = 'confirmed'
+         THEN ((t.value -> 'reviewState') ->> 'confirmedAt')::timestamptz END,
+    t.value ->> 'notes'
+  FROM pg_catalog.jsonb_array_elements(coalesce(p_store -> 'trackedPositions', '[]'::jsonb)) t
+  WHERE (t.value ->> 'assessmentId')::uuid = ANY (v_assessments)
+  ON CONFLICT DO NOTHING;
+  GET DIAGNOSTICS n = ROW_COUNT; v_rows := v_rows || jsonb_build_object('trackedPositions', n);
+
+  INSERT INTO app_private.wagers (workspace_id, id, bout_id, assessment_id,
+    market_snapshot_id, corner, stake_units, placed_at, settlement_status,
+    settlement_outcome, financial_status, financial_reason, profit_units,
+    settled_at, notes, external_ids)
+  SELECT p_ws, (g.value ->> 'id')::uuid, (g.value ->> 'boutId')::uuid,
+    (g.value ->> 'assessmentId')::uuid, (g.value ->> 'marketSnapshotId')::uuid,
+    g.value ->> 'corner', (g.value ->> 'stakeUnits')::numeric,
+    (g.value ->> 'placedAt')::timestamptz, (g.value -> 'settlement') ->> 'status',
+    CASE WHEN (g.value -> 'settlement') ->> 'status' = 'settled'
+         THEN (g.value -> 'settlement') ->> 'outcome' END,
+    CASE WHEN (g.value -> 'settlement') ->> 'status' = 'settled'
+         THEN (g.value -> 'settlement' -> 'financialResult') ->> 'status' END,
+    CASE WHEN (g.value -> 'settlement' -> 'financialResult') ->> 'status' = 'uncomputable'
+         THEN (g.value -> 'settlement' -> 'financialResult') ->> 'reason' END,
+    CASE WHEN (g.value -> 'settlement' -> 'financialResult') ->> 'status' = 'computed'
+         THEN ((g.value -> 'settlement' -> 'financialResult') ->> 'profitUnits')::double precision END,
+    CASE WHEN (g.value -> 'settlement') ->> 'status' = 'settled'
+         THEN ((g.value -> 'settlement') ->> 'settledAt')::timestamptz END,
+    g.value ->> 'notes',
+    CASE WHEN g.value -> 'externalIds' IS NULL OR g.value -> 'externalIds' = 'null'::jsonb
+         THEN '{}'::jsonb ELSE g.value -> 'externalIds' END
+  FROM pg_catalog.jsonb_array_elements(coalesce(p_store -> 'wagers', '[]'::jsonb)) g
+  WHERE (g.value ->> 'assessmentId')::uuid = ANY (v_assessments)
+  ON CONFLICT DO NOTHING;
+  GET DIAGNOSTICS n = ROW_COUNT; v_rows := v_rows || jsonb_build_object('wagers', n);
+
+  INSERT INTO app_private.props (workspace_id, id, event_id, target_kind,
+    target_bout_id, target_corner, target_event_id, method, prop_type, label,
+    odds, stake_units, result, pick_source, created_at)
+  SELECT p_ws, pr.value ->> 'id', (pr.value ->> 'eventId')::uuid,
+    (pr.value -> 'target') ->> 'kind',
+    CASE WHEN (pr.value -> 'target') ->> 'kind' = 'bout' THEN ((pr.value -> 'target') ->> 'boutId')::uuid END,
+    CASE WHEN (pr.value -> 'target') ->> 'kind' = 'bout' THEN (pr.value -> 'target') ->> 'corner' END,
+    CASE WHEN (pr.value -> 'target') ->> 'kind' = 'event' THEN ((pr.value -> 'target') ->> 'eventId')::uuid END,
+    pr.value ->> 'method', pr.value ->> 'propType', pr.value ->> 'label',
+    (pr.value ->> 'odds')::int, (pr.value ->> 'stakeUnits')::numeric,
+    pr.value ->> 'result', pr.value ->> 'pickSource', (pr.value ->> 'createdAt')::timestamptz
+  FROM pg_catalog.jsonb_array_elements(coalesce(p_store -> 'props', '[]'::jsonb)) pr
+  WHERE (pr.value ->> 'id') = ANY (v_props)
+  ON CONFLICT DO NOTHING;
+  GET DIAGNOSTICS n = ROW_COUNT; v_rows := v_rows || jsonb_build_object('props', n);
+
+  INSERT INTO app_private.parlays (workspace_id, id, event_id, combined_odds,
+    stake_units, pick_source, created_at)
+  SELECT p_ws, pa.value ->> 'id', (pa.value ->> 'eventId')::uuid,
+    (pa.value ->> 'combinedOdds')::int, (pa.value ->> 'stakeUnits')::numeric,
+    pa.value ->> 'pickSource', (pa.value ->> 'createdAt')::timestamptz
+  FROM pg_catalog.jsonb_array_elements(coalesce(p_store -> 'parlays', '[]'::jsonb)) pa
+  WHERE (pa.value ->> 'id') = ANY (v_parlays)
+  ON CONFLICT DO NOTHING;
+  GET DIAGNOSTICS n = ROW_COUNT; v_rows := v_rows || jsonb_build_object('parlays', n);
+
+  INSERT INTO app_private.parlay_legs (workspace_id, parlay_id, leg_index, bout_id,
+    picked_corner, model_default_corner, model_prob_at_build, overridden)
+  SELECT p_ws, pa.value ->> 'id', (leg.ord - 1)::int, (leg.v ->> 'boutId')::uuid,
+    leg.v ->> 'pickedCorner', leg.v ->> 'modelDefaultCorner',
+    (leg.v ->> 'modelProbAtBuild')::double precision, (leg.v ->> 'overridden')::boolean
+  FROM pg_catalog.jsonb_array_elements(coalesce(p_store -> 'parlays', '[]'::jsonb)) pa,
+       pg_catalog.jsonb_array_elements(coalesce(pa.value -> 'legs', '[]'::jsonb))
+         WITH ORDINALITY AS leg(v, ord)
+  WHERE (pa.value ->> 'id') = ANY (v_parlays)
+  ON CONFLICT DO NOTHING;
+  GET DIAGNOSTICS n = ROW_COUNT; v_rows := v_rows || jsonb_build_object('parlayLegs', n);
+
+  -- (4) LEDGER. One live row per newly seeded root, stamped with the seed
+  -- version that first introduced it. Deliberately NO `ON CONFLICT DO NOTHING`:
+  -- eligibility is DEFINED as "absent from the ledger", so a conflict here would
+  -- be a genuine bug in the filter and must fail loudly rather than be absorbed.
+  INSERT INTO app_private.seed_items (workspace_id, root_type, root_id,
+    first_seed_version, removed_at)
+  SELECT p_ws, 'predictionRun', x, p_seed_version, NULL::timestamptz FROM unnest(v_runs) x
+  UNION ALL SELECT p_ws, 'prop', x, p_seed_version, NULL::timestamptz FROM unnest(v_props) x
+  UNION ALL SELECT p_ws, 'parlay', x, p_seed_version, NULL::timestamptz FROM unnest(v_parlays) x;
+
+  -- (5) STATISTICS. A bulk load leaves every seeded table with NO statistics,
+  -- and the planner's defaults are catastrophic for the lateral joins in
+  -- app_private.position_rows. MEASURED on the real 178-position corpus: on a
+  -- freshly seeded workspace both fm_member_roi and fm_member_upcoming hit the
+  -- 8s statement timeout (57014 "canceling statement due to statement timeout")
+  -- and returned in 22ms and 10ms respectively once statistics existed. A seed
+  -- that leaves the app's primary read surface timing out is not finished, so
+  -- this belongs to the seed itself and not to an operator runbook step.
+  --
+  -- Guarded on having inserted something, so an idempotent re-seed stays free.
+  IF (SELECT sum(e.value::int)
+        FROM pg_catalog.jsonb_each_text(v_rows) AS e(key, value)) > 0 THEN
+    ANALYZE app_private.events, app_private.bouts, app_private.prediction_runs,
+            app_private.prediction_snapshots, app_private.market_snapshots,
+            app_private.betting_assessments, app_private.tracked_positions,
+            app_private.wagers, app_private.props, app_private.parlays,
+            app_private.parlay_legs, app_private.seed_items;
+  END IF;
+
+  RETURN jsonb_build_object(
+    -- cardinality(), NOT array_length(): array_length returns NULL for an empty
+    -- array, so a fully idempotent re-seed would report a NULL root count.
+    'rootsSeeded', cardinality(v_runs) + cardinality(v_props) + cardinality(v_parlays),
+    'rootsSkippedLive', coalesce(v_live, 0),
+    'rootsSkippedTombstoned', coalesce(v_tomb, 0),
+    'rowsInserted', v_rows);
+END $$;
+
+-- The seed RPC. Owner-only, revision-checked on the workspace row (the row it
+-- writes), envelope-gated with the SAME app_private.assert_store_envelope import
+-- uses, and serialized by the same workspace-row FOR UPDATE lock — without it
+-- two simultaneous seeds could both read an empty ledger and both insert.
+--
+-- No undo entry (§6): a seed is an operator action over storage, not a user edit
+-- of Store content, and the in-memory reference records none. Re-running it is
+-- the documented way to converge, and a root the user deleted stays deleted.
+CREATE FUNCTION public.fm_rpc_seed_store(
+  p_slug text, p_store jsonb, p_seed_version text, p_expected_revision text)
+RETURNS TABLE (seed_version text, roots_seeded int, roots_skipped_live int,
+               roots_skipped_tombstoned int, rows_inserted jsonb, revision text)
+LANGUAGE plpgsql VOLATILE SECURITY DEFINER SET search_path = '' AS $$
+DECLARE
+  v_ws uuid; v_row app_private.workspaces; v_new bigint;
+  v_incoming int; v_result jsonb; v_virgin boolean;
+BEGIN
+  v_ws := app_private.require_role(p_slug, ARRAY['owner']);
+  SELECT * INTO v_row FROM app_private.workspaces w WHERE w.id = v_ws FOR UPDATE;
+  IF v_row.revision <> app_private.parse_revision(p_expected_revision) THEN
+    PERFORM app_private.raise_stale_write(v_row.revision);
+  END IF;
+  IF p_seed_version IS NULL OR length(p_seed_version) = 0 THEN
+    RAISE EXCEPTION 'seedVersion: a non-empty seed version is required'
+      USING ERRCODE = '23514';
+  END IF;
+
+  -- Envelope FIRST. A seed writes rather than clears, so a bad payload is not
+  -- destructive here — but it would leave a half-recognisable workspace, and one
+  -- gate shared with import is worth more than two that can drift apart.
+  PERFORM app_private.assert_store_envelope(p_store);
+  v_incoming := (p_store #>> '{meta,schemaVersion}')::int;
+  IF v_incoming > v_row.schema_version THEN
+    RAISE EXCEPTION 'unknownFutureVersion: incoming schema % exceeds %',
+      v_incoming, v_row.schema_version USING ERRCODE = '23514';
+  END IF;
+
+  -- A VIRGIN workspace — empty ledger, so nothing was ever seeded OR authored
+  -- here — adopts the store's meta, because this seed is what makes it a
+  -- migrated store. Every later seed leaves meta alone: meta is Store content
+  -- and a seed never silently overwrites Store content (§7).
+  v_virgin := NOT EXISTS (SELECT 1 FROM app_private.seed_items s
+                           WHERE s.workspace_id = v_ws);
+
+  v_result := app_private.seed_store_entities(v_ws, p_store, p_seed_version);
+
+  UPDATE app_private.workspaces w
+     SET seed_version = p_seed_version,
+         schema_version = CASE WHEN v_virgin THEN v_incoming ELSE w.schema_version END,
+         migrated_at = CASE WHEN v_virgin
+                            THEN (p_store #>> '{meta,migratedAt}')::timestamptz
+                            ELSE w.migrated_at END
+   WHERE w.id = v_ws
+  RETURNING w.revision INTO v_new;
+
+  RETURN QUERY SELECT p_seed_version, (v_result ->> 'rootsSeeded')::int,
+    (v_result ->> 'rootsSkippedLive')::int,
+    (v_result ->> 'rootsSkippedTombstoned')::int,
+    v_result -> 'rowsInserted', v_new::text;
+END $$;
+
 -- ── (4) transfer ownership ──────────────────────────────────────────────────
 ALTER SCHEMA app_private OWNER TO fm_table_owner;
 DO $$ DECLARE r record; BEGIN
@@ -4560,6 +4994,8 @@ GRANT EXECUTE ON FUNCTION app_private.check_pending_vector(uuid, jsonb) TO fm_me
 GRANT EXECUTE ON FUNCTION app_private.clear_workspace_entities(uuid) TO fm_member_api;
 GRANT EXECUTE ON FUNCTION app_private.import_store_entities(uuid, jsonb) TO fm_member_api;
 GRANT EXECUTE ON FUNCTION app_private.assert_store_envelope(jsonb) TO fm_member_api;
+-- Gate 3 seed plumbing: fm_member_api only.
+GRANT EXECUTE ON FUNCTION app_private.seed_store_entities(uuid, jsonb, text) TO fm_member_api;
 -- CHECK-constraint helpers are evaluated as the role PERFORMING THE WRITE, not
 -- as the table owner, so fm_member_api needs EXECUTE on every helper reachable
 -- from a constraint on a table it writes. Without these the cluster failed with

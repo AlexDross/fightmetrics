@@ -277,7 +277,10 @@ SELECT set_eq(
            ('fm_rpc_save_parlay'),('fm_rpc_delete_parlay'),
            ('fm_member_workspace'),('fm_member_seed_version'),
            ('fm_rpc_set_seed_version'),('fm_rpc_import_store'),
-           ('fm_rpc_reset_workspace')$$,
+           ('fm_rpc_reset_workspace'),
+           -- Gate 3. The ONE non-contract RPC: it populates a workspace, it does
+           -- not serve the repository, and it must not be counted against the 46.
+           ('fm_rpc_seed_store')$$,
   'the public API surface is exactly the documented function set');
 
 -- ── Constraint helpers reachable by the writing role ────────────────────────
