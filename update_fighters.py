@@ -20,6 +20,10 @@ import pandas as pd
 import re, os, json
 from datetime import datetime, date, timedelta
 
+from fight_event_dates import (
+    canonicalize_undated_events, fight_sort_key, is_dated, normalize_date,
+)
+
 SRC          = os.path.dirname(os.path.abspath(__file__))
 JS_PATH      = os.path.join(SRC, 'src', 'fightersData.js')
 FH_PATH      = os.path.join(SRC, 'src', 'fightHistory.js')
@@ -238,8 +242,44 @@ prospect_fallbacks = load_prospect_fallbacks()
 
 event_dates = dict(zip(events_df['EVENT'].str.strip(), events_df['DATE'].apply(parse_date)))
 results_df['EVENT'] = results_df['EVENT'].str.strip()
-results_df['DATE']  = results_df['EVENT'].map(event_dates)
 results_df['BOUT']  = results_df['BOUT'].str.strip() if 'BOUT' in results_df.columns else ''
+
+# ─── Undated events ───────────────────────────────────────────────────────────
+# Some events in ufc_fight_results.csv have no row in ufc_event_details.csv, so
+# .map() would leave NaN — a float that is TRUTHY, which is how it slipped past
+# every `or ''` / `if date` guard and crashed the sort with
+# "'<' not supported between instances of 'float' and 'str'".
+#
+# Two of them are the same cards under a second name (Greco lists the Noche UFC
+# cards a second time as "UFC Fight Night: ..."), so they are canonicalised onto
+# the dated event and their duplicate rows dropped — dating them in place would
+# count those fights twice in every record, streak and history.
+_bouts_by_event = {
+    ev: frozenset(grp['BOUT'].dropna().astype(str))
+    for ev, grp in results_df.groupby('EVENT')
+}
+_alias_map, _unresolved_undated = canonicalize_undated_events(_bouts_by_event, event_dates)
+
+if _alias_map:
+    _before = len(results_df)
+    for _alias, _canon in sorted(_alias_map.items()):
+        print(f"  ↪ canonicalised undated event {_alias!r} → {_canon!r} "
+              f"(identical {len(_bouts_by_event[_alias])}-bout card; duplicate rows dropped)")
+    results_df = results_df[~results_df['EVENT'].isin(_alias_map)].copy()
+    print(f"  Dropped {_before - len(results_df)} duplicate result rows from aliased events")
+
+# Never fabricate a date. An event with no safe canonical form stays undated and
+# says so loudly; its fights still count toward records, but can never become a
+# fighter's last-fight date.
+for _ev in _unresolved_undated:
+    print(f"  ⚠️  WARNING: event {_ev!r} has NO mapped date and no matching dated "
+          f"card ({len(_bouts_by_event.get(_ev, ()))} bouts). Its fights are kept "
+          f"as UNDATED — they cannot set a last-fight date or appear in "
+          f"fightHistory. Add an authoritative date source to resolve this.")
+
+# Normalise to `str | None` BEFORE any fight record is built, so NaN can never
+# reach a sort key or date.fromisoformat().
+results_df['DATE'] = results_df['EVENT'].map(event_dates).map(normalize_date)
 
 detail_lookup = {}
 if has_details:
@@ -289,7 +329,9 @@ for _, row in results_df.iterrows():
         })
 
 for n in fights_by_fighter:
-    fights_by_fighter[n].sort(key=lambda x: x['date'] or '', reverse=True)
+    # fight_sort_key, not `or ''`: NaN is truthy, so `or ''` returned NaN and
+    # the comparison raised TypeError. Undated fights sort last.
+    fights_by_fighter[n].sort(key=lambda x: fight_sort_key(x['date']), reverse=True)
 
 # ─── Compute record updates ────────────────────────────────────────────────────
 print("Computing record stats...")
@@ -299,9 +341,11 @@ for name, fights in fights_by_fighter.items():
     wi  = sum(1 for f in fights if f['result'] == 'W')
     lo  = sum(1 for f in fights if f['result'] == 'L')
     ws, ls = compute_streak(fights)
-    dated = [f for f in fights if f['result'] in ('W','L','NC') and f['date']]
+    # is_dated(), not truthiness: an undated fight must never become a
+    # fighter's last-fight date, and NaN must never reach date.fromisoformat.
+    dated = [f for f in fights if f['result'] in ('W','L','NC') and is_dated(f['date'])]
     lfd = dated[0]['date'] if dated else None
-    dsl = (TODAY - date.fromisoformat(lfd)).days if lfd else None
+    dsl = (TODAY - date.fromisoformat(lfd)).days if is_dated(lfd) else None
     kow = sum(1 for f in fights if f['result']=='W' and any(x in f['method'] for x in ['KO','TKO']))
     sbw = sum(1 for f in fights if f['result']=='W' and 'SUB' in f['method'])
     dcw = sum(1 for f in fights if f['result']=='W' and 'DEC' in f['method'])
@@ -557,8 +601,10 @@ rebuilt_history = {}
 for fighter_name, fights in fights_by_fighter.items():
     entries = []
     for fight in fights:
-        fight_dt = fight.get('date', '')
-        if not fight_dt or fight['result'] not in ('W', 'L', 'NC'):
+        fight_dt = fight.get('date')
+        # Undated fights are excluded from fightHistory rather than emitted
+        # with a NaN 'dt' that would poison the sort below and the JSON.
+        if not is_dated(fight_dt) or fight['result'] not in ('W', 'L', 'NC'):
             continue
         wc = fight['wc'] or wc_lookup.get(fighter_name, 'Unknown')
         tb = 'title' in wc.lower() or 'title' in fight['event'].lower()
@@ -577,7 +623,7 @@ for fighter_name, fights in fights_by_fighter.items():
             'ev': fight['event'],
         })
     if entries:
-        entries.sort(key=lambda x: x['dt'], reverse=True)
+        entries.sort(key=lambda x: fight_sort_key(x['dt']), reverse=True)
         rebuilt_history[fighter_name] = entries
 
 fh_json = json.dumps(rebuilt_history, indent=2, ensure_ascii=False)

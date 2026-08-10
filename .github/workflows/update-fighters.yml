@@ -38,6 +38,13 @@ jobs:
           echo "✅  CSVs downloaded"
           echo "fight_stats rows: $(wc -l < ufc_fight_stats.csv)"
 
+      # Guards the undated-event handling BEFORE the updater runs, so a
+      # regression fails fast and loudly instead of resurfacing as
+      # "TypeError: '<' not supported between instances of 'float' and 'str'"
+      # halfway through a rebuild. stdlib unittest — no extra dependency.
+      - name: Test undated-event handling
+        run: python test_fight_event_dates.py
+
       - name: Run update_fighters.py
         run: python update_fighters.py
 

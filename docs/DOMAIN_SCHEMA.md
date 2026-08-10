@@ -312,6 +312,27 @@ records may use `null`; anything the app settles must supply a real timestamp.
 IDs are minted **once**. Later editing `Event.name`, `Event.promotion` or
 attaching real fighter IDs does not change any ID.
 
+### ROI and Upcoming transitions must be committed atomically
+
+`PredictionRun` carries the **legacy id verbatim**, and the same logical pick
+exists in `upcomingData.js` before an event and in `roiData.js` after it. The two
+files are therefore a single unit of truth with one invariant: **a given legacy
+id must appear in exactly one of them at any commit.**
+
+Two CI failures came from breaking that invariant across separate commits:
+
+1. `roiData.js` was updated while the corresponding `upcomingData.js` entries
+   still existed. Both files then carried the same legacy ids, so migration
+   produced **duplicate `PredictionRun` ids** and the suite failed.
+2. The follow-up commit cleared `upcomingData.js` on its own, which left a
+   synthetic migration fixture referencing fighter keys that no longer resolved.
+
+Neither needed a code change — the code was right and the data was momentarily
+inconsistent. The rule is procedural: **when a card is graded, remove its
+Upcoming entries and add its ROI entries in the SAME commit.** A commit that
+moves one side alone will fail CI, and should. The green run after the pair was
+reconciled (`31399785788`) confirms nothing else was wrong.
+
 The ID layer is **browser-safe**: no Node builtins anywhere in `src/data`.
 SHA-1 is implemented in-file and randomness comes from Web Crypto
 (`globalThis.crypto.getRandomValues`). `npm run probe:browser` performs a real
