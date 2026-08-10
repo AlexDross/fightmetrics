@@ -258,6 +258,66 @@ describe('import/reset serialize on the workspace row', () => {
   });
 });
 
+// THE DURABLE TIMESTAMP CONTRACT. MetaSchema (via the refined isoDateTime) and
+// the SQL envelope gate must accept EXACTLY the same set of timestamps. Two
+// mismatches existed: the SQL regex used unrestricted \d{2} time fields, so
+// Zod-invalid hour 24 / second 60 passed (PostgreSQL silently normalizes both);
+// and z.iso.datetime({offset:true}) alone accepts offsets up to ±23:59 that
+// PostgreSQL's timestamptz cannot represent (±15:59 max). Each case below is
+// asserted on BOTH sides, so the two can never drift apart again.
+describe('MetaSchema and the HTTP import agree on migratedAt (paired conformance)', () => {
+  let S0;
+  beforeAll(async () => { S0 = await exportStore(); });
+  afterAll(async () => {
+    await rpc('fm_rpc_import_store', { p_slug: SLUG, p_store: S0, p_backup_confirmed: true }, { as: USER_MEMBER });
+  });
+
+  const store = (iso) => ({ ...S0, meta: { ...S0.meta, migratedAt: iso } });
+  const accepted = [
+    ['minute precision, Z', '2026-08-08T05:28Z'],
+    ['seconds, Z', '2026-08-08T05:28:39Z'],
+    ['fractional seconds', '2026-08-08T05:28:39.900566Z'],
+    ['seconds, explicit offset', '2026-08-08T05:28:39+03:15'],
+    ['23:59 clock', '2026-08-08T23:59:59.999Z'],
+    ['offset +15:59 (PostgreSQL max)', '2026-08-08T05:28+15:59'],
+    ['offset -15:59 (PostgreSQL min)', '2026-08-08T05:28-15:59'],
+  ];
+  const refused = [
+    ['hour 24', '2026-08-08T24:00Z'],
+    ['second 60', '2026-08-08T23:59:60Z'],
+    ['offset +16:00 (beyond timestamptz)', '2026-08-08T05:28+16:00'],
+    ['offset +23:59 (beyond timestamptz)', '2026-08-08T05:28+23:59'],
+    ['offset -16:00 (beyond timestamptz)', '2026-08-08T05:28-16:00'],
+    ['impossible calendar date', '2026-13-45T00:00:00Z'],
+  ];
+
+  for (const [label, iso] of accepted) {
+    it(`both ACCEPT ${label}: ${iso}`, async () => {
+      expect(StoreSchema.safeParse(store(iso)).success, 'MetaSchema rejected it').toBe(true);
+      const res = await rpc('fm_rpc_import_store',
+        { p_slug: SLUG, p_store: store(iso), p_backup_confirmed: true }, { as: USER_MEMBER });
+      expect(res.status, JSON.stringify(res.body)).toBe(200);
+      // Stored as timestamptz: the same INSTANT, normalized to UTC text.
+      expect(new Date((await exportStore()).meta.migratedAt).getTime())
+        .toBe(new Date(iso).getTime());
+    });
+  }
+
+  for (const [label, iso] of refused) {
+    it(`both REJECT ${label}: ${iso}`, async () => {
+      expect(StoreSchema.safeParse(store(iso)).success, 'MetaSchema accepted it').toBe(false);
+      const before = JSON.stringify(await exportStore());
+      const res = await rpc('fm_rpc_import_store',
+        { p_slug: SLUG, p_store: store(iso), p_backup_confirmed: true }, { as: USER_MEMBER });
+      expect(res.status, JSON.stringify(res.body)).not.toBe(200);
+      expect(res.body.code).toBe('23514');
+      expect(res.body.message).toMatch(/invalidStoreEnvelope/);
+      // Rejected before the clear: the store is untouched.
+      expect(JSON.stringify(await exportStore())).toBe(before);
+    });
+  }
+});
+
 describe('migratedAt accepts every z.iso.datetime({offset:true}) form', () => {
   let S0;
   beforeAll(async () => { S0 = await exportStore(); });

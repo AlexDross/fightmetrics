@@ -4344,11 +4344,25 @@ BEGIN
   END IF;
   IF pg_catalog.jsonb_typeof(v_meta -> 'migratedAt') = 'string' THEN
     v_ts := v_meta ->> 'migratedAt';
-    -- z.iso.datetime({offset:true}): date T time, where time is HH:MM, HH:MM:SS
-    -- or HH:MM:SS.fraction (seconds and fraction both optional), then a required
-    -- Z or ±HH:MM. Calendar validity is left to the timestamptz cast below.
-    IF v_ts !~ '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:\d{2})$' THEN
+    -- THE DURABLE TIMESTAMP CONTRACT, mirroring isoDateTime() in
+    -- src/data/schemas/primitives.mjs. Time is HH:MM, HH:MM:SS or
+    -- HH:MM:SS.fraction (a fraction only where seconds exist), with Zod's real
+    -- BOUNDS: hour 00-23, minute 00-59, second 00-59. Unrestricted \d{2} fields
+    -- let hour 24 and second 60 through — Zod rejects both, while PostgreSQL
+    -- silently normalizes them (measured: 2026-08-08T24:00Z -> 2026-08-09
+    -- 00:00:00+00), so the pattern must carry the bounds itself.
+    IF v_ts !~ '^\d{4}-\d{2}-\d{2}T([01]\d|2[0-3]):[0-5]\d(:[0-5]\d(\.\d+)?)?(Z|[+-]\d{2}:\d{2})$' THEN
       RAISE EXCEPTION 'invalidStoreEnvelope: meta.migratedAt must be an ISO-8601 datetime with an offset, got %', v_ts
+        USING ERRCODE = '23514';
+    END IF;
+    -- Offset range: PostgreSQL timestamptz represents only ±15:59, while Zod
+    -- alone would accept up to ±23:59. Rejected HERE as a stable 23514 rather
+    -- than reaching the cast's `time zone displacement out of range`.
+    IF v_ts ~ '[+-]\d{2}:\d{2}$'
+       AND (substring(v_ts from '([+-])\d{2}:\d{2}$') IS NOT NULL)
+       AND (substring(v_ts from '[+-](\d{2}):\d{2}$')::int * 60
+            + substring(v_ts from '[+-]\d{2}:(\d{2})$')::int) > 959 THEN
+      RAISE EXCEPTION 'invalidStoreEnvelope: meta.migratedAt UTC offset must be within ±15:59, got %', v_ts
         USING ERRCODE = '23514';
     END IF;
     BEGIN
