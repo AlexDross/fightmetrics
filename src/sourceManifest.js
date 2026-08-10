@@ -9,43 +9,43 @@
 // cardioModule.js / rankHistory.js are regenerated, so the manifest stays current.
 
 export const SOURCE_MANIFEST = {
-  "manifestGeneratedAt": "2026-07-24T20:16:37Z",
+  "manifestGeneratedAt": "2026-08-10T20:09:24Z",
   "generatorScript": "generate_source_manifest.py",
   "methodologyRef": "research/source_integrity_audit.md",
   "modules": {
     "fightHistory": {
       "file": "src/fightHistory.js",
       "feedsV2": true,
-      "generatedAt": "2026-07-23",
-      "maxObservedEventDate": "2026-05-16",
-      "contentHash": "4b1cfa4885c6032aeb366996559a2fcef12914ced8038331e6a78040f45172e3",
-      "generatorVersion": "update_fighters.py @ d24b2d0862dae29f4299e7dd61e4394150add51b",
-      "verificationMethod": "Parsed DATE column of ufc_event_details.csv directly (774 rows); maximum event date found = 2026-05-16. Cross-checked ufc_fight_results.csv, ufc_fight_details.csv, ufc_fight_stats.csv for window-period event names: zero matches. This value is NOT derived from any file mtime, git commit date, or in-file header comment -- see research/source_integrity_audit.md for the original manual methodology this script automates."
+      "generatedAt": "2026-08-10",
+      "maxObservedEventDate": "2026-08-08",
+      "contentHash": "75a725cd4f7af93caeb4353fea74055272e2259c68a26490a44d8fc3a0590ee2",
+      "generatorVersion": "update_fighters.py @ c29071dc9f8c4e56b6b4355ee158d50dd95e5a6f",
+      "verificationMethod": "Parsed DATE column of ufc_event_details.csv directly (783 rows); maximum event date found = 2026-08-08. Cross-checked ufc_fight_results.csv, ufc_fight_details.csv, ufc_fight_stats.csv for window-period event names: FOUND (see manual audit). This value is NOT derived from any file mtime, git commit date, or in-file header comment -- see research/source_integrity_audit.md for the original manual methodology this script automates."
     },
     "fightersDataAggregates": {
       "file": "src/fightersData.js",
       "feedsV2": true,
       "note": "Feeds ASL/ASP/ATL/ATP/ASA (sig_str_landed, sig_str_accuracy, sub_attempts, td_landed, td_accuracy) and TR (rounds) -- the highest-weight non-ELO v2 features.",
-      "generatedAt": "2026-07-23",
-      "maxObservedEventDate": "2026-05-16",
-      "contentHash": "8b00817af6cb13a1b2987e81a72fd11a0f531b0000ac151aa2904393df0b8f02",
-      "generatorVersion": "update_fighters.py @ d24b2d0862dae29f4299e7dd61e4394150add51b",
-      "verificationMethod": "Parsed DATE column of ufc_event_details.csv directly (774 rows); maximum event date found = 2026-05-16. Cross-checked ufc_fight_results.csv, ufc_fight_details.csv, ufc_fight_stats.csv for window-period event names: zero matches. This value is NOT derived from any file mtime, git commit date, or in-file header comment -- see research/source_integrity_audit.md for the original manual methodology this script automates."
+      "generatedAt": "2026-08-10",
+      "maxObservedEventDate": "2026-08-08",
+      "contentHash": "ac80f4647cad1b9b8d54d7edf49f252b08dbccdf3faef10abb6b0d931b30534f",
+      "generatorVersion": "update_fighters.py @ c29071dc9f8c4e56b6b4355ee158d50dd95e5a6f",
+      "verificationMethod": "Parsed DATE column of ufc_event_details.csv directly (783 rows); maximum event date found = 2026-08-08. Cross-checked ufc_fight_results.csv, ufc_fight_details.csv, ufc_fight_stats.csv for window-period event names: FOUND (see manual audit). This value is NOT derived from any file mtime, git commit date, or in-file header comment -- see research/source_integrity_audit.md for the original manual methodology this script automates."
     },
     "elo": {
       "file": "src/eloModule.js",
       "feedsV2": true,
-      "generatedAt": "2026-07-20",
-      "maxObservedEventDate": "2026-05-16",
-      "contentHash": "05c4f95554f8e06e543d7d08b244ac7137842516dc6ad5d8b2cacc00d2f85ed3",
-      "generatorVersion": "regen_elo.py @ d2c56b9807b020db7ccca7db333298b997dff5e0",
-      "verificationMethod": "Parsed DATE column of ufc_event_details.csv directly (774 rows); maximum event date found = 2026-05-16. Cross-checked ufc_fight_results.csv, ufc_fight_details.csv, ufc_fight_stats.csv for window-period event names: zero matches. This value is NOT derived from any file mtime, git commit date, or in-file header comment -- see research/source_integrity_audit.md for the original manual methodology this script automates. NOTE: eloModule.js's own header comment claims coverage \"through Jul 2026\" -- this is misleading relative to the verified underlying data and should not be trusted; regen_elo.py reads only ufc_fight_results.csv + ufc_event_details.csv, identical to the fight-history/fighter-aggregate sources above."
+      "generatedAt": "2026-08-10",
+      "maxObservedEventDate": "2026-08-08",
+      "contentHash": "0cb60aee84bb6b2b40b2cb476c44e734f9706a96942246d022d285ebe80aa35d",
+      "generatorVersion": "regen_elo.py @ c29071dc9f8c4e56b6b4355ee158d50dd95e5a6f",
+      "verificationMethod": "Parsed DATE column of ufc_event_details.csv directly (783 rows); maximum event date found = 2026-08-08. Cross-checked ufc_fight_results.csv, ufc_fight_details.csv, ufc_fight_stats.csv for window-period event names: FOUND (see manual audit). This value is NOT derived from any file mtime, git commit date, or in-file header comment -- see research/source_integrity_audit.md for the original manual methodology this script automates. NOTE: eloModule.js's own header comment claims coverage \"through Jul 2026\" -- this is misleading relative to the verified underlying data and should not be trusted; regen_elo.py reads only ufc_fight_results.csv + ufc_event_details.csv, identical to the fight-history/fighter-aggregate sources above."
     },
     "cardio": {
       "file": "src/cardioModule.js",
       "feedsV2": false,
       "note": "Does not feed MODEL_V2 (no path into computeLogisticProb's 16 features, confirmed in research/source_integrity_audit.md). Tracked here for future model versions that might use it.",
-      "generatedAt": "2026-04-13",
+      "generatedAt": "2026-08-10",
       "maxObservedEventDate": null,
       "contentHash": "7025f1f440bbf01c15731cc40e65521e50635902ee482536cd07a412738b788c",
       "generatorVersion": "unavailable -- no cardio-generation script found in repo",
@@ -55,9 +55,9 @@ export const SOURCE_MANIFEST = {
       "file": "src/rankHistory.js",
       "feedsV2": false,
       "note": "Does not feed MODEL_V2 (no path into computeLogisticProb's 16 features, confirmed in research/source_integrity_audit.md). Tracked here for future model versions that might use it.",
-      "generatedAt": "2026-06-10",
+      "generatedAt": "2026-08-10",
       "maxObservedEventDate": "2026-03-12",
-      "contentHash": "16221ebe40b5d95e2dfcc8b51fe392138771d43f441e25883aa07515f117c112",
+      "contentHash": "9a706f356ef41fa68b605dd9c52740dd370eda014dfb747b0cb8bdc6313ba244",
       "generatorVersion": "regen_rankhistory.py (untracked in git -- present on disk, no commit history, no recoverable version)",
       "verificationMethod": "Raw source UFC_rankings_history.csv is not present on disk, so maxObservedEventDate is instead the maximum YYYYMMDD date literally embedded in the shipped rankHistory.js artifact's own HISTORICAL_RANKINGS data -- a defensible proxy (the artifact cannot reflect dates its regeneration process never saw), but distinct from the direct-CSV verification used for the three modules above."
     }

@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 // buildRoiEntry is reached through frozenRoiEntry so the entry goldens use the
 // same frozen division averages as the model goldens they embed.
 import { buildProvenance } from '../index.js';
+import { SOURCE_MANIFEST } from '../../../sourceManifest.js';
 import { loadFixture, expectExact, frozenRoiEntry } from '../../../__tests__/goldenSupport.js';
 
 const { fighterFixtures } = loadFixture('fighters.golden.json');
@@ -25,9 +26,25 @@ const set = (o, p, v) => {
   if (t && typeof t === 'object') t[last] = v;
 };
 
+// _provenance.sourceManifest is a PROVENANCE STAMP of the data that produced the
+// entry: content hashes, generation dates and observed-event dates. It changes on
+// every data refresh BY DESIGN — that is what the Update Fighters workflow exists
+// to do — so a Stage 0 capture can never permanently equal it. Pinning it made the
+// golden fail on every refresh (regen_elo.py alone moved elo.contentHash), which
+// is a false alarm about entry/model behaviour.
+//
+// It is therefore replaced by one sentinel on BOTH sides here, and its real value
+// is asserted separately below against the live SOURCE_MANIFEST. That splits the
+// two responsibilities cleanly:
+//   * this golden protects entry/model behaviour, exactly, field by field;
+//   * the direct test protects correct stamping of the CURRENT manifest.
+// Nothing else is loosened: every other field stays an exact comparison.
+const LIVE_SOURCE_MANIFEST = '<LIVE_SOURCE_MANIFEST>';
+
 function canonicalise(entry) {
   const clone = structuredClone(entry);
   for (const p of volatileEntryPaths) set(clone, p, '<VOLATILE>');
+  set(clone, '_provenance.sourceManifest', LIVE_SOURCE_MANIFEST);
   return clone;
 }
 
@@ -54,8 +71,46 @@ describe('buildRoiEntry — exact golden replay', () => {
         eventName: 'GOLDEN FIXTURE EVENT', eventDate: '2026-08-01',
         modelToggle: g.modelToggle, unitsWagered: 1,
       });
-      expectExact(canonicalise(built), g.canonical, `${g.pair} [${g.modelToggle}]`);
+      // canonicalise BOTH sides: the stored golden already carries <VOLATILE> in
+      // the four volatile paths (re-setting them is a no-op), and this replaces
+      // the captured manifest with the same sentinel as the freshly built entry.
+      expectExact(canonicalise(built), canonicalise(g.canonical), `${g.pair} [${g.modelToggle}]`);
     }
+  });
+
+  it('stamps the CURRENT live source manifest on every entry', () => {
+    // The half the golden deliberately no longer pins. Exact equality against the
+    // live manifest, so a wrong, stale or partially-populated stamp still fails.
+    for (const g of entryGoldens) {
+      const [fA, fB] = pairFighters(g.pair);
+      const built = frozenRoiEntry({
+        fA, fB, oddsA: '-150', oddsB: '+130',
+        eventName: 'GOLDEN FIXTURE EVENT', eventDate: '2026-08-01',
+        modelToggle: g.modelToggle, unitsWagered: 1,
+      });
+      expect(built._provenance.sourceManifest).toEqual(SOURCE_MANIFEST.modules);
+    }
+  });
+
+  it('negative control: an unrelated entry-field mutation still fails', () => {
+    // Proves the sentinel did not blunt the golden — everything outside the
+    // manifest is still compared exactly.
+    const g = entryGoldens[0];
+    const [fA, fB] = pairFighters(g.pair);
+    const built = frozenRoiEntry({
+      fA, fB, oddsA: '-150', oddsB: '+130',
+      eventName: 'GOLDEN FIXTURE EVENT', eventDate: '2026-08-01',
+      modelToggle: g.modelToggle, unitsWagered: 1,
+    });
+    const mutated = canonicalise(built);
+    mutated.edgeA += 1e-9;                       // one perturbed model number
+    expect(() => expectExact(mutated, canonicalise(g.canonical), 'mutated'))
+      .toThrow(/edgeA/);
+
+    const renamed = canonicalise(built);
+    renamed.predictedWinner = `${renamed.predictedWinner} (mutated)`;
+    expect(() => expectExact(renamed, canonicalise(g.canonical), 'mutated'))
+      .toThrow(/predictedWinner/);
   });
 
   it('covers both v1 and v2 toggles', () => {

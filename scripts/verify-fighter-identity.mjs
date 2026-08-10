@@ -5,16 +5,13 @@ import { CARDIO_RATIOS } from '../src/cardioModule.js';
 import { ELO_RATINGS } from '../src/eloModule.js';
 import { FIGHT_HISTORY } from '../src/fightHistory.js';
 import { _D2 } from '../src/fightersData.js';
+import { HISTORICAL_RANKINGS } from '../src/rankHistory.js';
 
 const LEGACY_NAME = 'Ian Garry';
 const CANONICAL_NAME = 'Ian Machado Garry';
 
 const aliases = JSON.parse(
   fs.readFileSync(new URL('../name_aliases.json', import.meta.url), 'utf8')
-);
-const appSource = fs.readFileSync(
-  new URL('../src/App.js', import.meta.url),
-  'utf8'
 );
 
 assert.equal(
@@ -73,10 +70,34 @@ assert.equal(
   'Opponent references must use the canonical name.'
 );
 
-assert.match(
-  appSource,
-  /'Ian Machado Garry':\s*\{\s*division:\s*'Welterweight',\s*rank:/,
-  'UFC rankings must use the canonical name.'
+// UFC rankings must use the canonical name.
+//
+// This assertion used to match a `'Ian Machado Garry': { division: 'Welterweight',
+// rank: … }` literal in src/App.js. The Vite/domain-extraction refactor (e28c8a2)
+// moved rankings out of App.js, so the pattern could never match again and this
+// script failed unconditionally — the Update Fighters workflow only ever got here
+// after the updater itself was fixed, which is how it stayed hidden.
+//
+// Rankings now live in two places, and both are checked against the same intent:
+//   * the roster's divisional-rank field (`dr`) on the canonical row
+//   * HISTORICAL_RANKINGS in src/rankHistory.js, keyed by fighter name
+assert.equal(
+  typeof canonicalRows[0].dr,
+  'number',
+  'The canonical roster row must carry a divisional rank.'
+);
+
+// Asserted against the imported STRUCTURE, never the source text: a substring
+// search can be satisfied by a comment, a prose note or an unrelated value, so
+// it would pass without the rankings actually being keyed correctly.
+assert.ok(
+  Object.hasOwn(HISTORICAL_RANKINGS, CANONICAL_NAME),
+  'Historical rankings must be keyed by the canonical name.'
+);
+assert.equal(
+  Object.hasOwn(HISTORICAL_RANKINGS, LEGACY_NAME),
+  false,
+  'Historical rankings must not be keyed by the legacy name.'
 );
 
 console.log(

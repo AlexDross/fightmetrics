@@ -68,6 +68,47 @@ stay 0 — a harness choice, not data loss; the production entry is preserved.
 The 167-row stored-profit recomputation and `fm_rpc_seed_store` remain Gate 3
 work and were **not** started here.
 
+### The Update Fighters hotfix landing (also pre-Gate-3)
+
+After the sync, `main` gained the Update Fighters hotfix (PR #9, squash-merged as
+`c29071d`) and the first successful run of that workflow, which committed
+regenerated data as `791c69f`. Both were merged into this branch before Gate 3.
+
+The workflow had been failing on a `TypeError: '<' not supported between
+instances of 'float' and 'str'` — pandas `.map()` yields NaN for events missing
+from `ufc_event_details.csv`, and **NaN is truthy in Python**, so every
+`x['date'] or ''` guard passed it through into a sort. Two further blockers were
+found behind it: a fighter-identity assertion that had been unreachable since the
+Vite refactor, and the entry golden pinning `_provenance.sourceManifest`, which
+changes on every data refresh by construction.
+
+**Migration counts are UNCHANGED by that landing**, and this is the load-bearing
+point for Stage 7: the workflow regenerates `fightersData.js`, `fightHistory.js`,
+`eloModule.js` and `sourceManifest.js` only. It never touches `roiData.js` or
+`upcomingData.js`, which are the sole inputs to `migrateV0ToV1`. Re-measured on
+the merged tree:
+
+| quantity | value |
+|---|---|
+| events / bouts | 18 / 178 |
+| predictionRuns · snapshots · marketSnapshots | 178 · 273 · 177 |
+| bettingAssessments · trackedPositions | 178 · 178 |
+| settled (graded) / open | 168 / 10 |
+| computed-profit rows | 167 |
+| props / parlays | 4 / 0 |
+| **seed-ledger roots** | **182** (178 + 4 + 0) |
+
+Generated-data totals **did** move, and are recorded for reference rather than
+asserted by Stage 7: roster `_D2` 2,291 · fighter histories 2,737 · Elo ratings
+2,729 · 17,644 history entries. The history count rose by one because
+`UFC - Road to UFC 4.6` is now dated (2025-08-22, from a reviewed override) and
+its fighters gained real histories.
+
+The catalog fingerprint is **unchanged at 850 / `1dff5590…`** — the landing
+touches no SQL — and `test:db` (159) and `test:api` (172) are likewise unmoved.
+Only the offline Vitest total rose, 426 → **428**, from the two new golden tests
+that split manifest-stamping from entry/model behaviour.
+
 ---
 
 ## 1. Architecture
@@ -1437,14 +1478,20 @@ The pre-Gate-3 sync of `origin/main` changed that, legitimately. `src/roiData.js
 main refreshed them with live results (two new cards). The JS bundle therefore
 *must* change, and continuing to claim the old hash would be false:
 
-| | Gate 1 → cluster 8 | post-sync (current) |
-|---|---|---|
-| JS bytes | 4,648,208 | **4,768,408** (+120,200) |
-| JS SHA-256 | `bc0fc915…e834` | **`76a8ed98…0977`** |
-| CSS SHA-256 | `4f72dadb…99cb` | `4f72dadb…99cb` (**unchanged**) |
+The **Update Fighters hotfix** (PR #9) then landed on main and its first
+successful run committed regenerated `fightersData.js`, `fightHistory.js`,
+`eloModule.js` and `sourceManifest.js`, moving the bundle once more. Both steps
+are recorded so the provenance of each move is clear:
+
+| | Gate 1 → cluster 8 | after main sync | **after Update Fighters** |
+|---|---|---|---|
+| JS filename | `index-BF9fYd6Y.js` | `index-B1hd45kI.js` | **`index-BNNY8Yhh.js`** |
+| JS bytes | 4,648,208 | 4,768,408 | **4,785,292** (+16,884) |
+| JS SHA-256 | `bc0fc915…e834` | `76a8ed98…0977` | **`259400aa…86ae`** |
+| CSS SHA-256 | `4f72dadb…99cb` | `4f72dadb…99cb` | `4f72dadb…99cb` (**unchanged throughout**) |
 
 ```
-js   4768408  76a8ed98d0b9b1d53c95023807949e1ffcbb8160c29171b6303171b9f6640977
+js   4785292  259400aa11a0881a3c065198f00f43a0eac3bdf1adcbf8acc0840dd9810486ae
 css    51993  4f72dadb556c0ea47a480c772cdb8f32b6d7212a14a7d6be020c27ad7cb299cb
 ```
 
