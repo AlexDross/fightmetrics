@@ -42,7 +42,7 @@ const snapshotsOfRun = (runId) => store.predictionSnapshots.filter((s) => s.runI
  *
  * The v2 snapshot is referenced by no `decisionSnapshotId` and no
  * `predictionSnapshotId` — it is reachable only through `runId`. Measured on the
- * migrated corpus: 77 of 237 snapshots are in that position, and 69 of the 152
+ * migrated corpus: 95 of 273 snapshots are in that position, and 69 of the 167
  * priced graded rows sit on such a run. Picking a single-snapshot run instead
  * makes the pruning assertions vacuous, because the only snapshot present is
  * also the one the assessment pins.
@@ -135,7 +135,7 @@ describe('contract conformance', () => {
     const snapshot = impl[SEED_LEDGER];
     snapshot[0].removedAt = 'tampered';
     snapshot.length = 0;
-    expect(impl[SEED_LEDGER]).toHaveLength(164);
+    expect(impl[SEED_LEDGER]).toHaveLength(182);
     expect(impl[SEED_LEDGER].every((x) => x.removedAt === null)).toBe(true);
   });
 
@@ -159,9 +159,9 @@ describe('reads', () => {
   const r = make();
 
   it('returns the migrated corpus', () => {
-    expect(r.eventRepository.list().data).toHaveLength(16);
-    expect(r.predictionRepository.listGraded({}).data).toHaveLength(153);
-    expect(r.predictionRepository.listPending().data).toHaveLength(7);
+    expect(r.eventRepository.list().data).toHaveLength(18);
+    expect(r.predictionRepository.listGraded({}).data).toHaveLength(168);
+    expect(r.predictionRepository.listPending().data).toHaveLength(10);
     expect(r.propRepository.list().data).toHaveLength(4);
     expect(r.parlayRepository.list().data).toHaveLength(0);
   });
@@ -194,15 +194,15 @@ describe('reads', () => {
 
   it('counts bouts per event without duplicating event data', () => {
     const rows = r.eventRepository.listWithBoutCounts().data;
-    expect(rows).toHaveLength(16);
-    expect(rows.reduce((n, x) => n + x.boutCount, 0)).toBe(160);
+    expect(rows).toHaveLength(18);
+    expect(rows.reduce((n, x) => n + x.boutCount, 0)).toBe(178);
   });
 });
 
 describe('statistics stay in JavaScript', () => {
   it('the repository returns an input projection the domain readers accept', () => {
     const rows = make().statisticsRepository.statisticsInput({}).data;
-    expect(rows).toHaveLength(160);
+    expect(rows).toHaveLength(178);
     // The existing, tested domain function does the computing — not SQL, not
     // the repository.
     const summary = computeROISummary(rows, new Set());
@@ -241,8 +241,8 @@ describe('authentication and membership are separate', () => {
     expect(r.predictionRepository.savePrediction({ run: { id: 'x' } }).error.kind)
       .toBe('unauthenticated');
     // Public read surface is still open.
-    expect(r.predictionRepository.listGraded({}).data).toHaveLength(153);
-    expect(r.statisticsRepository.statisticsInput({}).data).toHaveLength(160);
+    expect(r.predictionRepository.listGraded({}).data).toHaveLength(168);
+    expect(r.statisticsRepository.statisticsInput({}).data).toHaveLength(178);
     // Cannot claim: there is nobody to claim as.
     expect(r.authRepository.claimOwnership().error.kind).toBe('unauthenticated');
     // exportStore is the private store, not a read surface.
@@ -258,7 +258,7 @@ describe('authentication and membership are separate', () => {
     expect(r.predictionRepository.savePrediction({ run: { id: 'x' } }).error.kind).toBe('forbidden');
     expect(r.workspaceRepository.reset({ backupConfirmed: true }).error.kind).toBe('forbidden');
     // Routing is by membership: reads through the SAME public surface.
-    expect(r.predictionRepository.listGraded({}).data).toHaveLength(153);
+    expect(r.predictionRepository.listGraded({}).data).toHaveLength(168);
     expect(r.workspaceRepository.exportStore().error.kind).toBe('forbidden');
   });
 
@@ -308,7 +308,7 @@ describe('authentication and membership are separate', () => {
     expect(r.workspaceRepository.exportStore().error.kind).toBe('unauthenticated');
     expect(r.authRepository.claimOwnership().error.kind).toBe('unauthenticated');
     // The public read surface is still open.
-    expect(r.predictionRepository.listGraded({}).data).toHaveLength(153);
+    expect(r.predictionRepository.listGraded({}).data).toHaveLength(168);
   });
 
   it('signing out after claiming drops the claimed role too', () => {
@@ -457,29 +457,29 @@ describe('deletion removes the COMPLETE aggregate, and only proven orphans', () 
     expect(r.predictionRepository.getAggregate(runId).error.kind).toBe('notFound');
   });
 
-  it('clearGraded deletes 153 whole aggregates, leaving nothing orphaned', () => {
+  it('clearGraded deletes 168 whole aggregates, leaving nothing orphaned', () => {
     const r = make();
     const before = counts(r);
     const graded = r.predictionRepository.listGraded({}).data;
     const res = r.predictionRepository.clearGraded(
       graded.map((g) => ({ id: g.trackedPositionId, revision: g.revision })));
     expect(res.ok, JSON.stringify(res.error ?? {})).toBe(true);
-    expect(res.data.removed).toBe(153);
-    expect(res.data.rootsTombstoned).toBe(153);
-    expect(res.data.physicallyRemoved).toBe(153);
+    expect(res.data.removed).toBe(168);
+    expect(res.data.rootsTombstoned).toBe(168);
+    expect(res.data.physicallyRemoved).toBe(168);
 
     const after = counts(r);
     // THE regression: the old implementation dropped 153 positions and left
     // every assessment, run, snapshot and market behind.
-    expect(after.positions).toBe(before.positions - 153);
-    expect(after.assessments).toBe(before.assessments - 153);
-    expect(after.runs).toBe(before.runs - 153);
+    expect(after.positions).toBe(before.positions - 168);
+    expect(after.assessments).toBe(before.assessments - 168);
+    expect(after.runs).toBe(before.runs - 168);
     expect(after.snapshots).toBeLessThan(before.snapshots);
     expect(after.markets).toBeLessThan(before.markets);
     expect(after.events).toBe(before.events);
     expect(after.bouts).toBe(before.bouts);
     // The 7 pending positions and their aggregates survive intact.
-    expect(r.predictionRepository.listPending().data).toHaveLength(7);
+    expect(r.predictionRepository.listPending().data).toHaveLength(10);
     for (const p of r.predictionRepository.listPending().data) {
       expect(r.predictionRepository.getAggregate(runIdOfPosition(p.trackedPositionId)).ok).toBe(true);
     }
@@ -635,9 +635,9 @@ describe('deletion removes the COMPLETE aggregate, and only proven orphans', () 
       .toBe(true);
   });
 
-  it('the ledger records 164 roots and tombstones exactly what is deleted', () => {
+  it('the ledger records 182 roots and tombstones exactly what is deleted', () => {
     const r = make();
-    expect(r[SEED_LEDGER]).toHaveLength(164);   // 160 runs + 4 props + 0 parlays
+    expect(r[SEED_LEDGER]).toHaveLength(182);   // 178 runs + 4 props + 0 parlays
     const row = r.predictionRepository.listGraded({}).data[0];
     const runId = runIdOfPosition(row.trackedPositionId);
     r.predictionRepository.remove(runId, row.revision);
@@ -646,7 +646,7 @@ describe('deletion removes the COMPLETE aggregate, and only proven orphans', () 
     const tombstoned = r[SEED_LEDGER].filter((x) => x.removedAt !== null);
     expect(tombstoned.map((x) => x.rootId).sort())
       .toEqual([runId, store.props[0].id].sort());
-    expect(r[SEED_LEDGER]).toHaveLength(164);   // tombstoned, not forgotten
+    expect(r[SEED_LEDGER]).toHaveLength(182);   // tombstoned, not forgotten
     // Whether a later seed may re-insert a tombstoned root is Gate 3's
     // behaviour to build and prove; Gate 1 only guarantees the tombstone exists.
   });
@@ -783,8 +783,8 @@ describe('isolation', () => {
     const a = make();
     const b = make();
     a.workspaceRepository.reset({ backupConfirmed: true });
-    expect(b.predictionRepository.listGraded({}).data).toHaveLength(153);
-    expect(store.trackedPositions).toHaveLength(160);
+    expect(b.predictionRepository.listGraded({}).data).toHaveLength(168);
+    expect(store.trackedPositions).toHaveLength(178);
   });
 });
 
@@ -926,13 +926,13 @@ describe('revision vectors cover the whole dependency set', () => {
     expect(r.predictionRepository.listPending().data.some((x) => x.boutId === p.boutId)).toBe(true);
   });
 
-  it('clearGraded refuses an empty vector — the exact bug that deleted 153 rows', () => {
+  it('clearGraded refuses an empty vector — the exact bug that deleted every graded row', () => {
     const r = make();
     const before = counts(r);
     const res = r.predictionRepository.clearGraded([]);
     expect(res.ok).toBe(false);
     expect(res.error.kind).toBe('validation');
-    expect(res.error.issues).toHaveLength(153);
+    expect(res.error.issues).toHaveLength(168);
     expect(res.error.issues[0].code).toBe('missingRevisionEntry');
     expect(counts(r)).toEqual(before);
   });
@@ -1047,7 +1047,7 @@ describe('import is atomic and fully validated', () => {
       expect(r.workspaceRepository.importStore(bad, { backupConfirmed: true }).ok, String(bad))
         .toBe(false);
     }
-    expect(counts(r).positions).toBe(160);
+    expect(counts(r).positions).toBe(178);
   });
 
   it('a full export re-imports cleanly, even after an amended price', () => {
@@ -1058,7 +1058,7 @@ describe('import is atomic and fully validated', () => {
     const exported = r.workspaceRepository.exportStore().data;
     const res = r.workspaceRepository.importStore(exported, { backupConfirmed: true });
     expect(res.ok, JSON.stringify(res.error ?? {})).toBe(true);
-    expect(counts(r).positions).toBe(160);
+    expect(counts(r).positions).toBe(178);
   });
 
   it('import rebuilds the seed ledger from the incoming store', () => {
@@ -1067,7 +1067,7 @@ describe('import is atomic and fully validated', () => {
     r.predictionRepository.remove(runIdOfPosition(row.trackedPositionId), row.revision);
     expect(r[SEED_LEDGER].filter((x) => x.removedAt !== null)).toHaveLength(1);
     expect(r.workspaceRepository.importStore(exportOf(), { backupConfirmed: true }).ok).toBe(true);
-    expect(r[SEED_LEDGER]).toHaveLength(164);
+    expect(r[SEED_LEDGER]).toHaveLength(182);
     expect(r[SEED_LEDGER].every((x) => x.removedAt === null)).toBe(true);
   });
 });

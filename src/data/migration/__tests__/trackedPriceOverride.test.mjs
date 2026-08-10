@@ -11,7 +11,7 @@ import { marketIdFor, trackedMarketIdFor } from '../ids.mjs';
 // The legacy `marketOdds` field is an INDEPENDENT source value, not a
 // derivation of oddsA/oddsB. App.js edits it alone (:7890) and rewrites it when
 // the tracked side changes (:7868). It happens to equal the selected corner on
-// all 160 current rows, which is a property of today's seed and NOT a migration
+// every row in the original Stage 6 capture, which is a seed property and NOT a migration
 // rule — deriving it would discard any real price correction.
 const LEGACY = {
   roiEntries: ROI_ENTRIES, upcomingEntries: UPCOMING_ENTRIES,
@@ -257,27 +257,49 @@ describe('reconciliation rules', () => {
   });
 });
 
-describe('the current production seed is unaffected', () => {
+describe('the current production seed reconciles tracked prices', () => {
   const { store, manifest } = migrateV0ToV1(LEGACY, deps());
 
-  it('still produces 158 market snapshots and no override snapshots', () => {
-    expect(manifest.counts.marketSnapshots).toBe(158);
-    expect(store.marketSnapshots.every((m) => m.source === 'manual')).toBe(true);
-    expect(store.marketSnapshots.every((m) => m.capturedAt !== null)).toBe(true);
+  it('binds market source to timestamp provenance for every current snapshot', () => {
+    expect(manifest.counts.marketSnapshots).toBe(store.marketSnapshots.length);
+    for (const market of store.marketSnapshots) {
+      expect(market.source === 'legacyTrackedOverride').toBe(market.capturedAt === null);
+    }
   });
 
-  it('still links 158 positions and leaves 2 null', () => {
-    expect(store.trackedPositions.filter((t) => t.marketSnapshotId !== null)).toHaveLength(158);
-    expect(store.trackedPositions.filter((t) => t.marketSnapshotId === null)).toHaveLength(2);
+  it('resolves every non-null tracked market pointer', () => {
+    const linked = store.trackedPositions.filter((t) => t.marketSnapshotId !== null);
+    const unlinked = store.trackedPositions.filter((t) => t.marketSnapshotId === null);
+    const marketIds = new Set(store.marketSnapshots.map((market) => market.id));
+    expect(linked.length + unlinked.length).toBe(ROI_ENTRIES.length + UPCOMING_ENTRIES.length);
+    expect(linked.every((t) => marketIds.has(t.marketSnapshotId))).toBe(true);
   });
 
-  it('every tracked position still points at its assessment market', () => {
-    // True only because marketOdds equals the selected corner on all 160 rows
-    // today — a characterisation, which is exactly why the migration checks it
-    // instead of assuming it.
-    const A = new Map(store.bettingAssessments.map((a) => [a.id, a]));
+  it('uses a distinct pointer exactly when the source records a divergent tracked price', () => {
+    const entries = new Map([...ROI_ENTRIES, ...UPCOMING_ENTRIES].map((entry) => [entry.id, entry]));
+    const runs = new Map(store.predictionRuns.map((run) => [run.id, run]));
+    const assessments = new Map(store.bettingAssessments.map((a) => [a.id, a]));
+    const markets = new Map(store.marketSnapshots.map((market) => [market.id, market]));
     for (const t of store.trackedPositions) {
-      expect(t.marketSnapshotId).toBe(A.get(t.assessmentId).marketSnapshotId);
+      const assessment = assessments.get(t.assessmentId);
+      const entry = entries.get(runs.get(assessment.runId).legacyEntryId);
+      const trackedIsA = entry.trackedSide === entry.fighterA;
+      const sourceCornerOdds = trackedIsA ? entry.oddsA : entry.oddsB;
+      const selected = sourceCornerOdds === '' || sourceCornerOdds == null
+        ? null
+        : Number(sourceCornerOdds);
+      const hasTrackedPrice = Object.prototype.hasOwnProperty.call(entry, 'marketOdds');
+      const tracked = entry.marketOdds === '' || entry.marketOdds == null
+        ? null
+        : Number(entry.marketOdds);
+      const diverges = hasTrackedPrice && tracked !== selected;
+
+      if (!diverges) {
+        expect(t.marketSnapshotId).toBe(assessment.marketSnapshotId);
+      } else if (t.marketSnapshotId !== null) {
+        expect(t.marketSnapshotId).not.toBe(assessment.marketSnapshotId);
+        expect(markets.get(t.marketSnapshotId).source).toBe('legacyTrackedOverride');
+      }
     }
   });
 });

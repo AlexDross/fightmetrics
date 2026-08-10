@@ -25,6 +25,49 @@ Every gate re-runs: full Vitest suite, browser probe, production build, JS/CSS
 byte comparison, leak checks, fixture/reference integrity, and confirmation that
 the 22 untracked user files are untouched.
 
+### Pre-Gate-3 synchronization with `main`
+
+`main` was deliberately left un-merged for the whole of Gate 2 so the RPC clusters
+could be reviewed against a fixed base. It is merged **once**, here, before Gate 3
+begins — as its own reviewable commit, with no Gate 3 work in it.
+
+Merged `origin/main` (8 commits, not the 5 known earlier: three more landed while
+cluster 8 was under review, and the stale local `main` ref hid them). Their
+messages are generic and misleading — several say "Hello"/"Goodbye" or
+`fmt.Println` in a repo with no Go — but the *content* is real: live ROI and
+upcoming refreshes, the first parlay entry, and the CI fix.
+
+**Only one file was touched by both sides** — `docs/DOMAIN_SCHEMA.md` — and it
+auto-merged cleanly because the edits are in different sections: `main`
+de-hardcoded row counts in the legacy field-map table, Stage 7 added "The durable
+timestamp contract". Both survive in full.
+
+**The real conflict was semantic, not textual, and is worth stating plainly.**
+`main` changed no SQL and no API test, so the schema, the fingerprint and the
+whole `test:api` suite were unaffected. What it did change is the **size of the
+migrated corpus**, and `contract.test.mjs` hard-codes corpus counts. Fourteen
+assertions failed — every one a count, none a logic error:
+
+| Quantity | Gate 1 | post-sync | derivation |
+|---|---|---|---|
+| ROI entries (graded) | 153 | **168** | refreshed `roiData.js` |
+| Upcoming entries (open) | 7 | **10** | refreshed `upcomingData.js` |
+| events | 16 | **18** | two new cards |
+| prediction runs / positions | 160 | **178** | 168 + 10 ✓ |
+| seed-ledger roots | 164 | **182** | 178 + 4 props + 0 parlays ✓ |
+| prediction snapshots | 237 | **273** | |
+| computed-profit rows | 152 | **167** | |
+
+The counts were re-derived from the merged data and cross-checked for internal
+consistency (168 + 10 = 178; 178 + 4 + 0 = 182) before any test was edited, so
+this is a re-measured baseline rather than a test bent to fit output. The
+assertions remain exact equalities. `parlayData.js` now holds one real parlay, but
+the contract suite still migrates with `parlayEntries: []`, so migrated parlays
+stay 0 — a harness choice, not data loss; the production entry is preserved.
+
+The 167-row stored-profit recomputation and `fm_rpc_seed_store` remain Gate 3
+work and were **not** started here.
+
 ---
 
 ## 1. Architecture
@@ -523,7 +566,7 @@ wagers, each against **its own** `market_snapshot_id`:
 A deferred trigger on `bouts` re-checks **every** dependent position and wager
 after grading or return-to-pending.
 
-Profit equality is exact (`<>`, no epsilon) because recomputing all 152 stored
+Profit equality is exact (`<>`, no epsilon) because recomputing all 167 stored
 computed rows in JS reproduced them bit-for-bit, deviation `0`. **Gate 2 re-runs
 this in real Postgres; if any row deviates, the smallest sufficient bound is
 measured there and only that comparison changes.**
@@ -847,7 +890,10 @@ which rely on the mandatory backup.
 
 ## 7. Seed ledger and pruning
 
-164 logical roots: 160 prediction runs + 4 props + 0 parlays.
+**182 logical roots: 178 prediction runs + 4 props + 0 parlays** (measured after
+the pre-Gate-3 sync of `origin/main`, which refreshed the live ROI/upcoming
+data). The Gate-1 figure was 164 = 160 + 4 + 0; the corpus grew by two cards,
+and every count below is the post-sync measurement.
 
 ```sql
 seed_items(workspace_id, root_type, root_id, first_seed_version, removed_at)
@@ -898,7 +944,7 @@ off the run by `run_id`, so if the run row survives — which happens exactly wh
 a wager pinned its assessment through step 2 — then **none** of its snapshots are
 orphans, whatever else does or does not point at them. Testing a snapshot only
 against *other* runs' `decision_snapshot_id` is not enough: measured on the
-migrated corpus, **77 of 237 snapshots are referenced by no
+migrated corpus, **95 of 273 snapshots are referenced by no
 `decision_snapshot_id` and no `prediction_snapshot_id`** and are reachable only
 through `run_id`. On run `1779253814932-7igxlf` that rule deleted the `v2`
 snapshot while leaving the run alive, and **both `StoreSchema` and
@@ -1373,13 +1419,42 @@ and `@tailwindcss/vite`. Hit while pinning the CLI: the install pruned the
 toolchain and the suite failed to start with `Cannot find package 'vite'`.
 
 The **build** needs no ambient `NODE_ENV`. Measured: `npm run build` with
-`NODE_ENV` unset reproduces the approved hashes exactly
-(`bc0fc915…`, 4,648,208 bytes; CSS `4f72dadb…`), because Vite sets production
-mode itself. The prohibition is only against **forcing**
+`NODE_ENV` unset reproduces the approved hashes exactly, because Vite sets
+production mode itself. The prohibition is only against **forcing**
 `NODE_ENV=development`, which selects React's development build and inflates the
-JS to 5,005,192 bytes — not a real change, but it does break byte comparison.
+JS by roughly 350 KB — not a real change, but it does break byte comparison.
 An earlier revision of this note wrongly claimed ambient
 `NODE_ENV=production` was required.
+
+### The approved bundle baseline (re-established at the pre-Gate-3 sync)
+
+Every Stage 7 gate through cluster 8 asserted **byte identity** against the Gate-1
+bundle, which was correct while Stage 7 was runtime-inert: it adds SQL, tests and
+docs only, so the bundle could not move.
+
+The pre-Gate-3 sync of `origin/main` changed that, legitimately. `src/roiData.js`,
+`src/upcomingData.js` and `src/parlayData.js` are **bundled runtime data**, and
+main refreshed them with live results (two new cards). The JS bundle therefore
+*must* change, and continuing to claim the old hash would be false:
+
+| | Gate 1 → cluster 8 | post-sync (current) |
+|---|---|---|
+| JS bytes | 4,648,208 | **4,768,408** (+120,200) |
+| JS SHA-256 | `bc0fc915…e834` | **`76a8ed98…0977`** |
+| CSS SHA-256 | `4f72dadb…99cb` | `4f72dadb…99cb` (**unchanged**) |
+
+```
+js   4768408  76a8ed98d0b9b1d53c95023807949e1ffcbb8160c29171b6303171b9f6640977
+css    51993  4f72dadb556c0ea47a480c772cdb8f32b6d7212a14a7d6be020c27ad7cb299cb
+```
+
+The CSS is unchanged because no style changed — which is itself the evidence that
+the JS delta is data, not behaviour. The **leak check** re-run against the new
+bundle confirms it: zero occurrences of `service_role`, `JWT_SECRET`,
+`supabase_admin`, a Postgres URL or an access token, and zero occurrences of
+`app_private`, `fm_rpc_*`, `fm_member_*` or `prior_state` — Stage 7's server-only
+surface is still entirely absent from the client. **This is the baseline later
+gates compare against**; the Gate-1 hash is retained above only as history.
 
 ### Required rejection tests
 
@@ -1412,7 +1487,7 @@ every `app_private` table · neither client role can `SET ROLE`.
 ### Gate 2 measurements
 
 - browser → PostgREST → `float8` probability complementarity
-- Postgres profit recomputation across all 152 computed rows
+- Postgres profit recomputation across all 167 computed rows
 - negative-zero probe via `encode(pg_catalog.float8send(v),'hex') =
   '8000000000000000'`, over every persisted double column and a jsonb `-0`
   round-trip
@@ -1436,7 +1511,7 @@ real browser → PostgREST → `float8` → response → JavaScript path.
   round-trip is outstanding with `test:api`.
 - Profit: the exact `<>` comparison binds, proven against a real stored row —
   the correct value is accepted and a value **one ULP off is rejected**. The
-  recomputation over the 152 stored computed rows needs Gate 3's seed.
+  recomputation over the 167 stored computed rows needs Gate 3's seed.
 
 **Postgres and V8 agree bit-for-bit** on `decimal_from_american` for `-150`,
 `+250`, `-110` and `+100`, compared as `float8send` hex against constants dumped
