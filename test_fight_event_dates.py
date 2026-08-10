@@ -12,9 +12,11 @@ when Greco's feed grew events that have no row in ufc_event_details.csv. Every
 test below fails against the pre-fix code.
 """
 import unittest
+from collections import Counter
 from datetime import date
 
 from fight_event_dates import (
+    EVENT_DATE_OVERRIDES, apply_event_date_overrides,
     canonicalize_undated_events, fight_sort_key, is_dated, normalize_date,
 )
 
@@ -151,6 +153,94 @@ class TestNanCannotReachSortingOrDateParsing(unittest.TestCase):
                    if is_dated(f['date']) and f['result'] in ('W', 'L', 'NC')]
         self.assertEqual(entries, [{'dt': '2025-09-13'}])
         entries.sort(key=lambda x: fight_sort_key(x['dt']), reverse=True)  # must not raise
+
+
+ROAD = 'UFC - Road to UFC 4.6'
+ROAD_BOUTS = ['Shi Ming vs. Bruna Brasil',
+              'Nyamjargal Tumendemberel vs. Terrance Saeteurn']
+
+
+class TestRoadToUfcDateOverride(unittest.TestCase):
+    """Road to UFC 4.6 is dated from a reviewed, attributed source — not guessed."""
+
+    def test_the_override_is_the_officially_sourced_date(self):
+        self.assertEqual(EVENT_DATE_OVERRIDES[ROAD], '2025-08-22')
+
+    def test_the_override_dates_the_event_and_removes_it_from_unresolved(self):
+        dates = {'Some Dated Card': '2025-01-01'}
+        applied = apply_event_date_overrides(dates)
+        self.assertIn(ROAD, applied)
+        self.assertEqual(dates[ROAD], '2025-08-22')
+        _, unresolved = canonicalize_undated_events(
+            {ROAD: Counter(ROAD_BOUTS), 'Some Dated Card': Counter(['A vs. B'])}, dates)
+        self.assertNotIn(ROAD, unresolved)
+
+    def test_both_road_bouts_are_dated_exactly_once_and_can_set_last_fight_date(self):
+        dates = {}
+        apply_event_date_overrides(dates)
+        # Build the per-fighter records the updater would build.
+        rows = [(ROAD, b) for b in ROAD_BOUTS]
+        fights = []
+        for event, bout in rows:
+            a, b = bout.split(' vs. ')
+            for fighter, opponent in ((a, b), (b, a)):
+                fights.append({'fighter': fighter, 'opponent': opponent,
+                               'result': 'W', 'date': normalize_date(dates.get(event))})
+        # Each bout contributes exactly one record per fighter — no duplication.
+        self.assertEqual(len(fights), 4)
+        for f in fights:
+            self.assertEqual(f['date'], '2025-08-22')
+            self.assertTrue(is_dated(f['date']), 'must be usable as a real date')
+        # ...and each fighter appears exactly once.
+        names = [f['fighter'] for f in fights]
+        self.assertEqual(len(names), len(set(names)))
+        # ...and the date can drive last-fight-date / days-since-last.
+        dated = [f for f in fights if f['result'] in ('W', 'L', 'NC') and is_dated(f['date'])]
+        lfd = dated[0]['date']
+        self.assertEqual(lfd, '2025-08-22')
+        self.assertEqual(date.fromisoformat(lfd), date(2025, 8, 22))
+
+    def test_an_override_never_contradicts_a_date_the_feed_supplies(self):
+        dates = {ROAD: '2099-01-01'}          # feed already has one
+        applied = apply_event_date_overrides(dates)
+        self.assertEqual(applied, [])
+        self.assertEqual(dates[ROAD], '2099-01-01')
+
+    def test_an_unknown_undated_event_is_still_reported(self):
+        """The override table must not silence future gaps."""
+        dates = {}
+        apply_event_date_overrides(dates)
+        _, unresolved = canonicalize_undated_events(
+            {'UFC - Some Future Unknown Card': Counter(['X vs. Y'])}, dates)
+        self.assertEqual(unresolved, ['UFC - Some Future Unknown Card'])
+
+
+class TestBoutMultisetMatching(unittest.TestCase):
+    """Exact equality must compare multiplicity, not just membership."""
+
+    def test_a_repeated_bout_label_is_not_collapsed(self):
+        # Same distinct labels, different multiplicity: a set would call these
+        # equal and silently merge two different cards.
+        dated_card = Counter(['A vs. B', 'C vs. D', 'C vs. D'])
+        undated = Counter(['A vs. B', 'C vs. D'])
+        self.assertEqual(set(dated_card), set(undated))       # a set cannot tell them apart
+        self.assertNotEqual(dated_card, undated)              # a multiset can
+        alias, unresolved = canonicalize_undated_events(
+            {'Dated': dated_card, 'Undated': undated}, {'Dated': '2025-01-01'})
+        self.assertEqual(alias, {})
+        self.assertIn('Undated', unresolved)
+
+    def test_an_identical_multiset_still_canonicalizes(self):
+        bouts = Counter(['A vs. B', 'C vs. D', 'C vs. D'])
+        alias, unresolved = canonicalize_undated_events(
+            {'Dated': bouts, 'Undated': Counter(bouts)}, {'Dated': '2025-01-01'})
+        self.assertEqual(alias, {'Undated': 'Dated'})
+        self.assertEqual(unresolved, [])
+
+    def test_plain_iterables_are_accepted_and_converted(self):
+        alias, _ = canonicalize_undated_events(
+            {'Dated': ['A vs. B'], 'Undated': ['A vs. B']}, {'Dated': '2025-01-01'})
+        self.assertEqual(alias, {'Undated': 'Dated'})
 
 
 if __name__ == '__main__':

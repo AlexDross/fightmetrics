@@ -20,8 +20,11 @@ import pandas as pd
 import re, os, json
 from datetime import datetime, date, timedelta
 
+from collections import Counter
+
 from fight_event_dates import (
-    canonicalize_undated_events, fight_sort_key, is_dated, normalize_date,
+    apply_event_date_overrides, canonicalize_undated_events, fight_sort_key,
+    is_dated, normalize_date,
 )
 
 SRC          = os.path.dirname(os.path.abspath(__file__))
@@ -254,8 +257,16 @@ results_df['BOUT']  = results_df['BOUT'].str.strip() if 'BOUT' in results_df.col
 # cards a second time as "UFC Fight Night: ..."), so they are canonicalised onto
 # the dated event and their duplicate rows dropped — dating them in place would
 # count those fights twice in every record, streak and history.
+# Reviewed, attributed dates for cards the feed omits entirely (see
+# fight_event_dates.EVENT_DATE_OVERRIDES). Applied BEFORE canonicalisation so an
+# overridden card is simply dated, never aliased onto another event.
+for _ev in apply_event_date_overrides(event_dates):
+    print(f"  ✔ applied reviewed date override for {_ev!r} → {event_dates[_ev]}")
+
+# Counter, not frozenset: a set collapses duplicate bout labels, so multiplicity
+# would be ignored and two different cards could compare equal.
 _bouts_by_event = {
-    ev: frozenset(grp['BOUT'].dropna().astype(str))
+    ev: Counter(grp['BOUT'].dropna().astype(str))
     for ev, grp in results_df.groupby('EVENT')
 }
 _alias_map, _unresolved_undated = canonicalize_undated_events(_bouts_by_event, event_dates)
@@ -264,7 +275,7 @@ if _alias_map:
     _before = len(results_df)
     for _alias, _canon in sorted(_alias_map.items()):
         print(f"  ↪ canonicalised undated event {_alias!r} → {_canon!r} "
-              f"(identical {len(_bouts_by_event[_alias])}-bout card; duplicate rows dropped)")
+              f"(identical {sum(_bouts_by_event[_alias].values())}-bout card; duplicate rows dropped)")
     results_df = results_df[~results_df['EVENT'].isin(_alias_map)].copy()
     print(f"  Dropped {_before - len(results_df)} duplicate result rows from aliased events")
 
@@ -273,7 +284,7 @@ if _alias_map:
 # fighter's last-fight date.
 for _ev in _unresolved_undated:
     print(f"  ⚠️  WARNING: event {_ev!r} has NO mapped date and no matching dated "
-          f"card ({len(_bouts_by_event.get(_ev, ()))} bouts). Its fights are kept "
+          f"card ({sum(_bouts_by_event.get(_ev, Counter()).values())} bouts). Its fights are kept "
           f"as UNDATED — they cannot set a last-fight date or appear in "
           f"fightHistory. Add an authoritative date source to resolve this.")
 

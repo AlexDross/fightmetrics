@@ -5,6 +5,7 @@ import { CARDIO_RATIOS } from '../src/cardioModule.js';
 import { ELO_RATINGS } from '../src/eloModule.js';
 import { FIGHT_HISTORY } from '../src/fightHistory.js';
 import { _D2 } from '../src/fightersData.js';
+import { HISTORICAL_RANKINGS } from '../src/rankHistory.js';
 
 const LEGACY_NAME = 'Ian Garry';
 const CANONICAL_NAME = 'Ian Machado Garry';
@@ -86,18 +87,17 @@ assert.equal(
   'The canonical roster row must carry a divisional rank.'
 );
 
-const rankHistorySource = fs.readFileSync(
-  new URL('../src/rankHistory.js', import.meta.url),
-  'utf8'
-);
+// Asserted against the imported STRUCTURE, never the source text: a substring
+// search can be satisfied by a comment, a prose note or an unrelated value, so
+// it would pass without the rankings actually being keyed correctly.
 assert.ok(
-  rankHistorySource.includes(`"${CANONICAL_NAME}"`),
-  'Historical rankings must use the canonical name.'
+  Object.hasOwn(HISTORICAL_RANKINGS, CANONICAL_NAME),
+  'Historical rankings must be keyed by the canonical name.'
 );
 assert.equal(
-  rankHistorySource.includes(`"${LEGACY_NAME}"`),
+  Object.hasOwn(HISTORICAL_RANKINGS, LEGACY_NAME),
   false,
-  'Historical rankings must not use the legacy name.'
+  'Historical rankings must not be keyed by the legacy name.'
 );
 
 console.log(

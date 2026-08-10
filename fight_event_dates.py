@@ -30,9 +30,28 @@ They are the same cards under a second name. Keeping both would count 25 fights
 twice in every record, streak and history. They are therefore CANONICALISED onto
 the dated event and processed exactly once.
 
-A third undated event, `UFC - Road to UFC 4.6`, matches nothing. Its date is NOT
-invented: it stays undated, loudly, until an authoritative source is added.
+A third undated event, `UFC - Road to UFC 4.6`, matches no other card, so it
+cannot be canonicalised. Its date is not guessed either — it is supplied by the
+reviewed override table below, sourced from official UFC pages. Any *other*
+undated event with no override and no exact twin stays undated, loudly.
 """
+
+from collections import Counter
+
+
+# ─── Reviewed event-date overrides ────────────────────────────────────────────
+# Greco's ufc_event_details.csv omits some cards entirely. Where an authoritative
+# UFC source gives the date, it is recorded here — reviewed, attributed, and
+# applied ONLY to events the feed leaves undated. This is never a fallback for a
+# date the feed already supplies, and never a guess.
+#
+# UFC - Road to UFC 4.6 — Road to UFC Season 4, Semifinals — 22 August 2025,
+# Shanghai. Sources:
+#   https://www.ufc.com/event/road-ufc-season-4-semifinals
+#   https://www.ufc.com.br/news/road-to-ufc-live-results-season-4-semifinals-shi-vs-brasil-recaps-official-scorecards-interviews-shanghai
+EVENT_DATE_OVERRIDES = {
+    'UFC - Road to UFC 4.6': '2025-08-22',
+}
 
 
 def normalize_date(value):
@@ -63,20 +82,42 @@ def fight_sort_key(value):
     return value if isinstance(value, str) else ''
 
 
+def apply_event_date_overrides(event_dates, overrides=None):
+    """
+    Fill in reviewed dates for events the feed leaves undated.
+
+    Only ever ADDS a date where there is none — an override can never silently
+    contradict a date the feed already supplies. Returns the list of events that
+    an override actually resolved, so the caller can report them.
+    """
+    overrides = EVENT_DATE_OVERRIDES if overrides is None else overrides
+    applied = []
+    for event, iso in overrides.items():
+        if not is_dated(event_dates.get(event)):
+            event_dates[event] = iso
+            applied.append(event)
+    return sorted(applied)
+
+
 def canonicalize_undated_events(bouts_by_event, event_dates):
     """
     Resolve undated events onto dated ones, but only when it is provably safe.
 
-    An undated event is canonicalised ONLY when its **complete** bout set is
-    exactly equal to that of exactly one dated event. Exact set equality is the
-    whole safeguard: a subset or an overlap could merge two genuinely different
-    cards, so anything short of equality is left undated.
+    An undated event is canonicalised ONLY when its bout MULTISET is exactly
+    equal to that of exactly one dated event.
+
+    A multiset, not a set: a set collapses duplicate bout labels, so two cards
+    that differ only in how many times a label repeats would compare equal and be
+    silently merged. `Counter` equality compares both membership AND
+    multiplicity, which is what "complete exact equality" has to mean here.
 
     Requiring a *unique* match matters too — if two dated events somehow shared a
-    bout set, picking either would be a guess, so the event stays unresolved.
+    bout multiset, picking either would be a guess, so the event stays unresolved.
 
     Args:
-        bouts_by_event: {event_name: frozenset(bout_labels)}
+        bouts_by_event: {event_name: Counter(bout_labels)} (a set or list is
+                        accepted and converted, so callers cannot get it subtly
+                        wrong)
         event_dates:    {event_name: 'YYYY-MM-DD' | None}
 
     Returns:
@@ -86,21 +127,20 @@ def canonicalize_undated_events(bouts_by_event, event_dates):
                     identical bouts. Dating them in place would double-count.
         unresolved: sorted list of undated events with no safe canonical form.
     """
+    counts = {e: (b if isinstance(b, Counter) else Counter(b))
+              for e, b in bouts_by_event.items()}
     dated = {e for e, d in event_dates.items() if is_dated(d)}
     alias_map = {}
     unresolved = []
 
-    for event in sorted(bouts_by_event):
+    for event in sorted(counts):
         if is_dated(event_dates.get(event)):
             continue  # already dated
-        bouts = bouts_by_event.get(event) or frozenset()
+        bouts = counts[event]
         if not bouts:
             unresolved.append(event)
             continue
-        matches = sorted(
-            d for d in dated
-            if d in bouts_by_event and bouts_by_event[d] == bouts
-        )
+        matches = sorted(d for d in dated if d in counts and counts[d] == bouts)
         if len(matches) == 1:
             alias_map[event] = matches[0]
         else:
