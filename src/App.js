@@ -3785,20 +3785,24 @@ const FighterPanel = ({ f, setF, color, ph, allFighters, fA, fB }) => {
                 {f.FIGHTER}
               </p>
               <p className="text-slate-500 text-xs mt-0.5">
-                {f.WEIGHT_CLASS} · {f.RECORD} · RTG {f.ADJUSTED_RATING.toFixed(1)}
+                {f.WEIGHT_CLASS} · {f.RECORD}
               </p>
             </div>
             <button
+              type="button"
               onClick={() => setShowFull((o) => !o)}
+              aria-expanded={showFull}
+              aria-label={`${showFull ? 'Hide' : 'Show'} full profile for ${f.FIGHTER}`}
               className="shrink-0 text-slate-500 hover:text-slate-300 text-xs font-semibold"
             >
               {showFull ? 'Full Profile ▲' : 'Full Profile ▾'}
             </button>
           </div>
-          {showFull && (
-          <div className="mt-3 pt-3 border-t border-slate-700/50">
-          {/* Primary stats: RTG, Reach, Age */}
-          <div className="grid grid-cols-3 gap-2 mb-3 pb-3 border-b border-slate-700/50">
+          {/* Primary stats: RTG, Reach, Age -- always visible alongside the
+              header so a collapsed card still previews the profile. The
+              divider sits on top only, so nothing dangles below when the
+              full-profile disclosure is closed. */}
+          <div className="grid grid-cols-3 gap-2 mt-3 pt-3 border-t border-slate-700/50">
             {[
               ['RTG', f.ADJUSTED_RATING.toFixed(1)],
               ['Reach', fmtReach(f.REACH_IN)],
@@ -3813,6 +3817,8 @@ const FighterPanel = ({ f, setF, color, ph, allFighters, fA, fB }) => {
               </div>
             ))}
           </div>
+          {showFull && (
+          <div className="mt-3 pt-3 border-t border-slate-700/50">
           {/* Secondary stats: Rank, Height, Stance */}
           <div className="grid grid-cols-3 gap-2 mb-3 pb-3 border-b border-slate-700/50">
             {[
