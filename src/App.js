@@ -59,7 +59,6 @@ import { PARLAY_ENTRIES } from './parlayData';
 // Foundation Stage 3: the pure model engine now lives in src/domain/model.
 // Extracted verbatim; see that file's header for original App.js line numbers.
 import {
-  UFC_RANKINGS,
   getOpponentTier,
   computeModernForm,
   computeSOS,
@@ -147,12 +146,15 @@ import {
 
 // Foundation Stage 3: extracted verbatim -- see src/domain/fighters/index.js
 import { FIGHTERS } from './domain/fighters';
+import { isChampionRecord } from './domain/rankings/index.js';
 
 
-const ufcRankLabel = (name) => {
-  const r = UFC_RANKINGS[name];
+const ufcRankLabel = (r) => {
   if (!r) return null;
-  return r.rank === 'C' ? 'C' : `#${r.rank}`;
+  if (isChampionRecord(r)) return r.crossDivision ? `C ${r.divisionLabel}` : 'C';
+  // A rank earned in another division is shown WITH that division, never
+  // relabelled into the roster's (e.g. "#11 HW").
+  return r.crossDivision ? `#${r.rank} ${r.divisionLabel}` : `#${r.rank}`;
 };
 
 
@@ -3295,12 +3297,12 @@ function DataTable({ fighters }) {
                         {f.UFC_RANK && (
                           <span
                             className={`text-xs font-black font-mono px-1.5 py-0.5 rounded border ${
-                              f.UFC_RANK.rank === 'C'
+                              isChampionRecord(f.UFC_RANK)
                                 ? 'bg-yellow-900/40 text-yellow-400 border-yellow-800'
                                 : 'bg-slate-800 text-slate-400 border-slate-700'
                             }`}
                           >
-                            {ufcRankLabel(f.FIGHTER)}
+                            {ufcRankLabel(f.UFC_RANK)}
                           </span>
                         )}
                         {f.IS_PROSPECT && (
@@ -3822,7 +3824,7 @@ const FighterPanel = ({ f, setF, color, ph, allFighters, fA, fB }) => {
           {/* Secondary stats: Rank, Height, Stance */}
           <div className="grid grid-cols-3 gap-2 mb-3 pb-3 border-b border-slate-700/50">
             {[
-              ['Rank', ufcRankLabel(f.FIGHTER) ?? 'NR'],
+              ['Rank', ufcRankLabel(f.UFC_RANK) ?? 'NR'],
               ['Height', fmtHeight(f.HEIGHT_IN)],
               ['Stance', f.STANCE || '—'],
             ].map(([k, v]) => (
@@ -5622,12 +5624,12 @@ function ScoutProfile({ allFighters }) {
                   {fighter.UFC_RANK && (
                     <span
                       className={`text-xs font-bold px-2 py-0.5 rounded-full border ${
-                        fighter.UFC_RANK.rank === 'C'
+                        isChampionRecord(fighter.UFC_RANK)
                           ? 'bg-yellow-900/40 text-yellow-400 border-yellow-800'
                           : 'bg-slate-700 text-slate-300 border-slate-600'
                       }`}
                     >
-                      {ufcRankLabel(fighter.FIGHTER)} UFC Official
+                      {ufcRankLabel(fighter.UFC_RANK)} UFC Official
                     </span>
                   )}
                   {fighter.QUALITY_ADJUSTMENT != null &&

@@ -40,6 +40,16 @@ const importSpecifiers = (source) => {
 
 const RANKING_MODULES = /(^|\/)(rankingsData(\.js)?|rankings(\/index\.js)?)$/;
 
+// Strip comments and string literals so a doc comment or a generated
+// provenance note that merely NAMES a symbol is not mistaken for a consumer.
+const codeOnly = (source) =>
+  source
+    .replace(/\/\*[\s\S]*?\*\//g, ' ')
+    .replace(/(^|[^:])\/\/[^\n]*/g, '$1 ')
+    .replace(/'(?:[^'\\\n]|\\.)*'/g, "''")
+    .replace(/"(?:[^"\\\n]|\\.)*"/g, '""')
+    .replace(/`(?:[^`\\]|\\.)*`/g, '``');
+
 describe('rankings <-> model boundary', () => {
   const protectedDirs = ['domain/model', 'domain/betting'];
 
@@ -102,7 +112,7 @@ describe('rankings <-> model boundary', () => {
       if (relative.startsWith('domain/rankings')) continue;
       if (relative === 'rankingsData.js') continue;
       if (relative.includes('__tests__')) continue;
-      const source = fs.readFileSync(file, 'utf8');
+      const source = codeOnly(fs.readFileSync(file, 'utf8'));
       if (/\bDIVISION_RANK_HISTORY\b|\bgetHistoricalRank\b/.test(source)) {
         offenders.push(relative);
       }

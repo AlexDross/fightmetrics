@@ -68,6 +68,7 @@ jobs:
               './src/fightHistory.js',
               './src/eloModule.js',
               './src/cardioModule.js',
+              './src/rankingsData.js',
             ];
             let failed = false;
             for (const f of files) {
@@ -76,6 +77,12 @@ jobs:
             }
             if (failed) process.exit(1);
           "
+
+      # A roster refresh can rename or drop fighters, which would silently break
+      # the official-ranking joins and the UI badges. Fail here rather than
+      # shipping a roster the rankings no longer match.
+      - name: Verify rankings still join to the refreshed roster
+        run: npm run rankings:verify
 
       - name: Verify canonical fighter identity joins
         run: node scripts/verify-fighter-identity.mjs
