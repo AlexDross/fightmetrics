@@ -146,6 +146,22 @@ import {
 
 // Foundation Stage 3: extracted verbatim -- see src/domain/fighters/index.js
 import { FIGHTERS } from './domain/fighters';
+
+// Age is DOB-derived. FIGHTERS[].AGE is already resolved as of app load, so
+// roster/scout views read it directly. The Simulator additionally re-resolves
+// against the entered event date, so its displayed age, decay penalty and
+// veteran flag agree with the probability the model produced for that date.
+import { resolveFighterAge } from './domain/age/index.js';
+
+// Age as of the Simulator's event date, falling back to the load-time roster
+// age when no date has been entered. null means genuinely unknown.
+const simulatorAge = (f, eventDate) =>
+  f ? resolveFighterAge(f, eventDate) : null;
+
+// Unknown age must never render as a number -- "0.0" reads as a real fighter
+// who is zero years old rather than as missing data.
+const fmtAge = (age, dec = 0) =>
+  Number.isFinite(age) ? age.toFixed(dec) : '—';
 import { isChampionRecord } from './domain/rankings/current.js';
 
 
@@ -413,6 +429,12 @@ const computeQualityAdjustment = (fightHistory) => {
 // Tests the matchup engine against known fight history outcomes.
 // Note: still uses current career stats, so this is an upper-bound estimate.
 // Fixes 1-3 above progressively improve this number toward true accuracy.
+//
+// AGE is the one input that IS point-in-time here: passing the bout's own date
+// ages both fighters back to how old they actually were that night, instead of
+// scoring a 2015 fight with 2026 ages. Everything else (ELO, form, career
+// stats) is still current, so this remains a diagnostic number and not a
+// validated accuracy figure -- the mix is now less wrong, not correct.
 const computeBacktestAccuracy = () => {
   let correct = 0,
     total = 0,
@@ -428,7 +450,9 @@ const computeBacktestAccuracy = () => {
       if (seen.has(key)) return;
       seen.add(key);
       // fighter is always fA; if re=W we expect pA > 0.5
-      const result = computeMatchupEdges(fighter, opponent);
+      const result = computeMatchupEdges(fighter, opponent, {
+        eventDate: fight.dt,
+      });
       const predictedWin = result.pA > 0.5;
       const actualWin = fight.re === 'W';
       const correct_ = predictedWin === actualWin;
@@ -2267,10 +2291,13 @@ function UpcomingEventTab({
   // buildRoiEntry computed and saved at save time -- never recomputed against
   // current fighter data. A saved pick can no longer drift when the pipeline
   // refreshes fighter stats. computeMatchupEdges is called ONLY as a legacy
-  // fallback for entries saved before v2pA/v2pB existed (entry.v2pA == null);
-  // 0 of 146 current entries hit that path (freeze-at-save audit,
-  // 2026-07-21/22) -- it exists purely so old exported upcomingData.js
-  // snapshots don't render blank. Card-displayed predictedWinner/winProb
+  // fallback for entries saved before v2pA/v2pB existed (entry.v2pA == null),
+  // so old exported upcomingData.js snapshots don't render blank. No
+  // hard-coded hit count is recorded here: the earlier "0 of 146" note was
+  // already stale, and a number baked into a comment goes wrong silently. The
+  // fallback passes the entry's own eventDate, so a recomputed legacy pick
+  // uses fight-night ages -- what buildRoiEntry would have frozen at save
+  // time. Card-displayed predictedWinner/winProb
   // still follow modelToggle (v1/v2), exactly as before; v2Winner/v2WinProb
   // below are v2's OWN argmax pick (off the same stored/fallback v2pA/v2pB),
   // independent of modelToggle, since a parlay leg's frozen "v2 default"
@@ -2286,7 +2313,9 @@ function UpcomingEventTab({
       let pA, pB, hasV2, betAction, betFighter, edgeA, edgeB, v2pAOut, v2pBOut, hasV1, v1pAOut, v1pBOut;
       if (entry.v2pA == null && fA && fB) {
         // Legacy fallback only -- see FROZEN comment above.
-        const res = computeMatchupEdges(fA, fB);
+        const res = computeMatchupEdges(fA, fB, {
+          eventDate: entry.eventDate,
+        });
         hasV2 = res.v2pA != null;
         v2pAOut = res.v2pA;
         v2pBOut = res.v2pB;
@@ -3671,13 +3700,30 @@ const SIMULATOR_GLOBAL_GROUP = {
 // carry structurally more weight than others), over every same-division
 // real fighter pair with both fighters at CREDIBILITY >= 50. v1's
 // contribution is edge.weighted; v2's is a domain's summed per-feature
-// logit contribution (SIMULATOR_DOMAIN_MAP). As of 2026-07-17, computed
-// from the live roster.
+// logit contribution (SIMULATOR_DOMAIN_MAP).
 //
-// Regenerate with: node scripts/regen_simulator_bar_anchors.js
+// DISPLAY SCALING ONLY. Neither value enters a probability, edge, EV, Kelly
+// figure or saved entry -- a stale anchor makes bars over- or under-fill and
+// nothing else.
+//
+// V2 re-measured 2026-08-12 for the DOB-derived age change. Moving ages off
+// the stale scrape-time integers widens real age differentials across the
+// roster, which lifts the physical domain's contribution tail: measured on one
+// roster both ways, the pooled p99 is 0.6663193144595225 with stored ages and
+// 0.8031716417910447 with DOB ages (+20.5%). Left unchanged, every v2 physical
+// bar in that band would have pinned at 95% fill.
+//
+// V1 is deliberately NOT touched. Measured both ways on that same roster its
+// anchor is bit-identical (0.0000% attributable to this change) -- v1's age
+// term is too small relative to the pooled p99 to move it. The ~0.6% gap
+// between the constant below and a fresh v1 measurement is ordinary roster
+// drift that predates this change, so correcting it belongs to a data-refresh
+// commit, not this one.
+//
+// Regenerate with: node scripts/regen_simulator_bar_anchors.mjs
 // If the printed values drift from these constants, paste the new ones in.
 const V1_BAR_ANCHOR = 0.05926015365523809;
-const V2_BAR_ANCHOR = 0.667623002310482;
+const V2_BAR_ANCHOR = 0.8031716417910447;
 
 // One bar-fill formula, used for every domain, both models. `value` is
 // signed (positive favors fighter A); magnitude is scaled against the
@@ -3753,14 +3799,19 @@ const fmtT = (f, { key, dec, signed, pct }) => {
 // Hoisted to module scope so its identity is stable across MatchupSimulator
 // renders — defining it inline remounted the subtree (and reset FighterSearch
 // state) on every keystroke in the odds/event inputs.
-const FighterPanel = ({ f, setF, color, ph, allFighters, fA, fB }) => {
+const FighterPanel = ({ f, setF, color, ph, allFighters, fA, fB, eventDate }) => {
   const [showFull, setShowFull] = useState(false);
   const tc = color === 'blue' ? 'text-blue-400' : 'text-red-400';
   const bc =
     color === 'blue'
       ? 'border-blue-800 bg-blue-950/20'
       : 'border-red-800 bg-red-950/20';
-  const pen = f ? ageDecayPenalty(f) : 0;
+  // Bout-date age, so the displayed age and the decay penalty shown on this
+  // card are the same ones the model used for the probability alongside it. A
+  // fighter who turns 35 between today and the event must not read as
+  // penalty-free here while the model is already penalising him.
+  const panelAge = simulatorAge(f, eventDate);
+  const pen = f ? ageDecayPenalty(f, panelAge) : 0;
   const adjTE = f ? f.TOTAL_EFFICIENCY * (1 - pen) : null;
   const form = f ? recentForm(f.FIGHT_HISTORY) : [];
   return (
@@ -3810,7 +3861,9 @@ const FighterPanel = ({ f, setF, color, ph, allFighters, fA, fB }) => {
               ['Reach', fmtReach(f.REACH_IN)],
               [
                 'Age',
-                f.AGE ? (f.AGE >= 35 ? `${f.AGE} ⚠️` : String(f.AGE)) : '—',
+                Number.isFinite(panelAge)
+                  ? (panelAge >= 35 ? `${panelAge} ⚠️` : String(panelAge))
+                  : '—',
               ],
             ].map(([k, v]) => (
               <div key={k} className="text-center">
@@ -3963,8 +4016,13 @@ const describeModernForm = (fighter) => {
 // of that domain's score in the model being shown (see SIMULATOR_DOMAIN_MAP
 // comment for which raw inputs actually feed which model). Order matters:
 // the larger-weighted stat is listed first.
-const getSimulatorHeadlineStats = (domainKey, modelToggle, fA, fB) => {
+const getSimulatorHeadlineStats = (domainKey, modelToggle, fA, fB, eventDate) => {
   const v2 = modelToggle === 'v2';
+  // Same bout-date ages the model scored with. Formatting for a KNOWN age is
+  // unchanged (one decimal, as captured); only the unknown case moves, from a
+  // fabricated "0.0" to an explicit em dash.
+  const ageA = fmtAge(simulatorAge(fA, eventDate), 1);
+  const ageB = fmtAge(simulatorAge(fB, eventDate), 1);
   switch (domainKey) {
     case 'striking':
       return v2
@@ -3988,11 +4046,11 @@ const getSimulatorHeadlineStats = (domainKey, modelToggle, fA, fB) => {
           ];
     case 'physical':
       return v2
-        ? [{ label: 'Age', a: (fA.AGE ?? 0).toFixed(1), b: (fB.AGE ?? 0).toFixed(1) }]
+        ? [{ label: 'Age', a: ageA, b: ageB }]
         : [
             { label: 'Height', a: fmtHeight(fA.HEIGHT_IN), b: fmtHeight(fB.HEIGHT_IN) },
             { label: 'Reach', a: fmtReach(fA.REACH_IN), b: fmtReach(fB.REACH_IN) },
-            { label: 'Age', a: (fA.AGE ?? 0).toFixed(1), b: (fB.AGE ?? 0).toFixed(1) },
+            { label: 'Age', a: ageA, b: ageB },
           ];
     case 'form':
       return v2
@@ -4088,7 +4146,7 @@ const buildSimulatorDomainRows = (result, modelToggle) => {
 //
 // Built and exported standalone so it can be rendered in isolation before
 // being wired into MatchupSimulator's render tree.
-function SimulatorContributionPanel({ fA, fB, result, modelToggle }) {
+function SimulatorContributionPanel({ fA, fB, result, modelToggle, eventDate }) {
   const [expanded, setExpanded] = useState(() => new Set());
   // Separate from `expanded`: a domain must already be expanded before its
   // technical toggle is reachable, and collapsing the domain again (see
@@ -4135,7 +4193,7 @@ function SimulatorContributionPanel({ fA, fB, result, modelToggle }) {
           const pctA = simulatorBarPct(row.totalContribution, anchor);
           const nearEmptyKey = `${row.key}_${modelToggle}`;
           const nearEmptyCopy = SIMULATOR_NEAR_EMPTY_COPY[nearEmptyKey];
-          const headlineStats = row.isGlobal ? [] : getSimulatorHeadlineStats(row.key, modelToggle, fA, fB);
+          const headlineStats = row.isGlobal ? [] : getSimulatorHeadlineStats(row.key, modelToggle, fA, fB, eventDate);
           const hasFeatures = row.features.length > 0;
           // Global-under-v2 is the only row that's ever truly inert (0
           // features -- SIMULATOR_GLOBAL_GROUP.v2 is deliberately empty, see
@@ -4277,8 +4335,11 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
     // (52% vs 48% accuracy on flipped picks) — exactly the scenario where you
     // are looking for value. Feeding market odds into the probability also makes
     // value analysis circular (comparing model vs market when model IS the market).
-    return computeMatchupEdges(fA, fB);
-  }, [fA, fB]);
+    // eventDate drives DOB-derived ages for both fighters. It is '' until the
+    // user picks a date, and an unparseable date falls back to each fighter's
+    // load-time (today's) age, so an untouched Simulator behaves as before.
+    return computeMatchupEdges(fA, fB, { eventDate });
+  }, [fA, fB, eventDate]);
 
   // Active probabilities for whichever model version is toggled on — shared by
   // the market analysis below and by the display sections further down so the
@@ -4312,6 +4373,7 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
           allFighters={allFighters}
           fA={fA}
           fB={fB}
+          eventDate={eventDate}
         />
         <FighterPanel
           f={fB}
@@ -4321,6 +4383,7 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
           allFighters={allFighters}
           fA={fA}
           fB={fB}
+          eventDate={eventDate}
         />
       </div>
 
@@ -4691,7 +4754,9 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
               flags.push({ label: "Women's Division", color: 'text-pink-400 bg-pink-900/20 border-pink-800/40' });
             if (result.southpawMismatch)
               flags.push({ label: 'Southpaw vs Orthodox', color: 'text-cyan-400 bg-cyan-900/20 border-cyan-800/40' });
-            if ((fA.AGE ?? 0) >= 38 || (fB.AGE ?? 0) >= 38)
+            // Bout-date ages, matching the model. An unknown age stays below
+            // the threshold rather than defaulting into it.
+            if ((simulatorAge(fA, eventDate) ?? 0) >= 38 || (simulatorAge(fB, eventDate) ?? 0) >= 38)
               flags.push({ label: 'Veteran Age (38+)', color: 'text-red-400 bg-red-900/20 border-red-800/40' });
             if ((result.loseStreakA ?? 0) >= 3 || (result.loseStreakB ?? 0) >= 3)
               flags.push({ label: 'Active Loss Streak', color: 'text-red-400 bg-red-900/20 border-red-800/40' });
@@ -4717,7 +4782,7 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
           })()}
 
           {/* ── CONTRIBUTION BREAKDOWN (replaces Key Advantages, Domain Breakdown, Model Input Comparison) ── */}
-          <SimulatorContributionPanel fA={fA} fB={fB} result={result} modelToggle={modelToggle} />
+          <SimulatorContributionPanel fA={fA} fB={fB} result={result} modelToggle={modelToggle} eventDate={eventDate} />
 
           {/* ── BETTING ANALYSIS (only when odds entered) ── */}
           {market && (
@@ -6699,7 +6764,11 @@ function HomeTab({ summary, entries, allFighters, filterSince }) {
       const fA = fighterMap.get(entry.fighterA);
       const fB = fighterMap.get(entry.fighterB);
       if (!fA || !fB) return;
-      const res = computeMatchupEdges(fA, fB);
+      // Upcoming fights: the entry's own eventDate ages both fighters forward
+      // to fight night rather than scoring them at today's age.
+      const res = computeMatchupEdges(fA, fB, {
+        eventDate: entry.eventDate,
+      });
       map.set(entry.id, {
         winner: res.v2pA >= res.v2pB ? entry.fighterA : entry.fighterB,
         prob: Math.max(res.v2pA, res.v2pB),
@@ -7242,8 +7311,15 @@ function ROITab({
   // this file -- not a new gap introduced here.
   //
   // computeMatchupEdges is called ONLY as a legacy fallback for entries
-  // saved before v2pA/v2pB existed (entry.v2pA == null); 0 of 146 current
-  // entries hit that path (freeze-at-save audit, 2026-07-21/22).
+  // saved before v2pA/v2pB existed (entry.v2pA == null). The "0 of 146 current
+  // entries hit that path" note was already wrong -- a large share of the
+  // entries in roiData.js have no stored v2pA and DO take it. No replacement
+  // count is recorded, because a number baked into a comment cannot be kept
+  // honest; the guarantee that matters is structural and unchanged -- an entry
+  // WITH a stored v2pA is never recomputed.
+  //
+  // The fallback now passes the entry's own eventDate, so a reconstructed
+  // legacy pick uses fight-night ages instead of today's.
   const v2DataMap = useMemo(() => {
     const map = new Map();
     evaluatedEntries
@@ -7258,7 +7334,12 @@ function ROITab({
           const fB = fighterMap.get(entry.fighterB);
           if (!fA || !fB) return;
 
-          const res = computeMatchupEdges(fA, fB);
+          // Legacy fallback for pre-v2pA entries -- see the FROZEN comment
+          // above. Passing eventDate reconstructs the pick with fight-night
+          // ages, which is what buildRoiEntry would have frozen at save time.
+          const res = computeMatchupEdges(fA, fB, {
+            eventDate: entry.eventDate,
+          });
           const v2pA = res.v2pA;
           const v2pB = res.v2pB;
           const v2Winner = v2pA >= v2pB ? entry.fighterA : entry.fighterB;

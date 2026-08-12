@@ -63,8 +63,19 @@ export function loadInput(name) {
 // behaviour, because an omitted context silently reintroduces roster coupling
 // and the test would still pass today. Routing through one place is what makes
 // that omission impossible rather than merely discouraged.
+//
+// useStoredAge pins the SECOND source of scheduled drift. Ages are now derived
+// from date of birth, so without this flag every fixture fighter would age by a
+// year on their own birthday and rewrite the goldens exactly the way a roster
+// refresh used to. The approved fixtures were captured with integer ages, so
+// they replay with integer ages -- 30 of the 37 fixture pairs produce different
+// probabilities without it.
+//
+// This is the ONLY place in the repository that sets useStoredAge, and
+// src/__tests__/isolation.test.js enforces that production never can.
 export const FROZEN_MODEL_CONTEXT = Object.freeze({
   divisionAverages: loadInput('model-context.input.json').divisionAverages,
+  useStoredAge: true,
 });
 
 // Thin wrappers. Signature-compatible with the production functions; the only

@@ -30,6 +30,7 @@ import {
   getCurrentP4PRanking,
   resolveCurrentRanking,
 } from '../rankings/current.js';
+import { resolveFighterAge } from '../age/index.js';
 
 const currentRankTier = (rankObj) => {
   if (!rankObj) return 0.12;
@@ -374,7 +375,11 @@ const momentumScore = Math.max(
   return {
     FIGHTER: d.n,
     WEIGHT_CLASS: d.w,
-    AGE: d.ag,
+    // Recomputed from date of birth on every app load. d.ag is the scrape-time
+    // integer snapshot and is kept only as a fallback for the fighters with no
+    // known birth date; null means genuinely unknown, and every consumer must
+    // treat it as unknown rather than substituting a default age.
+    AGE: resolveFighterAge({ FIGHTER: d.n, AGE: d.ag }),
     HEIGHT_IN: d.ht,
     REACH_IN: d.rh,
     STANCE: d.st,

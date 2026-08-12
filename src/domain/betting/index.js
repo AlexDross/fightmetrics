@@ -351,12 +351,18 @@ export const buildProvenance = ({ eventDate, result, fA, fB, predictionTimestamp
 // tab. Used by the manual savePrediction path ("Save to Upcoming" / "Save and
 // Open Upcoming" in the Simulator).
 
-// modelContext is OPTIONAL and is forwarded verbatim to computeMatchupEdges.
-// Application callers omit it and keep reading live roster averages; only the
-// frozen characterisation tests supply one. See the comment on
-// computeMatchupEdges for why this exists.
+// modelContext is OPTIONAL. The entry's own eventDate is merged into it before
+// forwarding, so a saved prediction freezes the ages the fighters will be ON
+// FIGHT NIGHT rather than the ages they happened to be on the day it was saved.
+// Application callers pass no modelContext at all and get exactly that; only
+// the frozen characterisation tests supply one, and theirs still wins (it sets
+// useStoredAge) so the approved fixtures keep replaying their captured ages.
+// See the comment on computeMatchupEdges.
 const buildRoiEntry = ({ fA, fB, oddsA, oddsB, eventName, eventDate, modelToggle = 'v2', unitsWagered = 1, modelContext }) => {
-  const result = computeMatchupEdges(fA, fB, modelContext);
+  const result = computeMatchupEdges(fA, fB, {
+    ...(modelContext ?? {}),
+    eventDate: eventDate || modelContext?.eventDate,
+  });
   // Use whichever model the user had active at save time (v1 or v2) for every
   // bet-decision field, mirroring the Simulator's own market useMemo. The raw
   // per-model probabilities are still stored separately and unchanged
