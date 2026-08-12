@@ -51,14 +51,29 @@ jobs:
       - name: Regenerate eloModule.js
         run: python regen_elo.py
 
-      - name: Regenerate source manifest
-        run: python generate_source_manifest.py
-
+      # Node is pinned BEFORE anything runs `node`, so the birth-date artifact
+      # is generated on the same Node 24 that runs the tests and the build
+      # rather than on whatever version the runner image happens to ship.
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
           node-version: '24'
           cache: npm
+
+      # Must run BEFORE the source manifest: the manifest records this file's
+      # content hash, so generating it afterwards would hash the previous run's
+      # artifact and record provenance for data no longer on disk.
+      - name: Regenerate fighter birth dates
+        run: node scripts/generate-fighter-birthdates.mjs
+
+      # Re-running the generator must be a no-op. If it is not, the output
+      # depends on something other than fighters.json + name_aliases.json and
+      # the bot would commit a churning artifact on every scheduled run.
+      - name: Verify birth-date artifact is reproducible
+        run: node scripts/generate-fighter-birthdates.mjs --check
+
+      - name: Regenerate source manifest
+        run: python generate_source_manifest.py
 
       - name: Validate generated JS is syntactically valid
         run: |
@@ -68,6 +83,7 @@ jobs:
               './src/fightHistory.js',
               './src/eloModule.js',
               './src/cardioModule.js',
+              './src/fighterBirthdates.js',
               './src/rankingsData.js',
               './src/rankingsHistoryData.js',
             ];
@@ -123,7 +139,7 @@ jobs:
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add src/fightersData.js src/fightHistory.js src/eloModule.js src/cardioModule.js src/sourceManifest.js
+          git add src/fightersData.js src/fightHistory.js src/eloModule.js src/cardioModule.js src/fighterBirthdates.js src/sourceManifest.js
           if git diff --staged --quiet; then
             echo "No changes — skipping commit"
           else

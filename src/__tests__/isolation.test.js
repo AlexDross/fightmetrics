@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { loadFixture, decodeSpecials, firstDifference, ulpDistance, withinUlps } from './goldenSupport.js';
+import { loadFixture, decodeSpecials, firstDifference, ulpDistance, withinUlps, FROZEN_MODEL_CONTEXT } from './goldenSupport.js';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const SRC = path.join(HERE, '..');
@@ -72,6 +72,58 @@ describe('test isolation (direct-import guard)', () => {
       }
     }
     expect(offenders, offenders.join('\n')).toEqual([]);
+  });
+});
+
+// useStoredAge exists so the approved Stage 0 fixtures keep replaying the
+// integer ages they were captured with, instead of ageing a year every time a
+// fixture fighter has a birthday. It is a TEST affordance. If production ever
+// set it, the app would silently fall back to the stale scrape-time ages the
+// DOB change exists to remove -- and the whole suite would still pass, because
+// the fixtures pin the stored-age path anyway. A source scan is the only thing
+// that catches that, so it is asserted here rather than left to review.
+describe('useStoredAge is reachable from tests only', () => {
+  function productionFiles(dir, acc = []) {
+    for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+      const p = path.join(dir, e.name);
+      if (e.isDirectory()) {
+        if (e.name !== 'node_modules' && e.name !== '__tests__') productionFiles(p, acc);
+      } else if (e.name.endsWith('.js') && !e.name.endsWith('.test.js')) {
+        acc.push(p);
+      }
+    }
+    return acc;
+  }
+
+  // computeMatchupEdges must READ the flag; that is the one legitimate
+  // appearance in executable code outside a test directory.
+  const READER = path.join(SRC, 'domain', 'model', 'index.js');
+
+  // Comments may discuss the flag -- documenting why it exists is the point.
+  // Only executable code is scanned, so prose elsewhere does not read as a
+  // leak while an actual `useStoredAge: true` in production does.
+  const stripComments = (src) =>
+    src.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
+
+  it('no production module references useStoredAge in code except the model', () => {
+    const offenders = productionFiles(SRC)
+      .filter((f) => f !== READER)
+      .filter((f) => /useStoredAge/.test(stripComments(fs.readFileSync(f, 'utf8'))))
+      .map((f) => path.relative(SRC, f));
+    expect(offenders, `useStoredAge leaked into production: ${offenders.join(', ')}`).toEqual([]);
+  });
+
+  it('the model requires an explicit true and never defaults it on', () => {
+    // `modelContext?.useStoredAge` alone would let any truthy junk pin the
+    // stored-age path; the identity check is what keeps it opt-in.
+    const src = stripComments(fs.readFileSync(READER, 'utf8'));
+    expect(src).toMatch(/modelContext\?\.useStoredAge === true/);
+  });
+
+  it('the frozen fixture context actually carries the flag', () => {
+    // If this were ever dropped, the Stage 0 goldens would start ageing with
+    // the calendar again -- the exact drift the flag exists to stop.
+    expect(FROZEN_MODEL_CONTEXT.useStoredAge).toBe(true);
   });
 });
 

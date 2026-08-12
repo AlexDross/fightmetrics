@@ -6,12 +6,15 @@
 // in-file header comment. See research/source_integrity_audit.md for the manual
 // methodology this script automates.
 // Re-run this script whenever fightersData.js / fightHistory.js / eloModule.js /
-// cardioModule.js / rankingsData.js / rankingsHistoryData.js are regenerated,
-// so the
-// manifest stays current.
+// cardioModule.js / rankingsData.js / rankingsHistoryData.js /
+// fighterBirthdates.js are regenerated, so the manifest stays current.
+// fighterBirthdates.js must be regenerated BEFORE this script runs, or its
+// recorded contentHash describes the previous artifact. maxObservedEventDate
+// is null for fighterBirthdates because birth dates are not event-scoped --
+// measured coverage is the freshness signal there instead.
 
 export const SOURCE_MANIFEST = {
-  "manifestGeneratedAt": "2026-08-12T00:34:37Z",
+  "manifestGeneratedAt": "2026-08-12T17:27:29Z",
   "generatorScript": "generate_source_manifest.py",
   "methodologyRef": "research/source_integrity_audit.md",
   "modules": {
@@ -62,6 +65,16 @@ export const SOURCE_MANIFEST = {
       "contentHash": "9a706f356ef41fa68b605dd9c52740dd370eda014dfb747b0cb8bdc6313ba244",
       "generatorVersion": "regen_rankhistory.py (untracked in git -- present on disk, no commit history, no recoverable version)",
       "verificationMethod": "Raw source UFC_rankings_history.csv is not present on disk, so maxObservedEventDate is instead the maximum YYYYMMDD date literally embedded in the shipped rankHistory.js artifact's own HISTORICAL_RANKINGS data -- a defensible proxy (the artifact cannot reflect dates its regeneration process never saw), but distinct from the direct-CSV verification used for the three modules above."
+    },
+    "fighterBirthdates": {
+      "file": "src/fighterBirthdates.js",
+      "feedsV2": true,
+      "note": "Canonical fighter name -> date of birth. Feeds the v2 'younger' feature and the v1 age differential/age-decay penalty via src/domain/age, which derives every age from DOB -- at app load for the roster, and at the bout date for a prediction. The integer AGE values in fightersData.js are now used only where no birth date exists here.",
+      "generatedAt": null,
+      "maxObservedEventDate": null,
+      "contentHash": "560e7d5207c1766a57380ce852767ea03b004a89e2281c3be3dd11fc9e63cd5d",
+      "generatorVersion": "scripts/generate-fighter-birthdates.mjs @ None",
+      "verificationMethod": "Recomputed the join from source while writing this manifest: read 2267 rows from fighters.json, of which 2207 carry a dob matching ^\\d{4}-\\d{2}-\\d{2}$; applied 1 name_aliases.json rewrites; produced 2207 canonical names, and the shipped artifact contains 2207 entries. The generator raises on any canonical name that would receive two DIFFERENT birth dates, so a silent bad join cannot ship. Keys are sorted by UTF-16 code point (not localeCompare), making regeneration byte-identical across machines and ICU builds; the scheduled workflow enforces this with a --check re-run. maxObservedEventDate is null by nature, not by omission: this artifact holds birth dates, which are not event-scoped, so there is no event date it could be current or stale relative to. Its freshness question is coverage, which is the measured count above."
     },
     "rankings": {
       "file": "src/rankingsData.js",

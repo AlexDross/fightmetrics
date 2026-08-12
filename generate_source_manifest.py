@@ -27,10 +27,16 @@ manual approach:
   - cardio: no generator script exists in the repo and no per-fighter date is
     embedded in the shipped artifact. Recorded as indeterminate with an
     explicit note; not a silent gap.
+  - fighterBirthdates: birth dates are not event-scoped, so maxObservedEventDate
+    is null BY NATURE rather than by omission. Its freshness question is
+    coverage, so the join is recomputed here directly from fighters.json +
+    name_aliases.json and the measured counts are recorded, along with a stale
+    warning if the shipped artifact disagrees with what the sources now yield.
 
 Read-only against every source file it inspects. Writes only to
 src/sourceManifest.js. Does not touch fightersData.js, fightHistory.js,
-eloModule.js, cardioModule.js, rankHistory.js, or any prediction/model logic.
+eloModule.js, cardioModule.js, rankHistory.js, fighterBirthdates.js, or any
+prediction/model logic.
 """
 
 import csv
@@ -123,6 +129,54 @@ def max_embedded_yyyymmdd(js_path):
     max_n = max(int(m) for m in matches)
     s = str(max_n)
     return f"{s[0:4]}-{s[4:6]}-{s[6:8]}"
+
+
+def birthdate_source_coverage():
+    """Recomputes the fighterBirthdates.js join straight from its own inputs, so
+    the manifest records MEASURED coverage instead of a prose claim.
+
+    Returns (source_rows, rows_with_valid_dob, aliases_applied, canonical_names,
+    artifact_keys). canonical_names and artifact_keys must agree -- a mismatch
+    means the shipped artifact is stale relative to fighters.json.
+    """
+    fighters_path = REPO_ROOT / 'fighters.json'
+    aliases_path = REPO_ROOT / 'name_aliases.json'
+    artifact_path = REPO_ROOT / 'src' / 'fighterBirthdates.js'
+    if not (fighters_path.exists() and aliases_path.exists()):
+        return None
+
+    date_only = re.compile(r'^\d{4}-\d{2}-\d{2}$')
+    fighters = json.loads(fighters_path.read_text(encoding='utf-8'))
+    aliases = json.loads(aliases_path.read_text(encoding='utf-8'))
+
+    canonical = {}
+    source_rows = len(fighters)
+    valid_dob = 0
+    aliases_applied = 0
+    for row in fighters:
+        dob = (row or {}).get('dob') or ''
+        if not date_only.match(dob):
+            continue
+        valid_dob += 1
+        name = row.get('name')
+        if name in aliases:
+            aliases_applied += 1
+        canonical_name = aliases.get(name, name)
+        if canonical_name:
+            canonical[canonical_name] = dob
+
+    artifact_keys = None
+    if artifact_path.exists():
+        content = artifact_path.read_text(encoding='utf-8')
+        artifact_keys = len(
+            re.findall(
+                r'^\s{2}"(?:[^"\\]|\\.)*":\s"\d{4}-\d{2}-\d{2}",?$',
+                content,
+                flags=re.MULTILINE,
+            )
+        )
+
+    return source_rows, valid_dob, aliases_applied, len(canonical), artifact_keys
 
 
 def event_name_present_in_csv(csv_path, needle_lower):
@@ -375,6 +429,59 @@ def build_manifest():
         ),
     }
 
+    coverage = birthdate_source_coverage()
+    if coverage:
+        src_rows, valid_dob, aliased, canonical_n, artifact_n = coverage
+        stale_warning = (
+            ''
+            if artifact_n == canonical_n
+            else (
+                f" WARNING: the shipped artifact holds {artifact_n} entries but fighters.json "
+                f"currently yields {canonical_n} -- the artifact is STALE. Re-run "
+                "scripts/generate-fighter-birthdates.mjs."
+            )
+        )
+        birthdate_verification = (
+            f"Recomputed the join from source while writing this manifest: read {src_rows} rows "
+            f"from fighters.json, of which {valid_dob} carry a dob matching ^\\d{{4}}-\\d{{2}}-\\d{{2}}$; "
+            f"applied {aliased} name_aliases.json rewrites; produced {canonical_n} canonical "
+            f"names, and the shipped artifact contains {artifact_n} entries. "
+            "The generator raises on any canonical name that would receive two DIFFERENT birth "
+            "dates, so a silent bad join cannot ship. Keys are sorted by UTF-16 code point (not "
+            "localeCompare), making regeneration byte-identical across machines and ICU builds; "
+            "the scheduled workflow enforces this with a --check re-run. maxObservedEventDate is "
+            "null by nature, not by omission: this artifact holds birth dates, which are not "
+            "event-scoped, so there is no event date it could be current or stale relative to. "
+            "Its freshness question is coverage, which is the measured count above."
+            + stale_warning
+        )
+    else:
+        birthdate_verification = (
+            "INDETERMINATE: fighters.json and/or name_aliases.json were not present on disk when "
+            "this manifest was generated, so the join could not be recomputed and coverage could "
+            "not be measured. The contentHash below still identifies the shipped artifact exactly."
+        )
+
+    modules['fighterBirthdates'] = {
+        'file': 'src/fighterBirthdates.js',
+        'feedsV2': True,
+        'note': "Canonical fighter name -> date of birth. Feeds the v2 'younger' feature and the "
+                 "v1 age differential/age-decay penalty via src/domain/age, which derives every "
+                 "age from DOB -- at app load for the roster, and at the bout date for a "
+                 "prediction. The integer AGE values in fightersData.js are now used only where "
+                 "no birth date exists here.",
+        'generatedAt': git_last_commit_date('src/fighterBirthdates.js'),
+        'maxObservedEventDate': None,
+        'contentHash': sha256_of_file('src/fighterBirthdates.js'),
+        'generatorVersion': (
+            f"scripts/generate-fighter-birthdates.mjs @ "
+            f"{git_last_commit_hash('scripts/generate-fighter-birthdates.mjs')}"
+            if git_is_tracked('scripts/generate-fighter-birthdates.mjs')
+            else 'scripts/generate-fighter-birthdates.mjs (working tree version -- not yet committed)'
+        ),
+        'verificationMethod': birthdate_verification,
+    }
+
     modules.update(rankings_module_entry())
 
     return {
@@ -395,8 +502,12 @@ def write_js(manifest, out_path='src/sourceManifest.js'):
         "// in-file header comment. See research/source_integrity_audit.md for the manual\n"
         "// methodology this script automates.\n"
         "// Re-run this script whenever fightersData.js / fightHistory.js / eloModule.js /\n"
-        "// cardioModule.js / rankingsData.js / rankingsHistoryData.js are regenerated,\n"        "// so the\n"
-        "// manifest stays current.\n\n"
+        "// cardioModule.js / rankingsData.js / rankingsHistoryData.js /\n"
+        "// fighterBirthdates.js are regenerated, so the manifest stays current.\n"
+        "// fighterBirthdates.js must be regenerated BEFORE this script runs, or its\n"
+        "// recorded contentHash describes the previous artifact. maxObservedEventDate\n"
+        "// is null for fighterBirthdates because birth dates are not event-scoped --\n"
+        "// measured coverage is the freshness signal there instead.\n\n"
     )
     body = f"export const SOURCE_MANIFEST = {json.dumps(manifest, indent=2)};\n"
     (REPO_ROOT / out_path).write_text(header + body, encoding='utf-8')

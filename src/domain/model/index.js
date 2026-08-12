@@ -33,6 +33,7 @@
 
 import { _D2 } from '../../fightersData';
 import { getHistoricalTier } from '../../rankHistory';
+import { parseDateOnly, resolveFighterAge } from '../age/index.js';
 
 const UFC_RANKINGS = {
   // Bantamweight
@@ -495,8 +496,13 @@ const getDebutProspectAdjustment = (fighter, opponent) => {
 };
 
 
-const ageDecayPenalty = (f) => {
-  const age = f.AGE;
+// resolvedAge lets callers pass the age AT THE BOUT DATE instead of the
+// fighter object's stored age. This is an individually-supported penalty: it
+// depends only on how old THIS fighter is, so it correctly still applies when
+// the OTHER fighter's age is unknown (unlike the age differential, which
+// neutralises in that case -- see computeMatchupEdges).
+const ageDecayPenalty = (f, resolvedAge = f.AGE) => {
+  const age = resolvedAge;
   if (!age || age < 35) return 0;
   // Heavier divisions lose athleticism faster — scale by weight class
   const divMultiplier = (() => {
@@ -652,25 +658,43 @@ const computeLogisticProb = (featsV2) => {
 // Odds do NOT affect win probability. They are used only in the betting layer.
 
 
-// modelContext is an OPTIONAL third argument. It exists so characterisation
-// tests can pin the normalisation context that would otherwise drift every time
-// the roster is refreshed -- DIVISION_UFC_AVERAGES is derived from the whole
-// _D2 roster at module load, so a single fighter's stats moving shifts every
-// division mean and therefore every golden.
+// modelContext is an OPTIONAL third argument with two distinct fields.
 //
-// Production NEVER passes it. Every application call site remains two-argument
-// and keeps reading the live roster averages, which is the intended behaviour:
-// the app must adapt when new fighter data arrives. Only the frozen tests inject
-// a context, so they compare the model under fixed conditions.
+// eventDate (PRODUCTION): the bout date, as YYYY-MM-DD. When supplied, both
+// fighters' ages are derived from date of birth as of that date, so a
+// prediction for a future card ages the fighters forward and a replay of a past
+// fight uses how old they actually were on the night. When it is absent or
+// unparseable the model falls back to each fighter object's own AGE -- which,
+// for the assembled production roster, is already DOB-derived as of app load.
+// The fallback deliberately does NOT invent a target date: an undated analysis
+// gets today's age, not a guess.
 //
-// Scope is deliberately limited to divisionAverages. Coefficients, rankings,
-// SOS behaviour and clocks are NOT injectable here.
+// divisionAverages (TESTS ONLY): pins the normalisation context that would
+// otherwise drift every time the roster is refreshed -- DIVISION_UFC_AVERAGES
+// is derived from the whole _D2 roster at module load, so a single fighter's
+// stats moving shifts every division mean and therefore every golden.
+//
+// useStoredAge (TESTS ONLY): forces the stored-integer path even when an
+// eventDate is present, so the approved Stage 0 fixtures keep replaying the
+// exact ages they were captured with. NO production call site sets this, and
+// none may -- see src/__tests__/goldenSupport.js.
+//
+// Coefficients, rankings and SOS behaviour are NOT injectable here.
 const computeMatchupEdges = (fA, fB, modelContext) => {
   const S = MODEL.SCALES;
+  const hasEventDate = parseDateOnly(modelContext?.eventDate) !== null;
+  const useStoredAge = modelContext?.useStoredAge === true || !hasEventDate;
+  const storedAge = (f) => (Number.isFinite(f.AGE) ? f.AGE : null);
+  const ageA = useStoredAge
+    ? storedAge(fA)
+    : resolveFighterAge(fA, modelContext.eventDate);
+  const ageB = useStoredAge
+    ? storedAge(fB)
+    : resolveFighterAge(fB, modelContext.eventDate);
   const debutAdjA = getDebutProspectAdjustment(fA, fB);
   const debutAdjB = getDebutProspectAdjustment(fB, fA);
-  const agePenA = ageDecayPenalty(fA);
-  const agePenB = ageDecayPenalty(fB);
+  const agePenA = ageDecayPenalty(fA, ageA);
+  const agePenB = ageDecayPenalty(fB, ageB);
 
   // Discount striking stats for fighters on losing streaks so high-volume
   // output in losses does not overstate current offensive strength.
@@ -750,8 +774,16 @@ const computeMatchupEdges = (fA, fB, modelContext) => {
     (fA.QUALITY_MOMENTUM ?? 0) - debutAdjA.qualityPenalty;
   const effectiveQualMomB =
     (fB.QUALITY_MOMENTUM ?? 0) - debutAdjB.qualityPenalty;
-  let ageDiff =
-    ((fB.AGE ?? 30) - (fA.AGE ?? 30)) / S.age_dif;
+  // An unknown age is NEUTRAL, not an invented age-30 comparison. Defaulting
+  // to 30 handed a real advantage to whichever fighter's age happened to be
+  // known -- a 39-year-old with no recorded age for his opponent scored as if
+  // the opponent were 30, which is a fabricated 9-year edge.
+  //
+  // Neutralising here affects only the DIFFERENTIAL. ageDecayPenalty above is
+  // per-fighter and individually supported, so a known 39-year-old still
+  // carries his own decay penalty even when his opponent's age is unknown.
+  const hasBothAges = Number.isFinite(ageA) && Number.isFinite(ageB);
+  let ageDiff = hasBothAges ? (ageB - ageA) / S.age_dif : 0;
   if (debutAdjA.isDebutProspect && ageDiff > 0) ageDiff *= debutAdjA.ageTrust;
   if (debutAdjB.isDebutProspect && ageDiff < 0) ageDiff *= debutAdjB.ageTrust;
 
@@ -991,8 +1023,8 @@ const computeMatchupEdges = (fA, fB, modelContext) => {
       label: 'Age',
       aLabel: 'AGE',
       bLabel: 'AGE',
-      aValue: fA.AGE ?? 30,
-      bValue: fB.AGE ?? 30,
+      aValue: ageA ?? 'Unknown',
+      bValue: ageB ?? 'Unknown',
       diff: feats.age_dif,
       scale: S.age_dif,
       weight: W.age_dif,
@@ -1174,7 +1206,7 @@ const computeMatchupEdges = (fA, fB, modelContext) => {
     sub_wins:         subWinsA - subWinsB,
     height:           (fA.HEIGHT_IN ?? 69) - (fB.HEIGHT_IN ?? 69),
     reach:            (fA.REACH_IN ?? 70) - (fB.REACH_IN ?? 70),
-    younger:          (fB.AGE ?? 30) - (fA.AGE ?? 30),
+    younger:          hasBothAges ? ageB - ageA : 0,
     sig_str_landed:   aslA - aslB,
     sig_str_accuracy: aspA - aspB,
     sub_attempts:     asaA - asaB,
@@ -1196,7 +1228,7 @@ const computeMatchupEdges = (fA, fB, modelContext) => {
     sub_wins:         subWinsB - subWinsA,
     height:           (fB.HEIGHT_IN ?? 69) - (fA.HEIGHT_IN ?? 69),
     reach:            (fB.REACH_IN ?? 70) - (fA.REACH_IN ?? 70),
-    younger:          (fA.AGE ?? 30) - (fB.AGE ?? 30),
+    younger:          hasBothAges ? ageA - ageB : 0,
     sig_str_landed:   aslB - aslA,
     sig_str_accuracy: aspB - aspA,
     sub_attempts:     asaB - asaA,
