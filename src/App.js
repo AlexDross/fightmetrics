@@ -146,7 +146,7 @@ import {
 
 // Foundation Stage 3: extracted verbatim -- see src/domain/fighters/index.js
 import { FIGHTERS } from './domain/fighters';
-import { isChampionRecord } from './domain/rankings/index.js';
+import { isChampionRecord } from './domain/rankings/current.js';
 
 
 const ufcRankLabel = (r) => {

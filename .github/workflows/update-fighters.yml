@@ -69,6 +69,7 @@ jobs:
               './src/eloModule.js',
               './src/cardioModule.js',
               './src/rankingsData.js',
+              './src/rankingsHistoryData.js',
             ];
             let failed = false;
             for (const f of files) {

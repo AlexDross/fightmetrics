@@ -1,18 +1,21 @@
-// Rankings domain -- CURRENT official UFC rankings for profile/UI metadata,
-// plus read access to the historical artifact.
+// RUNTIME entrypoint -- current official UFC rankings for profile/UI metadata.
+//
+// This module ships to the browser. It imports ONLY src/rankingsData.js (the
+// current tables). It must never import, re-export or dynamically load
+// ./history.js, ../../rankingsHistoryData.js, the Kaggle history cache, or the
+// raw snapshots: doing so would put ~190 kB of research data into every page
+// load. There is deliberately no barrel module combining the two entrypoints.
 //
 // BOUNDARY: nothing here may be imported by src/domain/model or
-// src/domain/betting. v1 scoring keeps its own frozen ranking path until v1 is
-// retired, and the frozen 16-feature MODEL_V2 reads no ranking at all.
-// src/domain/rankings/__tests__/boundary.test.js enforces this.
+// src/domain/betting. v1 keeps its own frozen ranking path until v1 is retired,
+// and the frozen 16-feature MODEL_V2 reads no ranking at all.
 //
-// DIVISION_RANK_HISTORY is a data/research artifact. getHistoricalRank exposes
-// it for analysis; no runtime scoring code consumes it.
+// Enforced by src/domain/rankings/__tests__/boundary.test.js (import-graph
+// walk) and scripts/verify-bundle.mjs (emitted-asset scan).
 import {
   CURRENT_MEDIA_P4P,
   CURRENT_MEDIA_RANKINGS,
   CURRENT_META_RANKINGS,
-  DIVISION_RANK_HISTORY,
   RANKING_ALIASES,
   RANKINGS_METADATA,
 } from '../../rankingsData.js';
@@ -20,14 +23,11 @@ import {
   buildKeysByName,
   divisionAbbreviation,
   isChampionRecord,
-  lookupHistoricalRank,
   normalizeRankingDivision,
   normalizeRankingName,
   rankingHistoryKey,
   resolveCurrentRankingFrom,
 } from './lookup.js';
-
-const HISTORY_KEYS_BY_NAME = buildKeysByName(DIVISION_RANK_HISTORY);
 
 const CURRENT_BY_SOURCE = {
   media: CURRENT_MEDIA_RANKINGS,
@@ -114,20 +114,5 @@ export const getCurrentP4PRanking = (
   const fighterKey = normalizeRankingName(fighterName, RANKING_ALIASES);
   return records[fighterKey] ?? null;
 };
-
-/**
- * Point-in-time historical rank. RESEARCH/DATA ONLY -- do not wire into
- * scoring. Callers must pass a real division; the truncated "Women\" and
- * "Unknown" weight classes resolve only when unambiguous.
- */
-export const getHistoricalRank = (fighterName, eventDate, division) =>
-  lookupHistoricalRank({
-    history: DIVISION_RANK_HISTORY,
-    keysByName: HISTORY_KEYS_BY_NAME,
-    aliases: RANKING_ALIASES,
-    fighterName,
-    division,
-    eventDate,
-  });
 
 export { RANKINGS_METADATA, divisionAbbreviation, isChampionRecord };

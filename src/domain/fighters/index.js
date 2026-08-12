@@ -29,7 +29,7 @@ import { UFC_RANKINGS, getOpponentTier, DIVISION_UFC_AVERAGES, clampNum, sortHis
 import {
   getCurrentP4PRanking,
   resolveCurrentRanking,
-} from '../rankings/index.js';
+} from '../rankings/current.js';
 
 const currentRankTier = (rankObj) => {
   if (!rankObj) return 0.12;

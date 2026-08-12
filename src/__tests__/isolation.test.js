@@ -61,7 +61,7 @@ describe('test isolation (direct-import guard)', () => {
   });
 
   it('no test reads live ROI_ENTRIES or other live data modules', () => {
-    const live = ['roiData', 'upcomingData', 'propPicksData', 'parlayData', 'fightersData', 'fightHistory', 'eloModule', 'cardioModule', 'prospectsData', 'rankHistory', 'rankingsData'];
+    const live = ['roiData', 'upcomingData', 'propPicksData', 'parlayData', 'fightersData', 'fightHistory', 'eloModule', 'cardioModule', 'prospectsData', 'rankHistory', 'rankingsData', 'rankingsHistoryData'];
     const offenders = [];
     for (const f of files) {
       const src = fs.readFileSync(f, 'utf8');

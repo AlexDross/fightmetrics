@@ -8,14 +8,47 @@ FightMetrics uses two rankings sources, kept strictly apart:
 - **Current tables** — the official UFC rankings page, captured as
   source-labelled `media` and `meta` snapshots under `snapshots/`.
 
+## Two artifacts: one ships, one does not
+
+Generation produces **two separate modules**, and the split is load-bearing:
+
+| Artifact | Contents | Ships to browsers? |
+| --- | --- | --- |
+| `src/rankingsData.js` | current media + Meta divisional tables, media P4P, aliases, current metadata | **yes** (~102 kB) |
+| `src/rankingsHistoryData.js` | `DIVISION_RANK_HISTORY`, tombstones, history metadata | **no** (~195 kB) |
+
+They are reached through two deliberately separate entrypoints. There is **no
+barrel module** re-exporting both — that would silently pull history into the
+UI graph:
+
+| Entrypoint | For | May import |
+| --- | --- | --- |
+| `src/domain/rankings/current.js` | runtime / UI | `rankingsData.js` only |
+| `src/domain/rankings/history.js` | offline generation, verification scripts, research, focused tests | `rankingsHistoryData.js` |
+
+`src/App.js`, `src/domain/fighters/`, and their transitive imports must never
+import, initialise, re-export or dynamically load the history module, the
+history artifact, the Kaggle cache, or the raw snapshots. This is not a
+lazy-chunk arrangement: history is absent from the complete production build
+because no runtime feature uses it.
+
+Enforced two ways:
+
+- `src/domain/rankings/__tests__/boundary.test.js` resolves the real import
+  graph from the app entry and fails with the offending import chain.
+- `scripts/verify-bundle.mjs` (`npm run rankings:bundle-check`) scans **every**
+  emitted JS asset for history-only fighter keys and pre-2020 snapshot dates,
+  so minification cannot hide an inclusion.
+
 ## Scope: what rankings are and are not used for
 
 Rankings feed **fighter-profile and UI metadata only**.
 
 - `CURRENT_MEDIA_RANKINGS` / `CURRENT_MEDIA_P4P` drive rank badges.
-- `DIVISION_RANK_HISTORY` is a **data/research artifact with no runtime model
-  consumer**. It is generated, validated and shipped so future analysis can use
-  it, but nothing in `src/domain/model` or `src/domain/betting` may import it.
+- `DIVISION_RANK_HISTORY` is a **data/research artifact with no runtime and no
+  model consumer**. It is generated and validated so future analysis can use
+  it, but nothing in `src/domain/model` or `src/domain/betting` may import it,
+  and nothing in the runtime graph may either.
 
 v1 is deprecated and frozen: it keeps its own legacy ranking path so its
 arithmetic stays byte-exact until v1 is retired. The frozen 16-feature
@@ -82,9 +115,10 @@ legitimate, so rank *uniqueness* is deliberately not asserted.
 ## Commands
 
 ```bash
-npm run rankings:regen    # offline: rebuild from committed cache + snapshots
-npm run rankings:update   # fetch UFC.com, then regenerate
-npm run rankings:verify   # contract checks against the generated artifact
-npm run rankings:test     # fail-closed validation tests
+npm run rankings:regen         # offline: rebuild BOTH artifacts from committed inputs
+npm run rankings:update        # fetch UFC.com, then regenerate
+npm run rankings:verify        # contract checks against both artifacts
+npm run rankings:test          # fail-closed validation tests
+npm run rankings:bundle-check  # after `npm run build`: no history in any JS asset
 python3 scripts/update_rankings.py --refresh-kaggle   # rebuild the cache
 ```

@@ -43,7 +43,7 @@ jobs:
 
       - name: Regenerate source manifest
         run: |
-          if git diff --quiet -- src/rankingsData.js; then
+          if git diff --quiet -- src/rankingsData.js src/rankingsHistoryData.js; then
             echo "Rankings artifact unchanged - preserving source manifest"
           else
             python generate_source_manifest.py
@@ -70,12 +70,16 @@ jobs:
       - name: Production build
         run: npm run build
 
+      - name: Historical data must not reach the bundle
+        run: npm run rankings:bundle-check
+
       - name: Commit ranking changes
         id: commit
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add data/rankings/snapshots src/rankingsData.js src/sourceManifest.js
+          git add data/rankings/snapshots src/rankingsData.js \
+                  src/rankingsHistoryData.js src/sourceManifest.js
           if git diff --staged --quiet; then
             echo "No ranking changes - skipping commit"
             echo "changed=false" >> "$GITHUB_OUTPUT"

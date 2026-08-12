@@ -9,7 +9,7 @@ import { HISTORICAL_RANKINGS } from '../src/rankHistory.js';
 import {
   getCurrentRanking,
   resolveCurrentRanking,
-} from '../src/domain/rankings/index.js';
+} from '../src/domain/rankings/current.js';
 
 const LEGACY_NAME = 'Ian Garry';
 const CANONICAL_NAME = 'Ian Machado Garry';

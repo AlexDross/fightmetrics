@@ -1,4 +1,7 @@
-// Contract checks against the LIVE generated rankings artifact.
+// Contract checks against BOTH live generated rankings artifacts.
+//
+// This is a verification script, so it is one of the few places allowed to
+// import the history artifact. Runtime code must not.
 //
 // Kept out of the vitest suite on purpose: src/__tests__/isolation.test.js
 // forbids tests importing live data modules, because live data drifts on a
@@ -10,35 +13,53 @@ import {
   CURRENT_MEDIA_P4P,
   CURRENT_MEDIA_RANKINGS,
   CURRENT_META_RANKINGS,
-  DIVISION_RANK_HISTORY,
   RANKINGS_METADATA,
 } from '../src/rankingsData.js';
-import * as rankingsModule from '../src/rankingsData.js';
+import * as currentModule from '../src/rankingsData.js';
+import {
+  DIVISION_RANK_HISTORY,
+  RANKINGS_HISTORY_METADATA,
+} from '../src/rankingsHistoryData.js';
 import { _D2 } from '../src/fightersData.js';
 import {
   getCurrentP4PRanking,
   getCurrentRanking,
-  getHistoricalRank,
   isChampionRecord,
   listCurrentRankingAmbiguities,
   resolveCurrentRanking,
-} from '../src/domain/rankings/index.js';
+} from '../src/domain/rankings/current.js';
+import { getHistoricalRank } from '../src/domain/rankings/history.js';
 
 const CUTOFF = 20260618;
 
 // ── artifact shape ──────────────────────────────────────────────────────────
-assert.equal(RANKINGS_METADATA.schemaVersion, 3);
+assert.equal(RANKINGS_METADATA.schemaVersion, 4);
 assert.equal(RANKINGS_METADATA.primarySource, 'media');
 assert.equal(Object.keys(CURRENT_MEDIA_RANKINGS).length, 176);
 assert.equal(Object.keys(CURRENT_META_RANKINGS).length, 176);
 assert.equal(Object.keys(CURRENT_MEDIA_P4P).length, 30);
+
+assert.equal(RANKINGS_HISTORY_METADATA.schemaVersion, 4);
 assert.ok(Object.keys(DIVISION_RANK_HISTORY).length > 700);
-assert.ok(RANKINGS_METADATA.history.explicitUnrankedTombstones > 900);
-assert.equal(RANKINGS_METADATA.kaggle.historyUsedThrough, '2026-06-18');
+assert.ok(RANKINGS_HISTORY_METADATA.history.explicitUnrankedTombstones > 900);
+assert.equal(RANKINGS_HISTORY_METADATA.kaggle.historyUsedThrough, '2026-06-18');
+
+// The runtime artifact must carry NO history: that is what keeps ~190 kB out
+// of every browser bundle.
+for (const symbol of ['DIVISION_RANK_HISTORY', 'RANKINGS_HISTORY_METADATA']) {
+  assert.ok(
+    !(symbol in currentModule),
+    `${symbol} must not be exported from the runtime artifact src/rankingsData.js.`
+  );
+}
+assert.ok(
+  !('history' in RANKINGS_METADATA),
+  'RANKINGS_METADATA must not carry history statistics in the runtime artifact.'
+);
 
 // No permanently-empty exports: UFC publishes no Meta P4P board.
 assert.ok(
-  !('CURRENT_META_P4P' in rankingsModule),
+  !('CURRENT_META_P4P' in currentModule),
   'CURRENT_META_P4P must not be exported while UFC publishes no Meta P4P table.'
 );
 
@@ -58,10 +79,10 @@ for (const [key, entries] of Object.entries(DIVISION_RANK_HISTORY)) {
     );
   }
 }
-assert.equal(tombstones, RANKINGS_METADATA.history.explicitUnrankedTombstones);
+assert.equal(tombstones, RANKINGS_HISTORY_METADATA.history.explicitUnrankedTombstones);
 
 // Retired divisions must not leave anyone ranked forever.
-for (const division of RANKINGS_METADATA.history.retiredDivisions) {
+for (const division of RANKINGS_HISTORY_METADATA.history.retiredDivisions) {
   for (const [key, entries] of Object.entries(DIVISION_RANK_HISTORY)) {
     if (!key.startsWith(`${division}\u001f`)) continue;
     assert.equal(
@@ -74,7 +95,7 @@ for (const division of RANKINGS_METADATA.history.retiredDivisions) {
 // Kaggle-era rows must not have leaked past the reviewed cutoff except through
 // source-labelled official media snapshots.
 const officialDates = new Set([
-  Number(RANKINGS_METADATA.officialUfc.mediaSnapshot.replaceAll('-', '')),
+  Number(RANKINGS_HISTORY_METADATA.officialUfc.mediaSnapshot.replaceAll('-', '')),
 ]);
 for (const [key, entries] of Object.entries(DIVISION_RANK_HISTORY)) {
   for (const [date] of entries) {
@@ -149,10 +170,11 @@ const champions = slots.filter(isChampionRecord).length;
 assert.equal(champions, 11, 'Expected one champion per active division');
 
 console.log(
-  `OK rankings: Kaggle v${RANKINGS_METADATA.kaggle.version} through ` +
-    `${RANKINGS_METADATA.kaggle.historyUsedThrough}, ` +
-    `${slots.length} media slots (all joined), ${champions} champions, ` +
-    `${RANKINGS_METADATA.history.transitions} transitions, ` +
+  `OK rankings: Kaggle v${RANKINGS_HISTORY_METADATA.kaggle.version} through ` +
+    `${RANKINGS_HISTORY_METADATA.kaggle.historyUsedThrough}, ` +
+    `${slots.length} media slots (all joined), ${champions} champions | ` +
+    `history (not bundled): ` +
+    `${RANKINGS_HISTORY_METADATA.history.transitions} transitions, ` +
     `${tombstones} tombstones`
 );
 console.log(`Cross-division badges (${crossDivision.length}):`);

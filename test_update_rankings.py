@@ -472,12 +472,31 @@ class MalformedUfcHtml(unittest.TestCase):
 
 
 class GeneratedArtifact(unittest.TestCase):
-    """The committed artifact must satisfy the invariants the app relies on."""
+    """The committed artifacts must satisfy the invariants the app relies on."""
 
     def test_committed_output_has_no_meta_p4p_export(self):
         text = (ROOT / 'src' / 'rankingsData.js').read_text(encoding='utf-8')
         self.assertNotIn('CURRENT_META_P4P', text)
         self.assertIn('CURRENT_MEDIA_P4P', text)
+
+    def test_runtime_artifact_carries_no_history(self):
+        """The ~190 kB history must not sit in the file that ships to browsers."""
+        text = (ROOT / 'src' / 'rankingsData.js').read_text(encoding='utf-8')
+        self.assertNotIn('DIVISION_RANK_HISTORY', text)
+        self.assertNotIn('RANKINGS_HISTORY_METADATA', text)
+
+    def test_history_artifact_carries_no_current_tables(self):
+        text = (ROOT / 'src' / 'rankingsHistoryData.js').read_text(encoding='utf-8')
+        self.assertIn('DIVISION_RANK_HISTORY', text)
+        for symbol in ['CURRENT_MEDIA_RANKINGS', 'CURRENT_META_RANKINGS',
+                       'CURRENT_MEDIA_P4P']:
+            self.assertNotIn(symbol, text)
+
+    def test_runtime_artifact_is_much_smaller_than_the_history_artifact(self):
+        current = (ROOT / 'src' / 'rankingsData.js').stat().st_size
+        history = (ROOT / 'src' / 'rankingsHistoryData.js').stat().st_size
+        self.assertLess(current, history)
+        self.assertGreater(history, 150_000)
 
     def test_committed_cache_matches_the_reviewed_cutoff(self):
         cache = json.loads(
