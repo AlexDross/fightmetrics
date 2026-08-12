@@ -11,14 +11,40 @@ import { checkInvariants } from '../../schemas/invariants.mjs';
 import { computeROISummary } from '../../../domain/statistics/index.js';
 
 // The contract suite runs against a REAL migrated Stage 6 store, not fixtures,
-// so the in-memory backing is exercised on the same 160 positions Postgres will
+// so the in-memory backing is exercised on the same positions Postgres will
 // hold. Gate 6 must satisfy this identical suite.
 const deps = { migratedAt: '2026-07-28T00:00:00.000Z', newId: () => '0'.repeat(8) + '-0000-7000-8000-' + '0'.repeat(12) };
+const PARLAY_ENTRIES = [];
 const { store } = migrateV0ToV1(
-  { roiEntries: ROI_ENTRIES, upcomingEntries: UPCOMING_ENTRIES, propPicks: PROP_PICKS, parlayEntries: [] },
+  { roiEntries: ROI_ENTRIES, upcomingEntries: UPCOMING_ENTRIES, propPicks: PROP_PICKS, parlayEntries: PARLAY_ENTRIES },
   deps
 );
 const make = (opts) => createInMemoryRepositories(store, { now: () => '2026-08-01T00:00:00.000Z', ...opts });
+
+// ── expected corpus cardinality ──────────────────────────────────────────────
+//
+// Every count below is derived from the canonical INPUT arrays, never from the
+// store or from a repository under test, so the assertions stay falsifiable: a
+// migration that drops, duplicates or misclassifies a row still fails them.
+// Hard-coded totals made this suite fail whenever a prediction was legitimately
+// saved, because saving one changes the corpus these tests read.
+//
+// `migrateV0ToV1` maps each legacy entry 1:1 onto a run, an assessment and a
+// tracked position, and settles that position exactly when the entry carries an
+// `actualWinner` — so the ROI file is the graded half and Upcoming the pending
+// half. `isResolvedEntry` states that rule; the migration suite asserts the two
+// files actually obey it rather than leaving it assumed here.
+const isResolvedEntry = (entry) => String(entry?.actualWinner ?? '').trim() !== '';
+const EXPECTED_GRADED = ROI_ENTRIES.length;
+const EXPECTED_PENDING = UPCOMING_ENTRIES.length;
+const EXPECTED_PREDICTIONS = EXPECTED_GRADED + EXPECTED_PENDING;
+const EXPECTED_PROPS = PROP_PICKS.length;
+const EXPECTED_PARLAYS = PARLAY_ENTRIES.length;
+// The seed ledger carries one root per prediction run, prop and parlay.
+const EXPECTED_SEED_ROOTS = EXPECTED_PREDICTIONS + EXPECTED_PROPS + EXPECTED_PARLAYS;
+// Events are keyed by (name, date); the promotion is a pure function of the name.
+const EXPECTED_EVENTS = new Set(
+  [...ROI_ENTRIES, ...UPCOMING_ENTRIES].map((e) => `${e.eventName}|${e.eventDate}`)).size;
 
 /** The complete dependency set a bout-result write must cover. */
 const boutVector = (r, boutId) => {
@@ -41,11 +67,11 @@ const snapshotsOfRun = (runId) => store.predictionSnapshots.filter((s) => s.runI
  * A priced, graded row whose run carries BOTH a v1 and a v2 snapshot.
  *
  * The v2 snapshot is referenced by no `decisionSnapshotId` and no
- * `predictionSnapshotId` — it is reachable only through `runId`. Measured on the
- * migrated corpus: 95 of 273 snapshots are in that position, and 69 of the 167
- * priced graded rows sit on such a run. Picking a single-snapshot run instead
- * makes the pruning assertions vacuous, because the only snapshot present is
- * also the one the assessment pins.
+ * `predictionSnapshotId` — it is reachable only through `runId`. A substantial
+ * minority of the migrated corpus's snapshots are in that position, and so are
+ * many of its priced graded rows. Picking a single-snapshot run instead makes
+ * the pruning assertions vacuous, because the only snapshot present is also the
+ * one the assessment pins.
  */
 const pricedRowWithTwoSnapshots = (r) => {
   const row = r.predictionRepository.listGraded({}).data.find((x) =>
@@ -135,7 +161,7 @@ describe('contract conformance', () => {
     const snapshot = impl[SEED_LEDGER];
     snapshot[0].removedAt = 'tampered';
     snapshot.length = 0;
-    expect(impl[SEED_LEDGER]).toHaveLength(182);
+    expect(impl[SEED_LEDGER]).toHaveLength(EXPECTED_SEED_ROOTS);
     expect(impl[SEED_LEDGER].every((x) => x.removedAt === null)).toBe(true);
   });
 
@@ -159,11 +185,26 @@ describe('reads', () => {
   const r = make();
 
   it('returns the migrated corpus', () => {
-    expect(r.eventRepository.list().data).toHaveLength(18);
-    expect(r.predictionRepository.listGraded({}).data).toHaveLength(168);
-    expect(r.predictionRepository.listPending().data).toHaveLength(10);
-    expect(r.propRepository.list().data).toHaveLength(4);
-    expect(r.parlayRepository.list().data).toHaveLength(0);
+    // The graded/pending expectations are only meaningful if the ROI file really
+    // is the resolved half and Upcoming the unresolved half. Assert that here
+    // rather than assuming it where the constants are defined.
+    expect(ROI_ENTRIES.every(isResolvedEntry)).toBe(true);
+    expect(UPCOMING_ENTRIES.some(isResolvedEntry)).toBe(false);
+
+    expect(r.eventRepository.list().data).toHaveLength(EXPECTED_EVENTS);
+    expect(r.predictionRepository.listGraded({}).data).toHaveLength(EXPECTED_GRADED);
+    expect(r.predictionRepository.listPending().data).toHaveLength(EXPECTED_PENDING);
+    expect(r.propRepository.list().data).toHaveLength(EXPECTED_PROPS);
+    expect(r.parlayRepository.list().data).toHaveLength(EXPECTED_PARLAYS);
+
+    // Counting alone cannot catch a drop paired with a duplicate. The run id is
+    // the legacy entry id, so every canonical input must appear exactly once, on
+    // the side its source file puts it.
+    const runIdsOf = (rows) => rows.map((x) => runIdOfPosition(x.trackedPositionId)).sort();
+    expect(runIdsOf(r.predictionRepository.listGraded({}).data))
+      .toEqual(ROI_ENTRIES.map((e) => String(e.id)).sort());
+    expect(runIdsOf(r.predictionRepository.listPending().data))
+      .toEqual(UPCOMING_ENTRIES.map((e) => String(e.id)).sort());
   });
 
   it('emits revisions as opaque strings and stakes as decimal strings', () => {
@@ -194,15 +235,17 @@ describe('reads', () => {
 
   it('counts bouts per event without duplicating event data', () => {
     const rows = r.eventRepository.listWithBoutCounts().data;
-    expect(rows).toHaveLength(18);
-    expect(rows.reduce((n, x) => n + x.boutCount, 0)).toBe(178);
+    expect(rows).toHaveLength(EXPECTED_EVENTS);
+    // One bout per migrated prediction: no two entries collapse onto a shared
+    // bout, and no bout is counted twice across events.
+    expect(rows.reduce((n, x) => n + x.boutCount, 0)).toBe(EXPECTED_PREDICTIONS);
   });
 });
 
 describe('statistics stay in JavaScript', () => {
   it('the repository returns an input projection the domain readers accept', () => {
     const rows = make().statisticsRepository.statisticsInput({}).data;
-    expect(rows).toHaveLength(178);
+    expect(rows).toHaveLength(EXPECTED_PREDICTIONS);
     // The existing, tested domain function does the computing — not SQL, not
     // the repository.
     const summary = computeROISummary(rows, new Set());
@@ -241,8 +284,8 @@ describe('authentication and membership are separate', () => {
     expect(r.predictionRepository.savePrediction({ run: { id: 'x' } }).error.kind)
       .toBe('unauthenticated');
     // Public read surface is still open.
-    expect(r.predictionRepository.listGraded({}).data).toHaveLength(168);
-    expect(r.statisticsRepository.statisticsInput({}).data).toHaveLength(178);
+    expect(r.predictionRepository.listGraded({}).data).toHaveLength(EXPECTED_GRADED);
+    expect(r.statisticsRepository.statisticsInput({}).data).toHaveLength(EXPECTED_PREDICTIONS);
     // Cannot claim: there is nobody to claim as.
     expect(r.authRepository.claimOwnership().error.kind).toBe('unauthenticated');
     // exportStore is the private store, not a read surface.
@@ -258,7 +301,7 @@ describe('authentication and membership are separate', () => {
     expect(r.predictionRepository.savePrediction({ run: { id: 'x' } }).error.kind).toBe('forbidden');
     expect(r.workspaceRepository.reset({ backupConfirmed: true }).error.kind).toBe('forbidden');
     // Routing is by membership: reads through the SAME public surface.
-    expect(r.predictionRepository.listGraded({}).data).toHaveLength(168);
+    expect(r.predictionRepository.listGraded({}).data).toHaveLength(EXPECTED_GRADED);
     expect(r.workspaceRepository.exportStore().error.kind).toBe('forbidden');
   });
 
@@ -308,7 +351,7 @@ describe('authentication and membership are separate', () => {
     expect(r.workspaceRepository.exportStore().error.kind).toBe('unauthenticated');
     expect(r.authRepository.claimOwnership().error.kind).toBe('unauthenticated');
     // The public read surface is still open.
-    expect(r.predictionRepository.listGraded({}).data).toHaveLength(168);
+    expect(r.predictionRepository.listGraded({}).data).toHaveLength(EXPECTED_GRADED);
   });
 
   it('signing out after claiming drops the claimed role too', () => {
@@ -457,29 +500,29 @@ describe('deletion removes the COMPLETE aggregate, and only proven orphans', () 
     expect(r.predictionRepository.getAggregate(runId).error.kind).toBe('notFound');
   });
 
-  it('clearGraded deletes 168 whole aggregates, leaving nothing orphaned', () => {
+  it('clearGraded deletes every graded aggregate whole, leaving nothing orphaned', () => {
     const r = make();
     const before = counts(r);
     const graded = r.predictionRepository.listGraded({}).data;
     const res = r.predictionRepository.clearGraded(
       graded.map((g) => ({ id: g.trackedPositionId, revision: g.revision })));
     expect(res.ok, JSON.stringify(res.error ?? {})).toBe(true);
-    expect(res.data.removed).toBe(168);
-    expect(res.data.rootsTombstoned).toBe(168);
-    expect(res.data.physicallyRemoved).toBe(168);
+    expect(res.data.removed).toBe(EXPECTED_GRADED);
+    expect(res.data.rootsTombstoned).toBe(EXPECTED_GRADED);
+    expect(res.data.physicallyRemoved).toBe(EXPECTED_GRADED);
 
     const after = counts(r);
     // THE regression: the old implementation dropped 153 positions and left
     // every assessment, run, snapshot and market behind.
-    expect(after.positions).toBe(before.positions - 168);
-    expect(after.assessments).toBe(before.assessments - 168);
-    expect(after.runs).toBe(before.runs - 168);
+    expect(after.positions).toBe(before.positions - EXPECTED_GRADED);
+    expect(after.assessments).toBe(before.assessments - EXPECTED_GRADED);
+    expect(after.runs).toBe(before.runs - EXPECTED_GRADED);
     expect(after.snapshots).toBeLessThan(before.snapshots);
     expect(after.markets).toBeLessThan(before.markets);
     expect(after.events).toBe(before.events);
     expect(after.bouts).toBe(before.bouts);
-    // The 7 pending positions and their aggregates survive intact.
-    expect(r.predictionRepository.listPending().data).toHaveLength(10);
+    // Every pending position and its aggregate survives intact.
+    expect(r.predictionRepository.listPending().data).toHaveLength(EXPECTED_PENDING);
     for (const p of r.predictionRepository.listPending().data) {
       expect(r.predictionRepository.getAggregate(runIdOfPosition(p.trackedPositionId)).ok).toBe(true);
     }
@@ -635,9 +678,9 @@ describe('deletion removes the COMPLETE aggregate, and only proven orphans', () 
       .toBe(true);
   });
 
-  it('the ledger records 182 roots and tombstones exactly what is deleted', () => {
+  it('the ledger records every seeded root and tombstones exactly what is deleted', () => {
     const r = make();
-    expect(r[SEED_LEDGER]).toHaveLength(182);   // 178 runs + 4 props + 0 parlays
+    expect(r[SEED_LEDGER]).toHaveLength(EXPECTED_SEED_ROOTS);   // runs + props + parlays
     const row = r.predictionRepository.listGraded({}).data[0];
     const runId = runIdOfPosition(row.trackedPositionId);
     r.predictionRepository.remove(runId, row.revision);
@@ -646,7 +689,7 @@ describe('deletion removes the COMPLETE aggregate, and only proven orphans', () 
     const tombstoned = r[SEED_LEDGER].filter((x) => x.removedAt !== null);
     expect(tombstoned.map((x) => x.rootId).sort())
       .toEqual([runId, store.props[0].id].sort());
-    expect(r[SEED_LEDGER]).toHaveLength(182);   // tombstoned, not forgotten
+    expect(r[SEED_LEDGER]).toHaveLength(EXPECTED_SEED_ROOTS);   // tombstoned, not forgotten
     // Whether a later seed may re-insert a tombstoned root is Gate 3's
     // behaviour to build and prove; Gate 1 only guarantees the tombstone exists.
   });
@@ -783,8 +826,8 @@ describe('isolation', () => {
     const a = make();
     const b = make();
     a.workspaceRepository.reset({ backupConfirmed: true });
-    expect(b.predictionRepository.listGraded({}).data).toHaveLength(168);
-    expect(store.trackedPositions).toHaveLength(178);
+    expect(b.predictionRepository.listGraded({}).data).toHaveLength(EXPECTED_GRADED);
+    expect(store.trackedPositions).toHaveLength(EXPECTED_PREDICTIONS);
   });
 });
 
@@ -932,7 +975,8 @@ describe('revision vectors cover the whole dependency set', () => {
     const res = r.predictionRepository.clearGraded([]);
     expect(res.ok).toBe(false);
     expect(res.error.kind).toBe('validation');
-    expect(res.error.issues).toHaveLength(168);
+    // One missing-entry issue per graded row it refused to touch.
+    expect(res.error.issues).toHaveLength(EXPECTED_GRADED);
     expect(res.error.issues[0].code).toBe('missingRevisionEntry');
     expect(counts(r)).toEqual(before);
   });
@@ -991,7 +1035,7 @@ describe('import is atomic and fully validated', () => {
     incoming.wagers = [];
     const res = r.workspaceRepository.importStore(incoming, { backupConfirmed: true });
     expect(res.ok, JSON.stringify(res.error ?? {})).toBe(true);
-    // REPLACE, not merge: the other 157 positions are gone, not retained.
+    // REPLACE, not merge: every position outside the sliced three is gone, not retained.
     expect(counts(r).positions).toBe(3);
   });
 
@@ -1037,7 +1081,7 @@ describe('import is atomic and fully validated', () => {
     const res = r.workspaceRepository.importStore(partial, { backupConfirmed: true });
     expect(res.ok).toBe(false);
     expect(res.error.kind).toBe('validation');
-    // The old code kept the 160 previous positions and called the import a success.
+    // The old code kept the previously loaded positions and called the import a success.
     expect(JSON.stringify(r.workspaceRepository.exportStore().data)).toBe(before);
   });
 
@@ -1047,7 +1091,7 @@ describe('import is atomic and fully validated', () => {
       expect(r.workspaceRepository.importStore(bad, { backupConfirmed: true }).ok, String(bad))
         .toBe(false);
     }
-    expect(counts(r).positions).toBe(178);
+    expect(counts(r).positions).toBe(EXPECTED_PREDICTIONS);
   });
 
   it('a full export re-imports cleanly, even after an amended price', () => {
@@ -1058,7 +1102,7 @@ describe('import is atomic and fully validated', () => {
     const exported = r.workspaceRepository.exportStore().data;
     const res = r.workspaceRepository.importStore(exported, { backupConfirmed: true });
     expect(res.ok, JSON.stringify(res.error ?? {})).toBe(true);
-    expect(counts(r).positions).toBe(178);
+    expect(counts(r).positions).toBe(EXPECTED_PREDICTIONS);
   });
 
   it('import rebuilds the seed ledger from the incoming store', () => {
@@ -1067,7 +1111,7 @@ describe('import is atomic and fully validated', () => {
     r.predictionRepository.remove(runIdOfPosition(row.trackedPositionId), row.revision);
     expect(r[SEED_LEDGER].filter((x) => x.removedAt !== null)).toHaveLength(1);
     expect(r.workspaceRepository.importStore(exportOf(), { backupConfirmed: true }).ok).toBe(true);
-    expect(r[SEED_LEDGER]).toHaveLength(182);
+    expect(r[SEED_LEDGER]).toHaveLength(EXPECTED_SEED_ROOTS);
     expect(r[SEED_LEDGER].every((x) => x.removedAt === null)).toBe(true);
   });
 });
