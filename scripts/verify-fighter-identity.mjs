@@ -6,6 +6,10 @@ import { ELO_RATINGS } from '../src/eloModule.js';
 import { FIGHT_HISTORY } from '../src/fightHistory.js';
 import { _D2 } from '../src/fightersData.js';
 import { HISTORICAL_RANKINGS } from '../src/rankHistory.js';
+import {
+  getCurrentRanking,
+  resolveCurrentRanking,
+} from '../src/domain/rankings/current.js';
 
 const LEGACY_NAME = 'Ian Garry';
 const CANONICAL_NAME = 'Ian Machado Garry';
@@ -100,8 +104,28 @@ assert.equal(
   'Historical rankings must not be keyed by the legacy name.'
 );
 
+// Current official rankings must join to the canonical name, and the ingest
+// alias must resolve the legacy name to the same record -- otherwise a renamed
+// fighter silently shows as unranked in the UI.
+const canonicalCurrent = getCurrentRanking(CANONICAL_NAME, 'Welterweight');
+assert.ok(
+  canonicalCurrent,
+  'Current rankings must join to the canonical fighter.'
+);
+assert.equal(
+  getCurrentRanking(LEGACY_NAME, 'Welterweight')?.rank,
+  canonicalCurrent.rank,
+  'The ranking alias must resolve the legacy name to the canonical rank.'
+);
+assert.equal(
+  resolveCurrentRanking(CANONICAL_NAME, 'Welterweight')?.crossDivision,
+  false,
+  'The canonical fighter is ranked in his own roster division.'
+);
+
 console.log(
   `OK ${CANONICAL_NAME}: ${historyWins}-${historyLosses}, ` +
     `${history.length} fights, Elo ${ELO_RATINGS[CANONICAL_NAME].elo}, ` +
-    `cardio ${CARDIO_RATIOS[CANONICAL_NAME]}`
+    `cardio ${CARDIO_RATIOS[CANONICAL_NAME]}`,
+  `| current rank #${canonicalCurrent.rank} ${canonicalCurrent.division}`
 );

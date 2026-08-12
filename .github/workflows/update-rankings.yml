@@ -1,0 +1,96 @@
+name: Update UFC Rankings
+
+on:
+  # Weekly. UFC republishes the tables once a week, and the historical baseline
+  # is a committed cache rather than a live download, so there is nothing for a
+  # daily run to pick up. Unchanged semantic snapshots produce no commit.
+  schedule:
+    - cron: '0 18 * * 2'
+  workflow_dispatch:
+
+# Never let two runs write snapshots concurrently.
+concurrency:
+  group: update-rankings
+  cancel-in-progress: false
+
+jobs:
+  update-rankings:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout FightMetrics
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install rankings dependencies
+        run: pip install -r requirements-rankings.txt
+
+      # Fail-closed validation runs BEFORE anything touches the network, so a
+      # broken importer can never write a partial snapshot.
+      - name: Rankings input-validation tests
+        run: python test_update_rankings.py
+
+      - name: Capture official rankings and regenerate
+        run: python scripts/update_rankings.py
+
+      - name: Regenerate source manifest
+        run: |
+          if git diff --quiet -- src/rankingsData.js src/rankingsHistoryData.js; then
+            echo "Rankings artifact unchanged - preserving source manifest"
+          else
+            python generate_source_manifest.py
+          fi
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+
+      - name: Install Node dependencies
+        run: npm ci --include=dev
+
+      - name: Verify rankings contracts
+        run: npm run rankings:verify
+
+      - name: Verify fighter identity
+        run: node scripts/verify-fighter-identity.mjs
+
+      - name: Run tests
+        run: npm test
+
+      - name: Production build
+        run: npm run build
+
+      - name: Historical data must not reach the bundle
+        run: npm run rankings:bundle-check
+
+      - name: Commit ranking changes
+        id: commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/rankings/snapshots src/rankingsData.js \
+                  src/rankingsHistoryData.js src/sourceManifest.js
+          if git diff --staged --quiet; then
+            echo "No ranking changes - skipping commit"
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            git commit -m "Auto-update UFC rankings $(date -u +'%Y-%m-%d')"
+            git push
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      # No deploy when nothing changed: an unchanged artifact means an
+      # unchanged site.
+      - name: Trigger Vercel redeploy
+        if: steps.commit.outputs.changed == 'true'
+        run: curl -fsS -X POST "${{ secrets.VERCEL_DEPLOY_HOOK }}"

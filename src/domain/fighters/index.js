@@ -26,6 +26,10 @@ import { ELO_RATINGS } from '../../eloModule';
 import { CARDIO_RATIOS } from '../../cardioModule';
 import { FIGHT_HISTORY } from '../../fightHistory';
 import { UFC_RANKINGS, getOpponentTier, DIVISION_UFC_AVERAGES, clampNum, sortHistoryDesc, getResultStreak, isDecisionMethod, isKoMethod, isSubMethod } from '../model';
+import {
+  getCurrentP4PRanking,
+  resolveCurrentRanking,
+} from '../rankings/current.js';
 
 const currentRankTier = (rankObj) => {
   if (!rankObj) return 0.12;
@@ -196,10 +200,22 @@ const FIGHTERS = [..._D2, ...activeProspects].map((d) => {
   const isProspect = d._p_source !== undefined;
   const eloRec = ELO_RATINGS[d.n] ?? null;
   const fightHistory = sortHistoryDesc(FIGHT_HISTORY[d.n] ?? []);
-  const officialRank = UFC_RANKINGS[d.n] ?? null;
-  const fallbackRank =
+  // ── v1 ranking inputs (FROZEN) ────────────────────────────────────────────
+  // RANK_TIER/OQI_SCALE feed feats.rank_tier_dif in the deprecated v1 engine.
+  // They deliberately keep reading the legacy UFC_RANKINGS table and the stale
+  // embedded `dr` fallback: repointing them would move v1 arithmetic, which is
+  // out of scope here. This debt goes when v1 is retired.
+  const legacyRank = UFC_RANKINGS[d.n] ?? null;
+  const legacyFallbackRank =
     d.dr != null ? { division: d.w, rank: Math.round(d.dr) } : null;
-  const mergedRank = officialRank ?? fallbackRank;
+  const mergedLegacyRank = legacyRank ?? legacyFallbackRank;
+
+  // ── current official rankings (UI/profile only) ───────────────────────────
+  // Source-backed, division-aware, and never fed to any model. resolveCurrent-
+  // Ranking recovers athletes whose ranked division has moved ahead of the
+  // roster's weight class and flags them with crossDivision for the badge.
+  const currentRank = resolveCurrentRanking(d.n, d.w);
+  const currentP4P = getCurrentP4PRanking(d.n);
 
   const divisionAvg = DIVISION_UFC_AVERAGES[d.w] ?? {
     asl: 3.5,
@@ -222,7 +238,7 @@ const FIGHTERS = [..._D2, ...activeProspects].map((d) => {
   const cardioBase = (rawCardio !== undefined && rawCardio !== 0.5)
     ? rawCardio
     : seededProspectCardio;
-  const rankTier = currentRankTier(mergedRank);
+  const rankTier = currentRankTier(mergedLegacyRank);
   const historyWins = fightHistory.filter((fight) => fight.re === 'W');
   const historyLosses = fightHistory.filter((fight) => fight.re === 'L');
   const rawWins = fightHistory.length > 0 ? historyWins.length : d.wi ?? 0;
@@ -386,8 +402,8 @@ const momentumScore = Math.max(
     CARDIO_RATIO: modelCardioRatio,
     LAST_FIGHT_DATE: lastFightDate,
     DAYS_SINCE_LAST: daysSinceLast,
-    DIV_RANK: d.dr,
-    P4P_RANK: d.p4p,
+    DIV_RANK: currentRank?.rank ?? null,
+    P4P_RANK: currentP4P?.rank ?? null,
     WEIGHT_LBS: d.wlb,
     // Derived display fields
     ADJUSTED_RATING: rating, // 0–100, ELO-based, normalized per division
@@ -445,7 +461,7 @@ const momentumScore = Math.max(
     EXPERIENCE_FACTOR: 1.0,
     OQI_SCALE: rankTier,
     TOTAL_MIN: totalMin,
-    UFC_RANK: mergedRank,
+    UFC_RANK: currentRank,
     SUB_THREAT_RATE: modelAsa ?? 0,
     KO_WIN_PCT:
       rawWins > 0

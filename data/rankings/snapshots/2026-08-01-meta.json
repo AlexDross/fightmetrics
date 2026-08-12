@@ -1,0 +1,1660 @@
+{
+  "divisions": {
+    "Bantamweight": {
+      "champions": [
+        {
+          "athleteSlug": "petr-yan",
+          "displayName": "Petr Yan",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 0,
+          "status": "champion"
+        }
+      ],
+      "contenders": [
+        {
+          "athleteSlug": "merab-dvalishvili",
+          "displayName": "Merab Dvalishvili",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 1,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "umar-nurmagomedov",
+          "displayName": "Umar Nurmagomedov",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 2,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "sean-omalley",
+          "displayName": "Sean O'Malley",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 3,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "mario-bautista",
+          "displayName": "Mario Bautista",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 4,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "cory-sandhagen",
+          "displayName": "Cory Sandhagen",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 5,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "song-yadong",
+          "displayName": "Song Yadong",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 6,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "david-martinez",
+          "displayName": "David Martinez",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 7,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "raoni-barcelos",
+          "displayName": "Raoni Barcelos",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 8,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "farid-basharat",
+          "displayName": "Farid Basharat",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 9,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "marcus-mcghee",
+          "displayName": "Marcus McGhee",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 10,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "deiveson-figueiredo",
+          "displayName": "Deiveson Figueiredo",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 11,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "aiemann-zahabi",
+          "displayName": "Aiemann Zahabi",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 12,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "charles-jourdain",
+          "displayName": "Charles Jourdain",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 13,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "bryce-mitchell",
+          "displayName": "Bryce Mitchell",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 14,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "montel-jackson",
+          "displayName": "Montel Jackson",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 15,
+          "status": "contender"
+        }
+      ]
+    },
+    "Featherweight": {
+      "champions": [
+        {
+          "athleteSlug": "alexander-volkanovski",
+          "displayName": "Alexander Volkanovski",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 0,
+          "status": "champion"
+        }
+      ],
+      "contenders": [
+        {
+          "athleteSlug": "movsar-evloev",
+          "displayName": "Movsar Evloev",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 1,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "diego-lopes",
+          "displayName": "Diego Lopes",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 2,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "lerone-murphy",
+          "displayName": "Lerone Murphy",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 3,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "aljamain-sterling",
+          "displayName": "Aljamain Sterling",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 4,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "arnold-allen",
+          "displayName": "Arnold Allen",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 5,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "jean-silva",
+          "displayName": "Jean Silva",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 6,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "pat-sabatini",
+          "displayName": "Pat Sabatini",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 7,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "youssef-zalal",
+          "displayName": "Youssef Zalal",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 8,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "nathaniel-wood",
+          "displayName": "Nathaniel Wood",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 9,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "kevin-vallejos",
+          "displayName": "Kevin Vallejos",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 10,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "melquizael-costa",
+          "displayName": "Melquizael Costa",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 11,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "steve-garcia",
+          "displayName": "Steve Garcia",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 12,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "aaron-pico",
+          "displayName": "Aaron Pico",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 13,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "jose-miguel-delgado",
+          "displayName": "Jose Miguel Delgado",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 14,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "joanderson-brito",
+          "displayName": "Joanderson Brito",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 15,
+          "status": "contender"
+        }
+      ]
+    },
+    "Flyweight": {
+      "champions": [
+        {
+          "athleteSlug": "joshua-van",
+          "displayName": "Joshua Van",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 0,
+          "status": "champion"
+        }
+      ],
+      "contenders": [
+        {
+          "athleteSlug": "alexandre-pantoja",
+          "displayName": "Alexandre Pantoja",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 1,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "manel-kape",
+          "displayName": "Manel Kape",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 2,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "brandon-royval",
+          "displayName": "Brandon Royval",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 3,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "tatsuro-taira",
+          "displayName": "Tatsuro Taira",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 4,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "asu-almabayev",
+          "displayName": "Asu Almabayev",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 5,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "loneer-kavanagh",
+          "displayName": "Lone’er Kavanagh",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 6,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "ramazan-temirov",
+          "displayName": "Ramazan Temirov",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 7,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "kyoji-horiguchi",
+          "displayName": "Kyoji Horiguchi",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 8,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "amir-albazi",
+          "displayName": "Amir Albazi",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 9,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "brandon-moreno",
+          "displayName": "Brandon Moreno",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 10,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "kevin-borjas",
+          "displayName": "Kevin Borjas",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 11,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "mitch-raposo",
+          "displayName": "Mitch Raposo",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 12,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "sumudaerji",
+          "displayName": "Sumudaerji",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 13,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "alessandro-costa",
+          "displayName": "Alessandro Costa",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 14,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "alex-perez",
+          "displayName": "Alex Perez",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 15,
+          "status": "contender"
+        }
+      ]
+    },
+    "Heavyweight": {
+      "champions": [
+        {
+          "athleteSlug": "tom-aspinall",
+          "displayName": "Tom Aspinall",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 0,
+          "status": "champion"
+        }
+      ],
+      "contenders": [
+        {
+          "athleteSlug": "ciryl-gane",
+          "displayName": "Ciryl Gane",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 1,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "alexander-volkov",
+          "displayName": "Alexander Volkov",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 2,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "sergei-pavlovich",
+          "displayName": "Sergei Pavlovich",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 3,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "alex-pereira",
+          "displayName": "Alex Pereira",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 4,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "rizvan-kuniev",
+          "displayName": "Rizvan Kuniev",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 5,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "josh-hokit",
+          "displayName": "Josh Hokit",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 6,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "waldo-cortes-acosta",
+          "displayName": "Waldo Cortes Acosta",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 7,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "valter-walker",
+          "displayName": "Valter Walker",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 8,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "serghei-spivac",
+          "displayName": "Serghei Spivac",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 9,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "curtis-blaydes",
+          "displayName": "Curtis Blaydes",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 10,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "vitor-petrino",
+          "displayName": "Vitor Petrino",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 11,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "brando-pericic",
+          "displayName": "Brando Peričić",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 12,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "mario-pinto",
+          "displayName": "Mario Pinto",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 13,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "mick-parkin",
+          "displayName": "Mick Parkin",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 14,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "ryan-spann",
+          "displayName": "Ryan Spann",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 15,
+          "status": "contender"
+        }
+      ]
+    },
+    "Light Heavyweight": {
+      "champions": [
+        {
+          "athleteSlug": "carlos-ulberg",
+          "displayName": "Carlos Ulberg",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 0,
+          "status": "champion"
+        }
+      ],
+      "contenders": [
+        {
+          "athleteSlug": "alex-pereira",
+          "displayName": "Alex Pereira",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 1,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "magomed-ankalaev",
+          "displayName": "Magomed Ankalaev",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 2,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "jiri-prochazka",
+          "displayName": "Jiří Procházka",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 3,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "paulo-costa",
+          "displayName": "Paulo Costa",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 4,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "jamahal-hill",
+          "displayName": "Jamahal Hill",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 5,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "khalil-rountree-jr",
+          "displayName": "Khalil Rountree Jr.",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 6,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "navajo-stirling",
+          "displayName": "Navajo Stirling",
+          "movement": 3,
+          "movementStatus": "up",
+          "movementText": "Rank increased by 3",
+          "rank": 7,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "dominick-reyes",
+          "displayName": "Dominick Reyes",
+          "movement": -1,
+          "movementStatus": "down",
+          "movementText": "Rank decreased by 1",
+          "rank": 8,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "azamat-murzakanov",
+          "displayName": "Azamat Murzakanov",
+          "movement": -1,
+          "movementStatus": "down",
+          "movementText": "Rank decreased by 1",
+          "rank": 9,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "bogdan-guskov",
+          "displayName": "Bogdan Guskov",
+          "movement": -1,
+          "movementStatus": "down",
+          "movementText": "Rank decreased by 1",
+          "rank": 10,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "robert-whittaker",
+          "displayName": "Robert Whittaker",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 11,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "johnny-walker",
+          "displayName": "Johnny Walker",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 12,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "alonzo-menifield",
+          "displayName": "Alonzo Menifield",
+          "movement": 1,
+          "movementStatus": "up",
+          "movementText": "Rank increased by 1",
+          "rank": 13,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "muhammad-said",
+          "displayName": "Muhammad Saidov",
+          "movement": 1,
+          "movementStatus": "up",
+          "movementText": "Rank increased by 1",
+          "rank": 14,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "iwo-baraniewski",
+          "displayName": "Iwo Baraniewski",
+          "movement": null,
+          "movementStatus": "new",
+          "movementText": "NR",
+          "rank": 15,
+          "status": "contender"
+        }
+      ]
+    },
+    "Lightweight": {
+      "champions": [
+        {
+          "athleteSlug": "justin-gaethje",
+          "displayName": "Justin Gaethje",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 0,
+          "status": "champion"
+        }
+      ],
+      "contenders": [
+        {
+          "athleteSlug": "ilia-topuria",
+          "displayName": "Ilia Topuria",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 1,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "arman-tsarukyan",
+          "displayName": "Arman Tsarukyan",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 2,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "charles-oliveira",
+          "displayName": "Charles Oliveira",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 3,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "max-holloway",
+          "displayName": "Max Holloway",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 4,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "paddy-pimblett",
+          "displayName": "Paddy Pimblett",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 5,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "mateusz-gamrot",
+          "displayName": "Mateusz Gamrot",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 6,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "renato-moicano",
+          "displayName": "Renato Moicano",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 7,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "benoit-saint-denis",
+          "displayName": "Benoît Saint Denis",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 8,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "quillan-salkilld",
+          "displayName": "Quillan Salkilld",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 9,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "mauricio-ruffy",
+          "displayName": "Mauricio Ruffy",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 10,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "tom-nolan",
+          "displayName": "Tom Nolan",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 11,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "dan-hooker",
+          "displayName": "Dan Hooker",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 12,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "rafael-fiziev",
+          "displayName": "Rafael Fiziev",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 13,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "tofiq-musayev",
+          "displayName": "Tofiq Musayev",
+          "movement": null,
+          "movementStatus": "new",
+          "movementText": "NR",
+          "rank": 14,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "grant-dawson",
+          "displayName": "Grant Dawson",
+          "movement": -1,
+          "movementStatus": "down",
+          "movementText": "Rank decreased by 1",
+          "rank": 15,
+          "status": "contender"
+        }
+      ]
+    },
+    "Middleweight": {
+      "champions": [
+        {
+          "athleteSlug": "sean-strickland",
+          "displayName": "Sean Strickland",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 0,
+          "status": "champion"
+        }
+      ],
+      "contenders": [
+        {
+          "athleteSlug": "khamzat-chimaev",
+          "displayName": "Khamzat Chimaev",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 1,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "dricus-du-plessis",
+          "displayName": "Dricus Du Plessis",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 2,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "nassourdine-imavov",
+          "displayName": "Nassourdine Imavov",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 3,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "joe-pyfer",
+          "displayName": "Joe Pyfer",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 4,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "brendan-allen",
+          "displayName": "Brendan Allen",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 5,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "caio-borralho",
+          "displayName": "Caio Borralho",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 6,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "anthony-hernandez",
+          "displayName": "Anthony Hernandez",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 7,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "israel-adesanya",
+          "displayName": "Israel Adesanya",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 8,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "gregory-rodrigues",
+          "displayName": "Gregory Rodrigues",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 9,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "christian-leroy-duncan",
+          "displayName": "Christian Leroy Duncan",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 10,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "ikram-aliskerov",
+          "displayName": "Ikram Aliskerov",
+          "movement": 1,
+          "movementStatus": "up",
+          "movementText": "Rank increased by 1",
+          "rank": 11,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "bo-nickal",
+          "displayName": "Bo Nickal",
+          "movement": 1,
+          "movementStatus": "up",
+          "movementText": "Rank increased by 1",
+          "rank": 12,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "abus-magomedov",
+          "displayName": "Abus Magomedov",
+          "movement": 1,
+          "movementStatus": "up",
+          "movementText": "Rank increased by 1",
+          "rank": 13,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "nursulton-ruziboev",
+          "displayName": "Nursulton Ruziboev",
+          "movement": 1,
+          "movementStatus": "up",
+          "movementText": "Rank increased by 1",
+          "rank": 14,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "reinier-de-ridder",
+          "displayName": "Reinier de Ridder",
+          "movement": null,
+          "movementStatus": "new",
+          "movementText": "NR",
+          "rank": 15,
+          "status": "contender"
+        }
+      ]
+    },
+    "Welterweight": {
+      "champions": [
+        {
+          "athleteSlug": "islam-makhachev",
+          "displayName": "Islam Makhachev",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 0,
+          "status": "champion"
+        }
+      ],
+      "contenders": [
+        {
+          "athleteSlug": "carlos-prates",
+          "displayName": "Carlos Prates",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 1,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "ian-machado-garry",
+          "displayName": "Ian Machado Garry",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 2,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "michael-morales",
+          "displayName": "Michael Morales",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 3,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "jack-della-maddalena",
+          "displayName": "Jack Della Maddalena",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 4,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "sean-brady",
+          "displayName": "Sean Brady",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 5,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "gabriel-bonfim",
+          "displayName": "Gabriel Bonfim",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 6,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "belal-muhammad",
+          "displayName": "Belal Muhammad",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 7,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "leon-edwards",
+          "displayName": "Leon Edwards",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 8,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "joaquin-buckley",
+          "displayName": "Joaquin Buckley",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 9,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "uros-medic",
+          "displayName": "Uroš Medić",
+          "movement": 4,
+          "movementStatus": "up",
+          "movementText": "Rank increased by 4",
+          "rank": 10,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "kamaru-usman",
+          "displayName": "Kamaru Usman",
+          "movement": -1,
+          "movementStatus": "down",
+          "movementText": "Rank decreased by 1",
+          "rank": 11,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "mike-malott",
+          "displayName": "Mike Malott",
+          "movement": -1,
+          "movementStatus": "down",
+          "movementText": "Rank decreased by 1",
+          "rank": 12,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "michael-page",
+          "displayName": "Michael Venom Page",
+          "movement": -1,
+          "movementStatus": "down",
+          "movementText": "Rank decreased by 1",
+          "rank": 13,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "yaroslav-amosov",
+          "displayName": "Yaroslav Amosov",
+          "movement": 1,
+          "movementStatus": "up",
+          "movementText": "Rank increased by 1",
+          "rank": 14,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "kevin-holland",
+          "displayName": "Kevin Holland",
+          "movement": null,
+          "movementStatus": "new",
+          "movementText": "NR",
+          "rank": 15,
+          "status": "contender"
+        }
+      ]
+    },
+    "Women's Bantamweight": {
+      "champions": [
+        {
+          "athleteSlug": "kayla-harrison",
+          "displayName": "Kayla Harrison",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 0,
+          "status": "champion"
+        }
+      ],
+      "contenders": [
+        {
+          "athleteSlug": "joselyne-edwards",
+          "displayName": "Joselyne Edwards",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 1,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "norma-dumont",
+          "displayName": "Norma Dumont",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 2,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "luana-santos",
+          "displayName": "Luana Santos",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 3,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "ailin-perez",
+          "displayName": "Ailin Perez",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 4,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "julianna-pena",
+          "displayName": "Julianna Peña",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 5,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "yana-santos",
+          "displayName": "Yana Santos",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 6,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "jacqueline-cavalcanti",
+          "displayName": "Jacqueline Cavalcanti",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 7,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "michelle-montague",
+          "displayName": "Michelle Montague",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 8,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "melissa-croden",
+          "displayName": "Melissa Croden",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 9,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "karol-rosa",
+          "displayName": "Karol Rosa",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 10,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "bia-mesquita",
+          "displayName": "Bia Mesquita",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 11,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "macy-chiasson",
+          "displayName": "Macy Chiasson",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 12,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "dariya-zheleznyakova",
+          "displayName": "Daria Zhelezniakova",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 13,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "raquel-pennington",
+          "displayName": "Raquel Pennington",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 14,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "klaudia-sygula",
+          "displayName": "Klaudia Sygula",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 15,
+          "status": "contender"
+        }
+      ]
+    },
+    "Women's Flyweight": {
+      "champions": [
+        {
+          "athleteSlug": "valentina-shevchenko",
+          "displayName": "Valentina Shevchenko",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 0,
+          "status": "champion"
+        }
+      ],
+      "contenders": [
+        {
+          "athleteSlug": "natalia-silva",
+          "displayName": "Natalia Silva",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 1,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "manon-fiorot",
+          "displayName": "Manon Fiorot",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 2,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "alexa-grasso",
+          "displayName": "Alexa Grasso",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 3,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "erin-blanchfield",
+          "displayName": "Erin Blanchfield",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 4,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "zhang-weili",
+          "displayName": "Zhang Weili",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 5,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "wang-cong",
+          "displayName": "Wang Cong",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 6,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "jasmine-jasudavicius",
+          "displayName": "Jasmine Jasudavicius",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 7,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "rose-namajunas",
+          "displayName": "Rose Namajunas",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 8,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "maycee-barber",
+          "displayName": "Maycee Barber",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 9,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "tracy-cortez",
+          "displayName": "Tracy Cortez",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 10,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "miranda-maverick",
+          "displayName": "Miranda Maverick",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 11,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "jj-aldrich",
+          "displayName": "JJ Aldrich",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 12,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "karine-silva",
+          "displayName": "Karine Silva",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 13,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "eduarda-moura",
+          "displayName": "Eduarda Moura",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 14,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "casey-oneill",
+          "displayName": "Casey O'Neill",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 15,
+          "status": "contender"
+        }
+      ]
+    },
+    "Women's Strawweight": {
+      "champions": [
+        {
+          "athleteSlug": "mackenzie-dern",
+          "displayName": "Mackenzie Dern",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 0,
+          "status": "champion"
+        }
+      ],
+      "contenders": [
+        {
+          "athleteSlug": "zhang-weili",
+          "displayName": "Zhang Weili",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 1,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "virna-jandiroba",
+          "displayName": "Virna Jandiroba",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 2,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "tatiana-suarez",
+          "displayName": "Tatiana Suarez",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 3,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "gillian-robertson",
+          "displayName": "Gillian Robertson",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 4,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "xiaonan-yan",
+          "displayName": "Yan Xiaonan",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 5,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "fatima-kline",
+          "displayName": "Fatima Kline",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 6,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "piera-rodriguez",
+          "displayName": "Piera Rodriguez",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 7,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "denise-gomes",
+          "displayName": "Denise Gomes",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 8,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "mizuki-inoue",
+          "displayName": "Mizuki",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 9,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "alexia-thainara",
+          "displayName": "Alexia Thainara",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 10,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "amanda-lemos",
+          "displayName": "Amanda Lemos",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 11,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "loopy-godinez",
+          "displayName": "Loopy Godinez",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 12,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "tabatha-ricci",
+          "displayName": "Tabatha Ricci",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 13,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "jaqueline-amorim",
+          "displayName": "Jaqueline Amorim",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 14,
+          "status": "contender"
+        },
+        {
+          "athleteSlug": "talita-alencar",
+          "displayName": "Talita Alencar",
+          "movement": null,
+          "movementStatus": null,
+          "movementText": null,
+          "rank": 15,
+          "status": "contender"
+        }
+      ]
+    }
+  },
+  "fetchedAt": "2026-08-07T18:49:33Z",
+  "poundForPound": {},
+  "schemaVersion": 1,
+  "sourceSystem": "meta",
+  "sourceUpdatedAt": "2026-08-01",
+  "sourceUrl": "https://www.ufc.com/rankings"
+}

@@ -133,6 +133,125 @@ def event_name_present_in_csv(csv_path, needle_lower):
     return needle_lower in content
 
 
+def rankings_module_entry():
+    """Provenance for the two generated rankings artifacts.
+
+    Every field is read from the artifacts and the reviewed history cache, which
+    record the upstream dataset version, its content hash, the clean-history
+    cutoff and the official snapshot dates. There is deliberately NO fallback to
+    a git commit date or a previous manifest: if the source evidence is missing
+    this raises, because a manifest that quietly reuses commit-derived dates
+    while claiming independent source provenance is worse than no manifest.
+
+    The artifacts are tracked separately because only ONE of them ships:
+    rankingsData.js is in the production bundle, rankingsHistoryData.js is
+    offline research data.
+    """
+    current_path = REPO_ROOT / 'src' / 'rankingsData.js'
+    history_path = REPO_ROOT / 'src' / 'rankingsHistoryData.js'
+    cache_path = (
+        REPO_ROOT / 'data' / 'rankings' / 'kaggle-history-through-2026-06-18.json'
+    )
+    for path in (current_path, history_path):
+        if not path.exists():
+            raise SystemExit(
+                f'FATAL: {path.relative_to(REPO_ROOT)} is missing. Run '
+                '`npm run rankings:regen` before regenerating the manifest.'
+            )
+    if not cache_path.exists():
+        raise SystemExit(
+            f'FATAL: reviewed history cache {cache_path} is missing; rankings '
+            'provenance cannot be established from source.'
+        )
+
+    def read_metadata(path, symbol):
+        content = path.read_text(encoding='utf-8')
+        match = re.search(
+            r'export const ' + symbol + r' = (\{.*?\});\n', content, re.S
+        )
+        if not match:
+            raise SystemExit(
+                f'FATAL: could not read {symbol} out of '
+                f'{path.relative_to(REPO_ROOT)}; refusing to emit unverified '
+                'rankings provenance.'
+            )
+        return json.loads(match.group(1))
+
+    current_metadata = read_metadata(current_path, 'RANKINGS_METADATA')
+    history_metadata = read_metadata(history_path, 'RANKINGS_HISTORY_METADATA')
+    cache = json.loads(cache_path.read_text(encoding='utf-8'))
+
+    snapshot_dir = REPO_ROOT / 'data' / 'rankings' / 'snapshots'
+    snapshots = sorted(p.name for p in snapshot_dir.glob('*.json'))
+    if not snapshots:
+        raise SystemExit(
+            'FATAL: no official ranking snapshots on disk; rankings provenance '
+            'cannot be established from source.'
+        )
+
+    generator = (
+        f"scripts/update_rankings.py @ "
+        f"{git_last_commit_hash('scripts/update_rankings.py')}"
+        if git_is_tracked('scripts/update_rankings.py')
+        else 'scripts/update_rankings.py (untracked working-tree version)'
+    )
+    verification = (
+        'Read directly from the generated artifacts and the committed history '
+        'cache, all produced by scripts/update_rankings.py and regenerating '
+        'byte-identically from the same inputs. upstreamContentSha256 is the '
+        'SHA-256 of the Kaggle CSV the cache was built from. No git commit '
+        'date, file mtime, or header comment is consulted, and a missing '
+        'artifact, cache or snapshot set is a hard failure rather than a '
+        'silent fallback.'
+    )
+
+    return {
+        'rankings': {
+            'file': 'src/rankingsData.js',
+            'feedsV2': False,
+            'inProductionBundle': True,
+            'note': (
+                'Current official rankings feed fighter-profile/UI rank badges '
+                'only. Runtime artifact: this is the only rankings file in the '
+                'production dependency graph. Historical series live in the '
+                'separate rankingsHistory module below.'
+            ),
+            'generatedAt': current_metadata['generatedAt'],
+            'maxObservedEventDate': (
+                current_metadata['officialUfc']['mediaSnapshot']
+            ),
+            'contentHash': sha256_of_file('src/rankingsData.js'),
+            'officialSnapshots': snapshots,
+            'generatorVersion': generator,
+            'verificationMethod': verification,
+        },
+        'rankingsHistory': {
+            'file': 'src/rankingsHistoryData.js',
+            'feedsV2': False,
+            'inProductionBundle': False,
+            'note': (
+                'Historical divisional rankings. RESEARCH ARTIFACT: no runtime '
+                'consumer and no model consumer -- neither the deprecated v1 '
+                'engine nor the frozen 16-feature MODEL_V2. Kept out of the '
+                'browser bundle; enforced by '
+                'src/domain/rankings/__tests__/boundary.test.js (import graph) '
+                'and scripts/verify-bundle.mjs (emitted assets).'
+            ),
+            'generatedAt': history_metadata['generatedAt'],
+            'maxObservedEventDate': history_metadata['history']['latestSnapshot'],
+            'contentHash': sha256_of_file('src/rankingsHistoryData.js'),
+            'historyCacheSha256': sha256_of_file(
+                'data/rankings/kaggle-history-through-2026-06-18.json'
+            ),
+            'upstreamContentSha256': cache['source']['contentSha256'],
+            'upstreamVersion': cache['source']['version'],
+            'historyUsedThrough': history_metadata['kaggle']['historyUsedThrough'],
+            'generatorVersion': generator,
+            'verificationMethod': verification,
+        },
+    }
+
+
 def build_manifest():
     now_iso = datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
 
@@ -256,6 +375,8 @@ def build_manifest():
         ),
     }
 
+    modules.update(rankings_module_entry())
+
     return {
         'manifestGeneratedAt': now_iso,
         'generatorScript': 'generate_source_manifest.py',
@@ -268,13 +389,14 @@ def write_js(manifest, out_path='src/sourceManifest.js'):
     header = (
         "// AUTO-GENERATED by generate_source_manifest.py -- do not hand-edit.\n"
         "// Per-module provenance tuples for every active v2 feature-source module\n"
-        "// (plus cardio/rankHistory, tracked for future model versions even though they\n"
-        "// do not currently feed MODEL_V2). maxObservedEventDate is computed by reading\n"
+        "// (plus cardio/rankHistory/rankings, tracked even though they do not feed\n"
+        "// MODEL_V2). maxObservedEventDate is computed by reading\n"
         "// the actual underlying source data -- never a file mtime, git commit date, or\n"
         "// in-file header comment. See research/source_integrity_audit.md for the manual\n"
         "// methodology this script automates.\n"
         "// Re-run this script whenever fightersData.js / fightHistory.js / eloModule.js /\n"
-        "// cardioModule.js / rankHistory.js are regenerated, so the manifest stays current.\n\n"
+        "// cardioModule.js / rankingsData.js / rankingsHistoryData.js are regenerated,\n"        "// so the\n"
+        "// manifest stays current.\n\n"
     )
     body = f"export const SOURCE_MANIFEST = {json.dumps(manifest, indent=2)};\n"
     (REPO_ROOT / out_path).write_text(header + body, encoding='utf-8')
