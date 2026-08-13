@@ -56,8 +56,24 @@ jobs:
       - name: Test source-manifest scoping
         run: python test_source_manifest_scope.py
 
+      # The roster is read with ONE grammar. Two independently written `[^']`
+      # patterns used to truncate at the backslash of an escaped apostrophe, so
+      # nine fighters silently stopped receiving updates and 1,849 history
+      # entries shipped with the weight class "Women\". Runs before the updater
+      # so a reintroduced field-specific regex fails on fixtures rather than by
+      # quietly freezing a fighter again.
+      - name: Test JS roster parser
+        run: python test_js_roster_parser.py
+
       - name: Run update_fighters.py
         run: python update_fighters.py
+
+      # Same defect, now held against the artifacts this run just generated: no
+      # truncated identity, no "Women\" weight class, and Sean O'Malley still at
+      # four title bouts. tb is stored data the updater must not recompute while
+      # every fight record carries wc:''.
+      - name: Test correction-5 identity invariants
+        run: python test_correction5_identity.py
 
       - name: Regenerate eloModule.js
         run: python regen_elo.py

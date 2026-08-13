@@ -45,6 +45,16 @@ jobs:
       - name: Install rankings dependencies
         run: pip install -r requirements-rankings.txt
 
+      # Roster identity. Two independently written `[^']` patterns used to
+      # truncate at the backslash of an escaped apostrophe, freezing nine
+      # fighters and shipping 1,849 history entries with the weight class
+      # "Women\". Both suites are stdlib-only and read no feed.
+      - name: JS roster parser tests
+        run: python test_js_roster_parser.py
+
+      - name: Correction-5 identity invariants
+        run: python test_correction5_identity.py
+
       - name: Run Vitest
         run: npm test
 
