@@ -1456,7 +1456,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "1:50",
-      "wc": "Unknown",
+      "wc": "Heavyweight",
       "tb": false,
       "ev": "UFC Fight Night: Gamrot vs. Salkilld"
     }
@@ -1493,7 +1493,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Unknown",
+      "wc": "Lightweight",
       "tb": false,
       "ev": "UFC Fight Night: Gamrot vs. Salkilld"
     }
@@ -1789,7 +1789,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Unknown",
+      "wc": "Women\\",
       "tb": false,
       "ev": "UFC Fight Night: Gamrot vs. Salkilld"
     }
@@ -1802,7 +1802,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Unknown",
+      "wc": "Women\\",
       "tb": false,
       "ev": "UFC Fight Night: Gamrot vs. Salkilld"
     }
@@ -7766,7 +7766,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "1:01",
-      "wc": "Unknown",
+      "wc": "Middleweight",
       "tb": false,
       "ev": "UFC Fight Night: Medic vs. Rodriguez"
     }
@@ -7836,7 +7836,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "1:21",
-      "wc": "Unknown",
+      "wc": "Lightweight",
       "tb": false,
       "ev": "UFC Fight Night: Medic vs. Rodriguez"
     }
@@ -7849,7 +7849,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "1:21",
-      "wc": "Unknown",
+      "wc": "Lightweight",
       "tb": false,
       "ev": "UFC Fight Night: Medic vs. Rodriguez"
     }
@@ -8110,7 +8110,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "1:49",
-      "wc": "Unknown",
+      "wc": "Welterweight",
       "tb": false,
       "ev": "UFC Fight Night: Medic vs. Rodriguez"
     }
@@ -8123,7 +8123,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Unknown",
+      "wc": "Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Medic vs. Rodriguez"
     }
@@ -8432,7 +8432,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "3:41",
-      "wc": "Unknown",
+      "wc": "Women\\",
       "tb": false,
       "ev": "UFC Fight Night: Medic vs. Rodriguez"
     }
@@ -8491,7 +8491,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "2:22",
-      "wc": "Unknown",
+      "wc": "Heavyweight",
       "tb": false,
       "ev": "UFC Fight Night: Medic vs. Rodriguez"
     }
@@ -8504,7 +8504,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "2:22",
-      "wc": "Unknown",
+      "wc": "Heavyweight",
       "tb": false,
       "ev": "UFC Fight Night: Medic vs. Rodriguez"
     }
@@ -8517,7 +8517,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "3:20",
-      "wc": "Unknown",
+      "wc": "Women\\",
       "tb": false,
       "ev": "UFC Fight Night: Medic vs. Rodriguez"
     }
@@ -8980,7 +8980,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Unknown",
+      "wc": "Lightweight",
       "tb": false,
       "ev": "UFC Fight Night: Ankalaev vs. Guskov"
     }
@@ -8993,7 +8993,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Unknown",
+      "wc": "Lightweight",
       "tb": false,
       "ev": "UFC Fight Night: Ankalaev vs. Guskov"
     }
@@ -9065,7 +9065,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Unknown",
+      "wc": "Welterweight",
       "tb": false,
       "ev": "UFC Fight Night: Ankalaev vs. Guskov"
     }
@@ -9449,7 +9449,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "4:49",
-      "wc": "Unknown",
+      "wc": "Light Heavyweight",
       "tb": false,
       "ev": "UFC Fight Night: Ankalaev vs. Guskov"
     }
@@ -9877,7 +9877,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Unknown",
+      "wc": "Light Heavyweight",
       "tb": false,
       "ev": "UFC Fight Night: Ankalaev vs. Guskov"
     }
@@ -10239,7 +10239,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 3,
       "ti": "3:07",
-      "wc": "Unknown",
+      "wc": "Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Ankalaev vs. Guskov"
     }
