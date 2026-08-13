@@ -1,16 +1,17 @@
 """
 FightMetrics — Auto-Update Script v8.0 (FINAL SAFE)
 ====================================================
-Updates record fields, fight history, and seeds new UFC-only fighters when they
-make their debut. Nothing that affects rankings is touched.
+Updates records, aggregate fight statistics, fight history, and seeds new
+UFC-only fighters when they make their debut. Rankings and rating artifacts are
+not touched.
 
 UPDATES:
-  fightersData.js  — wi, lo, ws, ls, lfd, dsl, kow, sbw, dcw
+  fightersData.js  — records plus tr, tb, asl, asp, asa, atl, atp and detail stats
   fightersData.js  — adds new UFC-only entries for debuting fighters
   fightHistory.js  — rebuilt from source CSVs
 
-NEVER TOUCHES (leave for Colab pipeline):
-  elo, crd, asl, asp, asa, atl, atp  — affect rankings/ratings
+NEVER TOUCHES (leave for their dedicated generators):
+  elo, crd                           — rating/calibration artifacts
   eloModule.js, cardioModule.js       — affect rankings/ratings
   dr, p4p                             — rankings
   tb, ht, rh, st, w, ag              — physical attributes
@@ -26,6 +27,7 @@ from fight_event_dates import (
     apply_event_date_overrides, canonicalize_undated_events, fight_sort_key,
     is_dated, normalize_date,
 )
+from fight_data_integrity import canonicalize_aggregate_inputs, load_required_csv
 
 SRC          = os.path.dirname(os.path.abspath(__file__))
 JS_PATH      = os.path.join(SRC, 'src', 'fightersData.js')
@@ -220,26 +222,18 @@ def load_prospect_fallbacks():
 
 # ─── Load CSVs ────────────────────────────────────────────────────────────────
 print("Loading CSVs...")
-results_df = pd.read_csv('ufc_fight_results.csv', dtype=str)
-events_df  = pd.read_csv('ufc_event_details.csv', dtype=str)
+results_df = load_required_csv(os.path.join(SRC, 'ufc_fight_results.csv'))
+events_df  = load_required_csv(os.path.join(SRC, 'ufc_event_details.csv'))
+details_df = load_required_csv(os.path.join(SRC, 'ufc_fight_details.csv'))
+stats_df   = load_required_csv(os.path.join(SRC, 'ufc_fight_stats.csv'))
+has_details = True
+has_stats = True
 
-try:
-    details_df = pd.read_csv('ufc_fight_details.csv', dtype=str)
-    details_df['EVENT'] = details_df['EVENT'].str.strip()
-    details_df['BOUT']  = details_df['BOUT'].str.strip()
-    has_details = True
-except:
-    has_details = False
-
-try:
-    stats_df = pd.read_csv('ufc_fight_stats.csv', dtype=str)
-    stats_df['EVENT'] = stats_df['EVENT'].str.strip()
-    stats_df['BOUT'] = stats_df['BOUT'].str.strip()
-    stats_df['FIGHTER'] = stats_df['FIGHTER'].str.strip().map(normalize_name)
-    has_stats = True
-except:
-    stats_df = None
-    has_stats = False
+details_df['EVENT'] = details_df['EVENT'].str.strip()
+details_df['BOUT']  = details_df['BOUT'].str.strip()
+stats_df['EVENT'] = stats_df['EVENT'].str.strip()
+stats_df['BOUT'] = stats_df['BOUT'].str.strip()
+stats_df['FIGHTER'] = stats_df['FIGHTER'].str.strip().map(normalize_name)
 
 prospect_fallbacks = load_prospect_fallbacks()
 
@@ -272,12 +266,23 @@ _bouts_by_event = {
 _alias_map, _unresolved_undated = canonicalize_undated_events(_bouts_by_event, event_dates)
 
 if _alias_map:
-    _before = len(results_df)
     for _alias, _canon in sorted(_alias_map.items()):
         print(f"  ↪ canonicalised undated event {_alias!r} → {_canon!r} "
-              f"(identical {sum(_bouts_by_event[_alias].values())}-bout card; duplicate rows dropped)")
-    results_df = results_df[~results_df['EVENT'].isin(_alias_map)].copy()
-    print(f"  Dropped {_before - len(results_df)} duplicate result rows from aliased events")
+              f"(identical {sum(_bouts_by_event[_alias].values())}-bout card)")
+
+# One alias policy must govern every aggregate input.  Canonicalising only the
+# result rows leaves duplicate per-round stats behind, inflating ASL/ASP/ASA/
+# ATL/ATP and every downstream detail aggregate.  Exact cross-event duplicates
+# collapse; any payload disagreement is a hard failure.
+results_df, details_df, stats_df, _canonical_summary = canonicalize_aggregate_inputs(
+    results_df, details_df, stats_df, _alias_map,
+)
+for _source, _summary in _canonical_summary.items():
+    if _summary['canonicalizedRows'] or _summary['collapsedRows']:
+        print(
+            f"  {_source}: canonicalised {_summary['canonicalizedRows']} alias rows; "
+            f"collapsed {_summary['collapsedRows']} exact duplicates"
+        )
 
 # Never fabricate a date. An event with no safe canonical form stays undated and
 # says so loudly; its fights still count toward records, but can never become a

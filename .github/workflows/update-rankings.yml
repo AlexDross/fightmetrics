@@ -41,12 +41,18 @@ jobs:
       - name: Capture official rankings and regenerate
         run: python scripts/update_rankings.py
 
-      - name: Regenerate source manifest
+      # Rankings-scoped: this job rebuilds only rankingsData.js and
+      # rankingsHistoryData.js. A full regeneration here would re-derive
+      # maxObservedEventDate for fightHistory, fightersDataAggregates and elo
+      # from whatever feed happened to be on disk, attaching a coverage claim to
+      # artifacts this job never rebuilt. The scoped run preserves their last
+      # verified provenance and needs no fight inputs at all.
+      - name: Regenerate source manifest (rankings modules only)
         run: |
           if git diff --quiet -- src/rankingsData.js src/rankingsHistoryData.js; then
             echo "Rankings artifact unchanged - preserving source manifest"
           else
-            python generate_source_manifest.py
+            python generate_source_manifest.py --scope rankings
           fi
 
       - name: Set up Node

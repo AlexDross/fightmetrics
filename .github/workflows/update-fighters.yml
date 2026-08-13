@@ -45,6 +45,17 @@ jobs:
       - name: Test undated-event handling
         run: python test_fight_event_dates.py
 
+      # One event-alias policy must hold across every aggregate input. Runs
+      # before the updater so a duplicate-round-stat regression fails on
+      # committed fixtures rather than silently inflating rate statistics.
+      - name: Test aggregate input identity gates
+        run: python test_fight_data_integrity.py
+
+      # Provenance may only be re-derived by a run that regenerated the
+      # artifact. Guards the manifest's module scoping before it is written.
+      - name: Test source-manifest scoping
+        run: python test_source_manifest_scope.py
+
       - name: Run update_fighters.py
         run: python update_fighters.py
 

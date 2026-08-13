@@ -12,14 +12,24 @@ module's underlying source data -- never a file mtime, git date, or in-file
 header comment), a content hash of the shipped artifact, and generatorVersion
 (the commit that produced it, when recoverable).
 
+Two different questions are recorded per module and must not be conflated:
+sourceInputs is the artifact's data lineage -- the files whose contents can
+actually appear in it -- while generatorRequiredInputs is what the generating
+script refuses to run without. update_fighters.py requires all four Greco CSVs
+to execute, but only fightersData.js aggregates read the round-stat file;
+fightHistory.js never does.
+
 maxObservedEventDate methodology mirrors research/source_integrity_audit.md's
 manual approach:
-  - fightHistory / fightersData aggregates / elo: all three are generated from
-    the same two Greco CSVs (ufc_fight_results.csv joined to
-    ufc_event_details.csv via EVENT name -- see update_fighters.py:240-242 and
-    regen_elo.py:6-7). maxObservedEventDate is the maximum DATE value actually
+  - fightHistory: results, event details and fight details. Round stats are
+    not part of its lineage.
+  - fightersData aggregates: all four Greco inputs; the round-stat file feeds
+    every rate statistic.
+  - elo: results and event details only.
+    For all three, maxObservedEventDate is the maximum DATE value actually
     parseable in ufc_event_details.csv, verified against the CSVs, not any
-    script's run date or in-file comment.
+    script's run date or in-file comment -- and only ever recomputed by a run
+    that regenerated the artifact itself.
   - rankHistory: its raw source CSV (UFC_rankings_history.csv) is not present
     on disk. Falls back to the maximum YYYYMMDD date literally embedded in the
     shipped rankHistory.js artifact itself -- a defensible proxy for "latest
@@ -33,12 +43,29 @@ manual approach:
     name_aliases.json and the measured counts are recorded, along with a stale
     warning if the shipped artifact disagrees with what the sources now yield.
 
+Generation is module-scoped, because provenance is only as trustworthy as the
+regeneration that produced it:
+
+  --scope full      Regenerates every module. Requires all Greco inputs on disk
+                    and fails closed without them. Use this only where the
+                    Greco-backed artifacts themselves were just rebuilt.
+  --scope rankings  Regenerates the two rankings modules and copies every other
+                    module object through verbatim. Reads no Greco input.
+
+The scoping is not a convenience. A rankings run downloads no fight data and
+rebuilds no fight artifact, so recomputing maxObservedEventDate there would
+pair an unchanged fightHistory/fightersData/elo contentHash with whatever date
+happened to be in a newer feed -- asserting coverage the shipped artifact does
+not contain. Emitting null instead is equally wrong in the other direction.
+Preserving the last verified value is the only honest option.
+
 Read-only against every source file it inspects. Writes only to
 src/sourceManifest.js. Does not touch fightersData.js, fightHistory.js,
 eloModule.js, cardioModule.js, rankHistory.js, fighterBirthdates.js, or any
 prediction/model logic.
 """
 
+import argparse
 import csv
 import hashlib
 import json
@@ -48,6 +75,14 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent
+
+# Modules whose maxObservedEventDate is read out of the Greco event feed. Only
+# a run that actually regenerated these artifacts may recompute their dates.
+GRECO_BACKED_MODULES = ('fightHistory', 'fightersDataAggregates', 'elo')
+
+# Modules produced by scripts/update_rankings.py, the only ones a rankings run
+# is entitled to rewrite.
+RANKINGS_MODULES = ('rankings', 'rankingsHistory')
 
 
 def git_last_commit_date(path):
@@ -92,12 +127,45 @@ def sha256_of_file(path):
     return h.hexdigest()
 
 
-def max_event_date_in_csv(csv_path):
-    """Parses ufc_event_details.csv's DATE column ('Month D, YYYY' format) and
-    returns the maximum date as an ISO string, or None if unreadable."""
-    p = REPO_ROOT / csv_path
+def load_existing_manifest(path='src/sourceManifest.js'):
+    """Read the currently shipped manifest so a scoped run can preserve it."""
+    p = REPO_ROOT / path
     if not p.exists():
-        return None, 0
+        raise SystemExit(
+            f'FATAL: {path} does not exist, so a scoped regeneration has no '
+            'verified provenance to preserve. Run --scope full first.'
+        )
+    match = re.search(
+        r'export const SOURCE_MANIFEST = (\{.*\});\n', p.read_text(encoding='utf-8'), re.S
+    )
+    if not match:
+        raise SystemExit(f'FATAL: could not parse SOURCE_MANIFEST out of {path}.')
+    manifest = json.loads(match.group(1))
+    if not isinstance(manifest.get('modules'), dict):
+        raise SystemExit(f'FATAL: {path} has no modules object to preserve.')
+    return manifest
+
+
+def max_event_date_in_csv(csv_path, input_root=None):
+    """Parses ufc_event_details.csv's DATE column ('Month D, YYYY' format) and
+    returns the maximum date as an ISO string.
+
+    A missing input is fatal, never null.  This field is the manifest's only
+    claim about how current the generated aggregates are; emitting
+    maxObservedEventDate: null when the CSV is simply absent produced a
+    manifest that looked authoritative while asserting nothing, which is how
+    stale aggregates went unnoticed in the first place.
+
+    Only --scope full calls this. A run that did not rebuild the Greco-backed
+    artifacts must preserve their last verified date instead.
+    """
+    p = (Path(input_root) if input_root else REPO_ROOT) / csv_path
+    if not p.exists():
+        raise SystemExit(
+            f"FATAL: required aggregate input is missing: {csv_path}. "
+            "Refusing to emit maxObservedEventDate: null for a provenance claim "
+            "that cannot be verified."
+        )
     max_dt = None
     n_rows = 0
     with p.open() as f:
@@ -179,8 +247,8 @@ def birthdate_source_coverage():
     return source_rows, valid_dob, aliases_applied, len(canonical), artifact_keys
 
 
-def event_name_present_in_csv(csv_path, needle_lower):
-    p = REPO_ROOT / csv_path
+def event_name_present_in_csv(csv_path, needle_lower, input_root=None):
+    p = (Path(input_root) if input_root else REPO_ROOT) / csv_path
     if not p.exists():
         return None
     content = p.read_text(encoding='utf-8', errors='ignore').lower()
@@ -306,10 +374,54 @@ def rankings_module_entry():
     }
 
 
-def build_manifest():
+def build_rankings_scoped_manifest(now_iso, existing=None):
+    """Regenerate only the rankings modules; copy everything else verbatim.
+
+    The rankings workflow rebuilds rankingsData.js and rankingsHistoryData.js
+    and nothing else. fightHistory.js, fightersData.js and eloModule.js are
+    untouched on disk, so their recorded provenance is still exactly true and
+    is preserved byte-for-byte. Recomputing their maxObservedEventDate from
+    whatever feed happens to be present would attach a newer coverage claim to
+    an unchanged artifact.
+    """
+    existing = load_existing_manifest() if existing is None else existing
+    modules = dict(existing['modules'])
+
+    missing = [name for name in GRECO_BACKED_MODULES if name not in modules]
+    if missing:
+        raise SystemExit(
+            'FATAL: the shipped manifest is missing Greco-backed modules '
+            f"({', '.join(missing)}), so a rankings-scoped run has nothing "
+            'verified to preserve. Run --scope full first.'
+        )
+
+    preserved = {name: modules[name] for name in modules if name not in RANKINGS_MODULES}
+    modules.update(rankings_module_entry())
+    for name, value in preserved.items():
+        modules[name] = value
+
+    return {
+        'manifestGeneratedAt': now_iso,
+        'generatorScript': 'generate_source_manifest.py',
+        'lastGenerationScope': 'rankings',
+        'methodologyRef': existing.get(
+            'methodologyRef', 'research/source_integrity_audit.md'
+        ),
+        'modules': modules,
+    }
+
+
+def build_manifest(scope='full', input_root=None, existing=None):
     now_iso = datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
 
-    max_event_date, n_event_rows = max_event_date_in_csv('ufc_event_details.csv')
+    if scope == 'rankings':
+        return build_rankings_scoped_manifest(now_iso, existing=existing)
+    if scope != 'full':
+        raise SystemExit(f"FATAL: unknown manifest scope {scope!r}.")
+
+    max_event_date, n_event_rows = max_event_date_in_csv(
+        'ufc_event_details.csv', input_root=input_root
+    )
 
     # Cross-check: confirm zero window-period event names leak into the raw
     # fight-level CSVs even though they lack their own date column (mirrors
@@ -321,12 +433,40 @@ def build_manifest():
         'ufc macau', 'ufc vegas 118', 'freedom 250', 'ufc vegas 119',
         'ufc fight night baku', 'ufc 329',
     ]
-    fight_csvs = ['ufc_fight_results.csv', 'ufc_fight_details.csv', 'ufc_fight_stats.csv']
+    aggregate_inputs = [
+        'ufc_fight_results.csv',
+        'ufc_event_details.csv',
+        'ufc_fight_details.csv',
+        'ufc_fight_stats.csv',
+    ]
+    # Every aggregate input must be present before any provenance is claimed.
+    # A silently absent CSV downgrades the cross-check to "zero matches" and the
+    # date to null, both of which read as a clean bill of health.
+    input_base = Path(input_root) if input_root else REPO_ROOT
+    absent_inputs = [name for name in aggregate_inputs if not (input_base / name).exists()]
+    if absent_inputs:
+        raise SystemExit(
+            'FATAL: required aggregate inputs are missing: '
+            f"{', '.join(absent_inputs)}. Provenance cannot be asserted for "
+            'artifacts whose sources are not on disk.'
+        )
+
+    fight_csvs = [name for name in aggregate_inputs if name != 'ufc_event_details.csv']
     any_window_hit = False
     for csvf in fight_csvs:
         for name in window_event_names:
-            if event_name_present_in_csv(csvf, name):
+            if event_name_present_in_csv(csvf, name, input_root=input_root):
                 any_window_hit = True
+
+    # Data lineage per artifact -- the files whose contents can actually appear
+    # in it. Distinct from generatorRequiredInputs below, which is what the
+    # script refuses to start without.
+    history_inputs = [
+        'ufc_fight_results.csv',
+        'ufc_event_details.csv',
+        'ufc_fight_details.csv',
+    ]
+    elo_inputs = ['ufc_fight_results.csv', 'ufc_event_details.csv']
 
     greco_verification_note = (
         f"Parsed DATE column of ufc_event_details.csv directly ({n_event_rows} rows); "
@@ -345,6 +485,9 @@ def build_manifest():
         'generatedAt': git_last_commit_date('src/fightHistory.js'),
         'maxObservedEventDate': max_event_date,
         'contentHash': sha256_of_file('src/fightHistory.js'),
+        # Lineage, not prerequisites: fightHistory.js never reads round stats.
+        'sourceInputs': history_inputs,
+        'generatorRequiredInputs': aggregate_inputs,
         'generatorVersion': (
             f"update_fighters.py @ {git_last_commit_hash('update_fighters.py')}"
             if git_is_tracked('update_fighters.py') else 'unavailable'
@@ -360,6 +503,9 @@ def build_manifest():
         'generatedAt': git_last_commit_date('src/fightersData.js'),
         'maxObservedEventDate': max_event_date,
         'contentHash': sha256_of_file('src/fightersData.js'),
+        # All four: the round-stat file feeds every rate statistic here.
+        'sourceInputs': aggregate_inputs,
+        'generatorRequiredInputs': aggregate_inputs,
         'generatorVersion': (
             f"update_fighters.py @ {git_last_commit_hash('update_fighters.py')}"
             if git_is_tracked('update_fighters.py') else 'unavailable'
@@ -373,6 +519,8 @@ def build_manifest():
         'generatedAt': git_last_commit_date('src/eloModule.js'),
         'maxObservedEventDate': max_event_date,
         'contentHash': sha256_of_file('src/eloModule.js'),
+        'sourceInputs': elo_inputs,
+        'generatorRequiredInputs': elo_inputs,
         'generatorVersion': (
             f"regen_elo.py @ {git_last_commit_hash('regen_elo.py')}"
             if git_is_tracked('regen_elo.py') else 'unavailable'
@@ -381,8 +529,9 @@ def build_manifest():
             greco_verification_note +
             " NOTE: eloModule.js's own header comment claims coverage \"through Jul 2026\" -- "
             "this is misleading relative to the verified underlying data and should not be trusted; "
-            "regen_elo.py reads only ufc_fight_results.csv + ufc_event_details.csv, identical to the "
-            "fight-history/fighter-aggregate sources above."
+            "regen_elo.py reads only ufc_fight_results.csv + ufc_event_details.csv. Unlike ELO, "
+            "the fighter aggregate updater also requires ufc_fight_details.csv and "
+            "ufc_fight_stats.csv."
         ),
     }
 
@@ -487,6 +636,7 @@ def build_manifest():
     return {
         'manifestGeneratedAt': now_iso,
         'generatorScript': 'generate_source_manifest.py',
+        'lastGenerationScope': 'full',
         'methodologyRef': 'research/source_integrity_audit.md',
         'modules': modules,
     }
@@ -504,6 +654,9 @@ def write_js(manifest, out_path='src/sourceManifest.js'):
         "// Re-run this script whenever fightersData.js / fightHistory.js / eloModule.js /\n"
         "// cardioModule.js / rankingsData.js / rankingsHistoryData.js /\n"
         "// fighterBirthdates.js are regenerated, so the manifest stays current.\n"
+        "// Use --scope rankings when only the rankings artifacts were rebuilt: it\n"
+        "// preserves every other module's verified provenance instead of re-deriving\n"
+        "// dates for artifacts this run did not regenerate.\n"
         "// fighterBirthdates.js must be regenerated BEFORE this script runs, or its\n"
         "// recorded contentHash describes the previous artifact. maxObservedEventDate\n"
         "// is null for fighterBirthdates because birth dates are not event-scoped --\n"
@@ -514,7 +667,26 @@ def write_js(manifest, out_path='src/sourceManifest.js'):
     print(f"Wrote {out_path}")
 
 
-if __name__ == '__main__':
-    manifest = build_manifest()
-    write_js(manifest)
+def main(argv=None):
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        '--scope', choices=('full', 'rankings'), default='full',
+        help=(
+            'full: regenerate every module, requires all Greco inputs. '
+            'rankings: regenerate only the rankings modules and preserve every '
+            'other module object verbatim (reads no Greco input).'
+        ),
+    )
+    parser.add_argument(
+        '--out', default='src/sourceManifest.js',
+        help='Output path, relative to the repo root.',
+    )
+    args = parser.parse_args(argv)
+    manifest = build_manifest(scope=args.scope)
+    write_js(manifest, out_path=args.out)
     print(json.dumps(manifest, indent=2))
+    return 0
+
+
+if __name__ == '__main__':
+    raise SystemExit(main())
