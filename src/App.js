@@ -4,6 +4,11 @@ import { Link, NavLink, Navigate, useLocation, useNavigate } from 'react-router-
 // paths are written down; nothing in this file hard-codes a path string.
 import { pathForView, viewForPathname, HOME_PATH } from './app/routes.jsx';
 import {
+  CSI_DESCRIPTION,
+  MASTER_RATING_DESCRIPTION,
+  V2_OPPONENT_QUALITY_DESCRIPTION,
+} from './uiTerminology';
+import {
   RadarChart,
   PolarGrid,
   PolarAngleAxis,
@@ -545,7 +550,7 @@ const TABLE_COLS = [
     group: 'Rating',
     signed: false,
     dec: 1,
-    tip: 'Master rating: base efficiency × experience factor ± opponent quality adjustment',
+    tip: MASTER_RATING_DESCRIPTION,
   },
   {
     key: 'CREDIBILITY',
@@ -565,11 +570,11 @@ const TABLE_COLS = [
   },
   {
     key: 'OQI',
-    short: 'OQI',
+    short: 'CSI',
     group: 'Rating',
     signed: false,
     dec: 2,
-    tip: 'Opponent Quality Index — strength of schedule',
+    tip: CSI_DESCRIPTION,
   },
   {
     key: 'SIG_STR_ACC',
@@ -3112,7 +3117,7 @@ function DataTable({ fighters }) {
       short: 'RTG',
       name: 'Master Rating',
       color: 'text-red-400',
-      desc: 'The primary ranking stat. Base efficiency adjusted for opponent quality (wins vs elite boost it, losses to unranked tank it) and scaled by experience. Replaces raw EFF.',
+      desc: MASTER_RATING_DESCRIPTION,
     },
     {
       short: 'CRED%',
@@ -3157,10 +3162,10 @@ function DataTable({ fighters }) {
       desc: 'Output in rounds 3–5 divided by rounds 1–2. Above 1.0 = gets stronger late. Below = fades.',
     },
     {
-      short: 'OQI',
-      name: 'Opponent Quality Index',
+      short: 'CSI',
+      name: 'Competitive Standing Index',
       color: 'text-slate-300',
-      desc: 'Average strength of opposition faced. Higher = fought tougher competition.',
+      desc: CSI_DESCRIPTION,
     },
     {
       short: 'DMG',
@@ -3722,8 +3727,8 @@ const SIMULATOR_GLOBAL_GROUP = {
   icon: '🌐',
   v1ResultFields: [
     { field: 'agePenAdj', label: 'Age-Decay Adjustment' },
-    { field: 'sosContribution', label: 'Strength of Schedule' },
-    { field: 'qualMomContribution', label: 'Quality Momentum' },
+    { field: 'sosContribution', label: 'Strength of Schedule (v1 only)' },
+    { field: 'qualMomContribution', label: 'Quality Momentum (v1 only)' },
   ],
   v2: [],
 };
@@ -3817,7 +3822,7 @@ const TAPE = [
   { key: 'FINISH_RATE', label: 'Finish Rate %', hb: true, dec: 1, pct: true },
   { key: 'KD_PER_MIN', label: 'KO Wins / min', hb: true, dec: 4 },
   { key: 'CARDIO_DECAY', label: 'Cardio (R3/R1)', hb: true, dec: 2 },
-  { key: 'OQI', label: 'Opp. Quality Index', hb: true, dec: 2 },
+  { key: 'OQI', label: 'Competitive Standing Index', hb: true, dec: 2 },
   { key: 'FACTOR_DAMAGE', label: 'Damage Factor', hb: true, dec: 1 },
   { key: 'FACTOR_POSITION', label: 'Position Factor', hb: true, dec: 1 },
   { key: 'FACTOR_FINISH', label: 'Finish Factor', hb: true, dec: 1 },
@@ -3926,7 +3931,7 @@ const FighterPanel = ({ f, setF, color, ph, allFighters, fA, fB, eventDate }) =>
             <span className="text-slate-500">Base </span>
             <span className={`font-semibold ${tc}`}>{(f.TOTAL_EFFICIENCY ?? 0).toFixed(1)}</span>
             <span className="text-slate-600"> · </span>
-            <span className="text-slate-500">Qual </span>
+            <span className="text-slate-500">Legacy adj. (not v2) </span>
             <span className={`font-semibold ${tc}`}>
               {(f.QUALITY_ADJUSTMENT ?? 0) >= 0 ? '+' : ''}
               {(f.QUALITY_ADJUSTMENT ?? 0).toFixed(1)}
@@ -4107,7 +4112,7 @@ const SIMULATOR_NEAR_EMPTY_COPY = {
   experience_v2:
     'v2 assigns almost no weight here — total rounds carries a small signal; UFC fight count, title bouts, KO wins, and submission wins are all excluded.',
   global_v2:
-    'v1 adds strength-of-schedule and an extra age-decay term outside these six domains; v2 has no equivalent — nothing to show.',
+    'Strength of Schedule and Quality Momentum are v1-only metrics. V2 has no direct strength-of-schedule feature or equivalent global adjustment.',
 };
 
 // Builds one row per domain (+ Global) for the currently displayed model.
@@ -5812,7 +5817,7 @@ function ScoutProfile({ allFighters }) {
     {
       title: 'Quality & Durability',
       stats: [
-        { key: 'OQI', label: 'Opponent Quality Index', dec: 3 },
+        { key: 'OQI', label: 'Competitive Standing Index', dec: 3 },
         { key: 'WIN_PCT', label: 'Win Percentage', dec: 1, pct: true },
         { key: 'CARDIO_DECAY', label: 'Late-Round Output (R3/R1)', dec: 2 },
         { key: 'CREDIBILITY', label: 'Sample Confidence', dec: 1, pct: true },
@@ -5904,8 +5909,8 @@ function ScoutProfile({ allFighters }) {
                         }`}
                       >
                         {fighter.QUALITY_ADJUSTMENT > 0 ? '+' : ''}
-                        {(fighter.QUALITY_ADJUSTMENT ?? 0).toFixed(1)} quality
-                        adj.
+                        {(fighter.QUALITY_ADJUSTMENT ?? 0).toFixed(1)} legacy
+                        display adj. (not v2)
                       </span>
                     )}
                   <CredBadge cred={fighter.CREDIBILITY} />
@@ -5971,7 +5976,7 @@ function ScoutProfile({ allFighters }) {
                   <span className="text-white font-bold">
                     {(fighter.WIN_PCT ?? 0).toFixed(1)}%
                   </span>{' '}
-                  · OQI{' '}
+                  · CSI{' '}
                   <span className="text-white font-bold">
                     {(fighter.OQI ?? 0).toFixed(2)}
                   </span>
@@ -6233,7 +6238,7 @@ function ScoutProfile({ allFighters }) {
                         color: 'bg-emerald-500',
                       },
                       {
-                        label: 'Opp. Quality Index',
+                        label: 'Competitive Standing Index',
                         pct: divPercentiles.OQI,
                         color: 'bg-slate-400',
                       },
@@ -6456,7 +6461,7 @@ function ScoutProfile({ allFighters }) {
                       divPercentiles.FINISH >= 70 &&
                         'Priced as underdog — finishes at an elite rate',
                       divPercentiles.OQI >= 70 &&
-                        'Faces lower-quality opposition — battle-tested vs top comp',
+                        'Current standing is strong — ranking tier and Elo support the profile',
                       divPercentiles.STR >= 65 &&
                         'Against volume strikers — accuracy wins over output',
                     ]
@@ -6505,7 +6510,7 @@ function ScoutProfile({ allFighters }) {
                       divPercentiles.CARDIO < 35 &&
                         'Fights expected to go deep — output fades in late rounds',
                       divPercentiles.OQI < 35 &&
-                        'Steps up in competition — limited reps vs top-level fighters',
+                        'Current standing is lower — ranking tier and Elo trail the division',
                     ]
                       .filter(Boolean)
                       .slice(0, 4)
@@ -6567,7 +6572,7 @@ function ScoutProfile({ allFighters }) {
                       color: 'bg-emerald-500',
                     },
                     {
-                      label: 'Opp. Quality Index',
+                      label: 'Competitive Standing Index',
                       pct: divPercentiles.OQI,
                       color: 'bg-slate-400',
                     },
@@ -8223,23 +8228,21 @@ function InfoTab() {
   const stats = [
     {
       term: 'RTG',
-      full: '0–90 Fighter Rating',
-      formula:
-        "Normalized ELO within each weight class. 100 = division's highest-rated fighter. 50 = division average. Updates every Monday and Thursday after fight results are processed.",
+      full: '0–100 Master Rating',
+      formula: MASTER_RATING_DESCRIPTION,
       color: 'text-red-400',
     },
     {
       term: 'ELO',
-      full: 'ELO Rating',
+      full: 'Elo Rating',
       formula:
-        'Elo-based skill rating updated after every UFC fight. Base: 1500. K-factor scales by finish type (KO/Sub ×1.5), round (R1 ×1.3), and experience (<5 fights ×1.5). Elite fighters typically range 1700–1900.',
+        `Elo is updated after every UFC fight from a 1500 base. K-factor scales by finish type (KO/Sub ×1.5), round (R1 ×1.3), and experience (<5 fights ×1.5). ${V2_OPPONENT_QUALITY_DESCRIPTION}`,
       color: 'text-orange-400',
     },
     {
-      term: 'OQI',
-      full: 'Overall Quality Index',
-      formula:
-        "Composite of efficiency, credibility, and output metrics — the primary ranking stat, analogous to KenPom's overall rating.",
+      term: 'CSI',
+      full: 'Competitive Standing Index',
+      formula: CSI_DESCRIPTION,
       color: 'text-yellow-400',
     },
     {
@@ -8257,10 +8260,17 @@ function InfoTab() {
       color: 'text-cyan-400',
     },
     {
-      term: 'QM',
-      full: 'Quality Momentum',
+      term: 'SOS',
+      full: 'Strength of Schedule (v1 only)',
       formula:
-        'Opponent-quality-adjusted win/loss momentum. Rewards beating highly-rated opponents and penalizes losing to lower-rated ones.',
+        'A named v1-only recent-opponent tier metric. V2 has no direct strength-of-schedule feature; opponent quality reaches v2 only indirectly through Elo.',
+      color: 'text-sky-400',
+    },
+    {
+      term: 'QM',
+      full: 'Quality Momentum (v1 only)',
+      formula:
+        'A v1-only recent-results metric that weights wins and losses by opponent tier. It is not a v2 feature.',
       color: 'text-blue-400',
     },
     {
@@ -8330,7 +8340,7 @@ function InfoTab() {
               <h3 className="text-white font-bold text-sm">Prediction Engine</h3>
             </div>
             <p className="text-slate-400 text-xs leading-relaxed">
-              Two models run in parallel. <span className="text-slate-200">v1 (DrossPom Composite)</span> is a domain-engineered linear composite — weighted sum of 6 domains (Striking, Grappling, Physical, Form, Experience, Analytics) through a sigmoid function. <span className="text-slate-200">v2 (Logistic)</span> is a learned logistic regression trained on 7,177 historical UFC fights using 17 features including ELO, streaks, and striking efficiency. Win probabilities are Platt-calibrated.
+              Two models run in parallel. <span className="text-slate-200">v1 (DrossPom Composite)</span> is a domain-engineered linear composite — weighted sum of 6 domains (Striking, Grappling, Physical, Form, Experience, Analytics) through a sigmoid function. <span className="text-slate-200">v2 (Logistic)</span> is a learned logistic regression trained on 7,177 historical UFC fights using 16 features including Elo, recent form, and striking efficiency. Win probabilities are Platt-calibrated.
             </p>
           </div>
           {/* Card 2 — Key Predictors */}
@@ -8342,7 +8352,7 @@ function InfoTab() {
             <ul className="space-y-1.5">
               <li className="text-slate-400 text-xs leading-relaxed flex gap-2"><span>⚔️</span><span>Striking output is the strongest single predictor across all divisions</span></li>
               <li className="text-slate-400 text-xs leading-relaxed flex gap-2"><span>🛡️</span><span>Takedown defense outperforms takedown offense as a win signal</span></li>
-              <li className="text-slate-400 text-xs leading-relaxed flex gap-2"><span>📈</span><span>ELO accounts for opponent quality — a win over a top-ranked fighter carries more weight</span></li>
+              <li className="text-slate-400 text-xs leading-relaxed flex gap-2"><span>📈</span><span>V2 has no direct schedule-strength feature; opponent quality is represented indirectly through Elo</span></li>
               <li className="text-slate-400 text-xs leading-relaxed flex gap-2"><span>📉</span><span>Age penalizes fighters 35+ with a linear decay; 38+ triggers a matchup flag</span></li>
               <li className="text-slate-400 text-xs leading-relaxed flex gap-2"><span>📏</span><span>Physical traits (reach, size) matter more in heavier divisions</span></li>
             </ul>
@@ -8360,26 +8370,26 @@ function InfoTab() {
         </div>
       </div>
 
-      {/* Section 2 — Rating & ELO Explained */}
+      {/* Section 2 — Rating & Elo Explained */}
       <div>
-        <h2 className="text-white font-black text-xl mb-1">Rating &amp; ELO Explained</h2>
+        <h2 className="text-white font-black text-xl mb-1">Rating &amp; Elo Explained</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 hover:border-slate-700 transition-colors">
             <div className="flex items-center gap-2 mb-2">
               <span className="text-base">🏅</span>
-              <h3 className="text-white font-bold text-sm">0–100 Fighter Rating</h3>
+              <h3 className="text-white font-bold text-sm">0–100 Master Rating</h3>
             </div>
             <p className="text-slate-400 text-xs leading-relaxed">
-              Normalized ELO score within each weight class. <span className="text-slate-200">100 = division’s highest-rated fighter.</span> 50 = division average. Updates every Monday and Thursday after fight results are processed. Not the same as UFC rankings — based entirely on performance data.
+              {MASTER_RATING_DESCRIPTION}
             </p>
           </div>
           <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 hover:border-slate-700 transition-colors">
             <div className="flex items-center gap-2 mb-2">
               <span className="text-base">📡</span>
-              <h3 className="text-white font-bold text-sm">ELO Rating</h3>
+              <h3 className="text-white font-bold text-sm">Elo Rating</h3>
             </div>
             <p className="text-slate-400 text-xs leading-relaxed">
-              Elo-based skill rating updated after every UFC fight. <span className="text-slate-200">Base: 1500.</span> K-factor scales by finish type (KO/Sub ×1.5), round (R1 ×1.3), and experience (&lt;5 fights ×1.5). Elite fighters typically range 1700–1900. Quality Momentum (QM) adjusts for recent opponent strength.
+              Elo is a skill rating updated after every UFC fight. <span className="text-slate-200">Base: 1500.</span> K-factor scales by finish type (KO/Sub ×1.5), round (R1 ×1.3), and experience (&lt;5 fights ×1.5). {V2_OPPONENT_QUALITY_DESCRIPTION}
             </p>
           </div>
         </div>
