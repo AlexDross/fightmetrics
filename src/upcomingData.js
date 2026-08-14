@@ -10,6 +10,16 @@ export const UPCOMING_ENTRIES = [
     "fighterBIsProspect": false,
     "includesProspect": false,
     "division": "Welterweight",
+    "boutContext": {
+      "division": "Welterweight",
+      "isTitleBout": true,
+      "scheduledRounds": 5,
+      "provenance": {
+        "sourceUrl": "https://www.ufc.com/news/official-weigh-results-ufc-330-makhachev-vs-machado-garry",
+        "retrievedAt": "2026-08-14",
+        "authority": "official"
+      }
+    },
     "fighterAProb": 0.7480815023580831,
     "fighterBProb": 0.25191849764191687,
     "predictedWinner": "Islam Makhachev",
@@ -168,6 +178,16 @@ export const UPCOMING_ENTRIES = [
     "fighterBIsProspect": false,
     "includesProspect": false,
     "division": "Women's Strawweight",
+    "boutContext": {
+      "division": "Women's Strawweight",
+      "isTitleBout": true,
+      "scheduledRounds": 5,
+      "provenance": {
+        "sourceUrl": "https://www.ufc.com/news/official-weigh-results-ufc-330-makhachev-vs-machado-garry",
+        "retrievedAt": "2026-08-14",
+        "authority": "official"
+      }
+    },
     "fighterAProb": 0.262066824702611,
     "fighterBProb": 0.737933175297389,
     "predictedWinner": "Gillian Robertson",
@@ -326,6 +346,16 @@ export const UPCOMING_ENTRIES = [
     "fighterBIsProspect": false,
     "includesProspect": false,
     "division": "Middleweight",
+    "boutContext": {
+      "division": "Middleweight",
+      "isTitleBout": false,
+      "scheduledRounds": 3,
+      "provenance": {
+        "sourceUrl": "https://www.ufc.com/news/official-weigh-results-ufc-330-makhachev-vs-machado-garry",
+        "retrievedAt": "2026-08-14",
+        "authority": "official"
+      }
+    },
     "fighterAProb": 0.6934795934309508,
     "fighterBProb": 0.3065204065690492,
     "predictedWinner": "Mansur Abdul-Malik",
@@ -484,6 +514,16 @@ export const UPCOMING_ENTRIES = [
     "fighterBIsProspect": false,
     "includesProspect": false,
     "division": "Lightweight",
+    "boutContext": {
+      "division": "Lightweight",
+      "isTitleBout": false,
+      "scheduledRounds": 3,
+      "provenance": {
+        "sourceUrl": "https://www.ufc.com/news/official-weigh-results-ufc-330-makhachev-vs-machado-garry",
+        "retrievedAt": "2026-08-14",
+        "authority": "official"
+      }
+    },
     "fighterAProb": 0.4067633741295507,
     "fighterBProb": 0.5932366258704493,
     "predictedWinner": "Esteban Ribovics",
@@ -642,6 +682,16 @@ export const UPCOMING_ENTRIES = [
     "fighterBIsProspect": false,
     "includesProspect": false,
     "division": "Welterweight",
+    "boutContext": {
+      "division": "Welterweight",
+      "isTitleBout": false,
+      "scheduledRounds": 3,
+      "provenance": {
+        "sourceUrl": "https://www.ufc.com/news/official-weigh-results-ufc-330-makhachev-vs-machado-garry",
+        "retrievedAt": "2026-08-14",
+        "authority": "official"
+      }
+    },
     "fighterAProb": 0.30214405641054676,
     "fighterBProb": 0.6978559435894532,
     "predictedWinner": "Joel Alvarez",
@@ -800,6 +850,16 @@ export const UPCOMING_ENTRIES = [
     "fighterBIsProspect": false,
     "includesProspect": false,
     "division": "Lightweight",
+    "boutContext": {
+      "division": "Lightweight",
+      "isTitleBout": false,
+      "scheduledRounds": 3,
+      "provenance": {
+        "sourceUrl": "https://www.ufc.com/news/official-weigh-results-ufc-330-makhachev-vs-machado-garry",
+        "retrievedAt": "2026-08-14",
+        "authority": "official"
+      }
+    },
     "fighterAProb": 0.577593701461212,
     "fighterBProb": 0.42240629853878797,
     "predictedWinner": "Jalin Turner",
@@ -958,6 +1018,16 @@ export const UPCOMING_ENTRIES = [
     "fighterBIsProspect": false,
     "includesProspect": false,
     "division": "Middleweight",
+    "boutContext": {
+      "division": "Middleweight",
+      "isTitleBout": false,
+      "scheduledRounds": 3,
+      "provenance": {
+        "sourceUrl": "https://www.ufc.com/news/official-weigh-results-ufc-330-makhachev-vs-machado-garry",
+        "retrievedAt": "2026-08-14",
+        "authority": "official"
+      }
+    },
     "fighterAProb": 0.6208311268834413,
     "fighterBProb": 0.37916887311655867,
     "predictedWinner": "Donte Johnson",
@@ -1115,7 +1185,17 @@ export const UPCOMING_ENTRIES = [
     "fighterAIsProspect": false,
     "fighterBIsProspect": false,
     "includesProspect": false,
-    "division": "Welterweight / Middleweight",
+    "division": "Middleweight",
+    "boutContext": {
+      "division": "Middleweight",
+      "isTitleBout": false,
+      "scheduledRounds": 3,
+      "provenance": {
+        "sourceUrl": "https://www.ufc.com/news/official-weigh-results-ufc-330-makhachev-vs-machado-garry",
+        "retrievedAt": "2026-08-14",
+        "authority": "official"
+      }
+    },
     "fighterAProb": 0.5923807975369481,
     "fighterBProb": 0.40761920246305194,
     "predictedWinner": "Vicente Luque",
@@ -1274,6 +1354,16 @@ export const UPCOMING_ENTRIES = [
     "fighterBIsProspect": false,
     "includesProspect": false,
     "division": "Welterweight",
+    "boutContext": {
+      "division": "Welterweight",
+      "isTitleBout": false,
+      "scheduledRounds": 3,
+      "provenance": {
+        "sourceUrl": "https://www.ufc.com/news/official-weigh-results-ufc-330-makhachev-vs-machado-garry",
+        "retrievedAt": "2026-08-14",
+        "authority": "official"
+      }
+    },
     "fighterAProb": 0.5748972073075925,
     "fighterBProb": 0.42510279269240747,
     "predictedWinner": "Neil Magny",
@@ -1432,6 +1522,16 @@ export const UPCOMING_ENTRIES = [
     "fighterBIsProspect": false,
     "includesProspect": false,
     "division": "Welterweight",
+    "boutContext": {
+      "division": "Welterweight",
+      "isTitleBout": false,
+      "scheduledRounds": 3,
+      "provenance": {
+        "sourceUrl": "https://www.ufc.com/news/official-weigh-results-ufc-330-makhachev-vs-machado-garry",
+        "retrievedAt": "2026-08-14",
+        "authority": "official"
+      }
+    },
     "fighterAProb": 0.21641016469593574,
     "fighterBProb": 0.7835898353040642,
     "predictedWinner": "Myktybek Orolbai",

@@ -107,6 +107,19 @@ import {
   createGradedEntry,
   removePendingEntry,
 } from './domain/workflow';
+// Corrections 3/4: scheduled bout context (division / title / rounds).
+import {
+  SUPPORTED_DIVISIONS,
+  normalizeBoutContext,
+  validateBoutContext,
+  isSupportedDivision,
+  fightersOutsideRosterDivision,
+  describeTitleStatus,
+  describeScheduledRounds,
+  describeBoutContextSuffix,
+  missingBoutContextFields,
+  hasUnknownBoutContext,
+} from './domain/boutContext';
 
 // Foundation Stage 3: extracted verbatim -- see src/domain/statistics/index.js
 import {
@@ -491,6 +504,26 @@ const WEIGHT_CLASSES = [
   "Women's Flyweight",
   "Women's Strawweight",
 ];
+// Division to show for a saved entry. A verified bout division is the truth;
+// otherwise fall back to whatever the entry stored at save time. Historical
+// entries in roiData.js have no boutContext and are NOT rewritten -- they keep
+// rendering exactly the string they were saved with.
+const entryDisplayDivision = (entry) =>
+  entry?.boutContext?.division ?? entry?.division ?? '';
+
+// Compact "· Non-title · 3 rounds" suffix.
+//
+// An entry that HAS bout context always renders both states explicitly, including
+// the negative and the unknown ones. Showing "Title" only when true would make a
+// verified non-title bout indistinguishable from an unverified one, and would
+// hide a half-verified entry entirely -- the ambiguity Correction 4 exists to
+// remove. The three-state wording lives in the domain helpers so it cannot drift
+// between here and the Simulator.
+//
+// Legacy entries carry no boutContext at all and keep the old blank suffix:
+// there is genuinely nothing to say about them.
+const entryContextSuffix = (entry) => describeBoutContextSuffix(entry?.boutContext ?? null);
+
 const DIV_SHORT = {
   Heavyweight: 'HW',
   'Light Heavyweight': 'LHW',
@@ -2545,7 +2578,8 @@ function UpcomingEventTab({
                         </span>
                       </div>
                       <p className="text-slate-500 text-xs mt-1">
-                        {entry.division}
+                        {entryDisplayDivision(entry)}
+                        {entryContextSuffix(entry)}
                         {entry.eventName ? ` · ${entry.eventName}` : ''}
                         {entry.eventDate ? ` · ${entry.eventDate}` : ''}
                       </p>
@@ -4327,6 +4361,32 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
   const [unitsWagered, setUnitsWagered] = useState('');
   const [saveFeedback, setSaveFeedback] = useState('');
   const [modelToggle, setModelToggle] = useState('v2');
+  // Scheduled bout context. All three start as '' = UNKNOWN and are never
+  // pre-filled with a guess: an unset division must not silently become the
+  // roster's, and an unset title/round value must not silently become
+  // "non-title, three rounds". The user states what was verified, or nothing.
+  const [boutDivision, setBoutDivision] = useState('');
+  const [boutTitleStatus, setBoutTitleStatus] = useState('');
+  const [boutRounds, setBoutRounds] = useState('');
+
+  // One object, built once, used by BOTH the live preview and the save path so a
+  // saved prediction can never have been computed under different context than
+  // the one the user was looking at.
+  const boutContext = useMemo(
+    () =>
+      normalizeBoutContext({
+        division: boutDivision || null,
+        isTitleBout:
+          boutTitleStatus === '' ? null : boutTitleStatus === 'title',
+        scheduledRounds: boutRounds === '' ? null : Number(boutRounds),
+      }),
+    [boutDivision, boutTitleStatus, boutRounds]
+  );
+
+  const boutContextIssues = useMemo(
+    () => validateBoutContext(boutContext),
+    [boutContext]
+  );
 
   const result = useMemo(() => {
     if (!fA || !fB) return null;
@@ -4338,8 +4398,13 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
     // eventDate drives DOB-derived ages for both fighters. It is '' until the
     // user picks a date, and an unparseable date falls back to each fighter's
     // load-time (today's) age, so an untouched Simulator behaves as before.
-    return computeMatchupEdges(fA, fB, { eventDate });
-  }, [fA, fB, eventDate]);
+    //
+    // boutContext is the SAME object the save path passes to buildRoiEntry, so
+    // the previewed probability and the saved probability are computed under
+    // identical context by construction. With no context set it is null and the
+    // call is byte-identical to the pre-Correction-3 behaviour.
+    return computeMatchupEdges(fA, fB, { eventDate, boutContext });
+  }, [fA, fB, eventDate, boutContext]);
 
   // Active probabilities for whichever model version is toggled on — shared by
   // the market analysis below and by the display sections further down so the
@@ -4656,6 +4721,78 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                 />
               </div>
             </div>
+            {/* ── SCHEDULED BOUT CONTEXT ──
+                Every control defaults to Unknown and stays Unknown until set.
+                Nothing here is pre-filled from the roster: a guess stored as if
+                verified is worse than an honest blank. */}
+            <div className="grid grid-cols-3 gap-4 mb-4">
+              <div>
+                <label className="text-slate-500 text-xs font-semibold uppercase tracking-wider block mb-1.5">
+                  Bout Division
+                </label>
+                <select
+                  value={boutDivision}
+                  onChange={(e) => setBoutDivision(e.target.value)}
+                  className="w-full h-10 bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:outline-hidden focus:border-red-500"
+                >
+                  <option value="">Unknown</option>
+                  {SUPPORTED_DIVISIONS.map((d) => (
+                    <option key={d} value={d}>
+                      {d}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="text-slate-500 text-xs font-semibold uppercase tracking-wider block mb-1.5">
+                  Title Bout
+                </label>
+                <select
+                  value={boutTitleStatus}
+                  onChange={(e) => setBoutTitleStatus(e.target.value)}
+                  className="w-full h-10 bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:outline-hidden focus:border-red-500"
+                >
+                  <option value="">Unknown</option>
+                  <option value="title">Title bout</option>
+                  <option value="non-title">Non-title</option>
+                </select>
+              </div>
+              <div>
+                <label className="text-slate-500 text-xs font-semibold uppercase tracking-wider block mb-1.5">
+                  Scheduled Rounds
+                </label>
+                <select
+                  value={boutRounds}
+                  onChange={(e) => setBoutRounds(e.target.value)}
+                  className="w-full h-10 bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:outline-hidden focus:border-red-500"
+                >
+                  <option value="">Unknown</option>
+                  <option value="3">3 rounds</option>
+                  <option value="5">5 rounds</option>
+                </select>
+              </div>
+            </div>
+            {(boutContextIssues.errors.length > 0 ||
+              boutContextIssues.warnings.length > 0) && (
+              <div className="mb-4 space-y-1">
+                {boutContextIssues.errors.map((msg) => (
+                  <p
+                    key={msg}
+                    className="text-red-400 text-xs font-semibold bg-red-900/20 border border-red-800/40 rounded-lg px-3 py-2"
+                  >
+                    Contradictory bout context: {msg}
+                  </p>
+                ))}
+                {boutContextIssues.warnings.map((msg) => (
+                  <p
+                    key={msg}
+                    className="text-amber-400 text-xs bg-amber-900/20 border border-amber-800/40 rounded-lg px-3 py-2"
+                  >
+                    {msg}
+                  </p>
+                ))}
+              </div>
+            )}
             {(() => {
               const savePick = activePA >= activePB ? fA.FIGHTER : fB.FIGHTER;
               const saveProb = Math.max(activePA, activePB);
@@ -4699,38 +4836,60 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
             </div>
               );
             })()}
+            {/* Both save paths fail closed on contradictory context. The
+                buttons are disabled AND each handler re-checks, because a
+                disabled button is a UI affordance and not an enforcement
+                point. buildRoiEntry throws independently of both, so a
+                non-UI caller cannot bypass the rule either. Warnings never
+                block: a catchweight bout is real and must be saveable. */}
             <div className="flex gap-3 flex-wrap">
               <button
+                disabled={!boutContextIssues.valid}
+                title={
+                  boutContextIssues.valid
+                    ? undefined
+                    : `Fix the bout context first: ${boutContextIssues.errors.join('; ')}`
+                }
                 onClick={() => {
                   if (!fA || !fB) return;
+                  if (!boutContextIssues.valid) return;
                   const entry = buildRoiEntry({
                     fA, fB, oddsA, oddsB,
                     eventName: eventName.trim(),
                     eventDate,
                     modelToggle,
                     unitsWagered: unitsWagered.trim() ? Number(unitsWagered) : 1,
+                    boutContext,
                   });
                   onSaveToUpcoming?.(entry);
                   setSaveFeedback('Saved to Upcoming.');
                 }}
-                className="px-4 py-2 rounded-lg border border-blue-700 text-blue-300 text-sm font-semibold hover:text-white hover:border-blue-500 transition-colors"
+                className="px-4 py-2 rounded-lg border border-blue-700 text-blue-300 text-sm font-semibold hover:text-white hover:border-blue-500 transition-colors disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:text-blue-300 disabled:hover:border-blue-700"
               >
                 Save to Upcoming
               </button>
               <button
+                disabled={!boutContextIssues.valid}
+                title={
+                  boutContextIssues.valid
+                    ? undefined
+                    : `Fix the bout context first: ${boutContextIssues.errors.join('; ')}`
+                }
                 onClick={() => {
                   if (!fA || !fB) return;
+                  if (!boutContextIssues.valid) return;
                   const entry = buildRoiEntry({
                     fA, fB, oddsA, oddsB,
                     eventName: eventName.trim(),
                     eventDate,
                     modelToggle,
                     unitsWagered: unitsWagered.trim() ? Number(unitsWagered) : 1,
+                    boutContext,
                   });
                   onSaveToUpcomingAndOpen?.(entry);
                   setSaveFeedback('Saved to Upcoming.');
                 }}
-                className="px-4 py-2 rounded-lg bg-blue-700 text-white text-sm font-semibold hover:bg-blue-600 transition-colors"
+                className="px-4 py-2 rounded-lg bg-blue-700 text-white text-sm font-semibold hover:bg-blue-600 transition-colors disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-blue-700"
               >
                 Save and Open Upcoming
               </button>
@@ -4748,8 +4907,46 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
               flags.push({ label: 'Sparse Data', color: 'text-yellow-400 bg-yellow-900/20 border-yellow-800/40' });
             if ((fA.CREDIBILITY ?? 100) < 30 || (fB.CREDIBILITY ?? 100) < 30)
               flags.push({ label: 'Low Credibility', color: 'text-orange-400 bg-orange-900/20 border-orange-800/40' });
-            if (fA.WEIGHT_CLASS !== fB.WEIGHT_CLASS)
-              flags.push({ label: 'Cross-Division', color: 'text-purple-400 bg-purple-900/20 border-purple-800/40' });
+            // Correction 3. The old flag compared the two fighters' stored
+            // roster classes to each other and called any disagreement
+            // "Cross-Division". That fires on STALE ROSTER DATA, not on the
+            // bout: Luque vs Gore is a plain middleweight fight that tripped it
+            // only because fightersData.js still had Luque at welterweight.
+            //
+            // With a verified bout division the meaningful statement is
+            // per-fighter -- is THIS fighter competing away from their stored
+            // division. Without one, fall back to the old comparison but label
+            // it as the unverified roster disagreement it actually is.
+            const outsideRoster = fightersOutsideRosterDivision(boutContext, fA, fB);
+            if (isSupportedDivision(boutContext?.division)) {
+              outsideRoster.forEach((f) =>
+                flags.push({
+                  label: `Competing outside roster division: ${f.FIGHTER}`,
+                  color: 'text-purple-400 bg-purple-900/20 border-purple-800/40',
+                })
+              );
+            } else if (fA.WEIGHT_CLASS !== fB.WEIGHT_CLASS) {
+              flags.push({
+                label: 'Roster divisions differ (bout division unverified)',
+                color: 'text-slate-400 bg-slate-800/40 border-slate-700',
+              });
+            }
+            // Three distinct states, not two. A division on its own does NOT
+            // make the context complete -- reporting it as such is how a
+            // half-verified bout starts reading as verified.
+            const missingContext = missingBoutContextFields(boutContext);
+            if (hasUnknownBoutContext(boutContext)) {
+              flags.push({ label: 'Unknown bout context', color: 'text-slate-400 bg-slate-800/40 border-slate-700' });
+            } else if (missingContext.length > 0) {
+              flags.push({
+                label: `Incomplete bout context: ${missingContext.join(', ')} unknown`,
+                color: 'text-amber-400 bg-amber-900/20 border-amber-800/40',
+              });
+            }
+            if (boutContext?.isTitleBout === true)
+              flags.push({ label: 'Title Bout', color: 'text-yellow-300 bg-yellow-900/20 border-yellow-700/40' });
+            if (boutContext?.scheduledRounds === 5 && boutContext?.isTitleBout === false)
+              flags.push({ label: 'Five-Round Non-Title', color: 'text-indigo-300 bg-indigo-900/20 border-indigo-800/40' });
             if (fA.WEIGHT_CLASS?.startsWith("Women's") || fB.WEIGHT_CLASS?.startsWith("Women's"))
               flags.push({ label: "Women's Division", color: 'text-pink-400 bg-pink-900/20 border-pink-800/40' });
             if (result.southpawMismatch)
@@ -6920,7 +7117,7 @@ function HomeTab({ summary, entries, allFighters, filterSince }) {
                     </p>
                     <p className="text-slate-500 text-xs mt-0.5">
                       {e.eventName}
-                      {e.division ? ` · ${e.division}` : ''}
+                      {entryDisplayDivision(e) ? ` · ${entryDisplayDivision(e)}` : ''}
                     </p>
                   </div>
                   <div className="shrink-0">
@@ -7766,7 +7963,8 @@ function ROITab({
                       </span>
                     </div>
                     <p className="text-slate-500 text-xs mt-1">
-                      {entry.division}
+                      {entryDisplayDivision(entry)}
+                      {entryContextSuffix(entry)}
                       {entry.eventName ? ` · ${entry.eventName}` : ''}
                       {entry.eventDate ? ` · ${entry.eventDate}` : ''}
                     </p>

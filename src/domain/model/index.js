@@ -34,6 +34,10 @@
 import { _D2 } from '../../fightersData';
 import { getHistoricalTier } from '../../rankHistory';
 import { parseDateOnly, resolveFighterAge } from '../age/index.js';
+import {
+  normalizeBoutContext,
+  resolveNormalizationDivisions,
+} from '../boutContext/index.js';
 
 const UFC_RANKINGS = {
   // Bantamweight
@@ -658,7 +662,7 @@ const computeLogisticProb = (featsV2) => {
 // Odds do NOT affect win probability. They are used only in the betting layer.
 
 
-// modelContext is an OPTIONAL third argument with two distinct fields.
+// modelContext is an OPTIONAL third argument with several distinct fields.
 //
 // eventDate (PRODUCTION): the bout date, as YYYY-MM-DD. When supplied, both
 // fighters' ages are derived from date of birth as of that date, so a
@@ -678,6 +682,25 @@ const computeLogisticProb = (featsV2) => {
 // eventDate is present, so the approved Stage 0 fixtures keep replaying the
 // exact ages they were captured with. NO production call site sets this, and
 // none may -- see src/__tests__/goldenSupport.js.
+//
+// boutContext (PRODUCTION, Correction 3): the scheduled context of THIS bout --
+// {division, isTitleBout, scheduledRounds}. Only `division` reaches the model,
+// and only to pick the normalisation average both corners are blended toward.
+// A canonical division applies to BOTH fighters; anything absent or
+// non-canonical (catchweight) preserves the previous per-fighter roster lookup
+// exactly, so an omitted boutContext is bit-identical to the old behaviour.
+//
+// isTitleBout and scheduledRounds are deliberately INERT here. They are stored,
+// displayed and carried in provenance, but they are NOT features:
+//   * isTitleBout is scheduled context for an upcoming bout. The only
+//     title-shaped model inputs (feats.total_title_bout_dif, featsV2.title_bouts)
+//     are differentials of CAREER title-bout counts. Feeding scheduled status
+//     into either would corrupt a historical statistic and, being one-sided,
+//     fabricate an asymmetric edge.
+//   * scheduledRounds has no calibrated consumer. computeFinishProbs projects
+//     method-of-victory shares from career finish rates and has no duration
+//     term; inventing one here would be uncalibrated. That is deliberately left
+//     to a separate change with its own golden-file review.
 //
 // Coefficients, rankings and SOS behaviour are NOT injectable here.
 const computeMatchupEdges = (fA, fB, modelContext) => {
@@ -706,8 +729,22 @@ const computeMatchupEdges = (fA, fB, modelContext) => {
   // Omitted context => live roster averages, byte-identical to the previous
   // behaviour. This is the only place divisionAverages is read.
   const divisionAverages = modelContext?.divisionAverages ?? DIVISION_UFC_AVERAGES;
-  const divA = divisionAverages[fA.WEIGHT_CLASS] ?? {};
-  const divB = divisionAverages[fB.WEIGHT_CLASS] ?? {};
+  // Correction 3: a verified canonical bout division normalises BOTH corners
+  // against the division the bout is actually contested at. Without it, each
+  // fighter is keyed off their own stored roster class -- which is how the two
+  // corners of one bout could end up on two different normalisation bases.
+  // resolveNormalizationDivisions returns exactly the old per-fighter pair when
+  // context is absent or non-canonical, so this is a no-op for untouched callers.
+  //
+  // The resolution is NOT echoed back on the return object: these goldens are
+  // exact full-structure replays captured in Chrome, and a new key would fail
+  // every one of them. Callers that need the basis for display call
+  // resolveNormalizationDivisions directly -- it is pure, and given the same
+  // arguments it returns exactly what was used here.
+  const { divisionA: normDivisionA, divisionB: normDivisionB } =
+    resolveNormalizationDivisions(normalizeBoutContext(modelContext?.boutContext), fA, fB);
+  const divA = divisionAverages[normDivisionA] ?? {};
+  const divB = divisionAverages[normDivisionB] ?? {};
   const totalMinA = fA.TOTAL_MIN ?? 0;
   const totalMinB = fB.TOTAL_MIN ?? 0;
   // Blend a fighter's observed stat toward the division mean when sample is small

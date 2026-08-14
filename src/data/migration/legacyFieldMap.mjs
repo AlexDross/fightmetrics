@@ -21,7 +21,24 @@ export const LEGACY_FIELD_MAP = Object.freeze({
     createdAt: { to: 'PredictionRun.createdAt, v1 PredictionSnapshot.capturedAt, MarketSnapshot.capturedAt, BettingAssessment.frozenAt, TrackedPosition.openedAt' },
     eventName: { to: 'Event.name' },
     eventDate: { to: 'Event.date; also PredictionRun.targetEventDateAtCapture when _provenance.targetEventDate is absent' },
-    division: { to: 'Bout.division' },
+    division: { to: 'Bout.division (legacy display string; boutContext.division supersedes it when present)' },
+    // ── Scheduled bout context (Corrections 3/4) ──
+    // Absent on every entry saved before the context existed; absence means
+    // UNKNOWN and must migrate as null, never as false / 3 rounds.
+    boutContext: { to: 'Bout scheduled-context fields' },
+    'boutContext.division': { to: 'Bout.scheduledDivision (canonical; null when unverified)' },
+    'boutContext.isTitleBout': { to: 'Bout.isTitleBout (null when unverified — never defaulted to false)' },
+    'boutContext.scheduledRounds': { to: 'Bout.scheduledRounds (null when unverified — never defaulted to 3)' },
+    'boutContext.provenance': { to: 'Bout.scheduledContextProvenance' },
+    'boutContext.provenance.sourceUrl': { to: 'Bout.scheduledContextProvenance.sourceUrl' },
+    'boutContext.provenance.retrievedAt': { to: 'Bout.scheduledContextProvenance.retrievedAt' },
+    'boutContext.provenance.authority': { to: 'Bout.scheduledContextProvenance.authority ("official" | "secondary")' },
+    // NOTE: buildRoiEntry also stamps the context into _provenance.boutContext
+    // for NEW predictions, but no committed entry carries it yet -- the ten UFC
+    // 330 rows were predicted before the context existed, and back-stamping it
+    // would misrepresent what actually fed those numbers. The map is verified
+    // against the real data in both directions, so those paths get added here
+    // when the first context-carrying prediction is committed, not before.
     fighterA: { to: 'Bout.cornerA.displayName (canonical orientation)' },
     fighterB: { to: 'Bout.cornerB.displayName (canonical orientation)' },
 

@@ -20,6 +20,11 @@
 import { computeFinishProbs, getProjectedFinishLabel } from '../finish';
 import { MODEL_V2, computeMatchupEdges, latestFightHistoryDate } from '../model';
 import { SOURCE_MANIFEST } from '../../sourceManifest';
+import {
+  normalizeBoutContext,
+  validateBoutContext,
+  isSupportedDivision,
+} from '../boutContext/index.js';
 
 const americanOdds = (p) => {
   p = Math.max(0.001, Math.min(0.999, p));
@@ -323,7 +328,12 @@ const djb2Checksum = (str) => {
 // the original v1-era capture tier, never touched by the later v2pA/v2pB
 // backfill). Optional and undefined for any caller that doesn't pass it, so
 // this is purely additive.
-export const buildProvenance = ({ eventDate, result, fA, fB, predictionTimestamp, captureMode, frozenTier }) => {
+// boutContext: forward-only and OPTIONAL, exactly like frozenTier above. Records
+// the scheduled division/title/round context the prediction was computed under,
+// plus where that context was sourced from, so a later audit can tell a verified
+// non-title three-rounder from an unverified one. Omitted entirely when the
+// caller passes nothing, so historical entries and frozen fixtures are untouched.
+export const buildProvenance = ({ eventDate, result, fA, fB, predictionTimestamp, captureMode, frozenTier, boutContext }) => {
   const todayIso = new Date().toISOString().slice(0, 10);
   const resolvedCaptureMode =
     captureMode ??
@@ -335,6 +345,7 @@ export const buildProvenance = ({ eventDate, result, fA, fB, predictionTimestamp
     modelVersion: MODEL_V2.version,
     modelCoefHash: djb2Checksum(JSON.stringify(MODEL_V2.coef)),
     ...(frozenTier !== undefined ? { frozenTier } : {}),
+    ...(boutContext !== undefined ? { boutContext } : {}),
     featureVector: {
       v1: result.feats,
       v2: result.featsV2 ?? null,
@@ -358,10 +369,36 @@ export const buildProvenance = ({ eventDate, result, fA, fB, predictionTimestamp
 // the frozen characterisation tests supply one, and theirs still wins (it sets
 // useStoredAge) so the approved fixtures keep replaying their captured ages.
 // See the comment on computeMatchupEdges.
-const buildRoiEntry = ({ fA, fB, oddsA, oddsB, eventName, eventDate, modelToggle = 'v2', unitsWagered = 1, modelContext }) => {
+const buildRoiEntry = ({ fA, fB, oddsA, oddsB, eventName, eventDate, modelToggle = 'v2', unitsWagered = 1, modelContext, boutContext }) => {
+  // Correction 3/4: the scheduled context of this bout, normalised once here so
+  // the model call, the stored entry and the display all read the same object.
+  // null means UNKNOWN and stays unknown -- it is never coerced to non-title or
+  // to three rounds.
+  //
+  // FAIL CLOSED, and validate the RAW value before normalising it. normalize-
+  // BoutContext coerces anything malformed to null, so validating afterwards
+  // would silently accept `isTitleBout: 'yes'` as "unknown" and persist a
+  // different fact than the caller supplied. Validating first means a bad value
+  // is rejected rather than quietly rewritten.
+  //
+  // This guard is independent of the UI. The Simulator also disables its save
+  // buttons on invalid context, but a non-UI caller must not be able to persist
+  // a contradictory bout, so the rule lives here too.
+  //
+  // Errors block; WARNINGS DO NOT. A catchweight bout is real and must be
+  // saveable -- it just cannot select a division average.
+  const rawBoutContext = boutContext ?? modelContext?.boutContext;
+  const boutContextValidation = validateBoutContext(rawBoutContext);
+  if (!boutContextValidation.valid) {
+    throw new TypeError(
+      `buildRoiEntry: invalid boutContext — ${boutContextValidation.errors.join('; ')}`
+    );
+  }
+  const normalizedBoutContext = normalizeBoutContext(rawBoutContext);
   const result = computeMatchupEdges(fA, fB, {
     ...(modelContext ?? {}),
     eventDate: eventDate || modelContext?.eventDate,
+    boutContext: normalizedBoutContext,
   });
   // Use whichever model the user had active at save time (v1 or v2) for every
   // bet-decision field, mirroring the Simulator's own market useMemo. The raw
@@ -433,10 +470,23 @@ const buildRoiEntry = ({ fA, fB, oddsA, oddsB, eventName, eventDate, modelToggle
     fighterAIsProspect: !!fA.IS_PROSPECT,
     fighterBIsProspect: !!fB.IS_PROSPECT,
     includesProspect: !!fA.IS_PROSPECT || !!fB.IS_PROSPECT,
-    division:
-      fA.WEIGHT_CLASS === fB.WEIGHT_CLASS
-        ? fA.WEIGHT_CLASS
-        : `${fA.WEIGHT_CLASS} / ${fB.WEIGHT_CLASS}`,
+    // Legacy display string. A verified canonical bout division is the truth and
+    // wins outright; without one this keeps the previous roster-derived
+    // behaviour, including the "A / B" concatenation that signals the two
+    // corners' stored classes disagree. That concatenation is a display artifact
+    // of stale roster data, never a statement about where the bout is contested.
+    division: isSupportedDivision(normalizedBoutContext?.division)
+      ? normalizedBoutContext.division
+      : fA.WEIGHT_CLASS === fB.WEIGHT_CLASS
+      ? fA.WEIGHT_CLASS
+      : `${fA.WEIGHT_CLASS} / ${fB.WEIGHT_CLASS}`,
+    // Scheduled bout context. Null fields mean unverified, not "no".
+    //
+    // Emitted ONLY when there is context to carry, matching the frozenTier
+    // precedent above. An absent key is the single "legacy or unknown" signal
+    // every consumer checks, and it keeps entries saved without context
+    // byte-identical to what this function produced before Correction 3/4.
+    ...(normalizedBoutContext !== null ? { boutContext: normalizedBoutContext } : {}),
     fighterAProb: result.pA,
     fighterBProb: result.pB,
     predictedWinner,
@@ -485,7 +535,14 @@ const buildRoiEntry = ({ fA, fB, oddsA, oddsB, eventName, eventDate, modelToggle
     // reconstructed" and "what fed it" without a manual forensic audit (see
     // research/source_integrity_audit.md and research/daysSinceLast_live_audit.md,
     // which this schema exists to make unnecessary going forward).
-    _provenance: buildProvenance({ eventDate, result, fA, fB, frozenTier: market?.betAction ?? 'NO BET' }),
+    _provenance: buildProvenance({
+      eventDate,
+      result,
+      fA,
+      fB,
+      frozenTier: market?.betAction ?? 'NO BET',
+      boutContext: normalizedBoutContext ?? undefined,
+    }),
   };
 };
 
