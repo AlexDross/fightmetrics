@@ -954,7 +954,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Gamrot vs. Salkilld"
     },
@@ -965,7 +965,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Emmett vs. Vallejos"
     },
@@ -976,7 +976,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "Noche UFC: Lopes vs. Silva"
     },
@@ -987,7 +987,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 313: Pereira vs. Ankalaev"
     },
@@ -998,7 +998,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "4:48",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Lemos vs. Jandiroba"
     },
@@ -1009,7 +1009,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 298: Volkanovski vs. Topuria"
     },
@@ -1020,7 +1020,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 5,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 292: Sterling vs. O'Malley"
     },
@@ -1031,7 +1031,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 3,
       "ti": "0:54",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Rodriguez vs. Lemos"
     },
@@ -1042,7 +1042,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "1:48",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Ortega vs. Rodriguez"
     },
@@ -1053,7 +1053,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "3:13",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Lemos vs. Andrade"
     },
@@ -1064,7 +1064,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Lewis vs. Daukaus"
     },
@@ -1075,7 +1075,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "0:35",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Makhachev vs. Moises"
     },
@@ -1086,7 +1086,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "3:39",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 259: Blachowicz vs. Adesanya"
     },
@@ -1097,7 +1097,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Munhoz vs. Edgar"
     },
@@ -1108,7 +1108,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "3:43",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Edgar vs. The Korean Zombie"
     },
@@ -1119,7 +1119,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "2:53",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Nelson vs. Ponzinibbio"
     }
@@ -1132,7 +1132,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Gamrot vs. Salkilld"
     },
@@ -1143,7 +1143,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Adesanya vs. Pyfer"
     },
@@ -1154,7 +1154,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Ulberg vs. Reyes"
     },
@@ -1165,7 +1165,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "4:32",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Edwards vs. Brady"
     }
@@ -1675,7 +1675,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "1:38",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Gamrot vs. Salkilld"
     },
@@ -1686,7 +1686,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Strickland vs. Hernandez"
     },
@@ -1697,7 +1697,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Sandhagen vs. Figueiredo"
     },
@@ -1708,7 +1708,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "3:41",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Luque vs. Dos Anjos"
     },
@@ -1719,7 +1719,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 286: Edwards vs. Usman 3"
     },
@@ -1730,7 +1730,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 3,
       "ti": "3:57",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Santos vs. Hill"
     }
@@ -1743,7 +1743,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "1:38",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Gamrot vs. Salkilld"
     },
@@ -1754,7 +1754,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "1:17",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Evloev vs. Murphy"
     },
@@ -1765,7 +1765,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 3,
       "ti": "2:50",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: De Ridder vs. Allen"
     },
@@ -1776,7 +1776,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Yusuff vs. Barboza"
     }
@@ -1789,7 +1789,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Gamrot vs. Salkilld"
     }
@@ -1802,7 +1802,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Gamrot vs. Salkilld"
     }
@@ -3682,7 +3682,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "2:29",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 327: Prochazka vs. Ulberg"
     },
@@ -3693,7 +3693,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "Noche UFC: Lopes vs. Silva"
     },
@@ -3704,7 +3704,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 5,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 312: Du Plessis vs. Strickland 2"
     },
@@ -3715,7 +3715,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "1:31",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Sandhagen vs. Font"
     },
@@ -3726,7 +3726,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "2:51",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Muniz vs. Allen"
     },
@@ -3737,7 +3737,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 238: Cejudo vs. Moraes"
     },
@@ -3748,7 +3748,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 3,
       "ti": "4:33",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 228: Woodley vs. Till"
     },
@@ -3759,7 +3759,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "2:44",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Maia vs. Usman"
     },
@@ -3770,7 +3770,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Poirier vs. Pettis"
     },
@@ -3781,7 +3781,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "3:43",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "The Ultimate Fighter: Team Joanna vs. Team Cláudia Finale"
     }
@@ -4257,7 +4257,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "2:07",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Emmett vs. Vallejos"
     },
@@ -4268,7 +4268,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "Noche UFC: Lopes vs. Silva"
     },
@@ -4279,7 +4279,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Ribas vs. Namajunas"
     },
@@ -4290,7 +4290,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Fiziev vs. Gamrot"
     }
@@ -4303,7 +4303,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "4:24",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Moicano vs. Duncan"
     },
@@ -4314,7 +4314,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "Noche UFC: Lopes vs. Silva"
     }
@@ -4375,7 +4375,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "2:42",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Adesanya vs. Pyfer"
     },
@@ -4386,7 +4386,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 315: Muhammad vs. Della Maddalena"
     },
@@ -4397,7 +4397,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 5,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 306: Riyadh Season Noche UFC"
     },
@@ -4408,7 +4408,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 5,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "Noche UFC: Grasso vs. Shevchenko 2"
     },
@@ -4419,7 +4419,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 4,
       "ti": "4:34",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 285: Jones vs. Gane"
     },
@@ -4430,7 +4430,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 5,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Grasso vs. Araujo"
     },
@@ -4441,7 +4441,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "3:57",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Blaydes vs. Daukaus"
     },
@@ -4452,7 +4452,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 258: Usman vs. Burns"
     },
@@ -4463,7 +4463,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Smith vs. Rakic"
     },
@@ -4474,7 +4474,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Majority",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Rodriguez vs. Stephens"
     },
@@ -4485,7 +4485,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 238: Cejudo vs. Moraes"
     },
@@ -4496,7 +4496,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "2:44",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Maia vs. Usman"
     },
@@ -4507,7 +4507,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Pettis vs. Moreno"
     },
@@ -4518,7 +4518,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Bermudez vs. The Korean Zombie"
     },
@@ -4529,7 +4529,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Dos Anjos vs. Ferguson"
     }
@@ -4542,7 +4542,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 5,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 322: Della Maddalena vs. Makhachev"
     },
@@ -4553,7 +4553,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 5,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 315: Muhammad vs. Della Maddalena"
     },
@@ -4564,7 +4564,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 5,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 306: Riyadh Season Noche UFC"
     },
@@ -4575,7 +4575,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 5,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "Noche UFC: Grasso vs. Shevchenko 2"
     },
@@ -4586,7 +4586,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 4,
       "ti": "4:34",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 285: Jones vs. Gane"
     },
@@ -4597,7 +4597,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 5,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 275: Teixeira vs. Prochazka"
     },
@@ -4608,7 +4608,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 4,
       "ti": "4:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 266: Volkanovski vs. Ortega"
     },
@@ -4619,7 +4619,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "3:19",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 261: Usman vs. Masvidal 2"
     },
@@ -4630,7 +4630,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 5,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 255: Figueiredo vs. Perez"
     },
@@ -4641,7 +4641,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 3,
       "ti": "1:03",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 247: Jones vs. Reyes"
     },
@@ -4652,7 +4652,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 5,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Shevchenko vs. Carmouche 2"
     },
@@ -4663,7 +4663,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "0:26",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 238: Cejudo vs. Moraes"
     },
@@ -4674,7 +4674,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 5,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 231: Holloway vs. Ortega"
     },
@@ -4685,7 +4685,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "4:25",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Machida vs. Anders"
     },
@@ -4696,7 +4696,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 5,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 215: Nunes vs Shevchenko 2"
     },
@@ -4707,7 +4707,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "4:29",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC on FOX: Shevchenko vs. Pena"
     },
@@ -4718,7 +4718,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 5,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC on FOX: Holm vs. Shevchenko"
     },
@@ -4729,7 +4729,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 196: McGregor vs Diaz"
     },
@@ -4740,7 +4740,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC on FOX: Dos Anjos vs. Cowboy 2"
     }
@@ -5704,7 +5704,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "2:29",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 327: Prochazka vs. Ulberg"
     },
@@ -5715,7 +5715,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 319: Du Plessis vs. Chimaev"
     },
@@ -5726,7 +5726,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Moreno vs. Erceg"
     },
@@ -5737,7 +5737,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Sandhagen vs. Nurmagomedov"
     },
@@ -5748,7 +5748,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Blanchfield vs. Fiorot"
     },
@@ -5759,7 +5759,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 295: Prochazka vs. Pereira"
     },
@@ -5770,7 +5770,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "3:38",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "Noche UFC: Grasso vs. Shevchenko 2"
     },
@@ -5781,7 +5781,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Dern vs. Hill"
     },
@@ -5792,7 +5792,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 287: Pereira vs. Adesanya 2"
     },
@@ -5803,7 +5803,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Vera vs. Cruz"
     },
@@ -5814,7 +5814,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 274: Oliveira vs. Gaethje"
     },
@@ -5825,7 +5825,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Vieira vs. Tate"
     },
@@ -5836,7 +5836,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Ladd vs. Dumont"
     },
@@ -5847,7 +5847,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "4:14",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Dern vs. Rodriguez"
     },
@@ -5858,7 +5858,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Whittaker vs. Gastelum"
     }
@@ -5871,7 +5871,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "0:30",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Burns vs. Morales"
     },
@@ -5882,7 +5882,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Hernandez vs. Pereira"
     },
@@ -5893,7 +5893,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "3:38",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "Noche UFC: Grasso vs. Shevchenko 2"
     },
@@ -5904,7 +5904,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Kara-France vs. Albazi"
     },
@@ -5915,7 +5915,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "0:44",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 284: Makhachev vs. Volkanovski"
     },
@@ -5926,7 +5926,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 279: Diaz vs. Ferguson"
     },
@@ -5937,7 +5937,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 3,
       "ti": "3:52",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Holm vs. Vieira"
     },
@@ -5948,7 +5948,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Volkov vs. Aspinall"
     },
@@ -5959,7 +5959,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "3:49",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Sandhagen vs. Dillashaw"
     }
@@ -6321,7 +6321,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 329: McGregor vs. Holloway 2"
     },
@@ -6332,7 +6332,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "4:44",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 322: Della Maddalena vs. Makhachev"
     },
@@ -6343,7 +6343,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 317: Topuria vs. Oliveira"
     },
@@ -6354,7 +6354,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 5,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Namajunas vs. Cortez"
     },
@@ -6365,7 +6365,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "Noche UFC: Grasso vs. Shevchenko 2"
     },
@@ -6376,7 +6376,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 274: Oliveira vs. Gaethje"
     },
@@ -6387,7 +6387,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Whittaker vs. Gastelum"
     },
@@ -6398,7 +6398,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Moraes vs. Sandhagen"
     },
@@ -6409,7 +6409,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Blachowicz vs. Jacare"
     }
@@ -6422,7 +6422,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Burns vs. Malott"
     },
@@ -6433,7 +6433,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "1:14",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: De Ridder vs. Allen"
     },
@@ -6444,7 +6444,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "2:40",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 315: Muhammad vs. Della Maddalena"
     },
@@ -6455,7 +6455,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Adesanya vs. Imavov"
     },
@@ -6466,7 +6466,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 3,
       "ti": "2:28",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Moreno vs. Albazi"
     },
@@ -6477,7 +6477,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Namajunas vs. Cortez"
     },
@@ -6488,7 +6488,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 3,
       "ti": "4:21",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 297: Strickland vs. Du Plessis"
     },
@@ -6499,7 +6499,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "Noche UFC: Grasso vs. Shevchenko 2"
     },
@@ -6510,7 +6510,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 289: Nunes vs. Aldana"
     },
@@ -6521,7 +6521,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Muniz vs. Allen"
     },
@@ -6532,7 +6532,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Kattar vs. Emmett"
     },
@@ -6543,7 +6543,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 270: Ngannou vs. Gane"
     }
@@ -6626,7 +6626,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Covington vs. Buckley"
     },
@@ -6637,7 +6637,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Perez vs. Taira"
     },
@@ -6648,7 +6648,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "Noche UFC: Grasso vs. Shevchenko 2"
     }
@@ -6661,7 +6661,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Nicolau vs. Perez"
     },
@@ -6672,7 +6672,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "Noche UFC: Grasso vs. Shevchenko 2"
     }
@@ -8432,7 +8432,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "3:41",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Medic vs. Rodriguez"
     }
@@ -8445,7 +8445,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "3:41",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Medic vs. Rodriguez"
     },
@@ -8456,7 +8456,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "4:24",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Moicano vs. Duncan"
     },
@@ -8467,7 +8467,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "1:52",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 314: Volkanovski vs. Lopes"
     },
@@ -8478,7 +8478,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Song vs. Simon"
     }
@@ -8517,7 +8517,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "3:20",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Medic vs. Rodriguez"
     }
@@ -8530,7 +8530,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "3:20",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Medic vs. Rodriguez"
     },
@@ -8541,7 +8541,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 3,
       "ti": "2:50",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: De Ridder vs. Allen"
     },
@@ -8552,7 +8552,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Vettori vs. Dolidze 2"
     },
@@ -8563,7 +8563,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Tybura vs. Spivac 2"
     }
@@ -11133,7 +11133,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Du Plessis vs. Usman"
     },
@@ -11144,7 +11144,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Moicano vs. Duncan"
     },
@@ -11155,7 +11155,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "2:59",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Whittaker vs. De Ridder"
     },
@@ -11166,7 +11166,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Yan vs. Figueiredo"
     },
@@ -11177,7 +11177,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Cannonier vs. Borralho"
     },
@@ -11188,7 +11188,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Lewis vs. Nascimento"
     },
@@ -11199,7 +11199,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 295: Prochazka vs. Pereira"
     },
@@ -11210,7 +11210,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Emmett vs. Topuria"
     },
@@ -11221,7 +11221,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "2:14",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 285: Jones vs. Gane"
     },
@@ -11232,7 +11232,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Holm vs. Vieira"
     },
@@ -11243,7 +11243,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Costa vs. Vettori"
     },
@@ -11254,7 +11254,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "3:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Rozenstruik vs. Sakai"
     }
@@ -11267,7 +11267,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Du Plessis vs. Usman"
     },
@@ -11278,7 +11278,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 322: Della Maddalena vs. Makhachev"
     },
@@ -11289,7 +11289,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 3,
       "ti": "2:36",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Lewis vs. Teixeira"
     },
@@ -11300,7 +11300,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "4:27",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Dern vs. Ribas 2"
     },
@@ -11311,7 +11311,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Namajunas vs. Cortez"
     }
@@ -11669,7 +11669,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "4:04",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Du Plessis vs. Usman"
     }
@@ -11682,7 +11682,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "4:04",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Du Plessis vs. Usman"
     },
@@ -11693,7 +11693,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Majority",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Moicano vs. Duncan"
     },
@@ -11704,7 +11704,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 319: Du Plessis vs. Chimaev"
     },
@@ -11715,7 +11715,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "4:13",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Emmett vs. Murphy"
     },
@@ -11726,7 +11726,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Lemos vs. Jandiroba"
     },
@@ -11737,7 +11737,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 301: Pantoja vs. Erceg"
     }
@@ -13029,7 +13029,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 3,
       "ti": "3:40",
-      "wc": "Unknown",
+      "wc": "Flyweight",
       "tb": false,
       "ev": "UFC 329: McGregor vs. Holloway 2"
     },
@@ -13040,7 +13040,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 5,
       "ti": "5:00",
-      "wc": "Unknown",
+      "wc": "Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Moreno vs. Kavanagh"
     },
@@ -13051,7 +13051,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "4:35",
-      "wc": "Unknown",
+      "wc": "Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Walker vs. Zhang"
     },
@@ -13062,7 +13062,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Unknown",
+      "wc": "Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Edwards vs. Brady"
     },
@@ -13073,7 +13073,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Unknown",
+      "wc": "Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Yan vs. Figueiredo"
     }
@@ -14569,7 +14569,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 329: McGregor vs. Holloway 2"
     },
@@ -14580,7 +14580,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Bautista vs. Oliveira"
     },
@@ -14591,7 +14591,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 316: Dvalishvili vs. O'Malley 2"
     },
@@ -14602,7 +14602,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 312: Du Plessis vs. Strickland 2"
     },
@@ -14613,7 +14613,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "3:49",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Yan vs. Figueiredo"
     },
@@ -14624,7 +14624,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "1:02",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Cannonier vs. Borralho"
     }
@@ -18065,7 +18065,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "3:16",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Kape vs. Horiguchi"
     },
@@ -18076,7 +18076,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "2:07",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Emmett vs. Vallejos"
     },
@@ -18087,7 +18087,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "2:14",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Oliveira vs. Gamrot"
     }
@@ -18100,7 +18100,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "3:16",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Kape vs. Horiguchi"
     },
@@ -18111,7 +18111,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Hill vs. Rountree Jr."
     },
@@ -18122,7 +18122,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "1:20",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Magny vs. Prates"
     },
@@ -18133,7 +18133,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "3:06",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Allen vs. Curtis 2"
     },
@@ -18144,7 +18144,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Yusuff vs. Barboza"
     }
@@ -18400,7 +18400,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Kape vs. Horiguchi"
     },
@@ -18411,7 +18411,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Taira vs. Park"
     },
@@ -18422,7 +18422,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 311: Makhachev vs. Moicano"
     },
@@ -18433,7 +18433,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Tybura vs. Spivac 2"
     },
@@ -18444,7 +18444,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 296: Edwards vs. Covington"
     },
@@ -18455,7 +18455,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Strickland vs. Magomedov"
     },
@@ -18466,7 +18466,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Pavlovich vs. Blaydes"
     },
@@ -18477,7 +18477,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Majority",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 280: Oliveira vs. Makhachev"
     },
@@ -18488,7 +18488,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Blaydes vs. Daukaus"
     },
@@ -18499,7 +18499,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Santos vs. Walker"
     },
@@ -18510,7 +18510,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Overeem vs. Volkov"
     },
@@ -18521,7 +18521,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 251: Usman vs. Masvidal"
     },
@@ -18532,7 +18532,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Andrade vs. Zhang"
     }
@@ -18545,7 +18545,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Kape vs. Horiguchi"
     },
@@ -18556,7 +18556,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Royval vs. Kape"
     },
@@ -18567,7 +18567,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "4:59",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Burns vs. Morales"
     },
@@ -18578,7 +18578,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 305: Du Plessis vs. Adesanya"
     },
@@ -18589,7 +18589,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "3:27",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Namajunas vs. Cortez"
     },
@@ -18600,7 +18600,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Song vs. Gutierrez"
     },
@@ -18611,7 +18611,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "3:41",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Luque vs. Dos Anjos"
     }
@@ -19241,7 +19241,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "4:02",
-      "wc": "Unknown",
+      "wc": "Bantamweight",
       "tb": false,
       "ev": "UFC Freedom 250"
     },
@@ -19252,7 +19252,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Unknown",
+      "wc": "Bantamweight",
       "tb": false,
       "ev": "UFC 324: Gaethje vs. Pimblett"
     },
@@ -19263,7 +19263,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 3,
       "ti": "4:42",
-      "wc": "Unknown",
+      "wc": "Bantamweight",
       "tb": false,
       "ev": "UFC 316: Dvalishvili vs. O'Malley 2"
     },
@@ -19274,7 +19274,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 5,
       "ti": "5:00",
-      "wc": "Unknown",
+      "wc": "Bantamweight",
       "tb": false,
       "ev": "UFC 306: Riyadh Season Noche UFC"
     },
@@ -19285,7 +19285,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 5,
       "ti": "5:00",
-      "wc": "Unknown",
+      "wc": "Bantamweight",
       "tb": false,
       "ev": "UFC 299: O'Malley vs. Vera 2"
     },
@@ -19296,7 +19296,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "0:51",
-      "wc": "Unknown",
+      "wc": "Bantamweight",
       "tb": false,
       "ev": "UFC 292: Sterling vs. O'Malley"
     },
@@ -19307,7 +19307,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Unknown",
+      "wc": "Bantamweight",
       "tb": false,
       "ev": "UFC 280: Oliveira vs. Makhachev"
     },
@@ -19318,7 +19318,7 @@ export const FIGHT_HISTORY = {
       "me": "Could Not Continue",
       "rn": 2,
       "ti": "3:09",
-      "wc": "Unknown",
+      "wc": "Bantamweight",
       "tb": false,
       "ev": "UFC 276: Adesanya vs. Cannonier"
     },
@@ -19329,7 +19329,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "4:42",
-      "wc": "Unknown",
+      "wc": "Bantamweight",
       "tb": false,
       "ev": "UFC 269: Oliveira vs. Poirier"
     },
@@ -19340,7 +19340,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 3,
       "ti": "4:33",
-      "wc": "Unknown",
+      "wc": "Bantamweight",
       "tb": false,
       "ev": "UFC 264: Poirier vs. McGregor 3"
     },
@@ -19351,7 +19351,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 3,
       "ti": "3:52",
-      "wc": "Unknown",
+      "wc": "Bantamweight",
       "tb": false,
       "ev": "UFC 260: Miocic vs. Ngannou"
     },
@@ -19362,7 +19362,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "4:40",
-      "wc": "Unknown",
+      "wc": "Bantamweight",
       "tb": false,
       "ev": "UFC 252: Miocic vs. Cormier 3"
     },
@@ -19373,7 +19373,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "1:54",
-      "wc": "Unknown",
+      "wc": "Bantamweight",
       "tb": false,
       "ev": "UFC 250: Nunes vs. Spencer"
     },
@@ -19384,7 +19384,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "2:02",
-      "wc": "Unknown",
+      "wc": "Bantamweight",
       "tb": false,
       "ev": "UFC 248: Adesanya vs. Romero"
     },
@@ -19395,7 +19395,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Unknown",
+      "wc": "Bantamweight",
       "tb": false,
       "ev": "UFC 222: Cyborg vs. Kunitskaya"
     },
@@ -19406,7 +19406,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Unknown",
+      "wc": "Bantamweight",
       "tb": false,
       "ev": "The Ultimate Fighter: A New World Champion Finale"
     }
@@ -22145,7 +22145,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "3:42",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Muhammad vs. Bonfim"
     },
@@ -22156,7 +22156,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Bautista vs. Oliveira"
     },
@@ -22167,7 +22167,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "2:24",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Dolidze vs. Hernandez"
     },
@@ -22178,7 +22178,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "2:46",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Vettori vs. Dolidze 2"
     },
@@ -22189,7 +22189,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 3,
       "ti": "4:21",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 297: Strickland vs. Du Plessis"
     },
@@ -22200,7 +22200,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 3,
       "ti": "2:11",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 291: Poirier vs. Gaethje 2"
     },
@@ -22211,7 +22211,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "1:05",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Vera vs. Cruz"
     },
@@ -22222,7 +22222,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Makhachev vs. Green"
     },
@@ -22233,7 +22233,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "4:59",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 269: Oliveira vs. Poirier"
     },
@@ -22244,7 +22244,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "4:51",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 262: Oliveira vs. Chandler"
     },
@@ -22255,7 +22255,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "0:40",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Felder vs. Hooker"
     },
@@ -22266,7 +22266,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 237: Namajunas vs. Andrade"
     },
@@ -22277,7 +22277,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Till vs. Masvidal"
     },
@@ -22288,7 +22288,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "4:25",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Machida vs. Anders"
     }
@@ -22301,7 +22301,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "3:42",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Muhammad vs. Bonfim"
     },
@@ -22312,7 +22312,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "2:31",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Machado Garry vs. Prates"
     },
@@ -22323,7 +22323,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Tybura vs. Spivac 2"
     },
@@ -22334,7 +22334,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Tuivasa vs. Tybura"
     },
@@ -22345,7 +22345,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Holm vs. Bueno Silva"
     },
@@ -22356,7 +22356,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "4:15",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Dern vs. Yan"
     }
@@ -22593,7 +22593,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Muhammad vs. Bonfim"
     }
@@ -22606,7 +22606,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Muhammad vs. Bonfim"
     },
@@ -22617,7 +22617,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "1:40",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Vettori vs. Dolidze 2"
     }
@@ -22630,7 +22630,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "1:34",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Muhammad vs. Bonfim"
     },
@@ -22641,7 +22641,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Bautista vs. Oliveira"
     },
@@ -22652,7 +22652,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Taira vs. Park"
     },
@@ -22663,7 +22663,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Cannonier vs. Rodrigues"
     },
@@ -22674,7 +22674,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "3:02",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 306: Riyadh Season Noche UFC"
     },
@@ -22685,7 +22685,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Nicolau vs. Perez"
     },
@@ -22696,7 +22696,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "1:45",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Kara-France vs. Albazi"
     }
@@ -22709,7 +22709,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "1:34",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Muhammad vs. Bonfim"
     },
@@ -22720,7 +22720,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 3,
       "ti": "4:36",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Garcia vs. Onama"
     },
@@ -22731,7 +22731,7 @@ export const FIGHT_HISTORY = {
       "me": "DQ",
       "rn": 2,
       "ti": "3:16",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Barboza vs. Murphy"
     },
@@ -22742,7 +22742,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 274: Oliveira vs. Gaethje"
     },
@@ -22753,7 +22753,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 3,
       "ti": "2:57",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Ladd vs. Dumont"
     },
@@ -22764,7 +22764,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "1:28",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 261: Usman vs. Masvidal 2"
     },
@@ -22775,7 +22775,7 @@ export const FIGHT_HISTORY = {
       "me": "TKO - Doctor's Stoppage",
       "rn": 3,
       "ti": "1:56",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Rodriguez vs. Stephens"
     }
@@ -24608,7 +24608,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Song vs. Figueiredo"
     },
@@ -24619,7 +24619,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 322: Della Maddalena vs. Makhachev"
     },
@@ -24630,7 +24630,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Dolidze vs. Hernandez"
     },
@@ -24641,7 +24641,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Cannonier vs. Rodrigues"
     },
@@ -24652,7 +24652,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Cannonier vs. Borralho"
     },
@@ -24663,7 +24663,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "4:12",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Barboza vs. Murphy"
     },
@@ -24674,7 +24674,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Almeida vs. Lewis"
     },
@@ -24685,7 +24685,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 5,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Dern vs. Hill"
     },
@@ -24696,7 +24696,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Thompson vs. Holland"
     },
@@ -24707,7 +24707,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Vera vs. Cruz"
     },
@@ -24718,7 +24718,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Blachowicz vs. Rakic"
     },
@@ -24729,7 +24729,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Lewis vs. Daukaus"
     },
@@ -24740,7 +24740,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 265: Lewis vs. Gane"
     },
@@ -24751,7 +24751,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Edwards vs. Muhammad"
     },
@@ -24762,7 +24762,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 5,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Waterson vs. Hill"
     },
@@ -24773,7 +24773,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Overeem vs. Harris"
     },
@@ -24784,7 +24784,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Felder vs. Hooker"
     },
@@ -24795,7 +24795,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "4:26",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Blaydes vs. Dos Santos"
     },
@@ -24806,7 +24806,7 @@ export const FIGHT_HISTORY = {
       "me": "TKO - Doctor's Stoppage",
       "rn": 3,
       "ti": "1:56",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Rodriguez vs. Stephens"
     },
@@ -24817,7 +24817,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 238: Cejudo vs. Moraes"
     },
@@ -24828,7 +24828,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Jacare vs. Hermansson"
     },
@@ -24839,7 +24839,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "4:24",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Thompson vs. Pettis"
     },
@@ -24850,7 +24850,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Gaethje vs. Vick"
     },
@@ -24861,7 +24861,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Emmett vs. Stephens"
     },
@@ -24872,7 +24872,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Poirier vs. Pettis"
     },
@@ -24883,7 +24883,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "The Ultimate Fighter: Redemption Finale"
     },
@@ -24894,7 +24894,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Bermudez vs. The Korean Zombie"
     },
@@ -24905,7 +24905,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "2:47",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 192: Cormier vs Gustafsson"
     },
@@ -24916,7 +24916,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 188: Velasquez vs Werdum"
     },
@@ -24927,7 +24927,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "The Ultimate Fighter: A Champion Will Be Crowned Finale"
     }
@@ -24940,7 +24940,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Song vs. Figueiredo"
     }
@@ -24979,7 +24979,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "4:04",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Song vs. Figueiredo"
     },
@@ -24990,7 +24990,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Ulberg vs. Reyes"
     },
@@ -25001,7 +25001,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Emmett vs. Murphy"
     },
@@ -25012,7 +25012,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Hermansson vs. Pyfer"
     },
@@ -25023,7 +25023,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "0:44",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 284: Makhachev vs. Volkanovski"
     },
@@ -25034,7 +25034,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Sandhagen vs. Song"
     },
@@ -25045,7 +25045,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Vieira vs. Tate"
     },
@@ -25056,7 +25056,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Reyes vs. Prochazka"
     },
@@ -25067,7 +25067,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Holm vs. Aldana"
     },
@@ -25078,7 +25078,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Felder vs. Hooker"
     },
@@ -25089,7 +25089,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Maia vs. Askren"
     }
@@ -25102,7 +25102,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "4:04",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Song vs. Figueiredo"
     },
@@ -25113,7 +25113,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 321: Aspinall vs. Gane"
     },
@@ -25124,7 +25124,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "1:49",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Machado Garry vs. Prates"
     },
@@ -25135,7 +25135,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "3:28",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Burns vs. Brady"
     },
@@ -25146,7 +25146,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "1:38",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Tuivasa vs. Tybura"
     },
@@ -25157,7 +25157,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 3,
       "ti": "3:41",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Luque vs. Dos Anjos"
     },
@@ -25168,7 +25168,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 287: Pereira vs. Adesanya 2"
     }
@@ -26258,7 +26258,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Allen vs. Costa"
     },
@@ -26269,7 +26269,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Garcia vs. Onama"
     },
@@ -26280,7 +26280,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Blanchfield vs. Barber"
     },
@@ -26291,7 +26291,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 307: Pereira vs. Rountree Jr."
     },
@@ -26302,7 +26302,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Aspinall vs. Tybura"
     },
@@ -26313,7 +26313,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Strickland vs. Imavov"
     },
@@ -26324,7 +26324,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 5,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Holm vs. Vieira"
     },
@@ -26335,7 +26335,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 5,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Vieira vs. Tate"
     },
@@ -26346,7 +26346,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Blaydes vs. Lewis"
     },
@@ -26357,7 +26357,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 253: Adesanya vs. Costa"
     },
@@ -26368,7 +26368,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "4:51",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 245: Usman vs. Covington"
     },
@@ -26379,7 +26379,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 222: Cyborg vs. Kunitskaya"
     },
@@ -26390,7 +26390,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "4:16",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 215: Nunes vs Shevchenko 2"
     },
@@ -26401,7 +26401,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC on FOX: Johnson vs. Reis"
     },
@@ -26412,7 +26412,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Lineker vs. Dodson"
     }
@@ -26425,7 +26425,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Allen vs. Costa"
     },
@@ -26436,7 +26436,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Bonfim vs. Brown"
     },
@@ -26447,7 +26447,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Cannonier vs. Rodrigues"
     },
@@ -26458,7 +26458,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Moicano vs. Saint Denis"
     },
@@ -26469,7 +26469,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Cannonier vs. Borralho"
     },
@@ -26480,7 +26480,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Gane vs. Spivac"
     }
@@ -26816,7 +26816,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "4:36",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Allen vs. Costa"
     },
@@ -26827,7 +26827,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Garcia vs. Onama"
     },
@@ -26838,7 +26838,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Blanchfield vs. Barber"
     },
@@ -26849,7 +26849,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Hernandez vs. Pereira"
     },
@@ -26860,7 +26860,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 304: Edwards vs. Muhammad 2"
     }
@@ -26873,7 +26873,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "4:36",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Allen vs. Costa"
     },
@@ -26884,7 +26884,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "1:49",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Machado Garry vs. Prates"
     },
@@ -26895,7 +26895,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "3:12",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 297: Strickland vs. Du Plessis"
     },
@@ -26906,7 +26906,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "3:42",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Luque vs. Dos Anjos"
     },
@@ -26917,7 +26917,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "0:47",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Rodriguez vs. Lemos"
     },
@@ -26928,7 +26928,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Holm vs. Vieira"
     },
@@ -26939,7 +26939,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "3:18",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 258: Usman vs. Burns"
     },
@@ -26950,7 +26950,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "1:53",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Smith vs. Rakic"
     },
@@ -26961,7 +26961,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "1:09",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Shevchenko vs. Carmouche 2"
     },
@@ -26972,7 +26972,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 235: Jones vs. Smith"
     },
@@ -26983,7 +26983,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 227: Dillashaw vs. Garbrandt 2"
     },
@@ -26994,7 +26994,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "3:50",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Machida vs. Anders"
     }
@@ -27053,7 +27053,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 3,
       "ti": "3:08",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Allen vs. Costa"
     },
@@ -27064,7 +27064,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "1:58",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Imavov vs. Borralho"
     },
@@ -27075,7 +27075,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "3:22",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Edwards vs. Brady"
     },
@@ -27086,7 +27086,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 304: Edwards vs. Muhammad 2"
     },
@@ -27097,7 +27097,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Aspinall vs. Tybura"
     }
@@ -27110,7 +27110,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 3,
       "ti": "3:08",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Allen vs. Costa"
     },
@@ -27121,7 +27121,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 3,
       "ti": "1:30",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 318: Holloway vs. Poirier 3"
     },
@@ -27132,7 +27132,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Dern vs. Ribas 2"
     }
@@ -32405,7 +32405,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Sterling vs. Zalal"
     },
@@ -32416,7 +32416,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Garcia vs. Onama"
     },
@@ -32427,7 +32427,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 306: Riyadh Season Noche UFC"
     },
@@ -32438,7 +32438,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Allen vs. Curtis 2"
     },
@@ -32449,7 +32449,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Holm vs. Bueno Silva"
     },
@@ -32460,7 +32460,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Pavlovich vs. Blaydes"
     },
@@ -32471,7 +32471,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 279: Diaz vs. Ferguson"
     },
@@ -32482,7 +32482,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 274: Oliveira vs. Gaethje"
     },
@@ -32493,7 +32493,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 5,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Ladd vs. Dumont"
     },
@@ -32504,7 +32504,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Font vs. Garbrandt"
     },
@@ -32515,7 +32515,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Smith vs. Clark"
     },
@@ -32526,7 +32526,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "3:31",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Benavidez vs. Figueiredo"
     }
@@ -32539,7 +32539,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Sterling vs. Zalal"
     },
@@ -32550,7 +32550,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "2:44",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Strickland vs. Hernandez"
     },
@@ -32561,7 +32561,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "2:24",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Dolidze vs. Hernandez"
     },
@@ -32572,7 +32572,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "2:31",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Machado Garry vs. Prates"
     },
@@ -32583,7 +32583,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 3,
       "ti": "4:33",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Hernandez vs. Pereira"
     },
@@ -32594,7 +32594,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 302: Makhachev vs. Poirier"
     },
@@ -32605,7 +32605,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Gane vs. Spivac"
     },
@@ -32616,7 +32616,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Holloway vs. Allen"
     },
@@ -32627,7 +32627,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 277: Pena vs. Nunes 2"
     },
@@ -32638,7 +32638,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 275: Teixeira vs. Prochazka"
     },
@@ -32649,7 +32649,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Costa vs. Vettori"
     },
@@ -32660,7 +32660,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Overeem vs. Volkov"
     },
@@ -32671,7 +32671,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Holloway vs. Kattar"
     }
@@ -33604,7 +33604,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Sterling vs. Zalal"
     },
@@ -33615,7 +33615,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Bonfim vs. Brown"
     },
@@ -33626,7 +33626,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Adesanya vs. Imavov"
     },
@@ -33637,7 +33637,7 @@ export const FIGHT_HISTORY = {
       "me": "TKO - Doctor's Stoppage",
       "rn": 2,
       "ti": "1:58",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 303: Pereira vs. Prochazka 2"
     },
@@ -33648,7 +33648,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 5,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 297: Strickland vs. Du Plessis"
     },
@@ -33659,7 +33659,7 @@ export const FIGHT_HISTORY = {
       "me": "Overturned",
       "rn": 2,
       "ti": "0:38",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Holm vs. Bueno Silva"
     },
@@ -33670,7 +33670,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "4:45",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Andrade vs. Blanchfield"
     },
@@ -33681,7 +33681,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "1:17",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Santos vs. Hill"
     },
@@ -33692,7 +33692,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Luque vs. Muhammad"
     },
@@ -33703,7 +33703,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Ladd vs. Dumont"
     },
@@ -33714,7 +33714,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Majority",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Rozenstruik vs. Gane"
     },
@@ -33725,7 +33725,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "2:29",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Covington vs. Woodley"
     },
@@ -33736,7 +33736,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Lee vs. Oliveira"
     },
@@ -33747,7 +33747,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "4:55",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Marreta vs. Anders"
     }
@@ -33760,7 +33760,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Sterling vs. Zalal"
     },
@@ -33771,7 +33771,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Ulberg vs. Reyes"
     }
@@ -34168,7 +34168,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Sterling vs. Zalal"
     },
@@ -34179,7 +34179,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 3,
       "ti": "4:36",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Garcia vs. Onama"
     },
@@ -34190,7 +34190,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Emmett vs. Murphy"
     },
@@ -34201,7 +34201,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Tybura vs. Spivac 2"
     },
@@ -34212,7 +34212,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Song vs. Gutierrez"
     }
@@ -34225,7 +34225,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Sterling vs. Zalal"
     },
@@ -34236,7 +34236,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 3,
       "ti": "2:56",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Oliveira vs. Gamrot"
     },
@@ -34247,7 +34247,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Moreno vs. Erceg"
     },
@@ -34258,7 +34258,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Royval vs. Taira"
     },
@@ -34269,7 +34269,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Perez vs. Taira"
     }
@@ -35075,7 +35075,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Burns vs. Malott"
     },
@@ -35086,7 +35086,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 323: Dvalishvili vs. Yan 2"
     },
@@ -35097,7 +35097,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 319: Du Plessis vs. Chimaev"
     },
@@ -35108,7 +35108,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 309: Jones vs. Miocic"
     },
@@ -35119,7 +35119,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Nicolau vs. Perez"
     },
@@ -35130,7 +35130,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "4:59",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 292: Sterling vs. O'Malley"
     },
@@ -35141,7 +35141,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "1:45",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Kara-France vs. Albazi"
     },
@@ -35152,7 +35152,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "4:55",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Volkov vs. Rozenstruik"
     }
@@ -35540,7 +35540,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Burns vs. Malott"
     },
@@ -35551,7 +35551,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Royval vs. Kape"
     },
@@ -35562,7 +35562,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 3,
       "ti": "4:32",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: De Ridder vs. Allen"
     }
@@ -35575,7 +35575,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Burns vs. Malott"
     },
@@ -35586,7 +35586,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Hill vs. Rountree Jr."
     },
@@ -35597,7 +35597,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "3:52",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Moicano vs. Saint Denis"
     },
@@ -35608,7 +35608,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Ribas vs. Namajunas"
     }
@@ -35621,7 +35621,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Burns vs. Malott"
     },
@@ -35632,7 +35632,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Kape vs. Almabayev"
     },
@@ -35643,7 +35643,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Lewis vs. Nascimento"
     },
@@ -35654,7 +35654,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Dawson vs. Green"
     },
@@ -35665,7 +35665,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "4:49",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Holloway vs. The Korean Zombie"
     },
@@ -35676,7 +35676,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Yan vs. Dvalishvili"
     },
@@ -35687,7 +35687,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "2:38",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Volkov vs. Rozenstruik"
     },
@@ -35698,7 +35698,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Santos vs. Ankalaev"
     },
@@ -35709,7 +35709,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Barboza vs. Chikadze"
     },
@@ -35720,7 +35720,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Edwards vs. Muhammad"
     },
@@ -35731,7 +35731,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 246: McGregor vs. Cowboy"
     },
@@ -35742,7 +35742,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Joanna vs. Waterson"
     },
@@ -35753,7 +35753,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "3:01",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Thompson vs. Pettis"
     },
@@ -35764,7 +35764,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 227: Dillashaw vs. Garbrandt 2"
     },
@@ -35775,7 +35775,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Stephens vs. Choi"
     },
@@ -35786,7 +35786,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Lewis vs. Hunt"
     },
@@ -35797,7 +35797,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Lewis vs. Abdurakhimov"
     }
@@ -35810,7 +35810,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Burns vs. Malott"
     },
@@ -35821,7 +35821,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "2:05",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Royval vs. Kape"
     },
@@ -35832,7 +35832,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Usman vs. Buckley"
     },
@@ -35843,7 +35843,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Covington vs. Buckley"
     },
@@ -35854,7 +35854,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Moreno vs. Albazi"
     },
@@ -35865,7 +35865,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Dariush vs. Tsarukyan"
     },
@@ -35876,7 +35876,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Song vs. Simon"
     }
@@ -38628,7 +38628,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Moicano vs. Duncan"
     },
@@ -38639,7 +38639,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 5,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 321: Aspinall vs. Gane"
     },
@@ -38650,7 +38650,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 314: Volkanovski vs. Lopes"
     },
@@ -38661,7 +38661,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "4:48",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Lemos vs. Jandiroba"
     },
@@ -38672,7 +38672,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Blanchfield vs. Fiorot"
     },
@@ -38683,7 +38683,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 288: Sterling vs. Cejudo"
     },
@@ -38694,7 +38694,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Blachowicz vs. Rakic"
     },
@@ -38705,7 +38705,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 267: Blachowicz vs. Teixeira"
     },
@@ -38716,7 +38716,7 @@ export const FIGHT_HISTORY = {
       "me": "TKO - Doctor's Stoppage",
       "rn": 2,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Jung vs. Ige"
     },
@@ -38727,7 +38727,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 256: Figueiredo vs. Moreno"
     },
@@ -38738,7 +38738,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "1:44",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 252: Miocic vs. Cormier 3"
     },
@@ -38749,7 +38749,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "1:16",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Overeem vs. Rozenstruik"
     },
@@ -38760,7 +38760,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Jacare vs. Hermansson"
     }
@@ -39231,7 +39231,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Majority",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Moicano vs. Duncan"
     },
@@ -39242,7 +39242,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 3,
       "ti": "0:37",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Barboza vs. Murphy"
     },
@@ -39253,7 +39253,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Strickland vs. Magomedov"
     },
@@ -39264,7 +39264,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 274: Oliveira vs. Gaethje"
     },
@@ -39275,7 +39275,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 3,
       "ti": "0:45",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Lewis vs. Daukaus"
     },
@@ -39286,7 +39286,7 @@ export const FIGHT_HISTORY = {
       "me": "TKO - Doctor's Stoppage",
       "rn": 2,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 265: Lewis vs. Gane"
     }
@@ -39613,7 +39613,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "2:42",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Adesanya vs. Pyfer"
     },
@@ -39624,7 +39624,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 323: Dvalishvili vs. Yan 2"
     },
@@ -39635,7 +39635,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 299: O'Malley vs. Vera 2"
     },
@@ -39646,7 +39646,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "3:42",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Emmett vs. Topuria"
     },
@@ -39657,7 +39657,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Vera vs. Sandhagen"
     },
@@ -39668,7 +39668,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 276: Adesanya vs. Cannonier"
     },
@@ -39679,7 +39679,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Lemos vs. Andrade"
     },
@@ -39690,7 +39690,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Sandhagen vs. Dillashaw"
     },
@@ -39701,7 +39701,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 258: Usman vs. Burns"
     },
@@ -39712,7 +39712,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 246: McGregor vs. Cowboy"
     },
@@ -39723,7 +39723,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "3:04",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Reyes vs. Weidman"
     },
@@ -39734,7 +39734,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "3:01",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Thompson vs. Pettis"
     },
@@ -39745,7 +39745,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "2:01",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Korean Zombie vs. Rodriguez"
     }
@@ -40665,7 +40665,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "3:11",
-      "wc": "Unknown",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Adesanya vs. Pyfer"
     },
@@ -40676,7 +40676,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Unknown",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 305: Du Plessis vs. Adesanya"
     },
@@ -40687,7 +40687,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "1:18",
-      "wc": "Unknown",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 296: Edwards vs. Covington"
     },
@@ -40698,7 +40698,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Unknown",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 286: Edwards vs. Usman 3"
     },
@@ -40709,7 +40709,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Unknown",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 271: Adesanya vs. Whittaker 2"
     },
@@ -40720,7 +40720,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "4:47",
-      "wc": "Unknown",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Santos vs. Walker"
     },
@@ -40731,7 +40731,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 3,
       "ti": "2:54",
-      "wc": "Unknown",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Jung vs. Ige"
     },
@@ -40742,7 +40742,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "3:41",
-      "wc": "Unknown",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Blaydes vs. Lewis"
     }
@@ -40755,7 +40755,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "3:11",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Adesanya vs. Pyfer"
     },
@@ -40766,7 +40766,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Dolidze vs. Hernandez"
     },
@@ -40777,7 +40777,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "3:49",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Yan vs. Figueiredo"
     },
@@ -40788,7 +40788,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Perez vs. Taira"
     },
@@ -40799,7 +40799,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Vettori vs. Cannonier"
     },
@@ -40810,7 +40810,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Muniz vs. Allen"
     }
@@ -41012,7 +41012,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Adesanya vs. Pyfer"
     },
@@ -41023,7 +41023,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Bautista vs. Oliveira"
     },
@@ -41034,7 +41034,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC - Road to UFC 4.6"
     },
@@ -41045,7 +41045,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 312: Du Plessis vs. Strickland 2"
     },
@@ -41056,7 +41056,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 304: Edwards vs. Muhammad 2"
     },
@@ -41067,7 +41067,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Hermansson vs. Pyfer"
     },
@@ -41078,7 +41078,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Aspinall vs. Tybura"
     },
@@ -41089,7 +41089,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "2:42",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Holloway vs. Allen"
     }
@@ -42078,7 +42078,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "1:17",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Evloev vs. Murphy"
     }
@@ -42326,7 +42326,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Emmett vs. Vallejos"
     },
@@ -42337,7 +42337,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "2:07",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Sandhagen vs. Figueiredo"
     },
@@ -42348,7 +42348,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Magny vs. Prates"
     },
@@ -42359,7 +42359,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 303: Pereira vs. Prochazka 2"
     },
@@ -42370,7 +42370,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "3:12",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 297: Strickland vs. Du Plessis"
     },
@@ -42381,7 +42381,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Emmett vs. Topuria"
     },
@@ -42392,7 +42392,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "4:21",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Holloway vs. Allen"
     },
@@ -42403,7 +42403,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "2:19",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Sandhagen vs. Song"
     },
@@ -42414,7 +42414,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Santos vs. Ankalaev"
     },
@@ -42425,7 +42425,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "4:59",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 269: Oliveira vs. Poirier"
     },
@@ -42436,7 +42436,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 260: Miocic vs. Ngannou"
     },
@@ -42447,7 +42447,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Thompson vs. Neal"
     },
@@ -42458,7 +42458,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Ortega vs. The Korean Zombie"
     },
@@ -42469,7 +42469,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 3,
       "ti": "4:36",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Blaydes vs. Volkov"
     },
@@ -42480,7 +42480,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "3:04",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Reyes vs. Weidman"
     },
@@ -42491,7 +42491,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "4:13",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 240: Holloway vs. Edgar"
     },
@@ -42502,7 +42502,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "3:27",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Blachowicz vs. Santos"
     },
@@ -42513,7 +42513,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "4:55",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Marreta vs. Anders"
     },
@@ -42524,7 +42524,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "2:05",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Thompson vs. Till"
     },
@@ -42535,7 +42535,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "2:12",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "The Ultimate Fighter: A New World Champion Finale"
     }
@@ -43661,7 +43661,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Emmett vs. Vallejos"
     },
@@ -43672,7 +43672,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Taira vs. Park"
     },
@@ -43683,7 +43683,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Covington vs. Buckley"
     },
@@ -43694,7 +43694,7 @@ export const FIGHT_HISTORY = {
       "me": "DQ",
       "rn": 2,
       "ti": "3:16",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Barboza vs. Murphy"
     },
@@ -43705,7 +43705,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "4:21",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Holloway vs. Allen"
     },
@@ -43716,7 +43716,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Grasso vs. Araujo"
     },
@@ -43727,7 +43727,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 273: Volkanovski vs. The Korean Zombie"
     }
@@ -43740,7 +43740,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Emmett vs. Vallejos"
     },
@@ -43751,7 +43751,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "1:58",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Imavov vs. Borralho"
     },
@@ -43762,7 +43762,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Vettori vs. Dolidze 2"
     },
@@ -43773,7 +43773,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Sandhagen vs. Nurmagomedov"
     },
@@ -43784,7 +43784,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Moreno vs. Royval 2"
     },
@@ -43795,7 +43795,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 287: Pereira vs. Adesanya 2"
     },
@@ -43806,7 +43806,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Grasso vs. Araujo"
     },
@@ -43817,7 +43817,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 3,
       "ti": "3:52",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Holm vs. Vieira"
     },
@@ -43828,7 +43828,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Majority",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Luque vs. Muhammad"
     },
@@ -43839,7 +43839,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Vieira vs. Tate"
     },
@@ -43850,7 +43850,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Reyes vs. Prochazka"
     },
@@ -43861,7 +43861,7 @@ export const FIGHT_HISTORY = {
       "me": "TKO - Doctor's Stoppage",
       "rn": 1,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 256: Figueiredo vs. Moreno"
     }
@@ -46099,7 +46099,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Moreno vs. Kavanagh"
     },
@@ -46110,7 +46110,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 311: Makhachev vs. Moicano"
     },
@@ -46121,7 +46121,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "3:52",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Moicano vs. Saint Denis"
     },
@@ -46132,7 +46132,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 302: Makhachev vs. Poirier"
     },
@@ -46143,7 +46143,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Allen vs. Craig"
     },
@@ -46154,7 +46154,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Holm vs. Bueno Silva"
     },
@@ -46165,7 +46165,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "4:54",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Gane vs. Tuivasa"
     }
@@ -46178,7 +46178,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Moreno vs. Kavanagh"
     },
@@ -46189,7 +46189,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 320: Ankalaev vs. Pereira 2"
     },
@@ -46200,7 +46200,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Blanchfield vs. Barber"
     },
@@ -46211,7 +46211,7 @@ export const FIGHT_HISTORY = {
       "me": "TKO - Doctor's Stoppage",
       "rn": 2,
       "ti": "1:58",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 303: Pereira vs. Prochazka 2"
     },
@@ -46222,7 +46222,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "3:54",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Tuivasa vs. Tybura"
     },
@@ -46233,7 +46233,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 3,
       "ti": "2:21",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 279: Diaz vs. Ferguson"
     },
@@ -46244,7 +46244,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 274: Oliveira vs. Gaethje"
     },
@@ -46255,7 +46255,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "3:07",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Lewis vs. Daukaus"
     },
@@ -46266,7 +46266,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Brunson vs. Holland"
     },
@@ -46277,7 +46277,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Anderson vs. Blachowicz"
     },
@@ -46288,7 +46288,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Hermansson vs. Cannonier"
     },
@@ -46299,7 +46299,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "2:22",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Iaquinta vs. Cowboy"
     },
@@ -46310,7 +46310,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "1:49",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 235: Jones vs. Smith"
     },
@@ -46321,7 +46321,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "2:11",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "The Ultimate Fighter: Heavy Hitters Finale"
     }
@@ -46595,7 +46595,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Moreno vs. Kavanagh"
     },
@@ -46606,7 +46606,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Dern vs. Ribas 2"
     },
@@ -46617,7 +46617,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 301: Pantoja vs. Erceg"
     }
@@ -47765,7 +47765,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "2:44",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Strickland vs. Hernandez"
     },
@@ -47776,7 +47776,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Taira vs. Park"
     },
@@ -47787,7 +47787,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "1:52",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 314: Volkanovski vs. Lopes"
     },
@@ -47798,7 +47798,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Moicano vs. Saint Denis"
     },
@@ -47809,7 +47809,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "3:06",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Allen vs. Curtis 2"
     },
@@ -47820,7 +47820,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Gane vs. Spivac"
     }
@@ -48158,7 +48158,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Strickland vs. Hernandez"
     },
@@ -48169,7 +48169,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 3,
       "ti": "1:30",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 318: Holloway vs. Poirier 3"
     },
@@ -48180,7 +48180,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "1:40",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Vettori vs. Dolidze 2"
     },
@@ -48191,7 +48191,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Perez vs. Taira"
     }
@@ -48940,7 +48940,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Bautista vs. Oliveira"
     },
@@ -48951,7 +48951,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Lewis vs. Teixeira"
     },
@@ -48962,7 +48962,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 309: Jones vs. Miocic"
     },
@@ -48973,7 +48973,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Cannonier vs. Imavov"
     },
@@ -48984,7 +48984,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "2:14",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Almeida vs. Lewis"
     }
@@ -49078,7 +49078,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Bautista vs. Oliveira"
     },
@@ -49089,7 +49089,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Hill vs. Rountree Jr."
     },
@@ -49100,7 +49100,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "1:20",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Magny vs. Prates"
     }
@@ -49905,7 +49905,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC - Road to UFC 4.6"
     },
@@ -49916,7 +49916,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 3,
       "ti": "0:46",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Yan vs. Figueiredo"
     }
@@ -49942,7 +49942,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 324: Gaethje vs. Pimblett"
     },
@@ -49953,7 +49953,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 315: Muhammad vs. Della Maddalena"
     },
@@ -49964,7 +49964,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Burns vs. Brady"
     },
@@ -49975,7 +49975,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Dolidze vs. Imavov"
     },
@@ -49986,7 +49986,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 292: Sterling vs. O'Malley"
     },
@@ -49997,7 +49997,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "2:58",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Dern vs. Hill"
     },
@@ -50008,7 +50008,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 3,
       "ti": "1:27",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Nzechukwu vs. Cutelaba"
     },
@@ -50019,7 +50019,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Kattar vs. Emmett"
     }
@@ -50032,7 +50032,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 324: Gaethje vs. Pimblett"
     },
@@ -50043,7 +50043,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Usman vs. Buckley"
     },
@@ -50054,7 +50054,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 5,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Moreno vs. Albazi"
     },
@@ -50065,7 +50065,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 5,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Namajunas vs. Cortez"
     },
@@ -50076,7 +50076,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 5,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Ribas vs. Namajunas"
     },
@@ -50087,7 +50087,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Gane vs. Spivac"
     },
@@ -50098,7 +50098,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 5,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 274: Oliveira vs. Gaethje"
     },
@@ -50109,7 +50109,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 5,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 268: Usman vs. Covington 2"
     },
@@ -50120,7 +50120,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "1:18",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 261: Usman vs. Masvidal 2"
     },
@@ -50131,7 +50131,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 251: Usman vs. Masvidal"
     },
@@ -50142,7 +50142,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "2:58",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 237: Namajunas vs. Andrade"
     },
@@ -50153,7 +50153,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 5,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 223: Khabib vs. Iaquinta"
     },
@@ -50164,7 +50164,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "3:03",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 217: Bisping vs. St-Pierre"
     },
@@ -50175,7 +50175,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "2:47",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC on FOX: Johnson vs. Reis"
     },
@@ -50186,7 +50186,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 201: Lawler vs. Woodley"
     },
@@ -50197,7 +50197,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC on FOX: Teixeira vs Evans"
     },
@@ -50208,7 +50208,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 5,
       "ti": "2:25",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Namajunas vs. VanZant"
     },
@@ -50219,7 +50219,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "2:47",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 192: Cormier vs Gustafsson"
     },
@@ -50230,7 +50230,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 3,
       "ti": "1:26",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "The Ultimate Fighter: A Champion Will Be Crowned Finale"
     }
@@ -51277,7 +51277,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "2:05",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Royval vs. Kape"
     },
@@ -51288,7 +51288,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Vettori vs. Cannonier"
     },
@@ -51299,7 +51299,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 3,
       "ti": "1:27",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Nzechukwu vs. Cutelaba"
     }
@@ -54284,7 +54284,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 5,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 322: Della Maddalena vs. Makhachev"
     },
@@ -54295,7 +54295,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 5,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 312: Du Plessis vs. Strickland 2"
     },
@@ -54306,7 +54306,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 5,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 300: Pereira vs. Hill"
     },
@@ -54317,7 +54317,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 5,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 292: Sterling vs. O'Malley"
     },
@@ -54328,7 +54328,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "1:05",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 281: Adesanya vs. Pereira"
     },
@@ -54339,7 +54339,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "2:28",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 275: Teixeira vs. Prochazka"
     },
@@ -54350,7 +54350,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 5,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 268: Usman vs. Covington 2"
     },
@@ -54361,7 +54361,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "1:18",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 261: Usman vs. Masvidal 2"
     },
@@ -54372,7 +54372,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 5,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 248: Adesanya vs. Romero"
     },
@@ -54383,7 +54383,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "0:42",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Andrade vs. Zhang"
     },
@@ -54394,7 +54394,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 235: Jones vs. Smith"
     },
@@ -54405,7 +54405,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "3:41",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Blaydes vs. Ngannou 2"
     },
@@ -54416,7 +54416,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 227: Dillashaw vs. Garbrandt 2"
     }
@@ -54730,7 +54730,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "4:44",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 322: Della Maddalena vs. Makhachev"
     },
@@ -54741,7 +54741,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 5,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Moreno vs. Albazi"
     },
@@ -54752,7 +54752,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 5,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Blanchfield vs. Fiorot"
     },
@@ -54763,7 +54763,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Holloway vs. The Korean Zombie"
     },
@@ -54774,7 +54774,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "1:37",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Andrade vs. Blanchfield"
     },
@@ -54785,7 +54785,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "3:37",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 281: Adesanya vs. Pereira"
     },
@@ -54796,7 +54796,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "2:38",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Volkov vs. Rozenstruik"
     },
@@ -54807,7 +54807,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 269: Oliveira vs. Poirier"
     },
@@ -54818,7 +54818,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Smith vs. Spann"
     }
@@ -55338,7 +55338,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Bonfim vs. Brown"
     },
@@ -55349,7 +55349,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Burns vs. Morales"
     },
@@ -55360,7 +55360,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 307: Pereira vs. Rountree Jr."
     },
@@ -55371,7 +55371,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Lewis vs. Nascimento"
     },
@@ -55382,7 +55382,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 273: Volkanovski vs. The Korean Zombie"
     },
@@ -55393,7 +55393,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 265: Lewis vs. Gane"
     },
@@ -55404,7 +55404,7 @@ export const FIGHT_HISTORY = {
       "me": "TKO - Doctor's Stoppage",
       "rn": 1,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 256: Figueiredo vs. Moreno"
     },
@@ -55415,7 +55415,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Blaydes vs. Volkov"
     },
@@ -55426,7 +55426,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Shevchenko vs. Carmouche 2"
     },
@@ -55437,7 +55437,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 235: Jones vs. Smith"
     },
@@ -55448,7 +55448,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Alvarez vs. Poirier 2"
     },
@@ -55459,7 +55459,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Emmett vs. Stephens"
     },
@@ -55470,7 +55470,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 218: Holloway vs. Aldo 2"
     },
@@ -55481,7 +55481,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "0:53",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "The Ultimate Fighter: Redemption Finale"
     },
@@ -55492,7 +55492,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Bermudez vs. The Korean Zombie"
     },
@@ -55503,7 +55503,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC on FOX: Teixeira vs Evans"
     },
@@ -55514,7 +55514,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 194: Aldo vs McGregor"
     },
@@ -55525,7 +55525,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 188: Velasquez vs Werdum"
     },
@@ -55536,7 +55536,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "The Ultimate Fighter: A Champion Will Be Crowned Finale"
     }
@@ -55549,7 +55549,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Bonfim vs. Brown"
     },
@@ -55560,7 +55560,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "0:30",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Burns vs. Morales"
     },
@@ -55571,7 +55571,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Magny vs. Prates"
     },
@@ -55582,7 +55582,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Cannonier vs. Imavov"
     },
@@ -55593,7 +55593,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Almeida vs. Lewis"
     },
@@ -55604,7 +55604,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "0:20",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 290: Volkanovski vs. Rodriguez"
     },
@@ -55615,7 +55615,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "2:42",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Holloway vs. Allen"
     },
@@ -55626,7 +55626,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Sandhagen vs. Song"
     }
@@ -56003,7 +56003,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Garcia vs. Onama"
     },
@@ -56014,7 +56014,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "2:14",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Almeida vs. Lewis"
     },
@@ -56025,7 +56025,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 3,
       "ti": "3:41",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Luque vs. Dos Anjos"
     },
@@ -56036,7 +56036,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "0:35",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Makhachev vs. Moises"
     },
@@ -56047,7 +56047,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Brunson vs. Holland"
     }
@@ -56172,7 +56172,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 5,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 321: Aspinall vs. Gane"
     },
@@ -56183,7 +56183,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 3,
       "ti": "4:56",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Dern vs. Ribas 2"
     },
@@ -56194,7 +56194,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Sandhagen vs. Nurmagomedov"
     },
@@ -56205,7 +56205,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 298: Volkanovski vs. Topuria"
     },
@@ -56216,7 +56216,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "3:15",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 295: Prochazka vs. Pereira"
     },
@@ -56227,7 +56227,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 5,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Dern vs. Hill"
     },
@@ -56238,7 +56238,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Majority",
       "rn": 5,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Dern vs. Yan"
     },
@@ -56249,7 +56249,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 273: Volkanovski vs. The Korean Zombie"
     },
@@ -56260,7 +56260,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 5,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Dern vs. Rodriguez"
     },
@@ -56271,7 +56271,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "4:48",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Vettori vs. Holland"
     },
@@ -56282,7 +56282,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 256: Figueiredo vs. Moreno"
     },
@@ -56293,7 +56293,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "3:44",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Covington vs. Woodley"
     },
@@ -56304,7 +56304,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "2:36",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Woodley vs. Burns"
     },
@@ -56315,7 +56315,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Joanna vs. Waterson"
     },
@@ -56326,7 +56326,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "2:27",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 224: Nunes vs. Pennington"
     },
@@ -56337,7 +56337,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 222: Cyborg vs. Kunitskaya"
     }
@@ -56822,7 +56822,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 321: Aspinall vs. Gane"
     },
@@ -56833,7 +56833,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Fiziev vs. Gamrot"
     },
@@ -56844,7 +56844,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Munhoz vs. Edgar"
     },
@@ -56855,7 +56855,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Andrade vs. Zhang"
     }
@@ -56868,7 +56868,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "1:14",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: De Ridder vs. Allen"
     },
@@ -56879,7 +56879,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 5,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 315: Muhammad vs. Della Maddalena"
     },
@@ -56890,7 +56890,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 5,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Blanchfield vs. Fiorot"
     },
@@ -56901,7 +56901,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Gane vs. Spivac"
     },
@@ -56912,7 +56912,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 280: Oliveira vs. Makhachev"
     },
@@ -56923,7 +56923,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Blaydes vs. Daukaus"
     },
@@ -56934,7 +56934,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Ladd vs. Dumont"
     },
@@ -56945,7 +56945,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "3:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Rozenstruik vs. Sakai"
     },
@@ -56956,7 +56956,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "4:08",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Chiesa vs. Magny"
     }
@@ -57206,7 +57206,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 3,
       "ti": "4:32",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: De Ridder vs. Allen"
     },
@@ -57217,7 +57217,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "4:59",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Burns vs. Morales"
     },
@@ -57228,7 +57228,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Yusuff vs. Barboza"
     },
@@ -57239,7 +57239,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 3,
       "ti": "4:20",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Rozenstruik vs. Almeida"
     }
@@ -57544,7 +57544,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "2:14",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Oliveira vs. Gamrot"
     },
@@ -57555,7 +57555,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Hill vs. Rountree Jr."
     },
@@ -57566,7 +57566,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Yusuff vs. Barboza"
     },
@@ -57577,7 +57577,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "2:11",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Song vs. Simon"
     }
@@ -57614,7 +57614,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 3,
       "ti": "2:56",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Oliveira vs. Gamrot"
     },
@@ -57625,7 +57625,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Magny vs. Prates"
     },
@@ -57636,7 +57636,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 301: Pantoja vs. Erceg"
     },
@@ -57647,7 +57647,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Dawson vs. Green"
     },
@@ -57658,7 +57658,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Dern vs. Hill"
     },
@@ -57669,7 +57669,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 281: Adesanya vs. Pereira"
     },
@@ -57680,7 +57680,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "4:01",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Volkov vs. Rozenstruik"
     },
@@ -57691,7 +57691,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "4:32",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 265: Lewis vs. Gane"
     },
@@ -57702,7 +57702,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Felder vs. Hooker"
     },
@@ -57713,7 +57713,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 238: Cejudo vs. Moraes"
     },
@@ -57724,7 +57724,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Barboza vs. Gaethje"
     },
@@ -57735,7 +57735,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "1:58",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 228: Woodley vs. Till"
     },
@@ -57746,7 +57746,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 223: Khabib vs. Iaquinta"
     },
@@ -57757,7 +57757,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Cerrone vs. Till"
     },
@@ -57768,7 +57768,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "3:03",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 212: Aldo vs. Holloway"
     },
@@ -57779,7 +57779,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 5,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 205: Alvarez vs McGregor"
     },
@@ -57790,7 +57790,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 201: Lawler vs. Woodley"
     },
@@ -57801,7 +57801,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Overeem vs Arlovski"
     },
@@ -57812,7 +57812,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC on FOX: Dos Anjos vs. Cowboy 2"
     }
@@ -58071,7 +58071,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "1:41",
-      "wc": "Unknown",
+      "wc": "Middleweight",
       "tb": false,
       "ev": "UFC 320: Ankalaev vs. Pereira 2"
     }
@@ -58244,7 +58244,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 320: Ankalaev vs. Pereira 2"
     },
@@ -58255,7 +58255,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Sandhagen vs. Figueiredo"
     },
@@ -58266,7 +58266,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Tybura vs. Spivac 2"
     },
@@ -58277,7 +58277,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Strickland vs. Magomedov"
     },
@@ -58288,7 +58288,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Vera vs. Sandhagen"
     },
@@ -58299,7 +58299,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "4:35",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 264: Poirier vs. McGregor 3"
     },
@@ -58310,7 +58310,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Blaydes vs. Lewis"
     },
@@ -58321,7 +58321,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Lewis vs. Oleinik"
     },
@@ -58332,7 +58332,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 3,
       "ti": "0:33",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Overeem vs. Rozenstruik"
     },
@@ -58343,7 +58343,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Lewis vs. Dos Santos"
     },
@@ -58354,7 +58354,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 229: Khabib vs. McGregor"
     },
@@ -58365,7 +58365,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "3:25",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 222: Cyborg vs. Kunitskaya"
     }
@@ -58569,7 +58569,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 320: Ankalaev vs. Pereira 2"
     },
@@ -58580,7 +58580,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 309: Jones vs. Miocic"
     },
@@ -58591,7 +58591,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Lewis vs. Nascimento"
     },
@@ -58602,7 +58602,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Dariush vs. Tsarukyan"
     },
@@ -58613,7 +58613,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 286: Edwards vs. Usman 3"
     },
@@ -58624,7 +58624,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Lee vs. Oliveira"
     },
@@ -58635,7 +58635,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "1:09",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Shevchenko vs. Carmouche 2"
     },
@@ -58646,7 +58646,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "3:27",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Blachowicz vs. Santos"
     },
@@ -58657,7 +58657,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Maia vs. Usman"
     },
@@ -58668,7 +58668,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 3,
       "ti": "2:46",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Arlovski vs. Barnett"
     }
@@ -58681,7 +58681,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 320: Ankalaev vs. Pereira 2"
     },
@@ -58692,7 +58692,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Pavlovich vs. Blaydes"
     },
@@ -58703,7 +58703,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 3,
       "ti": "3:57",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Santos vs. Hill"
     }
@@ -59023,7 +59023,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Ulberg vs. Reyes"
     },
@@ -59034,7 +59034,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Lemos vs. Jandiroba"
     },
@@ -59045,7 +59045,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 3,
       "ti": "4:52",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Dolidze vs. Imavov"
     },
@@ -59056,7 +59056,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Strickland vs. Magomedov"
     },
@@ -59067,7 +59067,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 286: Edwards vs. Usman 3"
     },
@@ -59078,7 +59078,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 3,
       "ti": "1:52",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Volkov vs. Aspinall"
     },
@@ -59089,7 +59089,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Ladd vs. Dumont"
     },
@@ -59100,7 +59100,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Reyes vs. Prochazka"
     },
@@ -59111,7 +59111,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "1:28",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Figueiredo vs. Benavidez 2"
     },
@@ -59122,7 +59122,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 237: Namajunas vs. Andrade"
     }
@@ -60298,7 +60298,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 319: Du Plessis vs. Chimaev"
     },
@@ -60309,7 +60309,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "2:40",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 315: Muhammad vs. Della Maddalena"
     },
@@ -60320,7 +60320,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Burns vs. Brady"
     },
@@ -60331,7 +60331,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 300: Pereira vs. Hill"
     },
@@ -60342,7 +60342,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "3:15",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 295: Prochazka vs. Pereira"
     },
@@ -60353,7 +60353,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "1:31",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Sandhagen vs. Font"
     },
@@ -60364,7 +60364,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "2:20",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 288: Sterling vs. Cejudo"
     },
@@ -60375,7 +60375,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "1:37",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Andrade vs. Blanchfield"
     },
@@ -60386,7 +60386,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 283: Teixeira vs. Hill"
     },
@@ -60397,7 +60397,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "3:13",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Lemos vs. Andrade"
     },
@@ -60408,7 +60408,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "4:54",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 266: Volkanovski vs. Ortega"
     },
@@ -60419,7 +60419,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "3:19",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 261: Usman vs. Masvidal 2"
     },
@@ -60430,7 +60430,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "4:55",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Ortega vs. The Korean Zombie"
     },
@@ -60441,7 +60441,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 251: Usman vs. Masvidal"
     },
@@ -60452,7 +60452,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "0:42",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Andrade vs. Zhang"
     },
@@ -60463,7 +60463,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "2:58",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 237: Namajunas vs. Andrade"
     },
@@ -60474,7 +60474,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "1:58",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 228: Woodley vs. Till"
     },
@@ -60485,7 +60485,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Emmett vs. Stephens"
     },
@@ -60496,7 +60496,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Saint Preux vs. Okami"
     },
@@ -60507,7 +60507,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 5,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 211: Miocic vs. Dos Santos"
     },
@@ -60518,7 +60518,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Bermudez vs. The Korean Zombie"
     },
@@ -60529,7 +60529,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "4:38",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 203: Miocic vs. Overeem"
     },
@@ -60540,7 +60540,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "2:56",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 199: Rockhold vs. Bisping 2"
     },
@@ -60551,7 +60551,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "4:58",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 191: Johnson vs Dodson 2"
     },
@@ -60562,7 +60562,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Mir vs Duffee"
     },
@@ -60573,7 +60573,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "1:54",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Bigfoot vs Mir"
     },
@@ -60584,7 +60584,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "4:33",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Bigfoot vs Arlovski"
     },
@@ -60595,7 +60595,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 171: Hendricks vs Lawler"
     },
@@ -60606,7 +60606,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Machida vs Munoz"
     },
@@ -60617,7 +60617,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "3:57",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC on FOX: Johnson vs Moraga"
     }
@@ -60775,7 +60775,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Dolidze vs. Hernandez"
     },
@@ -60786,7 +60786,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 313: Pereira vs. Ankalaev"
     },
@@ -60797,7 +60797,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 307: Pereira vs. Rountree Jr."
     },
@@ -60808,7 +60808,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 301: Pantoja vs. Erceg"
     },
@@ -60819,7 +60819,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "3:42",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Luque vs. Dos Anjos"
     },
@@ -60830,7 +60830,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Pavlovich vs. Blaydes"
     },
@@ -60841,7 +60841,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Vera vs. Cruz"
     }
@@ -60935,7 +60935,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Dolidze vs. Hernandez"
     },
@@ -60946,7 +60946,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 3,
       "ti": "4:52",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Dolidze vs. Imavov"
     },
@@ -60957,7 +60957,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "1:55",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Aspinall vs. Tybura"
     },
@@ -60968,7 +60968,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "4:15",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Dern vs. Yan"
     },
@@ -60979,7 +60979,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "0:42",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 276: Adesanya vs. Cannonier"
     },
@@ -60990,7 +60990,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Hermansson vs. Strickland"
     },
@@ -61001,7 +61001,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 3,
       "ti": "4:19",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Gane vs. Volkov"
     },
@@ -61012,7 +61012,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Lewis vs. Oleinik"
     },
@@ -61023,7 +61023,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "The Ultimate Fighter: Heavy Hitters Finale"
     }
@@ -61543,7 +61543,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Unknown",
+      "wc": "Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Whittaker vs. De Ridder"
     },
@@ -61554,7 +61554,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Unknown",
+      "wc": "Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Machado Garry vs. Prates"
     },
@@ -61565,7 +61565,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "4:09",
-      "wc": "Unknown",
+      "wc": "Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Vettori vs. Dolidze 2"
     },
@@ -61576,7 +61576,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "4:19",
-      "wc": "Unknown",
+      "wc": "Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Magny vs. Prates"
     },
@@ -61587,7 +61587,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "0:18",
-      "wc": "Unknown",
+      "wc": "Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Namajunas vs. Cortez"
     },
@@ -61598,7 +61598,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Unknown",
+      "wc": "Bantamweight",
       "tb": false,
       "ev": "UFC 292: Sterling vs. O'Malley"
     },
@@ -61609,7 +61609,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "3:47",
-      "wc": "Unknown",
+      "wc": "Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Luque vs. Dos Anjos"
     },
@@ -61620,7 +61620,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "3:54",
-      "wc": "Unknown",
+      "wc": "Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Kara-France vs. Albazi"
     },
@@ -61631,7 +61631,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Unknown",
+      "wc": "Bantamweight",
       "tb": false,
       "ev": "UFC 285: Jones vs. Gane"
     },
@@ -61642,7 +61642,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Majority",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Unknown",
+      "wc": "Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Vera vs. Cruz"
     }
@@ -61655,7 +61655,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "2:59",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Whittaker vs. De Ridder"
     },
@@ -61666,7 +61666,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 3,
       "ti": "4:56",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Dern vs. Ribas 2"
     },
@@ -61677,7 +61677,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 5,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Ribas vs. Namajunas"
     },
@@ -61688,7 +61688,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 3,
       "ti": "3:53",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Allen vs. Craig"
     },
@@ -61699,7 +61699,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "3:42",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Emmett vs. Topuria"
     },
@@ -61710,7 +61710,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 285: Jones vs. Gane"
     },
@@ -61721,7 +61721,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Blachowicz vs. Rakic"
     },
@@ -61732,7 +61732,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 267: Blachowicz vs. Teixeira"
     },
@@ -61743,7 +61743,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "0:54",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 257: Poirier vs. McGregor"
     },
@@ -61754,7 +61754,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "2:21",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 251: Usman vs. Masvidal"
     },
@@ -61765,7 +61765,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Lee vs. Oliveira"
     },
@@ -61776,7 +61776,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Joanna vs. Waterson"
     },
@@ -61787,7 +61787,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "2:10",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Ngannou vs. Dos Santos"
     }
@@ -62953,7 +62953,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Lewis vs. Teixeira"
     },
@@ -62964,7 +62964,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 283: Teixeira vs. Hill"
     },
@@ -62975,7 +62975,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Ortega vs. Rodriguez"
     },
@@ -62986,7 +62986,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 4,
       "ti": "4:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 266: Volkanovski vs. Ortega"
     },
@@ -62997,7 +62997,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 263: Adesanya vs. Vettori 2"
     },
@@ -63008,7 +63008,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "3:31",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 254: Khabib vs. Gaethje"
     },
@@ -63019,7 +63019,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Blaydes vs. Volkov"
     },
@@ -63030,7 +63030,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 247: Jones vs. Reyes"
     },
@@ -63041,7 +63041,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 3,
       "ti": "1:46",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Covington vs. Lawler"
     },
@@ -63052,7 +63052,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Rivera vs. Moraes"
     },
@@ -63063,7 +63063,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "The Ultimate Fighter: A New World Champion Finale"
     },
@@ -63074,7 +63074,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: McDonald vs. Lineker"
     },
@@ -63085,7 +63085,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 3,
       "ti": "4:55",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Cowboy vs Cowboy"
     },
@@ -63096,7 +63096,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Mendes vs Lamas"
     },
@@ -63107,7 +63107,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Bader vs Saint Preux"
     }
@@ -63120,7 +63120,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 3,
       "ti": "2:36",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Lewis vs. Teixeira"
     },
@@ -63131,7 +63131,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Hernandez vs. Pereira"
     },
@@ -63142,7 +63142,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 279: Diaz vs. Ferguson"
     }
@@ -63335,7 +63335,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 317: Topuria vs. Oliveira"
     },
@@ -63346,7 +63346,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 309: Jones vs. Miocic"
     },
@@ -63357,7 +63357,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Dolidze vs. Imavov"
     },
@@ -63368,7 +63368,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Yusuff vs. Barboza"
     },
@@ -63379,7 +63379,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 285: Jones vs. Gane"
     },
@@ -63390,7 +63390,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 5,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Grasso vs. Araujo"
     },
@@ -63401,7 +63401,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Blachowicz vs. Rakic"
     },
@@ -63412,7 +63412,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 262: Oliveira vs. Chandler"
     },
@@ -63423,7 +63423,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Chiesa vs. Magny"
     },
@@ -63434,7 +63434,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Overeem vs. Sakai"
     },
@@ -63445,7 +63445,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 245: Usman vs. Covington"
     },
@@ -63456,7 +63456,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 240: Holloway vs. Edgar"
     },
@@ -63467,7 +63467,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 3,
       "ti": "0:48",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 237: Namajunas vs. Andrade"
     }
@@ -63750,7 +63750,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Usman vs. Buckley"
     },
@@ -63761,7 +63761,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Covington vs. Buckley"
     },
@@ -63772,7 +63772,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Lemos vs. Jandiroba"
     },
@@ -63783,7 +63783,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 298: Volkanovski vs. Topuria"
     },
@@ -63794,7 +63794,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 3,
       "ti": "2:11",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 291: Poirier vs. Gaethje 2"
     },
@@ -63805,7 +63805,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 289: Nunes vs. Aldana"
     },
@@ -63816,7 +63816,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Rodriguez vs. Lemos"
     },
@@ -63827,7 +63827,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "2:15",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Santos vs. Ankalaev"
     },
@@ -63838,7 +63838,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 269: Oliveira vs. Poirier"
     },
@@ -63849,7 +63849,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Sandhagen vs. Dillashaw"
     },
@@ -63860,7 +63860,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 260: Miocic vs. Ngannou"
     },
@@ -63871,7 +63871,7 @@ export const FIGHT_HISTORY = {
       "me": "TKO - Doctor's Stoppage",
       "rn": 1,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 254: Khabib vs. Gaethje"
     }
@@ -64218,7 +64218,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Usman vs. Buckley"
     },
@@ -64229,7 +64229,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Emmett vs. Murphy"
     },
@@ -64240,7 +64240,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "3:28",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Burns vs. Brady"
     },
@@ -64251,7 +64251,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Barboza vs. Murphy"
     },
@@ -64262,7 +64262,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Dawson vs. Green"
     },
@@ -64273,7 +64273,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Dern vs. Hill"
     },
@@ -64284,7 +64284,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Nzechukwu vs. Cutelaba"
     },
@@ -64295,7 +64295,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Tsarukyan vs. Gamrot"
     },
@@ -64306,7 +64306,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "2:25",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 270: Ngannou vs. Gane"
     },
@@ -64317,7 +64317,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Barboza vs. Chikadze"
     }
@@ -64330,7 +64330,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "4:55",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 316: Dvalishvili vs. O'Malley 2"
     },
@@ -64341,7 +64341,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 5,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 307: Pereira vs. Rountree Jr."
     },
@@ -64352,7 +64352,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 5,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 277: Pena vs. Nunes 2"
     },
@@ -64363,7 +64363,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "3:26",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 269: Oliveira vs. Poirier"
     },
@@ -64374,7 +64374,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 3,
       "ti": "3:39",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 257: Poirier vs. McGregor"
     },
@@ -64385,7 +64385,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 3,
       "ti": "3:25",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Holm vs. Aldana"
     },
@@ -64396,7 +64396,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: De Randamie vs. Ladd"
     },
@@ -64407,7 +64407,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "4:29",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC on FOX: Shevchenko vs. Pena"
     },
@@ -64418,7 +64418,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 200: Tate vs Nunes"
     },
@@ -64429,7 +64429,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 192: Cormier vs Gustafsson"
     },
@@ -64440,7 +64440,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "3:59",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Mendes vs Lamas"
     },
@@ -64451,7 +64451,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "4:59",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "The Ultimate Fighter: Team Rousey vs. Team Tate Finale"
     }
@@ -64464,7 +64464,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "4:55",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 316: Dvalishvili vs. O'Malley 2"
     },
@@ -64475,7 +64475,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 307: Pereira vs. Rountree Jr."
     },
@@ -64486,7 +64486,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "1:47",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 300: Pereira vs. Hill"
     }
@@ -64499,7 +64499,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 316: Dvalishvili vs. O'Malley 2"
     },
@@ -64510,7 +64510,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 3,
       "ti": "2:28",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Moreno vs. Albazi"
     },
@@ -64521,7 +64521,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Nicolau vs. Perez"
     },
@@ -64532,7 +64532,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "1:18",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 296: Edwards vs. Covington"
     },
@@ -64543,7 +64543,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Strickland vs. Magomedov"
     },
@@ -64554,7 +64554,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Yan vs. Dvalishvili"
     },
@@ -64565,7 +64565,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "1:05",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Vera vs. Cruz"
     },
@@ -64576,7 +64576,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Smith vs. Spann"
     },
@@ -64587,7 +64587,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "4:27",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Rozenstruik vs. Sakai"
     },
@@ -64598,7 +64598,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "4:33",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 255: Figueiredo vs. Perez"
     },
@@ -64609,7 +64609,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "1:28",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Figueiredo vs. Benavidez 2"
     },
@@ -64620,7 +64620,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Blachowicz vs. Jacare"
     },
@@ -64631,7 +64631,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Moicano vs. The Korean Zombie"
     },
@@ -64642,7 +64642,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Cejudo vs. Dillashaw"
     }
@@ -64861,7 +64861,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Blanchfield vs. Barber"
     },
@@ -64872,7 +64872,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Cannonier vs. Imavov"
     },
@@ -64883,7 +64883,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Song vs. Gutierrez"
     }
@@ -65190,7 +65190,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Burns vs. Morales"
     },
@@ -65201,7 +65201,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Magny vs. Prates"
     },
@@ -65212,7 +65212,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "4:12",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Barboza vs. Murphy"
     },
@@ -65223,7 +65223,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 3,
       "ti": "3:53",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Allen vs. Craig"
     },
@@ -65234,7 +65234,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 287: Pereira vs. Adesanya 2"
     },
@@ -65245,7 +65245,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Vieira vs. Tate"
     },
@@ -65256,7 +65256,7 @@ export const FIGHT_HISTORY = {
       "me": "DQ",
       "rn": 1,
       "ti": "4:16",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Reyes vs. Prochazka"
     }
@@ -65706,7 +65706,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Sandhagen vs. Figueiredo"
     },
@@ -65717,7 +65717,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 3,
       "ti": "1:15",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Dariush vs. Tsarukyan"
     },
@@ -65728,7 +65728,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Ortega vs. Rodriguez"
     },
@@ -65739,7 +65739,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 5,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Vieira vs. Tate"
     },
@@ -65750,7 +65750,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 3,
       "ti": "1:53",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Makhachev vs. Moises"
     },
@@ -65761,7 +65761,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 205: Alvarez vs McGregor"
     },
@@ -65772,7 +65772,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "3:16",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 200: Tate vs Nunes"
     },
@@ -65783,7 +65783,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 5,
       "ti": "3:30",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 196: McGregor vs Diaz"
     },
@@ -65794,7 +65794,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC on FOX: Dillashaw vs. Barao II"
     },
@@ -65805,7 +65805,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Majority",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 183: Silva vs Diaz"
     },
@@ -65816,7 +65816,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Hunt vs Nelson"
     },
@@ -65827,7 +65827,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC on FOX: Werdum vs Browne"
     },
@@ -65838,7 +65838,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 3,
       "ti": "0:58",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 168: Weidman vs Silva 2"
     },
@@ -65849,7 +65849,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 3,
       "ti": "2:55",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "The Ultimate Fighter: Team Jones vs. Team Sonnen Finale"
     }
@@ -65862,7 +65862,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "2:07",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Sandhagen vs. Figueiredo"
     },
@@ -65873,7 +65873,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 307: Pereira vs. Rountree Jr."
     },
@@ -65884,7 +65884,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 300: Pereira vs. Hill"
     },
@@ -65895,7 +65895,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "2:42",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Fiziev vs. Gamrot"
     },
@@ -65906,7 +65906,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 288: Sterling vs. Cejudo"
     },
@@ -65917,7 +65917,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 3,
       "ti": "0:54",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Rodriguez vs. Lemos"
     },
@@ -65928,7 +65928,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 272: Covington vs. Masvidal"
     },
@@ -65939,7 +65939,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 5,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Dern vs. Rodriguez"
     },
@@ -65950,7 +65950,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 5,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Rodriguez vs. Waterson"
     },
@@ -65961,7 +65961,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "0:54",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 257: Poirier vs. McGregor"
     },
@@ -65972,7 +65972,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Whittaker vs. Till"
     },
@@ -65983,7 +65983,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Majority",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Overeem vs. Rozenstruik"
     },
@@ -65994,7 +65994,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Shevchenko vs. Carmouche 2"
     },
@@ -66005,7 +66005,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Barboza vs. Gaethje"
     },
@@ -66016,7 +66016,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Majority",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Marreta vs. Anders"
     }
@@ -66029,7 +66029,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Unknown",
+      "wc": "Heavyweight",
       "tb": false,
       "ev": "UFC Fight Night: Sandhagen vs. Figueiredo"
     },
@@ -66040,7 +66040,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "1:17",
-      "wc": "Unknown",
+      "wc": "Heavyweight",
       "tb": false,
       "ev": "UFC Fight Night: Cannonier vs. Rodrigues"
     },
@@ -66051,7 +66051,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Unknown",
+      "wc": "Heavyweight",
       "tb": false,
       "ev": "UFC Fight Night: Sandhagen vs. Nurmagomedov"
     },
@@ -66062,7 +66062,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Unknown",
+      "wc": "Heavyweight",
       "tb": false,
       "ev": "UFC Fight Night: Nicolau vs. Perez"
     },
@@ -66073,7 +66073,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Unknown",
+      "wc": "Heavyweight",
       "tb": false,
       "ev": "UFC Fight Night: Almeida vs. Lewis"
     },
@@ -66084,7 +66084,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "3:17",
-      "wc": "Unknown",
+      "wc": "Heavyweight",
       "tb": false,
       "ev": "UFC Fight Night: Kara-France vs. Albazi"
     },
@@ -66095,7 +66095,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Unknown",
+      "wc": "Heavyweight",
       "tb": false,
       "ev": "UFC Fight Night: Muniz vs. Allen"
     },
@@ -66106,7 +66106,7 @@ export const FIGHT_HISTORY = {
       "me": "Overturned",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Unknown",
+      "wc": "Heavyweight",
       "tb": false,
       "ev": "UFC 277: Pena vs. Nunes 2"
     },
@@ -66117,7 +66117,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 3,
       "ti": "3:26",
-      "wc": "Unknown",
+      "wc": "Heavyweight",
       "tb": false,
       "ev": "UFC Fight Night: Lewis vs. Daukaus"
     },
@@ -66128,7 +66128,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Unknown",
+      "wc": "Heavyweight",
       "tb": false,
       "ev": "UFC Fight Night: Felder vs. Dos Anjos"
     },
@@ -66139,7 +66139,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "2:05",
-      "wc": "Unknown",
+      "wc": "Heavyweight",
       "tb": false,
       "ev": "UFC Fight Night: Overeem vs. Harris"
     },
@@ -66150,7 +66150,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 3,
       "ti": "4:46",
-      "wc": "Unknown",
+      "wc": "Heavyweight",
       "tb": false,
       "ev": "UFC Fight Night: Maia vs. Askren"
     }
@@ -66163,7 +66163,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Sandhagen vs. Figueiredo"
     },
@@ -66174,7 +66174,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Moreno vs. Albazi"
     },
@@ -66185,7 +66185,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 3,
       "ti": "1:29",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Nicolau vs. Perez"
     },
@@ -66196,7 +66196,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Strickland vs. Magomedov"
     }
@@ -67094,7 +67094,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 314: Volkanovski vs. Lopes"
     },
@@ -67105,7 +67105,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Yan vs. Figueiredo"
     },
@@ -67116,7 +67116,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 5,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 300: Pereira vs. Hill"
     },
@@ -67127,7 +67127,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "2:20",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 288: Sterling vs. Cejudo"
     },
@@ -67138,7 +67138,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Majority",
       "rn": 5,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Dern vs. Yan"
     },
@@ -67149,7 +67149,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 272: Covington vs. Masvidal"
     },
@@ -67160,7 +67160,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "2:58",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Font vs. Garbrandt"
     },
@@ -67171,7 +67171,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Santos vs. Teixeira"
     },
@@ -67182,7 +67182,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Felder vs. Hooker"
     },
@@ -67193,7 +67193,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 238: Cejudo vs. Moraes"
     },
@@ -67204,7 +67204,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Blaydes vs. Ngannou 2"
     },
@@ -67215,7 +67215,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Cowboy vs. Edwards"
     },
@@ -67226,7 +67226,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Bisping vs. Gastelum"
     }
@@ -67263,7 +67263,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "4:13",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Emmett vs. Murphy"
     },
@@ -67274,7 +67274,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "4:59",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Dolidze vs. Imavov"
     },
@@ -67285,7 +67285,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Dawson vs. Green"
     },
@@ -67296,7 +67296,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 289: Nunes vs. Aldana"
     },
@@ -67307,7 +67307,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Walker vs. Hill"
     },
@@ -67318,7 +67318,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Sandhagen vs. Dillashaw"
     },
@@ -67329,7 +67329,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "2:43",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Kattar vs. Ige"
     },
@@ -67340,7 +67340,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Reyes vs. Weidman"
     }
@@ -67353,7 +67353,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Emmett vs. Murphy"
     },
@@ -67364,7 +67364,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "0:34",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Holm vs. Bueno Silva"
     },
@@ -67375,7 +67375,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "4:06",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Thompson vs. Holland"
     },
@@ -67386,7 +67386,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Majority",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Luque vs. Muhammad"
     },
@@ -67397,7 +67397,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 3,
       "ti": "2:57",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Ladd vs. Dumont"
     }
@@ -67996,7 +67996,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "4:32",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Edwards vs. Brady"
     },
@@ -68007,7 +68007,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 304: Edwards vs. Muhammad 2"
     },
@@ -68018,7 +68018,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "4:59",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Dolidze vs. Imavov"
     },
@@ -68029,7 +68029,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "1:55",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Aspinall vs. Tybura"
     },
@@ -68040,7 +68040,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "3:37",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 281: Adesanya vs. Pereira"
     },
@@ -68051,7 +68051,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "3:52",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Blaydes vs. Aspinall"
     },
@@ -68062,7 +68062,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 3,
       "ti": "1:52",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Volkov vs. Aspinall"
     },
@@ -68073,7 +68073,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Brunson vs. Till"
     },
@@ -68084,7 +68084,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Overeem vs. Volkov"
     },
@@ -68095,7 +68095,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Kattar vs. Ige"
     },
@@ -68106,7 +68106,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Reyes vs. Weidman"
     },
@@ -68117,7 +68117,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Moicano vs. The Korean Zombie"
     },
@@ -68128,7 +68128,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Till vs. Masvidal"
     },
@@ -68139,7 +68139,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "2:05",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Thompson vs. Till"
     }
@@ -68279,7 +68279,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "3:22",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Edwards vs. Brady"
     },
@@ -68290,7 +68290,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Cannonier vs. Imavov"
     }
@@ -68577,7 +68577,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "2:46",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Vettori vs. Dolidze 2"
     },
@@ -68588,7 +68588,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Cannonier vs. Borralho"
     },
@@ -68599,7 +68599,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Tuivasa vs. Tybura"
     },
@@ -68610,7 +68610,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 283: Teixeira vs. Hill"
     },
@@ -68621,7 +68621,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Makhachev vs. Green"
     },
@@ -68632,7 +68632,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "4:54",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Cannonier vs. Gastelum"
     }
@@ -68814,7 +68814,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Kape vs. Almabayev"
     },
@@ -68825,7 +68825,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Cannonier vs. Imavov"
     },
@@ -68836,7 +68836,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 298: Volkanovski vs. Topuria"
     },
@@ -68847,7 +68847,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 292: Sterling vs. O'Malley"
     },
@@ -68858,7 +68858,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Vera vs. Sandhagen"
     },
@@ -68869,7 +68869,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Blachowicz vs. Rakic"
     },
@@ -68880,7 +68880,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Holloway vs. Rodriguez"
     },
@@ -68891,7 +68891,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "4:52",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 262: Oliveira vs. Chandler"
     },
@@ -68902,7 +68902,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Waterson vs. Hill"
     },
@@ -68913,7 +68913,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 247: Jones vs. Reyes"
     },
@@ -68924,7 +68924,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 242: Khabib vs. Poirier"
     },
@@ -68935,7 +68935,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Moicano vs. The Korean Zombie"
     },
@@ -68946,7 +68946,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Ngannou vs. Velasquez"
     },
@@ -68957,7 +68957,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Maia vs. Usman"
     }
@@ -69005,7 +69005,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Cannonier vs. Rodrigues"
     },
@@ -69016,7 +69016,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 3,
       "ti": "1:15",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Dariush vs. Tsarukyan"
     },
@@ -69027,7 +69027,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 3,
       "ti": "4:19",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Gane vs. Volkov"
     },
@@ -69038,7 +69038,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Waterson vs. Hill"
     },
@@ -69049,7 +69049,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "0:22",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Eye vs. Calvillo"
     },
@@ -69060,7 +69060,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 239: Jones vs. Santos"
     }
@@ -70146,7 +70146,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "4:27",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Dern vs. Ribas 2"
     },
@@ -70157,7 +70157,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Sandhagen vs. Nurmagomedov"
     },
@@ -70168,7 +70168,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 294: Makhachev vs. Volkanovski 2"
     },
@@ -70179,7 +70179,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "0:34",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Holm vs. Bueno Silva"
     }
@@ -71558,7 +71558,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 3,
       "ti": "0:46",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Yan vs. Figueiredo"
     }
@@ -74521,7 +74521,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 3,
       "ti": "4:33",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Hernandez vs. Pereira"
     },
@@ -74532,7 +74532,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 3,
       "ti": "0:37",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Barboza vs. Murphy"
     },
@@ -74543,7 +74543,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Fiziev vs. Gamrot"
     },
@@ -74554,7 +74554,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "3:06",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Rodriguez vs. Lemos"
     }
@@ -74567,7 +74567,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Hernandez vs. Pereira"
     },
@@ -74578,7 +74578,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "2:14",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 285: Jones vs. Gane"
     },
@@ -74589,7 +74589,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Ortega vs. Rodriguez"
     },
@@ -74600,7 +74600,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "4:32",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 265: Lewis vs. Gane"
     },
@@ -74611,7 +74611,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Whittaker vs. Gastelum"
     },
@@ -74622,7 +74622,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Swanson vs. Lobov"
     },
@@ -74633,7 +74633,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "2:56",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 199: Rockhold vs. Bisping 2"
     },
@@ -74644,7 +74644,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 3,
       "ti": "4:22",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Jedrzejczyk vs Penne"
     },
@@ -74655,7 +74655,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "The Ultimate Fighter: A Champion Will Be Crowned Finale"
     }
@@ -74883,7 +74883,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Royval vs. Taira"
     },
@@ -74894,7 +74894,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "1:38",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Tuivasa vs. Tybura"
     },
@@ -74905,7 +74905,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Cannonier vs. Strickland"
     },
@@ -74916,7 +74916,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "1:03",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Santos vs. Hill"
     },
@@ -74927,7 +74927,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Volkov vs. Aspinall"
     },
@@ -74938,7 +74938,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Felder vs. Dos Anjos"
     }
@@ -75019,7 +75019,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 5,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 307: Pereira vs. Rountree Jr."
     },
@@ -75030,7 +75030,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 5,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 297: Strickland vs. Du Plessis"
     },
@@ -75041,7 +75041,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Strickland vs. Imavov"
     },
@@ -75052,7 +75052,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 273: Volkanovski vs. The Korean Zombie"
     },
@@ -75063,7 +75063,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "3:07",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Lewis vs. Daukaus"
     },
@@ -75074,7 +75074,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Smith vs. Spann"
     },
@@ -75085,7 +75085,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Blaydes vs. Volkov"
     },
@@ -75096,7 +75096,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 246: McGregor vs. Cowboy"
     },
@@ -75107,7 +75107,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Dos Anjos vs. Edwards"
     },
@@ -75118,7 +75118,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Korean Zombie vs. Rodriguez"
     },
@@ -75129,7 +75129,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 5,
       "ti": "2:36",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 224: Nunes vs. Pennington"
     },
@@ -75140,7 +75140,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 205: Alvarez vs McGregor"
     },
@@ -75151,7 +75151,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 202: Diaz vs. McGregor 2"
     },
@@ -75162,7 +75162,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC on FOX: Teixeira vs Evans"
     },
@@ -75173,7 +75173,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "4:58",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 191: Johnson vs Dodson 2"
     },
@@ -75184,7 +75184,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 184: Rousey vs Zingano"
     },
@@ -75195,7 +75195,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "4:59",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 181: Hendricks vs Lawler II"
     },
@@ -75206,7 +75206,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 171: Hendricks vs Lawler"
     },
@@ -75217,7 +75217,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "The Ultimate Fighter: Team Rousey vs. Team Tate Finale"
     }
@@ -75540,7 +75540,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 307: Pereira vs. Rountree Jr."
     },
@@ -75551,7 +75551,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "1:05",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 281: Adesanya vs. Pereira"
     },
@@ -75562,7 +75562,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 5,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 274: Oliveira vs. Gaethje"
     },
@@ -75573,7 +75573,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "2:58",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Font vs. Garbrandt"
     },
@@ -75584,7 +75584,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Whittaker vs. Till"
     },
@@ -75595,7 +75595,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 249: Ferguson vs. Gaethje"
     },
@@ -75606,7 +75606,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Majority",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Rodriguez vs. Stephens"
     },
@@ -75617,7 +75617,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Jacare vs. Hermansson"
     },
@@ -75628,7 +75628,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 3,
       "ti": "4:33",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 228: Woodley vs. Till"
     },
@@ -75639,7 +75639,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 225: Whittaker vs. Romero 2"
     },
@@ -75650,7 +75650,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 219: Cyborg vs. Holm"
     },
@@ -75661,7 +75661,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Chiesa vs. Lee"
     },
@@ -75672,7 +75672,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Lewis vs. Browne"
     },
@@ -75683,7 +75683,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 197: Jones vs Saint Preux"
     },
@@ -75694,7 +75694,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "4:17",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 185: Pettis vs Dos Anjos"
     },
@@ -75705,7 +75705,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 3,
       "ti": "1:26",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "The Ultimate Fighter: A Champion Will Be Crowned Finale"
     }
@@ -76421,7 +76421,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 306: Riyadh Season Noche UFC"
     },
@@ -76432,7 +76432,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 296: Edwards vs. Covington"
     },
@@ -76443,7 +76443,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 5,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 289: Nunes vs. Aldana"
     },
@@ -76454,7 +76454,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 3,
       "ti": "2:21",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 279: Diaz vs. Ferguson"
     },
@@ -76465,7 +76465,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "4:35",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 264: Poirier vs. McGregor 3"
     },
@@ -76476,7 +76476,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 5,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Holm vs. Aldana"
     },
@@ -76487,7 +76487,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "4:51",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 245: Usman vs. Covington"
     },
@@ -76498,7 +76498,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Rodriguez vs. Stephens"
     },
@@ -76509,7 +76509,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Dos Anjos vs. Edwards"
     },
@@ -76520,7 +76520,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 3,
       "ti": "3:24",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 237: Namajunas vs. Andrade"
     },
@@ -76531,7 +76531,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 228: Woodley vs. Till"
     },
@@ -76542,7 +76542,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Stephens vs. Choi"
     },
@@ -76553,7 +76553,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 210: Cormier vs. Johnson 2"
     },
@@ -76564,7 +76564,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC on FOX: VanZant vs. Waterson"
     }
@@ -76577,7 +76577,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "3:02",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 306: Riyadh Season Noche UFC"
     },
@@ -76588,7 +76588,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Moreno vs. Royval 2"
     },
@@ -76599,7 +76599,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "0:20",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 290: Volkanovski vs. Rodriguez"
     },
@@ -76610,7 +76610,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "4:06",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Thompson vs. Holland"
     },
@@ -76621,7 +76621,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Vera vs. Cruz"
     }
@@ -76728,7 +76728,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "1:02",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Cannonier vs. Borralho"
     },
@@ -76739,7 +76739,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "2:58",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Dern vs. Hill"
     },
@@ -76750,7 +76750,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Blaydes vs. Aspinall"
     },
@@ -76761,7 +76761,7 @@ export const FIGHT_HISTORY = {
       "me": "TKO - Doctor's Stoppage",
       "rn": 2,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 265: Lewis vs. Gane"
     },
@@ -76772,7 +76772,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "4:08",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Chiesa vs. Magny"
     }
@@ -77290,7 +77290,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Tybura vs. Spivac 2"
     },
@@ -77301,7 +77301,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "3:54",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Tuivasa vs. Tybura"
     },
@@ -77312,7 +77312,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Aspinall vs. Tybura"
     },
@@ -77323,7 +77323,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Luque vs. Muhammad"
     },
@@ -77334,7 +77334,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Smith vs. Spann"
     },
@@ -77345,7 +77345,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 263: Adesanya vs. Vettori 2"
     },
@@ -77356,7 +77356,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Thompson vs. Neal"
     },
@@ -77367,7 +77367,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Whittaker vs. Till"
     },
@@ -77378,7 +77378,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Zabit vs. Kattar"
     },
@@ -77389,7 +77389,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 239: Jones vs. Santos"
     },
@@ -77400,7 +77400,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "2:11",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "The Ultimate Fighter: Heavy Hitters Finale"
     }
@@ -78289,7 +78289,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Lemos vs. Jandiroba"
     },
@@ -78300,7 +78300,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Allen vs. Craig"
     },
@@ -78311,7 +78311,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Holloway vs. Allen"
     },
@@ -78322,7 +78322,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "4:04",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 278: Usman vs. Edwards"
     },
@@ -78333,7 +78333,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Blaydes vs. Dos Santos"
     },
@@ -78344,7 +78344,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "1:20",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Covington vs. Lawler"
     },
@@ -78355,7 +78355,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Blachowicz vs. Santos"
     },
@@ -78366,7 +78366,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 228: Woodley vs. Till"
     },
@@ -78377,7 +78377,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Cerrone vs. Medeiros"
     },
@@ -78388,7 +78388,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Holm vs. Correia"
     },
@@ -78399,7 +78399,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Manuwa vs. Anderson"
     }
@@ -78412,7 +78412,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "3:27",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Namajunas vs. Cortez"
     },
@@ -78423,7 +78423,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "2:19",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Sandhagen vs. Song"
     },
@@ -78434,7 +78434,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "3:27",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 272: Covington vs. Masvidal"
     },
@@ -78445,7 +78445,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 3,
       "ti": "0:53",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Dern vs. Rodriguez"
     },
@@ -78456,7 +78456,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "1:38",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Munhoz vs. Edgar"
     },
@@ -78467,7 +78467,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "2:42",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Eye vs. Calvillo"
     }
@@ -78504,7 +78504,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 303: Pereira vs. Prochazka 2"
     },
@@ -78515,7 +78515,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "2:42",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Fiziev vs. Gamrot"
     },
@@ -78526,7 +78526,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 287: Pereira vs. Adesanya 2"
     },
@@ -78537,7 +78537,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "1:48",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Ortega vs. Rodriguez"
     },
@@ -78548,7 +78548,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 5,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Rodriguez vs. Waterson"
     },
@@ -78559,7 +78559,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 5,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Waterson vs. Hill"
     },
@@ -78570,7 +78570,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 249: Ferguson vs. Gaethje"
     },
@@ -78581,7 +78581,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 5,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Joanna vs. Waterson"
     },
@@ -78592,7 +78592,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Barboza vs. Gaethje"
     },
@@ -78603,7 +78603,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 229: Khabib vs. McGregor"
     },
@@ -78614,7 +78614,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Poirier vs. Gaethje"
     },
@@ -78625,7 +78625,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 218: Holloway vs. Aldo 2"
     },
@@ -78636,7 +78636,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "2:47",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC on FOX: Johnson vs. Reis"
     },
@@ -78647,7 +78647,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "3:21",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC on FOX: VanZant vs. Waterson"
     },
@@ -78658,7 +78658,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 3,
       "ti": "2:38",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "The Ultimate Fighter: American Top Team vs. Blackzilians Finale"
     }
@@ -79633,7 +79633,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Cannonier vs. Imavov"
     },
@@ -79644,7 +79644,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Dawson vs. Green"
     },
@@ -79655,7 +79655,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "2:51",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Muniz vs. Allen"
     },
@@ -79666,7 +79666,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Lemos vs. Andrade"
     },
@@ -79677,7 +79677,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "4:27",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Rozenstruik vs. Sakai"
     },
@@ -79688,7 +79688,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Majority",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Rozenstruik vs. Gane"
     },
@@ -79699,7 +79699,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Overeem vs. Sakai"
     },
@@ -79710,7 +79710,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Anderson vs. Blachowicz"
     },
@@ -79721,7 +79721,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Moicano vs. The Korean Zombie"
     },
@@ -79732,7 +79732,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "2:37",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 234: Adesanya vs. Silva"
     },
@@ -79743,7 +79743,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 3,
       "ti": "4:21",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "The Ultimate Fighter: Undefeated Finale"
     },
@@ -79754,7 +79754,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "2:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "The Ultimate Fighter: A New World Champion Finale"
     }
@@ -80050,7 +80050,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Barboza vs. Murphy"
     },
@@ -80061,7 +80061,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Yusuff vs. Barboza"
     },
@@ -80072,7 +80072,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Dern vs. Hill"
     },
@@ -80083,7 +80083,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Thompson vs. Holland"
     },
@@ -80094,7 +80094,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Ortega vs. Rodriguez"
     }
@@ -80696,7 +80696,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 3,
       "ti": "1:29",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Nicolau vs. Perez"
     },
@@ -80707,7 +80707,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "4:49",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Holloway vs. The Korean Zombie"
     },
@@ -80718,7 +80718,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "1:22",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 275: Teixeira vs. Prochazka"
     },
@@ -80729,7 +80729,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "1:28",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 261: Usman vs. Masvidal 2"
     }
@@ -80909,7 +80909,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "1:47",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 300: Pereira vs. Hill"
     },
@@ -80920,7 +80920,7 @@ export const FIGHT_HISTORY = {
       "me": "Overturned",
       "rn": 2,
       "ti": "0:38",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Holm vs. Bueno Silva"
     },
@@ -80931,7 +80931,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Vera vs. Sandhagen"
     },
@@ -80942,7 +80942,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 5,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Holm vs. Vieira"
     },
@@ -80953,7 +80953,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 5,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Holm vs. Aldana"
     },
@@ -80964,7 +80964,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 246: McGregor vs. Cowboy"
     },
@@ -80975,7 +80975,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "4:10",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 239: Jones vs. Santos"
     },
@@ -80986,7 +80986,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 225: Whittaker vs. Romero 2"
     },
@@ -80997,7 +80997,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 5,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 219: Cyborg vs. Holm"
     },
@@ -81008,7 +81008,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 3,
       "ti": "1:09",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Holm vs. Correia"
     },
@@ -81019,7 +81019,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 5,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 208: Holm vs. De Randamie"
     },
@@ -81030,7 +81030,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 5,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC on FOX: Holm vs. Shevchenko"
     },
@@ -81041,7 +81041,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 5,
       "ti": "3:30",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 196: McGregor vs Diaz"
     },
@@ -81052,7 +81052,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "0:59",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 193: Rousey vs Holm"
     },
@@ -81063,7 +81063,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Mir vs Duffee"
     },
@@ -81074,7 +81074,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 184: Rousey vs Zingano"
     }
@@ -81087,7 +81087,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Allen vs. Curtis 2"
     },
@@ -81098,7 +81098,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 3,
       "ti": "3:25",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Holm vs. Aldana"
     },
@@ -81109,7 +81109,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 5,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 245: Usman vs. Covington"
     },
@@ -81120,7 +81120,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "0:16",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: De Randamie vs. Ladd"
     },
@@ -81131,7 +81131,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Korean Zombie vs. Rodriguez"
     },
@@ -81142,7 +81142,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 5,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 208: Holm vs. De Randamie"
     },
@@ -81153,7 +81153,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "3:46",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Overeem vs Arlovski"
     },
@@ -81164,7 +81164,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "2:02",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 185: Pettis vs Dos Anjos"
     },
@@ -81175,7 +81175,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "3:56",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Fight for the Troops 3"
     },
@@ -81186,7 +81186,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC on FOX: Johnson vs Moraga"
     }
@@ -81686,7 +81686,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 299: O'Malley vs. Vera 2"
     },
@@ -81697,7 +81697,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 280: Oliveira vs. Makhachev"
     },
@@ -81708,7 +81708,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Blachowicz vs. Rakic"
     },
@@ -81719,7 +81719,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Kattar vs. Chikadze"
     },
@@ -81730,7 +81730,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 262: Oliveira vs. Chandler"
     },
@@ -81741,7 +81741,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 255: Figueiredo vs. Perez"
     },
@@ -81752,7 +81752,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "4:55",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Ortega vs. The Korean Zombie"
     },
@@ -81763,7 +81763,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Woodley vs. Burns"
     },
@@ -81774,7 +81774,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 3,
       "ti": "1:03",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 247: Jones vs. Reyes"
     },
@@ -81785,7 +81785,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 244: Masvidal vs. Diaz"
     },
@@ -81796,7 +81796,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 238: Cejudo vs. Moraes"
     },
@@ -81807,7 +81807,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 231: Holloway vs. Ortega"
     },
@@ -81818,7 +81818,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Alvarez vs. Poirier 2"
     },
@@ -81829,7 +81829,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Jacare vs. Brunson 2"
     },
@@ -81840,7 +81840,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 210: Cormier vs. Johnson 2"
     },
@@ -81851,7 +81851,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 205: Alvarez vs McGregor"
     },
@@ -81862,7 +81862,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: McDonald vs. Lineker"
     }
@@ -82022,7 +82022,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 299: O'Malley vs. Vera 2"
     },
@@ -82033,7 +82033,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 286: Edwards vs. Usman 3"
     },
@@ -82044,7 +82044,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "3:57",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Blaydes vs. Daukaus"
     },
@@ -82055,7 +82055,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "4:49",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Vieira vs. Tate"
     },
@@ -82066,7 +82066,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 263: Adesanya vs. Vettori 2"
     },
@@ -82077,7 +82077,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 257: Poirier vs. McGregor"
     },
@@ -82088,7 +82088,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "4:29",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Brunson vs. Shahbazyan"
     },
@@ -82099,7 +82099,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 242: Khabib vs. Poirier"
     },
@@ -82110,7 +82110,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 238: Cejudo vs. Moraes"
     },
@@ -82121,7 +82121,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Cejudo vs. Dillashaw"
     },
@@ -82132,7 +82132,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "4:57",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Gaethje vs. Vick"
     },
@@ -82143,7 +82143,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Nelson vs. Ponzinibbio"
     },
@@ -82154,7 +82154,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "4:38",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 203: Miocic vs. Overeem"
     },
@@ -82165,7 +82165,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 3,
       "ti": "2:44",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: MacDonald vs Thompson"
     },
@@ -82176,7 +82176,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Bisping vs Leites"
     },
@@ -82187,7 +82187,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "1:30",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Gonzaga vs Cro Cop 2"
     },
@@ -82198,7 +82198,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "The Ultimate Fighter: A Champion Will Be Crowned Finale"
     }
@@ -82211,7 +82211,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 299: O'Malley vs. Vera 2"
     },
@@ -82222,7 +82222,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "4:59",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 292: Sterling vs. O'Malley"
     },
@@ -82233,7 +82233,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Nzechukwu vs. Cutelaba"
     },
@@ -82244,7 +82244,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "3:27",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 272: Covington vs. Masvidal"
     },
@@ -82255,7 +82255,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Lee vs. Oliveira"
     },
@@ -82266,7 +82266,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Barboza vs. Gaethje"
     },
@@ -82277,7 +82277,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Emmett vs. Stephens"
     },
@@ -82288,7 +82288,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Chiesa vs. Lee"
     },
@@ -82299,7 +82299,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Rodriguez vs. Caceres"
     },
@@ -82310,7 +82310,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Rothwell vs Dos Santos"
     },
@@ -82321,7 +82321,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Holloway vs Oliveira"
     },
@@ -82332,7 +82332,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "1:30",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Gonzaga vs Cro Cop 2"
     }
@@ -83637,7 +83637,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Song vs. Gutierrez"
     },
@@ -83648,7 +83648,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "2:11",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Song vs. Simon"
     },
@@ -83659,7 +83659,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "4:54",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Gane vs. Tuivasa"
     },
@@ -83670,7 +83670,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "1:17",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Santos vs. Hill"
     },
@@ -83681,7 +83681,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "3:44",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Walker vs. Hill"
     },
@@ -83692,7 +83692,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "2:22",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Santos vs. Walker"
     },
@@ -83703,7 +83703,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Moraes vs. Sandhagen"
     }
@@ -84157,7 +84157,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 294: Makhachev vs. Volkanovski 2"
     },
@@ -84168,7 +84168,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Kara-France vs. Albazi"
     },
@@ -84179,7 +84179,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "0:47",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Rodriguez vs. Lemos"
     },
@@ -84190,7 +84190,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Tsarukyan vs. Gamrot"
     },
@@ -84201,7 +84201,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Hall vs. Strickland"
     },
@@ -84212,7 +84212,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Edwards vs. Muhammad"
     },
@@ -84223,7 +84223,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Holm vs. Aldana"
     },
@@ -84234,7 +84234,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 3,
       "ti": "2:26",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Poirier vs. Hooker"
     }
@@ -84247,7 +84247,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Yusuff vs. Barboza"
     },
@@ -84258,7 +84258,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 286: Edwards vs. Usman 3"
     },
@@ -84269,7 +84269,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Nzechukwu vs. Cutelaba"
     },
@@ -84280,7 +84280,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Blaydes vs. Daukaus"
     },
@@ -84291,7 +84291,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Kattar vs. Chikadze"
     },
@@ -84302,7 +84302,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 264: Poirier vs. McGregor 3"
     },
@@ -84313,7 +84313,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 5,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 255: Figueiredo vs. Perez"
     },
@@ -84324,7 +84324,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "4:29",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Brunson vs. Shahbazyan"
     },
@@ -84335,7 +84335,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 244: Masvidal vs. Diaz"
     },
@@ -84346,7 +84346,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Dos Anjos vs. Edwards"
     },
@@ -84357,7 +84357,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Thompson vs. Pettis"
     },
@@ -84368,7 +84368,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Dos Santos vs. Ivanov"
     }
@@ -84471,7 +84471,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Yusuff vs. Barboza"
     },
@@ -84482,7 +84482,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Hall vs. Strickland"
     },
@@ -84493,7 +84493,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Edwards vs. Muhammad"
     },
@@ -84504,7 +84504,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Felder vs. Dos Anjos"
     },
@@ -84515,7 +84515,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 252: Miocic vs. Cormier 3"
     },
@@ -84526,7 +84526,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Maia vs. Askren"
     },
@@ -84537,7 +84537,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Moicano vs. The Korean Zombie"
     },
@@ -84548,7 +84548,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Korean Zombie vs. Rodriguez"
     },
@@ -84559,7 +84559,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 222: Cyborg vs. Kunitskaya"
     },
@@ -84570,7 +84570,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "The Ultimate Fighter: Redemption Finale"
     },
@@ -84581,7 +84581,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Lewis vs. Abdurakhimov"
     }
@@ -84594,7 +84594,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Dawson vs. Green"
     },
@@ -84605,7 +84605,7 @@ export const FIGHT_HISTORY = {
       "me": "TKO - Doctor's Stoppage",
       "rn": 2,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Jung vs. Ige"
     },
@@ -84616,7 +84616,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Felder vs. Dos Anjos"
     }
@@ -84978,7 +84978,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Fiziev vs. Gamrot"
     },
@@ -84989,7 +84989,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "3:52",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Blaydes vs. Aspinall"
     },
@@ -85000,7 +85000,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "4:17",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Smith vs. Spann"
     },
@@ -85011,7 +85011,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Sandhagen vs. Dillashaw"
     },
@@ -85022,7 +85022,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Covington vs. Lawler"
     }
@@ -85371,7 +85371,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Featherweight",
       "tb": false,
       "ev": "UFC Fight Night: Gane vs. Spivac"
     },
@@ -85382,7 +85382,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Featherweight",
       "tb": false,
       "ev": "UFC 283: Teixeira vs. Hill"
     },
@@ -85393,7 +85393,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "3:37",
-      "wc": "Women\\",
+      "wc": "Women's Featherweight",
       "tb": false,
       "ev": "UFC Fight Night: Benavidez vs. Figueiredo"
     },
@@ -85404,7 +85404,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "3:57",
-      "wc": "Women\\",
+      "wc": "Women's Featherweight",
       "tb": false,
       "ev": "UFC 243: Whittaker vs. Adesanya"
     }
@@ -85551,7 +85551,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Holloway vs. The Korean Zombie"
     },
@@ -85562,7 +85562,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 5,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 275: Teixeira vs. Prochazka"
     },
@@ -85573,7 +85573,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "4:49",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Vieira vs. Tate"
     },
@@ -85584,7 +85584,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 266: Volkanovski vs. Ortega"
     },
@@ -85595,7 +85595,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Thompson vs. Neal"
     },
@@ -85606,7 +85606,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Kattar vs. Ige"
     },
@@ -85617,7 +85617,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Assuncao vs. Moraes 2"
     }
@@ -86687,7 +86687,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Holm vs. Bueno Silva"
     },
@@ -86698,7 +86698,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Smith vs. Clark"
     },
@@ -86709,7 +86709,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Ngannou vs. Velasquez"
     },
@@ -86720,7 +86720,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 223: Khabib vs. Iaquinta"
     },
@@ -86731,7 +86731,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "2:51",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 215: Nunes vs Shevchenko 2"
     },
@@ -86742,7 +86742,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC on FOX: Johnson vs. Reis"
     },
@@ -86753,7 +86753,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 3,
       "ti": "2:46",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Arlovski vs. Barnett"
     },
@@ -86764,7 +86764,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Cowboy vs Cowboy"
     },
@@ -86775,7 +86775,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "4:59",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 181: Hendricks vs Lawler II"
     }
@@ -87605,7 +87605,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 5,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 289: Nunes vs. Aldana"
     },
@@ -87616,7 +87616,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 5,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 277: Pena vs. Nunes 2"
     },
@@ -87627,7 +87627,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "3:26",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 269: Oliveira vs. Poirier"
     },
@@ -87638,7 +87638,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "2:03",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 259: Blachowicz vs. Adesanya"
     },
@@ -87649,7 +87649,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 5,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 250: Nunes vs. Spencer"
     },
@@ -87660,7 +87660,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 5,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 245: Usman vs. Covington"
     },
@@ -87671,7 +87671,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "4:10",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 239: Jones vs. Santos"
     },
@@ -87682,7 +87682,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "0:51",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 232: Jones vs. Gustafsson 2"
     },
@@ -87693,7 +87693,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 5,
       "ti": "2:36",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 224: Nunes vs. Pennington"
     },
@@ -87704,7 +87704,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 5,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 215: Nunes vs Shevchenko 2"
     },
@@ -87715,7 +87715,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "0:48",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 207: Nunes vs. Rousey"
     },
@@ -87726,7 +87726,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "3:16",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 200: Tate vs Nunes"
     },
@@ -87737,7 +87737,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 196: McGregor vs Diaz"
     },
@@ -87748,7 +87748,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "2:53",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Teixeira vs Saint Preux"
     },
@@ -87759,7 +87759,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "1:56",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Maia vs LaFlare"
     },
@@ -87770,7 +87770,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 3,
       "ti": "1:21",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 178: Johnson vs Cariaso"
     },
@@ -87781,7 +87781,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "3:56",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Fight for the Troops 3"
     },
@@ -87792,7 +87792,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "2:08",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 163: Aldo vs Jung"
     }
@@ -87873,7 +87873,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 289: Nunes vs. Aldana"
     },
@@ -87884,7 +87884,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Nzechukwu vs. Cutelaba"
     },
@@ -87895,7 +87895,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Kattar vs. Emmett"
     },
@@ -87906,7 +87906,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Costa vs. Vettori"
     }
@@ -88837,7 +88837,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "1:55",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Rozenstruik vs. Almeida"
     },
@@ -88848,7 +88848,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 277: Pena vs. Nunes 2"
     },
@@ -88859,7 +88859,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Makhachev vs. Green"
     },
@@ -88870,7 +88870,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Brunson vs. Till"
     },
@@ -88881,7 +88881,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Smith vs. Rakic"
     },
@@ -88892,7 +88892,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "4:59",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 243: Whittaker vs. Adesanya"
     },
@@ -88903,7 +88903,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "The Ultimate Fighter: Heavy Hitters Finale"
     },
@@ -88914,7 +88914,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Cowboy vs. Edwards"
     },
@@ -88925,7 +88925,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Jacare vs. Brunson 2"
     },
@@ -88936,7 +88936,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Holm vs. Correia"
     }
@@ -88949,7 +88949,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "1:55",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Rozenstruik vs. Almeida"
     },
@@ -88960,7 +88960,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Blaydes vs. Aspinall"
     },
@@ -88971,7 +88971,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Smith vs. Spann"
     }
@@ -88984,7 +88984,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 3,
       "ti": "4:20",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Rozenstruik vs. Almeida"
     },
@@ -88995,7 +88995,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "0:42",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 276: Adesanya vs. Cannonier"
     },
@@ -89006,7 +89006,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "3:44",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Walker vs. Hill"
     },
@@ -89017,7 +89017,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Costa vs. Vettori"
     },
@@ -89028,7 +89028,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 3,
       "ti": "4:21",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Covington vs. Woodley"
     },
@@ -89039,7 +89039,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Zabit vs. Kattar"
     },
@@ -89050,7 +89050,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Cowboy vs. Edwards"
     },
@@ -89061,7 +89061,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Stephens vs. Choi"
     },
@@ -89072,7 +89072,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Werdum vs. Tybura"
     }
@@ -90025,7 +90025,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 287: Pereira vs. Adesanya 2"
     },
@@ -90036,7 +90036,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Vera vs. Cruz"
     },
@@ -90047,7 +90047,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Holloway vs. Rodriguez"
     },
@@ -90058,7 +90058,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "4:54",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 266: Volkanovski vs. Ortega"
     },
@@ -90069,7 +90069,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 255: Figueiredo vs. Perez"
     },
@@ -90080,7 +90080,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 5,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Eye vs. Calvillo"
     },
@@ -90091,7 +90091,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Majority",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Overeem vs. Rozenstruik"
     },
@@ -90102,7 +90102,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Ngannou vs. Velasquez"
     },
@@ -90113,7 +90113,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "4:48",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Magny vs. Ponzinibbio"
     },
@@ -90124,7 +90124,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 219: Cyborg vs. Holm"
     },
@@ -90135,7 +90135,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Nelson vs. Ponzinibbio"
     },
@@ -90146,7 +90146,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 3,
       "ti": "3:45",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 210: Cormier vs. Johnson 2"
     },
@@ -90157,7 +90157,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "3:19",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 209: Woodley vs. Thompson 2"
     }
@@ -91595,7 +91595,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "4:45",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Andrade vs. Blanchfield"
     },
@@ -91606,7 +91606,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Majority",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 280: Oliveira vs. Makhachev"
     },
@@ -91617,7 +91617,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Luque vs. Muhammad"
     },
@@ -91628,7 +91628,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Blaydes vs. Dos Santos"
     },
@@ -91639,7 +91639,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Hermansson vs. Cannonier"
     },
@@ -91650,7 +91650,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Gustafsson vs. Smith"
     },
@@ -91661,7 +91661,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 229: Khabib vs. McGregor"
     },
@@ -91672,7 +91672,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Thompson vs. Till"
     },
@@ -91683,7 +91683,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "2:33",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Cerrone vs. Till"
     },
@@ -91694,7 +91694,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Manuwa vs. Anderson"
     },
@@ -91705,7 +91705,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "2:29",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Cyborg vs. Lansberg"
     }
@@ -92583,7 +92583,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Cannonier vs. Strickland"
     },
@@ -92594,7 +92594,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Font vs. Aldo"
     },
@@ -92605,7 +92605,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "1:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Hall vs. Strickland"
     },
@@ -92616,7 +92616,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Brunson vs. Holland"
     }
@@ -93608,7 +93608,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 281: Adesanya vs. Pereira"
     },
@@ -93619,7 +93619,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "1:22",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 275: Teixeira vs. Prochazka"
     },
@@ -93630,7 +93630,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "2:25",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 270: Ngannou vs. Gane"
     },
@@ -93641,7 +93641,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "4:14",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Dern vs. Rodriguez"
     }
@@ -93869,7 +93869,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Rodriguez vs. Lemos"
     },
@@ -93880,7 +93880,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "3:11",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Font vs. Vera"
     },
@@ -93891,7 +93891,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "2:22",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Santos vs. Walker"
     },
@@ -93902,7 +93902,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Anderson vs. Blachowicz"
     }
@@ -94009,7 +94009,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "3:06",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Rodriguez vs. Lemos"
     },
@@ -94020,7 +94020,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 275: Teixeira vs. Prochazka"
     },
@@ -94031,7 +94031,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Makhachev vs. Green"
     }
@@ -95906,7 +95906,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Featherweight",
       "tb": false,
       "ev": "UFC 279: Diaz vs. Ferguson"
     }
@@ -96268,7 +96268,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "4:04",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 278: Usman vs. Edwards"
     },
@@ -96279,7 +96279,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Luque vs. Muhammad"
     },
@@ -96290,7 +96290,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Holloway vs. Kattar"
     },
@@ -96301,7 +96301,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Andrade vs. Zhang"
     },
@@ -96312,7 +96312,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "4:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Blaydes vs. Ngannou 2"
     },
@@ -96323,7 +96323,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Bisping vs. Gastelum"
     }
@@ -96698,7 +96698,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Vera vs. Cruz"
     },
@@ -96709,7 +96709,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "4:48",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Vettori vs. Holland"
     },
@@ -96720,7 +96720,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 238: Cejudo vs. Moraes"
     },
@@ -96731,7 +96731,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 231: Holloway vs. Ortega"
     },
@@ -96742,7 +96742,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Alvarez vs. Poirier 2"
     },
@@ -96753,7 +96753,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Poirier vs. Pettis"
     },
@@ -96764,7 +96764,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 3,
       "ti": "3:39",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Rodriguez vs. Penn"
     },
@@ -96775,7 +96775,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 195: Lawler vs Condit"
     },
@@ -96786,7 +96786,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night 56: Shogun vs Saint Preux"
     }
@@ -97434,7 +97434,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "1:03",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Santos vs. Hill"
     },
@@ -97445,7 +97445,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Felder vs. Dos Anjos"
     },
@@ -97456,7 +97456,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "3:43",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Edgar vs. The Korean Zombie"
     },
@@ -97467,7 +97467,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Covington vs. Lawler"
     }
@@ -98128,7 +98128,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Dos Anjos vs. Fiziev"
     },
@@ -98139,7 +98139,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "4:47",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Santos vs. Walker"
     },
@@ -98150,7 +98150,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "4:52",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 262: Oliveira vs. Chandler"
     },
@@ -98161,7 +98161,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "4:33",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 255: Figueiredo vs. Perez"
     },
@@ -98172,7 +98172,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Woodley vs. Burns"
     },
@@ -98183,7 +98183,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "1:20",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Covington vs. Lawler"
     },
@@ -98194,7 +98194,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Overeem vs. Oleinik"
     },
@@ -98205,7 +98205,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "The Ultimate Fighter: Heavy Hitters Finale"
     }
@@ -98218,7 +98218,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Dos Anjos vs. Fiziev"
     },
@@ -98229,7 +98229,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Holloway vs. Rodriguez"
     },
@@ -98240,7 +98240,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Edwards vs. Muhammad"
     },
@@ -98251,7 +98251,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 3,
       "ti": "4:36",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Blaydes vs. Volkov"
     },
@@ -98262,7 +98262,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "3:36",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Overeem vs. Harris"
     },
@@ -98273,7 +98273,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Ngannou vs. Velasquez"
     },
@@ -98284,7 +98284,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Gaethje vs. Vick"
     },
@@ -98295,7 +98295,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Poirier vs. Gaethje"
     },
@@ -98306,7 +98306,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 218: Holloway vs. Aldo 2"
     },
@@ -98317,7 +98317,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 211: Miocic vs. Dos Santos"
     },
@@ -98328,7 +98328,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Bader vs. Nogueira"
     },
@@ -98339,7 +98339,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "4:34",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 202: Diaz vs. McGregor 2"
     },
@@ -98350,7 +98350,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "2:36",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: McDonald vs. Lineker"
     },
@@ -98361,7 +98361,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Henderson vs Masvidal"
     },
@@ -98372,7 +98372,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Bisping vs Leites"
     }
@@ -99128,7 +99128,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 276: Adesanya vs. Cannonier"
     },
@@ -99139,7 +99139,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 264: Poirier vs. McGregor 3"
     },
@@ -99150,7 +99150,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 257: Poirier vs. McGregor"
     },
@@ -99161,7 +99161,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 5,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Eye vs. Calvillo"
     },
@@ -99172,7 +99172,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 245: Usman vs. Covington"
     },
@@ -99183,7 +99183,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "0:26",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 238: Cejudo vs. Moraes"
     },
@@ -99194,7 +99194,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 231: Holloway vs. Ortega"
     },
@@ -99205,7 +99205,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Cowboy vs. Edwards"
     },
@@ -99216,7 +99216,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Stephens vs. Choi"
     },
@@ -99227,7 +99227,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 203: Miocic vs. Overeem"
     },
@@ -99238,7 +99238,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Almeida vs Garbrandt"
     },
@@ -99249,7 +99249,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 192: Cormier vs Gustafsson"
     },
@@ -99260,7 +99260,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC on FOX: Dillashaw vs. Barao II"
     },
@@ -99271,7 +99271,7 @@ export const FIGHT_HISTORY = {
       "me": "TKO - Doctor's Stoppage",
       "rn": 2,
       "ti": "1:30",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 180: Werdum vs Hunt"
     },
@@ -99282,7 +99282,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 170: Rousey vs McMann"
     },
@@ -99293,7 +99293,7 @@ export const FIGHT_HISTORY = {
       "me": "Overturned",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 166: Velasquez vs Dos Santos 3"
     }
@@ -99523,7 +99523,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Kattar vs. Emmett"
     },
@@ -99534,7 +99534,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Walker vs. Hill"
     },
@@ -99545,7 +99545,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "1:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Hall vs. Strickland"
     },
@@ -99556,7 +99556,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Edwards vs. Muhammad"
     }
@@ -99804,7 +99804,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "2:28",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 275: Teixeira vs. Prochazka"
     },
@@ -99815,7 +99815,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 5,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 248: Adesanya vs. Romero"
     },
@@ -99826,7 +99826,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 5,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Joanna vs. Waterson"
     },
@@ -99837,7 +99837,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 5,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 231: Holloway vs. Ortega"
     },
@@ -99848,7 +99848,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Alvarez vs. Poirier 2"
     },
@@ -99859,7 +99859,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 5,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 223: Khabib vs. Iaquinta"
     },
@@ -99870,7 +99870,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "3:03",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 217: Bisping vs. St-Pierre"
     },
@@ -99881,7 +99881,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 5,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 211: Miocic vs. Dos Santos"
     },
@@ -99892,7 +99892,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 5,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 205: Alvarez vs McGregor"
     },
@@ -99903,7 +99903,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 5,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "The Ultimate Fighter: Team Joanna vs. Team Cláudia Finale"
     },
@@ -99914,7 +99914,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 5,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 193: Rousey vs Holm"
     },
@@ -99925,7 +99925,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 3,
       "ti": "4:22",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Jedrzejczyk vs Penne"
     },
@@ -99936,7 +99936,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "4:17",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 185: Pettis vs Dos Anjos"
     },
@@ -99947,7 +99947,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC on FOX: Dos Santos vs Miocic"
     },
@@ -99958,7 +99958,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC on FOX: Lawler vs Brown"
     }
@@ -100061,7 +100061,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "4:55",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Volkov vs. Rozenstruik"
     },
@@ -100072,7 +100072,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Reyes vs. Prochazka"
     },
@@ -100083,7 +100083,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Ortega vs. The Korean Zombie"
     },
@@ -100094,7 +100094,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 236: Holloway vs. Poirier 2"
     },
@@ -100105,7 +100105,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "4:48",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Magny vs. Ponzinibbio"
     },
@@ -100116,7 +100116,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "0:33",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Maia vs. Usman"
     },
@@ -100127,7 +100127,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 216: Ferguson vs. Lee"
     }
@@ -100199,7 +100199,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "4:01",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Volkov vs. Rozenstruik"
     },
@@ -100210,7 +100210,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "1:44",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 252: Miocic vs. Cormier 3"
     },
@@ -100221,7 +100221,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 229: Khabib vs. McGregor"
     },
@@ -100232,7 +100232,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 223: Khabib vs. Iaquinta"
     },
@@ -100243,7 +100243,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 218: Holloway vs. Aldo 2"
     },
@@ -100254,7 +100254,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Chiesa vs. Lee"
     },
@@ -100265,7 +100265,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Bermudez vs. The Korean Zombie"
     },
@@ -100276,7 +100276,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "1:59",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC on FOX: Holm vs. Shevchenko"
     },
@@ -100287,7 +100287,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC on FOX: Machida vs Rockhold"
     },
@@ -100298,7 +100298,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "3:05",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "The Ultimate Fighter: A Champion Will Be Crowned Finale"
     }
@@ -100967,7 +100967,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "3:11",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Font vs. Vera"
     },
@@ -100978,7 +100978,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "4:51",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 262: Oliveira vs. Chandler"
     },
@@ -100989,7 +100989,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 3,
       "ti": "4:10",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Smith vs. Clark"
     },
@@ -101000,7 +101000,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "0:22",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Eye vs. Calvillo"
     },
@@ -101011,7 +101011,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "1:49",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 235: Jones vs. Smith"
     },
@@ -101022,7 +101022,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Thompson vs. Till"
     },
@@ -101033,7 +101033,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Bisping vs. Gastelum"
     },
@@ -101044,7 +101044,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "1:14",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Lewis vs. Browne"
     }
@@ -101291,7 +101291,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 273: Volkanovski vs. The Korean Zombie"
     },
@@ -101302,7 +101302,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 5,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Ladd vs. Dumont"
     },
@@ -101313,7 +101313,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 3,
       "ti": "0:33",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Overeem vs. Rozenstruik"
     },
@@ -101324,7 +101324,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "0:16",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: De Randamie vs. Ladd"
     },
@@ -101335,7 +101335,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Dos Anjos vs. Lee"
     },
@@ -101346,7 +101346,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "3:26",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 229: Khabib vs. McGregor"
     },
@@ -101357,7 +101357,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "2:33",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Cerrone vs. Till"
     }
@@ -101370,7 +101370,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 273: Volkanovski vs. The Korean Zombie"
     },
@@ -101381,7 +101381,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 270: Ngannou vs. Gane"
     },
@@ -101392,7 +101392,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Felder vs. Dos Anjos"
     },
@@ -101403,7 +101403,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 3,
       "ti": "2:26",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Poirier vs. Hooker"
     }
@@ -101473,7 +101473,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Blaydes vs. Daukaus"
     },
@@ -101484,7 +101484,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 3,
       "ti": "3:39",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 257: Poirier vs. McGregor"
     },
@@ -101495,7 +101495,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Blaydes vs. Dos Santos"
     },
@@ -101506,7 +101506,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "3:40",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Emmett vs. Stephens"
     },
@@ -101517,7 +101517,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "4:16",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 215: Nunes vs Shevchenko 2"
     },
@@ -101528,7 +101528,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "1:14",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Lewis vs. Browne"
     },
@@ -101539,7 +101539,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "2:52",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "The Ultimate Fighter: Tournament of Champions Finale"
     },
@@ -101550,7 +101550,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Almeida vs Garbrandt"
     },
@@ -101561,7 +101561,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "2:53",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Teixeira vs Saint Preux"
     },
@@ -101572,7 +101572,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Majority",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 183: Silva vs Diaz"
     },
@@ -101583,7 +101583,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Bader vs Saint Preux"
     },
@@ -101594,7 +101594,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "1:06",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 170: Rousey vs McMann"
     },
@@ -101605,7 +101605,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "4:06",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 159: Jones vs Sonnen"
     }
@@ -101903,7 +101903,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "2:15",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Santos vs. Ankalaev"
     },
@@ -101914,7 +101914,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 3,
       "ti": "0:53",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Dern vs. Rodriguez"
     },
@@ -101925,7 +101925,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Rozenstruik vs. Gane"
     },
@@ -101936,7 +101936,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 3,
       "ti": "3:57",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Waterson vs. Hill"
     },
@@ -101947,7 +101947,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 246: McGregor vs. Cowboy"
     },
@@ -101958,7 +101958,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 241: Cormier vs. Miocic 2"
     },
@@ -101969,7 +101969,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Barboza vs. Gaethje"
     }
@@ -102757,7 +102757,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 271: Adesanya vs. Whittaker 2"
     },
@@ -102768,7 +102768,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 266: Volkanovski vs. Ortega"
     },
@@ -102779,7 +102779,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Chiesa vs. Magny"
     },
@@ -102790,7 +102790,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Waterson vs. Hill"
     },
@@ -102801,7 +102801,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Blaydes vs. Volkov"
     },
@@ -102812,7 +102812,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 246: McGregor vs. Cowboy"
     },
@@ -102823,7 +102823,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Dos Anjos vs. Edwards"
     },
@@ -102834,7 +102834,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Overeem vs. Oleinik"
     },
@@ -102845,7 +102845,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 230: Cormier vs. Lewis"
     },
@@ -102856,7 +102856,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "3:32",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "The Ultimate Fighter: Undefeated Finale"
     },
@@ -102867,7 +102867,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 5,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "The Ultimate Fighter: A New World Champion Finale"
     },
@@ -102878,7 +102878,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "The Ultimate Fighter: Team Rousey vs. Team Tate Finale"
     }
@@ -102926,7 +102926,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Hermansson vs. Strickland"
     },
@@ -102937,7 +102937,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 263: Adesanya vs. Vettori 2"
     },
@@ -102948,7 +102948,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Rozenstruik vs. Gane"
     },
@@ -102959,7 +102959,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 240: Holloway vs. Edgar"
     },
@@ -102970,7 +102970,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Thompson vs. Pettis"
     },
@@ -102981,7 +102981,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Alvarez vs. Poirier 2"
     },
@@ -102992,7 +102992,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Swanson vs. Ortega"
     },
@@ -103003,7 +103003,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Swanson vs. Lobov"
     },
@@ -103014,7 +103014,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "2:52",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "The Ultimate Fighter: Tournament of Champions Finale"
     },
@@ -103025,7 +103025,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "3:07",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 186: Johnson vs Horiguchi"
     },
@@ -103036,7 +103036,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "0:16",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 175: Weidman vs Machida"
     },
@@ -103047,7 +103047,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 170: Rousey vs McMann"
     },
@@ -103058,7 +103058,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Fight for the Troops 3"
     },
@@ -103069,7 +103069,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 161: Evans vs Henderson"
     }
@@ -103376,7 +103376,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 3,
       "ti": "0:45",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Lewis vs. Daukaus"
     },
@@ -103387,7 +103387,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "3:49",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Sandhagen vs. Dillashaw"
     },
@@ -103398,7 +103398,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Thompson vs. Neal"
     },
@@ -103409,7 +103409,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 253: Adesanya vs. Costa"
     },
@@ -103420,7 +103420,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Waterson vs. Hill"
     },
@@ -103431,7 +103431,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Smith vs. Teixeira"
     },
@@ -103442,7 +103442,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Rodriguez vs. Stephens"
     },
@@ -103453,7 +103453,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Dos Anjos vs. Lee"
     },
@@ -103464,7 +103464,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 230: Cormier vs. Lewis"
     },
@@ -103475,7 +103475,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Rivera vs. Moraes"
     }
@@ -103771,7 +103771,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Font vs. Aldo"
     },
@@ -103782,7 +103782,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "3:18",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 258: Usman vs. Burns"
     },
@@ -103793,7 +103793,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "1:33",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Smith vs. Rakic"
     },
@@ -103804,7 +103804,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "1:16",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Overeem vs. Rozenstruik"
     }
@@ -104142,7 +104142,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 3,
       "ti": "4:25",
-      "wc": "Women\\",
+      "wc": "Women's Featherweight",
       "tb": false,
       "ev": "UFC Fight Night: Holloway vs. Rodriguez"
     },
@@ -104153,7 +104153,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Featherweight",
       "tb": false,
       "ev": "UFC Fight Night: Font vs. Garbrandt"
     },
@@ -104164,7 +104164,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 5,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Featherweight",
       "tb": false,
       "ev": "UFC 250: Nunes vs. Spencer"
     },
@@ -104175,7 +104175,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "3:37",
-      "wc": "Women\\",
+      "wc": "Women's Featherweight",
       "tb": false,
       "ev": "UFC Fight Night: Benavidez vs. Figueiredo"
     },
@@ -104186,7 +104186,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Featherweight",
       "tb": false,
       "ev": "UFC 240: Holloway vs. Edgar"
     },
@@ -104197,7 +104197,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "3:24",
-      "wc": "Women\\",
+      "wc": "Women's Featherweight",
       "tb": false,
       "ev": "UFC Fight Night: Dos Anjos vs. Lee"
     }
@@ -104210,7 +104210,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 3,
       "ti": "4:25",
-      "wc": "Women\\",
+      "wc": "Women's Featherweight",
       "tb": false,
       "ev": "UFC Fight Night: Holloway vs. Rodriguez"
     },
@@ -104221,7 +104221,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Featherweight",
       "tb": false,
       "ev": "The Ultimate Fighter: Heavy Hitters Finale"
     }
@@ -104258,7 +104258,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Holloway vs. Rodriguez"
     },
@@ -104269,7 +104269,7 @@ export const FIGHT_HISTORY = {
       "me": "TKO - Doctor's Stoppage",
       "rn": 1,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 254: Khabib vs. Gaethje"
     },
@@ -104280,7 +104280,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "2:43",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Kattar vs. Ige"
     },
@@ -104291,7 +104291,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 3,
       "ti": "2:26",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 242: Khabib vs. Poirier"
     }
@@ -104925,7 +104925,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Costa vs. Vettori"
     },
@@ -104936,7 +104936,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "3:39",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 259: Blachowicz vs. Adesanya"
     },
@@ -104947,7 +104947,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 252: Miocic vs. Cormier 3"
     },
@@ -104958,7 +104958,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: De Randamie vs. Ladd"
     },
@@ -104969,7 +104969,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Assuncao vs. Moraes 2"
     },
@@ -104980,7 +104980,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "1:21",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Marreta vs. Anders"
     }
@@ -104993,7 +104993,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Costa vs. Vettori"
     },
@@ -105004,7 +105004,7 @@ export const FIGHT_HISTORY = {
       "me": "DQ",
       "rn": 1,
       "ti": "4:16",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Reyes vs. Prochazka"
     },
@@ -105015,7 +105015,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Felder vs. Dos Anjos"
     },
@@ -105026,7 +105026,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "3:44",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Covington vs. Woodley"
     },
@@ -105037,7 +105037,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Lee vs. Oliveira"
     },
@@ -105048,7 +105048,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Maia vs. Askren"
     },
@@ -105059,7 +105059,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 239: Jones vs. Santos"
     },
@@ -105070,7 +105070,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "4:24",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Thompson vs. Pettis"
     },
@@ -105081,7 +105081,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Majority",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Marreta vs. Anders"
     },
@@ -105092,7 +105092,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Alvarez vs. Poirier 2"
     },
@@ -105103,7 +105103,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Jacare vs. Brunson 2"
     },
@@ -105114,7 +105114,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Pettis vs. Moreno"
     },
@@ -105125,7 +105125,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Lewis vs. Browne"
     },
@@ -105136,7 +105136,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "4:34",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 202: Diaz vs. McGregor 2"
     },
@@ -105147,7 +105147,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: MacDonald vs Thompson"
     },
@@ -105158,7 +105158,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC on FOX: Dos Anjos vs. Cowboy 2"
     },
@@ -105169,7 +105169,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 186: Johnson vs Horiguchi"
     },
@@ -105180,7 +105180,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "The Ultimate Fighter: A Champion Will Be Crowned Finale"
     }
@@ -105375,7 +105375,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Santos vs. Walker"
     },
@@ -105386,7 +105386,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Whittaker vs. Till"
     },
@@ -105397,7 +105397,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Rodriguez vs. Stephens"
     },
@@ -105408,7 +105408,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 3,
       "ti": "3:24",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 237: Namajunas vs. Andrade"
     },
@@ -105419,7 +105419,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 3,
       "ti": "1:09",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Holm vs. Correia"
     },
@@ -105430,7 +105430,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Majority",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Belfort vs. Gastelum"
     },
@@ -105441,7 +105441,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 203: Miocic vs. Overeem"
     },
@@ -105452,7 +105452,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC on FOX: Teixeira vs Evans"
     },
@@ -105463,7 +105463,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "0:34",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 190: Rousey vs Correia"
     },
@@ -105474,7 +105474,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "1:56",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 177: Dillashaw vs Soto"
     },
@@ -105485,7 +105485,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 172: Jones vs Teixeira"
     },
@@ -105496,7 +105496,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Hunt vs Bigfoot"
     }
@@ -105928,7 +105928,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Smith vs. Spann"
     },
@@ -105939,7 +105939,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 3,
       "ti": "4:21",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Covington vs. Woodley"
     }
@@ -106044,7 +106044,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "4:17",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Smith vs. Spann"
     },
@@ -106055,7 +106055,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "1:53",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Smith vs. Rakic"
     },
@@ -106066,7 +106066,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "2:10",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Ngannou vs. Dos Santos"
     },
@@ -106077,7 +106077,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "1:01",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Ngannou vs. Velasquez"
     },
@@ -106088,7 +106088,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 226: Miocic vs. Cormier"
     },
@@ -106099,7 +106099,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "2:12",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "The Ultimate Fighter: A New World Champion Finale"
     }
@@ -106406,7 +106406,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "4:54",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Cannonier vs. Gastelum"
     },
@@ -106417,7 +106417,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Lee vs. Oliveira"
     },
@@ -106428,7 +106428,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "1:59",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Gustafsson vs. Smith"
     }
@@ -106840,7 +106840,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 3,
       "ti": "1:53",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Makhachev vs. Moises"
     },
@@ -106851,7 +106851,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Brunson vs. Holland"
     },
@@ -106862,7 +106862,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Blaydes vs. Volkov"
     },
@@ -106873,7 +106873,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Lewis vs. Dos Santos"
     },
@@ -106884,7 +106884,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Dos Santos vs. Ivanov"
     },
@@ -106895,7 +106895,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "3:40",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Emmett vs. Stephens"
     },
@@ -106906,7 +106906,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 3,
       "ti": "4:54",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Volkov vs. Struve"
     },
@@ -106917,7 +106917,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Majority",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Belfort vs. Gastelum"
     },
@@ -106928,7 +106928,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 3,
       "ti": "3:03",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Mousasi vs. Hall 2"
     },
@@ -106939,7 +106939,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Cowboy vs Cowboy"
     },
@@ -106950,7 +106950,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Mir vs Duffee"
     },
@@ -106961,7 +106961,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "1:54",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Bigfoot vs Mir"
     },
@@ -106972,7 +106972,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 182: Jones vs Cormier"
     }
@@ -107947,7 +107947,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 3,
       "ti": "2:54",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Jung vs. Ige"
     },
@@ -107958,7 +107958,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Overeem vs. Volkov"
     },
@@ -107969,7 +107969,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Andrade vs. Zhang"
     }
@@ -109148,7 +109148,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Whittaker vs. Gastelum"
     },
@@ -109159,7 +109159,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 3,
       "ti": "3:57",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Waterson vs. Hill"
     },
@@ -109170,7 +109170,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Blaydes vs. Dos Santos"
     },
@@ -109181,7 +109181,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Jacare vs. Brunson 2"
     },
@@ -109192,7 +109192,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Chiesa vs. Lee"
     },
@@ -109203,7 +109203,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Lewis vs. Abdurakhimov"
     },
@@ -109214,7 +109214,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 195: Lawler vs Condit"
     }
@@ -110153,7 +110153,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "2:03",
-      "wc": "Women\\",
+      "wc": "Women's Featherweight",
       "tb": false,
       "ev": "UFC 259: Blachowicz vs. Adesanya"
     },
@@ -110164,7 +110164,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "3:31",
-      "wc": "Women\\",
+      "wc": "Women's Featherweight",
       "tb": false,
       "ev": "UFC Fight Night: Benavidez vs. Figueiredo"
     },
@@ -110175,7 +110175,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "3:57",
-      "wc": "Women\\",
+      "wc": "Women's Featherweight",
       "tb": false,
       "ev": "UFC 243: Whittaker vs. Adesanya"
     },
@@ -110186,7 +110186,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "3:24",
-      "wc": "Women\\",
+      "wc": "Women's Featherweight",
       "tb": false,
       "ev": "UFC Fight Night: Dos Anjos vs. Lee"
     },
@@ -110197,7 +110197,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "1:01",
-      "wc": "Women\\",
+      "wc": "Women's Featherweight",
       "tb": false,
       "ev": "UFC 232: Jones vs. Gustafsson 2"
     },
@@ -110208,7 +110208,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Featherweight",
       "tb": false,
       "ev": "UFC 225: Whittaker vs. Romero 2"
     }
@@ -110693,7 +110693,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "3:41",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Blaydes vs. Lewis"
     },
@@ -110704,7 +110704,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "1:38",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Munhoz vs. Edgar"
     },
@@ -110715,7 +110715,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "0:40",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Felder vs. Hooker"
     },
@@ -110726,7 +110726,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 241: Cormier vs. Miocic 2"
     },
@@ -110737,7 +110737,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Poirier vs. Gaethje"
     },
@@ -110748,7 +110748,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "2:53",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "The Ultimate Fighter: A New World Champion Finale"
     }
@@ -111666,7 +111666,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Holloway vs. Kattar"
     },
@@ -111677,7 +111677,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Smith vs. Teixeira"
     },
@@ -111688,7 +111688,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 3,
       "ti": "2:26",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 242: Khabib vs. Poirier"
     },
@@ -111699,7 +111699,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "2:22",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Iaquinta vs. Cowboy"
     },
@@ -111710,7 +111710,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Oezdemir vs. Smith"
     },
@@ -111721,7 +111721,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Cerrone vs. Medeiros"
     },
@@ -111732,7 +111732,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "2:51",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 215: Nunes vs Shevchenko 2"
     },
@@ -111743,7 +111743,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Mir vs Duffee"
     },
@@ -111754,7 +111754,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "The Ultimate Fighter: Team Edgar vs. Team Penn Finale"
     }
@@ -111767,7 +111767,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Holloway vs. Kattar"
     },
@@ -111778,7 +111778,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 251: Usman vs. Masvidal"
     },
@@ -111789,7 +111789,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Blachowicz vs. Jacare"
     },
@@ -111800,7 +111800,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Rodriguez vs. Stephens"
     }
@@ -112698,7 +112698,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 3,
       "ti": "4:10",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Smith vs. Clark"
     },
@@ -112709,7 +112709,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "1:50",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Cejudo vs. Dillashaw"
     },
@@ -112720,7 +112720,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 3,
       "ti": "4:21",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "The Ultimate Fighter: Undefeated Finale"
     },
@@ -112731,7 +112731,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "1:40",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "The Ultimate Fighter: A New World Champion Finale"
     }
@@ -113091,7 +113091,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Santos vs. Teixeira"
     },
@@ -113102,7 +113102,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Overeem vs. Harris"
     },
@@ -113113,7 +113113,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 239: Jones vs. Santos"
     },
@@ -113124,7 +113124,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 231: Holloway vs. Ortega"
     },
@@ -113135,7 +113135,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 225: Whittaker vs. Romero 2"
     },
@@ -113146,7 +113146,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Saint Preux vs. Okami"
     },
@@ -113157,7 +113157,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "3:03",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 212: Aldo vs. Holloway"
     },
@@ -113168,7 +113168,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Bader vs. Nogueira"
     },
@@ -113179,7 +113179,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 5,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "The Ultimate Fighter: Team Joanna vs. Team Cláudia Finale"
     },
@@ -113190,7 +113190,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 190: Rousey vs Correia"
     },
@@ -113201,7 +113201,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC on FOX: Dos Santos vs Miocic"
     },
@@ -113212,7 +113212,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Cowboy vs Miller"
     }
@@ -113921,7 +113921,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "3:31",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 254: Khabib vs. Gaethje"
     }
@@ -115256,7 +115256,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "2:29",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Covington vs. Woodley"
     },
@@ -115267,7 +115267,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "3:36",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Overeem vs. Harris"
     },
@@ -115278,7 +115278,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Anderson vs. Blachowicz"
     },
@@ -115289,7 +115289,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 3,
       "ti": "1:46",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Covington vs. Lawler"
     },
@@ -115300,7 +115300,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Assuncao vs. Moraes 2"
     },
@@ -115311,7 +115311,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Jacare vs. Brunson 2"
     },
@@ -115322,7 +115322,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "2:54",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 216: Ferguson vs. Lee"
     }
@@ -115701,7 +115701,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "1:33",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Smith vs. Rakic"
     },
@@ -115712,7 +115712,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "2:42",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Eye vs. Calvillo"
     },
@@ -115723,7 +115723,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "2:36",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Woodley vs. Burns"
     },
@@ -115734,7 +115734,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "4:26",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Blaydes vs. Dos Santos"
     },
@@ -115745,7 +115745,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 241: Cormier vs. Miocic 2"
     },
@@ -115756,7 +115756,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 235: Jones vs. Smith"
     },
@@ -115767,7 +115767,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "2:01",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Korean Zombie vs. Rodriguez"
     }
@@ -117080,7 +117080,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "2:21",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 251: Usman vs. Masvidal"
     },
@@ -117091,7 +117091,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "1:50",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Cejudo vs. Dillashaw"
     },
@@ -117102,7 +117102,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Stephens vs. Choi"
     },
@@ -117113,7 +117113,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "3:21",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC on FOX: VanZant vs. Waterson"
     },
@@ -117124,7 +117124,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "0:17",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC on FOX: Maia vs. Condit"
     },
@@ -117135,7 +117135,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 5,
       "ti": "2:25",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Namajunas vs. VanZant"
     },
@@ -117146,7 +117146,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 3,
       "ti": "1:01",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 191: Johnson vs Dodson 2"
     },
@@ -117157,7 +117157,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC on FOX: Machida vs Rockhold"
     },
@@ -117168,7 +117168,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 3,
       "ti": "2:54",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Edgar vs Swanson"
     }
@@ -121828,7 +121828,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Joanna vs. Waterson"
     },
@@ -121839,7 +121839,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 236: Holloway vs. Poirier 2"
     },
@@ -121850,7 +121850,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "4:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Blaydes vs. Ngannou 2"
     },
@@ -121861,7 +121861,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Poirier vs. Gaethje"
     }
@@ -121944,7 +121944,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "4:59",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 243: Whittaker vs. Adesanya"
     },
@@ -121955,7 +121955,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "2:37",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 234: Adesanya vs. Silva"
     },
@@ -121966,7 +121966,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Werdum vs. Tybura"
     }
@@ -122957,7 +122957,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 241: Cormier vs. Miocic 2"
     },
@@ -122968,7 +122968,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Jacare vs. Hermansson"
     },
@@ -122979,7 +122979,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Dos Santos vs. Ivanov"
     },
@@ -122990,7 +122990,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Cerrone vs. Till"
     }
@@ -123003,7 +123003,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 5,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Shevchenko vs. Carmouche 2"
     },
@@ -123014,7 +123014,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Blachowicz vs. Santos"
     },
@@ -123025,7 +123025,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Dos Santos vs. Ivanov"
     },
@@ -123036,7 +123036,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Swanson vs. Ortega"
     },
@@ -123047,7 +123047,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 205: Alvarez vs McGregor"
     },
@@ -123058,7 +123058,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Mendes vs Lamas"
     },
@@ -123069,7 +123069,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC on FOX: Werdum vs Browne"
     },
@@ -123080,7 +123080,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Fight for the Troops 3"
     },
@@ -123091,7 +123091,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "3:57",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC on FOX: Johnson vs Moraga"
     },
@@ -123102,7 +123102,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "4:49",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 157: Rousey vs Carmouche"
     }
@@ -123457,7 +123457,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "4:13",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 240: Holloway vs. Edgar"
     },
@@ -123468,7 +123468,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Assuncao vs. Moraes 2"
     }
@@ -123865,7 +123865,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: De Randamie vs. Ladd"
     },
@@ -123876,7 +123876,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 5,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "The Ultimate Fighter: A New World Champion Finale"
     }
@@ -124060,7 +124060,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Moicano vs. The Korean Zombie"
     },
@@ -124071,7 +124071,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Blaydes vs. Ngannou 2"
     },
@@ -124082,7 +124082,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "0:33",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Maia vs. Usman"
     },
@@ -124093,7 +124093,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Saint Preux vs. Okami"
     }
@@ -124367,7 +124367,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Gustafsson vs. Smith"
     },
@@ -124378,7 +124378,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "3:26",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 229: Khabib vs. McGregor"
     },
@@ -124389,7 +124389,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 3,
       "ti": "1:56",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 214: Cormier vs. Jones 2"
     }
@@ -124492,7 +124492,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "1:59",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Gustafsson vs. Smith"
     }
@@ -125028,7 +125028,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 3,
       "ti": "0:48",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 237: Namajunas vs. Andrade"
     },
@@ -125039,7 +125039,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Oezdemir vs. Smith"
     },
@@ -125050,7 +125050,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Stephens vs. Choi"
     },
@@ -125061,7 +125061,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 3,
       "ti": "4:54",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Volkov vs. Struve"
     }
@@ -126110,7 +126110,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Barboza vs. Gaethje"
     },
@@ -126121,7 +126121,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "3:41",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Blaydes vs. Ngannou 2"
     },
@@ -126132,7 +126132,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Dos Santos vs. Ivanov"
     },
@@ -126143,7 +126143,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 211: Miocic vs. Dos Santos"
     },
@@ -126154,7 +126154,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 190: Rousey vs Correia"
     }
@@ -128163,7 +128163,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "1:01",
-      "wc": "Women\\",
+      "wc": "Women's Featherweight",
       "tb": false,
       "ev": "UFC 232: Jones vs. Gustafsson 2"
     },
@@ -128174,7 +128174,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Featherweight",
       "tb": false,
       "ev": "UFC Fight Night: Dos Santos vs. Ivanov"
     },
@@ -128185,7 +128185,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Featherweight",
       "tb": false,
       "ev": "UFC 222: Cyborg vs. Kunitskaya"
     },
@@ -128196,7 +128196,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Featherweight",
       "tb": false,
       "ev": "UFC 200: Tate vs Nunes"
     },
@@ -128207,7 +128207,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "0:14",
-      "wc": "Women\\",
+      "wc": "Women's Featherweight",
       "tb": false,
       "ev": "UFC 184: Rousey vs Zingano"
     },
@@ -128218,7 +128218,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 3,
       "ti": "1:21",
-      "wc": "Women\\",
+      "wc": "Women's Featherweight",
       "tb": false,
       "ev": "UFC 178: Johnson vs Cariaso"
     },
@@ -128229,7 +128229,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 3,
       "ti": "2:55",
-      "wc": "Women\\",
+      "wc": "Women's Featherweight",
       "tb": false,
       "ev": "The Ultimate Fighter: Team Jones vs. Team Sonnen Finale"
     }
@@ -129543,7 +129543,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Korean Zombie vs. Rodriguez"
     },
@@ -129554,7 +129554,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "2:27",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 224: Nunes vs. Pennington"
     },
@@ -129565,7 +129565,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "4:34",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 218: Holloway vs. Aldo 2"
     },
@@ -129576,7 +129576,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "3:19",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 209: Woodley vs. Thompson 2"
     },
@@ -129587,7 +129587,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Mousasi vs. Hall 2"
     },
@@ -129598,7 +129598,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "3:43",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "The Ultimate Fighter: Team Joanna vs. Team Cláudia Finale"
     }
@@ -130856,7 +130856,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "1:21",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Marreta vs. Anders"
     },
@@ -130867,7 +130867,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Werdum vs. Tybura"
     },
@@ -130878,7 +130878,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 3,
       "ti": "1:01",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 191: Johnson vs Dodson 2"
     },
@@ -130889,7 +130889,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 3,
       "ti": "3:15",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Miocic vs Hunt"
     },
@@ -130900,7 +130900,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "4:53",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "The Ultimate Fighter: A Champion Will Be Crowned Finale"
     }
@@ -132129,7 +132129,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "4:57",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Gaethje vs. Vick"
     },
@@ -132140,7 +132140,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Stephens vs. Choi"
     },
@@ -132151,7 +132151,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "2:54",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 216: Ferguson vs. Lee"
     }
@@ -132489,7 +132489,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 227: Dillashaw vs. Garbrandt 2"
     },
@@ -132500,7 +132500,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Stephens vs. Choi"
     },
@@ -132511,7 +132511,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Swanson vs. Lobov"
     },
@@ -132522,7 +132522,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Whittaker vs. Brunson"
     },
@@ -132533,7 +132533,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Rodriguez vs. Caceres"
     }
@@ -133191,7 +133191,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 226: Miocic vs. Cormier"
     },
@@ -133202,7 +133202,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 212: Aldo vs. Holloway"
     },
@@ -133213,7 +133213,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "The Ultimate Fighter: Tournament of Champions Finale"
     }
@@ -133252,7 +133252,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "3:32",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "The Ultimate Fighter: Undefeated Finale"
     },
@@ -133263,7 +133263,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "The Ultimate Fighter: A New World Champion Finale"
     }
@@ -133600,7 +133600,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Cowboy vs. Edwards"
     },
@@ -133611,7 +133611,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Poirier vs. Pettis"
     },
@@ -133622,7 +133622,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 212: Aldo vs. Holloway"
     },
@@ -133633,7 +133633,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 206: Holloway vs. Pettis"
     }
@@ -133716,7 +133716,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Cowboy vs. Edwards"
     },
@@ -133727,7 +133727,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Majority",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "The Ultimate Fighter: A New World Champion Finale"
     }
@@ -135455,7 +135455,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC 223: Khabib vs. Iaquinta"
     },
@@ -135466,7 +135466,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Werdum vs. Tybura"
     },
@@ -135477,7 +135477,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Bermudez vs. The Korean Zombie"
     },
@@ -135488,7 +135488,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "0:17",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC on FOX: Maia vs. Condit"
     },
@@ -135499,7 +135499,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Hunt vs Mir"
     },
@@ -135510,7 +135510,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "4:09",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Miocic vs Hunt"
     },
@@ -135521,7 +135521,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "The Ultimate Fighter: A Champion Will Be Crowned Finale"
     }
@@ -136541,7 +136541,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "3:50",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Machida vs. Anders"
     }
@@ -136767,7 +136767,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Jacare vs. Brunson 2"
     },
@@ -136778,7 +136778,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "0:53",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "The Ultimate Fighter: Redemption Finale"
     },
@@ -136789,7 +136789,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Lewis vs. Abdurakhimov"
     },
@@ -136800,7 +136800,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 197: Jones vs Saint Preux"
     },
@@ -136811,7 +136811,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Condit vs Alves"
     },
@@ -136822,7 +136822,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night 56: Shogun vs Saint Preux"
     },
@@ -136833,7 +136833,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC on FOX: Lawler vs Brown"
     }
@@ -137412,7 +137412,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "4:34",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 218: Holloway vs. Aldo 2"
     },
@@ -137423,7 +137423,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 3,
       "ti": "2:38",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "The Ultimate Fighter: American Top Team vs. Blackzilians Finale"
     },
@@ -137434,7 +137434,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "The Ultimate Fighter: A Champion Will Be Crowned Finale"
     }
@@ -137460,7 +137460,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "2:00",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "The Ultimate Fighter: A New World Champion Finale"
     }
@@ -137519,7 +137519,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "1:40",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "The Ultimate Fighter: A New World Champion Finale"
     }
@@ -137532,7 +137532,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "2:53",
-      "wc": "Women\\",
+      "wc": "Women's Flyweight",
       "tb": false,
       "ev": "The Ultimate Fighter: A New World Champion Finale"
     }
@@ -137914,7 +137914,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Bisping vs. Gastelum"
     },
@@ -137925,7 +137925,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 214: Cormier vs. Jones 2"
     },
@@ -137936,7 +137936,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "The Ultimate Fighter: Tournament of Champions Finale"
     },
@@ -137947,7 +137947,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "1:59",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC on FOX: Holm vs. Shevchenko"
     },
@@ -137958,7 +137958,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "4:13",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Namajunas vs. VanZant"
     },
@@ -137969,7 +137969,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 3,
       "ti": "3:15",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Miocic vs Hunt"
     },
@@ -137980,7 +137980,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 3,
       "ti": "2:54",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Edgar vs Swanson"
     }
@@ -139286,7 +139286,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 216: Ferguson vs. Lee"
     },
@@ -139297,7 +139297,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 3,
       "ti": "3:45",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 210: Cormier vs. Johnson 2"
     }
@@ -140549,7 +140549,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "2:53",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Nelson vs. Ponzinibbio"
     },
@@ -140560,7 +140560,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC on FOX: VanZant vs. Waterson"
     },
@@ -140571,7 +140571,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "1:21",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 198: Werdum vs Miocic"
     },
@@ -140582,7 +140582,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Hunt vs Mir"
     },
@@ -140593,7 +140593,7 @@ export const FIGHT_HISTORY = {
       "me": "TKO - Doctor's Stoppage",
       "rn": 2,
       "ti": "1:30",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 180: Werdum vs Hunt"
     },
@@ -140604,7 +140604,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "2:24",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Cowboy vs Miller"
     },
@@ -140615,7 +140615,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Bisping vs Kennedy"
     }
@@ -142208,7 +142208,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Swanson vs. Lobov"
     }
@@ -144234,7 +144234,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 3,
       "ti": "3:39",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Rodriguez vs. Penn"
     },
@@ -144245,7 +144245,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: MacDonald vs Thompson"
     },
@@ -144256,7 +144256,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 194: Aldo vs McGregor"
     }
@@ -144269,7 +144269,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "0:48",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 207: Nunes vs. Rousey"
     },
@@ -144280,7 +144280,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "0:59",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 193: Rousey vs Holm"
     },
@@ -144291,7 +144291,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "0:34",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 190: Rousey vs Correia"
     },
@@ -144302,7 +144302,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "0:14",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 184: Rousey vs Zingano"
     },
@@ -144313,7 +144313,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "0:16",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 175: Weidman vs Machida"
     },
@@ -144324,7 +144324,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "1:06",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 170: Rousey vs McMann"
     },
@@ -144335,7 +144335,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 3,
       "ti": "0:58",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 168: Weidman vs Silva 2"
     },
@@ -144346,7 +144346,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "4:49",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 157: Rousey vs Carmouche"
     }
@@ -144976,7 +144976,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 206: Holloway vs. Pettis"
     },
@@ -144987,7 +144987,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 3,
       "ti": "2:44",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: MacDonald vs Thompson"
     },
@@ -144998,7 +144998,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 5,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 193: Rousey vs Holm"
     },
@@ -145009,7 +145009,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Holloway vs Oliveira"
     },
@@ -145020,7 +145020,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 186: Johnson vs Horiguchi"
     },
@@ -145031,7 +145031,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 174: Johnson vs Bagautinov"
     }
@@ -145296,7 +145296,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Unknown",
+      "wc": "Lightweight",
       "tb": false,
       "ev": "The Ultimate Fighter: Tournament of Champions Finale"
     },
@@ -145307,7 +145307,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "2:15",
-      "wc": "Unknown",
+      "wc": "Lightweight",
       "tb": false,
       "ev": "UFC Fight Night: Hunt vs Mir"
     },
@@ -145318,7 +145318,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Unknown",
+      "wc": "Lightweight",
       "tb": false,
       "ev": "UFC Fight Night: Miocic vs Hunt"
     },
@@ -145329,7 +145329,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Unknown",
+      "wc": "Lightweight",
       "tb": false,
       "ev": "UFC Fight Night: Bisping vs Le"
     }
@@ -146347,7 +146347,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Mousasi vs. Hall 2"
     },
@@ -146358,7 +146358,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "3:46",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Overeem vs Arlovski"
     }
@@ -146371,7 +146371,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 3,
       "ti": "3:03",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Mousasi vs. Hall 2"
     },
@@ -146382,7 +146382,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "3:59",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Mendes vs Lamas"
     },
@@ -146393,7 +146393,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Bisping vs Le"
     }
@@ -147075,7 +147075,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Lineker vs. Dodson"
     },
@@ -147086,7 +147086,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 3,
       "ti": "4:55",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Cowboy vs Cowboy"
     }
@@ -148409,7 +148409,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 202: Diaz vs. McGregor 2"
     },
@@ -148420,7 +148420,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC on FOX: Dillashaw vs. Barao II"
     },
@@ -148431,7 +148431,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Bisping vs Le"
     },
@@ -148442,7 +148442,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 174: Johnson vs Bagautinov"
     }
@@ -149069,7 +149069,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "2:36",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: McDonald vs. Lineker"
     },
@@ -149080,7 +149080,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Rothwell vs Dos Santos"
     }
@@ -151272,7 +151272,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Hunt vs Mir"
     },
@@ -151283,7 +151283,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Hunt vs Nelson"
     }
@@ -153055,7 +153055,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC on FOX: Dos Anjos vs. Cowboy 2"
     },
@@ -153066,7 +153066,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "3:07",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 186: Johnson vs Horiguchi"
     },
@@ -153077,7 +153077,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Bisping vs Kennedy"
     },
@@ -153088,7 +153088,7 @@ export const FIGHT_HISTORY = {
       "me": "Overturned",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 166: Velasquez vs Dos Santos 3"
     }
@@ -155013,7 +155013,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Holohan vs Smolka"
     },
@@ -155024,7 +155024,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 186: Johnson vs Horiguchi"
     },
@@ -155035,7 +155035,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "4:53",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "The Ultimate Fighter: A Champion Will Be Crowned Finale"
     }
@@ -155048,7 +155048,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Holohan vs Smolka"
     },
@@ -155059,7 +155059,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Condit vs Alves"
     }
@@ -156882,7 +156882,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC on FOX: Dillashaw vs. Barao II"
     },
@@ -156893,7 +156893,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "2:24",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Cowboy vs Miller"
     },
@@ -156904,7 +156904,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 172: Jones vs Teixeira"
     },
@@ -156915,7 +156915,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "The Ultimate Fighter: Team Rousey vs. Team Tate Finale"
     }
@@ -159081,7 +159081,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "4:09",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Miocic vs Hunt"
     },
@@ -159092,7 +159092,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "3:05",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "The Ultimate Fighter: A Champion Will Be Crowned Finale"
     }
@@ -159491,7 +159491,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC 186: Johnson vs Horiguchi"
     },
@@ -159502,7 +159502,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "4:59",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "The Ultimate Fighter: Team Rousey vs. Team Tate Finale"
     }
@@ -159829,7 +159829,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "3:34",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Gonzaga vs Cro Cop 2"
     }
@@ -160270,7 +160270,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "1:56",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Maia vs LaFlare"
     },
@@ -160281,7 +160281,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "1:56",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 177: Dillashaw vs Soto"
     }
@@ -160449,7 +160449,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "2:02",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 185: Pettis vs Dos Anjos"
     },
@@ -160460,7 +160460,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "4:33",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Bigfoot vs Arlovski"
     }
@@ -161371,7 +161371,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 182: Jones vs Cormier"
     },
@@ -161382,7 +161382,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "The Ultimate Fighter: Team Edgar vs. Team Penn Finale"
     }
@@ -163964,7 +163964,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Cowboy vs Miller"
     }
@@ -166670,7 +166670,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Hunt vs Bigfoot"
     },
@@ -166681,7 +166681,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Split",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC on FOX: Johnson vs Moraga"
     }
@@ -166762,7 +166762,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "The Ultimate Fighter: Team Rousey vs. Team Tate Finale"
     }
@@ -167190,7 +167190,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Machida vs Munoz"
     },
@@ -167201,7 +167201,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 161: Evans vs Henderson"
     }
@@ -169129,7 +169129,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "2:08",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 163: Aldo vs Jung"
     },
@@ -169140,7 +169140,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "4:06",
-      "wc": "Women\\",
+      "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC 159: Jones vs Sonnen"
     }
@@ -178736,7 +178736,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "2:38",
-      "wc": "Unknown",
+      "wc": "Lightweight",
       "tb": false,
       "ev": "UFC Live: Hardy vs Lytle"
     },
@@ -178747,7 +178747,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "3:16",
-      "wc": "Unknown",
+      "wc": "Lightweight",
       "tb": false,
       "ev": "UFC 123: Rampage vs Machida"
     }
@@ -179238,7 +179238,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Unknown",
+      "wc": "Welterweight",
       "tb": false,
       "ev": "The Ultimate Fighter: Team Lesnar vs Team dos Santos Finale"
     }

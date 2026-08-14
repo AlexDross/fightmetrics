@@ -6,7 +6,7 @@ UFC-only fighters when they make their debut. Rankings and rating artifacts are
 not touched.
 
 UPDATES:
-  fightersData.js  — records plus tr, tb, asl, asp, asa, atl, atp and detail stats
+  fightersData.js  — records plus tr, asl, asp, asa, atl, atp and detail stats
   fightersData.js  — adds new UFC-only entries for debuting fighters
   fightHistory.js  — rebuilt from source CSVs
 
@@ -14,7 +14,13 @@ NEVER TOUCHES (leave for their dedicated generators):
   elo, crd                           — rating/calibration artifacts
   eloModule.js, cardioModule.js       — affect rankings/ratings
   dr, p4p                             — rankings
-  tb, ht, rh, st, w, ag              — physical attributes
+  tb, ht, rh, st, w, ag              — physical attributes and title provenance
+
+Every quoted field in the generated modules is read through js_roster_parser,
+which is the one grammar for these files. Identity and division were previously
+matched by two separate `[^']` patterns that both truncated at the backslash of
+an escaped apostrophe, so apostrophe-named fighters silently stopped receiving
+updates and "Women's ..." divisions shipped as the literal string "Women\\".
 """
 
 import pandas as pd
@@ -28,6 +34,15 @@ from fight_event_dates import (
     is_dated, normalize_date,
 )
 from fight_data_integrity import canonicalize_aggregate_inputs, load_required_csv
+# ONE grammar reads every quoted field in the generated modules. Identity and
+# division used to be matched by two separate `[^']` patterns, and both stopped
+# at the backslash of an escaped apostrophe: `n:'Sean O\'Malley'` decoded to
+# "Sean O\" and `w:'Women\'s Flyweight'` to "Women\". See js_roster_parser.
+from js_roster_parser import (
+    JsParseError, append_object_field, format_js_literal, js_escape,
+    parse_object_fields, parse_prospect_fallbacks, parse_roster,
+    patch_object_fields,
+)
 
 SRC          = os.path.dirname(os.path.abspath(__file__))
 JS_PATH      = os.path.join(SRC, 'src', 'fightersData.js')
@@ -94,16 +109,10 @@ def compute_streak(fights):
             else: break
     return ws, ls
 
-def fmt(v):
-    if v is None: return 'null'
-    if isinstance(v, str): return f"'{js_escape(v)}'"
-    return str(v)
-
-def js_escape(s):
-    return str(s).replace("\\", "\\\\").replace("'", "\\'")
-
-def patch_field(entry_str, key, new_val):
-    return re.sub(rf"(,{key}:)([-\d.']+|null)", rf"\g<1>{fmt(new_val)}", entry_str)
+# The writer and the reader are one pair: fmt/js_escape emit what
+# js_roster_parser decodes, so a change to either side is caught by the
+# seeding round-trip test rather than by a fighter silently disappearing.
+fmt = format_js_literal
 
 def clean_wc(s):
     if not isinstance(s, str): return None
@@ -149,75 +158,26 @@ def parse_int_like(v, default=0):
     except:
         return default
 
-def split_top_level_objects(array_body):
-    objs = []
-    depth = 0
-    start = None
-    in_str = False
-    escape = False
-    quote = None
-    for i, ch in enumerate(array_body):
-        if in_str:
-            if escape:
-                escape = False
-            elif ch == '\\':
-                escape = True
-            elif ch == quote:
-                in_str = False
-            continue
-        if ch in ("'", '"'):
-            in_str = True
-            quote = ch
-            continue
-        if ch == '{':
-            if depth == 0:
-                start = i
-            depth += 1
-        elif ch == '}':
-            depth -= 1
-            if depth == 0 and start is not None:
-                objs.append(array_body[start:i+1])
-                start = None
-    return objs
-
-def parse_js_string_field(entry_str, key):
-    m = re.search(rf"{key}:\s*'((?:\\.|[^'])*)'", entry_str)
-    if not m:
-        return None
-    return m.group(1).replace("\\'", "'").replace('\\\\', '\\')
-
-def parse_js_number_field(entry_str, key):
-    m = re.search(rf"{key}:\s*(-?\d+(?:\.\d+)?)", entry_str)
-    if not m:
-        return None
-    num = float(m.group(1))
-    return int(num) if num.is_integer() else num
-
-def parse_js_nullable_field(entry_str, key):
-    if re.search(rf"{key}:\s*null", entry_str):
-        return None
-    return parse_js_number_field(entry_str, key)
-
 def load_prospect_fallbacks():
+    """Read src/prospectsData.js through the same fail-closed path as the roster.
+
+    OPTIONAL ONLY IN THE SENSE OF TRUE FILE ABSENCE. src/prospectsData.js is
+    tracked, so every checkout and every CI run has it; a stripped tree that
+    genuinely lacks the file simply seeds debuting fighters without
+    physical-attribute fallbacks, which is the long-standing behaviour.
+
+    A file that EXISTS but does not parse is a hard failure. There is no
+    `except JsParseError` here on purpose: converting a malformed prospect file
+    into an empty dict — or skipping an object with no decodable identity, or
+    letting a duplicate name overwrite another — is precisely the silent
+    data loss this correction removes, and the prospect file is the half of the
+    read path that just widened from 4 visible entries to 12.
+    """
     if not os.path.exists(PROSPECT_PATH):
+        print(f"  ⚠️  {PROSPECT_PATH} not found — seeding without prospect fallbacks")
         return {}
-    content = open(PROSPECT_PATH).read()
-    m = re.search(r'export\s+const\s+_P\s*=\s*\[(.*)\]\s*;', content, re.DOTALL)
-    if not m:
-        return {}
-    fallbacks = {}
-    for entry in split_top_level_objects(m.group(1)):
-        name = parse_js_string_field(entry, 'n')
-        if not name:
-            continue
-        fallbacks[name] = {
-            'w': parse_js_string_field(entry, 'w'),
-            'ag': parse_js_nullable_field(entry, 'ag'),
-            'ht': parse_js_nullable_field(entry, 'ht'),
-            'rh': parse_js_nullable_field(entry, 'rh'),
-            'st': parse_js_string_field(entry, 'st'),
-            'wlb': parse_js_nullable_field(entry, 'wlb'),
-        }
+    fallbacks = parse_prospect_fallbacks(open(PROSPECT_PATH).read())
+    print(f"  Parsed {len(fallbacks)} prospect fallback entries")
     return fallbacks
 
 # ─── Load CSVs ────────────────────────────────────────────────────────────────
@@ -524,9 +484,18 @@ def compute_stat_updates(name, fights):
     total_leg_landed = sum(r['leg_landed'] for r in rows)
     n_fights_stats = len(set((r['event'], r['bout']) for r in rows))
     sapm, sdef = compute_opponent_stats(name)
+    # No 'tb' here, deliberately. ufc_fight_details.csv is EVENT,BOUT,URL, so
+    # detail_lookup reads no WEIGHTCLASS and every fight record carries wc:''.
+    # A recomputed title-bout count therefore collapses to an event-NAME
+    # heuristic that matches one card in the entire 8,847-bout feed
+    # ("UFC 18: The Road to the Heavyweight Title"), which would have rewritten
+    # Sean O'Malley's stored tb:4 to 0 the moment the identity parser was
+    # repaired. Declining to recompute is the honest behaviour while no
+    # bout-level source is wired in. Deriving tb from the raw WEIGHTCLASS
+    # column of ufc_fight_results.csv — the only authoritative source for
+    # historical division and title provenance — is CORRECTION 6, not this one.
     return {
         'tr': compute_total_rounds(fights),
-        'tb': sum(1 for f in fights if 'title' in (f.get('wc') or '').lower() or 'title' in (f.get('event') or '').lower()),
         'asl': round2(total_sig_landed / (total_duration / 60)) if total_duration > 0 else None,
         'asp': round2(total_sig_landed / total_sig_attempted) if total_sig_attempted > 0 else None,
         'asa': round2((total_sub_att / total_duration) * 900) if total_duration > 0 else None,
@@ -543,27 +512,52 @@ def compute_stat_updates(name, fights):
 # ─── Patch fightersData.js ────────────────────────────────────────────────────
 print("\nPatching fightersData.js...")
 js_content = open(JS_PATH).read()
-existing = {}
-for m in re.finditer(r"\{n:'([^']+)'[^}]+\}", js_content):
-    entry_str = m.group(0)
-    name_m = re.search(r"n:'([^']+)'", entry_str)
-    if name_m: existing[name_m.group(1)] = entry_str
 
+# One parse, one grammar. `existing` is keyed by the DECODED identity, so
+# "Sean O'Malley" now joins the CSV-derived record_updates key instead of
+# sitting under the truncated "Sean O\" and never being updated again.
+roster = parse_roster(js_content, '_D2')
+existing = {entry.name: entry.raw for entry in roster.entries}
+if len(existing) != roster.object_count:
+    raise JsParseError(
+        f'{roster.object_count} roster objects collapsed into {len(existing)} identities')
+pristine_entries = {entry.name: entry for entry in roster.entries}
+print(f"  Parsed {roster.object_count} roster entries")
+
+# The division comes off the SAME parsed object as the identity. It used to be
+# re-matched with its own `w:'([^']*)'` pattern, which truncated every
+# "Women's ..." division to the literal "Women\" and shipped it into
+# fightHistory as a weight class.
 wc_lookup = {}
-for name, entry_str in existing.items():
-    wc_m = re.search(r"w:'([^']*)'", entry_str)
-    if wc_m: wc_lookup[name] = wc_m.group(1)
+for entry in roster.entries:
+    field = entry.fields.get('w')
+    if field is not None and field.is_string:
+        wc_lookup[entry.name] = field.value
 
 RECORD_FIELDS = ['wi','lo','ws','ls','kow','sbw','dcw','dsl']
-STAT_FIELDS = ['tr', 'tb', 'asl', 'asp', 'asa', 'atl', 'atp', 'kd', 'sapm', 'sdef', 'ctrl', 'hdpct', 'lgpct']
+# 'tb' is NOT here. See the comment in compute_stat_updates: with wc:'' on every
+# fight record a recomputed tb is an event-name heuristic, and repairing the
+# identity parser without this removal would have overwritten Sean O'Malley's
+# stored tb:4 with 0. Authoritative title provenance is correction 6.
+STAT_FIELDS = ['tr', 'asl', 'asp', 'asa', 'atl', 'atp', 'kd', 'sapm', 'sdef', 'ctrl', 'hdpct', 'lgpct']
+# Fields whose stored value this updater must never rewrite, enforced below
+# regardless of what STAT_FIELDS happens to contain.
+PRESERVED_FIELDS = ('tb',)
+assert not (set(STAT_FIELDS) & set(PRESERVED_FIELDS)), \
+    'a preserved field must not also be recomputed'
 
 _NEW_FIELDS = ['kd', 'sapm', 'sdef', 'ctrl', 'hdpct', 'lgpct']
 for _name in list(existing):
     _entry = existing[_name]
+    _present = parse_object_fields(_entry)
     for _f in _NEW_FIELDS:
-        if f',{_f}:' not in _entry:
-            _entry = _entry[:-1] + f',{_f}:null' + '}'
+        if _f not in _present:
+            _entry = append_object_field(_entry, _f, 'null')
     existing[_name] = _entry
+
+# Every field the updater is allowed to move. Anything outside this set must
+# come out of the run byte-identical to what went in.
+PATCHED_FIELDS = frozenset(RECORD_FIELDS) | frozenset(STAT_FIELDS) | frozenset(_NEW_FIELDS) | {'lfd'}
 
 new_lines = []
 
@@ -571,16 +565,19 @@ for name, entry_str in existing.items():
     if name in record_updates:
         u = record_updates[name]
         stat_updates = compute_stat_updates(name, fights_by_fighter.get(name, []))
-        for field in RECORD_FIELDS:
-            entry_str = patch_field(entry_str, field, u[field])
-        for field in STAT_FIELDS:
-            entry_str = patch_field(entry_str, field, stat_updates[field])
+        updates = {field: fmt(u[field]) for field in RECORD_FIELDS}
+        updates.update({field: fmt(stat_updates[field]) for field in STAT_FIELDS})
         if u['lfd']:
-            entry_str = re.sub(r",lfd:'[^']*'", f",lfd:'{u['lfd']}'", entry_str)
-            entry_str = re.sub(r",lfd:null",     f",lfd:'{u['lfd']}'", entry_str)
+            updates['lfd'] = fmt(u['lfd'])
+        # Targeted splice by field offset — the raw entry string is preserved
+        # and only the named fields are replaced. The roster is never
+        # deserialised and re-serialised.
+        entry_str = patch_object_fields(entry_str, updates)
+        existing[name] = entry_str
     new_lines.append(f"  {entry_str}")
 
 new_count = 0
+seeded_names = []
 for name, record in sorted(record_updates.items()):
     if name in existing:
         continue
@@ -599,12 +596,49 @@ for name, record in sorted(record_updates.items()):
         continue
     entry_str = build_new_fighter_entry(name, record, fights)
     new_lines.append(f"  {entry_str}")
+    seeded_names.append(name)
     wc = clean_wc(fights[0].get('wc', '')) if fights else None
     if wc:
         wc_lookup[name] = wc
     new_count += 1
 
 new_js = "export const _D2 = [\n" + ",\n".join(new_lines) + "\n];\n"
+
+# ─── Pre-write integrity gate ─────────────────────────────────────────────────
+# The defect this correction repairs was silent: a fighter stopped being seen by
+# the parser and simply never changed again. These assertions make the same
+# class of failure loud, and they run BEFORE the roster is written, so a bad
+# parse aborts instead of shipping.
+for _name, _patched in existing.items():
+    _before = pristine_entries[_name].fields
+    _after = parse_object_fields(_patched)
+    _expected_keys = list(_before) + [f for f in _NEW_FIELDS if f not in _before]
+    if list(_after) != _expected_keys:
+        raise JsParseError(
+            f'{_name!r}: field set changed from {list(_before)} to {list(_after)}')
+    for _key, _field in _before.items():
+        if _key in PATCHED_FIELDS:
+            continue
+        if _after[_key].raw != _field.raw:
+            raise JsParseError(
+                f'{_name!r}: untouched field {_key} moved '
+                f'{_field.raw} -> {_after[_key].raw}')
+    for _key in PRESERVED_FIELDS:
+        if _key in _before and _after[_key].raw != _before[_key].raw:
+            raise JsParseError(
+                f'{_name!r}: preserved field {_key} moved '
+                f'{_before[_key].raw} -> {_after[_key].raw}')
+
+_written = parse_roster(new_js, '_D2')
+_expected_names = list(pristine_entries) + seeded_names
+if _written.names != _expected_names:
+    _lost = sorted(set(_expected_names) - set(_written.names))
+    _gained = sorted(set(_written.names) - set(_expected_names))
+    raise JsParseError(
+        f'roster identity set changed: lost {_lost}, unexpectedly added {_gained}')
+print(f"  Identity gate: {len(pristine_entries)} existing identities preserved, "
+      f"{len(seeded_names)} seeded")
+
 with open(JS_PATH, 'w') as f:
     f.write(new_js)
 print(f"  Patched {len(new_lines)} fighters")
