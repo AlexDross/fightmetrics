@@ -77,6 +77,11 @@ jobs:
       - name: Test FIGHTMETRICS_ASOF pin
         run: python test_asof_pin.py
 
+      # Newcomer seeding must stay on parsed bout-local metadata: no clean_wc,
+      # no stats-row ordering, no event-name title heuristic.
+      - name: Test new-fighter seeding derivation
+        run: python test_correction6_seeding.py
+
       # CLOSED-LABEL GATE — runs against the freshly downloaded feed BEFORE any
       # artifact is written. A label is usable because a human reviewed it into
       # the fixture, never because it merely contains a recognised division

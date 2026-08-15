@@ -290,3 +290,16 @@ summed into the v1 composite) and `featsV2.title_bouts` (v2 coefficient `0`).
 
 **Deferred:** Class-A aliases, Class-B duplicates, 6B career `tb`, 6C
 current-division/`wsrc`/overrides, `wlb`, Correction 2B, UFC 330 re-save.
+
+**Post-review corrections (PR #16).** R10 added: the result URL is canonical
+bout identity, and `validate_bout_metadata` — one implementation shared by the
+updater and the closed-label gate — fails closed on a blank URL, an unparseable
+label, or rows sharing a URL that disagree on
+`(division, championship, interim, tournament_final)`. It runs on the raw feed
+(8,847 rows → 8,822 bouts, 25 duplicate-URL groups, 0 conflicts) because
+canonicalisation collapses those duplicates. `clean_wc` is retired; newcomer
+seeding derives its division from the latest dated contested bout and its `tb`
+from parsed championships, failing closed otherwise. Affected-bout count is
+corrected from **3,686 to 3,687** — the coarse `(date, event, {fighters})` key
+could not separate Sakuraba's two bouts against Silveira on one card. Every
+other ratified count is unchanged.

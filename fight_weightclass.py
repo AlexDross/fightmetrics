@@ -31,15 +31,21 @@ import re
 
 __all__ = [
     'WeightclassParseError',
+    'BoutMetadataConflict',
     'CANONICAL_DIVISIONS',
     'SUPPORTED_DIVISIONS',
     'REVIEWED_NO_TOKEN_LABELS',
     'parse_weightclass',
+    'validate_bout_metadata',
 ]
 
 
 class WeightclassParseError(ValueError):
     """Raised for any label the reviewed taxonomy does not cover."""
+
+
+class BoutMetadataConflict(ValueError):
+    """Raised when one bout URL carries contradictory division/title metadata."""
 
 
 # The twelve ratified canonical divisions.
@@ -183,4 +189,70 @@ def parse_weightclass(raw):
         'tournament_final': tournament_final,
         'category': category,
         'raw': raw,
+    }
+
+
+# ── R10: one bout URL, one set of bout metadata ──────────────────────────────
+# The result URL is the canonical bout identity: the pinned feed has 8,847 rows
+# and 8,822 distinct URLs, and the 25 duplicate groups are exactly the event
+# aliases (a card listed under two names). `(EVENT, BOUT)` is NOT usable for
+# this — Kazushi Sakuraba met Marcus Silveira twice on one card, two distinct
+# URLs under one (EVENT, BOUT) key.
+#
+# ONE implementation, shared by update_fighters.py and
+# scripts/gate_closed_labels.py, so the two can never drift apart on semantics.
+
+METADATA_FIELDS = ('division', 'championship', 'interim', 'tournament_final')
+
+
+def _metadata_tuple(parsed):
+    return tuple(parsed[field] for field in METADATA_FIELDS)
+
+
+def validate_bout_metadata(rows):
+    """Fail closed unless every bout URL carries one consistent metadata tuple.
+
+    `rows` is an iterable of (url, weightclass) pairs, in feed order.
+
+    Raises WeightclassParseError for a missing/blank URL or an unparseable
+    label, and BoutMetadataConflict when rows sharing a URL disagree on
+    (division, championship, interim, tournament_final). Repeats are allowed —
+    and expected — as long as they agree.
+
+    Returns a summary dict: row_count, url_count, duplicate_groups,
+    duplicate_rows, conflicts (always 0 on success).
+    """
+    seen = {}
+    duplicate_groups = set()
+    duplicate_rows = 0
+    row_count = 0
+
+    for index, (url, weightclass) in enumerate(rows):
+        row_count += 1
+        if url is None or not isinstance(url, str) or not url.strip():
+            raise WeightclassParseError(
+                f'result row {index}: blank or missing URL '
+                f'(WEIGHTCLASS={weightclass!r}); the URL is the bout identity '
+                f'and cannot be defaulted')
+        url = url.strip()
+        parsed = parse_weightclass(weightclass)
+        current = _metadata_tuple(parsed)
+        if url not in seen:
+            seen[url] = (current, weightclass)
+            continue
+        duplicate_groups.add(url)
+        duplicate_rows += 1
+        previous, previous_label = seen[url]
+        if previous != current:
+            raise BoutMetadataConflict(
+                f'bout {url} carries contradictory metadata: '
+                f'{previous_label!r} -> {dict(zip(METADATA_FIELDS, previous))} '
+                f'vs {weightclass!r} -> {dict(zip(METADATA_FIELDS, current))}')
+
+    return {
+        'row_count': row_count,
+        'url_count': len(seen),
+        'duplicate_groups': len(duplicate_groups),
+        'duplicate_rows': duplicate_rows,
+        'conflicts': 0,
     }

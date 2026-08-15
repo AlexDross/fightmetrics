@@ -30,8 +30,10 @@ import pandas as pd
 
 from fight_weightclass import (
     SUPPORTED_DIVISIONS,
+    BoutMetadataConflict,
     WeightclassParseError,
     parse_weightclass,
+    validate_bout_metadata,
 )
 
 DEFAULT_RESULTS = 'ufc_fight_results.csv'
@@ -105,6 +107,15 @@ def main():
             failures.append(
                 f'{label!r}: contradictory — championship and tournament final')
 
+    # R10 — one bout URL, one metadata tuple. Shared implementation, so this
+    # gate and update_fighters.py cannot drift apart on what "consistent" means.
+    summary = None
+    try:
+        summary = validate_bout_metadata(
+            zip(frame.get('URL', pd.Series(dtype=object)), frame['WEIGHTCLASS']))
+    except (WeightclassParseError, BoutMetadataConflict) as exc:
+        failures.append(f'bout-metadata gate: {exc}')
+
     if failures:
         print('Closed-label gate FAILED:', file=sys.stderr)
         for line in failures:
@@ -113,6 +124,10 @@ def main():
 
     print(f'✅  closed-label gate: {len(observed)} distinct labels, '
           f'{sum(observed.values())} rows, all reviewed and consistent')
+    print(f'✅  bout-metadata gate: {summary["url_count"]} bouts from '
+          f'{summary["row_count"]} rows; {summary["duplicate_groups"]} '
+          f'duplicate-URL groups ({summary["duplicate_rows"]} repeat rows), '
+          f'{summary["conflicts"]} conflicts')
     return 0
 
 

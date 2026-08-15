@@ -1461,3 +1461,13 @@ and still enforced by `test_the_updater_has_no_quoted_field_regex`.
 4. **6C current division** — Policy F: 5 source-backed writes (Luque by cited
    override; Costa, Whittaker, Erceg, Zhang Weili by media rankings), plus
    `wsrc` provenance on all 2,287 records. No `wlb` mutation.
+
+**PR #16 review corrections.** R10 URL gate (shared implementation, raw-feed
+placement); `clean_wc` retired and seeding made deterministic; snapshot-specific
+counts gated on the pinned results SHA so a scheduled refresh with new bouts
+still passes; both-corners assertion made dynamic; exact source coverage
+replaces the sampled `checked > 17000`; affected bouts corrected **3,686 →
+3,687** (result-URL identity); automated two-run regeneration test; per-fighter
+UFC 330 deltas for all 20 fighters (wc 59, tb 7); new read-only
+`correction6a-verify.yml` PR workflow that pins the Greco commit, verifies each
+CSV hash individually, and runs every 6A suite plus Vitest and the build.

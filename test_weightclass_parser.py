@@ -6,16 +6,19 @@ accepted, and the traps that break naive implementations stay covered.
 """
 
 import csv
+import hashlib
 import os
 import unittest
 
 import pandas as pd
 
 from fight_weightclass import (
+    BoutMetadataConflict,
     REVIEWED_NO_TOKEN_LABELS,
     SUPPORTED_DIVISIONS,
     WeightclassParseError,
     parse_weightclass,
+    validate_bout_metadata,
 )
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -23,6 +26,8 @@ FIXTURES = os.path.join(HERE, 'tests', 'fixtures', 'weightclass')
 LABELS_TSV = os.path.join(FIXTURES, 'labels_120.tsv')
 SYNTHETIC_TSV = os.path.join(FIXTURES, 'synthetic.tsv')
 RESULTS_CSV = os.path.join(HERE, 'ufc_fight_results.csv')
+PINNED_RESULTS_SHA256 = (
+    '7f8f3b5245851397006a1da7b2f042322b3bf9456c94d849d7d47fdc57a71f7d')
 
 
 def _rows(path):
@@ -211,6 +216,58 @@ class SyntheticFixture(unittest.TestCase):
                     self.assertEqual(p['championship'], champ == 'true')
                     self.assertEqual(p['interim'], interim == 'true')
                     self.assertEqual(p['tournament_final'], tourn == 'true')
+
+
+class BoutMetadataGate(unittest.TestCase):
+    """R10 — one bout URL, one metadata tuple. Shared by updater and gate."""
+
+    def test_same_url_identical_metadata_is_accepted(self):
+        rows = [('http://ufcstats.com/fight-details/aaa', 'Lightweight Bout'),
+                ('http://ufcstats.com/fight-details/aaa', 'Lightweight Bout')]
+        summary = validate_bout_metadata(rows)
+        self.assertEqual(summary['url_count'], 1)
+        self.assertEqual(summary['duplicate_groups'], 1)
+        self.assertEqual(summary['duplicate_rows'], 1)
+        self.assertEqual(summary['conflicts'], 0)
+
+    def test_same_url_contradictory_metadata_is_rejected(self):
+        for other in ('Welterweight Bout',                     # division differs
+                      'UFC Lightweight Title Bout',            # championship differs
+                      'UFC Interim Lightweight Title Bout',    # interim differs
+                      'Ultimate Fighter 12 Lightweight Tournament Title Bout'):
+            with self.subTest(other=other):
+                rows = [('http://ufcstats.com/fight-details/bbb', 'Lightweight Bout'),
+                        ('http://ufcstats.com/fight-details/bbb', other)]
+                with self.assertRaises(BoutMetadataConflict) as ctx:
+                    validate_bout_metadata(rows)
+                self.assertIn('bbb', str(ctx.exception))
+
+    def test_blank_url_is_rejected(self):
+        for url in ('', '   ', None, 0):
+            with self.subTest(url=url):
+                with self.assertRaises(WeightclassParseError):
+                    validate_bout_metadata([(url, 'Lightweight Bout')])
+
+    def test_distinct_urls_may_carry_different_metadata(self):
+        # Sakuraba vs Silveira: two bouts, one card, two URLs.
+        rows = [('http://ufcstats.com/fight-details/ec1bda9a4c2aab42',
+                 'Ultimate Japan Heavyweight Tournament Title Bout'),
+                ('http://ufcstats.com/fight-details/2750ac5854e8b28b',
+                 'Heavyweight Bout')]
+        summary = validate_bout_metadata(rows)
+        self.assertEqual(summary['url_count'], 2)
+        self.assertEqual(summary['duplicate_groups'], 0)
+
+    def test_pinned_feed_has_25_duplicate_groups_and_zero_conflicts(self):
+        frame = pd.read_csv(RESULTS_CSV)
+        if hashlib.sha256(open(RESULTS_CSV, 'rb').read()).hexdigest() != PINNED_RESULTS_SHA256:
+            self.skipTest('results CSV is not the pinned snapshot')
+        summary = validate_bout_metadata(zip(frame['URL'], frame['WEIGHTCLASS']))
+        self.assertEqual(summary['row_count'], 8847)
+        self.assertEqual(summary['url_count'], 8822)
+        self.assertEqual(summary['duplicate_groups'], 25)
+        self.assertEqual(summary['duplicate_rows'], 25)
+        self.assertEqual(summary['conflicts'], 0)
 
 
 if __name__ == '__main__':

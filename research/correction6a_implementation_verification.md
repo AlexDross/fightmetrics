@@ -15,8 +15,20 @@ are now read from the raw `WEIGHTCLASS` on each `ufc_fight_results.csv` row.
 | Max event date | `2026-08-08` |
 | `FIGHTMETRICS_ASOF` | `2026-08-13` (the artifact's own `dsl` baseline) |
 
-Feed CSV sha256: `ufc_event_details` `d20783b1…d077` · `ufc_fight_details` `34fe5ab9…ae2a5`
-· `ufc_fight_results` `7f8f3b52…1f7d` · `ufc_fight_stats` `b41f554b…286e`.
+**Authoritative source pin is the Greco commit plus the four individual CSV
+hashes.** The GitHub-generated ZIP is re-compressed server-side, so its byte
+hash is not a stable content identifier and is not relied on.
+
+| CSV | sha256 |
+|---|---|
+| `ufc_event_details.csv` | `d20783b15ea5c6c4971d093e6c9f5f185390a666cbc742d0afc26d6dc714d077` |
+| `ufc_fight_details.csv` | `34fe5ab97eaac498dbd03ac78a74fb2492b9bd359dbe3e67fd4f4c9b59eae2a5` |
+| `ufc_fight_results.csv` | `7f8f3b5245851397006a1da7b2f042322b3bf9456c94d849d7d47fdc57a71f7d` |
+| `ufc_fight_stats.csv` | `b41f554bb0c9fcbe5bd7988f972ee798741e4fb08d6d1d7a3c07a9310557286e` |
+
+**Correction:** an earlier report described the approved `ufc_fight_results.csv`
+hash as truncated. It is not — the approved value is the full 64-character hash
+above, and the feed matches it exactly.
 
 ## Root cause
 
@@ -73,6 +85,38 @@ Eleven labels carry no division token at all (15 raw rows, 15 canonical bouts,
 fights; UFC history records Ultimate Ultimate '96 as the last event contested
 without weight classes — <https://www.ufc.com/news/fast-facts-our-20th-anniversary>
 (accessed 2026-08-14).
+
+### R10 — one bout URL, one set of bout metadata
+
+The result URL is canonical bout identity: 8,847 rows resolve to 8,822 distinct
+URLs, and the 25 duplicate groups are exactly the event aliases (a card listed
+under two names). `validate_bout_metadata` — **one implementation shared by
+`update_fighters.py` and `scripts/gate_closed_labels.py`**, so they cannot drift
+— fails closed when a row has a blank/missing URL, when a label does not parse,
+or when rows sharing a URL disagree on
+`(division, championship, interim, tournament_final)`.
+
+It runs on the **raw** feed, before canonicalisation: `canonicalize_aggregate_inputs`
+collapses the alias duplicates, so validating afterwards would inspect 8,822
+rows that are unique by construction and never exercise the conflict check.
+
+Pinned feed: **8,847 rows → 8,822 bouts, 25 duplicate-URL groups, 25 repeat
+rows, 0 conflicts.**
+
+### New-fighter seeding
+
+Seeding no longer touches legacy metadata paths. `clean_wc` is retired
+outright. A newcomer's division follows one documented precedence: reviewed
+prospect fallback → parsed division of the **latest dated contested bout** →
+**fail closed**. Because `fights` is sorted descending before this runs, the
+result is recency-based and never depends on row order; the retired paths were
+`clean_wc(detail_lookup wc)` (always `''`) and `rows[-1]['weight_class']`, the
+last-appended per-round stats row. A seeded `tb` is counted from parsed
+championship facts, replacing the event-name heuristic. Existing roster `w`,
+`wlb` and `tb` remain untouched — reconciliation is 6B.
+
+The pinned run seeds **0** fighters, and `src/fightersData.js` stays
+byte-identical.
 
 ## Fail-closed behaviour
 
@@ -151,7 +195,7 @@ would ever emit, and the next CI run would reintroduce the difference anyway.
 | Rows whose `tb` changes | 804 | 804 |
 | Rows changing both | 287 | 287 |
 | Affected fighters | 1,433 | 1,433 |
-| Affected bouts | 3,686 | 3,686 |
+| Affected canonical bouts (by result URL) | **3,687** | 3,687 |
 | Distinct `wc` transitions | 68 | 68 |
 | `Unknown` before → after | 1,483 → 0 | 1,483 → 0 |
 | `tb` true → false | 12 | 12 |
@@ -253,10 +297,17 @@ parser category, classification, and the bout's `ufcstats.com` result URL.
 | Property | Value |
 |---|---|
 | Rows | 5,025 (4,508 `wc` + 804 `tb` − 287 both) |
+| Affected canonical bouts | **3,687 distinct result URLs** |
 | sha256 | `813da5f0cb30ce5da1fac7b81c3fbb5cb50818211fb3f12ada53014fc310ff4e` |
 | Bytes | 1,007,135 |
 | Unjoinable rows | 0 |
 | Distinct source URLs | 3,687 |
+
+**Withdrawn:** an earlier revision of this document reported **3,686** affected
+bouts. That figure came from a coarse `(date, event, {fighters})` key, which
+cannot separate Kazushi Sakuraba's two distinct bouts against Marcus Silveira on
+the same card. Canonical bout identity is the **result URL**, and the corrected
+count is **3,687**. Every other ratified count is unchanged.
 
 Provenance is row-local: the ledger mirrors the updater's own pipeline (alias
 normalisation, event canonicalisation, sort order) so each history entry carries

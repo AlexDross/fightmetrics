@@ -39,7 +39,7 @@ from fight_data_integrity import canonicalize_aggregate_inputs, load_required_cs
 # WEIGHTCLASS; history fell back to the fighter's CURRENT roster division and
 # title status collapsed to an event-name heuristic. The raw bout-local label
 # on each ufc_fight_results.csv row is the only authoritative source.
-from fight_weightclass import parse_weightclass
+from fight_weightclass import parse_weightclass, validate_bout_metadata
 # ONE grammar reads every quoted field in the generated modules. Identity and
 # division used to be matched by two separate `[^']` patterns, and both stopped
 # at the backslash of an escaped apostrophe: `n:'Sean O\'Malley'` decoded to
@@ -151,15 +151,12 @@ def compute_streak(fights):
 # seeding round-trip test rather than by a fighter silently disappearing.
 fmt = format_js_literal
 
-def clean_wc(s):
-    if not isinstance(s, str): return None
-    s = s.strip()
-    if not s:
-        return None
-    for w in ['UFC', 'Title', 'Bout', 'Interim']:
-        s = re.sub(rf'\b{w}\b', '', s, flags=re.IGNORECASE)
-    s = re.sub(r'\s+', ' ', s).strip()
-    return s or None
+# CORRECTION 6A retired `clean_wc`. It stripped the bare words UFC/Title/Bout/
+# Interim anywhere in a label, which destroyed interim status
+# ('UFC Interim Heavyweight Title Bout' -> 'Heavyweight') and mangled tournament
+# labels ('UFC 17 Middleweight Tournament Title Bout' -> '17 Middleweight
+# Tournament'). Every division/title decision now goes through
+# fight_weightclass.parse_weightclass.
 
 def parse_of_stat(s):
     if not isinstance(s, str):
@@ -238,6 +235,24 @@ event_dates = dict(zip(events_df['EVENT'].str.strip(), events_df['DATE'].apply(p
 results_df['EVENT'] = results_df['EVENT'].str.strip()
 results_df['BOUT']  = results_df['BOUT'].str.strip() if 'BOUT' in results_df.columns else ''
 
+# CORRECTION 6A / R10 — fail closed on the RAW feed, before canonicalisation and
+# before any artifact is written. Every result row must carry a URL (the
+# canonical bout identity: 8,847 rows resolve to 8,822 URLs, and the 25
+# duplicate groups are exactly the event aliases), every label must parse, and
+# rows sharing a URL may repeat only if their parsed (division, championship,
+# interim, tournament_final) tuples agree. Deliberately BEFORE
+# canonicalize_aggregate_inputs: that step collapses the alias duplicates, so
+# running afterwards would validate 8,822 rows that are unique by construction
+# and never exercise the conflict check at all. One shared implementation with
+# scripts/gate_closed_labels.py.
+_bout_meta_summary = validate_bout_metadata(
+    zip(results_df.get('URL', pd.Series(dtype=object)), results_df['WEIGHTCLASS']))
+print(f"  Bout-metadata gate: {_bout_meta_summary['url_count']} bouts from "
+      f"{_bout_meta_summary['row_count']} raw rows; "
+      f"{_bout_meta_summary['duplicate_groups']} duplicate-URL groups "
+      f"({_bout_meta_summary['duplicate_rows']} repeat rows), "
+      f"{_bout_meta_summary['conflicts']} conflicts")
+
 # ─── Undated events ───────────────────────────────────────────────────────────
 # Some events in ufc_fight_results.csv have no row in ufc_event_details.csv, so
 # .map() would leave NaN — a float that is TRUTHY, which is how it slipped past
@@ -308,6 +323,7 @@ res_cols  = results_df.columns.tolist()
 has_round = 'ROUND' in res_cols
 has_time  = 'TIME'  in res_cols
 print(f"  Results: {len(results_df)} rows")
+
 
 # ─── Build fight records ───────────────────────────────────────────────────────
 print("Building fight records...")
@@ -395,7 +411,6 @@ for _, row in results_df.iterrows():
     result_lookup[(event, bout)] = {
         'end_round': end_round,
         'time_secs': time_secs,
-        'weight_class': clean_wc(row.get('WEIGHTCLASS', '')),
     }
 
 stats_by_fighter = {}
@@ -434,7 +449,6 @@ if has_stats:
             'head_landed': head_landed,
             'body_landed': body_landed,
             'leg_landed': leg_landed,
-            'weight_class': bout_meta.get('weight_class'),
         })
 
 stats_by_bout = {}
@@ -453,6 +467,38 @@ def compute_total_rounds(fights):
         if rn > 0:
             total += rn
     return total
+
+def _contested_dated(fights):
+    """Bouts that reach fightHistory: dated, and W/L/NC (a draw stores as NC)."""
+    return [f for f in fights
+            if is_dated(f.get('date')) and f['result'] in ('W', 'L', 'NC')]
+
+
+def latest_dated_division(fights):
+    """Parsed bout-local division of the fighter's most recent contested bout.
+
+    `fights` arrives sorted by fight_sort_key descending, so this is recency —
+    not row order, not the last-appended stats row. Returns None when the
+    fighter has no dated contested bout, which the caller treats as fatal.
+    """
+    for fight in _contested_dated(fights):
+        division = fight.get('wc_division')
+        if division:
+            return division
+    return None
+
+
+def count_championship_bouts(fights):
+    """UFC championship appearances among contested, dated bouts.
+
+    Parsed facts only: undisputed, interim and legacy Superfight championships.
+    TUF / Road to UFC / early-bracket finals are tournament finals, not
+    championships. This replaces the event-name substring heuristic, which
+    matched one card in the entire feed. Existing roster `tb` values are NOT
+    touched by this — full reconciliation is Correction 6B.
+    """
+    return sum(1 for f in _contested_dated(fights) if f.get('wc_championship'))
+
 
 def round2(v):
     return round(v + 1e-9, 2)
@@ -487,12 +533,23 @@ def build_new_fighter_entry(name, record, fights):
     total_leg_landed = sum(r['leg_landed'] for r in rows)
     n_fights_stats = len(set((r['event'], r['bout']) for r in rows))
 
+    # CORRECTION 6A. A newcomer's seeded division is derived deterministically
+    # from bout-local metadata, in one documented precedence:
+    #   1. the reviewed prospect fallback in src/prospectsData.js, when present
+    #   2. the parsed division of the fighter's LATEST DATED contested bout
+    #   3. fail closed
+    # `fights` is sorted by fight_sort_key descending before this runs, so (2)
+    # is the latest bout and never depends on row order. The retired paths were
+    # clean_wc(detail_lookup wc) — always '' — and rows[-1]['weight_class'],
+    # the last-appended per-round STATS row, which is ordering-dependent and
+    # unrelated to recency.
     weight_class = fallback.get('w')
-    if not weight_class and fights:
-        latest_fight = fights[0]
-        weight_class = clean_wc(latest_fight.get('wc', ''))
-    if not weight_class and rows:
-        weight_class = rows[-1]['weight_class']
+    if not weight_class:
+        weight_class = latest_dated_division(fights)
+    if not weight_class:
+        raise JsParseError(
+            f'{name!r}: cannot seed a division — no prospect fallback and no '
+            f'dated contested bout with a parsed division')
 
     asl = round2(total_sig_landed / (total_duration / 60)) if total_duration > 0 else None
     asp = round2(total_sig_landed / total_sig_attempted) if total_sig_attempted > 0 else None
@@ -514,7 +571,7 @@ def build_new_fighter_entry(name, record, fights):
         f"rh:{fmt(fallback.get('rh'))},"
         f"st:{fmt(fallback.get('st') or '')},"
         f"wi:{record['wi']},lo:{record['lo']},ws:{record['ws']},ls:{record['ls']},"
-        f"tr:{compute_total_rounds(fights)},tb:{sum(1 for f in fights if 'title' in (f.get('wc') or '').lower() or 'title' in (f.get('event') or '').lower())},"
+        f"tr:{compute_total_rounds(fights)},tb:{count_championship_bouts(fights)},"
         f"kow:{record['kow']},sbw:{record['sbw']},dcw:{record['dcw']},"
         f"asl:{fmt(asl)},asp:{fmt(asp)},asa:{fmt(asa)},atl:{fmt(atl)},atp:{fmt(atp)},"
         f"kd:{fmt(kd_val)},sapm:{fmt(sapm_val)},sdef:{fmt(sdef_val)},ctrl:{fmt(ctrl_val)},hdpct:{fmt(hdpct_val)},lgpct:{fmt(lgpct_val)},"

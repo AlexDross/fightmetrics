@@ -1,0 +1,149 @@
+name: Correction 6A verification
+
+# READ-ONLY. Runs automatically on pull requests that touch the Correction 6A
+# surface. It regenerates artifacts in the runner's checkout to prove
+# determinism, but never commits, pushes, deploys or dispatches anything.
+#
+# The repo's existing "Test and build" workflow does not exercise the 6A suites,
+# and the scheduled updater only runs on a schedule -- so without this, a PR
+# could go green while the parser, the closed-label/URL gate and the history
+# invariants were never executed.
+
+on:
+  pull_request:
+    paths:
+      - 'fight_weightclass.py'
+      - 'update_fighters.py'
+      - 'scripts/gate_closed_labels.py'
+      - 'test_weightclass_parser.py'
+      - 'test_correction6_history.py'
+      - 'test_correction6_seeding.py'
+      - 'test_asof_pin.py'
+      - 'tests/fixtures/weightclass/**'
+      - 'src/fightHistory.js'
+      - '.github/workflows/correction6a-verify.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: correction6a-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # The ratified snapshot. Pinned by COMMIT, not by the GitHub-generated ZIP
+  # byte hash: that archive is re-compressed server-side and is not a stable
+  # content identifier. Authority is the commit plus the four CSV hashes below.
+  GRECO_COMMIT: 18ba20924fa439d0659e9b259759a07574cc8a07
+  EVENT_DETAILS_SHA256: d20783b15ea5c6c4971d093e6c9f5f185390a666cbc742d0afc26d6dc714d077
+  FIGHT_DETAILS_SHA256: 34fe5ab97eaac498dbd03ac78a74fb2492b9bd359dbe3e67fd4f4c9b59eae2a5
+  FIGHT_RESULTS_SHA256: 7f8f3b5245851397006a1da7b2f042322b3bf9456c94d849d7d47fdc57a71f7d
+  FIGHT_STATS_SHA256: b41f554bb0c9fcbe5bd7988f972ee798741e4fb08d6d1d7a3c07a9310557286e
+  FIGHTMETRICS_ASOF: '2026-08-13'
+  BASE_SHA: 1adfd22fe3b09b84ddd994a7057d4cc9c0275276
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout PR head with full history
+        uses: actions/checkout@v4
+        with:
+          # The history tests read the base blob via `git show <BASE_SHA>` to
+          # compute before/after deltas, so a shallow clone is not enough.
+          fetch-depth: 0
+
+      - name: Ensure the fixed base blob is available
+        run: |
+          git fetch --no-tags origin "$BASE_SHA" || git fetch --no-tags origin main
+          git cat-file -e "$BASE_SHA":src/fightHistory.js
+          echo "base blob $BASE_SHA present"
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install pandas
+
+      - name: Fetch the pinned Greco snapshot by commit
+        run: |
+          git clone --quiet --filter=blob:none --no-checkout \
+            https://github.com/Greco1899/scrape_ufc_stats.git greco
+          cd greco
+          git fetch --quiet origin "$GRECO_COMMIT"
+          git checkout --quiet "$GRECO_COMMIT"
+          test "$(git rev-parse HEAD)" = "$GRECO_COMMIT"
+          cd ..
+          cp greco/ufc_event_details.csv greco/ufc_fight_details.csv \
+             greco/ufc_fight_results.csv greco/ufc_fight_stats.csv .
+
+      - name: Verify each CSV hash individually
+        run: |
+          set -e
+          check () {
+            actual="$(sha256sum "$1" | cut -d' ' -f1)"
+            if [ "$actual" != "$2" ]; then
+              echo "::error::$1 hash mismatch: expected $2, got $actual"; exit 1
+            fi
+            echo "  OK  $1  $actual"
+          }
+          check ufc_event_details.csv "$EVENT_DETAILS_SHA256"
+          check ufc_fight_details.csv "$FIGHT_DETAILS_SHA256"
+          check ufc_fight_results.csv "$FIGHT_RESULTS_SHA256"
+          check ufc_fight_stats.csv   "$FIGHT_STATS_SHA256"
+
+      - name: Closed-label and bout-metadata (URL) gate
+        run: python scripts/gate_closed_labels.py
+
+      - name: Parser tests
+        run: python test_weightclass_parser.py
+
+      - name: ASOF pin tests
+        run: python test_asof_pin.py
+
+      - name: Seeding tests
+        run: python test_correction6_seeding.py
+
+      - name: Correction 5 identity invariants
+        run: python test_correction5_identity.py
+
+      # Includes the two-run deterministic regeneration test, which regenerates
+      # in the runner workspace only. Nothing is committed.
+      - name: History invariants, UFC 330 coverage and idempotence
+        run: python test_correction6_history.py
+
+      - name: Protected and generated artifact hashes
+        run: |
+          set -e
+          expect () {
+            actual="$(sha256sum "$1" | cut -d' ' -f1)"
+            if [ "$actual" != "$2" ]; then
+              echo "::error::$1 expected $2, got $actual"; exit 1
+            fi
+            echo "  OK  $1"
+          }
+          expect src/upcomingData.js 5ba9d1cc00d86ca01548d9c738c2495f3ca5901a5734a4c166ad01c52561cce9
+          expect src/fightersData.js 27b046d070869d7aba20117b971862623f67997956f18a77ad3ef0a283fdb134
+          expect src/fightHistory.js 420eafc4418bb747793d51a438a02b39525d03985e8b0f0139384c06ea9c0449
+
+      - name: Stage-0 goldens must be untouched
+        run: |
+          git diff --quiet "$BASE_SHA" -- src/__tests__/fixtures src/__tests__/snapshots \
+            && echo "  goldens byte-identical to base" \
+            || { echo "::error::a Stage-0 golden changed"; exit 1; }
+
+      - name: No model source change
+        run: |
+          git diff --quiet "$BASE_SHA" -- src/domain \
+            && echo "  src/domain byte-identical to base" \
+            || { echo "::error::model source changed"; exit 1; }
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm ci --include=dev
+
+      - name: Vitest
+        run: npx vitest run
+
+      - name: Production build
+        run: npm run build
