@@ -5,6 +5,7 @@ every observed label is reviewed, nothing outside the reviewed taxonomy is
 accepted, and the traps that break naive implementations stay covered.
 """
 
+import ast
 import csv
 import hashlib
 import os
@@ -19,6 +20,7 @@ from fight_weightclass import (
     WeightclassParseError,
     parse_weightclass,
     validate_bout_metadata,
+    validate_result_frame,
 )
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -257,6 +259,60 @@ class BoutMetadataGate(unittest.TestCase):
         summary = validate_bout_metadata(rows)
         self.assertEqual(summary['url_count'], 2)
         self.assertEqual(summary['duplicate_groups'], 0)
+
+    def test_empty_stream_is_rejected_not_reported_as_a_clean_pass(self):
+        # A gate that inspected nothing has been SKIPPED, not passed.
+        with self.assertRaises(WeightclassParseError) as ctx:
+            validate_bout_metadata([])
+        self.assertIn('0 rows', str(ctx.exception))
+
+    def test_frame_without_a_url_column_is_rejected(self):
+        # The reachable fail-open: the callers used to build the pair stream
+        # with zip(frame.get('URL', empty Series), ...), so a feed missing the
+        # URL column produced an empty zip and a clean bill of health.
+        frame = pd.DataFrame({'WEIGHTCLASS': ['Lightweight Bout'] * 3})
+        with self.assertRaises(WeightclassParseError) as ctx:
+            validate_result_frame(frame)
+        self.assertIn('URL column', str(ctx.exception))
+
+    def test_frame_without_a_weightclass_column_is_rejected(self):
+        frame = pd.DataFrame({'URL': ['http://x/1']})
+        with self.assertRaises(WeightclassParseError):
+            validate_result_frame(frame)
+
+    def test_empty_frame_is_rejected(self):
+        with self.assertRaises(WeightclassParseError):
+            validate_result_frame(pd.DataFrame({'URL': [], 'WEIGHTCLASS': []}))
+
+    def test_frame_entry_point_inspects_every_row(self):
+        frame = pd.read_csv(RESULTS_CSV)
+        summary = validate_result_frame(frame)
+        self.assertEqual(summary['row_count'], len(frame))
+
+    def test_callers_use_the_frame_entry_point_not_a_hand_built_stream(self):
+        """Source contract, read from the AST so comments are excluded.
+
+        Both callers must go through validate_result_frame. A hand-built
+        `zip(frame.get('URL', <default>), ...)` is exactly what let a feed
+        with no URL column skip the gate and still report success.
+        """
+        for name in ('update_fighters.py', os.path.join('scripts', 'gate_closed_labels.py')):
+            path = os.path.join(HERE, name)
+            with open(path, encoding='utf-8') as handle:
+                tree = ast.parse(handle.read())
+            for node in ast.walk(tree):
+                if (isinstance(node, ast.Call)
+                        and isinstance(node.func, ast.Attribute)
+                        and node.func.attr == 'get'
+                        and len(node.args) == 2
+                        and isinstance(node.args[0], ast.Constant)
+                        and node.args[0].value == 'URL'):
+                    self.fail(f'{name}: defaults a missing URL column: {ast.unparse(node)}')
+            called = {n.func.id for n in ast.walk(tree)
+                      if isinstance(n, ast.Call) and isinstance(n.func, ast.Name)}
+            self.assertIn('validate_result_frame', called, f'{name}')
+            self.assertNotIn('validate_bout_metadata', called,
+                             f'{name} bypasses the frame entry point')
 
     def test_pinned_feed_has_25_duplicate_groups_and_zero_conflicts(self):
         frame = pd.read_csv(RESULTS_CSV)

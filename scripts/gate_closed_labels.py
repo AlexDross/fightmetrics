@@ -33,7 +33,7 @@ from fight_weightclass import (
     BoutMetadataConflict,
     WeightclassParseError,
     parse_weightclass,
-    validate_bout_metadata,
+    validate_result_frame,
 )
 
 DEFAULT_RESULTS = 'ufc_fight_results.csv'
@@ -111,8 +111,7 @@ def main():
     # gate and update_fighters.py cannot drift apart on what "consistent" means.
     summary = None
     try:
-        summary = validate_bout_metadata(
-            zip(frame.get('URL', pd.Series(dtype=object)), frame['WEIGHTCLASS']))
+        summary = validate_result_frame(frame)
     except (WeightclassParseError, BoutMetadataConflict) as exc:
         failures.append(f'bout-metadata gate: {exc}')
 

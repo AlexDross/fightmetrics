@@ -37,6 +37,7 @@ __all__ = [
     'REVIEWED_NO_TOKEN_LABELS',
     'parse_weightclass',
     'validate_bout_metadata',
+    'validate_result_frame',
 ]
 
 
@@ -221,6 +222,14 @@ def validate_bout_metadata(rows):
 
     Returns a summary dict: row_count, url_count, duplicate_groups,
     duplicate_rows, conflicts (always 0 on success).
+
+    Raises WeightclassParseError on ZERO rows. A gate that inspected nothing has
+    not passed, it has been skipped — and the skip is reachable: the callers
+    used to build the pair stream with
+    `zip(frame.get('URL', pd.Series(dtype=object)), frame['WEIGHTCLASS'])`, so a
+    feed with no URL column at all produced an empty zip and a clean bill of
+    health. Use validate_result_frame() rather than assembling the stream by
+    hand.
     """
     seen = {}
     duplicate_groups = set()
@@ -249,6 +258,12 @@ def validate_bout_metadata(rows):
                 f'{previous_label!r} -> {dict(zip(METADATA_FIELDS, previous))} '
                 f'vs {weightclass!r} -> {dict(zip(METADATA_FIELDS, current))}')
 
+    if row_count == 0:
+        raise WeightclassParseError(
+            'bout-metadata gate inspected 0 rows; refusing to report success on '
+            'an empty stream (a missing URL column or an empty frame must fail '
+            'closed, not pass vacuously)')
+
     return {
         'row_count': row_count,
         'url_count': len(seen),
@@ -256,3 +271,23 @@ def validate_bout_metadata(rows):
         'duplicate_rows': duplicate_rows,
         'conflicts': 0,
     }
+
+
+def validate_result_frame(frame):
+    """Validate a ufc_fight_results frame. The ONLY supported entry point.
+
+    Requires both columns to exist before pairing them, so a missing URL column
+    is a hard failure instead of an empty zip, and cross-checks that every row
+    was actually inspected — zip() silently truncates to the shorter input.
+    """
+    for column in ('URL', 'WEIGHTCLASS'):
+        if column not in frame.columns:
+            raise WeightclassParseError(
+                f'result frame has no {column} column; the bout-metadata gate '
+                f'cannot be evaluated and must not be skipped')
+    summary = validate_bout_metadata(zip(frame['URL'], frame['WEIGHTCLASS']))
+    if summary['row_count'] != len(frame):
+        raise WeightclassParseError(
+            f'bout-metadata gate inspected {summary["row_count"]} of '
+            f'{len(frame)} rows')
+    return summary

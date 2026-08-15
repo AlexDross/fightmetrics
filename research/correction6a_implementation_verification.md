@@ -103,6 +103,18 @@ rows that are unique by construction and never exercise the conflict check.
 Pinned feed: **8,847 rows → 8,822 bouts, 25 duplicate-URL groups, 25 repeat
 rows, 0 conflicts.**
 
+**The gate cannot pass vacuously.** An earlier revision let both callers build
+the pair stream by hand as
+`zip(frame.get('URL', pd.Series(dtype=object)), frame['WEIGHTCLASS'])`, so a
+feed with **no URL column** produced an empty zip and the validator returned
+`{'row_count': 0, …, 'conflicts': 0}` — a clean bill of health for a gate that
+had inspected nothing. `validate_bout_metadata` now raises on zero rows, and
+`validate_result_frame` is the only supported entry point: it requires both
+columns to exist before pairing them and cross-checks that every row was
+inspected (`zip` silently truncates to the shorter input). An AST-based test
+asserts neither caller defaults a missing `URL` column or bypasses the frame
+entry point.
+
 ### New-fighter seeding
 
 Seeding no longer touches legacy metadata paths. `clean_wc` is retired

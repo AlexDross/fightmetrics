@@ -39,7 +39,7 @@ from fight_data_integrity import canonicalize_aggregate_inputs, load_required_cs
 # WEIGHTCLASS; history fell back to the fighter's CURRENT roster division and
 # title status collapsed to an event-name heuristic. The raw bout-local label
 # on each ufc_fight_results.csv row is the only authoritative source.
-from fight_weightclass import parse_weightclass, validate_bout_metadata
+from fight_weightclass import parse_weightclass, validate_result_frame
 # ONE grammar reads every quoted field in the generated modules. Identity and
 # division used to be matched by two separate `[^']` patterns, and both stopped
 # at the backslash of an escaped apostrophe: `n:'Sean O\'Malley'` decoded to
@@ -245,8 +245,11 @@ results_df['BOUT']  = results_df['BOUT'].str.strip() if 'BOUT' in results_df.col
 # running afterwards would validate 8,822 rows that are unique by construction
 # and never exercise the conflict check at all. One shared implementation with
 # scripts/gate_closed_labels.py.
-_bout_meta_summary = validate_bout_metadata(
-    zip(results_df.get('URL', pd.Series(dtype=object)), results_df['WEIGHTCLASS']))
+# validate_result_frame, NOT a hand-built zip: `.get('URL', empty Series)` made
+# a feed with no URL column produce an empty pair stream, which the gate then
+# reported as a clean pass. The frame entry point requires both columns and
+# cross-checks that every row was inspected.
+_bout_meta_summary = validate_result_frame(results_df)
 print(f"  Bout-metadata gate: {_bout_meta_summary['url_count']} bouts from "
       f"{_bout_meta_summary['row_count']} raw rows; "
       f"{_bout_meta_summary['duplicate_groups']} duplicate-URL groups "
