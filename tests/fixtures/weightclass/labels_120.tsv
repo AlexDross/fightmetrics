@@ -1,0 +1,121 @@
+raw	division	championship	interim	tournament_final	category	raw_rows	canonical_bouts
+Bantamweight Bout	Bantamweight	false	false	false	ORDINARY	762	759
+Catch Weight Bout	Catch Weight	false	false	false	CATCHWEIGHT	82	82
+Featherweight Bout	Featherweight	false	false	false	ORDINARY	846	844
+Flyweight Bout	Flyweight	false	false	false	ORDINARY	397	394
+Heavyweight Bout	Heavyweight	false	false	false	ORDINARY	721	721
+Light Heavyweight Bout	Light Heavyweight	false	false	false	ORDINARY	705	705
+Lightweight Bout	Lightweight	false	false	false	ORDINARY	1423	1418
+Middleweight Bout	Middleweight	false	false	false	ORDINARY	1109	1105
+Open Weight Bout	Open Weight	false	false	false	OPENWEIGHT	101	101
+Road To UFC 1 Bantamweight Tournament Title Bout	Bantamweight	false	false	true	TOURNAMENT_FINAL	1	1
+Road To UFC 1 Featherweight Tournament Title Bout	Featherweight	false	false	true	TOURNAMENT_FINAL	1	1
+Road To UFC 1 Lightweight Tournament Title Bout	Lightweight	false	false	true	TOURNAMENT_FINAL	1	1
+Road to UFC 1 Flyweight Tournament Title Bout	Flyweight	false	false	true	TOURNAMENT_FINAL	1	1
+Road to UFC 3 Bantamweight Tournament TitleBout	Bantamweight	false	false	true	TOURNAMENT_FINAL	1	1
+Road to UFC 3 Flyweight Tournament TitleBout	Flyweight	false	false	true	TOURNAMENT_FINAL	1	1
+Road to UFC 3 Women's Strawweight Tournament TitleBout	Women's Strawweight	false	false	true	TOURNAMENT_FINAL	1	1
+Super Heavyweight Bout	Super Heavyweight	false	false	false	SUPER_HEAVYWEIGHT	1	1
+TUF Nations Canada vs. Australia Middleweight Tournament Title Bout	Middleweight	false	false	true	TOURNAMENT_FINAL	1	1
+TUF Nations Canada vs. Australia Welterweight Tournament Title Bout	Welterweight	false	false	true	TOURNAMENT_FINAL	1	1
+UFC 10 Tournament Title Bout	Open Weight	false	false	true	TOURNAMENT_FINAL	1	1
+UFC 13 Heavyweight Tournament Title Bout	Heavyweight	false	false	true	TOURNAMENT_FINAL	1	1
+UFC 13 Lightweight Tournament Title Bout	Lightweight	false	false	true	TOURNAMENT_FINAL	1	1
+UFC 14 Heavyweight Tournament Title Bout	Heavyweight	false	false	true	TOURNAMENT_FINAL	1	1
+UFC 14 Middleweight Tournament Title Bout	Middleweight	false	false	true	TOURNAMENT_FINAL	1	1
+UFC 15 Heavyweight Tournament Title Bout	Heavyweight	false	false	true	TOURNAMENT_FINAL	1	1
+UFC 17 Middleweight Tournament Title Bout	Middleweight	false	false	true	TOURNAMENT_FINAL	1	1
+UFC 2 Tournament Title Bout	Open Weight	false	false	true	TOURNAMENT_FINAL	1	1
+UFC 3 Tournament Title Bout	Open Weight	false	false	true	TOURNAMENT_FINAL	1	1
+UFC 4 Tournament Title Bout	Open Weight	false	false	true	TOURNAMENT_FINAL	1	1
+UFC 5 Tournament Title Bout	Open Weight	false	false	true	TOURNAMENT_FINAL	1	1
+UFC 6 Tournament Title Bout	Open Weight	false	false	true	TOURNAMENT_FINAL	1	1
+UFC 7 Tournament Title Bout	Open Weight	false	false	true	TOURNAMENT_FINAL	1	1
+UFC 8 Tournament Title Bout	Open Weight	false	false	true	TOURNAMENT_FINAL	1	1
+UFC Bantamweight Title Bout	Bantamweight	true	false	false	UFC_TITLE	25	25
+UFC Featherweight Title Bout	Featherweight	true	false	false	UFC_TITLE	22	22
+UFC Flyweight Title Bout	Flyweight	true	false	false	UFC_TITLE	27	27
+UFC Heavyweight Title Bout	Heavyweight	true	false	false	UFC_TITLE	44	44
+UFC Interim Bantamweight Title Bout	Bantamweight	true	true	false	INTERIM_TITLE	4	4
+UFC Interim Featherweight Title Bout	Featherweight	true	true	false	INTERIM_TITLE	4	4
+UFC Interim Flyweight Title Bout	Flyweight	true	true	false	INTERIM_TITLE	1	1
+UFC Interim Heavyweight Title Bout	Heavyweight	true	true	false	INTERIM_TITLE	10	10
+UFC Interim Light Heavyweight Title Bout	Light Heavyweight	true	true	false	INTERIM_TITLE	2	2
+UFC Interim Lightweight Title Bout	Lightweight	true	true	false	INTERIM_TITLE	4	4
+UFC Interim Middleweight Title Bout	Middleweight	true	true	false	INTERIM_TITLE	2	2
+UFC Interim Welterweight Title Bout	Welterweight	true	true	false	INTERIM_TITLE	3	3
+UFC Light Heavyweight Title Bout	Light Heavyweight	true	false	false	UFC_TITLE	57	57
+UFC Lightweight Title Bout	Lightweight	true	false	false	UFC_TITLE	37	37
+UFC Middleweight Title Bout	Middleweight	true	false	false	UFC_TITLE	40	40
+UFC Superfight Championship Bout	Open Weight	true	false	false	SUPERFIGHT_CHAMPIONSHIP	5	5
+UFC Welterweight Title Bout	Welterweight	true	false	false	UFC_TITLE	49	49
+UFC Women's Bantamweight Title Bout	Women's Bantamweight	true	false	false	UFC_TITLE	20	20
+UFC Women's Featherweight Title Bout	Women's Featherweight	true	false	false	UFC_TITLE	7	7
+UFC Women's Flyweight Title Bout	Women's Flyweight	true	false	false	UFC_TITLE	15	14
+UFC Women's Strawweight Title Bout	Women's Strawweight	true	false	false	UFC_TITLE	20	20
+Ultimate Fighter 1 Light Heavyweight Tournament Title Bout	Light Heavyweight	false	false	true	TOURNAMENT_FINAL	1	1
+Ultimate Fighter 1 Middleweight Tournament Title Bout	Middleweight	false	false	true	TOURNAMENT_FINAL	1	1
+Ultimate Fighter 10 Heavyweight Tournament Title Bout	Heavyweight	false	false	true	TOURNAMENT_FINAL	1	1
+Ultimate Fighter 11 Middleweight Tournament Title Bout	Middleweight	false	false	true	TOURNAMENT_FINAL	1	1
+Ultimate Fighter 12 Lightweight Tournament Title Bout	Lightweight	false	false	true	TOURNAMENT_FINAL	1	1
+Ultimate Fighter 13 Welterweight Tournament Title Bout	Welterweight	false	false	true	TOURNAMENT_FINAL	1	1
+Ultimate Fighter 14 Bantamweight Tournament Title Bout	Bantamweight	false	false	true	TOURNAMENT_FINAL	1	1
+Ultimate Fighter 14 Featherweight Tournament Title Bout	Featherweight	false	false	true	TOURNAMENT_FINAL	1	1
+Ultimate Fighter 15 Lightweight Tournament Title Bout	Lightweight	false	false	true	TOURNAMENT_FINAL	1	1
+Ultimate Fighter 16 Welterweight Tournament Title Bout	Welterweight	false	false	true	TOURNAMENT_FINAL	1	1
+Ultimate Fighter 17 Middleweight Tournament Title Bout	Middleweight	false	false	true	TOURNAMENT_FINAL	1	1
+Ultimate Fighter 18 Bantamweight Tournament Title Bout	Bantamweight	false	false	true	TOURNAMENT_FINAL	1	1
+Ultimate Fighter 18 Women's Bantamweight Tournament Title Bout	Women's Bantamweight	false	false	true	TOURNAMENT_FINAL	1	1
+Ultimate Fighter 19 Light Heavyweight Tournament Title Bout	Light Heavyweight	false	false	true	TOURNAMENT_FINAL	1	1
+Ultimate Fighter 19 Middleweight Tournament Title Bout	Middleweight	false	false	true	TOURNAMENT_FINAL	1	1
+Ultimate Fighter 2 Heavyweight Tournament Title Bout	Heavyweight	false	false	true	TOURNAMENT_FINAL	1	1
+Ultimate Fighter 2 Welterweight Tournament Title Bout	Welterweight	false	false	true	TOURNAMENT_FINAL	1	1
+Ultimate Fighter 21 Welterweight Tournament Title Bout	Welterweight	false	false	true	TOURNAMENT_FINAL	1	1
+Ultimate Fighter 22 Lightweight Tournament Title Bout	Lightweight	false	false	true	TOURNAMENT_FINAL	1	1
+Ultimate Fighter 23 Light Heavyweight Tournament Title Bout	Light Heavyweight	false	false	true	TOURNAMENT_FINAL	1	1
+Ultimate Fighter 23 Women's Strawweight Tournament Title Bout	Women's Strawweight	false	false	true	TOURNAMENT_FINAL	1	1
+Ultimate Fighter 25 Welterweight Tournament Title Bout	Welterweight	false	false	true	TOURNAMENT_FINAL	1	1
+Ultimate Fighter 27 Featherweight Tournament Title Bout	Featherweight	false	false	true	TOURNAMENT_FINAL	1	1
+Ultimate Fighter 27 Lightweight Tournament Title Bout	Lightweight	false	false	true	TOURNAMENT_FINAL	1	1
+Ultimate Fighter 28 Heavyweight Tournament Title Bout	Heavyweight	false	false	true	TOURNAMENT_FINAL	1	1
+Ultimate Fighter 28 Women's Featherweight Tournament Title Bout	Women's Featherweight	false	false	true	TOURNAMENT_FINAL	1	1
+Ultimate Fighter 3 Light Heavyweight Tournament Title Bout	Light Heavyweight	false	false	true	TOURNAMENT_FINAL	1	1
+Ultimate Fighter 3 Middleweight Tournament Title Bout	Middleweight	false	false	true	TOURNAMENT_FINAL	1	1
+Ultimate Fighter 32 Featherweight Tournament Title Bout	Featherweight	false	false	true	TOURNAMENT_FINAL	1	1
+Ultimate Fighter 32 Middleweight Tournament Title Bout	Middleweight	false	false	true	TOURNAMENT_FINAL	1	1
+Ultimate Fighter 33 Flyweight Tournament Title Bout	Flyweight	false	false	true	TOURNAMENT_FINAL	1	1
+Ultimate Fighter 33 Welterweight Tournament Title Bout	Welterweight	false	false	true	TOURNAMENT_FINAL	2	1
+Ultimate Fighter 4 Middleweight Tournament Title Bout	Middleweight	false	false	true	TOURNAMENT_FINAL	1	1
+Ultimate Fighter 4 Welterweight Tournament Title Bout	Welterweight	false	false	true	TOURNAMENT_FINAL	1	1
+Ultimate Fighter 5 Lightweight Tournament Title Bout	Lightweight	false	false	true	TOURNAMENT_FINAL	1	1
+Ultimate Fighter 6 Welterweight Tournament Title Bout	Welterweight	false	false	true	TOURNAMENT_FINAL	1	1
+Ultimate Fighter 7 Middleweight Tournament Title Bout	Middleweight	false	false	true	TOURNAMENT_FINAL	1	1
+Ultimate Fighter 8 Light Heavyweight Tournament Title Bout	Light Heavyweight	false	false	true	TOURNAMENT_FINAL	1	1
+Ultimate Fighter 8 Lightweight Tournament Title Bout	Lightweight	false	false	true	TOURNAMENT_FINAL	1	1
+Ultimate Fighter 9 Lightweight Tournament Title Bout	Lightweight	false	false	true	TOURNAMENT_FINAL	1	1
+Ultimate Fighter 9 Welterweight Tournament Title Bout	Welterweight	false	false	true	TOURNAMENT_FINAL	1	1
+Ultimate Fighter Australia vs. UK Lightweight Tournament Title Bout	Lightweight	false	false	true	TOURNAMENT_FINAL	1	1
+Ultimate Fighter Australia vs. UK Welterweight Tournament Title Bout	Welterweight	false	false	true	TOURNAMENT_FINAL	1	1
+Ultimate Fighter Brazil 1 Featherweight Tournament Title Bout	Featherweight	false	false	true	TOURNAMENT_FINAL	1	1
+Ultimate Fighter Brazil 1 Middleweight Tournament Title Bout	Middleweight	false	false	true	TOURNAMENT_FINAL	1	1
+Ultimate Fighter Brazil 2 Welterweight Tournament Title Bout	Welterweight	false	false	true	TOURNAMENT_FINAL	1	1
+Ultimate Fighter Brazil 3 Heavyweight Tournament Title Bout	Heavyweight	false	false	true	TOURNAMENT_FINAL	1	1
+Ultimate Fighter Brazil 3 Middleweight Tournament Title Bout	Middleweight	false	false	true	TOURNAMENT_FINAL	1	1
+Ultimate Fighter Brazil 4 Bantamweight Tournament Title Bout	Bantamweight	false	false	true	TOURNAMENT_FINAL	1	1
+Ultimate Fighter Brazil 4 Lightweight Tournament Title Bout	Lightweight	false	false	true	TOURNAMENT_FINAL	1	1
+Ultimate Fighter China Featherweight Tournament Title Bout	Featherweight	false	false	true	TOURNAMENT_FINAL	1	1
+Ultimate Fighter China Welterweight Tournament Title Bout	Welterweight	false	false	true	TOURNAMENT_FINAL	1	1
+Ultimate Fighter Latin America 2 Lightweight Tournament Title Bout	Lightweight	false	false	true	TOURNAMENT_FINAL	1	1
+Ultimate Fighter Latin America 2 Welterweight Tournament Title Bout	Welterweight	false	false	true	TOURNAMENT_FINAL	1	1
+Ultimate Fighter Latin America 3 Lightweight Tournament Title Bout	Lightweight	false	false	true	TOURNAMENT_FINAL	1	1
+Ultimate Fighter Latin America Bantamweight Tournament Title Bout	Bantamweight	false	false	true	TOURNAMENT_FINAL	1	1
+Ultimate Fighter Latin America Featherweight Tournament Title Bout	Featherweight	false	false	true	TOURNAMENT_FINAL	1	1
+Ultimate Japan 2 Heavyweight Tournament Title Bout	Heavyweight	false	false	true	TOURNAMENT_FINAL	1	1
+Ultimate Japan Heavyweight Tournament Title Bout	Heavyweight	false	false	true	TOURNAMENT_FINAL	1	1
+Ultimate Ultimate '95 Tournament Title Bout	Open Weight	false	false	true	TOURNAMENT_FINAL	1	1
+Ultimate Ultimate '96 Tournament Title Bout	Open Weight	false	false	true	TOURNAMENT_FINAL	1	1
+Welterweight Bout	Welterweight	false	false	false	ORDINARY	1345	1344
+Women's Bantamweight Bout	Women's Bantamweight	false	false	false	ORDINARY	230	229
+Women's Featherweight Bout	Women's Featherweight	false	false	false	ORDINARY	22	22
+Women's Flyweight Bout	Women's Flyweight	false	false	false	ORDINARY	264	263
+Women's Strawweight Bout	Women's Strawweight	false	false	false	ORDINARY	356	353

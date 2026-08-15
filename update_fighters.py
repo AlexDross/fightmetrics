@@ -34,6 +34,12 @@ from fight_event_dates import (
     is_dated, normalize_date,
 )
 from fight_data_integrity import canonicalize_aggregate_inputs, load_required_csv
+# CORRECTION 6A. One strict parser owns historical division/title semantics.
+# ufc_fight_details.csv is EVENT,BOUT,URL, so detail_lookup never carried a
+# WEIGHTCLASS; history fell back to the fighter's CURRENT roster division and
+# title status collapsed to an event-name heuristic. The raw bout-local label
+# on each ufc_fight_results.csv row is the only authoritative source.
+from fight_weightclass import parse_weightclass
 # ONE grammar reads every quoted field in the generated modules. Identity and
 # division used to be matched by two separate `[^']` patterns, and both stopped
 # at the backslash of an escaped apostrophe: `n:'Sean O\'Malley'` decoded to
@@ -84,6 +90,37 @@ WEIGHT_LIMITS = {
     "Women's Bantamweight": 135,
     "Women's Featherweight": 145,
 }
+
+ASOF_ENV = 'FIGHTMETRICS_ASOF'
+_ASOF_RE = re.compile(r'^\d{4}-\d{2}-\d{2}$')
+
+
+def resolve_asof():
+    """The generation as-of date. REQUIRED, exact YYYY-MM-DD, real calendar day.
+
+    `dsl` is (as-of - last fight date), so an unpinned clock rewrites ~2,198
+    roster records on every run and buries a correction's real diff in churn.
+    Requiring the date makes each regeneration reproducible and lets a review
+    assert an exact changed-field set.
+
+    date.fromisoformat alone is not enough: it accepts basic-ISO forms such as
+    '20260813', so the shape is checked first, then the value must round-trip.
+    """
+    raw = os.environ.get(ASOF_ENV)
+    if not raw:
+        raise SystemExit(
+            f'{ASOF_ENV} is required (exact YYYY-MM-DD). Refusing to generate '
+            f'against an unpinned clock.')
+    if not _ASOF_RE.match(raw):
+        raise SystemExit(f'{ASOF_ENV} must be exactly YYYY-MM-DD, got {raw!r}')
+    try:
+        parsed = date.fromisoformat(raw)
+    except ValueError as exc:
+        raise SystemExit(f'{ASOF_ENV}={raw!r} is not a real calendar date: {exc}')
+    if parsed.isoformat() != raw:
+        raise SystemExit(f'{ASOF_ENV}={raw!r} is not canonical')
+    return parsed
+
 
 def parse_date(s):
     if not isinstance(s, str): return None
@@ -296,12 +333,30 @@ for _, row in results_df.iterrows():
     if has_time:
         ti = str(row.get('TIME','5:00')).strip() or '5:00'
 
+    # CORRECTION 6A. The bout's division and title status come off THIS result
+    # row and are parsed ONCE, then shared by both corners. That is what makes
+    # the two copies of a bout structurally identical rather than merely
+    # usually equal — main disagreed with itself on 2,861 of 8,822 bouts because
+    # each corner was stamped with its own fighter's roster division.
+    #
+    # Deliberately NOT a (EVENT, BOUT) join: that key is non-unique. Kazushi
+    # Sakuraba vs Marcus Silveira appears twice at UFC Ultimate Japan (the
+    # bracket opener, overturned to a No Contest, and the final), and a join
+    # would collapse them and misattribute one bout's metadata to the other.
+    _wc_meta = parse_weightclass(row.get('WEIGHTCLASS'))
+
     for fighter, opponent in [(fa, fb), (fb, fa)]:
         res = 'NC' if winner is None else ('W' if fighter == winner else 'L')
         fights_by_fighter.setdefault(fighter, []).append({
             'result': res, 'date': dt, 'method': method.upper(),
             'method_d': method, 'opponent': opponent,
             'event': event, 'rn': rn, 'ti': ti, 'wc': wc,
+            'wc_division': _wc_meta['division'],
+            'wc_championship': _wc_meta['championship'],
+            'wc_interim': _wc_meta['interim'],
+            'wc_tournament_final': _wc_meta['tournament_final'],
+            'wc_category': _wc_meta['category'],
+            'wc_raw': _wc_meta['raw'],
         })
 
 for n in fights_by_fighter:
@@ -311,7 +366,7 @@ for n in fights_by_fighter:
 
 # ─── Compute record updates ────────────────────────────────────────────────────
 print("Computing record stats...")
-TODAY = date.today()
+TODAY = resolve_asof()
 record_updates = {}
 for name, fights in fights_by_fighter.items():
     wi  = sum(1 for f in fights if f['result'] == 'W')
@@ -524,15 +579,11 @@ if len(existing) != roster.object_count:
 pristine_entries = {entry.name: entry for entry in roster.entries}
 print(f"  Parsed {roster.object_count} roster entries")
 
-# The division comes off the SAME parsed object as the identity. It used to be
-# re-matched with its own `w:'([^']*)'` pattern, which truncated every
-# "Women's ..." division to the literal "Women\" and shipped it into
-# fightHistory as a weight class.
-wc_lookup = {}
-for entry in roster.entries:
-    field = entry.fields.get('w')
-    if field is not None and field.is_string:
-        wc_lookup[entry.name] = field.value
+# CORRECTION 6A removed `wc_lookup`. It existed only to answer "what division
+# was this historical bout at?" with the fighter's CURRENT roster division,
+# which is the defect this correction repairs. fightHistory now reads the raw
+# bout-local WEIGHTCLASS instead, so nothing consumes a roster-division lookup
+# and keeping one would invite the fallback back in.
 
 RECORD_FIELDS = ['wi','lo','ws','ls','kow','sbw','dcw','dsl']
 # 'tb' is NOT here. See the comment in compute_stat_updates: with wc:'' on every
@@ -597,9 +648,6 @@ for name, record in sorted(record_updates.items()):
     entry_str = build_new_fighter_entry(name, record, fights)
     new_lines.append(f"  {entry_str}")
     seeded_names.append(name)
-    wc = clean_wc(fights[0].get('wc', '')) if fights else None
-    if wc:
-        wc_lookup[name] = wc
     new_count += 1
 
 new_js = "export const _D2 = [\n" + ",\n".join(new_lines) + "\n];\n"
@@ -656,10 +704,23 @@ for fighter_name, fights in fights_by_fighter.items():
         # with a NaN 'dt' that would poison the sort below and the JSON.
         if not is_dated(fight_dt) or fight['result'] not in ('W', 'L', 'NC'):
             continue
-        wc = fight['wc'] or wc_lookup.get(fighter_name, 'Unknown')
-        tb = 'title' in wc.lower() or 'title' in fight['event'].lower()
-        if tb and 'title' not in wc.lower():
-            wc = wc + ' Title'
+        # CORRECTION 6A. Bout-specific division, parsed from the raw result row.
+        #
+        # GONE, deliberately:
+        #   wc_lookup fallback   — stamped the fighter's CURRENT roster division
+        #                          onto their whole career (4,508 rows wrong,
+        #                          1,483 of them shipped as the string 'Unknown')
+        #   event-name heuristic — 'title' in event name flagged all 7 bouts of
+        #                          "UFC 18: The Road to the Heavyweight Title";
+        #                          6 were not title fights
+        #   ' Title' suffix      — welded status onto the division string and
+        #                          produced values like 'Unknown Title'
+        #
+        # `wc` is a division and nothing else; `tb` is a UFC championship
+        # (undisputed, interim, or legacy Superfight) and nothing else. Title
+        # status is per-bout, so it cannot leak forward onto later fights.
+        wc = fight['wc_division']
+        tb = bool(fight['wc_championship'])
         entries.append({
             'dt': fight_dt,
             'op': fight['opponent'],
