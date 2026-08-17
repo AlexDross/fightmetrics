@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   americanOdds, parseAmericanOdds, americanToDecimal,
   stripVig, calcExpectedValue, kellyFraction, computeMarketAnalysis,
+  deriveFrozenV2RoiView,
 } from '../index.js';
 import { loadFixture, expectWithinUlps } from '../../../__tests__/goldenSupport.js';
 
@@ -380,5 +381,58 @@ describe('market analysis over frozen fixture fighters', () => {
       n++;
     }
     expect(n).toBe(37);
+  });
+});
+
+describe('frozen v2 ROI card view', () => {
+  it('re-derives reconstructed market fields from v2 so the pick and recommendation cannot disagree', () => {
+    const entry = {
+      fighterA: 'Shara Magomedov',
+      fighterB: 'Michel Pereira',
+      v2pA: 0.5080615711886554,
+      v2pB: 0.49193842881134464,
+      oddsA: '-396',
+      oddsB: '+310',
+      trackedSide: 'Michel Pereira',
+      betAction: 'LEAN',
+      betRecommendedFighter: 'Michel Pereira',
+      edgeA: -0.4009636068376649,
+      edgeB: 0.40096360683766485,
+      _provenance: { captureMode: 'reconstructed' },
+    };
+
+    expect(deriveFrozenV2RoiView(entry, HI, HI2)).toMatchObject({
+      winner: 'Shara Magomedov',
+      probability: entry.v2pA,
+      odds: '-396',
+      betAction: 'NO BET',
+      betFighter: '',
+    });
+    expect(deriveFrozenV2RoiView(entry, HI, HI2).edge).toBeLessThan(0);
+  });
+
+  it('preserves genuinely frozen v2 market fields and normalizes the recommended side to the v2 pick', () => {
+    const entry = {
+      fighterA: 'A',
+      fighterB: 'B',
+      v2pA: 0.72,
+      v2pB: 0.28,
+      oddsA: '+120',
+      oddsB: '-140',
+      modelUsed: 'v2',
+      betAction: 'BET',
+      edgeA: 0.19,
+      edgeB: -0.19,
+      _provenance: { frozenTier: 'BET' },
+    };
+
+    expect(deriveFrozenV2RoiView(entry, HI, HI2)).toMatchObject({
+      winner: 'A',
+      probability: 0.72,
+      odds: '+120',
+      edge: 0.19,
+      betAction: 'BET',
+      betFighter: 'A',
+    });
   });
 });

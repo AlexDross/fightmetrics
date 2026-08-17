@@ -297,6 +297,72 @@ const computeMarketAnalysis = (result, oddsA, oddsB, fA, fB) => {
   };
 };
 
+// Builds the ROI card's single-model view from the entry's frozen v2
+// probabilities. Older reconstructed rows carry v2pA/v2pB alongside market
+// fields that were originally calculated for v1; reading those fields
+// directly can therefore show a v2 pick with a recommendation for its
+// opponent. Live rows saved with modelUsed === 'v2' already have genuine
+// point-in-time v2 market fields, so preserve those instead of re-deriving
+// them from today's fighter credibility.
+const deriveFrozenV2RoiView = (entry, fighterA, fighterB) => {
+  if (entry?.v2pA == null || entry?.v2pB == null) return null;
+
+  const pickA = entry.v2pA >= entry.v2pB;
+  const winner = pickA ? entry.fighterA : entry.fighterB;
+  const probability = pickA ? entry.v2pA : entry.v2pB;
+  const odds = pickA
+    ? entry.oddsA || entry.marketOdds || ''
+    : entry.oddsB || entry.marketOdds || '';
+
+  let edge = null;
+  let betAction = 'NO BET';
+
+  if (entry.modelUsed === 'v2') {
+    edge = (pickA ? entry.edgeA : entry.edgeB) ?? entry.edge ?? null;
+    betAction = entry._provenance?.frozenTier ?? entry.betAction ?? 'NO BET';
+  } else {
+    // computeMarketAnalysis only uses domain edges for its confidence score;
+    // the ROI card displays the probability/edge/tier, whose gate depends on
+    // the frozen probabilities, market prices, and credibility cap. Neutral
+    // domain placeholders let this reuse the production gate without
+    // recomputing the historical model from post-event fighter data.
+    const neutralEdges = Object.fromEntries(
+      ['striking', 'grappling', 'physical', 'form', 'experience', 'analytics']
+        .map((key) => [key, { clamped: 0 }])
+    );
+    const fallbackA = {
+      FIGHTER: entry.fighterA,
+      CREDIBILITY: fighterA?.CREDIBILITY ?? 100,
+    };
+    const fallbackB = {
+      FIGHTER: entry.fighterB,
+      CREDIBILITY: fighterB?.CREDIBILITY ?? 100,
+    };
+    const market = computeMarketAnalysis(
+      { pA: entry.v2pA, pB: entry.v2pB, edges: neutralEdges },
+      entry.oddsA,
+      entry.oddsB,
+      fallbackA,
+      fallbackB
+    );
+    edge = market ? (pickA ? market.edgeA : market.edgeB) : null;
+    betAction = market?.betAction ?? 'NO BET';
+  }
+
+  const actionable =
+    betAction === 'LEAN' || betAction === 'BET' || betAction === 'STRONG BET';
+
+  return {
+    winner,
+    probability,
+    fairLine: americanOdds(probability),
+    odds,
+    edge,
+    betAction,
+    betFighter: actionable ? winner : '',
+  };
+};
+
 // Lightweight, synchronous, non-cryptographic checksum (djb2) — used only to
 // detect drift in MODEL_V2's coefficients between saves, not for security.
 
@@ -565,6 +631,7 @@ export {
   createPredictionId,
   kellyFraction,
   computeMarketAnalysis,
+  deriveFrozenV2RoiView,
   djb2Checksum,
   buildRoiEntry,
 };

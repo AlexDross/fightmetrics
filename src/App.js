@@ -95,6 +95,7 @@ import {
   createPredictionId,
   kellyFraction,
   computeMarketAnalysis,
+  deriveFrozenV2RoiView,
   djb2Checksum,
   buildProvenance,
   buildRoiEntry,
@@ -7602,23 +7603,20 @@ function ROITab({
           return;
         }
 
-        // Primary: frozen values stored on the entry at save time.
-        const v2pA = entry.v2pA;
-        const v2pB = entry.v2pB;
-        const v2Winner = v2pA >= v2pB ? entry.fighterA : entry.fighterB;
-        const v2WinProb = Math.max(v2pA, v2pB);
-        const v2FairLine = americanOdds(v2WinProb);
-        const v2Edge = (v2pA >= v2pB ? entry.edgeA : entry.edgeB) ?? null;
-        const v2BetAction = entry.betAction ?? 'NO BET';
-        const v2BetFighter = entry.betRecommendedFighter || '';
+        const view = deriveFrozenV2RoiView(
+          entry,
+          fighterMap.get(entry.fighterA),
+          fighterMap.get(entry.fighterB)
+        );
 
         map.set(entry.id, {
-          v2Winner,
-          v2WinProb,
-          v2FairLine,
-          v2Edge,
-          v2BetAction,
-          v2BetFighter,
+          v2Winner: view.winner,
+          v2WinProb: view.probability,
+          v2FairLine: view.fairLine,
+          v2Odds: view.odds,
+          v2Edge: view.edge,
+          v2BetAction: view.betAction,
+          v2BetFighter: view.betFighter,
         });
       });
     return map;
@@ -7886,16 +7884,14 @@ function ROITab({
               entry.actualWinner === entry.fighterA ||
               entry.actualWinner === entry.fighterB;
             const profit = calcTrackedProfit(entry);
-            const trackedProb = entry.displayTrackedProb;
             const trackedEdge = entry.displayEdge;
             const inV2Mode = modelView === 'v2';
             const v2Data = inV2Mode ? (v2DataMap.get(entry.id) ?? null) : null;
             const v2pick = (inV2Mode && v2Data) ? v2Data.v2Winner : entry.trackedSide;
             const effectiveTrackedSide = inV2Mode ? v2pick : entry.trackedSide;
             const effectiveOdds = inV2Mode
-              ? (v2pick === entry.fighterA ? (entry.oddsA || entry.marketOdds) : (entry.oddsB || entry.marketOdds))
+              ? (v2Data?.v2Odds ?? (v2pick === entry.fighterA ? (entry.oddsA || entry.marketOdds) : (entry.oddsB || entry.marketOdds)))
               : entry.marketOdds;
-            const v2FlippedTracked = inV2Mode && v2pick !== entry.trackedSide;
             const effectiveProfit = (() => {
               if (!isResolvedWinner(entry.actualWinner, entry)) return null;
               if (isPushResult(entry.actualWinner)) return 0;
@@ -7907,7 +7903,6 @@ function ROITab({
               const stake = entry.unitsWagered != null ? entry.unitsWagered : 1;
               return entry.actualWinner === effectiveTrackedSide ? stake * (dec - 1) : -stake;
             })();
-            const effectiveWinnerForBadge = (inV2Mode && v2Data) ? v2Data.v2Winner : entry.displayWinner;
             const correct = decisive && entry.actualWinner === effectiveTrackedSide;
             const effWinner = (inV2Mode && v2Data) ? v2Data.v2Winner : entry.displayWinner;
             const effProb = (inV2Mode && v2Data) ? v2Data.v2WinProb : (entry.displayProb ?? 0);
@@ -7920,7 +7915,7 @@ function ROITab({
             return (
               <div
                 key={entry.id}
-                className={`bg-slate-900 border ${betTier(entry.displayBetAction).border} rounded-xl p-5`}
+                className={`bg-slate-900 border ${betTier(effBetAction).border} rounded-xl p-5`}
               >
                 <div className="flex items-start justify-between gap-4 mb-4">
                   <div>
@@ -8072,9 +8067,6 @@ function ROITab({
                     <p className="text-slate-500 text-xs">Market odds</p>
                     <p className="text-white font-bold text-sm mt-1">
                       {effectiveOdds || '—'}
-                      {v2FlippedTracked && (
-                        <span className="text-amber-400 text-xs ml-1">(v2 flip)</span>
-                      )}
                     </p>
                     <p className="text-slate-600 text-xs mt-1">
                       {effEdge != null
@@ -8115,8 +8107,8 @@ function ROITab({
                 <p className="sm:hidden text-slate-500 text-xs">
                   {entry.eventName || '—'}
                   {entry.eventDate ? ` · ${entry.eventDate}` : ''}
-                  {' · Tracked: '}{entry.trackedSide || '—'}
-                  {' · Market: '}{entry.marketOdds || '—'}
+                  {' · v2 Pick: '}{effectiveTrackedSide || '—'}
+                  {' · Market: '}{effectiveOdds || '—'}
                   {' · Winner: '}{entry.actualWinner || 'Pending'}
                 </p>
 
@@ -8149,39 +8141,24 @@ function ROITab({
                   </div>
                   <div>
                     <label className="text-slate-500 text-xs font-semibold uppercase tracking-wider block mb-1.5">
-                      Tracked Side
-                    </label>
-                    <select
-                      value={entry.trackedSide}
-                      onChange={(e) =>
-                        onUpdateEntry(entry.id, {
-                          trackedSide: e.target.value,
-                          marketOdds:
-                            e.target.value === entry.fighterA
-                              ? entry.oddsA || ''
-                              : entry.oddsB || '',
-                        })
-                      }
-                      className="w-full bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:outline-hidden focus:border-red-500"
-                    >
-                      <option value={entry.fighterA}>{entry.fighterA}</option>
-                      <option value={entry.fighterB}>{entry.fighterB}</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="text-slate-500 text-xs font-semibold uppercase tracking-wider block mb-1.5">
-                      Market Odds
+                      v2 Pick
                     </label>
                     <input
                       type="text"
-                      value={entry.marketOdds || ''}
-                      onChange={(e) =>
-                        onUpdateEntry(entry.id, {
-                          marketOdds: e.target.value.replace(/[^0-9+-]/g, ''),
-                        })
-                      }
-                      placeholder="-150"
-                      className="w-full bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:outline-hidden focus:border-red-500"
+                      value={effectiveTrackedSide || ''}
+                      readOnly
+                      className="w-full bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-slate-500 text-xs font-semibold uppercase tracking-wider block mb-1.5">
+                      v2 Odds
+                    </label>
+                    <input
+                      type="text"
+                      value={effectiveOdds || ''}
+                      readOnly
+                      className="w-full bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2"
                     />
                   </div>
                   <div>
