@@ -1,0 +1,20 @@
+# UFC 330: Makhachev vs. Machado Garry — all 12 official bouts, 24 fighters.
+# Source: Greco1899/scrape_ufc_stats @ 2feb525741e35472c5ef4673533eee7bc3e7cce8 (2026-08-16 refresh)
+#   ufc_fight_results.csv sha256 e080cefa88ef03d5a8e76948e79a61ee093d30c941d2647961c1b37bde609b2b
+#   ufc_event_details.csv sha256 f4e4e89d9869e9383fb66ac547b5581e64c98f1806a509f6bc971158234a8456
+#   ufc_fight_details.csv sha256 94edf07c9102d090ca44fc560a19551137dcf806b99004a7404299225805bd7c
+#   ufc_fight_stats.csv   sha256 124ce82e3c0a93f6347e08f80bfbcc5346c93a11bbfc6c5eef012f2fdfc9e486
+# Captured verbatim so CI covers the real event rows without a network fetch.
+event_date	url	bout	raw_weightclass	division	championship	interim	tournament_final
+2026-08-15	http://ufcstats.com/fight-details/e7c11d1b22d50ba0	Charles Johnson vs. Eduardo Chapolin	Catch Weight Bout	Catch Weight	False	False	False
+2026-08-15	http://ufcstats.com/fight-details/6e495deac1f57169	Chidi Njokuani vs. Joel Alvarez	Welterweight Bout	Welterweight	False	False	False
+2026-08-15	http://ufcstats.com/fight-details/9c5da658c76da7c0	Donte Johnson vs. Eric McConico	Middleweight Bout	Middleweight	False	False	False
+2026-08-15	http://ufcstats.com/fight-details/8e482cead0c7eb15	Edson Barboza vs. Esteban Ribovics	Lightweight Bout	Lightweight	False	False	False
+2026-08-15	http://ufcstats.com/fight-details/365fd759c03e93cf	Islam Makhachev vs. Ian Machado Garry	UFC Welterweight Title Bout	Welterweight	True	False	False
+2026-08-15	http://ufcstats.com/fight-details/d4bd456d70965734	Jalin Turner vs. Kaue Fernandes	Lightweight Bout	Lightweight	False	False	False
+2026-08-15	http://ufcstats.com/fight-details/d5ebdf462c9b59b3	Jeremiah Wells vs. Myktybek Orolbai	Welterweight Bout	Welterweight	False	False	False
+2026-08-15	http://ufcstats.com/fight-details/4700d42c9869674a	Mackenzie Dern vs. Gillian Robertson	UFC Women's Strawweight Title Bout	Women's Strawweight	True	False	False
+2026-08-15	http://ufcstats.com/fight-details/53902dcb3e213b18	Mansur Abdul-Malik vs. Dustin Stoltzfus	Middleweight Bout	Middleweight	False	False	False
+2026-08-15	http://ufcstats.com/fight-details/e7077d030d5fc15f	Neil Magny vs. Ramiz Brahimaj	Welterweight Bout	Welterweight	False	False	False
+2026-08-15	http://ufcstats.com/fight-details/360b13f97e7ca703	Rafael Tobias vs. Lucas Fernando	Light Heavyweight Bout	Light Heavyweight	False	False	False
+2026-08-15	http://ufcstats.com/fight-details/e79e4d13546d2360	Vicente Luque vs. Tresean Gore	Middleweight Bout	Middleweight	False	False	False

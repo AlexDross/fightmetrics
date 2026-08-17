@@ -13,7 +13,10 @@ import hashlib
 import json
 import os
 import re
+import shutil
 import subprocess
+import sys
+import tempfile
 import unittest
 from datetime import datetime
 
@@ -32,9 +35,13 @@ PINNED_RESULTS_SHA256 = (
     '7f8f3b5245851397006a1da7b2f042322b3bf9456c94d849d7d47fdc57a71f7d')
 
 
-def results_sha256():
-    with open(RESULTS_CSV, 'rb') as handle:
+def _sha256_file(path):
+    with open(path, 'rb') as handle:
         return hashlib.sha256(handle.read()).hexdigest()
+
+
+def results_sha256():
+    return _sha256_file(RESULTS_CSV)
 
 
 # ── exact source reconstruction ──────────────────────────────────────────────
@@ -432,7 +439,23 @@ class DeltaAgainstBase(unittest.TestCase):
 
 
 
-UFC330_DELTAS = {
+# ── TWO DISTINCT POPULATIONS, deliberately not conflated ────────────────────
+#
+# A. PRE-EVENT ROSTER (below). The 20 fighters in the 10 matchups saved to
+#    src/upcomingData.js before UFC 330 was contested. The pinned feed
+#    (Greco 18ba2092) PREDATES the event, so it contains no UFC 330 rows at
+#    all. What these deltas measure is the correction applied to those
+#    fighters' EARLIER careers: 59 wc and 7 tb changes. Nothing here inspects a
+#    UFC 330 bout, and this must never be described as "UFC 330's bouts
+#    verified".
+#
+# B. THE CONTESTED EVENT. UFC 330: Makhachev vs. Machado Garry was 12 official
+#    bouts / 24 fighters — the 10 saved matchups plus Charles Johnson vs.
+#    Eduardo Chapolin (Catch Weight) and Rafael Tobias vs. Lucas Fernando
+#    (Light Heavyweight). Those rows exist only in the LATER feed, so they are
+#    covered by a captured fixture in Ufc330ContestedEventFixture below rather
+#    than by these deltas.
+PRE_EVENT_ROSTER_DELTAS = {
     'Islam Makhachev': (17, 6), 'Ian Machado Garry': (0, 0),
     'Mackenzie Dern': (0, 1), 'Gillian Robertson': (13, 0),
     'Mansur Abdul-Malik': (0, 0), 'Dustin Stoltzfus': (0, 0),
@@ -445,9 +468,96 @@ UFC330_DELTAS = {
     'Jeremiah Wells': (0, 0), 'Myktybek Orolbai': (3, 0),
 }
 
+UFC330_FIXTURE = os.path.join(HERE, 'tests', 'fixtures', 'weightclass',
+                              'ufc330_bouts.tsv')
 
-class Ufc330Coverage(unittest.TestCase):
-    """Per-fighter history deltas for all 20 tracked UFC 330 fighters."""
+
+def load_ufc330_fixture():
+    """The 12 contested UFC 330 bout rows, captured from the later feed.
+
+    Read from a committed fixture rather than fetched, so CI covers the real
+    event without depending on a mutable upstream repository. Provenance (source
+    commit and all four CSV hashes) is recorded in the fixture header.
+    """
+    with open(UFC330_FIXTURE, encoding='utf-8') as handle:
+        lines = [ln for ln in handle if not ln.startswith('#')]
+    return list(csv.DictReader(lines, delimiter='\t'))
+
+
+class Ufc330ContestedEventFixture(unittest.TestCase):
+    """Population B: all 12 contested bouts / 24 fighters of the real event.
+
+    Feed-independent by construction — it asserts the PARSER against captured
+    source rows, so it runs on the pinned feed, on a newer feed, and offline.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        cls.rows = load_ufc330_fixture()
+
+    def test_fixture_covers_twelve_bouts_and_twenty_four_fighters(self):
+        self.assertEqual(len(self.rows), 12)
+        fighters = set()
+        for row in self.rows:
+            parts = re.split(r'\s+vs\.?\s+', row['bout'].strip(), maxsplit=1)
+            self.assertEqual(len(parts), 2, row['bout'])
+            fighters.update(p.strip() for p in parts)
+        self.assertEqual(len(fighters), 24)
+
+    def test_every_bout_url_is_distinct(self):
+        urls = [r['url'] for r in self.rows]
+        self.assertEqual(len(set(urls)), 12)
+        self.assertTrue(all(u.startswith('http') for u in urls))
+
+    def test_parser_reproduces_every_captured_bout_record(self):
+        """The whole point: each raw label parses to the recorded metadata."""
+        for row in self.rows:
+            with self.subTest(bout=row['bout']):
+                parsed = parse_weightclass(row['raw_weightclass'])
+                self.assertEqual(parsed['division'], row['division'])
+                self.assertEqual(parsed['championship'],
+                                 row['championship'] == 'True')
+                self.assertEqual(parsed['interim'], row['interim'] == 'True')
+                self.assertEqual(parsed['tournament_final'],
+                                 row['tournament_final'] == 'True')
+                self.assertIn(parsed['division'], SUPPORTED_DIVISIONS)
+                self.assertNotIn('title', parsed['division'].lower())
+
+    def test_the_two_title_bouts_are_the_only_championships(self):
+        champs = {r['bout'] for r in self.rows if r['championship'] == 'True'}
+        self.assertEqual(champs, {
+            'Islam Makhachev vs. Ian Machado Garry',
+            "Mackenzie Dern vs. Gillian Robertson"})
+        self.assertFalse(any(r['interim'] == 'True' for r in self.rows))
+
+    def test_the_two_bouts_outside_the_pre_event_roster_are_covered(self):
+        """Exactly the gap the 20-fighter population cannot reach."""
+        bouts = {r['bout']: r for r in self.rows}
+        extra = bouts['Charles Johnson vs. Eduardo Chapolin']
+        self.assertEqual(extra['division'], 'Catch Weight')
+        self.assertEqual(extra['championship'], 'False')
+        extra = bouts['Rafael Tobias vs. Lucas Fernando']
+        self.assertEqual(extra['division'], 'Light Heavyweight')
+        self.assertEqual(extra['championship'], 'False')
+
+    def test_no_fighter_in_the_fixture_is_missing_from_the_pre_event_roster_by_accident(self):
+        """Documents the 20 vs 24 relationship instead of leaving it implicit."""
+        fighters = set()
+        for row in self.rows:
+            fighters.update(p.strip() for p in
+                            re.split(r'\s+vs\.?\s+', row['bout'].strip(), maxsplit=1))
+        extra = fighters - set(PRE_EVENT_ROSTER_DELTAS)
+        self.assertEqual(extra, {'Charles Johnson', 'Eduardo Chapolin',
+                                 'Rafael Tobias', 'Lucas Fernando'})
+
+
+class Ufc330PreEventRosterCoverage(unittest.TestCase):
+    """Population A: pre-event historical wc/tb deltas for the 20-fighter roster.
+
+    These are corrections to fights the 20 fighters had BEFORE UFC 330. The
+    pinned feed has no UFC 330 rows; see Ufc330ContestedEventFixture for the
+    contested event itself.
+    """
 
     @classmethod
     def setUpClass(cls):
@@ -459,14 +569,15 @@ class Ufc330Coverage(unittest.TestCase):
             self.skipTest('base blob unavailable')
         require_pinned_snapshot(self)
 
-    def test_all_twenty_fighters_are_present(self):
-        self.assertEqual(len(UFC330_DELTAS), 20)
-        for name in UFC330_DELTAS:
+    def test_all_twenty_pre_event_roster_fighters_are_present(self):
+        self.assertEqual(len(PRE_EVENT_ROSTER_DELTAS), 20)
+        for name in PRE_EVENT_ROSTER_DELTAS:
             self.assertIn(name, self.current, f'{name} missing from fightHistory')
 
-    def test_per_fighter_wc_and_tb_deltas(self):
+    def test_per_fighter_pre_event_wc_and_tb_deltas(self):
+        """Corrections to bouts these 20 fighters had BEFORE UFC 330."""
         total_wc = total_tb = 0
-        for name, (want_wc, want_tb) in sorted(UFC330_DELTAS.items()):
+        for name, (want_wc, want_tb) in sorted(PRE_EVENT_ROSTER_DELTAS.items()):
             before, after = self.base[name], self.current[name]
             self.assertEqual(len(before), len(after), name)
             wc = sum(1 for x, y in zip(before, after) if x['wc'] != y['wc'])
@@ -479,7 +590,17 @@ class Ufc330Coverage(unittest.TestCase):
         self.assertEqual(total_wc, 59)
         self.assertEqual(total_tb, 7)
 
-    def test_luque_gastelum_both_corners_middleweight(self):
+    def test_pinned_feed_contains_no_ufc_330_rows(self):
+        """Makes the two-population split explicit instead of implied.
+
+        If a future pin includes the event, this fails and forces the deltas
+        above to be re-ratified rather than silently changing meaning.
+        """
+        with open(RESULTS_CSV, encoding='utf-8', errors='replace') as handle:
+            self.assertNotIn('UFC 330', handle.read())
+
+    def test_luque_gastelum_pre_event_both_corners_middleweight(self):
+        """Luque's UFC 327 bout — a pre-event correction, not a UFC 330 bout."""
         for a, b in (('Vicente Luque', 'Kelvin Gastelum'),
                      ('Kelvin Gastelum', 'Vicente Luque')):
             entry = next(e for e in self.current[a]
@@ -489,26 +610,116 @@ class Ufc330Coverage(unittest.TestCase):
 
 
 class DeterministicRegeneration(unittest.TestCase):
-    """Two full runs at a fixed ASOF must be byte-identical."""
+    """Two full runs at a fixed ASOF must be byte-identical.
 
-    def test_two_runs_produce_identical_artifacts(self):
-        require_pinned_snapshot(self)
-        if not os.path.exists(os.path.join(HERE, 'ufc_event_details.csv')):
-            self.skipTest('ufc_event_details.csv (gitignored) not present')
-        env = dict(os.environ, FIGHTMETRICS_ASOF='2026-08-13')
+    The regeneration happens in a THROWAWAY WORKSPACE, never in the checkout.
+    This test used to run `update_fighters.py` with `cwd=HERE`, which rewrote
+    the repository's own tracked `src/fightersData.js` and `src/fightHistory.js`
+    at a hardcoded 2026-08-13 as-of date. In the scheduled workflow that step
+    sits between the real current-clock generation and
+    `git add src/fightersData.js … && git commit && git push`, so a run whose
+    feed happened to match the pin published 2,198 `dsl` values rolled back to a
+    stale clock — measured, not hypothesised.
+
+    `cwd=` alone could never have fixed it: `update_fighters.py` resolves every
+    path from `os.path.dirname(os.path.abspath(__file__))`, so it writes beside
+    its own source file regardless of the working directory. The updater and its
+    imports are therefore COPIED into the temporary tree, and the assertions
+    read only paths under that tree.
+    """
+
+    # Everything update_fighters.py touches, resolved relative to SRC.
+    WORKSPACE_MODULES = (
+        'update_fighters.py', 'fight_event_dates.py', 'fight_data_integrity.py',
+        'fight_weightclass.py', 'js_roster_parser.py',
+    )
+    WORKSPACE_DATA = ('name_aliases.json',)
+    WORKSPACE_SRC = ('fightersData.js', 'fightHistory.js', 'prospectsData.js')
+    WORKSPACE_FEED = ('ufc_fight_results.csv', 'ufc_event_details.csv',
+                      'ufc_fight_details.csv', 'ufc_fight_stats.csv')
+    ARTIFACTS = ('fightHistory.js', 'fightersData.js')
+
+    def _materialise(self, root, feed_dir=None):
+        """Copy a complete, self-contained updater workspace into `root`.
+
+        `feed_dir` overrides where the four CSVs come from, so the same
+        machinery drives both the pinned-feed and the alternate-feed proofs.
+        """
+        os.makedirs(os.path.join(root, 'src'), exist_ok=True)
+        for name in self.WORKSPACE_MODULES + self.WORKSPACE_DATA:
+            shutil.copy2(os.path.join(HERE, name), os.path.join(root, name))
+        for name in self.WORKSPACE_SRC:
+            shutil.copy2(os.path.join(HERE, 'src', name),
+                         os.path.join(root, 'src', name))
+        for name in self.WORKSPACE_FEED:
+            shutil.copy2(os.path.join(feed_dir or HERE, name),
+                         os.path.join(root, name))
+
+    def _regenerate_twice(self, root, asof):
+        """Run the updater twice in `root`; return the two artifact digest pairs."""
+        env = dict(os.environ, FIGHTMETRICS_ASOF=asof)
         digests = []
-        for _ in range(2):
-            proc = subprocess.run(['python3', 'update_fighters.py'], cwd=HERE,
-                                  env=env, capture_output=True, text=True)
-            self.assertEqual(proc.returncode, 0, proc.stderr[-2000:])
-            digests.append(tuple(
-                hashlib.sha256(open(os.path.join(HERE, 'src', name), 'rb').read()).hexdigest()
-                for name in ('fightHistory.js', 'fightersData.js')))
-        self.assertEqual(digests[0], digests[1], 'regeneration is not idempotent')
-        self.assertEqual(digests[0][0],
+        for run in (1, 2):
+            proc = subprocess.run([sys.executable, 'update_fighters.py'],
+                                  cwd=root, env=env, capture_output=True,
+                                  text=True)
+            self.assertEqual(proc.returncode, 0,
+                             f'run {run} failed:\n{proc.stderr[-2000:]}')
+            digests.append(tuple(_sha256_file(os.path.join(root, 'src', name))
+                                 for name in self.ARTIFACTS))
+        return digests
+
+    def _require_feed(self):
+        for name in self.WORKSPACE_FEED:
+            if not os.path.exists(os.path.join(HERE, name)):
+                self.skipTest(f'{name} (gitignored) not present')
+
+    # ── DYNAMIC invariant: runs on ANY feed, never snapshot-gated ────────────
+    def test_two_runs_produce_identical_artifacts(self):
+        """Idempotence is a property of the generator, not of one snapshot.
+
+        Deliberately NOT wrapped in require_pinned_snapshot: gating execution on
+        the pinned feed is what made this gate vanish from the scheduled
+        workflow the moment upstream refreshed. Only the snapshot-specific
+        expected hashes below may skip.
+        """
+        self._require_feed()
+        with tempfile.TemporaryDirectory(prefix='fm-idem-') as root:
+            self._materialise(root)
+            first, second = self._regenerate_twice(root, '2026-08-13')
+            self.assertEqual(first, second, 'regeneration is not idempotent')
+
+    def test_expected_artifact_hashes_on_the_pinned_feed(self):
+        """SNAPSHOT-SPECIFIC: exact bytes, valid only for the pinned feed."""
+        self._require_feed()
+        require_pinned_snapshot(self)
+        with tempfile.TemporaryDirectory(prefix='fm-pin-') as root:
+            self._materialise(root)
+            first, _ = self._regenerate_twice(root, '2026-08-13')
+        self.assertEqual(first[0],
                          '420eafc4418bb747793d51a438a02b39525d03985e8b0f0139384c06ea9c0449')
-        self.assertEqual(digests[0][1],
+        self.assertEqual(first[1],
                          '27b046d070869d7aba20117b971862623f67997956f18a77ad3ef0a283fdb134')
+
+    def test_regeneration_does_not_touch_the_checkout(self):
+        """The guard that makes the above safe to run in CI.
+
+        Hashes every tracked artifact before and after a full two-run
+        regeneration. If a future edit reintroduces `cwd=HERE`, this fails here
+        instead of in a bot commit that rolls production data backwards.
+        """
+        self._require_feed()
+        watched = {name: os.path.join(HERE, 'src', name)
+                   for name in ('fightHistory.js', 'fightersData.js',
+                                'upcomingData.js')}
+        before = {n: _sha256_file(p) for n, p in watched.items()}
+        with tempfile.TemporaryDirectory(prefix='fm-iso-') as root:
+            self._materialise(root)
+            self._regenerate_twice(root, '2026-08-13')
+        after = {n: _sha256_file(p) for n, p in watched.items()}
+        self.assertEqual(before, after,
+                         'regeneration wrote into the checkout; the updater must '
+                         'run only inside its temporary workspace')
 
 
 if __name__ == '__main__':
