@@ -271,7 +271,7 @@ date). `dsl` is (as-of − last-fight date), so an unpinned clock rewrote ~2,198
 records per run and buried real diffs.
 
 **Counts.** 17,644 rows · 4,508 `wc` changes · 804 `tb` changes (792 false→true,
-12 true→false) · 287 both · 1,433 fighters · 3,686 bouts · 68 transitions ·
+12 true→false) · 287 both · 1,433 fighters · 3,687 bouts · 68 transitions ·
 `Unknown` 1,483 → 0 · asymmetric bouts 2,861 → 0.
 
 **Hashes** (`FIGHTMETRICS_ASOF=2026-08-13`): `fightHistory.js`
@@ -282,9 +282,9 @@ records per run and buried real diffs.
 byte-identical.
 
 **Model impact: exactly zero.** Fixed-clock harness (ASOF 2026-08-13, pinned
-`DAYS_SINCE_LAST`, explicit `eventDate`, real UFC 330 contexts, both slot
+`DAYS_SINCE_LAST`, explicit `eventDate`, real saved UFC 330 contexts, both slot
 orders): deep equality against origin/main across 32,627 broad matchups, 1,705
-direct-sweep matchups and 10 UFC 330 bouts; 0 pick flips. `wc` has one consumer
+direct-sweep matchups and the 10 saved UFC 330 matchups; 0 pick flips. `wc` has one consumer
 (a display string in `App.js`); `tb` feeds only `total_title_bout_dif` (never
 summed into the v1 composite) and `featsV2.title_bouts` (v2 coefficient `0`).
 
