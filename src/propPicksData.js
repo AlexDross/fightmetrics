@@ -12,7 +12,7 @@ export const PROP_PICKS = [
     "method": "KO/TKO",
     "odds": "-105",
     "stake": 1,
-    "result": "PENDING",
+    "result": "LOST",
     "label": "Mansur Abdul-Malik wins by KO/TKO",
     "propType": "Method of Victory"
   },
@@ -29,7 +29,7 @@ export const PROP_PICKS = [
     "method": "Submission",
     "odds": "+185",
     "stake": 1,
-    "result": "PENDING",
+    "result": "LOST",
     "label": "Joel Alvarez wins by Submission",
     "propType": "Method of Victory"
   },
@@ -46,7 +46,7 @@ export const PROP_PICKS = [
     "method": "Submission",
     "odds": "+220",
     "stake": 1,
-    "result": "PENDING",
+    "result": "LOST",
     "label": "Islam Makhachev wins by Submission",
     "propType": "Method of Victory"
   },
