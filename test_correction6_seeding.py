@@ -11,15 +11,33 @@ because importing that module executes a full regeneration.
 
 import ast
 import os
+import re
 import unittest
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 UPDATER = os.path.join(HERE, 'update_fighters.py')
 
+# The seeding function itself is extracted and executed, not just inspected.
+# Importing update_fighters.py runs a full regeneration at module scope, so the
+# smallest unit containing the real newcomer-construction path is lifted out by
+# AST and given the three module globals it reads. Everything else — the JS
+# literal formatting, the escaping, the error type, the weight-limit table — is
+# the production implementation, so a change to any of them is exercised here.
 _PRELUDE = (
     'from fight_event_dates import is_dated\n'
+    'from js_roster_parser import JsParseError, format_js_literal, js_escape\n'
+    'fmt = format_js_literal\n'
+    # Module state built from the CSVs at import time; a newcomer with no stats
+    # rows and no reviewed prospect entry is the case that matters here.
+    'stats_by_fighter = {}\n'
+    'prospect_fallbacks = {}\n'
+    'def compute_opponent_stats(name):\n'
+    '    return (None, None)\n'
 )
-_WANTED = ('_contested_dated', 'latest_dated_division', 'count_championship_bouts')
+_WANTED = ('_contested_dated', 'latest_dated_division', 'count_championship_bouts',
+           'compute_total_rounds', 'round2', 'build_new_fighter_entry')
+# Real production values, lifted verbatim rather than restated in the test.
+_WANTED_ASSIGNMENTS = ('WEIGHT_LIMITS',)
 
 
 def _load_helpers():
@@ -30,8 +48,15 @@ def _load_helpers():
     missing = set(_WANTED) - set(wanted)
     if missing:
         raise AssertionError(f'update_fighters.py is missing {sorted(missing)}')
+    assigns = [n for n in tree.body if isinstance(n, ast.Assign)
+               and any(isinstance(t, ast.Name) and t.id in _WANTED_ASSIGNMENTS
+                       for t in n.targets)]
+    if len(assigns) != len(_WANTED_ASSIGNMENTS):
+        raise AssertionError(f'update_fighters.py is missing {_WANTED_ASSIGNMENTS}')
     namespace = {}
-    source = _PRELUDE + '\n'.join(ast.unparse(wanted[n]) for n in _WANTED)
+    source = (_PRELUDE
+              + '\n'.join(ast.unparse(a) for a in assigns) + '\n'
+              + '\n'.join(ast.unparse(wanted[n]) for n in _WANTED))
     exec(compile(source, UPDATER, 'exec'), namespace)
     return namespace
 
@@ -39,6 +64,29 @@ def _load_helpers():
 HELPERS = _load_helpers()
 latest_dated_division = HELPERS['latest_dated_division']
 count_championship_bouts = HELPERS['count_championship_bouts']
+build_new_fighter_entry = HELPERS['build_new_fighter_entry']
+JsParseError = HELPERS['JsParseError']
+
+
+def record(**over):
+    base = {'wi': 3, 'lo': 1, 'ws': 2, 'ls': 0, 'kow': 1, 'sbw': 0, 'dcw': 2,
+            'lfd': '2026-05-01', 'dsl': 108}
+    base.update(over)
+    return base
+
+
+def field(entry, name):
+    """Read one `name:value` field back out of the emitted JS object literal.
+
+    The quoted alternative crosses backslash escapes on purpose. A plain
+    `'[^']*'` stops at the backslash in `'Women\\'s Strawweight'` and reports
+    the division as `'Women\\'` — the exact Correction 5 truncation this
+    codebase already fixed once, so the test helper must not reintroduce it.
+    """
+    match = re.search(
+        rf'[{{,]{re.escape(name)}:((?:\'(?:\\.|[^\'\\])*\')|[^,}}]*)', entry)
+    assert match, f'{name!r} not found in {entry!r}'
+    return match.group(1)
 
 
 def fight(date, division, *, championship=False, result='W', tournament_final=False):
@@ -124,6 +172,82 @@ class SeededTitleCount(unittest.TestCase):
         self.assertEqual(count_championship_bouts(fights), 2)
 
 
+class SeedingBehaviour(unittest.TestCase):
+    """Runs the REAL newcomer-construction path and reads the emitted entry.
+
+    The AST guards below prove the seeding function calls the right helpers.
+    These prove the values it actually emits are correct, which is what a
+    reviewer and the roster both depend on. Without this, the pinned feed seeds
+    zero newcomers and the whole path ships unexercised.
+    """
+
+    def test_non_title_newcomer_emits_division_and_zero_title_bouts(self):
+        entry = build_new_fighter_entry(
+            'Test Newcomer', record(),
+            [fight('2026-05-01', 'Lightweight'), fight('2025-02-01', 'Lightweight')])
+        self.assertEqual(field(entry, 'w'), "'Lightweight'")
+        self.assertEqual(field(entry, 'tb'), '0')
+
+    def test_championship_newcomer_counts_only_championships(self):
+        entry = build_new_fighter_entry(
+            'Champ Newcomer', record(),
+            [fight('2026-05-01', 'Bantamweight', championship=True),
+             fight('2025-05-01', 'Bantamweight'),
+             fight('2024-05-01', 'Bantamweight', tournament_final=True)])
+        self.assertEqual(field(entry, 'w'), "'Bantamweight'")
+        self.assertEqual(field(entry, 'tb'), '1')
+
+    def test_division_change_seeds_the_latest_division(self):
+        entry = build_new_fighter_entry(
+            'Mover', record(),
+            [fight('2026-05-01', 'Middleweight'), fight('2024-05-01', 'Welterweight')])
+        self.assertEqual(field(entry, 'w'), "'Middleweight'")
+
+    def test_event_name_containing_title_contributes_nothing(self):
+        """The exact retired heuristic, held behaviourally."""
+        bout = fight('1999-01-08', 'Middleweight')
+        bout['event'] = 'UFC 18: The Road to the Heavyweight Title'
+        entry = build_new_fighter_entry('Heuristic Bait', record(), [bout])
+        self.assertEqual(field(entry, 'tb'), '0')
+        self.assertEqual(field(entry, 'w'), "'Middleweight'")
+
+    def test_womens_division_survives_escaping(self):
+        entry = build_new_fighter_entry(
+            'Apostrophe Case', record(), [fight('2026-05-01', "Women's Strawweight")])
+        self.assertEqual(field(entry, 'w'), "'Women\\'s Strawweight'")
+
+    def test_emitted_division_never_carries_status_text(self):
+        entry = build_new_fighter_entry(
+            'Title Fighter', record(),
+            [fight('2026-05-01', 'Heavyweight', championship=True)])
+        self.assertEqual(field(entry, 'w'), "'Heavyweight'")
+        self.assertEqual(field(entry, 'tb'), '1')
+
+    def test_input_order_does_not_change_the_emitted_entry(self):
+        newest = fight('2026-05-01', 'Middleweight', championship=True)
+        older = fight('2019-01-01', 'Welterweight')
+        oldest = fight('2015-01-01', 'Lightweight')
+        canonical = build_new_fighter_entry('Ordered', record(),
+                                            [newest, older, oldest])
+        # `fights` arrives sorted descending; a trailing duplicate of an older
+        # bout must not displace the newest one.
+        self.assertEqual(
+            build_new_fighter_entry('Ordered', record(), [newest, older, oldest, older]),
+            canonical)
+        self.assertEqual(field(canonical, 'w'), "'Middleweight'")
+
+    def test_missing_data_fails_closed(self):
+        for label, fights in (
+                ('no fights at all', []),
+                ('only undated bouts', [fight(None, 'Heavyweight')]),
+                ('dated bout with no parsed division', [fight('2026-05-01', None)]),
+                ('only uncontested bouts',
+                 [fight('2026-05-01', 'Heavyweight', result='D')])):
+            with self.subTest(case=label):
+                with self.assertRaises(JsParseError):
+                    build_new_fighter_entry('Unseedable', record(), fights)
+
+
 class SeedingSourceContract(unittest.TestCase):
     """Guards against the retired paths reappearing."""
 
@@ -147,9 +271,80 @@ class SeedingSourceContract(unittest.TestCase):
                      and 'rows' in ast.unparse(n)]
         self.assertEqual(offenders, [], 'row-order-dependent seeding is back')
 
-    def test_seeding_uses_the_deterministic_helpers(self):
-        self.assertIn('latest_dated_division(fights)', self.source)
-        self.assertIn('count_championship_bouts(fights)', self.source)
+    # ── AST, SCOPED TO THE SEEDING FUNCTION ─────────────────────────────────
+    # The retired assertion was `assertIn('count_championship_bouts(fights)',
+    # source)`. The line `def count_championship_bouts(fights):` contains that
+    # substring, so the check passed on its own definition and proved nothing
+    # about the call site: reverting the tb field to the event-name heuristic
+    # left the whole suite green. These read the AST of
+    # build_new_fighter_entry itself.
+
+    def _seeding_fn(self):
+        for node in self.tree.body:
+            if (isinstance(node, ast.FunctionDef)
+                    and node.name == 'build_new_fighter_entry'):
+                return node
+        self.fail('update_fighters.py has no build_new_fighter_entry')
+
+    @staticmethod
+    def _interpolations(fn):
+        """{emitted field name: interpolated expression} for every f-string part.
+
+        The entry is built as one f-string per field, so the Constant directly
+        preceding a FormattedValue is that field's `name:` label. This is what
+        ties an assertion to the field actually emitted rather than to any
+        mention of a helper elsewhere in the function.
+        """
+        found = {}
+        for joined in [n for n in ast.walk(fn) if isinstance(n, ast.JoinedStr)]:
+            label = None
+            for part in joined.values:
+                if isinstance(part, ast.Constant) and isinstance(part.value, str):
+                    match = re.search(r'([A-Za-z_][A-Za-z0-9_]*):\s*$', part.value)
+                    label = match.group(1) if match else None
+                elif isinstance(part, ast.FormattedValue) and label:
+                    found[label] = part.value
+                    label = None
+        return found
+
+    def test_division_path_calls_latest_dated_division(self):
+        fn = self._seeding_fn()
+        calls = [n for n in ast.walk(fn) if isinstance(n, ast.Call)
+                 and isinstance(n.func, ast.Name)
+                 and n.func.id == 'latest_dated_division']
+        self.assertTrue(calls, 'build_new_fighter_entry never calls '
+                               'latest_dated_division')
+        # …and its result is what lands in `weight_class`.
+        assigned = [a for a in ast.walk(fn) if isinstance(a, ast.Assign)
+                    and any(isinstance(t, ast.Name) and t.id == 'weight_class'
+                            for t in a.targets)
+                    and isinstance(a.value, ast.Call)
+                    and isinstance(a.value.func, ast.Name)
+                    and a.value.func.id == 'latest_dated_division']
+        self.assertTrue(assigned, 'latest_dated_division is called but its result '
+                                  'is not assigned to weight_class')
+        # …and `weight_class` is what the emitted `w:` field interpolates.
+        w_expr = self._interpolations(fn).get('w')
+        self.assertIsNotNone(w_expr, "no `w:` field is emitted")
+        self.assertIn('weight_class', ast.unparse(w_expr))
+
+    def test_tb_field_interpolates_count_championship_bouts(self):
+        fn = self._seeding_fn()
+        tb_expr = self._interpolations(fn).get('tb')
+        self.assertIsNotNone(tb_expr, "no `tb:` field is emitted")
+        self.assertTrue(
+            isinstance(tb_expr, ast.Call) and isinstance(tb_expr.func, ast.Name)
+            and tb_expr.func.id == 'count_championship_bouts',
+            f'tb is emitted as {ast.unparse(tb_expr)!r}; it must be a direct '
+            f'count_championship_bouts(...) call, not a recomputed heuristic')
+
+    def test_seeding_has_no_event_name_title_heuristic(self):
+        """The specific retired defect: `'title' in <event>.lower()`."""
+        fn = self._seeding_fn()
+        for cmp_node in [n for n in ast.walk(fn) if isinstance(n, ast.Compare)]:
+            rendered = ast.unparse(cmp_node)
+            self.assertNotIn("'title'", rendered.lower().replace('"', "'"),
+                             f'event-name title heuristic is back: {rendered}')
 
 
 if __name__ == '__main__':
