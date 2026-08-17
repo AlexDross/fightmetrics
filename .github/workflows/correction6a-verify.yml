@@ -108,34 +108,90 @@ jobs:
 
       # Includes the two-run deterministic regeneration test, which regenerates
       # in the runner workspace only. Nothing is committed.
-      - name: History invariants, UFC 330 coverage and idempotence
+      # Covers BOTH UFC 330 populations, which are not the same thing:
+      #   A. the 20-fighter pre-event roster (10 saved matchups) — pinned-feed
+      #      historical wc/tb deltas of 59/7, on bouts predating the event;
+      #   B. the 12 contested bouts / 24 fighters of the event itself, held
+      #      against a captured fixture because the pinned feed predates it.
+      - name: History invariants, UFC 330 populations A+B, and idempotence
         run: python test_correction6_history.py
 
-      - name: Protected and generated artifact hashes
+      # ── Unrelated artifacts: assert THIS PR introduced no change ───────────
+      # A literal hash is the wrong instrument here. src/upcomingData.js was
+      # pinned to 5ba9d1cc… — its value at the 6A baseline — but main has since
+      # legitimately updated that file (UFC 330 grading). `pull_request` builds
+      # a synthetic merge of the PR head into the CURRENT base, so the working
+      # tree correctly contains main's newer file and the literal check fails on
+      # a change this PR never made.
+      #
+      # The real invariant is "the PR introduces no diff on these paths", so it
+      # is computed the way a reviewer would: merge-base(base, head) → head. That
+      # deliberately excludes changes that arrived on main independently, and —
+      # unlike inspecting the merge result — it cannot be satisfied by main
+      # having reverted something the PR changed.
+      - name: Unrelated artifacts unchanged by this PR
+        env:
+          PR_HEAD: ${{ github.event.pull_request.head.sha }}
+          PR_BASE: ${{ github.event.pull_request.base.sha }}
         run: |
-          set -e
-          expect () {
-            actual="$(sha256sum "$1" | cut -d' ' -f1)"
-            if [ "$actual" != "$2" ]; then
-              echo "::error::$1 expected $2, got $actual"; exit 1
-            fi
-            echo "  OK  $1"
-          }
-          expect src/upcomingData.js 5ba9d1cc00d86ca01548d9c738c2495f3ca5901a5734a4c166ad01c52561cce9
-          expect src/fightersData.js 27b046d070869d7aba20117b971862623f67997956f18a77ad3ef0a283fdb134
-          expect src/fightHistory.js 420eafc4418bb747793d51a438a02b39525d03985e8b0f0139384c06ea9c0449
+          set -euo pipefail
+          git fetch --no-tags --quiet origin "$PR_HEAD" "$PR_BASE"
+          MERGE_BASE="$(git merge-base "$PR_BASE" "$PR_HEAD")"
+          echo "  head=$PR_HEAD"
+          echo "  base=$PR_BASE"
+          echo "  merge-base=$MERGE_BASE"
+          PROTECTED="src/upcomingData.js src/fightersData.js src/parlayData.js src/propPicksData.js src/roiData.js src/rankingsData.js src/rankingsHistoryData.js src/eloModule.js src/cardioModule.js src/fighterBirthdates.js src/prospectsData.js"
+          if git diff --quiet "$MERGE_BASE" "$PR_HEAD" -- $PROTECTED; then
+            echo "  OK  this PR introduces no change to any protected artifact"
+          else
+            echo "::error::this PR changes a protected artifact:"
+            git diff --stat "$MERGE_BASE" "$PR_HEAD" -- $PROTECTED
+            exit 1
+          fi
 
-      - name: Stage-0 goldens must be untouched
+      # fightHistory.js is different in kind: it IS this correction's generated
+      # output, so an exact hash against the pinned feed is exactly right. It is
+      # read from the PR head rather than the merge result, so an unrelated main
+      # change could never mask or fake it.
+      - name: Correction 6A output hash at the PR head
+        env:
+          PR_HEAD: ${{ github.event.pull_request.head.sha }}
         run: |
-          git diff --quiet "$BASE_SHA" -- src/__tests__/fixtures src/__tests__/snapshots \
-            && echo "  goldens byte-identical to base" \
-            || { echo "::error::a Stage-0 golden changed"; exit 1; }
+          set -euo pipefail
+          actual="$(git show "$PR_HEAD":src/fightHistory.js | sha256sum | cut -d' ' -f1)"
+          expected=420eafc4418bb747793d51a438a02b39525d03985e8b0f0139384c06ea9c0449
+          if [ "$actual" != "$expected" ]; then
+            echo "::error::src/fightHistory.js expected $expected, got $actual"; exit 1
+          fi
+          echo "  OK  src/fightHistory.js $actual"
+
+      # Same reasoning as the protected-artifact step: compare what THIS PR
+      # introduced (merge-base → head), not a fixed baseline against a merge
+      # result that also contains independent main commits.
+      - name: Stage-0 goldens must be untouched
+        env:
+          PR_HEAD: ${{ github.event.pull_request.head.sha }}
+          PR_BASE: ${{ github.event.pull_request.base.sha }}
+        run: |
+          set -euo pipefail
+          MERGE_BASE="$(git merge-base "$PR_BASE" "$PR_HEAD")"
+          git diff --quiet "$MERGE_BASE" "$PR_HEAD" -- src/__tests__/fixtures src/__tests__/snapshots \
+            && echo "  goldens unchanged by this PR" \
+            || { echo "::error::a Stage-0 golden changed"; \
+                 git diff --stat "$MERGE_BASE" "$PR_HEAD" -- src/__tests__/fixtures src/__tests__/snapshots; \
+                 exit 1; }
 
       - name: No model source change
+        env:
+          PR_HEAD: ${{ github.event.pull_request.head.sha }}
+          PR_BASE: ${{ github.event.pull_request.base.sha }}
         run: |
-          git diff --quiet "$BASE_SHA" -- src/domain \
-            && echo "  src/domain byte-identical to base" \
-            || { echo "::error::model source changed"; exit 1; }
+          set -euo pipefail
+          MERGE_BASE="$(git merge-base "$PR_BASE" "$PR_HEAD")"
+          git diff --quiet "$MERGE_BASE" "$PR_HEAD" -- src/domain \
+            && echo "  src/domain unchanged by this PR" \
+            || { echo "::error::model source changed"; \
+                 git diff --stat "$MERGE_BASE" "$PR_HEAD" -- src/domain; exit 1; }
 
       - uses: actions/setup-node@v4
         with:
