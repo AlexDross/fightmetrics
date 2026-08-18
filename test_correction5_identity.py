@@ -325,17 +325,74 @@ class OneParserInTheReadPath(unittest.TestCase):
                          "js_roster_parser, which is the only grammar that crosses "
                          "an escaped apostrophe")
 
-    def test_identity_and_division_come_from_the_same_parse(self):
+    def test_identity_comes_from_one_parse_and_no_field_regex_returns(self):
+        """Correction 5's grammar rule, restated after Correction 6A.
+
+        This used to also assert `entry.fields.get('w')`, because the updater
+        read each roster division to answer "what division was this historical
+        bout at?". Correction 6A deleted that question: history now reads the
+        bout-local WEIGHTCLASS from its own result row, so the updater no longer
+        reads roster division ANYWHERE, and requiring the read would mean
+        keeping the discarded fallback's machinery alive as dead code.
+
+        The invariant Correction 5 actually protects — no field-specific quoted
+        pattern may reappear — is unchanged and is enforced structurally by
+        test_the_updater_has_no_quoted_field_regex above, which walks the AST
+        rather than matching source text. Both literal guards below are kept.
+        """
         source = UPDATER_PY.read_text()
-        self.assertIn('parse_roster(js_content', source)
-        self.assertIn("entry.fields.get('w')", source)
+        tree = ast.parse(source)
+        # The POSITIVE half is read from the AST, not the source text. As a
+        # substring, 'parse_roster(js_content' is satisfied by any comment or
+        # docstring that merely mentions the call — the same way the retired
+        # seeding guard was satisfied by a helper's own `def` line. Requiring a
+        # real Call node means the read path is proven, not described.
+        parses = [n for n in ast.walk(tree)
+                  if isinstance(n, ast.Call) and isinstance(n.func, ast.Name)
+                  and n.func.id == 'parse_roster'
+                  and n.args and isinstance(n.args[0], ast.Name)
+                  and n.args[0].id == 'js_content']
+        self.assertTrue(parses, 'the updater does not call '
+                                'parse_roster(js_content, ...); the roster must '
+                                'be read through the one shared grammar')
         self.assertNotIn("re.search(r\"w:'", source)
         self.assertNotIn("re.finditer(r\"\\{n:'", source)
+        # And the roster-division read really is gone, not merely relocated.
+        # Read from the AST, following the same rule as the regex guard above:
+        # comments and docstrings are excluded on purpose, because they exist to
+        # describe what was removed.
+        live_names = {n.id for n in ast.walk(tree) if isinstance(n, ast.Name)}
+        self.assertNotIn('wc_lookup', live_names,
+                         'the roster-division lookup is live again; historical '
+                         'divisions must come from the bout row, not the roster')
 
     def test_the_updater_does_not_evaluate_the_roster(self):
-        source = UPDATER_PY.read_text()
-        for forbidden in ('eval(', 'exec(', 'subprocess', 'json.loads(js_content'):
-            self.assertNotIn(forbidden, source)
+        """Structural, so indirection cannot slip past a substring search.
+
+        `assertNotIn('eval(', source)` is blind to `_e = eval` followed by
+        `_e(js_content)`, and it also fails spuriously on any comment that
+        happens to spell one of the words. Both problems go away by asking the
+        AST what the module actually references.
+        """
+        tree = ast.parse(UPDATER_PY.read_text())
+        referenced = {n.id for n in ast.walk(tree) if isinstance(n, ast.Name)}
+        for forbidden in ('eval', 'exec', 'compile', '__import__'):
+            self.assertNotIn(forbidden, referenced,
+                             f'the updater references {forbidden}; the roster is '
+                             f'parsed by grammar, never evaluated')
+        imported = set()
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Import):
+                imported.update(a.name.split('.')[0] for a in node.names)
+            elif isinstance(node, ast.ImportFrom) and node.module:
+                imported.add(node.module.split('.')[0])
+        self.assertNotIn('subprocess', imported)
+        # json.loads must never be pointed at the roster module's text.
+        for call in [n for n in ast.walk(tree) if isinstance(n, ast.Call)]:
+            if (isinstance(call.func, ast.Attribute) and call.func.attr == 'loads'
+                    and call.args and isinstance(call.args[0], ast.Name)
+                    and call.args[0].id == 'js_content'):
+                self.fail('json.loads(js_content) is back; the roster is not JSON')
 
 
 if __name__ == '__main__':

@@ -1,0 +1,205 @@
+name: Correction 6A verification
+
+# READ-ONLY. Runs automatically on pull requests that touch the Correction 6A
+# surface. It regenerates artifacts in the runner's checkout to prove
+# determinism, but never commits, pushes, deploys or dispatches anything.
+#
+# The repo's existing "Test and build" workflow does not exercise the 6A suites,
+# and the scheduled updater only runs on a schedule -- so without this, a PR
+# could go green while the parser, the closed-label/URL gate and the history
+# invariants were never executed.
+
+on:
+  pull_request:
+    paths:
+      - 'fight_weightclass.py'
+      - 'update_fighters.py'
+      - 'scripts/gate_closed_labels.py'
+      - 'test_weightclass_parser.py'
+      - 'test_correction6_history.py'
+      - 'test_correction6_seeding.py'
+      - 'test_asof_pin.py'
+      - 'tests/fixtures/weightclass/**'
+      - 'src/fightHistory.js'
+      - '.github/workflows/correction6a-verify.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: correction6a-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # The ratified snapshot. Pinned by COMMIT, not by the GitHub-generated ZIP
+  # byte hash: that archive is re-compressed server-side and is not a stable
+  # content identifier. Authority is the commit plus the four CSV hashes below.
+  GRECO_COMMIT: 18ba20924fa439d0659e9b259759a07574cc8a07
+  EVENT_DETAILS_SHA256: d20783b15ea5c6c4971d093e6c9f5f185390a666cbc742d0afc26d6dc714d077
+  FIGHT_DETAILS_SHA256: 34fe5ab97eaac498dbd03ac78a74fb2492b9bd359dbe3e67fd4f4c9b59eae2a5
+  FIGHT_RESULTS_SHA256: 7f8f3b5245851397006a1da7b2f042322b3bf9456c94d849d7d47fdc57a71f7d
+  FIGHT_STATS_SHA256: b41f554bb0c9fcbe5bd7988f972ee798741e4fb08d6d1d7a3c07a9310557286e
+  FIGHTMETRICS_ASOF: '2026-08-13'
+  BASE_SHA: 1adfd22fe3b09b84ddd994a7057d4cc9c0275276
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout PR head with full history
+        uses: actions/checkout@v4
+        with:
+          # The history tests read the base blob via `git show <BASE_SHA>` to
+          # compute before/after deltas, so a shallow clone is not enough.
+          fetch-depth: 0
+
+      - name: Ensure the fixed base blob is available
+        run: |
+          git fetch --no-tags origin "$BASE_SHA" || git fetch --no-tags origin main
+          git cat-file -e "$BASE_SHA":src/fightHistory.js
+          echo "base blob $BASE_SHA present"
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install pandas
+
+      - name: Fetch the pinned Greco snapshot by commit
+        run: |
+          git clone --quiet --filter=blob:none --no-checkout \
+            https://github.com/Greco1899/scrape_ufc_stats.git greco
+          cd greco
+          git fetch --quiet origin "$GRECO_COMMIT"
+          git checkout --quiet "$GRECO_COMMIT"
+          test "$(git rev-parse HEAD)" = "$GRECO_COMMIT"
+          cd ..
+          cp greco/ufc_event_details.csv greco/ufc_fight_details.csv \
+             greco/ufc_fight_results.csv greco/ufc_fight_stats.csv .
+
+      - name: Verify each CSV hash individually
+        run: |
+          set -e
+          check () {
+            actual="$(sha256sum "$1" | cut -d' ' -f1)"
+            if [ "$actual" != "$2" ]; then
+              echo "::error::$1 hash mismatch: expected $2, got $actual"; exit 1
+            fi
+            echo "  OK  $1  $actual"
+          }
+          check ufc_event_details.csv "$EVENT_DETAILS_SHA256"
+          check ufc_fight_details.csv "$FIGHT_DETAILS_SHA256"
+          check ufc_fight_results.csv "$FIGHT_RESULTS_SHA256"
+          check ufc_fight_stats.csv   "$FIGHT_STATS_SHA256"
+
+      - name: Closed-label and bout-metadata (URL) gate
+        run: python scripts/gate_closed_labels.py
+
+      - name: Parser tests
+        run: python test_weightclass_parser.py
+
+      - name: ASOF pin tests
+        run: python test_asof_pin.py
+
+      - name: Seeding tests
+        run: python test_correction6_seeding.py
+
+      - name: Correction 5 identity invariants
+        run: python test_correction5_identity.py
+
+      # Includes the two-run deterministic regeneration test, which regenerates
+      # in the runner workspace only. Nothing is committed.
+      # Covers BOTH UFC 330 populations, which are not the same thing:
+      #   A. the 20-fighter pre-event roster (10 saved matchups) — pinned-feed
+      #      historical wc/tb deltas of 59/7, on bouts predating the event;
+      #   B. the 12 contested bouts / 24 fighters of the event itself, held
+      #      against a captured fixture because the pinned feed predates it.
+      - name: History invariants, UFC 330 populations A+B, and idempotence
+        run: python test_correction6_history.py
+
+      # ── Unrelated artifacts: assert THIS PR introduced no change ───────────
+      # A literal hash is the wrong instrument here. src/upcomingData.js was
+      # pinned to 5ba9d1cc… — its value at the 6A baseline — but main has since
+      # legitimately updated that file (UFC 330 grading). `pull_request` builds
+      # a synthetic merge of the PR head into the CURRENT base, so the working
+      # tree correctly contains main's newer file and the literal check fails on
+      # a change this PR never made.
+      #
+      # The real invariant is "the PR introduces no diff on these paths", so it
+      # is computed the way a reviewer would: merge-base(base, head) → head. That
+      # deliberately excludes changes that arrived on main independently, and —
+      # unlike inspecting the merge result — it cannot be satisfied by main
+      # having reverted something the PR changed.
+      - name: Unrelated artifacts unchanged by this PR
+        env:
+          PR_HEAD: ${{ github.event.pull_request.head.sha }}
+          PR_BASE: ${{ github.event.pull_request.base.sha }}
+        run: |
+          set -euo pipefail
+          git fetch --no-tags --quiet origin "$PR_HEAD" "$PR_BASE"
+          MERGE_BASE="$(git merge-base "$PR_BASE" "$PR_HEAD")"
+          echo "  head=$PR_HEAD"
+          echo "  base=$PR_BASE"
+          echo "  merge-base=$MERGE_BASE"
+          PROTECTED="src/upcomingData.js src/fightersData.js src/parlayData.js src/propPicksData.js src/roiData.js src/rankingsData.js src/rankingsHistoryData.js src/eloModule.js src/cardioModule.js src/fighterBirthdates.js src/prospectsData.js"
+          if git diff --quiet "$MERGE_BASE" "$PR_HEAD" -- $PROTECTED; then
+            echo "  OK  this PR introduces no change to any protected artifact"
+          else
+            echo "::error::this PR changes a protected artifact:"
+            git diff --stat "$MERGE_BASE" "$PR_HEAD" -- $PROTECTED
+            exit 1
+          fi
+
+      # fightHistory.js is different in kind: it IS this correction's generated
+      # output, so an exact hash against the pinned feed is exactly right. It is
+      # read from the PR head rather than the merge result, so an unrelated main
+      # change could never mask or fake it.
+      - name: Correction 6A output hash at the PR head
+        env:
+          PR_HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          actual="$(git show "$PR_HEAD":src/fightHistory.js | sha256sum | cut -d' ' -f1)"
+          expected=420eafc4418bb747793d51a438a02b39525d03985e8b0f0139384c06ea9c0449
+          if [ "$actual" != "$expected" ]; then
+            echo "::error::src/fightHistory.js expected $expected, got $actual"; exit 1
+          fi
+          echo "  OK  src/fightHistory.js $actual"
+
+      # Same reasoning as the protected-artifact step: compare what THIS PR
+      # introduced (merge-base → head), not a fixed baseline against a merge
+      # result that also contains independent main commits.
+      - name: Stage-0 goldens must be untouched
+        env:
+          PR_HEAD: ${{ github.event.pull_request.head.sha }}
+          PR_BASE: ${{ github.event.pull_request.base.sha }}
+        run: |
+          set -euo pipefail
+          MERGE_BASE="$(git merge-base "$PR_BASE" "$PR_HEAD")"
+          git diff --quiet "$MERGE_BASE" "$PR_HEAD" -- src/__tests__/fixtures src/__tests__/snapshots \
+            && echo "  goldens unchanged by this PR" \
+            || { echo "::error::a Stage-0 golden changed"; \
+                 git diff --stat "$MERGE_BASE" "$PR_HEAD" -- src/__tests__/fixtures src/__tests__/snapshots; \
+                 exit 1; }
+
+      - name: No model source change
+        env:
+          PR_HEAD: ${{ github.event.pull_request.head.sha }}
+          PR_BASE: ${{ github.event.pull_request.base.sha }}
+        run: |
+          set -euo pipefail
+          MERGE_BASE="$(git merge-base "$PR_BASE" "$PR_HEAD")"
+          git diff --quiet "$MERGE_BASE" "$PR_HEAD" -- src/domain \
+            && echo "  src/domain unchanged by this PR" \
+            || { echo "::error::model source changed"; \
+                 git diff --stat "$MERGE_BASE" "$PR_HEAD" -- src/domain; exit 1; }
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm ci --include=dev
+
+      - name: Vitest
+        run: npx vitest run
+
+      - name: Production build
+        run: npm run build

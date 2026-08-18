@@ -230,3 +230,76 @@ This does not add an enforcement mechanism (no CI check, no pre-commit hook) —
 Not amended, and won't be: `aaa4569` was already pushed by the time the mislabeling was caught, and amending a pushed commit means a force-push — not done on this repo, full stop. This entry exists so the record is honest without rewriting history: if you're auditing `git log` later, `aaa4569`'s message is not a description of its content, this note is.
 
 v2's live-captured graded sample is now **20 fights**: the 12 UFC 329 entries noted above, plus these 8 OKC entries. Same population definition (`_provenance.captureMode === 'live'`), same two Statistics charts restricted to it, same exclusion of the 43 `reconstructed` entries.
+
+---
+
+## Correction 6A — historical bout metadata is bout-local (2026-08-15)
+
+`fightHistory[].wc` and `fightHistory[].tb` now come from the raw `WEIGHTCLASS`
+on each `ufc_fight_results.csv` row, parsed once per row and shared by both
+corners.
+
+**Root cause.** `ufc_fight_details.csv` is exactly `EVENT,BOUT,URL`, so
+`detail_lookup` read a `WEIGHTCLASS` that was never there and every bout carried
+`wc:''`. History then fell back to `wc_lookup[fighter]` — the fighter's
+**current roster division** — and title status degraded to `'title' in
+event_name`. Because each corner was stamped with its own fighter's division,
+the two copies of a bout disagreed on **2,861 of 8,822 bouts**.
+
+**Source-of-truth.** `wc` is a division and nothing else (12 canonical divisions
+plus `Catch Weight` / `Open Weight` / `Super Heavyweight`; never `Title` or
+`Interim` in the string). `tb` is a UFC championship and nothing else —
+undisputed, interim, and the five legacy `UFC Superfight Championship Bout` rows;
+TUF finals, Road to UFC finals and early UFC bracket finals are **not**
+championships. Deliberately no `(EVENT, BOUT)` join: that key is non-unique
+(Sakuraba vs Silveira twice at UFC Ultimate Japan).
+
+**Taxonomy.** 120 reviewed labels / 8,847 raw rows / 8,822 canonical bouts;
+398 raw championship rows → 397 canonical bouts → **794 championship corners**.
+Eleven no-token labels (15 rows, **30 corners**) map to `Open Weight` through an
+explicit reviewed map — all predate UFC 12
+(<https://www.ufc.com/news/fast-facts-our-20th-anniversary>, accessed 2026-08-14).
+
+**Fail-closed.** The parser raises on missing/blank/malformed/unreviewed-no-token
+labels and on two independent division tokens; `Unknown` is an error state only
+and is never emitted. `scripts/gate_closed_labels.py` runs against the downloaded
+feed **before any write** and rejects a label that is not in the reviewed fixture
+— token recognition alone grants nothing.
+
+**ASOF.** Generation now requires `FIGHTMETRICS_ASOF` (exact `YYYY-MM-DD`, real
+date). `dsl` is (as-of − last-fight date), so an unpinned clock rewrote ~2,198
+records per run and buried real diffs.
+
+**Counts.** 17,644 rows · 4,508 `wc` changes · 804 `tb` changes (792 false→true,
+12 true→false) · 287 both · 1,433 fighters · 3,687 bouts · 68 transitions ·
+`Unknown` 1,483 → 0 · asymmetric bouts 2,861 → 0.
+
+**Hashes** (`FIGHTMETRICS_ASOF=2026-08-13`): `fightHistory.js`
+`420eafc4418bb747793d51a438a02b39525d03985e8b0f0139384c06ea9c0449`;
+`fightersData.js` **byte-identical** at
+`27b046d070869d7aba20117b971862623f67997956f18a77ad3ef0a283fdb134`;
+`upcomingData.js` unchanged at `5ba9d1cc…cce9`. Two consecutive runs are
+byte-identical.
+
+**Model impact: exactly zero.** Fixed-clock harness (ASOF 2026-08-13, pinned
+`DAYS_SINCE_LAST`, explicit `eventDate`, real saved UFC 330 contexts, both slot
+orders): deep equality against origin/main across 32,627 broad matchups, 1,705
+direct-sweep matchups and the 10 saved UFC 330 matchups; 0 pick flips. `wc` has one consumer
+(a display string in `App.js`); `tb` feeds only `total_title_bout_dif` (never
+summed into the v1 composite) and `featsV2.title_bouts` (v2 coefficient `0`).
+
+**Deferred:** Class-A aliases, Class-B duplicates, 6B career `tb`, 6C
+current-division/`wsrc`/overrides, `wlb`, Correction 2B, UFC 330 re-save.
+
+**Post-review corrections (PR #16).** R10 added: the result URL is canonical
+bout identity, and `validate_bout_metadata` — one implementation shared by the
+updater and the closed-label gate — fails closed on a blank URL, an unparseable
+label, or rows sharing a URL that disagree on
+`(division, championship, interim, tournament_final)`. It runs on the raw feed
+(8,847 rows → 8,822 bouts, 25 duplicate-URL groups, 0 conflicts) because
+canonicalisation collapses those duplicates. `clean_wc` is retired; newcomer
+seeding derives its division from the latest dated contested bout and its `tb`
+from parsed championships, failing closed otherwise. Affected-bout count is
+corrected from **3,686 to 3,687** — the coarse `(date, event, {fighters})` key
+could not separate Sakuraba's two bouts against Silveira on one card. Every
+other ratified count is unchanged.

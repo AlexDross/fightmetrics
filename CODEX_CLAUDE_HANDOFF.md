@@ -1416,3 +1416,58 @@ Recommended future action only if the user authorizes a model-code change:
 - Align CRED with the same 75-minute scale used by stat blending, e.g. `min(100, round((totalRounds * 5 / 75) * 100))` for the current scheduled-round dataset.
 - Preserve prospect-specific credibility adjustments.
 - Rename or redesign `betConfidence` as a signal score, and save model version, `betConfidence`, CRED inputs, and active probability in each ROI row for future calibration audits.
+
+---
+
+## Correction 6A — shipped (historical `wc` / `tb` provenance)
+
+**Scope shipped.** `fight_weightclass.py` (strict parser),
+`scripts/gate_closed_labels.py` (closed-world pre-write gate), updater
+integration, required `FIGHTMETRICS_ASOF`, reviewed fixtures
+(`tests/fixtures/weightclass/`), three new test suites, regenerated
+`src/fightHistory.js` + `src/sourceManifest.js`.
+
+**`src/fightersData.js` is byte-identical to origin/main** — roster `w`, `wlb`
+and stored `tb` are untouched by design.
+
+**Verification:** `research/correction6a_implementation_verification.md`.
+Full changed-record ledger: `research/correction6a_history_ledger.tsv`
+(5,025 rows, sha256 `813da5f0cb30ce5da1fac7b81c3fbb5cb50818211fb3f12ada53014fc310ff4e`).
+
+**Necessary test amendment.** `test_correction5_identity.py`'s
+`test_identity_and_division_come_from_the_same_parse` required the updater to
+contain `entry.fields.get('w')` — the roster-division read. 6A deletes that read
+(its only consumer was the discarded fallback), so the assertion was narrowed and
+renamed; both anti-regex literals are kept and an AST check now asserts
+`wc_lookup` is not a live name. The Correction 5 invariant itself is unchanged
+and still enforced by `test_the_updater_has_no_quoted_field_regex`.
+
+**Still open, in dependency order:**
+
+1. **Class-A alias repair** — 7 renames in `name_aliases.json`; regenerates
+   `fightersData`, `fightHistory`, `eloModule` (7 keys renamed, 0 values moved)
+   and `fighterBirthdates` (5 DOB keys renamed, 0 conflicts). Measured impact:
+   14,763 / 32,627 broad pairs, 61 flips; the seven repaired identities' own
+   1,705 direct matchups all move, 1,070 flips. Includes the approved test-only
+   change in `src/domain/model/__tests__/bout-context.test.js` (exact zero → the
+   existing `1.1102230246251565e-16` flipped-call bound from
+   `symmetry.test.js`).
+2. **Class-B duplicate removal** — deletion-only: `Caludia Gadelha`,
+   `Katlyn Chookagian`, `Yana Kunitskaya`, `Weili Zhang`; roster 2,291 → 2,287.
+3. **6B career `tb`** — 219 records, histogram exactly `{tb: 219}` (215 up,
+   4 down: Bradley Scott, Glaico Franca, Ning Guangyou, William Patolino, each a
+   TUF final under championship-only semantics). Must land after Class-A and
+   Class-B so it can claim a single source-backed system.
+4. **6C current division** — Policy F: 5 source-backed writes (Luque by cited
+   override; Costa, Whittaker, Erceg, Zhang Weili by media rankings), plus
+   `wsrc` provenance on all 2,287 records. No `wlb` mutation.
+
+**PR #16 review corrections.** R10 URL gate (shared implementation, raw-feed
+placement); `clean_wc` retired and seeding made deterministic; snapshot-specific
+counts gated on the pinned results SHA so a scheduled refresh with new bouts
+still passes; both-corners assertion made dynamic; exact source coverage
+replaces the sampled `checked > 17000`; affected bouts corrected **3,686 →
+3,687** (result-URL identity); automated two-run regeneration test; per-fighter
+UFC 330 deltas for all 20 fighters (wc 59, tb 7); new read-only
+`correction6a-verify.yml` PR workflow that pins the Greco commit, verifies each
+CSV hash individually, and runs every 6A suite plus Vitest and the build.

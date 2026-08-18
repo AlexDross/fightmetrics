@@ -65,8 +65,44 @@ jobs:
       - name: Test JS roster parser
         run: python test_js_roster_parser.py
 
+      # CORRECTION 6A. Historical division and title status are read from the
+      # raw WEIGHTCLASS on each result row, so the parser is guarded on the
+      # reviewed 120-label fixture plus the synthetic fail-closed cases before
+      # it is trusted with a rebuild.
+      - name: Test weightclass parser
+        run: python test_weightclass_parser.py
+
+      # The as-of pin is what keeps a regeneration reproducible; without it
+      # ~2,198 dsl values move on every run and bury the real diff.
+      - name: Test FIGHTMETRICS_ASOF pin
+        run: python test_asof_pin.py
+
+      # Newcomer seeding must stay on parsed bout-local metadata: no clean_wc,
+      # no stats-row ordering, no event-name title heuristic.
+      - name: Test new-fighter seeding derivation
+        run: python test_correction6_seeding.py
+
+      # CLOSED-LABEL GATE — runs against the freshly downloaded feed BEFORE any
+      # artifact is written. A label is usable because a human reviewed it into
+      # the fixture, never because it merely contains a recognised division
+      # token. A novel label aborts the run for review instead of silently
+      # entering fightHistory.
+      - name: Closed-label pre-write gate
+        run: python scripts/gate_closed_labels.py
+
+      # FIGHTMETRICS_ASOF is now REQUIRED. Scheduled runs pin it to the UTC run
+      # date, which is what date.today() resolved to before; the difference is
+      # that the value is now explicit, logged, and reproducible after the fact.
       - name: Run update_fighters.py
-        run: python update_fighters.py
+        run: |
+          export FIGHTMETRICS_ASOF="$(date -u +%Y-%m-%d)"
+          echo "Generating with FIGHTMETRICS_ASOF=$FIGHTMETRICS_ASOF"
+          python update_fighters.py
+
+      # Held against the artifact this run just produced: bout-local divisions,
+      # both corners identical, no roster fallback, no event-name heuristic.
+      - name: Test correction-6A history invariants
+        run: python test_correction6_history.py
 
       # Same defect, now held against the artifacts this run just generated: no
       # truncated identity, no "Women\" weight class, and Sean O'Malley still at

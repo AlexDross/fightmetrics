@@ -1,0 +1,20 @@
+case	raw	expect	detail
+blank		raise	blank WEIGHTCLASS must fail closed
+whitespace_only	   	raise	whitespace-only must fail closed
+unreviewed_division_token	BMF Welterweight Title Bout	gate	parses as Welterweight, but is UNREVIEWED: rejection is the closed-label gate's job, not the parser's
+unknown_division	Cruiserweight Bout	raise	division outside the ratified vocabulary
+two_independent_tokens	Welterweight Lightweight Bout	raise	contradictory: two independent division tokens
+no_token_unreviewed	UFC 99 Tournament Title Bout	raise	no division token and not in the reviewed no-token map
+containment_light_heavy	Light Heavyweight Bout	Light Heavyweight|false|false|false	Heavyweight inside Light Heavyweight is not a second token
+containment_super_heavy	Super Heavyweight Bout	Super Heavyweight|false|false|false	Heavyweight inside Super Heavyweight is not a second token
+containment_womens	Women's Flyweight Bout	Women's Flyweight|false|false|false	Flyweight inside Women's Flyweight is not a second token
+ordinary	Middleweight Bout	Middleweight|false|false|false	ordinary divisional bout
+ufc_championship	UFC Light Heavyweight Title Bout	Light Heavyweight|true|false|false	UFC undisputed championship
+interim_championship	UFC Interim Heavyweight Title Bout	Heavyweight|true|true|false	interim championship; interim must survive parsing
+superfight_no_title_token	UFC Superfight Championship Bout	Open Weight|true|false|false	championship with no Title token at all
+tuf_tournament_final	Ultimate Fighter 33 Welterweight Tournament Title Bout	Welterweight|false|false|true	TUF final is not a championship
+road_to_ufc_titlebout	Road to UFC 3 Flyweight Tournament TitleBout	Flyweight|false|false|true	concatenated TitleBout spelling must be repaired
+early_ufc_bracket	UFC 8 Tournament Title Bout	Open Weight|false|false|true	early bracket final; reviewed no-token mapping
+ultimate_ultimate	Ultimate Ultimate '96 Tournament Title Bout	Open Weight|false|false|true	reviewed no-token mapping
+catchweight	Catch Weight Bout	Catch Weight|false|false|false	catchweight is a weight arrangement, not a division
+open_weight	Open Weight Bout	Open Weight|false|false|false	open weight is a weight arrangement, not a division

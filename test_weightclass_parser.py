@@ -1,0 +1,330 @@
+"""Correction 6A — fight_weightclass parser contract.
+
+Guards the rules that make historical division/title status source-backed:
+every observed label is reviewed, nothing outside the reviewed taxonomy is
+accepted, and the traps that break naive implementations stay covered.
+"""
+
+import ast
+import csv
+import hashlib
+import os
+import unittest
+
+import pandas as pd
+
+from fight_weightclass import (
+    BoutMetadataConflict,
+    REVIEWED_NO_TOKEN_LABELS,
+    SUPPORTED_DIVISIONS,
+    WeightclassParseError,
+    parse_weightclass,
+    validate_bout_metadata,
+    validate_result_frame,
+)
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+FIXTURES = os.path.join(HERE, 'tests', 'fixtures', 'weightclass')
+LABELS_TSV = os.path.join(FIXTURES, 'labels_120.tsv')
+SYNTHETIC_TSV = os.path.join(FIXTURES, 'synthetic.tsv')
+RESULTS_CSV = os.path.join(HERE, 'ufc_fight_results.csv')
+PINNED_RESULTS_SHA256 = (
+    '7f8f3b5245851397006a1da7b2f042322b3bf9456c94d849d7d47fdc57a71f7d')
+
+
+def _rows(path):
+    with open(path, newline='', encoding='utf-8') as handle:
+        return list(csv.DictReader(handle, delimiter='\t'))
+
+
+class ReviewedLabelFixture(unittest.TestCase):
+    """The 120 observed labels, every field asserted."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.rows = _rows(LABELS_TSV)
+
+    def test_fixture_covers_exactly_120_labels(self):
+        self.assertEqual(len(self.rows), 120)
+        self.assertEqual(len({r['raw'] for r in self.rows}), 120)
+
+    def test_every_reviewed_label_parses_to_its_reviewed_values(self):
+        for row in self.rows:
+            with self.subTest(label=row['raw']):
+                parsed = parse_weightclass(row['raw'])
+                self.assertEqual(parsed['division'], row['division'])
+                self.assertEqual(parsed['championship'], row['championship'] == 'true')
+                self.assertEqual(parsed['interim'], row['interim'] == 'true')
+                self.assertEqual(parsed['tournament_final'], row['tournament_final'] == 'true')
+                self.assertEqual(parsed['category'], row['category'])
+
+    def test_no_label_resolves_outside_the_supported_divisions(self):
+        for row in self.rows:
+            self.assertIn(parse_weightclass(row['raw'])['division'], SUPPORTED_DIVISIONS)
+
+    def test_no_division_string_carries_title_or_interim(self):
+        # `wc` is a division. Status lives in tb/interim, never in the string.
+        for row in self.rows:
+            division = parse_weightclass(row['raw'])['division']
+            for banned in ('title', 'interim', 'bout', 'ufc'):
+                self.assertNotIn(banned, division.lower(), f'{division!r} leaks {banned!r}')
+
+    def test_unknown_is_never_emitted(self):
+        for row in self.rows:
+            self.assertNotEqual(parse_weightclass(row['raw'])['division'], 'Unknown')
+
+    def test_fixture_matches_the_pinned_feed_in_both_directions(self):
+        observed = set(
+            pd.read_csv(RESULTS_CSV)['WEIGHTCLASS'].fillna('').astype(str).str.strip())
+        observed.discard('')
+        reviewed = {r['raw'] for r in self.rows}
+        self.assertEqual(observed - reviewed, set(), 'feed has labels the fixture lacks')
+        self.assertEqual(reviewed - observed, set(), 'fixture has labels the feed lacks')
+
+    def test_ratified_totals(self):
+        self.assertEqual(sum(int(r['raw_rows']) for r in self.rows), 8847)
+        self.assertEqual(sum(int(r['canonical_bouts']) for r in self.rows), 8822)
+        champ = [r for r in self.rows if r['championship'] == 'true']
+        self.assertEqual(sum(int(r['raw_rows']) for r in champ), 398)
+        self.assertEqual(sum(int(r['canonical_bouts']) for r in champ), 397)
+        tourn = [r for r in self.rows if r['tournament_final'] == 'true']
+        self.assertEqual(sum(int(r['raw_rows']) for r in tourn), 85)
+
+    def test_reviewed_no_token_map_is_exactly_the_ratified_fifteen_rows(self):
+        self.assertEqual(len(REVIEWED_NO_TOKEN_LABELS), 11)
+        rows = {r['raw']: int(r['raw_rows']) for r in self.rows}
+        self.assertEqual(sum(rows[label] for label in REVIEWED_NO_TOKEN_LABELS), 15)
+        for label, division in REVIEWED_NO_TOKEN_LABELS.items():
+            self.assertEqual(division, 'Open Weight')
+
+
+class TaxonomyTraps(unittest.TestCase):
+    """The cases that break the obvious implementations."""
+
+    def test_ordinary_division(self):
+        p = parse_weightclass('Middleweight Bout')
+        self.assertEqual(p['division'], 'Middleweight')
+        self.assertFalse(p['championship'])
+
+    def test_ufc_championship(self):
+        p = parse_weightclass('UFC Light Heavyweight Title Bout')
+        self.assertEqual(p['division'], 'Light Heavyweight')
+        self.assertTrue(p['championship'])
+        self.assertFalse(p['interim'])
+
+    def test_interim_championship_keeps_interim(self):
+        # clean_wc used to strip the bare word 'Interim' and erase this.
+        p = parse_weightclass('UFC Interim Heavyweight Title Bout')
+        self.assertEqual(p['division'], 'Heavyweight')
+        self.assertTrue(p['championship'])
+        self.assertTrue(p['interim'])
+
+    def test_superfight_championship_has_no_title_token(self):
+        label = 'UFC Superfight Championship Bout'
+        self.assertNotIn('title', label.lower())  # the trap, made explicit
+        p = parse_weightclass(label)
+        self.assertTrue(p['championship'])
+        self.assertEqual(p['division'], 'Open Weight')
+
+    def test_tuf_tournament_final_is_not_a_championship(self):
+        p = parse_weightclass('Ultimate Fighter 33 Welterweight Tournament Title Bout')
+        self.assertEqual(p['division'], 'Welterweight')
+        self.assertFalse(p['championship'])
+        self.assertTrue(p['tournament_final'])
+
+    def test_road_to_ufc_concatenated_titlebout_spelling(self):
+        p = parse_weightclass("Road to UFC 3 Women's Strawweight Tournament TitleBout")
+        self.assertEqual(p['division'], "Women's Strawweight")
+        self.assertFalse(p['championship'])
+        self.assertTrue(p['tournament_final'])
+
+    def test_early_ufc_bracket_final_is_not_a_championship(self):
+        p = parse_weightclass('UFC 8 Tournament Title Bout')
+        self.assertEqual(p['division'], 'Open Weight')
+        self.assertFalse(p['championship'])
+        self.assertTrue(p['tournament_final'])
+
+    def test_catchweight_open_weight_super_heavyweight(self):
+        for label, division in (('Catch Weight Bout', 'Catch Weight'),
+                                ('Open Weight Bout', 'Open Weight'),
+                                ('Super Heavyweight Bout', 'Super Heavyweight')):
+            p = parse_weightclass(label)
+            self.assertEqual(p['division'], division)
+            self.assertFalse(p['championship'])
+
+    def test_containment_is_not_a_second_token(self):
+        for label, division in (('Light Heavyweight Bout', 'Light Heavyweight'),
+                                ('Super Heavyweight Bout', 'Super Heavyweight'),
+                                ("Women's Flyweight Bout", "Women's Flyweight"),
+                                ("Women's Strawweight Bout", "Women's Strawweight")):
+            self.assertEqual(parse_weightclass(label)['division'], division)
+
+
+class FailClosed(unittest.TestCase):
+
+    def test_missing_label(self):
+        for value in (None, 0, [], {}):
+            with self.assertRaises(WeightclassParseError):
+                parse_weightclass(value)
+
+    def test_blank_label(self):
+        for value in ('', '   ', '\t\n'):
+            with self.assertRaises(WeightclassParseError):
+                parse_weightclass(value)
+
+    def test_unreviewed_label_with_a_recognised_token_is_the_gates_job(self):
+        # LAYERING, made explicit. The parser answers "what does this label
+        # mean?", so a well-formed unfamiliar label parses. Deciding that the
+        # label may be USED is the closed-label gate's job, which rejects it
+        # (see test_correction6_history.ClosedLabelGate). Asserting a raise
+        # here would push feed-membership policy into per-row parsing.
+        parsed = parse_weightclass('BMF Welterweight Title Bout')
+        self.assertEqual(parsed['division'], 'Welterweight')
+
+    def test_unknown_division(self):
+        with self.assertRaises(WeightclassParseError):
+            parse_weightclass('Cruiserweight Bout')
+
+    def test_two_independent_division_tokens(self):
+        with self.assertRaises(WeightclassParseError):
+            parse_weightclass('Welterweight Lightweight Bout')
+
+    def test_no_token_and_not_in_reviewed_map(self):
+        with self.assertRaises(WeightclassParseError):
+            parse_weightclass('UFC 99 Tournament Title Bout')
+
+    def test_championship_and_tournament_final_are_mutually_exclusive(self):
+        for row in _rows(LABELS_TSV):
+            p = parse_weightclass(row['raw'])
+            self.assertFalse(p['championship'] and p['tournament_final'], row['raw'])
+
+
+class SyntheticFixture(unittest.TestCase):
+    """Drive every synthetic.tsv case from the fixture itself."""
+
+    def test_synthetic_cases(self):
+        for row in _rows(SYNTHETIC_TSV):
+            with self.subTest(case=row['case']):
+                if row['expect'] == 'raise':
+                    with self.assertRaises(WeightclassParseError):
+                        parse_weightclass(row['raw'])
+                elif row['expect'] == 'gate':
+                    # Parses cleanly; closed-world membership is gate-enforced.
+                    parse_weightclass(row['raw'])
+                else:
+                    division, champ, interim, tourn = row['expect'].split('|')
+                    p = parse_weightclass(row['raw'])
+                    self.assertEqual(p['division'], division)
+                    self.assertEqual(p['championship'], champ == 'true')
+                    self.assertEqual(p['interim'], interim == 'true')
+                    self.assertEqual(p['tournament_final'], tourn == 'true')
+
+
+class BoutMetadataGate(unittest.TestCase):
+    """R10 — one bout URL, one metadata tuple. Shared by updater and gate."""
+
+    def test_same_url_identical_metadata_is_accepted(self):
+        rows = [('http://ufcstats.com/fight-details/aaa', 'Lightweight Bout'),
+                ('http://ufcstats.com/fight-details/aaa', 'Lightweight Bout')]
+        summary = validate_bout_metadata(rows)
+        self.assertEqual(summary['url_count'], 1)
+        self.assertEqual(summary['duplicate_groups'], 1)
+        self.assertEqual(summary['duplicate_rows'], 1)
+        self.assertEqual(summary['conflicts'], 0)
+
+    def test_same_url_contradictory_metadata_is_rejected(self):
+        for other in ('Welterweight Bout',                     # division differs
+                      'UFC Lightweight Title Bout',            # championship differs
+                      'UFC Interim Lightweight Title Bout',    # interim differs
+                      'Ultimate Fighter 12 Lightweight Tournament Title Bout'):
+            with self.subTest(other=other):
+                rows = [('http://ufcstats.com/fight-details/bbb', 'Lightweight Bout'),
+                        ('http://ufcstats.com/fight-details/bbb', other)]
+                with self.assertRaises(BoutMetadataConflict) as ctx:
+                    validate_bout_metadata(rows)
+                self.assertIn('bbb', str(ctx.exception))
+
+    def test_blank_url_is_rejected(self):
+        for url in ('', '   ', None, 0):
+            with self.subTest(url=url):
+                with self.assertRaises(WeightclassParseError):
+                    validate_bout_metadata([(url, 'Lightweight Bout')])
+
+    def test_distinct_urls_may_carry_different_metadata(self):
+        # Sakuraba vs Silveira: two bouts, one card, two URLs.
+        rows = [('http://ufcstats.com/fight-details/ec1bda9a4c2aab42',
+                 'Ultimate Japan Heavyweight Tournament Title Bout'),
+                ('http://ufcstats.com/fight-details/2750ac5854e8b28b',
+                 'Heavyweight Bout')]
+        summary = validate_bout_metadata(rows)
+        self.assertEqual(summary['url_count'], 2)
+        self.assertEqual(summary['duplicate_groups'], 0)
+
+    def test_empty_stream_is_rejected_not_reported_as_a_clean_pass(self):
+        # A gate that inspected nothing has been SKIPPED, not passed.
+        with self.assertRaises(WeightclassParseError) as ctx:
+            validate_bout_metadata([])
+        self.assertIn('0 rows', str(ctx.exception))
+
+    def test_frame_without_a_url_column_is_rejected(self):
+        # The reachable fail-open: the callers used to build the pair stream
+        # with zip(frame.get('URL', empty Series), ...), so a feed missing the
+        # URL column produced an empty zip and a clean bill of health.
+        frame = pd.DataFrame({'WEIGHTCLASS': ['Lightweight Bout'] * 3})
+        with self.assertRaises(WeightclassParseError) as ctx:
+            validate_result_frame(frame)
+        self.assertIn('URL column', str(ctx.exception))
+
+    def test_frame_without_a_weightclass_column_is_rejected(self):
+        frame = pd.DataFrame({'URL': ['http://x/1']})
+        with self.assertRaises(WeightclassParseError):
+            validate_result_frame(frame)
+
+    def test_empty_frame_is_rejected(self):
+        with self.assertRaises(WeightclassParseError):
+            validate_result_frame(pd.DataFrame({'URL': [], 'WEIGHTCLASS': []}))
+
+    def test_frame_entry_point_inspects_every_row(self):
+        frame = pd.read_csv(RESULTS_CSV)
+        summary = validate_result_frame(frame)
+        self.assertEqual(summary['row_count'], len(frame))
+
+    def test_callers_use_the_frame_entry_point_not_a_hand_built_stream(self):
+        """Source contract, read from the AST so comments are excluded.
+
+        Both callers must go through validate_result_frame. A hand-built
+        `zip(frame.get('URL', <default>), ...)` is exactly what let a feed
+        with no URL column skip the gate and still report success.
+        """
+        for name in ('update_fighters.py', os.path.join('scripts', 'gate_closed_labels.py')):
+            path = os.path.join(HERE, name)
+            with open(path, encoding='utf-8') as handle:
+                tree = ast.parse(handle.read())
+            for node in ast.walk(tree):
+                if (isinstance(node, ast.Call)
+                        and isinstance(node.func, ast.Attribute)
+                        and node.func.attr == 'get'
+                        and len(node.args) == 2
+                        and isinstance(node.args[0], ast.Constant)
+                        and node.args[0].value == 'URL'):
+                    self.fail(f'{name}: defaults a missing URL column: {ast.unparse(node)}')
+            called = {n.func.id for n in ast.walk(tree)
+                      if isinstance(n, ast.Call) and isinstance(n.func, ast.Name)}
+            self.assertIn('validate_result_frame', called, f'{name}')
+            self.assertNotIn('validate_bout_metadata', called,
+                             f'{name} bypasses the frame entry point')
+
+    def test_pinned_feed_has_25_duplicate_groups_and_zero_conflicts(self):
+        frame = pd.read_csv(RESULTS_CSV)
+        if hashlib.sha256(open(RESULTS_CSV, 'rb').read()).hexdigest() != PINNED_RESULTS_SHA256:
+            self.skipTest('results CSV is not the pinned snapshot')
+        summary = validate_bout_metadata(zip(frame['URL'], frame['WEIGHTCLASS']))
+        self.assertEqual(summary['row_count'], 8847)
+        self.assertEqual(summary['url_count'], 8822)
+        self.assertEqual(summary['duplicate_groups'], 25)
+        self.assertEqual(summary['duplicate_rows'], 25)
+        self.assertEqual(summary['conflicts'], 0)
+
+
+if __name__ == '__main__':
+    unittest.main(verbosity=2)
