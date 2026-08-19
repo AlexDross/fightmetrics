@@ -23,6 +23,35 @@
 @source './**/*.jsx';
 
 /*
+  Semantic foregrounds. Every foreground below is verified against the three
+  dark surfaces used by the application: slate-950 (#020617), slate-900
+  (#0f172a), and slate-800 (#1e293b). The weakest pair is muted on slate-800
+  at 5.71:1, above WCAG 2.2 AA's 4.5:1 requirement for normal text.
+*/
+:root {
+  --fm-text-primary: #f8fafc;
+  --fm-text-secondary: #cbd5e1;
+  --fm-text-muted: #94a3b8;
+  --fm-focus-ring: #f8fafc;
+}
+
+@utility text-primary {
+  color: var(--fm-text-primary);
+}
+
+@utility text-secondary {
+  color: var(--fm-text-secondary);
+}
+
+@utility text-muted {
+  color: var(--fm-text-muted);
+}
+
+@utility contained-table-scroll {
+  contain: layout paint inline-size;
+}
+
+/*
   ── Tailwind v4 Preflight compatibility (Foundation Stage 1b) ──────────────
 
   v4 changed several Preflight defaults. Each block below restores the v3
@@ -71,5 +100,56 @@
   input::placeholder,
   textarea::placeholder {
     color: var(--color-gray-400);
+  }
+
+  /* A consistent keyboard-only ring that survives every dark/red surface. */
+  :where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+    outline: 3px solid var(--fm-focus-ring);
+    outline-offset: 3px;
+  }
+
+  /* Chromium tabs through a date input's internal segments without keeping
+     :focus-visible on the host, so retain the same explicit ring throughout. */
+  input[type="date"]:focus,
+  input[type="date"]:focus-within {
+    outline: 3px solid var(--fm-focus-ring);
+    outline-offset: 3px;
+  }
+
+  /* Keep focused content clear of the fixed mobile navigation. */
+  html {
+    scroll-padding-bottom: calc(80px + env(safe-area-inset-bottom));
+  }
+
+  /* Wide data tables scroll inside their own overflow containers. Prevent
+     sticky table cells from expanding the mobile page-level scrollport. */
+  html,
+  body,
+  #root {
+    max-inline-size: 100%;
+    overflow-x: clip;
+  }
+
+  :where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+    scroll-margin-block: 1rem calc(80px + env(safe-area-inset-bottom));
+  }
+
+  /* WCAG 2.2 target-size floor for desktop controls; mobile utilities remain
+     free to provide the application's existing 44px targets. */
+  button:not(:disabled),
+  a[href],
+  select,
+  input:not([type='hidden']),
+  textarea {
+    min-block-size: 24px;
+  }
+
+  button:not(:disabled),
+  a[href] {
+    min-inline-size: 24px;
+  }
+
+  input[type='range'] {
+    min-block-size: 24px;
   }
 }

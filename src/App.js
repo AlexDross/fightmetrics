@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useId } from 'react';
 import { Link, NavLink, Navigate, useLocation, useNavigate } from 'react-router-dom';
 // Stage 5: URL <-> screen mapping. The registry is the only place the seven
 // paths are written down; nothing in this file hard-codes a path string.
@@ -657,8 +657,16 @@ const rankColor = (rank, total) => {
   if (p <= 0.05) return 'text-emerald-400 font-semibold';
   if (p <= 0.15) return 'text-emerald-500';
   if (p <= 0.4) return 'text-slate-200';
-  if (p <= 0.7) return 'text-slate-400';
+  if (p <= 0.7) return 'text-secondary';
   return 'text-red-400';
+};
+const rankBand = (rank, total) => {
+  const p = rank / total;
+  if (p <= 0.05) return { symbol: '▲▲', label: 'Top 5 percent' };
+  if (p <= 0.15) return { symbol: '▲', label: 'Top 15 percent' };
+  if (p <= 0.4) return { symbol: '↑', label: 'Above average' };
+  if (p <= 0.7) return { symbol: '·', label: 'Middle' };
+  return { symbol: '▼', label: 'Bottom 30 percent' };
 };
 const credColor = (c) =>
   c >= 80
@@ -670,7 +678,7 @@ const credColor = (c) =>
     : 'text-red-400';
 const decayColor = (v) =>
   v == null
-    ? 'text-slate-600'
+    ? 'text-muted'
     : v >= 1.2
     ? 'text-emerald-400'
     : v >= 0.95
@@ -685,7 +693,7 @@ function makeBandTick(data) {
         <text dy={14} textAnchor="middle" fill="#94a3b8" fontSize={11} fontWeight={600}>
           {payload.value}
         </text>
-        <text dy={28} textAnchor="middle" fill={lowN ? '#fbbf24' : '#64748b'} fontSize={10}>
+        <text dy={28} textAnchor="middle" fill={lowN ? '#fbbf24' : '#94a3b8'} fontSize={10}>
           {row ? `n=${row.n}${lowN ? '*' : ''}` : ''}
         </text>
       </g>
@@ -704,28 +712,64 @@ const roiChartTooltipStyle = {
   labelStyle: { color: '#e2e8f0', fontWeight: 600 },
 };
 
+const chartValue = (value, suffix = '') =>
+  value == null || Number.isNaN(value)
+    ? 'Unavailable'
+    : `${Number(value).toFixed(1)}${suffix}`;
+
+function AccessibleChartDataTable({ caption, columns, rows }) {
+  return (
+    <div className="sr-only">
+    <table>
+      <caption>{caption}</caption>
+      <thead>
+        <tr>
+          {columns.map((column) => (
+            <th key={column.key} scope="col">{column.label}</th>
+          ))}
+        </tr>
+      </thead>
+      <tbody>
+        {rows.map((row, index) => (
+          <tr key={row.band ?? row.bucket ?? row.tier ?? row.factor ?? (row.eventDate ? `${row.eventDate}-${row.eventName}` : index)}>
+            {columns.map((column) => (
+              <td key={column.key}>
+                {column.render ? column.render(row) : row[column.key]}
+              </td>
+            ))}
+          </tr>
+        ))}
+      </tbody>
+    </table>
+    </div>
+  );
+}
+
 function RoiByMarketBandChart({ data, modelLabel = 'v1', windowComposition }) {
   const anySamples = data.some((d) => d.n > 0);
+  const chartId = `roi-by-market-band-${modelLabel}`;
+  const descriptionId = `${chartId}-description`;
   const compositionText = windowComposition
     ? windowComposition.reconN > 0
       ? `${windowComposition.n} v2-scored fights in window (${windowComposition.liveN} live-captured, ${windowComposition.reconN} reconstructed)`
       : `${windowComposition.n} v2-scored fights in window (all live-captured)`
     : '';
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
-      <h3 className="text-white font-bold text-sm mb-1">ROI by Market Band</h3>
-      <p className="text-slate-500 text-xs mb-3">
+    <figure className="bg-slate-900 border border-slate-800 rounded-xl p-4" aria-labelledby={chartId} aria-describedby={descriptionId}>
+      <h3 id={chartId} className="text-white font-bold text-sm mb-1">ROI by Market Band</h3>
+      <p id={descriptionId} className="text-muted text-xs mb-3">
         {modelLabel === 'v2'
           ? `Stake-weighted ROI on V2's FROZEN pick (the probability stored at prediction/reconstruction time, at that pick's own price), grouped by that pick's raw market-implied probability. Same v2-scored population as the headline -- ${compositionText}. Dashed line = breakeven (0% ROI).`
           : "Flat 1u ROI on the actually-staked side, grouped by that side's raw market-implied probability. Dashed line = breakeven (0% ROI)."}
       </p>
       {!anySamples ? (
-        <p className="text-slate-600 text-sm py-8 text-center">
+        <p className="text-muted text-sm py-8 text-center">
           No staked, graded picks yet in the current filter window.
         </p>
       ) : (
+        <div role="img" aria-labelledby={chartId} aria-describedby={descriptionId}>
         <ResponsiveContainer width="100%" height={240}>
-          <BarChart data={data} margin={{ top: 10, right: 10, bottom: 24, left: 0 }}>
+          <BarChart accessibilityLayer={false} data={data} margin={{ top: 10, right: 10, bottom: 24, left: 0 }}>
             <CartesianGrid stroke="#334155" strokeDasharray="3 3" vertical={false} />
             <XAxis dataKey="band" interval={0} tick={makeBandTick(data)} height={40} />
             <YAxis
@@ -751,11 +795,22 @@ function RoiByMarketBandChart({ data, modelLabel = 'v1', windowComposition }) {
             </Bar>
           </BarChart>
         </ResponsiveContainer>
+        </div>
       )}
-      <p className="text-slate-600 text-[10px] mt-2">
+      <p className="text-muted text-[10px] mt-2">
         * n &lt; {ROI_ANALYTICS_LOW_N} — low sample, shown at reduced opacity. Interpret with caution.
       </p>
-    </div>
+      <AccessibleChartDataTable
+        caption="ROI by Market Band data"
+        columns={[
+          { key: 'band', label: 'Market band' },
+          { key: 'n', label: 'Sample size' },
+          { key: 'roi', label: 'ROI', render: (row) => chartValue(row.roi, '%') },
+          { key: 'sample', label: 'Sample note', render: (row) => row.lowN ? 'Low sample' : 'Standard sample' },
+        ]}
+        rows={data}
+      />
+    </figure>
   );
 }
 
@@ -767,28 +822,43 @@ function ModelVsMarketBracketChart({ data, modelLabel = 'v2' }) {
   // chart's v2 basis reads the same frozen v2pA/v2pB population, so it is
   // restricted to genuinely live-captured picks for the same reason.
   const isRestrictedV2 = modelLabel === 'v2';
+  const chartId = `model-vs-market-${modelLabel}`;
+  const descriptionId = `${chartId}-description`;
+  const actualPatternId = `${chartId}-actual-pattern`;
+  const marketPatternId = `${chartId}-market-pattern`;
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
-      <h3 className="text-white font-bold text-sm mb-1">{ML} Pick Win Rate vs. Market-Implied %</h3>
-      <p className="text-slate-500 text-xs mb-3">
+    <figure className="bg-slate-900 border border-slate-800 rounded-xl p-4" aria-labelledby={chartId} aria-describedby={descriptionId}>
+      <h3 id={chartId} className="text-white font-bold text-sm mb-1">{ML} Pick Win Rate vs. Market-Implied %</h3>
+      <p id={descriptionId} className="text-muted text-xs mb-3">
         {ML}'s picked side, grouped by that side's raw market-implied probability band.
         Market % is de-vigged (stripVig).
         {isRestrictedV2 && ' A win rate scored against picks made after the outcome was known is not a fair test — restricted to live-captured v2 picks only.'}
       </p>
       {isRestrictedV2 && (
-        <p className="text-slate-600 text-xs mb-3">
+        <p className="text-muted text-xs mb-3">
           {totalN} live v2 {totalN === 1 ? 'prediction' : 'predictions'} available in the current filter window.
         </p>
       )}
       {!anySamples ? (
-        <p className="text-slate-600 text-sm py-8 text-center">
+        <p className="text-muted text-sm py-8 text-center">
           {isRestrictedV2
             ? 'No live-captured v2 predictions in the current filter window — most saved picks were computed after the event and cannot be used for a fair win-rate comparison.'
             : 'No decisive graded picks with frozen v1/v2 fields yet in the current filter window.'}
         </p>
       ) : (
+        <div role="img" aria-labelledby={chartId} aria-describedby={descriptionId}>
         <ResponsiveContainer width="100%" height={240}>
-          <BarChart data={data} margin={{ top: 10, right: 10, bottom: 24, left: 0 }}>
+          <BarChart accessibilityLayer={false} data={data} margin={{ top: 10, right: 10, bottom: 24, left: 0 }}>
+            <defs>
+              <pattern id={actualPatternId} width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+                <rect width="8" height="8" fill="#f87171" />
+                <line x1="0" y1="0" x2="0" y2="8" stroke="#7f1d1d" strokeWidth="3" />
+              </pattern>
+              <pattern id={marketPatternId} width="6" height="6" patternUnits="userSpaceOnUse">
+                <rect width="6" height="6" fill="#94a3b8" />
+                <circle cx="3" cy="3" r="1.25" fill="#1e293b" />
+              </pattern>
+            </defs>
             <CartesianGrid stroke="#334155" strokeDasharray="3 3" vertical={false} />
             <XAxis dataKey="band" interval={0} tick={makeBandTick(data)} height={40} />
             <YAxis
@@ -802,15 +872,27 @@ function ModelVsMarketBracketChart({ data, modelLabel = 'v2' }) {
               formatter={(v, name) => (v == null ? ['—', name] : [`${v.toFixed(1)}%`, name])}
             />
             <Legend wrapperStyle={{ fontSize: 11, color: '#94a3b8' }} />
-            <Bar dataKey="actualWinRate" name="Actual Win %" fill="#f87171" radius={[3, 3, 0, 0]} />
-            <Bar dataKey="marketImplied" name="Market Implied % (de-vig)" fill="#94a3b8" radius={[3, 3, 0, 0]} />
+            <Bar dataKey="actualWinRate" name="Actual Win % (diagonal pattern)" fill={`url(#${actualPatternId})`} radius={[3, 3, 0, 0]} />
+            <Bar dataKey="marketImplied" name="Market Implied % (dot pattern, de-vig)" fill={`url(#${marketPatternId})`} radius={[3, 3, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
+        </div>
       )}
-      <p className="text-slate-600 text-[10px] mt-2">
+      <p className="text-muted text-[10px] mt-2">
         * n &lt; {ROI_ANALYTICS_LOW_N} — low sample (see x-axis labels). Interpret with caution.
       </p>
-    </div>
+      <AccessibleChartDataTable
+        caption={`${ML} Pick Win Rate versus Market-Implied Probability data`}
+        columns={[
+          { key: 'band', label: 'Market band' },
+          { key: 'n', label: 'Sample size' },
+          { key: 'actualWinRate', label: 'Actual win rate', render: (row) => chartValue(row.actualWinRate, '%') },
+          { key: 'marketImplied', label: 'Market-implied probability', render: (row) => chartValue(row.marketImplied, '%') },
+          { key: 'sample', label: 'Sample note', render: (row) => row.lowN ? 'Low sample' : 'Standard sample' },
+        ]}
+        rows={data}
+      />
+    </figure>
   );
 }
 
@@ -823,28 +905,43 @@ function CalibrationReliabilityChart({ data, modelLabel = 'v2', compact = false 
   // after their event, which a reliability curve can't honestly use. v1 has
   // no such restriction, so it gets the original, unqualified message.
   const isRestrictedV2 = modelLabel === 'v2';
+  const chartId = `calibration-reliability-${modelLabel}`;
+  const descriptionId = `${chartId}-description`;
+  const calibratedPatternId = `${chartId}-not-overconfident-pattern`;
+  const overconfidentPatternId = `${chartId}-overconfident-pattern`;
   return (
-    <div className={`bg-slate-900 border border-slate-800 rounded-xl ${compact ? 'p-3' : 'p-4'}`}>
-      <h3 className="text-white font-bold text-sm mb-1">Calibration Reliability</h3>
-      <p className="text-slate-500 text-xs mb-3">
+    <figure className={`bg-slate-900 border border-slate-800 rounded-xl ${compact ? 'p-3' : 'p-4'}`} aria-labelledby={chartId} aria-describedby={descriptionId}>
+      <h3 id={chartId} className="text-white font-bold text-sm mb-1">Calibration Reliability</h3>
+      <p id={descriptionId} className="text-muted text-xs mb-3">
         {ML}'s confidence on its picked side, bucketed, vs. actual win rate.
         Dashed line = mean predicted probability per bucket (perfect calibration reference).
         {isRestrictedV2 && ' Calibration requires predictions made before the outcome was known — restricted to live-captured v2 picks only.'}
       </p>
       {isRestrictedV2 && (
-        <p className="text-slate-600 text-xs mb-3">
+        <p className="text-muted text-xs mb-3">
           {totalN} live v2 {totalN === 1 ? 'prediction' : 'predictions'} available in the current filter window.
         </p>
       )}
       {!anySamples ? (
-        <p className="text-slate-600 text-sm py-8 text-center">
+        <p className="text-muted text-sm py-8 text-center">
           {isRestrictedV2
             ? 'No live-captured v2 predictions in the current filter window — most saved picks were computed after the event and can’t be used for calibration.'
             : 'No decisive graded picks with frozen v1/v2 fields yet in the current filter window.'}
         </p>
       ) : (
+        <div role="img" aria-labelledby={chartId} aria-describedby={descriptionId}>
         <ResponsiveContainer width="100%" height={compact ? 190 : 240}>
-          <ComposedChart data={data} margin={{ top: 10, right: 10, bottom: 24, left: 0 }}>
+          <ComposedChart accessibilityLayer={false} data={data} margin={{ top: 10, right: 10, bottom: 24, left: 0 }}>
+            <defs>
+              <pattern id={calibratedPatternId} width="6" height="6" patternUnits="userSpaceOnUse">
+                <rect width="6" height="6" fill="#34d399" />
+                <circle cx="3" cy="3" r="1.25" fill="#064e3b" />
+              </pattern>
+              <pattern id={overconfidentPatternId} width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+                <rect width="8" height="8" fill="#f87171" />
+                <line x1="0" y1="0" x2="0" y2="8" stroke="#7f1d1d" strokeWidth="3" />
+              </pattern>
+            </defs>
             <CartesianGrid stroke="#334155" strokeDasharray="3 3" vertical={false} />
             <XAxis dataKey="bucket" interval={0} tick={makeBandTick(data)} height={40} />
             <YAxis
@@ -866,8 +963,8 @@ function CalibrationReliabilityChart({ data, modelLabel = 'v2', compact = false 
                     d.actualWinRate == null
                       ? '#334155'
                       : d.actualWinRate >= d.predictedMean
-                      ? '#34d399'
-                      : '#f87171'
+                      ? `url(#${calibratedPatternId})`
+                      : `url(#${overconfidentPatternId})`
                   }
                   fillOpacity={d.lowN ? 0.45 : 0.9}
                 />
@@ -884,11 +981,32 @@ function CalibrationReliabilityChart({ data, modelLabel = 'v2', compact = false 
             />
           </ComposedChart>
         </ResponsiveContainer>
+        </div>
       )}
-      <p className="text-slate-600 text-[10px] mt-2">
-        * n &lt; {ROI_ANALYTICS_LOW_N} — low sample (see x-axis labels). Green = actual ≥ predicted (not overconfident); red = actual &lt; predicted (overconfident).
+      <p className="text-muted text-[10px] mt-2">
+        * n &lt; {ROI_ANALYTICS_LOW_N} — low sample (see x-axis labels). Dotted bars = actual ≥ predicted (not overconfident); diagonal bars = actual &lt; predicted (overconfident). Color is supplemental.
       </p>
-    </div>
+      <AccessibleChartDataTable
+        caption={`${ML} Calibration Reliability data`}
+        columns={[
+          { key: 'bucket', label: 'Confidence bucket' },
+          { key: 'n', label: 'Sample size' },
+          { key: 'actualWinRate', label: 'Actual win rate', render: (row) => chartValue(row.actualWinRate, '%') },
+          { key: 'predictedMean', label: 'Mean predicted probability', render: (row) => chartValue(row.predictedMean, '%') },
+          {
+            key: 'status',
+            label: 'Calibration status',
+            render: (row) => row.actualWinRate == null || row.predictedMean == null
+              ? 'Unavailable'
+              : row.actualWinRate >= row.predictedMean
+              ? 'Not overconfident: actual win rate meets or exceeds predicted probability'
+              : 'Overconfident: actual win rate is below predicted probability',
+          },
+          { key: 'sample', label: 'Sample note', render: (row) => row.lowN ? 'Low sample' : 'Standard sample' },
+        ]}
+        rows={data}
+      />
+    </figure>
   );
 }
 
@@ -905,10 +1023,12 @@ const BET_TIER_COLORS = {
 function BetTierWinRateChart({ data }) {
   const anySamples = data.some((d) => d.n > 0);
   const emptyTiers = data.filter((d) => d.n === 0).map((d) => d.tier);
+  const chartId = 'win-rate-by-bet-tier';
+  const descriptionId = `${chartId}-description`;
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
-      <h3 className="text-white font-bold text-sm mb-1">Win Rate by Bet Tier</h3>
-      <p className="text-slate-500 text-xs mb-3">
+    <figure className="bg-slate-900 border border-slate-800 rounded-xl p-4" aria-labelledby={chartId} aria-describedby={descriptionId}>
+      <h3 id={chartId} className="text-white font-bold text-sm mb-1">Win Rate by Bet Tier</h3>
+      <p id={descriptionId} className="text-muted text-xs mb-3">
         V2's picked-side win rate, grouped by the tier STORED on each entry
         (including the declined NO BET pool) -- not re-gated against current
         data. For live-captured picks this is a genuine prediction-time tier;
@@ -917,12 +1037,13 @@ function BetTierWinRateChart({ data }) {
         {emptyTiers.length > 0 && ` No graded picks in ${emptyTiers.join('/')} this window.`}
       </p>
       {!anySamples ? (
-        <p className="text-slate-600 text-sm py-8 text-center">
+        <p className="text-muted text-sm py-8 text-center">
           No decisive graded picks with resolvable fighters yet in the current filter window.
         </p>
       ) : (
+        <div role="img" aria-labelledby={chartId} aria-describedby={descriptionId}>
         <ResponsiveContainer width="100%" height={240}>
-          <BarChart data={data} margin={{ top: 10, right: 10, bottom: 24, left: 0 }}>
+          <BarChart accessibilityLayer={false} data={data} margin={{ top: 10, right: 10, bottom: 24, left: 0 }}>
             <CartesianGrid stroke="#334155" strokeDasharray="3 3" vertical={false} />
             <XAxis dataKey="tier" interval={0} tick={makeBandTick(data)} height={40} />
             <YAxis
@@ -944,21 +1065,34 @@ function BetTierWinRateChart({ data }) {
             </Bar>
           </BarChart>
         </ResponsiveContainer>
+        </div>
       )}
-      <p className="text-slate-600 text-[10px] mt-2">
+      <p className="text-muted text-[10px] mt-2">
         * n &lt; {ROI_ANALYTICS_LOW_N} — low sample, shown at reduced opacity. Interpret with caution.
       </p>
-    </div>
+      <AccessibleChartDataTable
+        caption="Win Rate by Bet Tier data"
+        columns={[
+          { key: 'tier', label: 'Bet tier' },
+          { key: 'n', label: 'Sample size' },
+          { key: 'winRate', label: 'Win rate', render: (row) => chartValue(row.winRate, '%') },
+          { key: 'sample', label: 'Sample note', render: (row) => row.lowN ? 'Low sample' : 'Standard sample' },
+        ]}
+        rows={data}
+      />
+    </figure>
   );
 }
 
 function BetTierRoiChart({ data }) {
   const anySamples = data.some((d) => d.n > 0);
   const emptyTiers = data.filter((d) => d.n === 0).map((d) => d.tier);
+  const chartId = 'roi-by-bet-tier';
+  const descriptionId = `${chartId}-description`;
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
-      <h3 className="text-white font-bold text-sm mb-1">ROI by Bet Tier</h3>
-      <p className="text-slate-500 text-xs mb-3">
+    <figure className="bg-slate-900 border border-slate-800 rounded-xl p-4" aria-labelledby={chartId} aria-describedby={descriptionId}>
+      <h3 id={chartId} className="text-white font-bold text-sm mb-1">ROI by Bet Tier</h3>
+      <p id={descriptionId} className="text-muted text-xs mb-3">
         Stake-weighted ROI on V2's frozen picked side (at that side's own
         stored price), grouped by the tier STORED on each entry at capture/
         reconstruction time -- not re-gated against current data. Dashed line
@@ -966,12 +1100,13 @@ function BetTierRoiChart({ data }) {
         {emptyTiers.length > 0 && ` No graded picks in ${emptyTiers.join('/')} this window.`}
       </p>
       {!anySamples ? (
-        <p className="text-slate-600 text-sm py-8 text-center">
+        <p className="text-muted text-sm py-8 text-center">
           No decisive graded picks with resolvable fighters yet in the current filter window.
         </p>
       ) : (
+        <div role="img" aria-labelledby={chartId} aria-describedby={descriptionId}>
         <ResponsiveContainer width="100%" height={240}>
-          <BarChart data={data} margin={{ top: 10, right: 10, bottom: 24, left: 0 }}>
+          <BarChart accessibilityLayer={false} data={data} margin={{ top: 10, right: 10, bottom: 24, left: 0 }}>
             <CartesianGrid stroke="#334155" strokeDasharray="3 3" vertical={false} />
             <XAxis dataKey="tier" interval={0} tick={makeBandTick(data)} height={40} />
             <YAxis
@@ -997,11 +1132,22 @@ function BetTierRoiChart({ data }) {
             </Bar>
           </BarChart>
         </ResponsiveContainer>
+        </div>
       )}
-      <p className="text-slate-600 text-[10px] mt-2">
+      <p className="text-muted text-[10px] mt-2">
         * n &lt; {ROI_ANALYTICS_LOW_N} — low sample, shown at reduced opacity. Interpret with caution.
       </p>
-    </div>
+      <AccessibleChartDataTable
+        caption="ROI by Bet Tier data"
+        columns={[
+          { key: 'tier', label: 'Bet tier' },
+          { key: 'n', label: 'Sample size' },
+          { key: 'roi', label: 'ROI', render: (row) => chartValue(row.roi, '%') },
+          { key: 'sample', label: 'Sample note', render: (row) => row.lowN ? 'Low sample' : 'Standard sample' },
+        ]}
+        rows={data}
+      />
+    </figure>
   );
 }
 
@@ -1011,21 +1157,24 @@ function CumulativePnlChart({ data, modelLabel = 'v1', windowComposition }) {
       ? `${windowComposition.n} v2-scored fights in window (${windowComposition.liveN} live-captured, ${windowComposition.reconN} reconstructed)`
       : `${windowComposition.n} v2-scored fights in window (all live-captured)`
     : '';
+  const chartId = `cumulative-pnl-${modelLabel}`;
+  const descriptionId = `${chartId}-description`;
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
-      <h3 className="text-white font-bold text-sm mb-1">Cumulative P&amp;L by Event</h3>
-      <p className="text-slate-500 text-xs mb-3">
+    <figure className="bg-slate-900 border border-slate-800 rounded-xl p-4" aria-labelledby={chartId} aria-describedby={descriptionId}>
+      <h3 id={chartId} className="text-white font-bold text-sm mb-1">Cumulative P&amp;L by Event</h3>
+      <p id={descriptionId} className="text-muted text-xs mb-3">
         {modelLabel === 'v2'
           ? `Running net units on V2's FROZEN pick (stake-weighted, at that pick's own stored price), one point per event in chronological order. Same v2-scored population as the headline -- ${compositionText}.`
           : 'Running net units on the actually-staked side, one point per event in chronological order.'}
       </p>
       {data.length === 0 ? (
-        <p className="text-slate-600 text-sm py-8 text-center">
+        <p className="text-muted text-sm py-8 text-center">
           No staked, graded picks yet in the current filter window.
         </p>
       ) : (
+        <div role="img" aria-labelledby={chartId} aria-describedby={descriptionId}>
         <ResponsiveContainer width="100%" height={240}>
-          <LineChart data={data} margin={{ top: 10, right: 10, bottom: 24, left: 0 }}>
+          <LineChart accessibilityLayer={false} data={data} margin={{ top: 10, right: 10, bottom: 24, left: 0 }}>
             <CartesianGrid stroke="#334155" strokeDasharray="3 3" vertical={false} />
             <XAxis
               dataKey="eventName"
@@ -1056,8 +1205,20 @@ function CumulativePnlChart({ data, modelLabel = 'v1', windowComposition }) {
             />
           </LineChart>
         </ResponsiveContainer>
+        </div>
       )}
-    </div>
+      <AccessibleChartDataTable
+        caption="Cumulative P and L by Event data"
+        columns={[
+          { key: 'eventName', label: 'Event' },
+          { key: 'eventDate', label: 'Event date' },
+          { key: 'n', label: 'Bets at event' },
+          { key: 'eventProfit', label: 'Event profit', render: (row) => chartValue(row.eventProfit, ' units') },
+          { key: 'cumulative', label: 'Cumulative profit', render: (row) => chartValue(row.cumulative, ' units') },
+        ]}
+        rows={data}
+      />
+    </figure>
   );
 }
 
@@ -1073,27 +1234,27 @@ function MonthlyPerformanceTable({ data, large = false, modelLabel = 'v1', windo
     <div className={`bg-slate-900 border border-slate-800 rounded-xl ${large ? 'p-6' : 'p-4'}`}>
       <h3 className={`text-white font-bold ${large ? 'text-base mb-1' : 'text-sm mb-3'}`}>Monthly Performance</h3>
       {large && (
-        <p className="text-slate-500 text-xs mb-4">
+        <p className="text-muted text-xs mb-4">
           {modelLabel === 'v2'
             ? `Bets, win rate, and net profit on V2's FROZEN pick (stake-weighted), grouped by calendar month. Same v2-scored population as the headline -- ${compositionText}.`
             : 'Bets, win rate, and net profit for the currently selected model, grouped by calendar month.'}
         </p>
       )}
       {data.length === 0 ? (
-        <p className="text-slate-600 text-sm py-8 text-center">
+        <p className="text-muted text-sm py-8 text-center">
           No staked, graded picks yet in the current filter window.
         </p>
       ) : (
         <div className="overflow-x-auto">
           <table className={`w-full ${large ? 'text-base' : 'text-sm'}`}>
             <thead>
-              <tr className={`text-slate-500 uppercase tracking-wider border-b border-slate-800 ${large ? 'text-sm' : 'text-xs'}`}>
-                <th className={`text-left ${cellPad} font-semibold`}>Month</th>
-                <th className={`text-right ${cellPad} font-semibold`}>Bets</th>
-                <th className={`text-right ${cellPad} font-semibold`}>Win Rate</th>
-                <th className={`text-right ${cellPad} font-semibold`}>Staked</th>
-                <th className={`text-right ${cellPad} font-semibold`}>Net Units</th>
-                <th className={`text-right ${lastCellPad} font-semibold`}>ROI</th>
+              <tr className={`text-muted uppercase tracking-wider border-b border-slate-800 ${large ? 'text-sm' : 'text-xs'}`}>
+                <th scope="col" className={`text-left ${cellPad} font-semibold`}>Month</th>
+                <th scope="col" className={`text-right ${cellPad} font-semibold`}>Bets</th>
+                <th scope="col" className={`text-right ${cellPad} font-semibold`}>Win Rate</th>
+                <th scope="col" className={`text-right ${cellPad} font-semibold`}>Staked</th>
+                <th scope="col" className={`text-right ${cellPad} font-semibold`}>Net Units</th>
+                <th scope="col" className={`text-right ${lastCellPad} font-semibold`}>ROI</th>
               </tr>
             </thead>
             <tbody>
@@ -1108,7 +1269,7 @@ function MonthlyPerformanceTable({ data, large = false, modelLabel = 'v1', windo
                   <td className={`${cellPad} text-right font-semibold ${row.netUnits >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                     {row.netUnits >= 0 ? '+' : ''}{row.netUnits.toFixed(2)}u
                   </td>
-                  <td className={`${lastCellPad} text-right font-semibold ${row.roi == null ? 'text-slate-600' : row.roi >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                  <td className={`${lastCellPad} text-right font-semibold ${row.roi == null ? 'text-muted' : row.roi >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                     {row.roi == null ? '—' : `${row.roi >= 0 ? '+' : ''}${row.roi.toFixed(1)}%`}
                   </td>
                 </tr>
@@ -1187,8 +1348,8 @@ function StatisticsTab({ entries, prospectNameSet, filterSince, setFilterSince, 
     <div className="max-w-5xl mx-auto px-5 py-8">
       <div className="flex items-start justify-between gap-4 mb-6">
         <div>
-          <h2 className="text-white font-black text-xl mb-1">Statistics</h2>
-          <p className="text-slate-400 text-sm">
+          <h1 className="text-white font-black text-xl mb-1">Statistics</h1>
+          <p className="text-secondary text-sm">
             Live calibration and ROI analysis of FightMetrics' models, computed
             from graded ROI entries.
           </p>
@@ -1202,29 +1363,30 @@ function StatisticsTab({ entries, prospectNameSet, filterSince, setFilterSince, 
       {entries.length > 0 && (
         <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-6">
           <div className="flex items-center gap-3 flex-wrap">
-            <span className="text-slate-500 text-xs uppercase tracking-wider font-semibold">Since</span>
+            <label htmlFor="statistics-since" className="text-muted text-xs uppercase tracking-wider font-semibold">Since</label>
             <input
+              id="statistics-since"
               type="date"
               value={filterSince}
               onChange={e => setFilterSince(e.target.value)}
-              className="bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-1.5 min-h-[44px] sm:min-h-0 sm:h-9 focus:outline-hidden focus:border-red-500"
+              className="bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-1.5 min-h-[44px] sm:min-h-0 sm:h-9 focus:border-red-500"
             />
             {filterSince && (
               <button
                 onClick={() => setFilterSince('')}
-                className="inline-flex items-center justify-center min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0 text-slate-500 hover:text-slate-300 text-xs underline"
+                className="inline-flex items-center justify-center min-w-[44px] min-h-[44px] sm:min-w-6 sm:min-h-6 text-muted hover:text-slate-300 text-xs underline"
               >
                 Clear
               </button>
             )}
             {filterSince && (
-              <span className="text-slate-600 text-xs">
+              <span className="text-muted text-xs">
                 {statsEntries.length} fights
               </span>
             )}
           </div>
           {v2ScoredFloorDate && (!filterSince || filterSince <= v2ScoredFloorDate) && (
-            <span className="text-slate-600 text-xs">
+            <span className="text-muted text-xs">
               Earliest v2-scored fight: {v2ScoredFloorDate}. Dates before this don't change the stats — v2 hadn't scored fights yet.
             </span>
           )}
@@ -1232,7 +1394,7 @@ function StatisticsTab({ entries, prospectNameSet, filterSince, setFilterSince, 
       )}
 
       {entries.length === 0 ? (
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-8 text-center text-slate-600">
+        <div className="bg-slate-900 border border-slate-800 rounded-xl p-8 text-center text-muted">
           <BarChart2 size={36} className="mx-auto mb-3 opacity-20" />
           <p className="text-sm">No saved predictions yet.</p>
           <p className="text-xs mt-1">
@@ -1244,21 +1406,21 @@ function StatisticsTab({ entries, prospectNameSet, filterSince, setFilterSince, 
         <>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6 items-stretch">
             <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 h-full">
-              <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold">Tracked Fights</p>
+              <p className="text-muted text-xs uppercase tracking-wider font-semibold">Tracked Fights</p>
               <p className="font-black text-2xl mt-2 text-white">{summaryV1.total}</p>
             </div>
             <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 h-full">
-              <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold">Graded Picks</p>
+              <p className="text-muted text-xs uppercase tracking-wider font-semibold">Graded Picks</p>
               <p className="font-black text-2xl mt-2 text-blue-400">{summaryV1.graded}</p>
             </div>
             <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 h-full">
-              <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold">Pick Accuracy</p>
+              <p className="text-muted text-xs uppercase tracking-wider font-semibold">Pick Accuracy</p>
               {modelView === 'v2' ? (
                 <>
                   <p className={`font-black text-2xl mt-2 ${summaryV2All.accuracy >= 60 ? 'text-emerald-400' : 'text-yellow-400'}`}>
                     {summaryV2All.accuracy.toFixed(1)}%
                   </p>
-                  <p className="text-slate-600 text-[10px] mt-1">
+                  <p className="text-muted text-[10px] mt-1">
                     v2 frozen scoring across {summaryV2All.graded} graded fights (stake-weighted). Frozen at each pick's capture — no lookahead.
                   </p>
                 </>
@@ -1269,13 +1431,13 @@ function StatisticsTab({ entries, prospectNameSet, filterSince, setFilterSince, 
               )}
             </div>
             <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 h-full">
-              <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold">ROI</p>
+              <p className="text-muted text-xs uppercase tracking-wider font-semibold">ROI</p>
               {modelView === 'v2' ? (
                 <>
                   <p className={`font-black text-2xl mt-2 ${summaryV2All.roi >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                     {summaryV2All.roi >= 0 ? '+' : ''}{summaryV2All.roi.toFixed(1)}%
                   </p>
-                  <p className="text-slate-600 text-xs mt-1">
+                  <p className="text-muted text-xs mt-1">
                     {summaryV2All.profit >= 0 ? '+' : ''}{summaryV2All.profit.toFixed(2)}u on {summaryV2All.bets} bets (stake-weighted)
                   </p>
                 </>
@@ -1284,7 +1446,7 @@ function StatisticsTab({ entries, prospectNameSet, filterSince, setFilterSince, 
                   <p className={`font-black text-2xl mt-2 ${summaryV1.roi >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                     {summaryV1.roi >= 0 ? '+' : ''}{summaryV1.roi.toFixed(1)}%
                   </p>
-                  <p className="text-slate-600 text-xs mt-1">
+                  <p className="text-muted text-xs mt-1">
                     {summaryV1.profit >= 0 ? '+' : ''}{summaryV1.profit.toFixed(2)}u on {summaryV1.bets} bets
                   </p>
                 </>
@@ -1355,9 +1517,9 @@ const PROP_RESULT_OPTIONS = [
 ];
 
 const PROP_INPUT_CLS =
-  'w-full bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:outline-hidden focus:border-red-500';
+  'w-full bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:border-red-500';
 const PROP_LABEL_CLS =
-  'text-slate-500 text-xs font-semibold uppercase tracking-wider block mb-1.5';
+  'text-muted text-xs font-semibold uppercase tracking-wider block mb-1.5';
 
 // Prop entry form, reused from two entry points in the Upcoming tab:
 //   mode="fromFight" -- opened from a specific fight card's "+ Prop" button.
@@ -1380,6 +1542,7 @@ function PropEntryForm({
   onAdd,
   onCancel,
 }) {
+  const formId = useId();
   const isManual = mode === 'manual';
   const [manualEventName, setManualEventName] = useState('');
   const [manualEventDate, setManualEventDate] = useState('');
@@ -1436,8 +1599,9 @@ function PropEntryForm({
       {isManual ? (
         <div className="grid grid-cols-2 gap-4 mb-4">
           <div>
-            <label className={PROP_LABEL_CLS}>Event Name</label>
+            <label htmlFor={`${formId}-event-name`} className={PROP_LABEL_CLS}>Event Name</label>
             <input
+              id={`${formId}-event-name`}
               type="text"
               value={manualEventName}
               onChange={(e) => setManualEventName(e.target.value)}
@@ -1446,8 +1610,9 @@ function PropEntryForm({
             />
           </div>
           <div>
-            <label className={PROP_LABEL_CLS}>Event Date</label>
+            <label htmlFor={`${formId}-event-date`} className={PROP_LABEL_CLS}>Event Date</label>
             <input
+              id={`${formId}-event-date`}
               type="date"
               value={manualEventDate}
               onChange={(e) => setManualEventDate(e.target.value)}
@@ -1455,8 +1620,9 @@ function PropEntryForm({
             />
           </div>
           <div>
-            <label className={PROP_LABEL_CLS}>Fighter A</label>
+            <label htmlFor={`${formId}-fighter-a`} className={PROP_LABEL_CLS}>Fighter A</label>
             <FighterSearch
+              id={`${formId}-fighter-a`}
               allFighters={allFighters}
               value={manualFighterA}
               onChange={setManualFighterA}
@@ -1464,8 +1630,9 @@ function PropEntryForm({
             />
           </div>
           <div>
-            <label className={PROP_LABEL_CLS}>Fighter B (optional)</label>
+            <label htmlFor={`${formId}-fighter-b`} className={PROP_LABEL_CLS}>Fighter B (optional)</label>
             <FighterSearch
+              id={`${formId}-fighter-b`}
               allFighters={allFighters}
               value={manualFighterB}
               onChange={setManualFighterB}
@@ -1477,26 +1644,27 @@ function PropEntryForm({
       ) : (
         <p className="text-sm mb-4">
           <span className="text-white font-semibold">{fighterA} vs. {fighterB}</span>
-          <span className="text-slate-500"> · {eventName}{eventDate ? ` · ${eventDate}` : ''}</span>
+          <span className="text-muted"> · {eventName}{eventDate ? ` · ${eventDate}` : ''}</span>
         </p>
       )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
         <div>
-          <label className={PROP_LABEL_CLS}>Prop Subject</label>
-          <div className="flex items-center gap-1 bg-slate-800 rounded-lg p-1">
+          <span id={`${formId}-subject-label`} className={PROP_LABEL_CLS}>Prop Subject</span>
+          <div role="group" aria-labelledby={`${formId}-subject-label`} className="flex items-center gap-1 bg-slate-800 rounded-lg p-1">
             {sideButtons.map(({ id, label, disabled }) => (
               <button
                 key={id}
                 disabled={disabled}
                 onClick={() => setSide(id)}
+                aria-pressed={side === id}
                 title={label}
                 className={`flex-1 min-w-0 px-2 py-1.5 rounded-md text-xs font-semibold transition-colors truncate ${
                   side === id
                     ? 'bg-red-600 text-white'
                     : disabled
                     ? 'text-slate-700 cursor-not-allowed'
-                    : 'text-slate-400 hover:text-white'
+                    : 'text-secondary hover:text-white'
                 }`}
               >
                 {label}
@@ -1505,8 +1673,9 @@ function PropEntryForm({
           </div>
         </div>
         <div>
-          <label className={PROP_LABEL_CLS}>Method (required)</label>
+          <label htmlFor={`${formId}-method`} className={PROP_LABEL_CLS}>Method (required)</label>
           <select
+            id={`${formId}-method`}
             value={method}
             onChange={(e) => setMethod(e.target.value)}
             className={`${PROP_INPUT_CLS} cursor-pointer`}
@@ -1523,8 +1692,9 @@ function PropEntryForm({
 
       <div className="grid grid-cols-2 gap-4 mb-4">
         <div>
-          <label className={PROP_LABEL_CLS}>Odds</label>
+          <label htmlFor={`${formId}-odds`} className={PROP_LABEL_CLS}>Odds</label>
           <input
+            id={`${formId}-odds`}
             type="text"
             value={odds}
             onChange={(e) => setOdds(e.target.value)}
@@ -1533,8 +1703,9 @@ function PropEntryForm({
           />
         </div>
         <div>
-          <label className={PROP_LABEL_CLS}>Stake (u)</label>
+          <label htmlFor={`${formId}-stake`} className={PROP_LABEL_CLS}>Stake (u)</label>
           <input
+            id={`${formId}-stake`}
             type="number"
             step="0.1"
             value={stake}
@@ -1546,7 +1717,7 @@ function PropEntryForm({
       </div>
 
       <div className="bg-slate-800/40 border border-slate-700/60 rounded-lg px-3 py-2 mb-4">
-        <span className="text-slate-500 text-xs uppercase tracking-wider font-semibold mr-2">This bet</span>
+        <span className="text-muted text-xs uppercase tracking-wider font-semibold mr-2">This bet</span>
         <span className="text-slate-200 text-sm font-semibold">{previewLabel || '—'}</span>
       </div>
 
@@ -1555,14 +1726,14 @@ function PropEntryForm({
           onClick={handleSubmit}
           disabled={!canSubmit}
           className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
-            canSubmit ? 'bg-red-600 text-white hover:bg-red-500' : 'bg-slate-800 text-slate-600 cursor-not-allowed'
+            canSubmit ? 'bg-red-600 text-white hover:bg-red-500' : 'bg-slate-800 text-muted cursor-not-allowed'
           }`}
         >
           Log Prop
         </button>
         <button
           onClick={onCancel}
-          className="px-4 py-2 rounded-lg text-sm font-semibold text-slate-500 hover:text-white transition-colors"
+          className="px-4 py-2 rounded-lg text-sm font-semibold text-muted hover:text-white transition-colors"
         >
           Cancel
         </button>
@@ -1584,13 +1755,13 @@ function PendingPropsSection({ picks, onGrade, onDelete, manualOpen, onToggleMan
     <div className="mt-8">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
-          <ClipboardList size={16} className="text-slate-500" />
+          <ClipboardList size={16} className="text-muted" />
           <h3 className="text-white font-black text-base">Props</h3>
-          <span className="text-slate-600 text-xs hidden sm:inline">pending method-of-victory picks</span>
+          <span className="text-muted text-xs hidden sm:inline">pending method-of-victory picks</span>
         </div>
         <button
           onClick={onToggleManual}
-          className="hidden sm:inline text-xs font-semibold text-slate-400 hover:text-white underline decoration-dotted underline-offset-2"
+          className="hidden sm:inline text-xs font-semibold text-secondary hover:text-white underline decoration-dotted underline-offset-2"
         >
           {manualOpen ? 'Cancel manual prop' : '+ Log a manual prop'}
         </button>
@@ -1603,10 +1774,10 @@ function PendingPropsSection({ picks, onGrade, onDelete, manualOpen, onToggleMan
       )}
 
       {picks.length === 0 ? (
-        <div className="bg-slate-900/50 border border-slate-800 rounded-xl p-6 text-center text-slate-600">
+        <div className="bg-slate-900/50 border border-slate-800 rounded-xl p-6 text-center text-muted">
           <p className="text-sm">No pending props.</p>
           <p className="text-xs mt-1">
-            Click <span className="text-slate-400 font-semibold">+ Prop</span> on a fight card above, or log one manually.
+            Click <span className="text-secondary font-semibold">+ Prop</span> on a fight card above, or log one manually.
           </p>
         </div>
       ) : (
@@ -1619,16 +1790,17 @@ function PendingPropsSection({ picks, onGrade, onDelete, manualOpen, onToggleMan
               <div key={pick.id} className="bg-slate-900 border border-slate-800 rounded-xl p-4 flex items-start justify-between gap-4">
                 <div>
                   <p className="text-white font-bold text-sm">{label}</p>
-                  <p className="text-slate-500 text-xs mt-1">
+                  <p className="text-muted text-xs mt-1">
                     {matchup} · {pick.eventName}{pick.eventDate ? ` · ${pick.eventDate}` : ''}
                   </p>
-                  <p className="text-slate-400 text-xs mt-1">{pick.odds} · {stake}u</p>
+                  <p className="text-secondary text-xs mt-1">{pick.odds} · {stake}u</p>
                 </div>
                 <div className="hidden sm:flex items-center gap-2 shrink-0">
                   <select
+                    aria-label={`Result for prop ${label} in ${matchup}`}
                     value={pick.result}
                     onChange={(e) => onGrade(pick.id, e.target.value)}
-                    className="bg-slate-800 border border-slate-700 text-slate-200 text-xs rounded-lg px-2 py-1.5 focus:outline-hidden focus:border-red-500 cursor-pointer"
+                    className="bg-slate-800 border border-slate-700 text-slate-200 text-xs rounded-lg px-2 py-1.5 focus:border-red-500 cursor-pointer"
                   >
                     {PROP_RESULT_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
                   </select>
@@ -1639,7 +1811,7 @@ function PendingPropsSection({ picks, onGrade, onDelete, manualOpen, onToggleMan
                         onDelete(pick.id);
                       }
                     }}
-                    className="text-slate-600 hover:text-red-400 text-xs"
+                    className="text-muted hover:text-red-400 text-xs"
                   >
                     Delete
                   </button>
@@ -1658,11 +1830,11 @@ function PendingPropsSection({ picks, onGrade, onDelete, manualOpen, onToggleMan
 function PropBetsPanel({ picks, onGrade, onDelete }) {
   if (picks.length === 0) {
     return (
-      <div className="bg-slate-900 border border-slate-800 rounded-xl p-8 text-center text-slate-600">
+      <div className="bg-slate-900 border border-slate-800 rounded-xl p-8 text-center text-muted">
         <ClipboardList size={36} className="mx-auto mb-3 opacity-20" />
         <p className="text-sm">No graded prop bets yet.</p>
         <p className="text-xs mt-1">
-          Log and grade props from the <span className="text-slate-400 font-semibold">Upcoming</span> tab — they land here once resolved.
+          Log and grade props from the <span className="text-secondary font-semibold">Upcoming</span> tab — they land here once resolved.
         </p>
       </div>
     );
@@ -1672,14 +1844,14 @@ function PropBetsPanel({ picks, onGrade, onDelete }) {
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="text-slate-500 text-xs uppercase tracking-wider border-b border-slate-800">
-              <th className="text-left font-semibold px-4 py-3">Prop</th>
-              <th className="text-left font-semibold px-4 py-3">Matchup</th>
-              <th className="text-left font-semibold px-4 py-3">Result</th>
-              <th className="text-left font-semibold px-4 py-3">Bet</th>
-              <th className="text-right font-semibold px-4 py-3">P&amp;L</th>
-              <th className="text-left font-semibold px-4 py-3">Event</th>
-              <th className="px-4 py-3" />
+            <tr className="text-muted text-xs uppercase tracking-wider border-b border-slate-800">
+              <th scope="col" className="text-left font-semibold px-4 py-3">Prop</th>
+              <th scope="col" className="text-left font-semibold px-4 py-3">Matchup</th>
+              <th scope="col" className="text-left font-semibold px-4 py-3">Result</th>
+              <th scope="col" className="text-left font-semibold px-4 py-3">Bet</th>
+              <th scope="col" className="text-right font-semibold px-4 py-3">P&amp;L</th>
+              <th scope="col" className="text-left font-semibold px-4 py-3">Event</th>
+              <th scope="col" className="px-4 py-3"><span className="sr-only">Actions</span></th>
             </tr>
           </thead>
           <tbody>
@@ -1694,23 +1866,24 @@ function PropBetsPanel({ picks, onGrade, onDelete }) {
               return (
                 <tr key={pick.id} className="border-b border-slate-800/60 last:border-0">
                   <td className="px-4 py-3 text-slate-200 font-semibold">{label}</td>
-                  <td className="px-4 py-3 text-slate-400 whitespace-nowrap">{matchup}</td>
+                  <td className="px-4 py-3 text-secondary whitespace-nowrap">{matchup}</td>
                   <td className="px-4 py-3">
                     <select
+                      aria-label={`Result for prop ${label} in ${matchup}`}
                       value={pick.result}
                       onChange={(e) => onGrade(pick.id, e.target.value)}
-                      className="hidden sm:inline-block bg-slate-800 border border-slate-700 text-slate-200 text-xs rounded-lg px-2 py-1.5 focus:outline-hidden focus:border-red-500 cursor-pointer"
+                      className="hidden sm:inline-block bg-slate-800 border border-slate-700 text-slate-200 text-xs rounded-lg px-2 py-1.5 focus:border-red-500 cursor-pointer"
                     >
                       {PROP_RESULT_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
                     </select>
                   </td>
-                  <td className="px-4 py-3 text-slate-400 whitespace-nowrap">{pick.odds} · {stake}u</td>
+                  <td className="px-4 py-3 text-secondary whitespace-nowrap">{pick.odds} · {stake}u</td>
                   <td className={`px-4 py-3 text-right font-bold whitespace-nowrap ${
-                    !graded ? 'text-slate-600' : profit > 0 ? 'text-emerald-400' : profit < 0 ? 'text-red-400' : 'text-slate-400'
+                    !graded ? 'text-muted' : profit > 0 ? 'text-emerald-400' : profit < 0 ? 'text-red-400' : 'text-secondary'
                   }`}>
                     {!graded ? '—' : pick.result === 'PUSH' ? 'Push' : `${profit > 0 ? '+' : ''}${profit.toFixed(2)}u`}
                   </td>
-                  <td className="px-4 py-3 text-slate-500 text-xs whitespace-nowrap">
+                  <td className="px-4 py-3 text-muted text-xs whitespace-nowrap">
                     {pick.eventName}{pick.eventDate ? ` · ${pick.eventDate}` : ''}
                   </td>
                   <td className="px-4 py-3 text-right">
@@ -1721,7 +1894,7 @@ function PropBetsPanel({ picks, onGrade, onDelete }) {
                           onDelete(pick.id);
                         }
                       }}
-                      className="hidden sm:inline text-slate-600 hover:text-red-400 text-xs"
+                      className="hidden sm:inline text-muted hover:text-red-400 text-xs"
                     >
                       Delete
                     </button>
@@ -1744,7 +1917,7 @@ function PropBetsPanel({ picks, onGrade, onDelete }) {
 // every render via computeParlayResult; nothing here freezes a result onto
 // the entry (that happens only at export time, a later commit).
 const PARLAY_STATUS_BADGE_CLS = {
-  PENDING: 'bg-slate-800 text-slate-400 border-slate-700',
+  PENDING: 'bg-slate-800 text-secondary border-slate-700',
   WIN: 'bg-emerald-900/30 text-emerald-400 border-emerald-800',
   LOSS: 'bg-red-900/30 text-red-400 border-red-800',
   NEEDS_REVIEW: 'bg-amber-900/30 text-amber-400 border-amber-800',
@@ -1764,11 +1937,11 @@ function ParlaysPanel({ parlayEntries, roiEntries, onDelete, showSummary = true 
 
   if (parlayEntries.length === 0) {
     return (
-      <div className="bg-slate-900 border border-slate-800 rounded-xl p-8 text-center text-slate-600">
+      <div className="bg-slate-900 border border-slate-800 rounded-xl p-8 text-center text-muted">
         <ClipboardList size={36} className="mx-auto mb-3 opacity-20" />
         <p className="text-sm">No parlays yet.</p>
         <p className="text-xs mt-1">
-          Select 2+ fights in the <span className="text-slate-400 font-semibold">Upcoming</span> tab and click Build Parlay.
+          Select 2+ fights in the <span className="text-secondary font-semibold">Upcoming</span> tab and click Build Parlay.
         </p>
       </div>
     );
@@ -1780,30 +1953,30 @@ function ParlaysPanel({ parlayEntries, roiEntries, onDelete, showSummary = true 
         <>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-3 items-stretch">
             <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 h-full">
-              <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold">Graded Parlays</p>
+              <p className="text-muted text-xs uppercase tracking-wider font-semibold">Graded Parlays</p>
               <p className="font-black text-2xl mt-2 text-white">{summary.graded}</p>
             </div>
             <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 h-full">
-              <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold">Win Rate</p>
+              <p className="text-muted text-xs uppercase tracking-wider font-semibold">Win Rate</p>
               <p className="font-black text-2xl mt-2 text-blue-400">
                 {summary.graded ? `${summary.winRate.toFixed(1)}%` : '—'}
               </p>
-              <p className="text-slate-600 text-xs mt-1">{summary.wins}W of {summary.graded} graded</p>
+              <p className="text-muted text-xs mt-1">{summary.wins}W of {summary.graded} graded</p>
             </div>
             <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 h-full">
-              <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold">Net Units</p>
+              <p className="text-muted text-xs uppercase tracking-wider font-semibold">Net Units</p>
               <p className={`font-black text-2xl mt-2 ${summary.netUnits >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                 {summary.netUnits >= 0 ? '+' : ''}{summary.netUnits.toFixed(2)}u
               </p>
             </div>
             <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 h-full">
-              <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold">ROI</p>
+              <p className="text-muted text-xs uppercase tracking-wider font-semibold">ROI</p>
               <p className={`font-black text-2xl mt-2 ${summary.roi >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                 {summary.staked > 0 ? `${summary.roi >= 0 ? '+' : ''}${summary.roi.toFixed(1)}%` : '—'}
               </p>
             </div>
           </div>
-          <p className="text-slate-600 text-xs mb-4">
+          <p className="text-muted text-xs mb-4">
             Win rate, net units, and ROI count only graded WIN/LOSS parlays — pending and needs-review parlays are excluded.
           </p>
         </>
@@ -1827,7 +2000,7 @@ function ParlaysPanel({ parlayEntries, roiEntries, onDelete, showSummary = true 
               <div className="flex items-start justify-between gap-4 mb-3">
                 <div>
                   <p className="text-white font-bold text-sm">{parlay.eventName}</p>
-                  <p className="text-slate-500 text-xs mt-1">
+                  <p className="text-muted text-xs mt-1">
                     {parlay.combinedOdds} · {stake}u · {derived.resolvedLegs}/{derived.totalLegs} legs resolved
                   </p>
                 </div>
@@ -1847,7 +2020,7 @@ function ParlaysPanel({ parlayEntries, roiEntries, onDelete, showSummary = true 
                           onDelete(parlay.id);
                         }
                       }}
-                      className="hidden sm:inline text-slate-600 hover:text-red-400 text-xs"
+                      className="hidden sm:inline text-muted hover:text-red-400 text-xs"
                     >
                       Delete
                     </button>
@@ -1872,7 +2045,7 @@ function ParlaysPanel({ parlayEntries, roiEntries, onDelete, showSummary = true 
                       ? 'text-red-400 font-semibold'
                       : legStatus === 'push'
                       ? 'text-amber-400 font-semibold'
-                      : 'text-slate-600';
+                      : 'text-muted';
                   const legStatusLabel =
                     legStatus === 'correct'
                       ? 'Won'
@@ -1888,7 +2061,7 @@ function ParlaysPanel({ parlayEntries, roiEntries, onDelete, showSummary = true 
                     >
                       <span className="text-slate-300">
                         {leg.pickedFighter}
-                        <span className="text-slate-600"> ({leg.fighterA} vs. {leg.fighterB})</span>
+                        <span className="text-muted"> ({leg.fighterA} vs. {leg.fighterB})</span>
                       </span>
                       <span className={legStatusCls}>{legStatusLabel}</span>
                     </div>
@@ -1898,7 +2071,7 @@ function ParlaysPanel({ parlayEntries, roiEntries, onDelete, showSummary = true 
 
               <p
                 className={`text-right font-bold text-sm ${
-                  profit == null ? 'text-slate-600' : profit > 0 ? 'text-emerald-400' : profit < 0 ? 'text-red-400' : 'text-slate-400'
+                  profit == null ? 'text-muted' : profit > 0 ? 'text-emerald-400' : profit < 0 ? 'text-red-400' : 'text-secondary'
                 }`}
               >
                 {profit == null ? '—' : `${profit > 0 ? '+' : ''}${profit.toFixed(2)}u`}
@@ -1923,15 +2096,15 @@ function PropStatsSection({ picks }) {
   return (
     <div className="mt-10 pt-8 border-t border-slate-800">
       <div className="flex items-center gap-2 mb-1">
-        <ClipboardList size={18} className="text-slate-400" />
+        <ClipboardList size={18} className="text-secondary" />
         <h3 className="text-white font-black text-lg">Prop Bets</h3>
       </div>
-      <p className="text-slate-500 text-sm mb-5">
+      <p className="text-muted text-sm mb-5">
         Manual method-of-victory picks — separate from the model, and unaffected by the v1/v2 toggle above.
       </p>
 
       {picks.length === 0 ? (
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-8 text-center text-slate-600">
+        <div className="bg-slate-900 border border-slate-800 rounded-xl p-8 text-center text-muted">
           <p className="text-sm">No prop bets logged yet.</p>
           <p className="text-xs mt-1">Add one from the Upcoming tab.</p>
         </div>
@@ -1939,24 +2112,24 @@ function PropStatsSection({ picks }) {
         <>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6 items-stretch">
             <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 h-full">
-              <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold">Graded Props</p>
+              <p className="text-muted text-xs uppercase tracking-wider font-semibold">Graded Props</p>
               <p className="font-black text-2xl mt-2 text-white">{summary.total}</p>
             </div>
             <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 h-full">
-              <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold">Win Rate</p>
+              <p className="text-muted text-xs uppercase tracking-wider font-semibold">Win Rate</p>
               <p className="font-black text-2xl mt-2 text-blue-400">
                 {summary.graded ? `${summary.winRate.toFixed(1)}%` : '—'}
               </p>
-              <p className="text-slate-600 text-xs mt-1">{summary.wins}W of {summary.graded} graded</p>
+              <p className="text-muted text-xs mt-1">{summary.wins}W of {summary.graded} graded</p>
             </div>
             <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 h-full">
-              <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold">Net Units</p>
+              <p className="text-muted text-xs uppercase tracking-wider font-semibold">Net Units</p>
               <p className={`font-black text-2xl mt-2 ${summary.netUnits >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                 {summary.netUnits >= 0 ? '+' : ''}{summary.netUnits.toFixed(2)}u
               </p>
             </div>
             <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 h-full">
-              <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold">ROI</p>
+              <p className="text-muted text-xs uppercase tracking-wider font-semibold">ROI</p>
               <p className={`font-black text-2xl mt-2 ${summary.roi >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                 {summary.staked > 0 ? `${summary.roi >= 0 ? '+' : ''}${summary.roi.toFixed(1)}%` : '—'}
               </p>
@@ -1965,17 +2138,17 @@ function PropStatsSection({ picks }) {
 
           <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
             <div className="px-4 py-3 border-b border-slate-800">
-              <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold">By Prop Type</p>
+              <p className="text-muted text-xs uppercase tracking-wider font-semibold">By Prop Type</p>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="text-slate-500 text-xs uppercase tracking-wider border-b border-slate-800">
-                    <th className="text-left font-semibold px-4 py-3">Type</th>
-                    <th className="text-right font-semibold px-4 py-3">Count</th>
-                    <th className="text-right font-semibold px-4 py-3">Win Rate</th>
-                    <th className="text-right font-semibold px-4 py-3">Staked</th>
-                    <th className="text-right font-semibold px-4 py-3">Net Units</th>
+                  <tr className="text-muted text-xs uppercase tracking-wider border-b border-slate-800">
+                    <th scope="col" className="text-left font-semibold px-4 py-3">Type</th>
+                    <th scope="col" className="text-right font-semibold px-4 py-3">Count</th>
+                    <th scope="col" className="text-right font-semibold px-4 py-3">Win Rate</th>
+                    <th scope="col" className="text-right font-semibold px-4 py-3">Staked</th>
+                    <th scope="col" className="text-right font-semibold px-4 py-3">Net Units</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1985,7 +2158,7 @@ function PropStatsSection({ picks }) {
                       <tr key={b.type} className="border-b border-slate-800/60 last:border-0">
                         <td className="px-4 py-3 text-slate-200 font-semibold">{b.type}</td>
                         <td className="px-4 py-3 text-right text-slate-300">{b.count}</td>
-                        <td className={`px-4 py-3 text-right ${lowN ? 'text-slate-500' : 'text-slate-300'}`}>
+                        <td className={`px-4 py-3 text-right ${lowN ? 'text-muted' : 'text-slate-300'}`}>
                           {b.decisive ? `${b.winRate.toFixed(1)}%${lowN ? ' *' : ''}` : '—'}
                         </td>
                         <td className="px-4 py-3 text-right text-slate-300">{b.staked.toFixed(2)}u</td>
@@ -2000,7 +2173,7 @@ function PropStatsSection({ picks }) {
             </div>
           </div>
           {hasLowSample && (
-            <p className="text-slate-600 text-xs mt-2">
+            <p className="text-muted text-xs mt-2">
               * n &lt; {ROI_ANALYTICS_LOW_N} graded — low sample, interpret with caution.
             </p>
           )}
@@ -2031,15 +2204,15 @@ function ParlayStatsSection({ parlayEntries, roiEntries }) {
   return (
     <div className="mt-10 pt-8 border-t border-slate-800">
       <div className="flex items-center gap-2 mb-1">
-        <ClipboardList size={18} className="text-slate-400" />
+        <ClipboardList size={18} className="text-secondary" />
         <h3 className="text-white font-black text-lg">Parlays</h3>
       </div>
-      <p className="text-slate-500 text-sm mb-5">
+      <p className="text-muted text-sm mb-5">
         Manual multi-fight parlay bets — separate from the model, and unaffected by the v1/v2 toggle above.
       </p>
 
       {parlayEntries.length === 0 ? (
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-8 text-center text-slate-600">
+        <div className="bg-slate-900 border border-slate-800 rounded-xl p-8 text-center text-muted">
           <p className="text-sm">No parlays logged yet.</p>
           <p className="text-xs mt-1">Build one from the Upcoming tab.</p>
         </div>
@@ -2047,30 +2220,30 @@ function ParlayStatsSection({ parlayEntries, roiEntries }) {
         <>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-2 items-stretch">
             <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 h-full">
-              <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold">Graded Parlays</p>
+              <p className="text-muted text-xs uppercase tracking-wider font-semibold">Graded Parlays</p>
               <p className="font-black text-2xl mt-2 text-white">{summary.graded}</p>
             </div>
             <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 h-full">
-              <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold">Win Rate</p>
+              <p className="text-muted text-xs uppercase tracking-wider font-semibold">Win Rate</p>
               <p className="font-black text-2xl mt-2 text-blue-400">
                 {summary.graded ? `${summary.winRate.toFixed(1)}%` : '—'}
               </p>
-              <p className="text-slate-600 text-xs mt-1">{summary.wins}W of {summary.graded} graded</p>
+              <p className="text-muted text-xs mt-1">{summary.wins}W of {summary.graded} graded</p>
             </div>
             <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 h-full">
-              <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold">Net Units</p>
+              <p className="text-muted text-xs uppercase tracking-wider font-semibold">Net Units</p>
               <p className={`font-black text-2xl mt-2 ${summary.netUnits >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                 {summary.netUnits >= 0 ? '+' : ''}{summary.netUnits.toFixed(2)}u
               </p>
             </div>
             <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 h-full">
-              <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold">ROI</p>
+              <p className="text-muted text-xs uppercase tracking-wider font-semibold">ROI</p>
               <p className={`font-black text-2xl mt-2 ${summary.roi >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                 {summary.staked > 0 ? `${summary.roi >= 0 ? '+' : ''}${summary.roi.toFixed(1)}%` : '—'}
               </p>
             </div>
           </div>
-          <p className="text-slate-600 text-xs">
+          <p className="text-muted text-xs">
             Win rate, net units, and ROI count only graded WIN/LOSS parlays — pending and needs-review parlays are excluded.
           </p>
         </>
@@ -2095,21 +2268,24 @@ const stanceColor = (s) =>
     : 'text-slate-300';
 
 const methodColor = (m) => {
-  if (!m) return 'text-slate-400';
+  if (!m) return 'text-secondary';
   if (m === 'KO' || m === 'TKO-Dr') return 'text-red-400';
   if (m === 'Sub') return 'text-purple-400';
   if (m.startsWith('Dec')) return 'text-blue-400';
-  return 'text-slate-400';
+  return 'text-secondary';
 };
 export const MODEL_VERSION = 'DrossPom Composite v1.0 · Logistic v2.0';
 
 // Local edit buffer (separate from the committed value) so a controlled
 // number input can hold an in-progress "2." without React snapping it back
 // to "2" on every keystroke -- only well-formed numbers get committed up.
-function UnitsStakedInput({ value, onCommit }) {
+function UnitsStakedInput({ value, onCommit, id, ariaLabel, describedBy }) {
   const [raw, setRaw] = useState(String(value));
   return (
     <input
+      id={id}
+      aria-label={ariaLabel}
+      aria-describedby={describedBy}
       type="number"
       step="0.1"
       min="0"
@@ -2121,7 +2297,7 @@ function UnitsStakedInput({ value, onCommit }) {
         if (next !== '' && !Number.isNaN(n)) onCommit(n);
       }}
       onBlur={() => setRaw(String(value))}
-      className="w-20 bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-1.5 focus:outline-hidden focus:border-red-500"
+      className="w-20 bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-1.5 focus:border-red-500"
     />
   );
 }
@@ -2134,6 +2310,7 @@ function UnitsStakedInput({ value, onCommit }) {
 // pickedFighter defaults to v2DefaultFighter; the override buttons below
 // mirror PropEntryForm's side-select pattern (App.js:2746-2764).
 function BuildParlayPanel({ legInputs, onConfirm, onCancel }) {
+  const formId = useId();
   const [picks, setPicks] = useState(() =>
     legInputs.map((l) => ({ ...l, pickedFighter: l.v2DefaultFighter, overridden: false }))
   );
@@ -2184,29 +2361,30 @@ function BuildParlayPanel({ legInputs, onConfirm, onCancel }) {
 
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-      <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 max-w-lg w-full max-h-[85vh] overflow-y-auto">
-        <h3 className="text-white font-black text-lg mb-4">Build Parlay</h3>
+      <div role="dialog" aria-modal="true" aria-labelledby={`${formId}-title`} className="bg-slate-900 border border-slate-800 rounded-xl p-5 max-w-lg w-full max-h-[85vh] overflow-y-auto">
+        <h3 id={`${formId}-title`} className="text-white font-black text-lg mb-4">Build Parlay</h3>
 
         <div className="space-y-3 mb-4">
           {picks.map((p) => (
             <div key={p.fightId} className="bg-slate-800/40 rounded-lg p-3">
-              <p className="text-slate-500 text-xs mb-2">{p.fighterA} vs. {p.fighterB}</p>
+              <p className="text-muted text-xs mb-2">{p.fighterA} vs. {p.fighterB}</p>
               <div className="flex items-center gap-1 bg-slate-800 rounded-lg p-1">
                 {[p.fighterA, p.fighterB].map((fighter) => (
                   <button
                     key={fighter}
                     onClick={() => setPick(p.fightId, fighter)}
+                    aria-pressed={p.pickedFighter === fighter}
                     className={`flex-1 min-w-0 px-2 py-1.5 rounded-md text-xs font-semibold transition-colors truncate ${
                       p.pickedFighter === fighter
                         ? 'bg-red-600 text-white'
-                        : 'text-slate-400 hover:text-white'
+                        : 'text-secondary hover:text-white'
                     }`}
                   >
                     {fighter}
                   </button>
                 ))}
               </div>
-              <p className="text-slate-600 text-xs mt-1.5 flex items-center gap-1.5 flex-wrap">
+              <p className="text-muted text-xs mt-1.5 flex items-center gap-1.5 flex-wrap">
                 <span className="text-[10px] font-bold text-violet-400 bg-violet-900/30 border border-violet-700/40 px-1.5 py-0.5 rounded-sm uppercase">
                   v2
                 </span>
@@ -2218,7 +2396,7 @@ function BuildParlayPanel({ legInputs, onConfirm, onCancel }) {
               {/* v1 disagreement note removed 2026-07-22 per v2-only betting
                   flow -- restore by re-adding:
                   {p.hasV1 && p.v1Winner && p.v1Winner !== p.v2DefaultFighter && (
-                    <p className="text-slate-600 text-xs mt-1">v1 favors {p.v1Winner}.</p>
+                    <p className="text-muted text-xs mt-1">v1 favors {p.v1Winner}.</p>
                   )}
                   hasV1/v1Winner stay computed in modelPickByEntryId -- only
                   this rendered note is gone. */}
@@ -2228,8 +2406,9 @@ function BuildParlayPanel({ legInputs, onConfirm, onCancel }) {
 
         <div className="grid grid-cols-2 gap-4 mb-4">
           <div>
-            <label className={PROP_LABEL_CLS}>Combined Odds</label>
+            <label htmlFor={`${formId}-combined-odds`} className={PROP_LABEL_CLS}>Combined Odds</label>
             <input
+              id={`${formId}-combined-odds`}
               type="text"
               value={combinedOdds}
               onChange={(e) => setCombinedOdds(e.target.value)}
@@ -2238,8 +2417,8 @@ function BuildParlayPanel({ legInputs, onConfirm, onCancel }) {
             />
           </div>
           <div>
-            <label className={PROP_LABEL_CLS}>Stake (u)</label>
-            <UnitsStakedInput value={stake} onCommit={setStake} />
+            <label htmlFor={`${formId}-stake`} className={PROP_LABEL_CLS}>Stake (u)</label>
+            <UnitsStakedInput id={`${formId}-stake`} value={stake} onCommit={setStake} />
           </div>
         </div>
 
@@ -2248,14 +2427,14 @@ function BuildParlayPanel({ legInputs, onConfirm, onCancel }) {
             onClick={handleConfirm}
             disabled={!canSubmit}
             className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
-              canSubmit ? 'bg-red-600 text-white hover:bg-red-500' : 'bg-slate-800 text-slate-600 cursor-not-allowed'
+              canSubmit ? 'bg-red-600 text-white hover:bg-red-500' : 'bg-slate-800 text-muted cursor-not-allowed'
             }`}
           >
             Confirm Parlay
           </button>
           <button
             onClick={onCancel}
-            className="px-4 py-2 rounded-lg text-sm font-semibold text-slate-500 hover:text-white transition-colors"
+            className="px-4 py-2 rounded-lg text-sm font-semibold text-muted hover:text-white transition-colors"
           >
             Cancel
           </button>
@@ -2447,8 +2626,8 @@ function UpcomingEventTab({
     <div className="max-w-5xl mx-auto px-5 py-8">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-white font-black text-xl mb-1">Upcoming</h2>
-          <p className="text-slate-400 text-sm">
+          <h1 className="text-white font-black text-xl mb-1">Upcoming</h1>
+          <p className="text-secondary text-sm">
             Save matchups from the Simulator to track pending picks.
           </p>
         </div>
@@ -2492,7 +2671,7 @@ function UpcomingEventTab({
         )}
       </div>
 
-      <div className="flex items-center flex-wrap gap-1 bg-slate-800 rounded-lg p-1 mb-4 w-fit">
+      <div role="tablist" aria-label="Upcoming sections" className="flex items-center flex-wrap gap-1 bg-slate-800 rounded-lg p-1 mb-4 w-fit">
         {[
           { id: 'fights', label: 'Upcoming Fights' },
           { id: 'props', label: 'Props' },
@@ -2500,11 +2679,13 @@ function UpcomingEventTab({
         ].map(({ id, label }) => (
           <button
             key={id}
+            role="tab"
+            aria-selected={subTab === id}
             onClick={() => setSubTab(id)}
             className={`inline-flex items-center justify-center min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0 whitespace-nowrap px-3 py-1.5 rounded-md text-xs font-semibold transition-colors ${
               subTab === id
                 ? 'bg-red-600 text-white'
-                : 'text-slate-400 hover:text-white'
+                : 'text-secondary hover:text-white'
             }`}
           >
             {label}
@@ -2514,14 +2695,14 @@ function UpcomingEventTab({
 
       {subTab === 'fights' && selectedLegIds.size > 0 && (
         <div className="hidden sm:flex items-center justify-between bg-slate-900 border border-red-800/60 rounded-xl px-4 py-3 mb-4">
-          <p className="text-slate-400 text-sm">
+          <p className="text-secondary text-sm">
             {selectedLegIds.size} leg{selectedLegIds.size === 1 ? '' : 's'} selected
             {lockedEventName ? ` · ${lockedEventName}` : ''}
           </p>
           <div className="flex items-center gap-3">
             <button
               onClick={clearLegSelection}
-              className="text-slate-500 hover:text-white text-xs font-semibold"
+              className="inline-flex items-center justify-center min-w-6 min-h-6 text-muted hover:text-white text-xs font-semibold"
             >
               Clear
             </button>
@@ -2538,11 +2719,11 @@ function UpcomingEventTab({
       )}
 
       {subTab === 'fights' && (entries.length === 0 ? (
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-8 text-center text-slate-600">
+        <div className="bg-slate-900 border border-slate-800 rounded-xl p-8 text-center text-muted">
           <Zap size={36} className="mx-auto mb-3 opacity-20" />
           <p className="text-sm">No upcoming picks saved.</p>
           <p className="text-xs mt-1">
-            Run a matchup in the Simulator and click <span className="text-slate-400 font-semibold">Save to Upcoming</span>.
+            Run a matchup in the Simulator and click <span className="text-secondary font-semibold">Save to Upcoming</span>.
           </p>
         </div>
       ) : (
@@ -2561,24 +2742,30 @@ function UpcomingEventTab({
                 {/* Header */}
                 <div className="flex items-start justify-between gap-4 mb-4">
                   <div className="flex items-start gap-3">
-                    <input
-                      type="checkbox"
-                      checked={isSelected}
-                      disabled={isOtherEvent && !isSelected}
-                      onChange={() => toggleLeg(entry.id)}
-                      title={isOtherEvent && !isSelected ? `Parlay locked to ${lockedEventName}` : 'Select for parlay'}
-                      className="hidden sm:block mt-1.5 w-4 h-4 accent-red-600 cursor-pointer disabled:cursor-not-allowed disabled:opacity-30"
-                    />
+                    <label
+                      title={isOtherEvent && !isSelected ? `Parlay locked to ${lockedEventName}` : `Select ${entry.fighterA} versus ${entry.fighterB} for parlay`}
+                      className="hidden sm:flex mt-0.5 w-6 h-6 items-center justify-center cursor-pointer has-disabled:cursor-not-allowed"
+                    >
+                      <input
+                        id={`parlay-selection-${entry.id}`}
+                        type="checkbox"
+                        checked={isSelected}
+                        disabled={isOtherEvent && !isSelected}
+                        onChange={() => toggleLeg(entry.id)}
+                        aria-label={`Select ${entry.fighterA} versus ${entry.fighterB} for parlay`}
+                        className="w-4 h-4 accent-red-600 cursor-pointer disabled:cursor-not-allowed disabled:opacity-30"
+                      />
+                    </label>
                     <div>
                       <div className="flex items-center gap-2 flex-wrap">
                         <h3 className="text-white font-black text-lg">
                           {entry.fighterA} vs. {entry.fighterB}
                         </h3>
-                        <span className="text-xs font-bold px-2 py-0.5 rounded-full border bg-slate-800 text-slate-400 border-slate-700">
+                        <span className="text-xs font-bold px-2 py-0.5 rounded-full border bg-slate-800 text-secondary border-slate-700">
                           Pending
                         </span>
                       </div>
-                      <p className="text-slate-500 text-xs mt-1">
+                      <p className="text-muted text-xs mt-1">
                         {entryDisplayDivision(entry)}
                         {entryContextSuffix(entry)}
                         {entry.eventName ? ` · ${entry.eventName}` : ''}
@@ -2592,7 +2779,7 @@ function UpcomingEventTab({
                       className={`px-3 py-1.5 rounded-lg border text-xs font-semibold transition-colors ${
                         propFormFor === entry.id
                           ? 'border-red-600 text-red-400'
-                          : 'border-slate-700 text-slate-500 hover:text-white hover:border-slate-600'
+                          : 'border-slate-700 text-muted hover:text-white hover:border-slate-600'
                       }`}
                     >
                       {propFormFor === entry.id ? 'Cancel Prop' : '+ Prop'}
@@ -2605,7 +2792,7 @@ function UpcomingEventTab({
                           onDelete(entry.id);
                         }
                       }}
-                      className="px-3 py-1.5 rounded-lg border border-slate-700 text-slate-500 text-xs font-semibold hover:text-white hover:border-slate-600 transition-colors"
+                      className="px-3 py-1.5 rounded-lg border border-slate-700 text-muted text-xs font-semibold hover:text-white hover:border-slate-600 transition-colors"
                     >
                       Delete
                     </button>
@@ -2616,7 +2803,7 @@ function UpcomingEventTab({
                 <div className="bg-slate-800/40 rounded-lg p-4 mb-3 flex items-baseline justify-between gap-3">
                   <div>
                     <div className="flex items-center gap-2">
-                      <p className="text-slate-500 text-xs uppercase tracking-wider">
+                      <p className="text-muted text-xs uppercase tracking-wider">
                         Model Pick
                       </p>
                       {hasV2 && modelToggle === 'v2' && (
@@ -2631,7 +2818,7 @@ function UpcomingEventTab({
                     <p className="text-emerald-400 font-black text-lg">
                       {(winProb * 100).toFixed(1)}%
                     </p>
-                    <p className="text-slate-500 text-xs mt-0.5">
+                    <p className="text-muted text-xs mt-0.5">
                       win prob{fairLine ? ` · ${fairLine}` : ''}
                     </p>
                   </div>
@@ -2640,7 +2827,7 @@ function UpcomingEventTab({
                 {/* Bet Rec + Market Odds */}
                 <div className="grid grid-cols-2 gap-3 mb-4">
                   <div className="bg-slate-800/40 rounded-lg p-3">
-                    <p className="text-slate-500 text-xs uppercase tracking-wider">Bet Rec</p>
+                    <p className="text-muted text-xs uppercase tracking-wider">Bet Rec</p>
                     {actionable ? (
                       <>
                         <div className="mt-2">
@@ -2659,15 +2846,15 @@ function UpcomingEventTab({
                         <p className="text-white font-bold text-sm mt-3">{betFighter || 'No bet side'}</p>
                       </>
                     ) : (
-                      <p className="text-slate-600 font-bold text-sm mt-2">—</p>
+                      <p className="text-muted font-bold text-sm mt-2">No Bet</p>
                     )}
                   </div>
                   <div className="bg-slate-800/40 rounded-lg p-3">
-                    <p className="text-slate-500 text-xs">Market odds</p>
+                    <p className="text-muted text-xs">Market odds</p>
                     <p className="text-white font-bold text-sm mt-1">
                       {effectiveMarketOdds || '—'}
                     </p>
-                    <p className="text-slate-600 text-xs mt-1">
+                    <p className="text-muted text-xs mt-1">
                       {pickEdge != null
                         ? `${pickEdge > 0 ? '+' : ''}${(pickEdge * 100).toFixed(1)}% edge`
                         : 'No saved market edge'}
@@ -2678,15 +2865,17 @@ function UpcomingEventTab({
                 {/* Actual Winner + Units Staked */}
                 <div className="hidden sm:flex border-t border-slate-800 pt-3 items-center justify-between gap-3 flex-wrap">
                   <div className="flex items-center gap-3">
-                    <span className="text-slate-500 text-xs font-semibold uppercase tracking-wider">
+                    <label htmlFor={`upcoming-winner-${entry.id}`} className="text-muted text-xs font-semibold uppercase tracking-wider">
                       Actual Winner
-                    </span>
+                    </label>
                     <select
+                      id={`upcoming-winner-${entry.id}`}
+                      aria-label={`Actual winner for ${entry.fighterA} versus ${entry.fighterB}`}
                       value=""
                       onChange={(e) => {
                         if (e.target.value) onGrade(entry.id, e.target.value);
                       }}
-                      className="bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-1.5 focus:outline-hidden focus:border-red-500 cursor-pointer"
+                      className="bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-1.5 focus:border-red-500 cursor-pointer"
                     >
                       <option value="">Pending…</option>
                       <option value={entry.fighterA}>{entry.fighterA}</option>
@@ -2695,10 +2884,12 @@ function UpcomingEventTab({
                     </select>
                   </div>
                   <div className="flex items-center gap-3">
-                    <span className="text-slate-500 text-xs font-semibold uppercase tracking-wider">
+                    <label htmlFor={`upcoming-units-${entry.id}`} className="text-muted text-xs font-semibold uppercase tracking-wider">
                       Units Staked
-                    </span>
+                    </label>
                     <UnitsStakedInput
+                      id={`upcoming-units-${entry.id}`}
+                      ariaLabel={`Units staked on ${entry.fighterA} versus ${entry.fighterB}`}
                       value={entry.unitsWagered != null ? entry.unitsWagered : 1}
                       onCommit={(n) => onUpdateEntry(entry.id, { unitsWagered: n })}
                     />
@@ -2780,7 +2971,11 @@ function Header({ view }) {
     { id: 'info', label: 'Info', Icon: Info },
   ];
   return (
-    <div className="bg-slate-900 border-b border-slate-800 px-5 py-3 flex items-center justify-between">
+    <>
+    <a href="#main-content" className="sr-only focus:not-sr-only fixed top-2 left-2 z-[100] rounded-lg bg-white px-4 py-2 font-bold text-slate-950">
+      Skip to main content
+    </a>
+    <header className="bg-slate-900 border-b border-slate-800 px-5 py-3 flex items-center justify-between">
       <div className="flex items-center gap-3">
         <div className="w-9 h-9 bg-red-600 rounded-lg flex items-center justify-center shadow-lg shadow-red-900/40">
           <span className="text-white font-black text-xs tracking-tight">
@@ -2788,15 +2983,15 @@ function Header({ view }) {
           </span>
         </div>
         <div>
-          <h1 className="text-white font-black text-base tracking-tight leading-none">
+          <p className="text-white font-black text-base tracking-tight leading-none">
             FightMetrics
-          </h1>
-          <p className="hidden sm:block text-slate-500 text-xs mt-0.5">
+          </p>
+          <p className="hidden sm:block text-muted text-xs mt-0.5">
             Fight Prediction Engine · {FIGHTERS.length} fighters · v7
           </p>
         </div>
       </div>
-      <nav className="hidden sm:flex gap-1 overflow-x-auto min-w-0">
+      <nav aria-label="Primary" className="hidden sm:flex gap-1 overflow-x-auto min-w-0">
         {tabs.map(({ id, label, Icon }) => (
           <NavLink
             key={id}
@@ -2805,7 +3000,7 @@ function Header({ view }) {
             className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
               view === id
                 ? 'bg-red-600 text-white shadow-lg shadow-red-900/30'
-                : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                : 'text-secondary hover:text-white hover:bg-slate-800'
             }`}
           >
             <Icon size={14} />
@@ -2813,7 +3008,8 @@ function Header({ view }) {
           </NavLink>
         ))}
       </nav>
-    </div>
+    </header>
+    </>
   );
 }
 
@@ -2881,21 +3077,23 @@ function BottomNav({ view }) {
   return (
     <>
       {moreOpen && (
-        <div
+        <button
+          type="button"
+          aria-label="Close More menu"
           className="sm:hidden fixed inset-0 bg-black/60 z-40"
           onClick={() => setMoreOpen(false)}
         />
       )}
       {moreOpen && (
-        <div className="sm:hidden fixed inset-x-0 bottom-16 z-50 bg-slate-900 border-t border-x border-slate-800 rounded-t-xl overflow-hidden">
+        <nav id="mobile-more-menu" aria-label="More destinations" className="sm:hidden fixed inset-x-0 bottom-16 z-50 bg-slate-900 border-t border-x border-slate-800 rounded-t-xl overflow-hidden">
           <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800">
-            <span className="text-slate-400 text-xs font-black uppercase tracking-widest">
+            <span className="text-secondary text-xs font-black uppercase tracking-widest">
               More
             </span>
             <button
               onClick={() => setMoreOpen(false)}
               aria-label="Close"
-              className="min-w-[44px] min-h-[44px] flex items-center justify-center text-slate-500 hover:text-white"
+              className="min-w-[44px] min-h-[44px] flex items-center justify-center text-muted hover:text-white"
             >
               <X size={18} />
             </button>
@@ -2917,9 +3115,10 @@ function BottomNav({ view }) {
               {label}
             </NavLink>
           ))}
-        </div>
+        </nav>
       )}
       <nav
+        aria-label="Mobile primary"
         className="sm:hidden fixed bottom-0 inset-x-0 z-40 bg-slate-900 border-t border-slate-800 flex pb-[env(safe-area-inset-bottom)]"
         style={{ height: 'calc(64px + env(safe-area-inset-bottom))' }}
       >
@@ -2929,7 +3128,7 @@ function BottomNav({ view }) {
             to={pathForView(id)}
             end
             className={`flex-1 min-w-[44px] min-h-[44px] flex flex-col items-center justify-center gap-0.5 text-[11px] font-semibold transition-colors ${
-              view === id ? 'text-red-400' : 'text-slate-500 hover:text-slate-300'
+              view === id ? 'text-red-400' : 'text-muted hover:text-slate-300'
             }`}
           >
             <Icon size={20} />
@@ -2938,8 +3137,10 @@ function BottomNav({ view }) {
         ))}
         <button
           onClick={() => setMoreOpen((o) => !o)}
+          aria-expanded={moreOpen}
+          aria-controls="mobile-more-menu"
           className={`flex-1 min-w-[44px] min-h-[44px] flex flex-col items-center justify-center gap-0.5 text-[11px] font-semibold transition-colors ${
-            moreOpen || moreActive ? 'text-red-400' : 'text-slate-500 hover:text-slate-300'
+            moreOpen || moreActive ? 'text-red-400' : 'text-muted hover:text-slate-300'
           }`}
         >
           <MoreHorizontal size={20} />
@@ -2955,13 +3156,14 @@ function Filters({ wc, setWC, minMin, setMinMin, count }) {
     <div className="bg-slate-900/80 border-b border-slate-800 px-5 py-3">
       <div className="flex flex-wrap items-end gap-6">
         <div className="flex flex-col gap-1">
-          <label className="text-slate-500 text-xs font-semibold uppercase tracking-wider flex items-center gap-1">
+          <label htmlFor="explore-division" className="text-muted text-xs font-semibold uppercase tracking-wider flex items-center gap-1">
             <Filter size={11} /> Division
           </label>
           <select
+            id="explore-division"
             value={wc}
             onChange={(e) => setWC(e.target.value)}
-            className="bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-1.5 min-h-[44px] sm:min-h-0 focus:outline-hidden focus:border-red-500 cursor-pointer min-w-40"
+            className="bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-1.5 min-h-[44px] sm:min-h-0 focus:border-red-500 cursor-pointer min-w-40"
           >
             {WEIGHT_CLASSES.map((w) => (
               <option key={w}>{w}</option>
@@ -2971,7 +3173,7 @@ function Filters({ wc, setWC, minMin, setMinMin, count }) {
 
         <div className="flex flex-col gap-1 min-w-48">
           <div className="flex items-center justify-between">
-            <label className="text-slate-500 text-xs font-semibold uppercase tracking-wider">
+            <label htmlFor="explore-min-minutes" className="text-muted text-xs font-semibold uppercase tracking-wider">
               Min Minutes Fought
             </label>
             <span className="text-red-400 text-xs font-mono font-bold">
@@ -2979,32 +3181,35 @@ function Filters({ wc, setWC, minMin, setMinMin, count }) {
             </span>
           </div>
           <input
+            id="explore-min-minutes"
             type="range"
             min={0}
             max={100}
             step={5}
             value={minMin}
             onChange={(e) => setMinMin(+e.target.value)}
-            className="w-full accent-red-500"
+            aria-valuetext={`${minMin} minutes`}
+            aria-describedby="explore-min-minutes-help"
+            className="w-full min-h-6 accent-red-500"
           />
-          <p className="text-slate-600 text-xs">
+          <p id="explore-min-minutes-help" className="text-muted text-xs">
             Filter out fighters with very few fight minutes
           </p>
         </div>
 
         <div className="flex flex-col gap-1">
-          <label className="text-slate-500 text-xs font-semibold uppercase tracking-wider">
+          <span className="text-muted text-xs font-semibold uppercase tracking-wider">
             Prospects
-          </label>
+          </span>
           <div className="text-sm text-slate-300">
             Pre-debut signees always shown
           </div>
-          <p className="text-slate-600 text-xs">Flagged <span className="text-amber-400 font-bold">PRE-UFC</span> in tables</p>
+          <p className="text-muted text-xs">Flagged <span className="text-amber-400 font-bold">PRE-UFC</span> in tables</p>
         </div>
 
         <div className="ml-auto flex flex-col items-end justify-end pb-1">
           <span className="text-white font-black text-xl">{count}</span>
-          <span className="text-slate-500 text-xs">fighters shown</span>
+          <span className="text-muted text-xs">fighters shown</span>
         </div>
       </div>
     </div>
@@ -3012,26 +3217,27 @@ function Filters({ wc, setWC, minMin, setMinMin, count }) {
 }
 
 function CredBadge({ cred }) {
-  const color =
+  const tier =
     cred >= 80
-      ? 'bg-emerald-900/40 text-emerald-400 border-emerald-800'
+      ? { label: 'High', color: 'bg-emerald-900/40 text-emerald-400 border-emerald-800' }
       : cred >= 60
-      ? 'bg-yellow-900/40 text-yellow-400 border-yellow-800'
+      ? { label: 'Moderate', color: 'bg-yellow-900/40 text-yellow-400 border-yellow-800' }
       : cred >= 40
-      ? 'bg-orange-900/40 text-orange-400 border-orange-800'
-      : 'bg-red-900/40 text-red-400 border-red-800';
+      ? { label: 'Low', color: 'bg-orange-900/40 text-orange-400 border-orange-800' }
+      : { label: 'Very low', color: 'bg-red-900/40 text-red-400 border-red-800' };
   return (
     <span
-      className={`inline-flex items-center text-xs font-bold px-2 py-0.5 rounded-full border ${color}`}
+      aria-label={`${tier.label} credibility, ${cred.toFixed(0)} percent`}
+      className={`inline-flex items-center text-xs font-bold px-2 py-0.5 rounded-full border ${tier.color}`}
     >
-      {cred.toFixed(0)}%
+      {tier.label} · {cred.toFixed(0)}%
     </span>
   );
 }
 
 function FormDots({ form }) {
   if (!form || !form.length)
-    return <span className="text-slate-600 text-xs">—</span>;
+    return <span className="text-muted text-xs">—</span>;
   return (
     <div className="flex items-center gap-0.5">
       {form.map((r, i) => (
@@ -3039,9 +3245,9 @@ function FormDots({ form }) {
           key={i}
           className={`w-4 h-4 rounded-full text-xs flex items-center justify-center font-black ${
             r === 'W'
-              ? 'bg-emerald-500 text-white'
+              ? 'bg-emerald-700 text-white'
               : r === 'L'
-              ? 'bg-red-500 text-white'
+              ? 'bg-red-700 text-white'
               : 'bg-slate-600 text-slate-300'
           }`}
         >
@@ -3184,7 +3390,7 @@ function DataTable({ fighters }) {
     {
       short: 'CRD',
       name: 'Credibility Score (raw)',
-      color: 'text-slate-400',
+      color: 'text-secondary',
       desc: 'Raw sample size score before being converted to a percentage. Higher = more fights logged.',
     },
   ];
@@ -3195,7 +3401,7 @@ function DataTable({ fighters }) {
         <div className="flex items-start gap-3">
           <Info size={14} className="text-blue-400 mt-0.5 shrink-0" />
           <div className="flex-1">
-            <p className="text-slate-400 text-xs leading-relaxed">
+            <p className="text-secondary text-xs leading-relaxed">
               <span className="text-white font-semibold">
                 Bayesian Credibility Model
               </span>{' '}
@@ -3209,17 +3415,19 @@ function DataTable({ fighters }) {
           </div>
           <button
             onClick={() => setShowKey((k) => !k)}
+            aria-expanded={showKey}
+            aria-controls="explore-column-key"
             className={`inline-flex items-center justify-center min-h-[44px] sm:min-h-0 shrink-0 text-xs px-3 py-1 rounded-lg border font-semibold transition-all ${
               showKey
                 ? 'bg-red-600 border-red-700 text-white'
-                : 'bg-slate-800 border-slate-700 text-slate-400 hover:text-white hover:border-slate-600'
+                : 'bg-slate-800 border-slate-700 text-secondary hover:text-white hover:border-slate-600'
             }`}
           >
             {showKey ? 'Hide Key' : '📖 Column Key'}
           </button>
         </div>
         {showKey && (
-          <div className="mt-4 pt-4 border-t border-slate-800 grid grid-cols-2 gap-x-8 gap-y-3">
+          <div id="explore-column-key" className="mt-4 pt-4 border-t border-slate-800 grid grid-cols-2 gap-x-8 gap-y-3">
             {COL_KEY.map(({ short, name, color, desc }) => (
               <div key={short} className="flex gap-3 items-start">
                 <span
@@ -3229,7 +3437,7 @@ function DataTable({ fighters }) {
                 </span>
                 <div>
                   <p className="text-white text-xs font-semibold">{name}</p>
-                  <p className="text-slate-500 text-xs leading-relaxed mt-0.5">
+                  <p className="text-muted text-xs leading-relaxed mt-0.5">
                     {desc}
                   </p>
                 </div>
@@ -3240,11 +3448,13 @@ function DataTable({ fighters }) {
       </div>
       <div className="flex items-center justify-between mb-3 flex-wrap gap-3">
         <div className="relative">
+          <label htmlFor="explore-fighter-search" className="sr-only">Search fighters</label>
           <Search
             size={13}
-            className="absolute left-3 top-2.5 text-slate-500"
+            className="absolute left-3 top-2.5 text-muted"
           />
           <input
+            id="explore-fighter-search"
             type="text"
             placeholder="Search fighter…"
             value={search}
@@ -3252,10 +3462,10 @@ function DataTable({ fighters }) {
               setSearch(e.target.value);
               setPage(1);
             }}
-            className="bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg pl-9 pr-4 py-2 w-64 min-h-[44px] sm:min-h-0 focus:outline-hidden focus:border-red-500"
+            className="bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg pl-9 pr-4 py-2 w-64 min-h-[44px] sm:min-h-0 focus:border-red-500"
           />
         </div>
-        <div className="flex items-center gap-3 text-xs text-slate-500 flex-wrap">
+        <div className="flex items-center gap-3 text-xs text-muted flex-wrap">
           <span>
             <span className="text-slate-200 font-mono">{displayed.length}</span>{' '}
             results
@@ -3269,6 +3479,11 @@ function DataTable({ fighters }) {
             ].map(([lbl, tgt], i) => (
               <button
                 key={i}
+                aria-label={
+                  lbl === '«' ? 'First page' :
+                  lbl === '‹' ? 'Previous page' :
+                  lbl === '›' ? 'Next page' : 'Last page'
+                }
                 onClick={() => setPage(Math.max(1, Math.min(totalPages, tgt)))}
                 disabled={
                   ((lbl === '«' || lbl === '‹') && safePage === 1) ||
@@ -3279,18 +3494,18 @@ function DataTable({ fighters }) {
                 {lbl}
               </button>
             ))}
-            <span className="px-2 py-1 text-slate-500">
+            <span className="px-2 py-1 text-muted">
               {safePage}/{totalPages}
             </span>
           </div>
         </div>
       </div>
       <div className="bg-slate-900 rounded-xl border border-slate-800 overflow-hidden">
-        <div className="overflow-auto" style={{ maxHeight: '64vh' }}>
+        <div className="overflow-auto contained-table-scroll" style={{ maxHeight: '64vh' }}>
           <table className="w-full text-xs border-collapse">
-            <thead className="sticky top-0 z-10 bg-slate-800">
+            <thead className="sm:sticky sm:top-0 z-10 bg-slate-800">
               <tr className="border-b border-slate-700">
-                <th colSpan={5} className="px-3 py-1" />
+                <th colSpan={5} aria-hidden="true" className="px-3 py-1" />
                 {(() => {
                   const groups = [];
                   TABLE_COLS.forEach(({ group }) => {
@@ -3307,7 +3522,8 @@ function DataTable({ fighters }) {
                     <th
                       key={label}
                       colSpan={span}
-                      className="px-3 py-1 text-center text-slate-500 text-xs font-semibold uppercase tracking-wider border-l border-slate-700"
+                      scope="colgroup"
+                      className="px-3 py-1 text-center text-muted text-xs font-semibold uppercase tracking-wider border-l border-slate-700"
                     >
                       {label}
                     </th>
@@ -3315,13 +3531,13 @@ function DataTable({ fighters }) {
                 })()}
               </tr>
               <tr>
-                <th className="text-left px-3 py-3 text-slate-300 font-semibold sticky left-0 bg-slate-800 min-w-44">
+                <th scope="col" className="text-left px-3 py-3 text-slate-300 font-semibold sm:sticky sm:left-0 bg-slate-800 min-w-44">
                   Fighter
                 </th>
-                <th className="px-2 py-2 text-slate-500">DIV</th>
-                <th className="px-2 py-2 text-slate-500">REC</th>
-                <th className="px-2 py-2 text-slate-500">AGE</th>
-                <th className="px-3 py-2 text-slate-500 whitespace-nowrap">
+                <th scope="col" className="px-2 py-2 text-muted">DIV</th>
+                <th scope="col" className="px-2 py-2 text-muted">REC</th>
+                <th scope="col" className="px-2 py-2 text-muted">AGE</th>
+                <th scope="col" className="px-3 py-2 text-muted whitespace-nowrap">
                   FORM
                 </th>
                 {TABLE_COLS.map(({ key, short, tip, group }, i) => {
@@ -3330,16 +3546,21 @@ function DataTable({ fighters }) {
                   return (
                     <th
                       key={key}
-                      onClick={() => handleSort(key)}
-                      title={tip}
-                      className={`px-3 py-2 text-right cursor-pointer hover:text-red-400 transition-colors select-none font-medium whitespace-nowrap ${
-                        sort.col === key ? 'text-red-400' : 'text-slate-400'
+                      scope="col"
+                      aria-sort={sort.col === key ? (sort.dir === 'desc' ? 'descending' : 'ascending') : 'none'}
+                      className={`px-3 py-2 text-right select-none font-medium whitespace-nowrap ${
+                        sort.col === key ? 'text-red-400' : 'text-secondary'
                       } ${isGroupStart ? 'border-l border-slate-700' : ''}`}
                     >
-                      <div className="flex items-center justify-end gap-1">
+                      <button
+                        type="button"
+                        onClick={() => handleSort(key)}
+                        title={tip}
+                        className="w-full min-h-6 flex items-center justify-end gap-1 hover:text-red-400 transition-colors"
+                      >
                         <span className="font-mono text-xs">{short}</span>
                         <SortIcon col={key} />
-                      </div>
+                      </button>
                     </th>
                   );
                 })}
@@ -3353,9 +3574,9 @@ function DataTable({ fighters }) {
                     key={f.FIGHTER}
                     className="border-t border-slate-800/40 hover:bg-slate-800/30 transition-colors"
                   >
-                    <td className="px-3 py-2.5 font-semibold text-slate-100 sticky left-0 bg-slate-900 whitespace-nowrap">
+                    <td className="px-3 py-2.5 font-semibold text-slate-100 sm:sticky sm:left-0 bg-slate-900 whitespace-nowrap">
                       <div className="flex items-center gap-1.5">
-                        <span className="text-slate-600 font-mono text-xs w-5 shrink-0">
+                        <span className="text-muted font-mono text-xs w-5 shrink-0">
                           {ranks['ADJUSTED_RATING'][f.FIGHTER]}
                         </span>
                         {f.UFC_RANK && (
@@ -3363,7 +3584,7 @@ function DataTable({ fighters }) {
                             className={`text-xs font-black font-mono px-1.5 py-0.5 rounded border ${
                               isChampionRecord(f.UFC_RANK)
                                 ? 'bg-yellow-900/40 text-yellow-400 border-yellow-800'
-                                : 'bg-slate-800 text-slate-400 border-slate-700'
+                                : 'bg-slate-800 text-secondary border-slate-700'
                             }`}
                           >
                             {ufcRankLabel(f.UFC_RANK)}
@@ -3380,10 +3601,10 @@ function DataTable({ fighters }) {
                         {f.FIGHTER}
                       </div>
                     </td>
-                    <td className="px-2 py-2.5 text-slate-500 text-center text-xs whitespace-nowrap">
+                    <td className="px-2 py-2.5 text-muted text-center text-xs whitespace-nowrap">
                       {DIV_SHORT[f.WEIGHT_CLASS] || f.WEIGHT_CLASS}
                     </td>
-                    <td className="px-2 py-2.5 text-slate-500 font-mono text-xs">
+                    <td className="px-2 py-2.5 text-muted font-mono text-xs">
                       {f.RECORD}
                     </td>
                     <td
@@ -3392,7 +3613,7 @@ function DataTable({ fighters }) {
                           ? 'text-orange-400'
                           : f.AGE >= 35
                           ? 'text-yellow-400'
-                          : 'text-slate-400'
+                          : 'text-secondary'
                       }`}
                     >
                       {f.AGE || '—'}
@@ -3402,6 +3623,7 @@ function DataTable({ fighters }) {
                     </td>
                     {TABLE_COLS.map(({ key, signed, dec }) => {
                       const rank = ranks[key][f.FIGHTER];
+                      const rankStatus = rankBand(rank, fighters.length);
                       const val = f[key];
                       const isPct = [
                         'SIG_STR_ACC',
@@ -3431,8 +3653,10 @@ function DataTable({ fighters }) {
                             fighters.length
                           )} ${extra}`}
                         >
+                          <span aria-hidden="true" className="text-[9px] mr-1">{rankStatus.symbol}</span>
+                          <span className="sr-only">{rankStatus.label}. </span>
                           {display}{' '}
-                          <span className="text-slate-600 font-normal">
+                          <span className="text-muted font-normal">
                             ({rank})
                           </span>
                         </td>
@@ -3445,17 +3669,17 @@ function DataTable({ fighters }) {
           </table>
         </div>
       </div>
-      <div className="mt-2 flex items-center gap-4 text-xs text-slate-600 px-1 flex-wrap">
+      <div className="mt-2 flex items-center gap-4 text-xs text-muted px-1 flex-wrap">
         <span className="flex items-center gap-1.5">
-          <span className="w-2 h-2 rounded-full bg-emerald-400 inline-block" />
+          <span aria-hidden="true">▲▲</span>
           Top 5%
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="w-2 h-2 rounded-full bg-slate-400 inline-block" />
+          <span aria-hidden="true">·</span>
           Middle
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="w-2 h-2 rounded-full bg-red-400 inline-block" />
+          <span aria-hidden="true">▼</span>
           Bottom 30%
         </span>
         <span className="text-orange-400 flex items-center gap-1">
@@ -3476,7 +3700,12 @@ function FighterSearch({
   onChange,
   placeholder,
   accent = 'red',
+  id,
+  ariaLabel,
 }) {
+  const generatedId = useId();
+  const controlId = id || generatedId;
+  const listId = `${controlId}-options`;
   const [search, setSearch] = useState('');
   const [open, setOpen] = useState(false);
   const opts = useMemo(() => {
@@ -3494,9 +3723,15 @@ function FighterSearch({
     <div className="relative">
       <Search
         size={13}
-        className="absolute left-3 top-2.5 text-slate-500 z-10"
+        className="absolute left-3 top-2.5 text-muted z-10"
       />
       <input
+        id={controlId}
+        aria-label={ariaLabel}
+        role="combobox"
+        aria-autocomplete="list"
+        aria-expanded={open && opts.length > 0}
+        aria-controls={listId}
         type="text"
         placeholder={placeholder}
         value={value ? value.FIGHTER : search}
@@ -3506,13 +3741,18 @@ function FighterSearch({
           setOpen(true);
         }}
         onFocus={() => setOpen(true)}
-        className={`bg-slate-800 border ${bdr} text-slate-200 text-sm rounded-lg pl-9 pr-4 py-2 w-full min-h-[44px] sm:min-h-0 focus:outline-hidden transition-colors`}
+        onKeyDown={(e) => {
+          if (e.key === 'Escape') setOpen(false);
+        }}
+        className={`bg-slate-800 border ${bdr} text-slate-200 text-sm rounded-lg pl-9 pr-4 py-2 w-full min-h-[44px] sm:min-h-0 transition-colors`}
       />
       {open && opts.length > 0 && (
-        <div className="absolute top-full left-0 right-0 mt-1 bg-slate-800 border border-slate-600 rounded-xl z-30 shadow-2xl overflow-hidden">
+        <div id={listId} role="listbox" aria-label="Matching fighters" className="absolute top-full left-0 right-0 mt-1 bg-slate-800 border border-slate-600 rounded-xl z-30 shadow-2xl overflow-hidden">
           {opts.map((f) => (
             <button
               key={f.FIGHTER}
+              role="option"
+              aria-selected={value?.FIGHTER === f.FIGHTER}
               onClick={() => {
                 onChange(f);
                 setSearch('');
@@ -3528,7 +3768,7 @@ function FighterSearch({
                 )}
                 {f.FIGHTER}
               </span>
-              <span className="text-slate-500 text-xs flex items-center gap-2">
+              <span className="text-muted text-xs flex items-center gap-2">
                 <span>{DIV_SHORT[f.WEIGHT_CLASS]}</span>
                 <span className="text-red-400 font-bold">
                   {(f.ADJUSTED_RATING ?? 0).toFixed(1)}
@@ -3581,18 +3821,18 @@ function FightCard({ fight, index }) {
             <p className="text-slate-100 font-bold text-sm truncate">
               vs. {fight.op}
             </p>
-            <p className="text-slate-500 text-xs mt-0.5">
+            <p className="text-muted text-xs mt-0.5">
               {fight.dt} · {fight.wc}
               {fight.tb ? ' · Title Bout' : ''}
             </p>
-            <p className="text-slate-400 text-xs mt-1">{fight.ev}</p>
+            <p className="text-secondary text-xs mt-1">{fight.ev}</p>
           </div>
         </div>
         <div className="text-right shrink-0">
           <p className={`text-xs font-bold ${methodColor(fight.me || '')}`}>
             {fight.me || 'Result'}
           </p>
-          <p className="text-slate-500 text-xs mt-0.5">
+          <p className="text-muted text-xs mt-0.5">
             {fight.rn ? `R${fight.rn}` : '—'}
             {fight.ti ? ` · ${fight.ti}` : ''}
           </p>
@@ -3852,6 +4092,8 @@ const FighterPanel = ({ f, setF, color, ph, allFighters, fA, fB, eventDate }) =>
   return (
     <div>
       <FighterSearch
+        id={`simulator-fighter-${color}`}
+        ariaLabel={color === 'blue' ? 'Search for Fighter A' : 'Search for Fighter B'}
         allFighters={allFighters}
         value={f}
         onChange={setF}
@@ -3872,7 +4114,7 @@ const FighterPanel = ({ f, setF, color, ph, allFighters, fA, fB, eventDate }) =>
               <p className="text-white font-black text-base leading-snug">
                 {f.FIGHTER}
               </p>
-              <p className="text-slate-500 text-xs mt-0.5">
+              <p className="text-muted text-xs mt-0.5">
                 {f.WEIGHT_CLASS} · {f.RECORD}
               </p>
             </div>
@@ -3880,8 +4122,9 @@ const FighterPanel = ({ f, setF, color, ph, allFighters, fA, fB, eventDate }) =>
               type="button"
               onClick={() => setShowFull((o) => !o)}
               aria-expanded={showFull}
+              aria-controls={`simulator-profile-${color}`}
               aria-label={`${showFull ? 'Hide' : 'Show'} full profile for ${f.FIGHTER}`}
-              className="shrink-0 text-slate-500 hover:text-slate-300 text-xs font-semibold"
+              className="shrink-0 text-muted hover:text-slate-300 text-xs font-semibold"
             >
               {showFull ? 'Full Profile ▲' : 'Full Profile ▾'}
             </button>
@@ -3902,13 +4145,13 @@ const FighterPanel = ({ f, setF, color, ph, allFighters, fA, fB, eventDate }) =>
               ],
             ].map(([k, v]) => (
               <div key={k} className="text-center">
-                <p className="text-slate-500 text-xs">{k}</p>
+                <p className="text-muted text-xs">{k}</p>
                 <p className={`font-black text-base mt-0.5 ${tc}`}>{v}</p>
               </div>
             ))}
           </div>
           {showFull && (
-          <div className="mt-3 pt-3 border-t border-slate-700/50">
+          <div id={`simulator-profile-${color}`} className="mt-3 pt-3 border-t border-slate-700/50">
           {/* Secondary stats: Rank, Height, Stance */}
           <div className="grid grid-cols-3 gap-2 mb-3 pb-3 border-b border-slate-700/50">
             {[
@@ -3917,35 +4160,35 @@ const FighterPanel = ({ f, setF, color, ph, allFighters, fA, fB, eventDate }) =>
               ['Stance', f.STANCE || '—'],
             ].map(([k, v]) => (
               <div key={k} className="text-center">
-                <p className="text-slate-500 text-xs">{k}</p>
+                <p className="text-muted text-xs">{k}</p>
                 <p className="text-slate-300 font-semibold text-xs mt-0.5 truncate">{v}</p>
               </div>
             ))}
           </div>
           {/* Tertiary: dot-separated inline analytics */}
           <p className="text-xs mb-3">
-            <span className="text-slate-500">Base </span>
+            <span className="text-muted">Base </span>
             <span className={`font-semibold ${tc}`}>{(f.TOTAL_EFFICIENCY ?? 0).toFixed(1)}</span>
-            <span className="text-slate-600"> · </span>
-            <span className="text-slate-500">Qual </span>
+            <span className="text-muted"> · </span>
+            <span className="text-muted">Qual </span>
             <span className={`font-semibold ${tc}`}>
               {(f.QUALITY_ADJUSTMENT ?? 0) >= 0 ? '+' : ''}
               {(f.QUALITY_ADJUSTMENT ?? 0).toFixed(1)}
             </span>
-            <span className="text-slate-600"> · </span>
-            <span className="text-slate-500">Adj RTG </span>
+            <span className="text-muted"> · </span>
+            <span className="text-muted">Adj RTG </span>
             <span className={`font-semibold ${tc}`}>
               {pen > 0
                 ? `${(adjTE ?? 0).toFixed(1)} (-${(pen * 100).toFixed(0)}%)`
                 : (adjTE ?? 0).toFixed(1)}
             </span>
-            <span className="text-slate-600"> · </span>
-            <span className="text-slate-500">Cred </span>
+            <span className="text-muted"> · </span>
+            <span className="text-muted">Cred </span>
             <span className={`font-semibold ${tc}`}>{(f.CREDIBILITY ?? 0).toFixed(0)}%</span>
           </p>
           {form.length > 0 && (
             <div className="flex items-center gap-1.5 mb-3">
-              <span className="text-slate-600 text-xs">Form</span>
+              <span className="text-muted text-xs">Form</span>
               {form.map((r, i) => (
                 <span
                   key={i}
@@ -3962,7 +4205,7 @@ const FighterPanel = ({ f, setF, color, ph, allFighters, fA, fB, eventDate }) =>
           )}
           {f.FIGHT_HISTORY?.length > 0 && (
             <div className="mb-3">
-              <p className="text-slate-600 text-[10px] uppercase tracking-wider mb-1.5">Recent</p>
+              <p className="text-muted text-[10px] uppercase tracking-wider mb-1.5">Recent</p>
               {f.FIGHT_HISTORY.slice(0, 5).map((fight, i) => (
                 <div key={i} className="flex items-center gap-1.5 mb-1">
                   <span
@@ -3971,14 +4214,14 @@ const FighterPanel = ({ f, setF, color, ph, allFighters, fA, fB, eventDate }) =>
                         ? 'bg-emerald-900/50 text-emerald-400'
                         : fight.re === 'L'
                         ? 'bg-red-900/50 text-red-400'
-                        : 'bg-slate-800 text-slate-400'
+                        : 'bg-slate-800 text-secondary'
                     }`}
                   >
                     {fight.re}
                   </span>
                   <span className="text-xs text-slate-300 font-medium truncate">{fight.op}</span>
                   {fight.me && (
-                    <span className="text-[10px] text-slate-500 shrink-0">{fight.me}</span>
+                    <span className="text-[10px] text-muted shrink-0">{fight.me}</span>
                   )}
                 </div>
               ))}
@@ -3999,12 +4242,12 @@ const FighterPanel = ({ f, setF, color, ph, allFighters, fA, fB, eventDate }) =>
                   key={stat.key}
                   className="flex items-center justify-between gap-2"
                 >
-                  <span className="text-slate-600 text-xs truncate">
+                  <span className="text-muted text-xs truncate">
                     {stat.label}
                   </span>
                   <span
                     className={`font-mono text-xs font-semibold shrink-0 ${
-                      isBetter ? tc : 'text-slate-400'
+                      isBetter ? tc : 'text-secondary'
                     }`}
                   >
                     {fmtT(f, stat)}
@@ -4214,10 +4457,10 @@ function SimulatorContributionPanel({ fA, fB, result, modelToggle, eventDate }) 
   return (
     <div className="bg-slate-900 border border-slate-700 rounded-xl p-5">
       <div className="flex items-center justify-between mb-4">
-        <p className="text-slate-400 text-xs font-semibold uppercase tracking-widest">
+        <p className="text-secondary text-xs font-semibold uppercase tracking-widest">
           Contribution Breakdown
         </p>
-        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">
+        <span className="text-[10px] font-bold text-muted uppercase tracking-wide">
           {modelToggle === 'v2' ? 'v2 logistic' : 'v1 composite'}
         </span>
       </div>
@@ -4241,7 +4484,11 @@ function SimulatorContributionPanel({ fA, fB, result, modelToggle, eventDate }) 
           return (
             <div key={row.key} className="bg-slate-800/40 rounded-xl overflow-hidden">
               <RowWrapper
-                {...(hasFeatures ? { onClick: () => toggleExpanded(row.key) } : {})}
+                {...(hasFeatures ? {
+                  onClick: () => toggleExpanded(row.key),
+                  'aria-expanded': isOpen,
+                  'aria-controls': `simulator-domain-${row.key}`,
+                } : {})}
                 className="w-full text-left p-4"
               >
                 <div className="flex items-center justify-between gap-3 mb-2">
@@ -4249,13 +4496,13 @@ function SimulatorContributionPanel({ fA, fB, result, modelToggle, eventDate }) 
                     {row.icon} {row.label}
                   </span>
                   {hasFeatures && (
-                    <span className="text-slate-500 text-xs shrink-0">
+                    <span className="text-muted text-xs shrink-0">
                       {isOpen ? 'Hide ▲' : 'Details ▼'}
                     </span>
                   )}
                 </div>
                 {nearEmptyCopy ? (
-                  <p className="text-slate-500 text-xs leading-snug">{nearEmptyCopy}</p>
+                  <p className="text-muted text-xs leading-snug">{nearEmptyCopy}</p>
                 ) : (
                   <>
                     <div className="h-2 bg-slate-700 rounded-full overflow-hidden flex mb-2">
@@ -4268,11 +4515,11 @@ function SimulatorContributionPanel({ fA, fB, result, modelToggle, eventDate }) 
                     {headlineStats.length > 0 && (
                       <div className="flex flex-wrap gap-x-4 gap-y-0.5">
                         {headlineStats.map((stat) => (
-                          <p key={stat.label} className="text-slate-500 text-xs">
+                          <p key={stat.label} className="text-muted text-xs">
                             {stat.label}:{' '}
-                            <span className={favA ? 'text-blue-400' : 'text-slate-400'}>{stat.a}</span>
+                            <span className={favA ? 'text-blue-400' : 'text-secondary'}>{stat.a}</span>
                             {' / '}
-                            <span className={!favA ? 'text-red-400' : 'text-slate-400'}>{stat.b}</span>
+                            <span className={!favA ? 'text-red-400' : 'text-secondary'}>{stat.b}</span>
                           </p>
                         ))}
                       </div>
@@ -4281,7 +4528,7 @@ function SimulatorContributionPanel({ fA, fB, result, modelToggle, eventDate }) 
                 )}
               </RowWrapper>
               {isOpen && hasFeatures && (
-                <div className="border-t border-slate-700/50 px-4 pb-3 pt-2 space-y-1.5">
+                <div id={`simulator-domain-${row.key}`} className="border-t border-slate-700/50 px-4 pb-3 pt-2 space-y-1.5">
                   {row.features.map((f) => {
                     const rawA = f.aRawLabel ? fA[f.aRawLabel] : null;
                     const rawB = f.bRawLabel ? fB[f.bRawLabel] : null;
@@ -4291,17 +4538,17 @@ function SimulatorContributionPanel({ fA, fB, result, modelToggle, eventDate }) 
                       typeof rawB === 'number' && typeof f.bValue === 'number' && Math.abs(rawB - f.bValue) > 1e-9;
                     return (
                       <div key={f.label} className="flex items-center justify-between text-xs gap-2">
-                        <span className="text-slate-500 flex-1">{f.label}</span>
+                        <span className="text-muted flex-1">{f.label}</span>
                         {modelToggle === 'v1' ? (
-                          <span className="text-slate-400 font-mono">
+                          <span className="text-secondary font-mono">
                             {typeof f.aValue === 'number' ? f.aValue.toFixed(2) : f.aValue}
                             {adjustedDiffersA && typeof rawA === 'number' && (
-                              <span className="text-slate-600"> (raw {rawA.toFixed(2)})</span>
+                              <span className="text-muted"> (raw {rawA.toFixed(2)})</span>
                             )}
                             {' / '}
                             {typeof f.bValue === 'number' ? f.bValue.toFixed(2) : f.bValue}
                             {adjustedDiffersB && typeof rawB === 'number' && (
-                              <span className="text-slate-600"> (raw {rawB.toFixed(2)})</span>
+                              <span className="text-muted"> (raw {rawB.toFixed(2)})</span>
                             )}
                           </span>
                         ) : (
@@ -4313,7 +4560,7 @@ function SimulatorContributionPanel({ fA, fB, result, modelToggle, eventDate }) 
                           // left unrendered; this surfaces it as the v2 analog of
                           // v1's raw stat comparison, distinct from the model's
                           // internal contribution coefficient shown below.
-                          <span className="text-slate-400 font-mono">
+                          <span className="text-secondary font-mono">
                             {typeof f.featsV2Value === 'number'
                               ? `${f.featsV2Value > 0 ? '+' : ''}${f.featsV2Value.toFixed(2)} (A−B)`
                               : '—'}
@@ -4326,7 +4573,7 @@ function SimulatorContributionPanel({ fA, fB, result, modelToggle, eventDate }) 
                                 ? 'text-blue-400'
                                 : f.contribution < 0
                                 ? 'text-red-400'
-                                : 'text-slate-500'
+                                : 'text-muted'
                             }`}
                           >
                             {f.contribution > 0 ? '+' : ''}
@@ -4338,7 +4585,8 @@ function SimulatorContributionPanel({ fA, fB, result, modelToggle, eventDate }) 
                   })}
                   <button
                     onClick={() => toggleTechnical(row.key)}
-                    className="text-slate-600 hover:text-slate-400 text-[11px] pt-1 transition-colors"
+                    aria-pressed={isTechnicalOpen}
+                    className="text-muted hover:text-secondary text-[11px] pt-1 transition-colors"
                   >
                     {isTechnicalOpen ? 'Hide technical details' : 'Show technical details'}
                   </button>
@@ -4421,11 +4669,11 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
 
   return (
     <div className="max-w-5xl mx-auto px-5 py-8">
-      <div className="hidden sm:block mb-6">
-        <h2 className="text-white font-black text-xl mb-1">
+      <div className="mb-6">
+        <h1 className="text-white font-black text-xl mb-1">
           Matchup Simulator
-        </h2>
-        <p className="text-slate-400 text-sm">
+        </h1>
+        <p className="text-secondary text-sm">
           Multi-factor model · moneyline value detection · Kelly sizing
         </p>
       </div>
@@ -4460,7 +4708,7 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
             <p className="text-white text-xs font-black uppercase tracking-widest mb-1">
               Enter Market Lines
             </p>
-            <p className="text-slate-500 text-xs mb-4">
+            <p className="text-muted text-xs mb-4">
               Input current sportsbook moneyline odds to unlock value analysis
             </p>
             <div className="grid grid-cols-2 gap-4 mb-4">
@@ -4470,6 +4718,7 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
               ].map(({ f, val, set, color, ph }) => (
                 <div key={color}>
                   <label
+                    htmlFor={`simulator-odds-${color}`}
                     className={`text-xs font-bold mb-1.5 block ${
                       color === 'blue' ? 'text-blue-400' : 'text-red-400'
                     }`}
@@ -4478,6 +4727,9 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                   </label>
                   <div className="relative">
                     <input
+                      id={`simulator-odds-${color}`}
+                      aria-label={`Moneyline odds for ${f.FIGHTER}`}
+                      aria-describedby={oddsA && oddsB && !market ? 'simulator-odds-error' : undefined}
                       type="text"
                       value={val}
                       onChange={(e) => {
@@ -4488,10 +4740,10 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                         set(v);
                       }}
                       placeholder={ph}
-                      className="w-full bg-slate-800 border border-slate-600 rounded-lg px-4 py-3 text-white font-black text-xl text-center placeholder-slate-700 focus:outline-hidden focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30 transition-colors"
+                      className="w-full bg-slate-800 border border-slate-600 rounded-lg px-4 py-3 text-white font-black text-xl text-center placeholder-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30 transition-colors"
                     />
                     {parseAmericanOdds(val) != null && (
-                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-500">
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted">
                         {(parseAmericanOdds(val) * 100).toFixed(1)}%
                       </span>
                     )}
@@ -4501,7 +4753,7 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
             </div>
 
             {oddsA && oddsB && !market && (
-              <p className="text-orange-400 text-xs mt-3 text-center">
+              <p id="simulator-odds-error" role="alert" className="text-orange-400 text-xs mt-3 text-center">
                 Enter valid American odds for both fighters (e.g. -200 and +170)
               </p>
             )}
@@ -4580,25 +4832,27 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
               <div className="bg-slate-900 border border-slate-700 rounded-xl p-5">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
-                    <p className="text-slate-400 text-xs font-semibold uppercase tracking-widest">
+                    <p className="text-secondary text-xs font-semibold uppercase tracking-widest">
                       Win Probability
                     </p>
-                    <p className="text-slate-600 text-xs font-mono">{MODEL_VERSION}</p>
+                    <p className="text-muted text-xs font-mono">{MODEL_VERSION}</p>
                   </div>
                   {result.v2pA != null && (
                     <div className="flex items-center gap-1 bg-slate-800 rounded-lg p-1">
                       <button
                         onClick={() => setModelToggle('v1')}
+                        aria-pressed={modelToggle === 'v1'}
                         className={`inline-flex items-center justify-center min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0 px-3 py-1 text-xs font-bold rounded-md transition-colors ${
-                          modelToggle === 'v1' ? 'bg-red-600 text-white' : 'text-slate-400 hover:text-white'
+                          modelToggle === 'v1' ? 'bg-red-600 text-white' : 'text-secondary hover:text-white'
                         }`}
                       >
                         v1
                       </button>
                       <button
                         onClick={() => setModelToggle('v2')}
+                        aria-pressed={modelToggle === 'v2'}
                         className={`inline-flex items-center justify-center min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0 px-3 py-1 text-xs font-bold rounded-md transition-colors ${
-                          modelToggle === 'v2' ? 'bg-red-600 text-white' : 'text-slate-400 hover:text-white'
+                          modelToggle === 'v2' ? 'bg-red-600 text-white' : 'text-secondary hover:text-white'
                         }`}
                       >
                         v2
@@ -4662,7 +4916,7 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
             );
           })()}
 
-          <p className="sm:hidden text-slate-600 text-xs text-center">
+          <p className="sm:hidden text-muted text-xs text-center">
             Saving is available on desktop.
           </p>
 
@@ -4672,53 +4926,56 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                 <p className="text-white text-xs font-black uppercase tracking-widest">
                   Save to Upcoming
                 </p>
-                <p className="text-slate-500 text-xs mt-1">
+                <p className="text-muted text-xs mt-1">
                   Save this matchup to grade the pick later against the real
                   result.
                 </p>
               </div>
               {saveFeedback && (
-                <span className="text-emerald-400 text-xs font-semibold">
+                <span role="status" aria-live="polite" className="text-emerald-400 text-xs font-semibold">
                   {saveFeedback}
                 </span>
               )}
             </div>
             <div className="grid grid-cols-3 gap-4 mb-4">
               <div>
-                <label className="text-slate-500 text-xs font-semibold uppercase tracking-wider block mb-1.5">
+                <label htmlFor="simulator-event-name" className="text-muted text-xs font-semibold uppercase tracking-wider block mb-1.5">
                   Event Name
                 </label>
                 <input
+                  id="simulator-event-name"
                   type="text"
                   value={eventName}
                   onChange={(e) => setEventName(e.target.value)}
                   placeholder="UFC 325"
-                  className="w-full bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:outline-hidden focus:border-red-500"
+                  className="w-full bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:border-red-500"
                 />
               </div>
               <div>
-                <label className="text-slate-500 text-xs font-semibold uppercase tracking-wider block mb-1.5">
+                <label htmlFor="simulator-event-date" className="text-muted text-xs font-semibold uppercase tracking-wider block mb-1.5">
                   Event Date
                 </label>
                 <input
+                  id="simulator-event-date"
                   type="date"
                   value={eventDate}
                   onChange={(e) => setEventDate(e.target.value)}
-                  className="w-full h-10 bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:outline-hidden focus:border-red-500"
+                  className="w-full h-10 bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:border-red-500"
                 />
               </div>
               <div>
-                <label className="text-slate-500 text-xs font-semibold uppercase tracking-wider block mb-1.5">
+                <label htmlFor="simulator-units" className="text-muted text-xs font-semibold uppercase tracking-wider block mb-1.5">
                   Units Staked
                 </label>
                 <input
+                  id="simulator-units"
                   type="number"
                   step="0.1"
                   min="0"
                   value={unitsWagered}
                   onChange={(e) => setUnitsWagered(e.target.value)}
                   placeholder="1"
-                  className="w-full bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:outline-hidden focus:border-red-500"
+                  className="w-full bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:border-red-500"
                 />
               </div>
             </div>
@@ -4728,13 +4985,15 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                 verified is worse than an honest blank. */}
             <div className="grid grid-cols-3 gap-4 mb-4">
               <div>
-                <label className="text-slate-500 text-xs font-semibold uppercase tracking-wider block mb-1.5">
+                <label htmlFor="simulator-bout-division" className="text-muted text-xs font-semibold uppercase tracking-wider block mb-1.5">
                   Bout Division
                 </label>
                 <select
+                  id="simulator-bout-division"
+                  aria-describedby={boutContextIssues.errors.length || boutContextIssues.warnings.length ? 'simulator-bout-context-feedback' : undefined}
                   value={boutDivision}
                   onChange={(e) => setBoutDivision(e.target.value)}
-                  className="w-full h-10 bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:outline-hidden focus:border-red-500"
+                  className="w-full h-10 bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:border-red-500"
                 >
                   <option value="">Unknown</option>
                   {SUPPORTED_DIVISIONS.map((d) => (
@@ -4745,13 +5004,15 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                 </select>
               </div>
               <div>
-                <label className="text-slate-500 text-xs font-semibold uppercase tracking-wider block mb-1.5">
+                <label htmlFor="simulator-title-status" className="text-muted text-xs font-semibold uppercase tracking-wider block mb-1.5">
                   Title Bout
                 </label>
                 <select
+                  id="simulator-title-status"
+                  aria-describedby={boutContextIssues.errors.length || boutContextIssues.warnings.length ? 'simulator-bout-context-feedback' : undefined}
                   value={boutTitleStatus}
                   onChange={(e) => setBoutTitleStatus(e.target.value)}
-                  className="w-full h-10 bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:outline-hidden focus:border-red-500"
+                  className="w-full h-10 bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:border-red-500"
                 >
                   <option value="">Unknown</option>
                   <option value="title">Title bout</option>
@@ -4759,13 +5020,15 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                 </select>
               </div>
               <div>
-                <label className="text-slate-500 text-xs font-semibold uppercase tracking-wider block mb-1.5">
+                <label htmlFor="simulator-rounds" className="text-muted text-xs font-semibold uppercase tracking-wider block mb-1.5">
                   Scheduled Rounds
                 </label>
                 <select
+                  id="simulator-rounds"
+                  aria-describedby={boutContextIssues.errors.length || boutContextIssues.warnings.length ? 'simulator-bout-context-feedback' : undefined}
                   value={boutRounds}
                   onChange={(e) => setBoutRounds(e.target.value)}
-                  className="w-full h-10 bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:outline-hidden focus:border-red-500"
+                  className="w-full h-10 bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:border-red-500"
                 >
                   <option value="">Unknown</option>
                   <option value="3">3 rounds</option>
@@ -4775,10 +5038,11 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
             </div>
             {(boutContextIssues.errors.length > 0 ||
               boutContextIssues.warnings.length > 0) && (
-              <div className="mb-4 space-y-1">
+              <div id="simulator-bout-context-feedback" className="mb-4 space-y-1">
                 {boutContextIssues.errors.map((msg) => (
                   <p
                     key={msg}
+                    role="alert"
                     className="text-red-400 text-xs font-semibold bg-red-900/20 border border-red-800/40 rounded-lg px-3 py-2"
                   >
                     Contradictory bout context: {msg}
@@ -4787,6 +5051,7 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                 {boutContextIssues.warnings.map((msg) => (
                   <p
                     key={msg}
+                    role="status"
                     className="text-amber-400 text-xs bg-amber-900/20 border border-amber-800/40 rounded-lg px-3 py-2"
                   >
                     {msg}
@@ -4800,16 +5065,16 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
               return (
             <div className="grid grid-cols-3 gap-3 mb-4">
               <div className="bg-slate-800/40 rounded-lg p-3">
-                <p className="text-slate-500 text-xs">Model pick</p>
+                <p className="text-muted text-xs">Model pick</p>
                 <p className="text-white font-bold text-sm mt-1">
                   {savePick}
                 </p>
-                <p className="text-slate-500 text-xs mt-0.5">
+                <p className="text-muted text-xs mt-0.5">
                   {(saveProb * 100).toFixed(1)}% win prob
                 </p>
               </div>
               <div className="bg-slate-800/40 rounded-lg p-3">
-                <p className="text-slate-500 text-xs">Bet recommendation</p>
+                <p className="text-muted text-xs">Bet recommendation</p>
                 {market &&
                 (market.betAction === 'LEAN' ||
                   market.betAction === 'BET' ||
@@ -4819,17 +5084,19 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                       {market.betAction}
                     </p>
                     {market.bestBet && (
-                      <p className="text-slate-400 text-xs mt-0.5">
+                      <p className="text-secondary text-xs mt-0.5">
                         {market.bestBet === 'A' ? fA.FIGHTER : fB.FIGHTER}
                       </p>
                     )}
                   </>
                 ) : (
-                  <p className="font-bold text-sm mt-1 text-slate-600">—</p>
+                  <p className="font-bold text-sm mt-1 text-muted">
+                    {market ? 'No Bet' : 'Unavailable'}
+                  </p>
                 )}
               </div>
               <div className="bg-slate-800/40 rounded-lg p-3">
-                <p className="text-slate-500 text-xs">Saved with market</p>
+                <p className="text-muted text-xs">Saved with market</p>
                 <p className="text-white font-bold text-sm mt-1">
                   {market ? 'Yes' : 'No'}
                 </p>
@@ -4929,7 +5196,7 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
             } else if (fA.WEIGHT_CLASS !== fB.WEIGHT_CLASS) {
               flags.push({
                 label: 'Roster divisions differ (bout division unverified)',
-                color: 'text-slate-400 bg-slate-800/40 border-slate-700',
+                color: 'text-secondary bg-slate-800/40 border-slate-700',
               });
             }
             // Three distinct states, not two. A division on its own does NOT
@@ -4937,7 +5204,7 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
             // half-verified bout starts reading as verified.
             const missingContext = missingBoutContextFields(boutContext);
             if (hasUnknownBoutContext(boutContext)) {
-              flags.push({ label: 'Unknown bout context', color: 'text-slate-400 bg-slate-800/40 border-slate-700' });
+              flags.push({ label: 'Unknown bout context', color: 'text-secondary bg-slate-800/40 border-slate-700' });
             } else if (missingContext.length > 0) {
               flags.push({
                 label: `Incomplete bout context: ${missingContext.join(', ')} unknown`,
@@ -4965,7 +5232,7 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
             if (flags.length === 0) return null;
             return (
               <div className="bg-slate-900 border border-slate-700 rounded-xl p-4">
-                <p className="text-slate-500 text-xs font-semibold uppercase tracking-widest mb-2">
+                <p className="text-muted text-xs font-semibold uppercase tracking-widest mb-2">
                   Matchup Context
                 </p>
                 <div className="flex flex-wrap gap-2">
@@ -5012,9 +5279,9 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                   'STRONG BET': { bg: 'bg-emerald-950/40 border-emerald-600', badge: 'bg-emerald-500 text-emerald-950', text: 'text-emerald-400' },
                   'BET':        { bg: 'bg-emerald-950/20 border-emerald-800', badge: 'bg-emerald-700 text-emerald-100', text: 'text-emerald-400' },
                   'LEAN':       { bg: 'bg-yellow-950/20 border-yellow-800',   badge: 'bg-yellow-700 text-yellow-100',   text: 'text-yellow-400' },
-                  'NO BET':     { bg: 'bg-slate-800/40 border-slate-700',     badge: 'bg-slate-600 text-slate-200',     text: 'text-slate-400'  },
+                  'NO BET':     { bg: 'bg-slate-800/40 border-slate-700',     badge: 'bg-slate-600 text-slate-200',     text: 'text-secondary'  },
                   // NO READ: muted gray, deliberately dimmer than NO BET.
-                  'NO READ':    { bg: 'bg-slate-900/40 border-slate-800',     badge: 'bg-slate-700 text-slate-400',     text: 'text-slate-500'  },
+                  'NO READ':    { bg: 'bg-slate-900/40 border-slate-800',     badge: 'bg-slate-700 text-secondary',     text: 'text-muted'  },
                 };
                 const s = actionStyles[displayAction] ?? actionStyles['NO BET'];
 
@@ -5026,13 +5293,13 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
 
                       {/* Model Pick — always shown */}
                       <div className={`border rounded-xl p-4 ${market.lowConviction ? 'bg-orange-950/10 border-orange-900' : 'bg-slate-900 border-slate-700'}`}>
-                        <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider mb-2">Model Pick</p>
+                        <p className="text-muted text-xs font-semibold uppercase tracking-wider mb-2">Model Pick</p>
                         <p className="text-white font-black text-base leading-tight">{pickFighter.FIGHTER}</p>
-                        <p className={`text-xs mt-1 ${market.lowConviction ? 'text-orange-400' : 'text-slate-400'}`}>
+                        <p className={`text-xs mt-1 ${market.lowConviction ? 'text-orange-400' : 'text-secondary'}`}>
                           {market.pickSide === 'A' ? (activePA * 100).toFixed(1) : (activePB * 100).toFixed(1)}% win prob
                           {market.lowConviction ? ' ⚠ low conviction' : market.midConviction ? ' · moderate' : ''}
                         </p>
-                        <p className="text-slate-500 text-xs mt-0.5">Fair line: {pickFairLine}</p>
+                        <p className="text-muted text-xs mt-0.5">Fair line: {pickFairLine}</p>
                       </div>
 
                       {/* Value Signal — where market edge is */}
@@ -5043,28 +5310,28 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                           ? 'bg-emerald-950/20 border-emerald-800'
                           : 'bg-slate-800/40 border-slate-700'
                       }`}>
-                        <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider mb-2">Value Signal</p>
+                        <p className="text-muted text-xs font-semibold uppercase tracking-wider mb-2">Value Signal</p>
                         {market.conflictingSignals ? (
                           <>
                             <p className="text-orange-400 font-black text-sm">⚠ Conflicting</p>
-                            <p className="text-slate-400 text-xs mt-1">
+                            <p className="text-secondary text-xs mt-1">
                               Edge on {market.pickSide === 'A' ? fB.FIGHTER : fA.FIGHTER}{' '}
                               (+{(market.oppEdge * 100).toFixed(1)}pp)
                             </p>
-                            <p className="text-slate-500 text-xs mt-0.5">Opposite of model pick</p>
+                            <p className="text-muted text-xs mt-0.5">Opposite of model pick</p>
                           </>
                         ) : market.hasPickEdge ? (
                           <>
                             <p className="text-emerald-400 font-black text-sm">✓ Aligned</p>
-                            <p className="text-slate-400 text-xs mt-1">
+                            <p className="text-secondary text-xs mt-1">
                               +{(market.pickEdge * 100).toFixed(1)}pp edge on pick
                             </p>
-                            <p className="text-slate-500 text-xs mt-0.5">Pick and value agree</p>
+                            <p className="text-muted text-xs mt-0.5">Pick and value agree</p>
                           </>
                         ) : (
                           <>
-                            <p className="text-slate-400 font-black text-sm">No Edge</p>
-                            <p className="text-slate-500 text-xs mt-1">Market fairly priced</p>
+                            <p className="text-secondary font-black text-sm">No Edge</p>
+                            <p className="text-muted text-xs mt-1">Market fairly priced</p>
                           </>
                         )}
                       </div>
@@ -5072,12 +5339,12 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                       {/* Bet Recommendation — actionable (LEAN/BET/STRONG BET) or NO READ */}
                       {showBetRec && (
                         <div className={`border rounded-xl p-4 ${s.bg}`}>
-                          <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider mb-2">Bet Rec</p>
+                          <p className="text-muted text-xs font-semibold uppercase tracking-wider mb-2">Bet Rec</p>
                           <span className={`inline-block text-xs font-black px-2 py-0.5 rounded-full mb-2 ${s.badge}`}>
                             {displayAction}
                           </span>
                           {noRead ? (
-                            <p className="text-slate-500 text-xs leading-snug">Pick under 53% — coin-flip, insufficient confidence to read</p>
+                            <p className="text-muted text-xs leading-snug">Pick under 53% — coin-flip, insufficient confidence to read</p>
                           ) : (
                           <>
                           <p className={`font-black text-sm ${s.text}`}>{pickFighter.FIGHTER}</p>
@@ -5105,41 +5372,41 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                         </div>
                         <div className="grid grid-cols-2 gap-3 mb-4">
                           <div className="bg-slate-900/60 rounded-lg p-3">
-                            <p className="text-slate-500 text-xs mb-1">Edge vs market</p>
+                            <p className="text-muted text-xs mb-1">Edge vs market</p>
                             <p className={`font-black text-xl ${s.text}`}>
                               +{(market.pickEdge * 100).toFixed(1)}pp
                             </p>
-                            <p className="text-slate-600 text-xs mt-0.5">
+                            <p className="text-muted text-xs mt-0.5">
                               Model sees {(market.pickEdge * 100).toFixed(1)}pp more than no-vig line
                             </p>
                           </div>
                           <div className="bg-slate-900/60 rounded-lg p-3">
-                            <p className="text-slate-500 text-xs mb-1">EV per $100</p>
+                            <p className="text-muted text-xs mb-1">EV per $100</p>
                             <p className={`font-black text-xl ${Number(pickEV ?? 0) > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                               {Number(pickEV ?? 0) > 0 ? '+' : ''}${Number(pickEV ?? 0).toFixed(2)}
                             </p>
-                            <p className="text-slate-600 text-xs mt-0.5">Expected return on $100 flat bet</p>
+                            <p className="text-muted text-xs mt-0.5">Expected return on $100 flat bet</p>
                           </div>
                           <div className="bg-slate-900/60 rounded-lg p-3">
-                            <p className="text-slate-500 text-xs mb-1">Break-even %</p>
+                            <p className="text-muted text-xs mb-1">Break-even %</p>
                             <p className="text-white font-black text-xl">
                               {((pickBreakEven || 0) * 100).toFixed(1)}%
                             </p>
-                            <p className="text-slate-600 text-xs mt-0.5">Win rate needed to break even</p>
+                            <p className="text-muted text-xs mt-0.5">Win rate needed to break even</p>
                           </div>
                           <div className="bg-slate-900/60 rounded-lg p-3">
-                            <p className="text-slate-500 text-xs mb-1">Kelly fraction</p>
+                            <p className="text-muted text-xs mb-1">Kelly fraction</p>
                             <p className="text-white font-black text-xl">
                               {((pickKelly || 0) * 100).toFixed(1)}%
                             </p>
-                            <p className="text-slate-600 text-xs mt-0.5">Suggested bankroll size (full Kelly)</p>
+                            <p className="text-muted text-xs mt-0.5">Suggested bankroll size (full Kelly)</p>
                           </div>
                         </div>
                         {/* Confidence bar */}
                         <div className="pt-3 border-t border-slate-700/40">
                           <div className="flex items-center justify-between mb-1.5">
-                            <span className="text-slate-500 text-xs">Model confidence</span>
-                            <span className={`text-xs font-bold ${market.betConfidence >= 65 ? 'text-emerald-400' : market.betConfidence >= 40 ? 'text-yellow-400' : 'text-slate-500'}`}>
+                            <span className="text-muted text-xs">Model confidence</span>
+                            <span className={`text-xs font-bold ${market.betConfidence >= 65 ? 'text-emerald-400' : market.betConfidence >= 40 ? 'text-yellow-400' : 'text-muted'}`}>
                               {market.betConfidence}/100
                             </span>
                           </div>
@@ -5149,7 +5416,7 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                               style={{ width: `${market.betConfidence ?? 0}%` }}
                             />
                           </div>
-                          <p className="text-slate-600 text-xs mt-1.5">
+                          <p className="text-muted text-xs mt-1.5">
                             {market.alignedDomains}/6 model domains align · avg credibility {((fA.CREDIBILITY + fB.CREDIBILITY) / 2).toFixed(0)}%
                           </p>
                         </div>
@@ -5201,7 +5468,7 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                                             'bg-slate-600 text-slate-200';
                 return (
                   <div className={`flex items-center gap-3 rounded-xl border px-4 py-3 ${disagrees ? 'border-amber-700/50 bg-amber-950/10' : 'border-slate-700 bg-slate-800/40'}`}>
-                    <span className="text-slate-500 text-xs shrink-0">v2 Logistic:</span>
+                    <span className="text-muted text-xs shrink-0">v2 Logistic:</span>
                     <span className={`text-xs font-black px-2 py-0.5 rounded-full ${badgeStyle}`}>{action}</span>
                     {v2Fighter && (
                       <span className={`text-xs font-semibold ${disagrees ? 'text-amber-400' : 'text-slate-300'}`}>
@@ -5216,10 +5483,10 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
               {/* VIG + SIDE-BY-SIDE CARDS */}
               <div className="bg-slate-900 border border-slate-700 rounded-xl p-5">
                 <div className="flex items-center justify-between mb-3">
-                  <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider">
+                  <p className="text-muted text-xs font-semibold uppercase tracking-wider">
                     Market Analysis
                   </p>
-                  <span className="text-xs text-slate-500 font-mono">
+                  <span className="text-xs text-muted font-mono">
                     Vig {(market.vig ?? 0).toFixed(1)}% · Overround{' '}
                     {(market.overround ?? 0).toFixed(1)}%
                   </span>
@@ -5229,21 +5496,21 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                 <div className="bg-slate-800/40 rounded-xl p-4 mb-4">
                   <div className="grid grid-cols-3 gap-2 text-center">
                     <div>
-                      <p className="text-slate-500 text-xs">Market (no-vig)</p>
+                      <p className="text-muted text-xs">Market (no-vig)</p>
                       <p className="text-white font-mono font-bold text-sm mt-1">
                         {((market.noVigA ?? 0) * 100).toFixed(1)}% /{' '}
                         {((market.noVigB ?? 0) * 100).toFixed(1)}%
                       </p>
                     </div>
                     <div>
-                      <p className="text-slate-500 text-xs">Model says</p>
+                      <p className="text-muted text-xs">Model says</p>
                       <p className="text-white font-mono font-bold text-sm mt-1">
                         {(activePA * 100).toFixed(1)}% /{' '}
                         {(activePB * 100).toFixed(1)}%
                       </p>
                     </div>
                     <div>
-                      <p className="text-slate-500 text-xs">Model edge</p>
+                      <p className="text-muted text-xs">Model edge</p>
                       <p className="text-white font-mono font-bold text-sm mt-1">
                         <span
                           className={
@@ -5347,7 +5614,7 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                                   ? 'bg-yellow-900/40 text-yellow-400 border-yellow-700/50'
                                   : grade.label === 'FADE'
                                   ? 'bg-red-900/40 text-red-400 border-red-700/50'
-                                  : 'bg-slate-700 text-slate-400 border-slate-600'
+                                  : 'bg-slate-700 text-secondary border-slate-600'
                               }`}
                             >
                               {grade.label}
@@ -5390,7 +5657,7 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                                 key={label}
                                 className="flex justify-between items-baseline"
                               >
-                                <span className="text-slate-500">{label}</span>
+                                <span className="text-muted">{label}</span>
                                 {val}
                               </div>
                             ))}
@@ -5404,7 +5671,7 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                                       ? 'text-xl text-emerald-400'
                                       : (edge ?? 0) < -0.03
                                       ? 'text-xl text-red-400'
-                                      : 'text-sm text-slate-400'
+                                      : 'text-sm text-secondary'
                                   }`}
                                 >
                                   {(edge ?? 0) > 0 ? '+' : ''}
@@ -5430,7 +5697,7 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                                   className={`font-mono ${
                                     (kelly ?? 0) > 0
                                       ? 'text-emerald-400'
-                                      : 'text-slate-600'
+                                      : 'text-muted'
                                   }`}
                                 >
                                   {(kelly ?? 0) > 0
@@ -5443,7 +5710,7 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                                 key={label}
                                 className="flex justify-between items-baseline"
                               >
-                                <span className="text-slate-500">{label}</span>
+                                <span className="text-muted">{label}</span>
                                 {val}
                               </div>
                             ))}
@@ -5465,7 +5732,7 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
           )}
 
           {!market && oddsA === '' && oddsB === '' && result && (
-            <p className="text-slate-600 text-xs text-center italic py-2">
+            <p className="text-muted text-xs text-center italic py-2">
               Enter sportsbook lines above to unlock value detection and bet
               sizing
             </p>
@@ -5482,7 +5749,7 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                   ? { label: 'KO/TKO LIKELY', cls: 'bg-red-950/60 text-red-400 border border-red-800/50' }
                   : sub > 30
                   ? { label: 'SUBMISSION THREAT', cls: 'bg-violet-950/60 text-violet-400 border border-violet-800/50' }
-                  : { label: 'LIKELY DECISION', cls: 'bg-slate-800 text-slate-400 border border-slate-700' };
+                  : { label: 'LIKELY DECISION', cls: 'bg-slate-800 text-secondary border border-slate-700' };
 
               const koDriver    = (fA.KO_WIN_PCT ?? 0) >= (fB.KO_WIN_PCT ?? 0) ? fA : fB;
               const subDriver   = (fA.SUB_WIN_PCT ?? 0) >= (fB.SUB_WIN_PCT ?? 0) ? fA : fB;
@@ -5525,7 +5792,7 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
               return (
                 <>
                   <div className="flex items-center justify-between mb-4">
-                    <p className="text-slate-400 text-xs font-semibold uppercase tracking-widest">
+                    <p className="text-secondary text-xs font-semibold uppercase tracking-widest">
                       Projected Finish Method
                     </p>
                     <span className={`text-[10px] font-black uppercase tracking-wider px-2 py-1 rounded-full ${badge.cls}`}>
@@ -5557,15 +5824,15 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                           <p className={`font-black ${isDominant ? 'text-2xl' : 'text-lg'} ${tc}`}>
                             {pct}%
                           </p>
-                          <p className="text-slate-400 text-xs mt-0.5 font-semibold">{label}</p>
-                          <p className="text-slate-500 text-[10px] mt-1 leading-tight">{driver}</p>
+                          <p className="text-secondary text-xs mt-0.5 font-semibold">{label}</p>
+                          <p className="text-muted text-[10px] mt-1 leading-tight">{driver}</p>
                         </div>
                       );
                     })}
                   </div>
 
                   <div className="mt-3 text-center">
-                    <span className="text-slate-400 text-xs uppercase tracking-widest">Projected Finish · </span>
+                    <span className="text-secondary text-xs uppercase tracking-widest">Projected Finish · </span>
                     <span className="text-white font-bold text-sm">{getProjectedFinishLabel({ ko, sub, dec })}</span>
                   </div>
                 </>
@@ -5575,7 +5842,7 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
 
         </div>
       ) : (
-        <div className="text-center py-16 text-slate-600">
+        <div className="text-center py-16 text-muted">
           <Swords size={40} className="mx-auto mb-3 opacity-20" />
           <p className="text-sm">
             Search two fighters to generate the matchup simulation
@@ -5844,6 +6111,8 @@ function ScoutProfile({ allFighters }) {
       </h2>
       <div className="max-w-sm mb-6">
         <FighterSearch
+          id="explore-scout-fighter"
+          ariaLabel="Search for a fighter to scout"
           allFighters={allFighters}
           value={fighter}
           onChange={(f) => {
@@ -5864,10 +6133,10 @@ function ScoutProfile({ allFighters }) {
                   {fighter.FIGHTER}
                 </h3>
                 <div className="flex items-center gap-3 mt-2 flex-wrap">
-                  <span className="text-slate-400 text-sm">
+                  <span className="text-secondary text-sm">
                     {fighter.WEIGHT_CLASS}
                   </span>
-                  <span className="text-slate-600">·</span>
+                  <span className="text-muted">·</span>
                   <span className="text-slate-300 font-mono font-bold">
                     {fighter.RECORD}
                   </span>
@@ -5915,7 +6184,7 @@ function ScoutProfile({ allFighters }) {
                       className={`text-xs font-bold px-2 py-0.5 rounded-full border ${
                         pen > 0
                           ? 'bg-orange-900/40 text-orange-400 border-orange-800'
-                          : 'bg-slate-800 text-slate-400 border-slate-700'
+                          : 'bg-slate-800 text-secondary border-slate-700'
                       }`}
                     >
                       Age {fighter.AGE}
@@ -5925,13 +6194,13 @@ function ScoutProfile({ allFighters }) {
                 </div>
                 <div className="flex items-center gap-4 mt-2">
                   {fighter.HEIGHT_IN && (
-                    <span className="text-slate-400 text-sm flex items-center gap-1">
+                    <span className="text-secondary text-sm flex items-center gap-1">
                       <Ruler size={12} />
                       {fmtHeight(fighter.HEIGHT_IN)}
                     </span>
                   )}
                   {fighter.REACH_IN && (
-                    <span className="text-slate-400 text-sm">
+                    <span className="text-secondary text-sm">
                       Reach {fmtReach(fighter.REACH_IN)}
                     </span>
                   )}
@@ -5947,7 +6216,7 @@ function ScoutProfile({ allFighters }) {
                 </div>
                 {fh.length > 0 && (
                   <div className="flex items-center gap-2 mt-2">
-                    <span className="text-slate-500 text-xs">Recent form:</span>
+                    <span className="text-muted text-xs">Recent form:</span>
                     <FormDots form={recentForm(fh)} />
                   </div>
                 )}
@@ -5956,14 +6225,14 @@ function ScoutProfile({ allFighters }) {
                 <p className="text-6xl font-black text-red-500">
                   {(fighter.ADJUSTED_RATING ?? 0).toFixed(1)}
                 </p>
-                <p className="text-slate-500 text-xs mt-0.5">Master Rating</p>
+                <p className="text-muted text-xs mt-0.5">Master Rating</p>
                 {pen > 0 && (
                   <p className="text-orange-400 text-xs mt-1">
                     Base EFF age-adj:{' '}
                     {((fighter.TOTAL_EFFICIENCY ?? 0) * (1 - pen)).toFixed(1)}
                   </p>
                 )}
-                <p className="text-slate-500 text-xs mt-1">
+                <p className="text-muted text-xs mt-1">
                   Base EFF{' '}
                   <span className="text-white font-bold">
                     {(fighter.TOTAL_EFFICIENCY ?? 0).toFixed(1)}
@@ -5994,7 +6263,7 @@ function ScoutProfile({ allFighters }) {
                       <span className="text-xs font-semibold">{label}</span>
                     </div>
                     <p className="text-3xl font-black text-white">{score}</p>
-                    <p className="text-slate-600 text-xs mt-0.5">
+                    <p className="text-muted text-xs mt-0.5">
                       raw {raw.toFixed(1)} · avg {avgRaw.toFixed(1)}
                     </p>
                     <div className="mt-2 h-1.5 bg-slate-700 rounded-full overflow-hidden">
@@ -6010,7 +6279,7 @@ function ScoutProfile({ allFighters }) {
           </div>
 
           {/* Sub-tabs */}
-          <div className="flex gap-1 bg-slate-900 border border-slate-800 rounded-xl p-1">
+          <div role="tablist" aria-label="Scout sections" className="flex gap-1 bg-slate-900 border border-slate-800 rounded-xl p-1">
             {[
               { id: 'overview', label: 'Overview' },
               { id: 'fights', label: `Recent Fights (${fh.length})` },
@@ -6019,11 +6288,13 @@ function ScoutProfile({ allFighters }) {
             ].map(({ id, label }) => (
               <button
                 key={id}
+                role="tab"
+                aria-selected={scoutTab === id}
                 onClick={() => setScoutTab(id)}
                 className={`flex-1 py-2 rounded-lg text-xs font-semibold transition-all ${
                   scoutTab === id
                     ? 'bg-slate-700 text-white'
-                    : 'text-slate-500 hover:text-slate-300'
+                    : 'text-muted hover:text-slate-300'
                 }`}
               >
                 {label}
@@ -6035,15 +6306,17 @@ function ScoutProfile({ allFighters }) {
           {scoutTab === 'overview' && (
             <div className="space-y-5">
               <div className="grid grid-cols-2 gap-5">
-                <div className="bg-slate-900 border border-slate-700 rounded-xl p-5">
-                  <p className="text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1">
+                <figure className="bg-slate-900 border border-slate-700 rounded-xl p-5" aria-labelledby="scout-factors-title" aria-describedby="scout-factors-description">
+                  <h3 id="scout-factors-title" className="text-secondary text-xs font-semibold uppercase tracking-wider mb-1">
                     Four Factors vs Division Avg
+                  </h3>
+                  <p id="scout-factors-description" className="text-muted text-xs mb-3">
+                    {fighter.WEIGHT_CLASS}. Solid profile = fighter percentile; dashed profile = division average.
                   </p>
-                  <p className="text-slate-600 text-xs mb-3">
-                    {fighter.WEIGHT_CLASS}
-                  </p>
+                  <div role="img" aria-labelledby="scout-factors-title" aria-describedby="scout-factors-description">
                   <ResponsiveContainer width="100%" height={230}>
                     <RadarChart
+                      accessibilityLayer={false}
                       data={radarData}
                       margin={{ top: 10, right: 30, bottom: 10, left: 30 }}
                     >
@@ -6090,7 +6363,8 @@ function ScoutProfile({ allFighters }) {
                       />
                     </RadarChart>
                   </ResponsiveContainer>
-                  <div className="flex justify-center gap-6 text-xs text-slate-500 mt-1">
+                  </div>
+                  <div className="flex justify-center gap-6 text-xs text-muted mt-1">
                     <span className="flex items-center gap-1.5">
                       <span className="w-4 h-0.5 bg-red-500 inline-block rounded-sm" />
                       {fighter.FIGHTER}
@@ -6100,9 +6374,18 @@ function ScoutProfile({ allFighters }) {
                       Div. Avg
                     </span>
                   </div>
-                </div>
+                  <AccessibleChartDataTable
+                    caption={`${fighter.FIGHTER} Four Factors versus Division Average data`}
+                    columns={[
+                      { key: 'factor', label: 'Factor' },
+                      { key: 'fighter', label: `${fighter.FIGHTER} percentile` },
+                      { key: 'avg', label: 'Division average percentile' },
+                    ]}
+                    rows={radarData}
+                  />
+                </figure>
                 <div className="bg-slate-900 border border-slate-700 rounded-xl p-5">
-                  <p className="text-slate-400 text-xs font-semibold uppercase tracking-wider mb-4">
+                  <p className="text-secondary text-xs font-semibold uppercase tracking-wider mb-4">
                     Grappling Floor
                   </p>
                   <div className="space-y-4">
@@ -6151,7 +6434,7 @@ function ScoutProfile({ allFighters }) {
                               <p className="text-slate-200 font-semibold text-sm">
                                 {label}
                               </p>
-                              <p className="text-slate-500 text-xs">{sub}</p>
+                              <p className="text-muted text-xs">{sub}</p>
                             </div>
                             <p className="text-xl font-black text-white">
                               {hasValue ? displayVal.toFixed(dec) : 'N/A'}
@@ -6178,13 +6461,13 @@ function ScoutProfile({ allFighters }) {
                   className={`border rounded-xl p-5 ${archetype.bg} flex items-start gap-4`}
                 >
                   <div className="flex-1">
-                    <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider mb-1">
+                    <p className="text-muted text-xs font-semibold uppercase tracking-wider mb-1">
                       Fighter Archetype
                     </p>
                     <p className={`font-black text-xl ${archetype.color}`}>
                       {archetype.label}
                     </p>
-                    <p className="text-slate-400 text-sm mt-1 leading-relaxed">
+                    <p className="text-secondary text-sm mt-1 leading-relaxed">
                       {archetype.desc}
                     </p>
                   </div>
@@ -6193,7 +6476,7 @@ function ScoutProfile({ allFighters }) {
 
               {divPercentiles && (
                 <div className="bg-slate-900 border border-slate-700 rounded-xl p-5">
-                  <p className="text-slate-400 text-xs font-semibold uppercase tracking-widest mb-4">
+                  <p className="text-secondary text-xs font-semibold uppercase tracking-widest mb-4">
                     Division Percentile Rankings · {fighter.WEIGHT_CLASS}
                   </p>
                   <div className="grid grid-cols-2 gap-x-8 gap-y-4">
@@ -6241,7 +6524,7 @@ function ScoutProfile({ allFighters }) {
                     ].map(({ label, pct, color }) => (
                       <div key={label}>
                         <div className="flex justify-between items-center mb-1">
-                          <span className="text-slate-400 text-xs">
+                          <span className="text-secondary text-xs">
                             {label}
                           </span>
                           <span
@@ -6276,7 +6559,7 @@ function ScoutProfile({ allFighters }) {
           {scoutTab === 'fights' && (
             <div className="space-y-3">
               {fh.length === 0 ? (
-                <div className="text-center py-12 text-slate-600">
+                <div className="text-center py-12 text-muted">
                   <Trophy size={32} className="mx-auto mb-2 opacity-20" />
                   <p className="text-sm">
                     No recent fights found for this fighter.
@@ -6292,7 +6575,7 @@ function ScoutProfile({ allFighters }) {
                   {/* Recent fight timeline */}
                   {perfTrendData.length >= 2 && (
                     <div className="bg-slate-900 border border-slate-700 rounded-xl p-5">
-                      <p className="text-slate-400 text-xs font-semibold uppercase tracking-wider mb-4">
+                      <p className="text-secondary text-xs font-semibold uppercase tracking-wider mb-4">
                         Recent Results (Most Recent → Oldest)
                       </p>
                       <div className="flex gap-3 overflow-x-auto pb-1">
@@ -6324,19 +6607,19 @@ function ScoutProfile({ allFighters }) {
                                 >
                                   {fight.re ?? '-'}
                                 </span>
-                                <span className="text-[11px] uppercase tracking-wider text-slate-500">
+                                <span className="text-[11px] uppercase tracking-wider text-muted">
                                   F{i + 1}
                                 </span>
                               </div>
                               <p className="text-sm font-bold text-white truncate">
                                 {fight.op}
                               </p>
-                              <p className="mt-1 text-xs text-slate-400">
+                              <p className="mt-1 text-xs text-secondary">
                                 {method}
                                 {fight.rn ? ` · R${fight.rn}` : ''}
                                 {fight.ti ? ` · ${fight.ti}` : ''}
                               </p>
-                              <p className="mt-2 text-[11px] text-slate-500 line-clamp-2">
+                              <p className="mt-2 text-[11px] text-muted line-clamp-2">
                                 {fight.ev}
                               </p>
                             </div>
@@ -6359,18 +6642,18 @@ function ScoutProfile({ allFighters }) {
               {/* Archetype + Win Method */}
               <div className="grid grid-cols-2 gap-4">
                 <div className={`border rounded-xl p-5 ${archetype.bg}`}>
-                  <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider mb-1">
+                  <p className="text-muted text-xs font-semibold uppercase tracking-wider mb-1">
                     Style Archetype
                   </p>
                   <p className={`font-black text-xl ${archetype.color}`}>
                     {archetype.label}
                   </p>
-                  <p className="text-slate-400 text-xs mt-2 leading-relaxed">
+                  <p className="text-secondary text-xs mt-2 leading-relaxed">
                     {archetype.desc}
                   </p>
                 </div>
                 <div className="bg-slate-900 border border-slate-700 rounded-xl p-5">
-                  <p className="text-slate-400 text-xs font-semibold uppercase tracking-wider mb-3">
+                  <p className="text-secondary text-xs font-semibold uppercase tracking-wider mb-3">
                     Projected Finish Method
                   </p>
                   {(() => {
@@ -6419,7 +6702,7 @@ function ScoutProfile({ allFighters }) {
                         ].map(({ label, pct, color, tc, icon }) => (
                           <div key={label}>
                             <div className="flex justify-between mb-1">
-                              <span className="text-slate-400 text-xs">
+                              <span className="text-secondary text-xs">
                                 {icon} {label}
                               </span>
                               <span className={`text-xs font-black ${tc}`}>
@@ -6443,7 +6726,7 @@ function ScoutProfile({ allFighters }) {
               {/* Betting Angles */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="bg-slate-900 border border-slate-700 rounded-xl p-5">
-                  <p className="text-slate-400 text-xs font-semibold uppercase tracking-wider mb-3">
+                  <p className="text-secondary text-xs font-semibold uppercase tracking-wider mb-3">
                     ✅ Bet On When...
                   </p>
                   <ul className="space-y-2">
@@ -6466,7 +6749,7 @@ function ScoutProfile({ allFighters }) {
                       .map((tip, i) => (
                         <li
                           key={i}
-                          className="flex gap-2 text-xs text-slate-400"
+                          className="flex gap-2 text-xs text-secondary"
                         >
                           <span className="text-emerald-500 shrink-0 mt-0.5">
                             •
@@ -6479,7 +6762,7 @@ function ScoutProfile({ allFighters }) {
                       divPercentiles.CTRL,
                       divPercentiles.CARDIO,
                     ].every((p) => p < 65) && (
-                      <li className="text-xs text-slate-500 italic">
+                      <li className="text-xs text-muted italic">
                         No strong statistical edge identified — proceed with
                         caution
                       </li>
@@ -6487,7 +6770,7 @@ function ScoutProfile({ allFighters }) {
                   </ul>
                 </div>
                 <div className="bg-slate-900 border border-slate-700 rounded-xl p-5">
-                  <p className="text-slate-400 text-xs font-semibold uppercase tracking-wider mb-3">
+                  <p className="text-secondary text-xs font-semibold uppercase tracking-wider mb-3">
                     ⚠️ Fade When...
                   </p>
                   <ul className="space-y-2">
@@ -6513,7 +6796,7 @@ function ScoutProfile({ allFighters }) {
                       .map((tip, i) => (
                         <li
                           key={i}
-                          className="flex gap-2 text-xs text-slate-400"
+                          className="flex gap-2 text-xs text-secondary"
                         >
                           <span className="text-red-500 shrink-0 mt-0.5">
                             •
@@ -6527,7 +6810,7 @@ function ScoutProfile({ allFighters }) {
 
               {/* Full Percentile Reference */}
               <div className="bg-slate-900 border border-slate-700 rounded-xl p-5">
-                <p className="text-slate-400 text-xs font-semibold uppercase tracking-widest mb-4">
+                <p className="text-secondary text-xs font-semibold uppercase tracking-widest mb-4">
                   Full Division Percentile Reference · {fighter.WEIGHT_CLASS}
                 </p>
                 <div className="grid grid-cols-2 gap-x-8 gap-y-4">
@@ -6575,7 +6858,7 @@ function ScoutProfile({ allFighters }) {
                   ].map(({ label, pct, color }) => (
                     <div key={label}>
                       <div className="flex justify-between items-center mb-1">
-                        <span className="text-slate-400 text-xs">{label}</span>
+                        <span className="text-secondary text-xs">{label}</span>
                         <span
                           className={`text-xs font-black ${
                             pct >= 80
@@ -6606,13 +6889,13 @@ function ScoutProfile({ allFighters }) {
           {/* FULL STATS TAB */}
           {scoutTab === 'stats' && (
             <div className="bg-slate-900 border border-slate-700 rounded-xl p-5">
-              <p className="text-slate-400 text-xs font-semibold uppercase tracking-wider mb-4">
+              <p className="text-secondary text-xs font-semibold uppercase tracking-wider mb-4">
                 Full Statistical Breakdown
               </p>
               <div className="grid grid-cols-3 gap-6">
                 {STAT_GROUPS.map(({ title, stats }) => (
                   <div key={title}>
-                    <p className="text-slate-500 text-xs font-bold uppercase tracking-wider mb-3 pb-1.5 border-b border-slate-800">
+                    <p className="text-muted text-xs font-bold uppercase tracking-wider mb-3 pb-1.5 border-b border-slate-800">
                       {title}
                     </p>
                     <div className="space-y-2">
@@ -6631,7 +6914,7 @@ function ScoutProfile({ allFighters }) {
                             key={key}
                             className="flex items-center justify-between gap-2"
                           >
-                            <span className="text-slate-500 text-xs">
+                            <span className="text-muted text-xs">
                               {label}
                             </span>
                             <span
@@ -6660,7 +6943,7 @@ function ScoutProfile({ allFighters }) {
           )}
         </div>
       ) : (
-        <div className="text-center py-16 text-slate-600">
+        <div className="text-center py-16 text-muted">
           <User size={40} className="mx-auto mb-3 opacity-20" />
           <p className="text-sm">
             Search for an active fighter to view their full analytics profile
@@ -6832,10 +7115,11 @@ export default function App() {
 
   return (
     <div
-      className="min-h-screen bg-slate-950 text-slate-100 font-sans pb-[calc(64px+env(safe-area-inset-bottom))] sm:pb-0"
+      className="min-h-screen bg-slate-950 text-primary font-sans pb-[calc(64px+env(safe-area-inset-bottom))] sm:pb-0"
     >
       <Header view={view} />
       {belowSm && <BottomNav view={view} />}
+      <main id="main-content" tabIndex={-1}>
       {/*
         Unknown path: replace rather than push, so a mistyped URL does not leave
         a dead entry in history that Back would land on again. Rendered as an
@@ -6903,6 +7187,7 @@ export default function App() {
         />
       )}
       {view === 'info' && <InfoTab />}
+      </main>
     </div>
   );
 }
@@ -6914,7 +7199,7 @@ const betTier = (action) => {
     return { label: 'BET', cls: 'text-emerald-400', border: 'border-emerald-700/50' };
   if (action === 'LEAN')
     return { label: 'LEAN', cls: 'text-yellow-400', border: 'border-yellow-700/50' };
-  return { label: '', cls: 'text-slate-500', border: 'border-slate-800' };
+  return { label: 'NO BET', cls: 'text-muted font-semibold', border: 'border-slate-800' };
 };
 
 function HomeTab({ summary, entries, allFighters, filterSince }) {
@@ -7034,21 +7319,21 @@ function HomeTab({ summary, entries, allFighters, filterSince }) {
     <div className="max-w-3xl mx-auto px-5 py-10">
       {/* Identity */}
       <div className="mb-8">
-        <h2 className="text-white font-black text-3xl tracking-tight mb-1">
+        <h1 className="text-white font-black text-3xl tracking-tight mb-1">
           FightMetrics
-        </h2>
-        <p className="text-slate-400 text-base">
+        </h1>
+        <p className="text-secondary text-base">
           UFC fight prediction engine — {MODEL_VERSION}
         </p>
       </div>
 
       {/* Track record tiles */}
-      <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider mb-3">
+      <p className="text-muted text-xs font-semibold uppercase tracking-wider mb-3">
         Model Track Record
       </p>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
         <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
-          <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold mb-2">
+          <p className="text-muted text-xs uppercase tracking-wider font-semibold mb-2">
             Pick Accuracy
           </p>
           {summaryV2All.graded > 0 ? (
@@ -7056,44 +7341,44 @@ function HomeTab({ summary, entries, allFighters, filterSince }) {
               <p className={`font-black text-3xl ${summaryV2All.accuracy >= 60 ? 'text-emerald-400' : 'text-yellow-400'}`}>
                 {summaryV2All.accuracy.toFixed(1)}%
               </p>
-              <p className="text-slate-500 text-xs mt-1">
+              <p className="text-muted text-xs mt-1">
                 v2 frozen scoring across {summaryV2All.graded} graded fights · {filterSince ? `since ${filterSince}` : 'all time'}
               </p>
               {/* v1 display hidden 2026-07-21 per single-model view -- restore
                   by re-adding: {v1Acc != null && <p>v1: {v1Acc.toFixed(1)}%</p>} */}
             </>
           ) : (
-            <p className="text-slate-600 text-sm mt-1">No graded picks</p>
+            <p className="text-muted text-sm mt-1">No graded picks</p>
           )}
         </div>
         <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
-          <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold mb-2">
+          <p className="text-muted text-xs uppercase tracking-wider font-semibold mb-2">
             ROI
           </p>
           <p className={`font-black text-3xl ${summaryV2All.roi >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
             {summaryV2All.roi >= 0 ? '+' : ''}{summaryV2All.roi.toFixed(1)}%
           </p>
-          <p className="text-slate-600 text-xs mt-1">
+          <p className="text-muted text-xs mt-1">
             {summaryV2All.profit >= 0 ? '+' : ''}{summaryV2All.profit.toFixed(2)}u on {summaryV2All.bets} bets (stake-weighted)
           </p>
         </div>
         <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
-          <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold mb-2">
+          <p className="text-muted text-xs uppercase tracking-wider font-semibold mb-2">
             Tracked Fights
           </p>
           <p className="font-black text-3xl text-white">{may23Entries.length}</p>
-          <p className="text-slate-600 text-xs mt-1">{filterSince ? `since ${filterSince}` : 'all time'}</p>
+          <p className="text-muted text-xs mt-1">{filterSince ? `since ${filterSince}` : 'all time'}</p>
         </div>
       </div>
 
       {/* Recent graded results */}
-      <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider mb-3">
+      <p className="text-muted text-xs font-semibold uppercase tracking-wider mb-3">
         Recent Results
       </p>
       <div className="space-y-2 mb-6">
         {gradedPicks.length === 0 ? (
           <div className="bg-slate-900 border border-slate-800 rounded-xl px-5 py-6 text-center">
-            <p className="text-slate-600 text-sm">
+            <p className="text-muted text-sm">
               No graded picks yet — results appear here after fights are scored.
             </p>
           </div>
@@ -7116,7 +7401,7 @@ function HomeTab({ summary, entries, allFighters, filterSince }) {
                     <p className="text-white font-semibold text-sm truncate">
                       {e.fighterA} vs {e.fighterB}
                     </p>
-                    <p className="text-slate-500 text-xs mt-0.5">
+                    <p className="text-muted text-xs mt-0.5">
                       {e.eventName}
                       {entryDisplayDivision(e) ? ` · ${entryDisplayDivision(e)}` : ''}
                     </p>
@@ -7133,7 +7418,7 @@ function HomeTab({ summary, entries, allFighters, filterSince }) {
                       </span>
                     )}
                     {outcome === 'push' && (
-                      <span className="px-2.5 py-1 rounded-lg bg-slate-800 text-slate-400 text-xs font-semibold">
+                      <span className="px-2.5 py-1 rounded-lg bg-slate-800 text-secondary text-xs font-semibold">
                         — NC/DRAW
                       </span>
                     )}
@@ -7145,11 +7430,11 @@ function HomeTab({ summary, entries, allFighters, filterSince }) {
                     <span className="text-sm font-semibold text-white">
                       {frozenV2.winner}
                     </span>
-                    <span className="text-slate-500 text-xs ml-1.5">{(frozenV2.prob * 100).toFixed(1)}%</span>
+                    <span className="text-muted text-xs ml-1.5">{(frozenV2.prob * 100).toFixed(1)}%</span>
                     {tier.label && <span className={`${tier.cls} ml-1.5`}>{tier.label}</span>}
                   </p>
                 ) : (
-                  <p className="text-xs text-slate-600 mt-1">
+                  <p className="text-xs text-muted mt-1">
                     No frozen v2 prediction recorded
                     {tier.label && (
                       <>{' · '}<span className={tier.cls}>{tier.label}</span></>
@@ -7165,7 +7450,7 @@ function HomeTab({ summary, entries, allFighters, filterSince }) {
       {/* Upcoming picks — secondary, muted */}
       {upcomingPicks.length > 0 && (
         <div className="mb-8">
-          <p className="text-slate-600 text-xs font-semibold uppercase tracking-wider mb-2">
+          <p className="text-muted text-xs font-semibold uppercase tracking-wider mb-2">
             Upcoming Picks
           </p>
           <div className="space-y-1">
@@ -7188,18 +7473,18 @@ function HomeTab({ summary, entries, allFighters, filterSince }) {
                         <span className={`text-sm font-bold ${v2Differs ? 'text-amber-400' : 'text-slate-300'}`}>
                           {v2Pick.winner}
                         </span>
-                        <span className="text-slate-500 text-xs">{(v2Pick.prob * 100).toFixed(1)}%</span>
+                        <span className="text-muted text-xs">{(v2Pick.prob * 100).toFixed(1)}%</span>
                         {tier.label && <span className={tier.cls}>{tier.label}</span>}
                       </p>
                     )}
-                    <p className="text-[11px] text-slate-600 mt-0.5">
+                    <p className="text-[11px] text-muted mt-0.5">
                       {e.eventName ? `${e.eventName} · ` : ''}was: {e.predictedWinner} {(e.predictedProb * 100).toFixed(1)}%
                       {!v2Pick && tier.label && (
                         <>{' · '}<span className={tier.cls}>{tier.label}</span></>
                       )}
                     </p>
                   </div>
-                  <span className="shrink-0 text-slate-600 text-xs font-semibold">
+                  <span className="shrink-0 text-muted text-xs font-semibold">
                     PENDING
                   </span>
                 </div>
@@ -7269,18 +7554,21 @@ function ExploreTab({ allFighters }) {
 
   return (
     <div>
-      <div className="bg-slate-900/80 border-b border-slate-800 px-5 py-2 flex gap-1">
+      <h1 className="sr-only">Explore fighters</h1>
+      <div role="tablist" aria-label="Explore views" className="bg-slate-900/80 border-b border-slate-800 px-5 py-2 flex gap-1">
         {[
           { id: 'table', label: 'Database' },
           { id: 'scout', label: 'Scout' },
         ].map(({ id, label }) => (
           <button
             key={id}
+            role="tab"
+            aria-selected={exploreTab === id}
             onClick={() => setExploreTab(id)}
             className={`inline-flex items-center justify-center min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0 px-4 py-1.5 rounded-lg text-sm font-semibold transition-all ${
               exploreTab === id
                 ? 'bg-slate-700 text-white'
-                : 'text-slate-500 hover:text-slate-300'
+                : 'text-muted hover:text-slate-300'
             }`}
           >
             {label}
@@ -7642,8 +7930,8 @@ function ROITab({
     <div className="max-w-5xl mx-auto px-5 py-8">
       <div className="flex items-start justify-between gap-4 mb-6">
         <div>
-          <h2 className="text-white font-black text-xl mb-1">ROI</h2>
-          <p className="text-slate-400 text-sm">
+          <h1 className="text-white font-black text-xl mb-1">ROI</h1>
+          <p className="text-secondary text-sm">
             Save simulator picks, grade them after the event, and track
             profit plus pick accuracy.
           </p>
@@ -7702,7 +7990,7 @@ function ROITab({
                   }
                   onClearEntries();
                 }}
-                className="px-3 py-2 rounded-lg border border-slate-700 text-slate-400 text-xs font-semibold hover:text-white hover:border-slate-600 transition-colors"
+                className="px-3 py-2 rounded-lg border border-slate-700 text-secondary text-xs font-semibold hover:text-white hover:border-slate-600 transition-colors"
               >
                 Clear All
               </button>
@@ -7731,23 +8019,24 @@ function ROITab({
 
       {entries.length > 0 && !isProps && !isParlays && (
         <div className="flex items-center gap-3 mb-4">
-          <span className="text-slate-500 text-xs uppercase tracking-wider font-semibold">Since</span>
+          <label htmlFor="roi-since" className="text-muted text-xs uppercase tracking-wider font-semibold">Since</label>
           <input
+            id="roi-since"
             type="date"
             value={filterSince}
             onChange={e => setFilterSince(e.target.value)}
-            className="bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-1.5 min-h-[44px] sm:min-h-0 sm:h-9 focus:outline-hidden focus:border-red-500"
+            className="bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-1.5 min-h-[44px] sm:min-h-0 sm:h-9 focus:border-red-500"
           />
           {filterSince && (
             <button
               onClick={() => setFilterSince('')}
-              className="inline-flex items-center justify-center min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0 text-slate-500 hover:text-slate-300 text-xs underline"
+              className="inline-flex items-center justify-center min-w-[44px] min-h-[44px] sm:min-w-6 sm:min-h-6 text-muted hover:text-slate-300 text-xs underline"
             >
               Clear
             </button>
           )}
           {filterSince && (
-            <span className="text-slate-600 text-xs">
+            <span className="text-muted text-xs">
               {displayedEntries.length} fights
             </span>
           )}
@@ -7761,35 +8050,35 @@ function ROITab({
       {entries.length > 0 && !isProps && !isParlays && (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6 items-stretch">
           <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 h-full">
-            <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold">Tracked Fights</p>
+            <p className="text-muted text-xs uppercase tracking-wider font-semibold">Tracked Fights</p>
             <p className="font-black text-2xl mt-2 text-white">{roiBannerV1.total}</p>
           </div>
           <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 h-full">
-            <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold">Graded Picks</p>
+            <p className="text-muted text-xs uppercase tracking-wider font-semibold">Graded Picks</p>
             <p className="font-black text-2xl mt-2 text-blue-400">{roiBannerV1.graded}</p>
           </div>
           <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 h-full">
-            <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold">Pick Accuracy</p>
+            <p className="text-muted text-xs uppercase tracking-wider font-semibold">Pick Accuracy</p>
             <p className={`font-black text-2xl mt-2 ${roiBannerV2.accuracy >= 60 ? 'text-emerald-400' : 'text-yellow-400'}`}>
               {roiBannerV2.accuracy.toFixed(1)}%
             </p>
-            <p className="text-slate-600 text-[10px] mt-1">
+            <p className="text-muted text-[10px] mt-1">
               v2 frozen scoring across {roiBannerV2.graded} graded fights (stake-weighted). Frozen at each pick's capture — no lookahead.
             </p>
           </div>
           <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 h-full">
-            <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold">ROI</p>
+            <p className="text-muted text-xs uppercase tracking-wider font-semibold">ROI</p>
             <p className={`font-black text-2xl mt-2 ${roiBannerV2.roi >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
               {roiBannerV2.roi >= 0 ? '+' : ''}{roiBannerV2.roi.toFixed(1)}%
             </p>
-            <p className="text-slate-600 text-xs mt-1">
+            <p className="text-muted text-xs mt-1">
               {roiBannerV2.profit >= 0 ? '+' : ''}{roiBannerV2.profit.toFixed(2)}u on {roiBannerV2.bets} bets (stake-weighted)
             </p>
           </div>
         </div>
       )}
 
-      <div className="flex items-center flex-wrap gap-1 bg-slate-800 rounded-lg p-1 mb-4 w-fit">
+      <div role="tablist" aria-label="ROI sections" className="flex items-center flex-wrap gap-1 bg-slate-800 rounded-lg p-1 mb-4 w-fit">
         {[
           { id: 'all', label: 'All Events' },
           { id: 'recent', label: 'Most Recent Event' },
@@ -7798,11 +8087,13 @@ function ROITab({
         ].map(({ id, label }) => (
           <button
             key={id}
+            role="tab"
+            aria-selected={subTab === id}
             onClick={() => setSubTab(id)}
             className={`inline-flex items-center justify-center min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0 whitespace-nowrap px-3 py-1.5 rounded-md text-xs font-semibold transition-colors ${
               subTab === id
                 ? 'bg-red-600 text-white'
-                : 'text-slate-400 hover:text-white'
+                : 'text-secondary hover:text-white'
             }`}
           >
             {label}
@@ -7823,7 +8114,7 @@ function ROITab({
           onDelete={onDeleteParlay}
         />
       ) : entries.length === 0 ? (
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-8 text-center text-slate-600">
+        <div className="bg-slate-900 border border-slate-800 rounded-xl p-8 text-center text-muted">
           <Calendar size={36} className="mx-auto mb-3 opacity-20" />
           <p className="text-sm">No saved predictions yet.</p>
           <p className="text-xs mt-1">
@@ -7832,7 +8123,7 @@ function ROITab({
           </p>
         </div>
       ) : visibleEntries.length === 0 ? (
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-8 text-center text-slate-600">
+        <div className="bg-slate-900 border border-slate-800 rounded-xl p-8 text-center text-muted">
           <p className="text-sm">No graded results yet to show as "Most Recent Event".</p>
         </div>
       ) : (
@@ -7848,18 +8139,20 @@ function ROITab({
               >
                 <button
                   onClick={() => toggleEvent(group.key)}
+                  aria-expanded={open}
+                  aria-controls={`roi-event-${group._i}`}
                   className="w-full flex items-center justify-between gap-3 px-5 py-4 text-left hover:bg-slate-800/40 transition-colors"
                 >
                   <div className="flex items-center gap-3">
                     {open ? (
-                      <ChevronDown size={18} className="text-slate-500 shrink-0" />
+                      <ChevronDown size={18} className="text-muted shrink-0" />
                     ) : (
-                      <ChevronRight size={18} className="text-slate-500 shrink-0" />
+                      <ChevronRight size={18} className="text-muted shrink-0" />
                     )}
                     <div>
                       <p className="text-white font-bold text-base">{group.eventName}</p>
                       {group.eventDate && (
-                        <p className="text-slate-500 text-xs mt-0.5">{group.eventDate}</p>
+                        <p className="text-muted text-xs mt-0.5">{group.eventDate}</p>
                       )}
                     </div>
                   </div>
@@ -7869,15 +8162,15 @@ function ROITab({
                         {eventSummary.profit >= 0 ? '+' : ''}{eventSummary.profit.toFixed(2)}u
                       </span>
                     ) : (
-                      <span className="text-slate-600 text-xs font-semibold">—</span>
+                      <span className="text-muted text-xs font-semibold">Unavailable</span>
                     )}
-                    <span className="text-slate-500 text-xs font-semibold uppercase tracking-wider">
+                    <span className="text-muted text-xs font-semibold uppercase tracking-wider">
                       {group.entries.length} {group.entries.length === 1 ? 'fight' : 'fights'}
                     </span>
                   </div>
                 </button>
                 {open && (
-                  <div className="space-y-4 px-4 pb-4">
+                  <div id={`roi-event-${group._i}`} className="space-y-4 px-4 pb-4">
                     {group.entries.map((entry) => {
             const graded = isResolvedWinner(entry.actualWinner, entry);
             const decisive =
@@ -7940,7 +8233,7 @@ function ROITab({
                       <span
                         className={`text-xs font-bold px-2 py-0.5 rounded-full border ${
                           !graded
-                            ? 'bg-slate-800 text-slate-400 border-slate-700'
+                            ? 'bg-slate-800 text-secondary border-slate-700'
                             : correct
                             ? 'bg-emerald-900/40 text-emerald-400 border-emerald-800'
                             : isPushResult(entry.actualWinner)
@@ -7957,7 +8250,7 @@ function ROITab({
                           : 'Miss'}
                       </span>
                     </div>
-                    <p className="text-slate-500 text-xs mt-1">
+                    <p className="text-muted text-xs mt-1">
                       {entryDisplayDivision(entry)}
                       {entryContextSuffix(entry)}
                       {entry.eventName ? ` · ${entry.eventName}` : ''}
@@ -7982,7 +8275,7 @@ function ROITab({
                           onDeleteEntry(entry.id);
                         }
                       }}
-                      className="px-3 py-1.5 rounded-lg border border-slate-700 text-slate-500 text-xs font-semibold hover:text-white hover:border-slate-600 transition-colors"
+                      className="px-3 py-1.5 rounded-lg border border-slate-700 text-muted text-xs font-semibold hover:text-white hover:border-slate-600 transition-colors"
                     >
                       Delete
                     </button>
@@ -7994,7 +8287,7 @@ function ROITab({
                   <div className="bg-slate-800/40 rounded-lg p-4 mb-3 flex items-baseline justify-between gap-3">
                     <div>
                       <div className="flex items-center gap-2">
-                        <p className="text-slate-500 text-xs uppercase tracking-wider">
+                        <p className="text-muted text-xs uppercase tracking-wider">
                           Model Pick
                         </p>
                         <span className="text-[10px] font-bold text-violet-400 bg-violet-900/30 border border-violet-700/40 px-1.5 py-0.5 rounded-sm uppercase">
@@ -8009,7 +8302,7 @@ function ROITab({
                       <p className="text-emerald-400 font-black text-lg">
                         {(effProb * 100).toFixed(1)}%
                       </p>
-                      <p className="text-slate-500 text-xs mt-0.5">
+                      <p className="text-muted text-xs mt-0.5">
                         win prob · {effFairLine}
                       </p>
                     </div>
@@ -8017,7 +8310,7 @@ function ROITab({
                 ) : (
                   <div className="bg-slate-800/40 rounded-lg p-4 mb-3 flex items-baseline justify-between gap-3">
                     <div>
-                      <p className="text-slate-500 text-xs uppercase tracking-wider">
+                      <p className="text-muted text-xs uppercase tracking-wider">
                         Model Pick
                       </p>
                       <p className="text-white font-black text-xl mt-1">
@@ -8028,7 +8321,7 @@ function ROITab({
                       <p className="text-emerald-400 font-black text-lg">
                         {((entry.displayProb ?? 0) * 100).toFixed(1)}%
                       </p>
-                      <p className="text-slate-500 text-xs mt-0.5">
+                      <p className="text-muted text-xs mt-0.5">
                         win prob · {americanOdds(entry.displayProb ?? 0)}
                       </p>
                     </div>
@@ -8037,7 +8330,7 @@ function ROITab({
 
                 <div className="grid grid-cols-3 gap-3 mb-4">
                   <div className="bg-slate-800/40 rounded-lg p-3">
-                    <p className="text-slate-500 text-xs uppercase tracking-wider">
+                    <p className="text-muted text-xs uppercase tracking-wider">
                       Bet Rec
                     </p>
                     {actionableBetEff ? (
@@ -8060,15 +8353,15 @@ function ROITab({
                         </p>
                       </>
                     ) : (
-                      <p className="text-slate-600 font-bold text-sm mt-2">—</p>
+                      <p className="text-muted font-bold text-sm mt-2">No Bet</p>
                     )}
                   </div>
                   <div className="bg-slate-800/40 rounded-lg p-3">
-                    <p className="text-slate-500 text-xs">Market odds</p>
+                    <p className="text-muted text-xs">Market odds</p>
                     <p className="text-white font-bold text-sm mt-1">
                       {effectiveOdds || '—'}
                     </p>
-                    <p className="text-slate-600 text-xs mt-1">
+                    <p className="text-muted text-xs mt-1">
                       {effEdge != null
                         ? `${effEdge > 0 ? '+' : ''}${(
                             effEdge * 100
@@ -8077,7 +8370,7 @@ function ROITab({
                     </p>
                   </div>
                   <div className="bg-slate-800/40 rounded-lg p-3">
-                      <p className="text-slate-500 text-xs">Units</p>
+                      <p className="text-muted text-xs">Units</p>
                     <p
                       className={`font-bold text-sm mt-1 ${
                         effectiveProfit == null
@@ -8091,7 +8384,7 @@ function ROITab({
                         ? 'Pending'
                         : `${effectiveProfit >= 0 ? '+' : ''}${effectiveProfit.toFixed(2)}u`}
                     </p>
-                    <p className="text-slate-600 text-xs mt-1">
+                    <p className="text-muted text-xs mt-1">
                       {entry.actualWinner === 'NC'
                         ? 'No Contest'
                         : entry.actualWinner === 'DRAW'
@@ -8104,7 +8397,7 @@ function ROITab({
                   </div>
                 </div>
 
-                <p className="sm:hidden text-slate-500 text-xs">
+                <p className="sm:hidden text-muted text-xs">
                   {entry.eventName || '—'}
                   {entry.eventDate ? ` · ${entry.eventDate}` : ''}
                   {' · v2 Pick: '}{effectiveTrackedSide || '—'}
@@ -8114,36 +8407,42 @@ function ROITab({
 
                 <div className="hidden sm:grid grid-cols-5 gap-3">
                   <div>
-                    <label className="text-slate-500 text-xs font-semibold uppercase tracking-wider block mb-1.5">
+                    <label htmlFor={`roi-event-name-${entry.id}`} className="text-muted text-xs font-semibold uppercase tracking-wider block mb-1.5">
                       Event Name
                     </label>
                     <input
+                      id={`roi-event-name-${entry.id}`}
+                      aria-label={`Event name for ${entry.fighterA} versus ${entry.fighterB}`}
                       type="text"
                       value={entry.eventName || ''}
                       onChange={(e) =>
                         onUpdateEntry(entry.id, { eventName: e.target.value })
                       }
-                      className="w-full bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:outline-hidden focus:border-red-500"
+                      className="w-full bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:border-red-500"
                     />
                   </div>
                   <div>
-                    <label className="text-slate-500 text-xs font-semibold uppercase tracking-wider block mb-1.5">
+                    <label htmlFor={`roi-event-date-${entry.id}`} className="text-muted text-xs font-semibold uppercase tracking-wider block mb-1.5">
                       Event Date
                     </label>
                     <input
+                      id={`roi-event-date-${entry.id}`}
+                      aria-label={`Event date for ${entry.fighterA} versus ${entry.fighterB}`}
                       type="date"
                       value={entry.eventDate || ''}
                       onChange={(e) =>
                         onUpdateEntry(entry.id, { eventDate: e.target.value })
                       }
-                      className="w-full h-10 bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:outline-hidden focus:border-red-500"
+                      className="w-full h-10 bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:border-red-500"
                     />
                   </div>
                   <div>
-                    <label className="text-slate-500 text-xs font-semibold uppercase tracking-wider block mb-1.5">
+                    <label htmlFor={`roi-pick-${entry.id}`} className="text-muted text-xs font-semibold uppercase tracking-wider block mb-1.5">
                       v2 Pick
                     </label>
                     <input
+                      id={`roi-pick-${entry.id}`}
+                      aria-label={`Model pick for ${entry.fighterA} versus ${entry.fighterB}`}
                       type="text"
                       value={effectiveTrackedSide || ''}
                       readOnly
@@ -8151,10 +8450,12 @@ function ROITab({
                     />
                   </div>
                   <div>
-                    <label className="text-slate-500 text-xs font-semibold uppercase tracking-wider block mb-1.5">
+                    <label htmlFor={`roi-odds-${entry.id}`} className="text-muted text-xs font-semibold uppercase tracking-wider block mb-1.5">
                       v2 Odds
                     </label>
                     <input
+                      id={`roi-odds-${entry.id}`}
+                      aria-label={`Odds for the model pick in ${entry.fighterA} versus ${entry.fighterB}`}
                       type="text"
                       value={effectiveOdds || ''}
                       readOnly
@@ -8162,17 +8463,19 @@ function ROITab({
                     />
                   </div>
                   <div>
-                    <label className="text-slate-500 text-xs font-semibold uppercase tracking-wider block mb-1.5">
+                    <label htmlFor={`roi-winner-${entry.id}`} className="text-muted text-xs font-semibold uppercase tracking-wider block mb-1.5">
                       Actual Winner
                     </label>
                     <select
+                      id={`roi-winner-${entry.id}`}
+                      aria-label={`Actual winner for ${entry.fighterA} versus ${entry.fighterB}`}
                       value={entry.actualWinner || ''}
                       onChange={(e) =>
                         onUpdateEntry(entry.id, {
                           actualWinner: e.target.value,
                         })
                       }
-                      className="w-full bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:outline-hidden focus:border-red-500"
+                      className="w-full bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:border-red-500"
                     >
                       <option value="">Pending</option>
                       <option value={entry.fighterA}>{entry.fighterA}</option>
@@ -8297,8 +8600,8 @@ function InfoTab() {
 
       {/* Section 1 — How FightMetrics Works */}
       <div>
-        <h2 className="text-white font-black text-xl mb-0.5">How FightMetrics Works</h2>
-        <p className="text-slate-500 text-xs mb-5 font-mono">DrossPom Composite v1.0 · Learned Logistic v2.0 (parallel)</p>
+        <h1 className="text-white font-black text-xl mb-0.5">How FightMetrics Works</h1>
+        <p className="text-muted text-xs mb-5 font-mono">DrossPom Composite v1.0 · Learned Logistic v2.0 (parallel)</p>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {/* Card 1 — Prediction Engine */}
           <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 hover:border-slate-700 transition-colors">
@@ -8306,7 +8609,7 @@ function InfoTab() {
               <span className="text-base">🧠</span>
               <h3 className="text-white font-bold text-sm">Prediction Engine</h3>
             </div>
-            <p className="text-slate-400 text-xs leading-relaxed">
+            <p className="text-secondary text-xs leading-relaxed">
               Two models run in parallel. <span className="text-slate-200">v1 (DrossPom Composite)</span> is a domain-engineered linear composite — weighted sum of 6 domains (Striking, Grappling, Physical, Form, Experience, Analytics) through a sigmoid function. <span className="text-slate-200">v2 (Logistic)</span> is a learned logistic regression trained on 7,177 historical UFC fights using 17 features including ELO, streaks, and striking efficiency. Win probabilities are Platt-calibrated.
             </p>
           </div>
@@ -8317,11 +8620,11 @@ function InfoTab() {
               <h3 className="text-white font-bold text-sm">Key Predictors</h3>
             </div>
             <ul className="space-y-1.5">
-              <li className="text-slate-400 text-xs leading-relaxed flex gap-2"><span>⚔️</span><span>Striking output is the strongest single predictor across all divisions</span></li>
-              <li className="text-slate-400 text-xs leading-relaxed flex gap-2"><span>🛡️</span><span>Takedown defense outperforms takedown offense as a win signal</span></li>
-              <li className="text-slate-400 text-xs leading-relaxed flex gap-2"><span>📈</span><span>ELO accounts for opponent quality — a win over a top-ranked fighter carries more weight</span></li>
-              <li className="text-slate-400 text-xs leading-relaxed flex gap-2"><span>📉</span><span>Age penalizes fighters 35+ with a linear decay; 38+ triggers a matchup flag</span></li>
-              <li className="text-slate-400 text-xs leading-relaxed flex gap-2"><span>📏</span><span>Physical traits (reach, size) matter more in heavier divisions</span></li>
+              <li className="text-secondary text-xs leading-relaxed flex gap-2"><span>⚔️</span><span>Striking output is the strongest single predictor across all divisions</span></li>
+              <li className="text-secondary text-xs leading-relaxed flex gap-2"><span>🛡️</span><span>Takedown defense outperforms takedown offense as a win signal</span></li>
+              <li className="text-secondary text-xs leading-relaxed flex gap-2"><span>📈</span><span>ELO accounts for opponent quality — a win over a top-ranked fighter carries more weight</span></li>
+              <li className="text-secondary text-xs leading-relaxed flex gap-2"><span>📉</span><span>Age penalizes fighters 35+ with a linear decay; 38+ triggers a matchup flag</span></li>
+              <li className="text-secondary text-xs leading-relaxed flex gap-2"><span>📏</span><span>Physical traits (reach, size) matter more in heavier divisions</span></li>
             </ul>
           </div>
           {/* Card 3 — Projected Finish Method */}
@@ -8330,7 +8633,7 @@ function InfoTab() {
               <span className="text-base">🥊</span>
               <h3 className="text-white font-bold text-sm">Projected Finish Method</h3>
             </div>
-            <p className="text-slate-400 text-xs leading-relaxed">
+            <p className="text-secondary text-xs leading-relaxed">
               A separate calibrated model predicts KO/TKO, Submission, or Decision probability for each matchup. Validated against 1,516 historical fights post-2019. Calibration: KO ±0.9pp, SUB ±0.6pp vs actual UFC rates. Inputs: KO win %, KD rate, sub threat rate, finish rate.
             </p>
           </div>
@@ -8346,7 +8649,7 @@ function InfoTab() {
               <span className="text-base">🏅</span>
               <h3 className="text-white font-bold text-sm">0–100 Fighter Rating</h3>
             </div>
-            <p className="text-slate-400 text-xs leading-relaxed">
+            <p className="text-secondary text-xs leading-relaxed">
               Normalized ELO score within each weight class. <span className="text-slate-200">100 = division’s highest-rated fighter.</span> 50 = division average. Updates every Monday and Thursday after fight results are processed. Not the same as UFC rankings — based entirely on performance data.
             </p>
           </div>
@@ -8355,7 +8658,7 @@ function InfoTab() {
               <span className="text-base">📡</span>
               <h3 className="text-white font-bold text-sm">ELO Rating</h3>
             </div>
-            <p className="text-slate-400 text-xs leading-relaxed">
+            <p className="text-secondary text-xs leading-relaxed">
               Elo-based skill rating updated after every UFC fight. <span className="text-slate-200">Base: 1500.</span> K-factor scales by finish type (KO/Sub ×1.5), round (R1 ×1.3), and experience (&lt;5 fights ×1.5). Elite fighters typically range 1700–1900. Quality Momentum (QM) adjusts for recent opponent strength.
             </p>
           </div>
@@ -8365,7 +8668,7 @@ function InfoTab() {
       {/* Section 3 — Stat Glossary */}
       <div>
         <h2 className="text-white font-black text-xl mb-1">Stat Glossary</h2>
-        <p className="text-slate-400 text-sm mb-4">
+        <p className="text-secondary text-sm mb-4">
           Every metric in FightMetrics explained — what it measures, how it was derived, and why it matters.
         </p>
         <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
@@ -8376,7 +8679,7 @@ function InfoTab() {
                   <span className={`font-black text-sm font-mono ${color}`}>{term}</span>
                   <p className="text-slate-300 text-xs font-semibold mt-0.5 leading-tight">{full}</p>
                 </div>
-                <p className="text-slate-400 text-xs leading-relaxed self-center">{formula}</p>
+                <p className="text-secondary text-xs leading-relaxed self-center">{formula}</p>
               </div>
             ))}
           </div>
@@ -8388,20 +8691,20 @@ function InfoTab() {
         <h2 className="text-white font-black text-xl mb-1">Data &amp; Limitations</h2>
         <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
           <ul className="space-y-3">
-            <li className="flex gap-3 text-xs text-slate-400 leading-relaxed">
-              <span className="text-slate-500 shrink-0 mt-0.5">▸</span>
-              <span>Stats sourced from ufcstats.com via automated pipeline — updates Mon/Thu after fight cards. Diagnostic accuracy ({backtest.correct}/{backtest.total} fights): <span className="text-red-400 font-bold">{backtest.accuracy.toFixed(1)}%</span> <span className="text-slate-500">(ceiling estimate using current career stats, not point-in-time snapshots)</span></span>
+            <li className="flex gap-3 text-xs text-secondary leading-relaxed">
+              <span className="text-muted shrink-0 mt-0.5">▸</span>
+              <span>Stats sourced from ufcstats.com via automated pipeline — updates Mon/Thu after fight cards. Diagnostic accuracy ({backtest.correct}/{backtest.total} fights): <span className="text-red-400 font-bold">{backtest.accuracy.toFixed(1)}%</span> <span className="text-muted">(ceiling estimate using current career stats, not point-in-time snapshots)</span></span>
             </li>
-            <li className="flex gap-3 text-xs text-slate-400 leading-relaxed">
-              <span className="text-slate-500 shrink-0 mt-0.5">▸</span>
+            <li className="flex gap-3 text-xs text-secondary leading-relaxed">
+              <span className="text-muted shrink-0 mt-0.5">▸</span>
               <span>Point-in-time pre-fight stats used for all predictions — no look-ahead bias</span>
             </li>
-            <li className="flex gap-3 text-xs text-slate-400 leading-relaxed">
-              <span className="text-slate-500 shrink-0 mt-0.5">▸</span>
+            <li className="flex gap-3 text-xs text-secondary leading-relaxed">
+              <span className="text-muted shrink-0 mt-0.5">▸</span>
               <span>Low sample fighters (&lt;75 min fight time) are blended toward division averages — flagged as low credibility</span>
             </li>
-            <li className="flex gap-3 text-xs text-slate-400 leading-relaxed">
-              <span className="text-slate-500 shrink-0 mt-0.5">▸</span>
+            <li className="flex gap-3 text-xs text-secondary leading-relaxed">
+              <span className="text-muted shrink-0 mt-0.5">▸</span>
               <span>Cross-division matchups (e.g. LHW vs HW) are noted but physical domain weights are not adjusted</span>
             </li>
           </ul>
