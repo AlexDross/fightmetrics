@@ -163,6 +163,14 @@ export const LEGACY_FIELD_MAP = Object.freeze({
     'legs[].v2DefaultFighter': { to: 'Parlay.legs[].modelDefaultCorner (orientation-mapped)' },
     'legs[].v2ProbAtBuild': { to: 'Parlay.legs[].modelProbAtBuild' },
     'legs[].overridden': { to: 'Parlay.legs[].overridden' },
+    // C6 promotion (2026-08-19): source-neutral, additive alongside the
+    // always-raw-v2 pair above. defaultFighter/probabilityAtBuild are C6 for
+    // a C6-driven leg, v2's own pick otherwise; decisionProbabilitySource
+    // records which.
+    'legs[].defaultFighter': { to: 'Parlay.legs[].defaultCorner (orientation-mapped; source-neutral)' },
+    'legs[].probabilityAtBuild': { to: 'Parlay.legs[].probabilityAtBuild' },
+    'legs[].decisionProbabilitySource': { to: 'Parlay.legs[].decisionProbabilitySource' },
+    'legs[].decisionProbabilityVersion': { to: 'Parlay.legs[].decisionProbabilityVersion' },
     'legs[].fighterA': { dropped: 'duplicated from Bout.cornerA' },
     'legs[].fighterB': { dropped: 'duplicated from Bout.cornerB' },
     'legs[].eventName': { dropped: 'duplicated from Event.name' },

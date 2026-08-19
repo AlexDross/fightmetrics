@@ -44,6 +44,11 @@ import {
   buildMarketInput,
   evaluateGateOnSnapshot,
 } from './marketCore.js';
+// Shared decision-probability resolver. The Simulator's live preview (App.js)
+// and buildRoiEntry below both call this SAME function, so the previewed
+// probability and the saved probability can never disagree. See decision.js
+// for the v1 / v2 / C6 selection rules.
+import { resolveDecisionProbability } from './decision.js';
 
 // americanOdds, parseAmericanOdds, stripVig, calcExpectedValue, americanToDecimal,
 // kellyFraction and djb2Checksum now live in ./marketCore.js (dependency-neutral)
@@ -157,7 +162,13 @@ const deriveFrozenV2RoiView = (entry, fighterA, fighterB) => {
 // plus where that context was sourced from, so a later audit can tell a verified
 // non-title three-rounder from an unverified one. Omitted entirely when the
 // caller passes nothing, so historical entries and frozen fixtures are untouched.
-export const buildProvenance = ({ eventDate, result, fA, fB, predictionTimestamp, captureMode, frozenTier, boutContext }) => {
+//
+// decisionProbabilitySource/c6: forward-only and OPTIONAL, same precedent.
+// Records which probability (v1/v2/c6) actually drove this prediction's bet
+// fields, and -- only when it was 'c6' -- the frozen C6 version/pA/pB that
+// drove it, so provenance is unambiguous about C6 having driven the decision
+// rather than raw v2. Omitted entirely when the caller passes nothing.
+export const buildProvenance = ({ eventDate, result, fA, fB, predictionTimestamp, captureMode, frozenTier, boutContext, decisionProbabilitySource, c6 }) => {
   const todayIso = new Date().toISOString().slice(0, 10);
   const resolvedCaptureMode =
     captureMode ??
@@ -170,6 +181,8 @@ export const buildProvenance = ({ eventDate, result, fA, fB, predictionTimestamp
     modelCoefHash: djb2Checksum(JSON.stringify(MODEL_V2.coef)),
     ...(frozenTier !== undefined ? { frozenTier } : {}),
     ...(boutContext !== undefined ? { boutContext } : {}),
+    ...(decisionProbabilitySource !== undefined ? { decisionProbabilitySource } : {}),
+    ...(c6 !== undefined ? { c6 } : {}),
     featureVector: {
       v1: result.feats,
       v2: result.featsV2 ?? null,
@@ -224,15 +237,30 @@ const buildRoiEntry = ({ fA, fB, oddsA, oddsB, eventName, eventDate, modelToggle
     eventDate: eventDate || modelContext?.eventDate,
     boutContext: normalizedBoutContext,
   });
-  // Use whichever model the user had active at save time (v1 or v2) for every
-  // bet-decision field, mirroring the Simulator's own market useMemo. The raw
-  // per-model probabilities are still stored separately and unchanged
-  // (fighterAProb/fighterBProb = v1, v2pA/v2pB = v2) so the v1-vs-v2 accuracy
-  // snapshots stay intact; modelUsed records which model drove the bet fields.
-  const activePA = modelToggle === 'v2' && result.v2pA != null ? result.v2pA : result.pA;
-  const activePB = modelToggle === 'v2' && result.v2pB != null ? result.v2pB : result.pB;
+  // Resolve which probability actually drives every bet-decision field below,
+  // via the SAME shared resolver the Simulator's live preview calls (see
+  // ./decision.js). Mirrors the Simulator's own market useMemo by
+  // construction, not by convention -- the two code paths cannot drift.
+  // The raw per-model probabilities are still stored separately and
+  // unchanged (fighterAProb/fighterBProb = v1, v2pA/v2pB = v2) so the
+  // v1-vs-v2 accuracy snapshots stay intact; modelUsed records which base
+  // model (v1/v2) was selected, and decisionProbabilitySource (below) records
+  // which probability -- v1, v2, or C6 -- actually drove the bet fields.
+  const decision = resolveDecisionProbability({
+    modelToggle,
+    v1pA: result.pA,
+    v1pB: result.pB,
+    v2pA: result.v2pA,
+    v2pB: result.v2pB,
+    oddsA,
+    oddsB,
+  });
+  const activePA = decision.pA;
+  const activePB = decision.pB;
   const activeResult = { ...result, pA: activePA, pB: activePB };
-  const market = computeMarketAnalysis(activeResult, oddsA, oddsB, fA, fB);
+  // C6 and the betting gate consume the ONE market snapshot the resolver
+  // already parsed -- odds are never re-parsed here.
+  const market = evaluateGateOnSnapshot(activeResult, decision.market, fA, fB);
 
   // predictedWinner/predictedProb stay on the v1 snapshot (consumed by the v1
   // accuracy stats and the "v2 differs" comparisons). trackedSide is the active
@@ -316,6 +344,26 @@ const buildRoiEntry = ({ fA, fB, oddsA, oddsB, eventName, eventDate, modelToggle
     predictedWinner,
     predictedProb: predictedWinner === fA.FIGHTER ? result.pA : result.pB,
     modelUsed: modelToggle,
+    // Authoritative decision-probability source: 'v1' | 'v2' | 'c6'. modelUsed
+    // above stays the SELECTED base model (unchanged, for compatibility with
+    // every existing consumer); this field says which probability actually
+    // drove trackedSide/trackedProb/edge/ev/kelly/fairLine/betAction/bestBet
+    // below -- 'c6' only when user-facing C6 was active, available, and used.
+    // Always present (like v2pA/v2pB) so a consumer never has to special-case
+    // its absence; 'v1'/'v2' here is not C6 metadata and is never misleading.
+    decisionProbabilitySource: decision.source,
+    // decisionUnavailableReason/c6ProbA/c6ProbB/c6Version are OMITTED (not
+    // present-as-null) on an ordinary v1/v2/flag-off save -- they are
+    // C6-specific facts, and adding null C6 metadata to every save (the vast
+    // majority, with the flag off) is unnecessary schema/golden-fixture churn.
+    // decisionUnavailableReason is present only when C6 was explicitly
+    // requested and could not be used; c6ProbA/c6ProbB/c6Version are present
+    // only when C6 actually drove the decision. Never recomputed downstream --
+    // loading/export/grading only ever read these, they must not call C6 again.
+    ...(decision.unavailableReason != null ? { decisionUnavailableReason: decision.unavailableReason } : {}),
+    ...(decision.source === 'c6'
+      ? { c6ProbA: decision.c6ProbA, c6ProbB: decision.c6ProbB, c6Version: decision.c6Version }
+      : {}),
     trackedSide,
     trackedProb,
     // Units actually staked on trackedSide at save time. Defaults to 1
@@ -366,6 +414,8 @@ const buildRoiEntry = ({ fA, fB, oddsA, oddsB, eventName, eventDate, modelToggle
       fB,
       frozenTier: market?.betAction ?? 'NO BET',
       boutContext: normalizedBoutContext ?? undefined,
+      decisionProbabilitySource: decision.source,
+      c6: decision.source === 'c6' ? { version: decision.c6Version, pA: decision.c6ProbA, pB: decision.c6ProbB } : undefined,
     }),
   };
 
@@ -414,4 +464,16 @@ export {
   deriveFrozenV2RoiView,
   djb2Checksum,
   buildRoiEntry,
+  evaluateGateOnSnapshot,
 };
+export {
+  resolveDecisionProbability,
+  resolveFrozenDecisionView,
+  DECISION_SOURCE_V1,
+  DECISION_SOURCE_V2,
+  DECISION_SOURCE_C6,
+  DECISION_LABEL_V1,
+  DECISION_LABEL_V2,
+  DECISION_LABEL_C6,
+} from './decision.js';
+export { buildParlayLeg } from './parlayLeg.js';

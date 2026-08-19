@@ -1,8 +1,10 @@
 // ─── DOMAIN / SHADOW ─────────────────────────────────────────────────────────
-// Isolated, experimental C6 shadow-evaluation domain. Nothing here changes the
-// user-facing v2 probability, the current recommendation, or any wager. It only
-// freezes a paper-only shadow record alongside a saved prediction when
-// VITE_C6_SHADOW_CAPTURE_ENABLED is true. C6 is never user-facing in this release.
+// Isolated, experimental C6 shadow-evaluation domain. This module only freezes
+// a paper-only shadow record alongside a saved prediction when
+// VITE_C6_SHADOW_CAPTURE_ENABLED is true; nothing here changes the displayed
+// probability, the recommendation, or the betting gate. User-facing promotion
+// of C6 (VITE_C6_USER_FACING_ENABLED, decoupled from shadow capture) lives in
+// src/domain/betting/decision.js and reads isC6UserFacingActive from ./config.js.
 
 export {
   C6_VERSION,

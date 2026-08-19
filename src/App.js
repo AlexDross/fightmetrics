@@ -95,11 +95,16 @@ import {
   createPredictionId,
   kellyFraction,
   computeMarketAnalysis,
+  evaluateGateOnSnapshot,
   deriveFrozenV2RoiView,
   djb2Checksum,
   buildProvenance,
   buildRoiEntry,
   isNoReadProbability,
+  resolveDecisionProbability,
+  resolveFrozenDecisionView,
+  DECISION_SOURCE_C6,
+  buildParlayLeg,
 } from './domain/betting';
 // Foundation Stage 4: Upcoming -> ROI transitions extracted verbatim.
 import {
@@ -2304,15 +2309,20 @@ function UnitsStakedInput({ value, onCommit, id, ariaLabel, describedBy }) {
 
 // Build Parlay modal -- sibling to PropEntryForm, not a shared refactor.
 // legInputs are the ALREADY-computed per-fight values from
-// UpcomingEventTab's modelPickByEntryId (v2DefaultFighter/v2WinProb) --
-// this component never calls computeMatchupEdges itself, so a pre-filled
-// leg can never drift from what modelPickByEntryId already resolved.
-// pickedFighter defaults to v2DefaultFighter; the override buttons below
-// mirror PropEntryForm's side-select pattern (App.js:2746-2764).
+// UpcomingEventTab's modelPickByEntryId + resolveFrozenDecisionView
+// (defaultFighter/probabilityAtBuild/decisionProbabilitySource/
+// decisionProbabilityVersion, plus the legacy raw-v2 v2DefaultFighter/
+// v2WinProb) -- this component never calls computeMatchupEdges or the C6
+// resolver itself, so a pre-filled leg can never drift from what the
+// Upcoming card already resolved and displayed.
+// pickedFighter defaults to defaultFighter (C6 for a C6-driven entry, v2's
+// own pick otherwise -- never silently defaulting a C6 entry to raw v2); the
+// override buttons below mirror PropEntryForm's side-select pattern
+// (App.js:2746-2764).
 function BuildParlayPanel({ legInputs, onConfirm, onCancel }) {
   const formId = useId();
   const [picks, setPicks] = useState(() =>
-    legInputs.map((l) => ({ ...l, pickedFighter: l.v2DefaultFighter, overridden: false }))
+    legInputs.map((l) => ({ ...l, pickedFighter: l.defaultFighter, overridden: false }))
   );
   const [combinedOdds, setCombinedOdds] = useState('');
   const [stake, setStake] = useState(1);
@@ -2321,7 +2331,7 @@ function BuildParlayPanel({ legInputs, onConfirm, onCancel }) {
     setPicks((prev) =>
       prev.map((p) =>
         p.fightId === fightId
-          ? { ...p, pickedFighter: fighter, overridden: fighter !== p.v2DefaultFighter }
+          ? { ...p, pickedFighter: fighter, overridden: fighter !== p.defaultFighter }
           : p
       )
     );
@@ -2331,20 +2341,10 @@ function BuildParlayPanel({ legInputs, onConfirm, onCancel }) {
 
   const handleConfirm = () => {
     if (!canSubmit) return;
-    const legs = picks.map((p) => ({
-      fightId: p.fightId,
-      fighterA: p.fighterA,
-      fighterB: p.fighterB,
-      eventName: p.eventName,
-      eventDate: p.eventDate,
-      pickedFighter: p.pickedFighter,
-      v2DefaultFighter: p.v2DefaultFighter,
-      // v2's probability for the PICKED (post-override) side -- not always
-      // v2's own favorite's prob. Well-defined since pA+pB=1 for a two-way
-      // fight: the non-favored side's prob is just 1 - the favorite's.
-      v2ProbAtBuild: p.overridden ? 1 - p.v2WinProb : p.v2WinProb,
-      overridden: p.overridden,
-    }));
+    // buildParlayLeg (domain/betting/parlayLeg.js) is the single source of
+    // truth for a leg's saved fields, so its output can be unit tested
+    // directly without rendering this component.
+    const legs = picks.map(buildParlayLeg);
     onConfirm({
       id: createPredictionId(),
       createdAt: new Date().toISOString(),
@@ -2385,11 +2385,17 @@ function BuildParlayPanel({ legInputs, onConfirm, onCancel }) {
                 ))}
               </div>
               <p className="text-muted text-xs mt-1.5 flex items-center gap-1.5 flex-wrap">
-                <span className="text-[10px] font-bold text-violet-400 bg-violet-900/30 border border-violet-700/40 px-1.5 py-0.5 rounded-sm uppercase">
-                  v2
+                <span
+                  className={`text-[10px] font-bold px-1.5 py-0.5 rounded-sm uppercase border ${
+                    p.decisionProbabilitySource === 'c6'
+                      ? 'text-amber-300 bg-amber-900/30 border-amber-700/50'
+                      : 'text-violet-400 bg-violet-900/30 border-violet-700/40'
+                  }`}
+                >
+                  {p.decisionProbabilitySource === 'c6' ? 'C6' : 'v2'}
                 </span>
                 <span>
-                  {p.v2DefaultFighter} · {((p.v2WinProb ?? 0) * 100).toFixed(1)}%
+                  {p.defaultFighter} · {((p.probabilityAtBuild ?? 0) * 100).toFixed(1)}%
                   {p.overridden ? ' · overridden' : ''}
                 </span>
               </p>
@@ -2550,8 +2556,17 @@ function UpcomingEventTab({
         hasV1 = entry.fighterAProb != null && entry.fighterBProb != null;
         v1pAOut = entry.fighterAProb;
         v1pBOut = entry.fighterBProb;
-        pA = modelToggle === 'v2' && entry.v2pA != null ? entry.v2pA : entry.fighterAProb;
-        pB = modelToggle === 'v2' && entry.v2pB != null ? entry.v2pB : entry.fighterBProb;
+        // C6-driven entries: the frozen decision probability is c6ProbA/B, not
+        // v2pA/v2pB (which stay raw v2 for the accuracy snapshots). Reading
+        // v2pA/v2pB here for a C6 entry would show a probability inconsistent
+        // with the already-frozen betAction/betRecommendedFighter below.
+        if (entry.decisionProbabilitySource === 'c6' && entry.c6ProbA != null && entry.c6ProbB != null) {
+          pA = entry.c6ProbA;
+          pB = entry.c6ProbB;
+        } else {
+          pA = modelToggle === 'v2' && entry.v2pA != null ? entry.v2pA : entry.fighterAProb;
+          pB = modelToggle === 'v2' && entry.v2pB != null ? entry.v2pB : entry.fighterBProb;
+        }
         betAction = entry.betAction;
         betFighter = entry.betRecommendedFighter || null;
         edgeA = entry.edgeA;
@@ -2602,16 +2617,29 @@ function UpcomingEventTab({
         .filter((e) => selectedLegIds.has(e.id))
         .map((entry) => {
           const mp = modelPickByEntryId.get(entry.id);
+          // frozenDecision is the SAME shared view ROI/Upcoming read (see
+          // domain/betting/decision.js) -- null for any non-C6 entry, in
+          // which case the parlay leg default stays v2's own reconstructed
+          // pick exactly as before.
+          const frozenDecision = resolveFrozenDecisionView(entry);
           return {
             fightId: entry.id,
             fighterA: entry.fighterA,
             fighterB: entry.fighterB,
             eventName: entry.eventName,
             eventDate: entry.eventDate,
+            // Legacy, raw-v2, unchanged -- kept for existing consumers/schema.
             v2DefaultFighter: mp?.v2Winner,
             v2WinProb: mp?.v2WinProb,
             hasV1: mp?.hasV1,
             v1Winner: mp?.v1Winner,
+            // Source-neutral default the modal actually pre-selects. C6 for a
+            // C6-driven entry (matching its Upcoming card); v2's own pick
+            // otherwise, byte-identical to pre-C6 behaviour.
+            defaultFighter: frozenDecision ? frozenDecision.winner : mp?.v2Winner,
+            probabilityAtBuild: frozenDecision ? frozenDecision.probability : mp?.v2WinProb,
+            decisionProbabilitySource: frozenDecision ? frozenDecision.source : 'v2',
+            decisionProbabilityVersion: frozenDecision ? frozenDecision.version : null,
           };
         }),
     [entries, selectedLegIds, modelPickByEntryId]
@@ -2806,10 +2834,19 @@ function UpcomingEventTab({
                       <p className="text-muted text-xs uppercase tracking-wider">
                         Model Pick
                       </p>
-                      {hasV2 && modelToggle === 'v2' && (
-                        <span className="text-[10px] font-bold text-violet-400 bg-violet-900/30 border border-violet-700/40 px-1.5 py-0.5 rounded-sm uppercase">
-                          v2
+                      {entry.decisionProbabilitySource === 'c6' ? (
+                        <span
+                          title="This pick's probability and bet recommendation were driven by C6 (v2 blended with the no-vig market)."
+                          className="text-[10px] font-bold text-amber-300 bg-amber-900/30 border border-amber-700/50 px-1.5 py-0.5 rounded-sm uppercase"
+                        >
+                          C6
                         </span>
+                      ) : (
+                        hasV2 && modelToggle === 'v2' && (
+                          <span className="text-[10px] font-bold text-violet-400 bg-violet-900/30 border border-violet-700/40 px-1.5 py-0.5 rounded-sm uppercase">
+                            v2
+                          </span>
+                        )
                       )}
                     </div>
                     <p className="text-white font-black text-xl mt-1">{predictedWinner}</p>
@@ -4422,7 +4459,7 @@ const buildSimulatorDomainRows = (result, modelToggle) => {
 //
 // Built and exported standalone so it can be rendered in isolation before
 // being wired into MatchupSimulator's render tree.
-function SimulatorContributionPanel({ fA, fB, result, modelToggle, eventDate }) {
+function SimulatorContributionPanel({ fA, fB, result, modelToggle, eventDate, isC6Active }) {
   const [expanded, setExpanded] = useState(() => new Set());
   // Separate from `expanded`: a domain must already be expanded before its
   // technical toggle is reachable, and collapsing the domain again (see
@@ -4456,12 +4493,19 @@ function SimulatorContributionPanel({ fA, fB, result, modelToggle, eventDate }) 
     <div className="bg-slate-900 border border-slate-700 rounded-xl p-5">
       <div className="flex items-center justify-between mb-4">
         <p className="text-secondary text-xs font-semibold uppercase tracking-widest">
-          Contribution Breakdown
+          {isC6Active ? 'Underlying v2 Model Contribution' : 'Contribution Breakdown'}
         </p>
         <span className="text-[10px] font-bold text-muted uppercase tracking-wide">
           {modelToggle === 'v2' ? 'v2 logistic' : 'v1 composite'}
         </span>
       </div>
+      {isC6Active && (
+        <p className="text-muted text-[11px] -mt-3 mb-4">
+          Reasoning behind the underlying v2 fighter model. C6's market adjustment above
+          is not decomposed here — it is v2 blended with the no-vig market price, not a
+          per-feature breakdown.
+        </p>
+      )}
       <div className="space-y-2">
         {rows.map((row) => {
           const isOpen = expanded.has(row.key);
@@ -4653,17 +4697,37 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
     return computeMatchupEdges(fA, fB, { eventDate, boutContext });
   }, [fA, fB, eventDate, boutContext]);
 
-  // Active probabilities for whichever model version is toggled on — shared by
-  // the market analysis below and by the display sections further down so the
-  // MODEL PICK / VALUE SIGNAL / BET REC boxes never disagree with each other.
-  const activePA = modelToggle === 'v2' && result?.v2pA != null ? result.v2pA : result?.pA;
-  const activePB = modelToggle === 'v2' && result?.v2pB != null ? result.v2pB : result?.pB;
+  // Decision resolver: picks v1 / raw v2 / C6 for whichever model version is
+  // toggled on, via the SAME shared resolver buildRoiEntry uses at save time
+  // (see domain/betting/decision.js) -- the live preview and a saved
+  // prediction can never disagree about which probability was used or why.
+  const decision = useMemo(() => {
+    if (!result) return null;
+    return resolveDecisionProbability({
+      modelToggle,
+      v1pA: result.pA,
+      v1pB: result.pB,
+      v2pA: result.v2pA,
+      v2pB: result.v2pB,
+      oddsA,
+      oddsB,
+    });
+  }, [result, modelToggle, oddsA, oddsB]);
+
+  // Active probabilities driving the MODEL PICK / VALUE SIGNAL / BET REC boxes
+  // further down, and the headline hero above -- always the resolver's output
+  // (raw v2 with the flag off, exactly as before; C6 only when the flag is on,
+  // v2 is selected, and valid odds are available).
+  const activePA = decision?.pA;
+  const activePB = decision?.pB;
 
   const market = useMemo(() => {
-    if (!result) return null;
-    const activeResult = { ...result, pA: activePA, pB: activePB };
-    return computeMarketAnalysis(activeResult, oddsA, oddsB, fA, fB);
-  }, [oddsA, oddsB, result, fA, fB, activePA, activePB]);
+    if (!result || !decision) return null;
+    const activeResult = { ...result, pA: decision.pA, pB: decision.pB };
+    // C6 (above) and the gate consume the ONE market snapshot the resolver
+    // already parsed -- odds are never re-parsed here.
+    return evaluateGateOnSnapshot(activeResult, decision.market, fA, fB);
+  }, [result, decision, fA, fB]);
 
   return (
     <div className="max-w-5xl mx-auto px-5 py-8">
@@ -4858,6 +4922,40 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                     </div>
                   )}
                 </div>
+
+                {/* C6 promotion label + compact comparison. Renders ONLY when
+                    C6 was actually requested (flag on + v2 selected) -- with
+                    the flag off this whole block is absent and the hero is
+                    byte-identical to pre-C6 behaviour. */}
+                {decision?.c6Requested && (
+                  <div className="mb-3">
+                    <span
+                      className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded-full border uppercase tracking-wide ${
+                        decision.source === DECISION_SOURCE_C6
+                          ? 'text-amber-300 bg-amber-900/30 border-amber-700/50'
+                          : 'text-slate-300 bg-slate-800/60 border-slate-700'
+                      }`}
+                    >
+                      {decision.label}
+                    </span>
+                    {decision.source === DECISION_SOURCE_C6 ? (
+                      <p className="text-muted text-[11px] mt-1.5 font-mono">
+                        v2 model {((result.v2pA ?? 0) * 100).toFixed(1)}% · no-vig market{' '}
+                        {((decision.market.noVigA ?? 0) * 100).toFixed(1)}% · C6 adjusted{' '}
+                        {((decision.pA ?? 0) * 100).toFixed(1)}%
+                      </p>
+                    ) : decision.bettingSuppressed ? (
+                      <p className="text-amber-500 text-[11px] mt-1.5">
+                        C6 unavailable ({decision.unavailableReason}) — showing v2, betting
+                        recommendation suppressed.
+                      </p>
+                    ) : decision.unavailableReason === 'ODDS_MISSING_OR_INVALID' ? (
+                      <p className="text-muted text-[11px] mt-1.5">
+                        Enter both moneyline odds above to see C6's market-adjusted estimate.
+                      </p>
+                    ) : null}
+                  </div>
+                )}
 
                 {/* One clear statement -- replaces the old Model Favorite tile
                     outright (it said nothing this doesn't already say). Full
@@ -5245,7 +5343,7 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
           })()}
 
           {/* ── CONTRIBUTION BREAKDOWN (replaces Key Advantages, Domain Breakdown, Model Input Comparison) ── */}
-          <SimulatorContributionPanel fA={fA} fB={fB} result={result} modelToggle={modelToggle} eventDate={eventDate} />
+          <SimulatorContributionPanel fA={fA} fB={fB} result={result} modelToggle={modelToggle} eventDate={eventDate} isC6Active={decision?.source === DECISION_SOURCE_C6} />
 
           {/* ── BETTING ANALYSIS (only when odds entered) ── */}
           {market && (
@@ -5291,7 +5389,14 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
 
                       {/* Model Pick — always shown */}
                       <div className={`border rounded-xl p-4 ${market.lowConviction ? 'bg-orange-950/10 border-orange-900' : 'bg-slate-900 border-slate-700'}`}>
-                        <p className="text-muted text-xs font-semibold uppercase tracking-wider mb-2">Model Pick</p>
+                        <div className="flex items-center gap-1.5 mb-2">
+                          <p className="text-muted text-xs font-semibold uppercase tracking-wider">Model Pick</p>
+                          {decision?.source === DECISION_SOURCE_C6 && (
+                            <span className="text-[9px] font-bold text-amber-300 bg-amber-900/30 border border-amber-700/50 px-1.5 py-0.5 rounded-sm uppercase">
+                              C6
+                            </span>
+                          )}
+                        </div>
                         <p className="text-white font-black text-base leading-tight">{pickFighter.FIGHTER}</p>
                         <p className={`text-xs mt-1 ${market.lowConviction ? 'text-orange-400' : 'text-secondary'}`}>
                           {market.pickSide === 'A' ? (activePA * 100).toFixed(1) : (activePB * 100).toFixed(1)}% win prob
@@ -5456,9 +5561,14 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                 if (lowCredCap && (action === 'STRONG BET' || action === 'BET')) action = 'LEAN';
                 if (pickRawOdds > 2 / 3 && pickEdge < 0.25 && action !== 'NO BET') action = 'NO BET';
                 const v2Fighter = action !== 'NO BET' ? (pickSide === 'A' ? fA.FIGHTER : fB.FIGHTER) : null;
-                const v1Action = market.betAction;
-                const v1Fighter = market.bestBet === 'A' ? fA.FIGHTER : market.bestBet === 'B' ? fB.FIGHTER : null;
-                const disagrees = action !== v1Action || v2Fighter !== v1Fighter;
+                // This card is v2's OWN raw recommendation, independent of the
+                // headline `market` gate above -- which is raw v2 with the C6
+                // flag off, but C6 when it's on. Comparing against whatever
+                // `market` currently represents (never hardcoded to "v1")
+                // keeps the disagreement note honest either way.
+                const headlineAction = market.betAction;
+                const headlineFighter = market.bestBet === 'A' ? fA.FIGHTER : market.bestBet === 'B' ? fB.FIGHTER : null;
+                const disagrees = action !== headlineAction || v2Fighter !== headlineFighter;
                 const badgeStyle =
                   action === 'STRONG BET' ? 'bg-emerald-500 text-emerald-950' :
                   action === 'BET'        ? 'bg-emerald-700 text-emerald-100' :
@@ -5473,7 +5583,11 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                         {v2Fighter}
                       </span>
                     )}
-                    {disagrees && <span className="text-amber-500 text-xs ml-auto">⚠ differs from v1</span>}
+                    {disagrees && (
+                      <span className="text-amber-500 text-xs ml-auto">
+                        ⚠ differs from {decision?.source === DECISION_SOURCE_C6 ? 'C6' : 'headline'}
+                      </span>
+                    )}
                   </div>
                 );
               })()}
@@ -8177,7 +8291,21 @@ function ROITab({
             const profit = calcTrackedProfit(entry);
             const trackedEdge = entry.displayEdge;
             const inV2Mode = modelView === 'v2';
-            const v2Data = inV2Mode ? (v2DataMap.get(entry.id) ?? null) : null;
+            // v2Data is v2's OWN reconstructed pick/probability (deriveFrozenV2RoiView
+            // reads raw v2pA/v2pB), independent of whichever probability actually
+            // drove this entry's tracked decision. For a C6-driven entry, C6 can
+            // pick a different side than v2's raw argmax -- so v2Data must NOT
+            // stand in for the headline/grading view here. Withholding it (rather
+            // than reading it and overriding downstream) reuses every existing
+            // "else" fallback below, which already reads the entry's own correct
+            // trackedSide/displayWinner/displayBetAction/displayBetFighter fields.
+            // Shared frozen-decision view (domain/betting/decision.js) -- the
+            // ONE place "what did C6 actually decide for this saved entry"
+            // is answered, so Upcoming/ROI/parlay can't independently drift.
+            // null for any non-C6 entry.
+            const frozenDecision = resolveFrozenDecisionView(entry);
+            const isC6Decision = frozenDecision != null;
+            const v2Data = (inV2Mode && !isC6Decision) ? (v2DataMap.get(entry.id) ?? null) : null;
             const v2pick = (inV2Mode && v2Data) ? v2Data.v2Winner : entry.trackedSide;
             const effectiveTrackedSide = inV2Mode ? v2pick : entry.trackedSide;
             const effectiveOdds = inV2Mode
@@ -8195,9 +8323,19 @@ function ROITab({
               return entry.actualWinner === effectiveTrackedSide ? stake * (dec - 1) : -stake;
             })();
             const correct = decisive && entry.actualWinner === effectiveTrackedSide;
-            const effWinner = (inV2Mode && v2Data) ? v2Data.v2Winner : entry.displayWinner;
-            const effProb = (inV2Mode && v2Data) ? v2Data.v2WinProb : (entry.displayProb ?? 0);
-            const effFairLine = (inV2Mode && v2Data) ? v2Data.v2FairLine : americanOdds(entry.displayProb ?? 0);
+            // C6-driven entries: display the frozen C6 decision, never
+            // entry.displayWinner/displayProb (those are the v1 snapshot,
+            // preserved unchanged for the v1 accuracy stats) and never
+            // v2Data (v2's own raw reconstructed pick, withheld above).
+            const effWinner = isC6Decision
+              ? frozenDecision.winner
+              : (inV2Mode && v2Data) ? v2Data.v2Winner : entry.displayWinner;
+            const effProb = isC6Decision
+              ? frozenDecision.probability
+              : (inV2Mode && v2Data) ? v2Data.v2WinProb : (entry.displayProb ?? 0);
+            const effFairLine = isC6Decision
+              ? frozenDecision.fairLine
+              : (inV2Mode && v2Data) ? v2Data.v2FairLine : americanOdds(entry.displayProb ?? 0);
             const effEdge = (inV2Mode && v2Data && v2Data.v2Edge != null) ? v2Data.v2Edge : trackedEdge;
             const effBetAction = (inV2Mode && v2Data) ? v2Data.v2BetAction : entry.displayBetAction;
             const effBetFighter = (inV2Mode && v2Data) ? v2Data.v2BetFighter : entry.displayBetFighter;
@@ -8288,9 +8426,18 @@ function ROITab({
                         <p className="text-muted text-xs uppercase tracking-wider">
                           Model Pick
                         </p>
-                        <span className="text-[10px] font-bold text-violet-400 bg-violet-900/30 border border-violet-700/40 px-1.5 py-0.5 rounded-sm uppercase">
-                          v2
-                        </span>
+                        {isC6Decision ? (
+                          <span
+                            title="This pick's probability and bet recommendation were driven by C6 (v2 blended with the no-vig market)."
+                            className="text-[10px] font-bold text-amber-300 bg-amber-900/30 border border-amber-700/50 px-1.5 py-0.5 rounded-sm uppercase"
+                          >
+                            C6
+                          </span>
+                        ) : (
+                          <span className="text-[10px] font-bold text-violet-400 bg-violet-900/30 border border-violet-700/40 px-1.5 py-0.5 rounded-sm uppercase">
+                            v2
+                          </span>
+                        )}
                       </div>
                       <p className="text-white font-black text-xl mt-1">
                         {effWinner}

@@ -11,10 +11,15 @@
 //        calculations, or any actual wager behaviour.
 //
 //   VITE_C6_USER_FACING_ENABLED
-//     OFF (default): C6 is never user-facing.
-//     ON: UNSUPPORTED in this release. We FAIL CLOSED — C6 recommendations are
-//        NOT activated regardless. Promoting C6 to user-facing requires a
-//        separate, reviewed change; a raw env flip must not do it.
+//     OFF (default), or unset, or any unrecognized value: C6 is never
+//        user-facing -- the Simulator and betting gate behave exactly as
+//        before.
+//     ON ('true' or '1'): the Simulator displays C6's market-adjusted
+//        probability (when v2 is selected and valid odds are available) and
+//        the betting gate uses that exact same probability. Shadow capture
+//        is a SEPARATE control -- this flag does not require it, and shadow
+//        capture alone never activates this flag. See
+//        src/domain/betting/decision.js for the resolver this flag gates.
 //
 // Reads import.meta.env when present (Vite / Vitest); tests use vi.stubEnv.
 // Falls back to an empty env in any non-Vite context, so the default is OFF.
@@ -40,25 +45,25 @@ export const isC6UserFacingRequested = () =>
   truthy(readEnv().VITE_C6_USER_FACING_ENABLED);
 
 /**
- * Whether C6 is user-facing/active. HARD-CODED false in this release: promoting
- * C6 to user-facing is intentionally NOT reachable by an env flag. This is the
- * fail-closed guarantee — even VITE_C6_USER_FACING_ENABLED=true does not
- * activate C6 recommendations.
+ * Whether C6 is user-facing/active. Mirrors the requested flag exactly --
+ * this is the ONE place production code should check before promoting C6 to
+ * the Simulator display or the betting gate. Defaults false (unset, 'false',
+ * or any unrecognized value); only 'true'/'1' activate it.
  */
-export const isC6UserFacingActive = () => false;
+export const isC6UserFacingActive = () => isC6UserFacingRequested();
 
 /**
  * Human-readable status of the user-facing control, for logging/diagnostics.
- *   'OFF'                 — not requested (normal).
- *   'UNSUPPORTED_FORCED_OFF' — requested via env but refused (fail closed).
+ *   'OFF'    — not requested, or requested with an unrecognized value.
+ *   'ACTIVE' — requested via a recognized truthy env value.
  */
 export const userFacingConfigStatus = () =>
-  isC6UserFacingRequested() ? 'UNSUPPORTED_FORCED_OFF' : 'OFF';
+  isC6UserFacingActive() ? 'ACTIVE' : 'OFF';
 
 /** Snapshot of the resolved shadow configuration (stored on each shadow record). */
 export const resolveShadowConfig = () => ({
   shadowCaptureEnabled: isShadowCaptureEnabled(),
   userFacingRequested: isC6UserFacingRequested(),
-  userFacingActive: isC6UserFacingActive(), // always false this release
+  userFacingActive: isC6UserFacingActive(),
   userFacingStatus: userFacingConfigStatus(),
 });

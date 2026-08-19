@@ -109,7 +109,8 @@ export function buildShadowRecord({
       coefHash: djb2Checksum(JSON.stringify(MODEL_V2.coef)),
     },
 
-    // C6 layer (experimental, order-safe, never user-facing this release)
+    // C6 layer (experimental, order-safe; user-facing promotion is gated by
+    // VITE_C6_USER_FACING_ENABLED -- see featureFlags.userFacingActive below)
     c6: {
       version: C6_VERSION,
       coefficients: { w0: C6_COEF.w0, wMarket: C6_COEF.wMarket, wV2: C6_COEF.wV2 },
@@ -152,7 +153,9 @@ export function buildShadowRecord({
     singleSnapshotConsistent,
     featureFlags: config,
     engineNote:
-      'C6 is an experimental market-adjusted betting-layer forecast. It does not ' +
-      'replace the v2 simulator probability and is never user-facing in this release.',
+      'C6 is an experimental market-adjusted betting-layer forecast, frozen here ' +
+      'for prospective paper evaluation regardless of whether it is user-facing. ' +
+      'See featureFlags.userFacingActive for whether C6 drove the Simulator ' +
+      'display and betting gate for this specific save.',
   };
 }
