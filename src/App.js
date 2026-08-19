@@ -662,10 +662,10 @@ const rankColor = (rank, total) => {
 };
 const rankBand = (rank, total) => {
   const p = rank / total;
-  if (p <= 0.05) return { symbol: '▲▲', label: 'Top 5 percent' };
-  if (p <= 0.15) return { symbol: '▲', label: 'Top 15 percent' };
-  if (p <= 0.4) return { symbol: '↑', label: 'Above average' };
-  if (p <= 0.7) return { symbol: '·', label: 'Middle' };
+  if (p <= 0.05) return { symbol: '▲', label: 'Top 5 percent' };
+  if (p <= 0.15) return { symbol: '', label: 'Top 15 percent' };
+  if (p <= 0.4) return { symbol: '', label: 'Above average' };
+  if (p <= 0.7) return { symbol: '', label: 'Middle' };
   return { symbol: '▼', label: 'Bottom 30 percent' };
 };
 const credColor = (c) =>
@@ -3653,7 +3653,9 @@ function DataTable({ fighters }) {
                             fighters.length
                           )} ${extra}`}
                         >
-                          <span aria-hidden="true" className="text-[9px] mr-1">{rankStatus.symbol}</span>
+                          {rankStatus.symbol && (
+                            <span aria-hidden="true" className="text-[9px] mr-1">{rankStatus.symbol}</span>
+                          )}
                           <span className="sr-only">{rankStatus.label}. </span>
                           {display}{' '}
                           <span className="text-muted font-normal">
@@ -3671,12 +3673,8 @@ function DataTable({ fighters }) {
       </div>
       <div className="mt-2 flex items-center gap-4 text-xs text-muted px-1 flex-wrap">
         <span className="flex items-center gap-1.5">
-          <span aria-hidden="true">▲▲</span>
+          <span aria-hidden="true">▲</span>
           Top 5%
-        </span>
-        <span className="flex items-center gap-1.5">
-          <span aria-hidden="true">·</span>
-          Middle
         </span>
         <span className="flex items-center gap-1.5">
           <span aria-hidden="true">▼</span>

@@ -26,12 +26,12 @@
   Semantic foregrounds. Every foreground below is verified against the three
   dark surfaces used by the application: slate-950 (#020617), slate-900
   (#0f172a), and slate-800 (#1e293b). The weakest pair is muted on slate-800
-  at 5.71:1, above WCAG 2.2 AA's 4.5:1 requirement for normal text.
+  at 5.23:1, above WCAG 2.2 AA's 4.5:1 requirement for normal text.
 */
 :root {
-  --fm-text-primary: #f8fafc;
-  --fm-text-secondary: #cbd5e1;
-  --fm-text-muted: #94a3b8;
+  --fm-text-primary: #f1f5f9;
+  --fm-text-secondary: #a8b4c4;
+  --fm-text-muted: #8d9caf;
   --fm-focus-ring: #f8fafc;
 }
 
