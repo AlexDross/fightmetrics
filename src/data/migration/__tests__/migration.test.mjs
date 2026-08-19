@@ -11,6 +11,11 @@ import {
 import { StoreSchema } from '../../schemas/entities.mjs';
 import { checkInvariants } from '../../schemas/invariants.mjs';
 import { eventNameKey, fighterKey } from '../ids.mjs';
+import finalPreFight from '../../../__tests__/snapshots/upcoming.finalPreFight.json';
+
+// The canonical shape of a SAVED-BUT-UNGRADED prediction, independent of
+// whether a card happens to be pending right now. See the use site below.
+const PENDING_TEMPLATE = finalPreFight.entries[0];
 
 const LEGACY = {
   roiEntries: ROI_ENTRIES,
@@ -428,7 +433,12 @@ describe('results and settlement', () => {
   });
 
   it('keeps a synthetic pending row open when both market corners are blank', () => {
-    const source = UPCOMING_ENTRIES[0];
+    // A PENDING-SHAPED template. Deliberately not UPCOMING_ENTRIES[0]: after a
+    // card is graded, Upcoming is legitimately empty until the next save (the
+    // UFC 330 handoff on 2026-08-17 left it so), and a template read from an
+    // empty array is `undefined`. The final pre-fight snapshot is the canonical
+    // pre-grading record shape and is committed, so it is always available.
+    const source = PENDING_TEMPLATE;
     const entry = { ...source, id: '1790000000010-noodds', oddsA: '', oddsB: '', marketOdds: '' };
     const out = migrateV0ToV1({
       roiEntries: [], upcomingEntries: [entry], propPicks: [], parlayEntries: [],

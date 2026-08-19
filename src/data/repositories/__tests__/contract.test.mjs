@@ -9,14 +9,43 @@ import { isRevision, isValidStakeTransport, semanticEquals } from '../types.mjs'
 import { StoreSchema } from '../../schemas/entities.mjs';
 import { checkInvariants } from '../../schemas/invariants.mjs';
 import { computeROISummary } from '../../../domain/statistics/index.js';
+import finalPreFight from '../../../__tests__/snapshots/upcoming.finalPreFight.json';
 
 // The contract suite runs against a REAL migrated Stage 6 store, not fixtures,
 // so the in-memory backing is exercised on the same positions Postgres will
 // hold. Gate 6 must satisfy this identical suite.
 const deps = { migratedAt: '2026-07-28T00:00:00.000Z', newId: () => '0'.repeat(8) + '-0000-7000-8000-' + '0'.repeat(12) };
 const PARLAY_ENTRIES = [];
+
+// ── the pending half of the corpus ───────────────────────────────────────────
+//
+// Grading, returnToPending and the revision-vector rules all need at least one
+// OPEN position to act on. Between a graded card and the next save, Upcoming is
+// legitimately EMPTY -- the UFC 330 handoff on 2026-08-17 left it exactly so --
+// and `listPending().data[0]` was then `undefined`, which is a property of the
+// current card, not of the repository contract under test.
+//
+// So the suite supplies its own pending row rather than assuming production has
+// one, in the same spirit as the note below about hard-coded totals. It is
+// built from the committed final pre-fight snapshot, so it is a real record
+// shape rather than a hand-written stub, and it is re-identified onto a
+// synthetic id and a far-future event so it can never collide with, or be
+// mistaken for, production data.
+const SYNTHETIC_PENDING = {
+  ...JSON.parse(JSON.stringify(finalPreFight.entries[0])),
+  // A well-formed legacy id (`\d{13}-[a-z0-9]{6}`) timestamped in the year
+  // 2100, so it satisfies the schema while being unmistakably synthetic and
+  // unable to collide with any real save.
+  id: '4102444800000-fixt01',
+  eventName: 'CONTRACT FIXTURE EVENT',
+  eventDate: '2099-01-01',
+  actualWinner: '',
+  actualFinish: '',
+};
+const PENDING_ENTRIES = [...UPCOMING_ENTRIES, SYNTHETIC_PENDING];
+
 const { store } = migrateV0ToV1(
-  { roiEntries: ROI_ENTRIES, upcomingEntries: UPCOMING_ENTRIES, propPicks: PROP_PICKS, parlayEntries: PARLAY_ENTRIES },
+  { roiEntries: ROI_ENTRIES, upcomingEntries: PENDING_ENTRIES, propPicks: PROP_PICKS, parlayEntries: PARLAY_ENTRIES },
   deps
 );
 const make = (opts) => createInMemoryRepositories(store, { now: () => '2026-08-01T00:00:00.000Z', ...opts });
@@ -36,7 +65,7 @@ const make = (opts) => createInMemoryRepositories(store, { now: () => '2026-08-0
 // files actually obey it rather than leaving it assumed here.
 const isResolvedEntry = (entry) => String(entry?.actualWinner ?? '').trim() !== '';
 const EXPECTED_GRADED = ROI_ENTRIES.length;
-const EXPECTED_PENDING = UPCOMING_ENTRIES.length;
+const EXPECTED_PENDING = PENDING_ENTRIES.length;
 const EXPECTED_PREDICTIONS = EXPECTED_GRADED + EXPECTED_PENDING;
 const EXPECTED_PROPS = PROP_PICKS.length;
 const EXPECTED_PARLAYS = PARLAY_ENTRIES.length;
@@ -44,7 +73,7 @@ const EXPECTED_PARLAYS = PARLAY_ENTRIES.length;
 const EXPECTED_SEED_ROOTS = EXPECTED_PREDICTIONS + EXPECTED_PROPS + EXPECTED_PARLAYS;
 // Events are keyed by (name, date); the promotion is a pure function of the name.
 const EXPECTED_EVENTS = new Set(
-  [...ROI_ENTRIES, ...UPCOMING_ENTRIES].map((e) => `${e.eventName}|${e.eventDate}`)).size;
+  [...ROI_ENTRIES, ...PENDING_ENTRIES].map((e) => `${e.eventName}|${e.eventDate}`)).size;
 
 /** The complete dependency set a bout-result write must cover. */
 const boutVector = (r, boutId) => {
@@ -189,7 +218,7 @@ describe('reads', () => {
     // is the resolved half and Upcoming the unresolved half. Assert that here
     // rather than assuming it where the constants are defined.
     expect(ROI_ENTRIES.every(isResolvedEntry)).toBe(true);
-    expect(UPCOMING_ENTRIES.some(isResolvedEntry)).toBe(false);
+    expect(PENDING_ENTRIES.some(isResolvedEntry)).toBe(false);
 
     expect(r.eventRepository.list().data).toHaveLength(EXPECTED_EVENTS);
     expect(r.predictionRepository.listGraded({}).data).toHaveLength(EXPECTED_GRADED);
@@ -204,7 +233,7 @@ describe('reads', () => {
     expect(runIdsOf(r.predictionRepository.listGraded({}).data))
       .toEqual(ROI_ENTRIES.map((e) => String(e.id)).sort());
     expect(runIdsOf(r.predictionRepository.listPending().data))
-      .toEqual(UPCOMING_ENTRIES.map((e) => String(e.id)).sort());
+      .toEqual(PENDING_ENTRIES.map((e) => String(e.id)).sort());
   });
 
   it('emits revisions as opaque strings and stakes as decimal strings', () => {

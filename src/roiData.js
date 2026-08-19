@@ -14,7 +14,11 @@ export const ROI_ENTRIES = [
       "division": "Welterweight",
       "isTitleBout": true,
       "scheduledRounds": 5,
-      "provenance": null
+      "provenance": {
+        "sourceUrl": "https://www.ufc.com/news/official-weigh-results-ufc-330-makhachev-vs-machado-garry",
+        "retrievedAt": "2026-08-14",
+        "authority": "official"
+      }
     },
     "fighterAProb": 0.7480815023580831,
     "fighterBProb": 0.25191849764191687,
@@ -59,12 +63,6 @@ export const ROI_ENTRIES = [
       "modelVersion": "logistic_v2.0_20260709",
       "modelCoefHash": "256f866e",
       "frozenTier": "NO BET",
-      "boutContext": {
-        "division": "Welterweight",
-        "isTitleBout": true,
-        "scheduledRounds": 5,
-        "provenance": null
-      },
       "featureVector": {
         "v1": {
           "sig_str_dif": -0.14746835443037976,
@@ -255,7 +253,11 @@ export const ROI_ENTRIES = [
       "division": "Women's Strawweight",
       "isTitleBout": true,
       "scheduledRounds": 5,
-      "provenance": null
+      "provenance": {
+        "sourceUrl": "https://www.ufc.com/news/official-weigh-results-ufc-330-makhachev-vs-machado-garry",
+        "retrievedAt": "2026-08-14",
+        "authority": "official"
+      }
     },
     "fighterAProb": 0.262066824702611,
     "fighterBProb": 0.737933175297389,
@@ -300,12 +302,6 @@ export const ROI_ENTRIES = [
       "modelVersion": "logistic_v2.0_20260709",
       "modelCoefHash": "256f866e",
       "frozenTier": "LEAN",
-      "boutContext": {
-        "division": "Women's Strawweight",
-        "isTitleBout": true,
-        "scheduledRounds": 5,
-        "provenance": null
-      },
       "featureVector": {
         "v1": {
           "sig_str_dif": 0.048101265822784824,
@@ -496,7 +492,11 @@ export const ROI_ENTRIES = [
       "division": "Lightweight",
       "isTitleBout": false,
       "scheduledRounds": 3,
-      "provenance": null
+      "provenance": {
+        "sourceUrl": "https://www.ufc.com/news/official-weigh-results-ufc-330-makhachev-vs-machado-garry",
+        "retrievedAt": "2026-08-14",
+        "authority": "official"
+      }
     },
     "fighterAProb": 0.5777012846198838,
     "fighterBProb": 0.4222987153801162,
@@ -541,12 +541,6 @@ export const ROI_ENTRIES = [
       "modelVersion": "logistic_v2.0_20260709",
       "modelCoefHash": "256f866e",
       "frozenTier": "NO BET",
-      "boutContext": {
-        "division": "Lightweight",
-        "isTitleBout": false,
-        "scheduledRounds": 3,
-        "provenance": null
-      },
       "featureVector": {
         "v1": {
           "sig_str_dif": 0.09338685625108378,
@@ -737,7 +731,11 @@ export const ROI_ENTRIES = [
       "division": "Middleweight",
       "isTitleBout": false,
       "scheduledRounds": 3,
-      "provenance": null
+      "provenance": {
+        "sourceUrl": "https://www.ufc.com/news/official-weigh-results-ufc-330-makhachev-vs-machado-garry",
+        "retrievedAt": "2026-08-14",
+        "authority": "official"
+      }
     },
     "fighterAProb": 0.6974330563381701,
     "fighterBProb": 0.3025669436618299,
@@ -782,12 +780,6 @@ export const ROI_ENTRIES = [
       "modelVersion": "logistic_v2.0_20260709",
       "modelCoefHash": "256f866e",
       "frozenTier": "NO BET",
-      "boutContext": {
-        "division": "Middleweight",
-        "isTitleBout": false,
-        "scheduledRounds": 3,
-        "provenance": null
-      },
       "featureVector": {
         "v1": {
           "sig_str_dif": 0.0023327232099719882,
@@ -978,7 +970,11 @@ export const ROI_ENTRIES = [
       "division": "Lightweight",
       "isTitleBout": false,
       "scheduledRounds": 3,
-      "provenance": null
+      "provenance": {
+        "sourceUrl": "https://www.ufc.com/news/official-weigh-results-ufc-330-makhachev-vs-machado-garry",
+        "retrievedAt": "2026-08-14",
+        "authority": "official"
+      }
     },
     "fighterAProb": 0.3781608731859632,
     "fighterBProb": 0.6218391268140369,
@@ -1023,12 +1019,6 @@ export const ROI_ENTRIES = [
       "modelVersion": "logistic_v2.0_20260709",
       "modelCoefHash": "256f866e",
       "frozenTier": "NO BET",
-      "boutContext": {
-        "division": "Lightweight",
-        "isTitleBout": false,
-        "scheduledRounds": 3,
-        "provenance": null
-      },
       "featureVector": {
         "v1": {
           "sig_str_dif": -0.21653164556962026,
@@ -1219,7 +1209,11 @@ export const ROI_ENTRIES = [
       "division": "Welterweight",
       "isTitleBout": false,
       "scheduledRounds": 3,
-      "provenance": null
+      "provenance": {
+        "sourceUrl": "https://www.ufc.com/news/official-weigh-results-ufc-330-makhachev-vs-machado-garry",
+        "retrievedAt": "2026-08-14",
+        "authority": "official"
+      }
     },
     "fighterAProb": 0.30622909063548853,
     "fighterBProb": 0.6937709093645115,
@@ -1264,12 +1258,6 @@ export const ROI_ENTRIES = [
       "modelVersion": "logistic_v2.0_20260709",
       "modelCoefHash": "256f866e",
       "frozenTier": "NO BET",
-      "boutContext": {
-        "division": "Welterweight",
-        "isTitleBout": false,
-        "scheduledRounds": 3,
-        "provenance": null
-      },
       "featureVector": {
         "v1": {
           "sig_str_dif": 0.04198101265822782,
@@ -1460,7 +1448,11 @@ export const ROI_ENTRIES = [
       "division": "Middleweight",
       "isTitleBout": false,
       "scheduledRounds": 3,
-      "provenance": null
+      "provenance": {
+        "sourceUrl": "https://www.ufc.com/news/official-weigh-results-ufc-330-makhachev-vs-machado-garry",
+        "retrievedAt": "2026-08-14",
+        "authority": "official"
+      }
     },
     "fighterAProb": 0.6463155570686728,
     "fighterBProb": 0.35368444293132717,
@@ -1505,12 +1497,6 @@ export const ROI_ENTRIES = [
       "modelVersion": "logistic_v2.0_20260709",
       "modelCoefHash": "256f866e",
       "frozenTier": "NO BET",
-      "boutContext": {
-        "division": "Middleweight",
-        "isTitleBout": false,
-        "scheduledRounds": 3,
-        "provenance": null
-      },
       "featureVector": {
         "v1": {
           "sig_str_dif": 0.012318526749766473,
@@ -1701,7 +1687,11 @@ export const ROI_ENTRIES = [
       "division": "Middleweight",
       "isTitleBout": false,
       "scheduledRounds": 3,
-      "provenance": null
+      "provenance": {
+        "sourceUrl": "https://www.ufc.com/news/official-weigh-results-ufc-330-makhachev-vs-machado-garry",
+        "retrievedAt": "2026-08-14",
+        "authority": "official"
+      }
     },
     "fighterAProb": 0.5923807975369481,
     "fighterBProb": 0.40761920246305194,
@@ -1746,12 +1736,6 @@ export const ROI_ENTRIES = [
       "modelVersion": "logistic_v2.0_20260709",
       "modelCoefHash": "256f866e",
       "frozenTier": "LEAN",
-      "boutContext": {
-        "division": "Middleweight",
-        "isTitleBout": false,
-        "scheduledRounds": 3,
-        "provenance": null
-      },
       "featureVector": {
         "v1": {
           "sig_str_dif": 0.08797468354430377,
@@ -1942,7 +1926,11 @@ export const ROI_ENTRIES = [
       "division": "Welterweight",
       "isTitleBout": false,
       "scheduledRounds": 3,
-      "provenance": null
+      "provenance": {
+        "sourceUrl": "https://www.ufc.com/news/official-weigh-results-ufc-330-makhachev-vs-machado-garry",
+        "retrievedAt": "2026-08-14",
+        "authority": "official"
+      }
     },
     "fighterAProb": 0.5701736772819317,
     "fighterBProb": 0.4298263227180683,
@@ -1987,12 +1975,6 @@ export const ROI_ENTRIES = [
       "modelVersion": "logistic_v2.0_20260709",
       "modelCoefHash": "256f866e",
       "frozenTier": "NO BET",
-      "boutContext": {
-        "division": "Welterweight",
-        "isTitleBout": false,
-        "scheduledRounds": 3,
-        "provenance": null
-      },
       "featureVector": {
         "v1": {
           "sig_str_dif": 0.0653354430379747,
@@ -2183,7 +2165,11 @@ export const ROI_ENTRIES = [
       "division": "Welterweight",
       "isTitleBout": false,
       "scheduledRounds": 3,
-      "provenance": null
+      "provenance": {
+        "sourceUrl": "https://www.ufc.com/news/official-weigh-results-ufc-330-makhachev-vs-machado-garry",
+        "retrievedAt": "2026-08-14",
+        "authority": "official"
+      }
     },
     "fighterAProb": 0.21636275826783666,
     "fighterBProb": 0.7836372417321633,
@@ -2228,12 +2214,6 @@ export const ROI_ENTRIES = [
       "modelVersion": "logistic_v2.0_20260709",
       "modelCoefHash": "256f866e",
       "frozenTier": "NO BET",
-      "boutContext": {
-        "division": "Welterweight",
-        "isTitleBout": false,
-        "scheduledRounds": 3,
-        "provenance": null
-      },
       "featureVector": {
         "v1": {
           "sig_str_dif": -0.03693520504949468,
