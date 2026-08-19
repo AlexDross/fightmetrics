@@ -5,6 +5,10 @@ build/
 __pycache__/
 .claude/settings.local.json
 
+# Local Vite environment overrides — never commit
+.env.local
+.env.*.local
+
 # Foundation: candidate captures are disposable; the Stage 0 reference is committed
 baseline/candidates/
 
