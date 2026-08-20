@@ -1,7 +1,7 @@
 export const UPCOMING_ENTRIES = [
   {
-    "id": "1787193814793-jpppdc",
-    "createdAt": "2026-08-20T02:43:34.793Z",
+    "id": "1787193909408-rqezwb",
+    "createdAt": "2026-08-20T02:45:09.408Z",
     "eventName": "UFC Sacramento",
     "eventDate": "2026-08-22",
     "fighterA": "Anthony Hernandez",
@@ -57,7 +57,7 @@ export const UPCOMING_ENTRIES = [
     "actualFinish": "",
     "notes": "",
     "_provenance": {
-      "predictionTimestamp": "2026-08-20T02:43:34.793Z",
+      "predictionTimestamp": "2026-08-20T02:45:09.409Z",
       "targetEventDate": "2026-08-22",
       "captureMode": "live",
       "modelVersion": "logistic_v2.0_20260709",
@@ -126,6 +126,257 @@ export const UPCOMING_ENTRIES = [
       "fightHistoryCutoff": {
         "fighterA": "2026-02-21",
         "fighterB": "2026-03-07"
+      },
+      "sourceManifest": {
+        "fightHistory": {
+          "file": "src/fightHistory.js",
+          "feedsV2": true,
+          "generatedAt": "2026-08-13",
+          "maxObservedEventDate": "2026-08-08",
+          "contentHash": "46bff36e8569423c1401fb137638b82265fab6a675584273ac1f0181ff9df0a5",
+          "sourceInputs": [
+            "ufc_fight_results.csv",
+            "ufc_event_details.csv",
+            "ufc_fight_details.csv"
+          ],
+          "generatorRequiredInputs": [
+            "ufc_fight_results.csv",
+            "ufc_event_details.csv",
+            "ufc_fight_details.csv",
+            "ufc_fight_stats.csv"
+          ],
+          "generatorVersion": "update_fighters.py @ 97d2379ea418148c1ce0a21deae0461310914844",
+          "verificationMethod": "Parsed DATE column of ufc_event_details.csv directly (783 rows); maximum event date found = 2026-08-08. Cross-checked ufc_fight_results.csv, ufc_fight_details.csv, ufc_fight_stats.csv for window-period event names: FOUND (see manual audit). This value is NOT derived from any file mtime, git commit date, or in-file header comment -- see research/source_integrity_audit.md for the original manual methodology this script automates."
+        },
+        "fightersDataAggregates": {
+          "file": "src/fightersData.js",
+          "feedsV2": true,
+          "note": "Feeds ASL/ASP/ATL/ATP/ASA (sig_str_landed, sig_str_accuracy, sub_attempts, td_landed, td_accuracy) and TR (rounds) -- the highest-weight non-ELO v2 features.",
+          "generatedAt": "2026-08-13",
+          "maxObservedEventDate": "2026-08-08",
+          "contentHash": "51dc68372e9742be8602c43b0a9119ecc3e2c9eb5fa0b3c4a97980ab1e244aad",
+          "sourceInputs": [
+            "ufc_fight_results.csv",
+            "ufc_event_details.csv",
+            "ufc_fight_details.csv",
+            "ufc_fight_stats.csv"
+          ],
+          "generatorRequiredInputs": [
+            "ufc_fight_results.csv",
+            "ufc_event_details.csv",
+            "ufc_fight_details.csv",
+            "ufc_fight_stats.csv"
+          ],
+          "generatorVersion": "update_fighters.py @ 97d2379ea418148c1ce0a21deae0461310914844",
+          "verificationMethod": "Parsed DATE column of ufc_event_details.csv directly (783 rows); maximum event date found = 2026-08-08. Cross-checked ufc_fight_results.csv, ufc_fight_details.csv, ufc_fight_stats.csv for window-period event names: FOUND (see manual audit). This value is NOT derived from any file mtime, git commit date, or in-file header comment -- see research/source_integrity_audit.md for the original manual methodology this script automates."
+        },
+        "elo": {
+          "file": "src/eloModule.js",
+          "feedsV2": true,
+          "generatedAt": "2026-08-13",
+          "maxObservedEventDate": "2026-08-08",
+          "contentHash": "0cb60aee84bb6b2b40b2cb476c44e734f9706a96942246d022d285ebe80aa35d",
+          "sourceInputs": [
+            "ufc_fight_results.csv",
+            "ufc_event_details.csv"
+          ],
+          "generatorRequiredInputs": [
+            "ufc_fight_results.csv",
+            "ufc_event_details.csv"
+          ],
+          "generatorVersion": "regen_elo.py @ 97d2379ea418148c1ce0a21deae0461310914844",
+          "verificationMethod": "Parsed DATE column of ufc_event_details.csv directly (783 rows); maximum event date found = 2026-08-08. Cross-checked ufc_fight_results.csv, ufc_fight_details.csv, ufc_fight_stats.csv for window-period event names: FOUND (see manual audit). This value is NOT derived from any file mtime, git commit date, or in-file header comment -- see research/source_integrity_audit.md for the original manual methodology this script automates. NOTE: eloModule.js's own header comment claims coverage \"through Jul 2026\" -- this is misleading relative to the verified underlying data and should not be trusted; regen_elo.py reads only ufc_fight_results.csv + ufc_event_details.csv. Unlike ELO, the fighter aggregate updater also requires ufc_fight_details.csv and ufc_fight_stats.csv."
+        },
+        "cardio": {
+          "file": "src/cardioModule.js",
+          "feedsV2": false,
+          "note": "Does not feed MODEL_V2 (no path into computeLogisticProb's 16 features, confirmed in research/source_integrity_audit.md). Tracked here for future model versions that might use it.",
+          "generatedAt": "2026-08-13",
+          "maxObservedEventDate": null,
+          "contentHash": "7025f1f440bbf01c15731cc40e65521e50635902ee482536cd07a412738b788c",
+          "generatorVersion": "unavailable -- no cardio-generation script found in repo",
+          "verificationMethod": "INDETERMINATE: no generator script present in the repository, and no per-fighter date field is embedded in the shipped artifact itself, so maxObservedEventDate cannot be independently verified the way the Greco-CSV-backed modules above were. The file's own header comment self-reports \"fetched 2026-04-14\" -- this is NOT independently verified and should not be treated as authoritative."
+        },
+        "rankHistory": {
+          "file": "src/rankHistory.js",
+          "feedsV2": false,
+          "note": "Does not feed MODEL_V2 (no path into computeLogisticProb's 16 features, confirmed in research/source_integrity_audit.md). Tracked here for future model versions that might use it.",
+          "generatedAt": "2026-08-13",
+          "maxObservedEventDate": "2026-03-12",
+          "contentHash": "9a706f356ef41fa68b605dd9c52740dd370eda014dfb747b0cb8bdc6313ba244",
+          "generatorVersion": "regen_rankhistory.py (untracked in git -- present on disk, no commit history, no recoverable version)",
+          "verificationMethod": "Raw source UFC_rankings_history.csv is not present on disk, so maxObservedEventDate is instead the maximum YYYYMMDD date literally embedded in the shipped rankHistory.js artifact's own HISTORICAL_RANKINGS data -- a defensible proxy (the artifact cannot reflect dates its regeneration process never saw), but distinct from the direct-CSV verification used for the three modules above."
+        },
+        "fighterBirthdates": {
+          "file": "src/fighterBirthdates.js",
+          "feedsV2": true,
+          "note": "Canonical fighter name -> date of birth. Feeds the v2 'younger' feature and the v1 age differential/age-decay penalty via src/domain/age, which derives every age from DOB -- at app load for the roster, and at the bout date for a prediction. The integer AGE values in fightersData.js are now used only where no birth date exists here.",
+          "generatedAt": "2026-08-13",
+          "maxObservedEventDate": null,
+          "contentHash": "560e7d5207c1766a57380ce852767ea03b004a89e2281c3be3dd11fc9e63cd5d",
+          "generatorVersion": "scripts/generate-fighter-birthdates.mjs @ 97d2379ea418148c1ce0a21deae0461310914844",
+          "verificationMethod": "Recomputed the join from source while writing this manifest: read 2267 rows from fighters.json, of which 2207 carry a dob matching ^\\d{4}-\\d{2}-\\d{2}$; applied 1 name_aliases.json rewrites; produced 2207 canonical names, and the shipped artifact contains 2207 entries. The generator raises on any canonical name that would receive two DIFFERENT birth dates, so a silent bad join cannot ship. Keys are sorted by UTF-16 code point (not localeCompare), making regeneration byte-identical across machines and ICU builds; the scheduled workflow enforces this with a --check re-run. maxObservedEventDate is null by nature, not by omission: this artifact holds birth dates, which are not event-scoped, so there is no event date it could be current or stale relative to. Its freshness question is coverage, which is the measured count above."
+        },
+        "rankings": {
+          "file": "src/rankingsData.js",
+          "feedsV2": false,
+          "inProductionBundle": true,
+          "note": "Current official rankings feed fighter-profile/UI rank badges only. Runtime artifact: this is the only rankings file in the production dependency graph. Historical series live in the separate rankingsHistory module below.",
+          "generatedAt": "2026-08-07T18:49:33Z",
+          "maxObservedEventDate": "2026-08-04",
+          "contentHash": "48524131c5d78b0adc80d83fe27a2ef7c365c124f66eddab11e17487f7df41d0",
+          "officialSnapshots": [
+            "2026-08-01-meta.json",
+            "2026-08-04-media.json"
+          ],
+          "generatorVersion": "scripts/update_rankings.py @ 97d2379ea418148c1ce0a21deae0461310914844",
+          "verificationMethod": "Read directly from the generated artifacts and the committed history cache, all produced by scripts/update_rankings.py and regenerating byte-identically from the same inputs. upstreamContentSha256 is the SHA-256 of the Kaggle CSV the cache was built from. No git commit date, file mtime, or header comment is consulted, and a missing artifact, cache or snapshot set is a hard failure rather than a silent fallback."
+        },
+        "rankingsHistory": {
+          "file": "src/rankingsHistoryData.js",
+          "feedsV2": false,
+          "inProductionBundle": false,
+          "note": "Historical divisional rankings. RESEARCH ARTIFACT: no runtime consumer and no model consumer -- neither the deprecated v1 engine nor the frozen 16-feature MODEL_V2. Kept out of the browser bundle; enforced by src/domain/rankings/__tests__/boundary.test.js (import graph) and scripts/verify-bundle.mjs (emitted assets).",
+          "generatedAt": "2026-08-07T18:49:33Z",
+          "maxObservedEventDate": "2026-08-04",
+          "contentHash": "387363b7f1fda0f51757fd778ff969ce9fffe1d34d3c870437977db5e36003a3",
+          "historyCacheSha256": "4f245240e2b53ee088d82f861aa0a718aef9f62bf15d62eb434d4628b3b6b3ad",
+          "upstreamContentSha256": "2d27b34e64372520e9170cc30f1d1c59e795d046b6726de89db95b9535db9858",
+          "upstreamVersion": 49,
+          "historyUsedThrough": "2026-06-18",
+          "generatorVersion": "scripts/update_rankings.py @ 97d2379ea418148c1ce0a21deae0461310914844",
+          "verificationMethod": "Read directly from the generated artifacts and the committed history cache, all produced by scripts/update_rankings.py and regenerating byte-identically from the same inputs. upstreamContentSha256 is the SHA-256 of the Kaggle CSV the cache was built from. No git commit date, file mtime, or header comment is consulted, and a missing artifact, cache or snapshot set is a hard failure rather than a silent fallback."
+        }
+      }
+    }
+  },
+  {
+    "id": "1787193889304-mzzs01",
+    "createdAt": "2026-08-20T02:44:49.304Z",
+    "eventName": "UFC Sacramento",
+    "eventDate": "2026-08-22",
+    "fighterA": "Serghei Spivac",
+    "fighterB": "Vitor Petrino",
+    "fighterAIsProspect": false,
+    "fighterBIsProspect": false,
+    "includesProspect": false,
+    "division": "Heavyweight",
+    "boutContext": {
+      "division": "Heavyweight",
+      "isTitleBout": false,
+      "scheduledRounds": 3,
+      "provenance": null
+    },
+    "fighterAProb": 0.5192980237920792,
+    "fighterBProb": 0.48070197620792077,
+    "predictedWinner": "Serghei Spivac",
+    "predictedProb": 0.5192980237920792,
+    "modelUsed": "v2",
+    "decisionProbabilitySource": "c6",
+    "c6ProbA": 0.4287388266767027,
+    "c6ProbB": 0.5712611733232973,
+    "c6Version": "c6_sym_zerointercept_full_20260818",
+    "trackedSide": "Vitor Petrino",
+    "trackedProb": 0.5712611733232973,
+    "unitsWagered": 1,
+    "betAction": "NO BET",
+    "bestBet": null,
+    "betRecommendedFighter": "",
+    "betRecommendedOdds": "",
+    "marketOdds": "-150",
+    "edge": -0.003206911783085742,
+    "edgeA": 0.003206911783085631,
+    "edgeB": -0.003206911783085742,
+    "ev": -4.789804446117131,
+    "evA": -3.533763997741886,
+    "evB": -4.789804446117131,
+    "kelly": 0,
+    "kellyA": 0,
+    "kellyB": 0,
+    "fairLine": "-133",
+    "fairLineA": "+133",
+    "fairLineB": "-133",
+    "oddsA": "+125",
+    "oddsB": "-150",
+    "v2pA": 0.495491457465549,
+    "v2pB": 0.504508542534451,
+    "projectedKO": 32,
+    "projectedSUB": 22,
+    "projectedDEC": 46,
+    "projectedFinish": "DEC",
+    "actualWinner": "",
+    "actualFinish": "",
+    "notes": "",
+    "_provenance": {
+      "predictionTimestamp": "2026-08-20T02:44:49.305Z",
+      "targetEventDate": "2026-08-22",
+      "captureMode": "live",
+      "modelVersion": "logistic_v2.0_20260709",
+      "modelCoefHash": "256f866e",
+      "frozenTier": "NO BET",
+      "boutContext": {
+        "division": "Heavyweight",
+        "isTitleBout": false,
+        "scheduledRounds": 3,
+        "provenance": null
+      },
+      "decisionProbabilitySource": "c6",
+      "c6": {
+        "version": "c6_sym_zerointercept_full_20260818",
+        "pA": 0.4287388266767027,
+        "pB": 0.5712611733232973
+      },
+      "featureVector": {
+        "v1": {
+          "sig_str_dif": 0.030379746835443037,
+          "avg_sig_str_pct_dif": -0.10000000000000009,
+          "avg_td_dif": 0.7000000000000001,
+          "avg_td_pct_dif": 0.5652173913043476,
+          "atd_dif": -1.0666666666666669,
+          "avg_sub_att_dif": -0.44285714285714295,
+          "kd_dif": 0.09999999999999995,
+          "control_time_dif": 0.5555555555555556,
+          "reach_dif": 0.09259259259259259,
+          "height_dif": 0.10989010989010989,
+          "age_dif": -0.6976744186046512,
+          "win_streak_dif": -1.4285714285714286,
+          "lose_streak_dif": 0,
+          "win_dif": 0.45454545454545453,
+          "loss_dif": -1.4814814814814814,
+          "total_round_dif": 0.4117647058823529,
+          "deep_round_dif": -0.058823529411764705,
+          "total_title_bout_dif": 0,
+          "ko_dif": 0.5,
+          "sub_dif": 0.7142857142857143,
+          "elo_dif": 0.48387096774193544,
+          "layoff_dif": -0.105,
+          "cardio_dif": 1.3762500000000002,
+          "peak_elo_dif": 0.9272727272727272,
+          "ufc_fight_count_dif": 0.75,
+          "rank_tier_dif": 2.611707935929908
+        },
+        "v2": {
+          "modern_form": -0.17841268083509443,
+          "wins": 2,
+          "losses": -4,
+          "rounds": 7,
+          "title_bouts": 0,
+          "ko_wins": 1,
+          "sub_wins": 1,
+          "height": 1,
+          "reach": 1,
+          "younger": -3,
+          "sig_str_landed": 0.48,
+          "sig_str_accuracy": -0.010000000000000009,
+          "sub_attempts": -0.31000000000000005,
+          "td_landed": 0.98,
+          "td_accuracy": 0.12999999999999995,
+          "elo": 0.24
+        }
+      },
+      "fightHistoryCutoff": {
+        "fighterA": "2026-02-21",
+        "fighterB": "2026-03-14"
       },
       "sourceManifest": {
         "fightHistory": {
