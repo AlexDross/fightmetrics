@@ -64,6 +64,16 @@ export const LEGACY_FIELD_MAP = Object.freeze({
     trackedSide: { to: 'TrackedPosition.corner' },
     trackedProb: { derived: 'decision-basis snapshot prob for TrackedPosition.corner; reproduces every stored value' },
 
+    // ── C6 decision layer (market-adjusted challenger) ──
+    // Present only on rows saved while user-facing C6 was active (the ten UFC
+    // Sacramento rows are the first). Absence means C6 never drove the row and
+    // must stay absent, never defaulted. c6ProbA/B are a distinct basis=c6
+    // PredictionSnapshot, not a rewrite of the v2 snapshot.
+    decisionProbabilitySource: { to: 'PredictionRun.decisionSnapshotId basis marker ("v2" | "c6"; absent -> v2/legacy)' },
+    c6ProbA: { to: 'PredictionSnapshot[basis=c6].probA' },
+    c6ProbB: { to: 'PredictionSnapshot[basis=c6].probB' },
+    c6Version: { to: 'PredictionSnapshot[basis=c6].modelVersion' },
+
     oddsA: { to: 'MarketSnapshot.oddsA (parsed to integer; "" -> no snapshot side)' },
     oddsB: { to: 'MarketSnapshot.oddsB (parsed to integer; "" -> no snapshot side)' },
     // NOT derived. App.js edits marketOdds independently (:7890) and rewrites it
@@ -120,6 +130,14 @@ export const LEGACY_FIELD_MAP = Object.freeze({
     '_provenance.priorV2.v2pA': { to: 'PredictionSnapshot.reconstruction.priorV2.v2pA' },
     '_provenance.priorV2.v2pB': { to: 'PredictionSnapshot.reconstruction.priorV2.v2pB' },
     '_provenance.frozenTier': { to: 'BettingAssessment.tier (+ tierProvenance "frozenTier")' },
+    // Capture-time copy of the C6 decision layer, written alongside the frozen
+    // v2 snapshot when user-facing C6 drove the row. Consistent by construction
+    // with the top-level c6* fields; absence stays absence (never back-filled).
+    '_provenance.decisionProbabilitySource': { to: 'PredictionSnapshot decision-basis marker ("v2" | "c6"), capture-time copy' },
+    '_provenance.c6': { to: 'PredictionSnapshot[basis=c6] capture-time copy (version + per-corner probs)' },
+    '_provenance.c6.version': { to: 'PredictionSnapshot[basis=c6].modelVersion (capture-time copy)' },
+    '_provenance.c6.pA': { to: 'PredictionSnapshot[basis=c6].probA (capture-time copy)' },
+    '_provenance.c6.pB': { to: 'PredictionSnapshot[basis=c6].probB (capture-time copy)' },
     '_provenance.featureVector': { to: 'PredictionSnapshot.featureVector' },
     '_provenance.featureVector.v1': { to: 'PredictionSnapshot[basis=legacy-v1-unversioned].featureVector' },
     '_provenance.featureVector.v2': { to: 'PredictionSnapshot[basis=v2].featureVector' },

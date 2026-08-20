@@ -92,11 +92,20 @@ describe('UFC Sacramento bout context provenance — official values', () => {
       });
       expect(typeof e.trackedSide, key(e)).toBe('string');
       expect(['LEAN', 'BET', 'STRONG BET', 'NO BET'], key(e)).toContain(e.betAction);
-      // These entries were saved before decisionProbabilitySource existed, so
-      // it is legitimately absent (undefined), not 'v2' -- either is fine,
-      // but no C6 decision metadata may be present, since C6 never drove them.
-      expect([undefined, 'v1', 'v2'], key(e)).toContain(e.decisionProbabilitySource);
-      expect(Object.prototype.hasOwnProperty.call(e, 'c6ProbA'), key(e)).toBe(false);
+      // These ten rows were RE-ENTERED with user-facing C6 active (the
+      // provenance repair below only touches boutContext, never the decision
+      // layer). So the decision source is 'c6' and the C6 fields must be
+      // present and well-formed -- this guards that the repair did not corrupt
+      // them, the same role the old "no C6 fields" assertion served before C6
+      // drove these rows.
+      expect(e.decisionProbabilitySource, key(e)).toBe('c6');
+      expect(e.c6Version, key(e)).toBe('c6_sym_zerointercept_full_20260818');
+      ['c6ProbA', 'c6ProbB'].forEach((f) => {
+        expect(Number.isFinite(e[f]), `${key(e)}.${f}`).toBe(true);
+        expect(e[f], `${key(e)}.${f}`).toBeGreaterThan(0);
+        expect(e[f], `${key(e)}.${f}`).toBeLessThan(1);
+      });
+      expect(e.c6ProbA + e.c6ProbB, `${key(e)} c6 probs sum to 1`).toBeCloseTo(1, 9);
     });
   });
 
