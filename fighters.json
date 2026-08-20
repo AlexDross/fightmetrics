@@ -421260,5 +421260,27 @@
     "stance": null,
     "div_rank": null,
     "p4p_rank": null
+  },
+  {
+    "name": "Jeisla Chaves",
+    "weight_class": "Women's Flyweight",
+    "record": "1-0",
+    "wins": 1,
+    "losses": 0,
+    "true_lfd": "2026-06-06",
+    "age": 29,
+    "dob": "1997-02-02",
+    "height_in": 66,
+    "weight_lbs": 125,
+    "reach_in": 68.0,
+    "stance": null,
+    "fights_in_db": 1,
+    "win_streak": 1,
+    "lose_streak": 0,
+    "last_fight_date": "2026-06-06",
+    "days_since_last": 68,
+    "ko_wins": 0,
+    "sub_wins": 0,
+    "dec_wins": 1
   }
 ]

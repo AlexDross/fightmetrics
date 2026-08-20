@@ -961,6 +961,7 @@ export const FIGHTER_BIRTHDATES = Object.freeze({
   "Jeff Hughes": "1988-05-17",
   "Jeff Molina": "1997-07-17",
   "Jeff Monson": "1971-01-18",
+  "Jeisla Chaves": "1997-02-02",
   "Jeka Saragih": "1995-01-01",
   "Jenel Lausa": "1988-08-01",
   "Jennifer Maia": "1988-10-06",
