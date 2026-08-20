@@ -15,9 +15,22 @@ import { FIXTURE_DIR } from './goldenSupport.js';
 //
 // This is NOT regeneration. If one of these fails, the fixture changed; restore
 // it from git rather than updating the hash.
+//
+// entries.golden.json is the ONE deliberate exception, made for the C6
+// user-facing promotion (2026-08-19) and its follow-up correction pass.
+// buildRoiEntry now additionally emits decisionProbabilitySource (always) and
+// _provenance.decisionProbabilitySource on every entry. Every captured golden
+// entry was built with the C6 flag off, so decisionProbabilitySource is
+// deterministic ('v1'/'v2' matching each entry's modelToggle). The
+// C6-specific fields (decisionUnavailableReason/c6ProbA/c6ProbB/c6Version) are
+// OMITTED for these flag-off entries -- they are not added as null, matching
+// production's conditional schema -- so no null-field additions appear in
+// this fixture. No existing field's value changed. See
+// src/domain/betting/__tests__/entries.golden.test.js for the byte-exact
+// comparison this fixture still backs.
 const APPROVED = {
   'characterisation.json':    '388ca4f3b74e499342caa7dd05a8bb90da3c03c4a600085c9ac13f2f65fe3921',
-  'entries.golden.json':      '827c1ffd67b9d5ea1eee5a54947b317f57350031d74779fb87db58d79567fbca',
+  'entries.golden.json':      '997401b7dc93201f3cc023987fe2914f3639414ecbb6a8a1bcee7cfcccefee04',
   'fightHistory.hashes.json': '7115625d8e979b5f394a303501e3bfb708bf3115d324306c507369a13dac7514',
   'fighters.golden.json':     '9de29d14dafee0694bc747bbd003a106120c27756c4688858c5ec69882816c2c',
   'model.golden.json':        '1a007e2e91305d297088f6153c209f50a45ad816ab196763c6db3041da14894a',

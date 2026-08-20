@@ -70,6 +70,8 @@ describe('legacy field map is exhaustive', () => {
       legs: [{
         fightId: 'x', fighterA: 'x', fighterB: 'x', eventName: 'x', eventDate: 'x',
         pickedFighter: 'x', v2DefaultFighter: 'x', v2ProbAtBuild: 0.5, overridden: false,
+        defaultFighter: 'x', probabilityAtBuild: 0.5, decisionProbabilitySource: 'v2',
+        decisionProbabilityVersion: null,
       }],
     };
     const paths = collectPaths([...PARLAY_ENTRIES, runtimeParlay]);

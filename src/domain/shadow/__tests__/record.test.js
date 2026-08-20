@@ -76,7 +76,7 @@ describe('frozen shadow record', () => {
     }
   });
 
-  it('records feature-flag state (capture only; C6 never user-facing)', () => {
+  it('records feature-flag state (userFacingActive defaults OFF, unset here)', () => {
     const r = buildShadowRecord(args());
     expect(r.featureFlags.userFacingActive).toBe(false);
   });

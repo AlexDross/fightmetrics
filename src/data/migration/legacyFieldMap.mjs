@@ -33,12 +33,23 @@ export const LEGACY_FIELD_MAP = Object.freeze({
     'boutContext.provenance.sourceUrl': { to: 'Bout.scheduledContextProvenance.sourceUrl' },
     'boutContext.provenance.retrievedAt': { to: 'Bout.scheduledContextProvenance.retrievedAt' },
     'boutContext.provenance.authority': { to: 'Bout.scheduledContextProvenance.authority ("official" | "secondary")' },
-    // NOTE: buildRoiEntry also stamps the context into _provenance.boutContext
-    // for NEW predictions, but no committed entry carries it yet -- the ten UFC
-    // 330 rows were predicted before the context existed, and back-stamping it
-    // would misrepresent what actually fed those numbers. The map is verified
-    // against the real data in both directions, so those paths get added here
-    // when the first context-carrying prediction is committed, not before.
+    // buildRoiEntry also stamps the SAME normalized context into
+    // _provenance.boutContext at save time -- a capture-time copy, not a
+    // second, independently-authored context. It must always be consistent
+    // with the authoritative top-level boutContext above (both are written
+    // from the one normalizedBoutContext object buildRoiEntry computes), so
+    // the duplication is intentional capture provenance, never a competing
+    // source of truth. The ten UFC Sacramento rows (2026-08-22) are the first
+    // committed entries to carry it; absence on any other historical record
+    // remains meaningful (UNKNOWN) and must not be defaulted or back-filled.
+    '_provenance.boutContext': { to: 'PredictionRun.scheduledContextAtCapture (Bout scheduled-context fields, capture-time copy)' },
+    '_provenance.boutContext.division': { to: 'PredictionRun.scheduledContextAtCapture.scheduledDivision (canonical; null when unverified)' },
+    '_provenance.boutContext.isTitleBout': { to: 'PredictionRun.scheduledContextAtCapture.isTitleBout (null when unverified — never defaulted to false)' },
+    '_provenance.boutContext.scheduledRounds': { to: 'PredictionRun.scheduledContextAtCapture.scheduledRounds (null when unverified — never defaulted to 3)' },
+    '_provenance.boutContext.provenance': { to: 'PredictionRun.scheduledContextAtCapture.scheduledContextProvenance' },
+    '_provenance.boutContext.provenance.sourceUrl': { to: 'PredictionRun.scheduledContextAtCapture.scheduledContextProvenance.sourceUrl' },
+    '_provenance.boutContext.provenance.retrievedAt': { to: 'PredictionRun.scheduledContextAtCapture.scheduledContextProvenance.retrievedAt' },
+    '_provenance.boutContext.provenance.authority': { to: 'PredictionRun.scheduledContextAtCapture.scheduledContextProvenance.authority ("official" | "secondary")' },
     fighterA: { to: 'Bout.cornerA.displayName (canonical orientation)' },
     fighterB: { to: 'Bout.cornerB.displayName (canonical orientation)' },
 
@@ -163,6 +174,14 @@ export const LEGACY_FIELD_MAP = Object.freeze({
     'legs[].v2DefaultFighter': { to: 'Parlay.legs[].modelDefaultCorner (orientation-mapped)' },
     'legs[].v2ProbAtBuild': { to: 'Parlay.legs[].modelProbAtBuild' },
     'legs[].overridden': { to: 'Parlay.legs[].overridden' },
+    // C6 promotion (2026-08-19): source-neutral, additive alongside the
+    // always-raw-v2 pair above. defaultFighter/probabilityAtBuild are C6 for
+    // a C6-driven leg, v2's own pick otherwise; decisionProbabilitySource
+    // records which.
+    'legs[].defaultFighter': { to: 'Parlay.legs[].defaultCorner (orientation-mapped; source-neutral)' },
+    'legs[].probabilityAtBuild': { to: 'Parlay.legs[].probabilityAtBuild' },
+    'legs[].decisionProbabilitySource': { to: 'Parlay.legs[].decisionProbabilitySource' },
+    'legs[].decisionProbabilityVersion': { to: 'Parlay.legs[].decisionProbabilityVersion' },
     'legs[].fighterA': { dropped: 'duplicated from Bout.cornerA' },
     'legs[].fighterB': { dropped: 'duplicated from Bout.cornerB' },
     'legs[].eventName': { dropped: 'duplicated from Event.name' },

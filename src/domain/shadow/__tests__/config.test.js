@@ -30,20 +30,44 @@ describe('shadow config flags', () => {
     expect(isShadowCaptureEnabled()).toBe(false);
   });
 
-  it('FAILS CLOSED: user-facing is never active even when the env requests it', () => {
+  it('user-facing activates on a recognized truthy env value', () => {
     vi.stubEnv('VITE_C6_USER_FACING_ENABLED', 'true');
     expect(isC6UserFacingRequested()).toBe(true);
-    expect(isC6UserFacingActive()).toBe(false); // refused
-    expect(userFacingConfigStatus()).toBe('UNSUPPORTED_FORCED_OFF');
+    expect(isC6UserFacingActive()).toBe(true);
+    expect(userFacingConfigStatus()).toBe('ACTIVE');
   });
 
-  it('shadow capture ON + user-facing requested still does not activate C6', () => {
+  it('user-facing activates on "1" but not on an unrecognized value', () => {
+    vi.stubEnv('VITE_C6_USER_FACING_ENABLED', '1');
+    expect(isC6UserFacingActive()).toBe(true);
+    vi.stubEnv('VITE_C6_USER_FACING_ENABLED', 'yes');
+    expect(isC6UserFacingActive()).toBe(false);
+    expect(userFacingConfigStatus()).toBe('OFF');
+  });
+
+  it('shadow capture ON alone does not activate user-facing C6', () => {
+    vi.stubEnv('VITE_C6_SHADOW_CAPTURE_ENABLED', 'true');
+    const cfg = resolveShadowConfig();
+    expect(cfg.shadowCaptureEnabled).toBe(true);
+    expect(cfg.userFacingRequested).toBe(false);
+    expect(cfg.userFacingActive).toBe(false);
+    expect(cfg.userFacingStatus).toBe('OFF');
+  });
+
+  it('user-facing ON works without shadow capture enabled', () => {
+    vi.stubEnv('VITE_C6_USER_FACING_ENABLED', 'true');
+    const cfg = resolveShadowConfig();
+    expect(cfg.shadowCaptureEnabled).toBe(false);
+    expect(cfg.userFacingActive).toBe(true);
+  });
+
+  it('both flags ON together work independently', () => {
     vi.stubEnv('VITE_C6_SHADOW_CAPTURE_ENABLED', 'true');
     vi.stubEnv('VITE_C6_USER_FACING_ENABLED', 'true');
     const cfg = resolveShadowConfig();
     expect(cfg.shadowCaptureEnabled).toBe(true);
     expect(cfg.userFacingRequested).toBe(true);
-    expect(cfg.userFacingActive).toBe(false);
-    expect(cfg.userFacingStatus).toBe('UNSUPPORTED_FORCED_OFF');
+    expect(cfg.userFacingActive).toBe(true);
+    expect(cfg.userFacingStatus).toBe('ACTIVE');
   });
 });
