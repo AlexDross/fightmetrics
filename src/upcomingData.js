@@ -14,7 +14,11 @@ export const UPCOMING_ENTRIES = [
       "division": "Middleweight",
       "isTitleBout": false,
       "scheduledRounds": 5,
-      "provenance": null
+      "provenance": {
+        "sourceUrl": "https://www.ufc.com/event/ufc-fight-night-august-22-2026",
+        "retrievedAt": "2026-08-19",
+        "authority": "official"
+      }
     },
     "fighterAProb": 0.5151920008002782,
     "fighterBProb": 0.48480799919972184,
@@ -67,7 +71,11 @@ export const UPCOMING_ENTRIES = [
         "division": "Middleweight",
         "isTitleBout": false,
         "scheduledRounds": 5,
-        "provenance": null
+        "provenance": {
+          "sourceUrl": "https://www.ufc.com/event/ufc-fight-night-august-22-2026",
+          "retrievedAt": "2026-08-19",
+          "authority": "official"
+        }
       },
       "decisionProbabilitySource": "c6",
       "c6": {
@@ -265,7 +273,11 @@ export const UPCOMING_ENTRIES = [
       "division": "Heavyweight",
       "isTitleBout": false,
       "scheduledRounds": 3,
-      "provenance": null
+      "provenance": {
+        "sourceUrl": "https://www.ufc.com/event/ufc-fight-night-august-22-2026",
+        "retrievedAt": "2026-08-19",
+        "authority": "official"
+      }
     },
     "fighterAProb": 0.5192980237920792,
     "fighterBProb": 0.48070197620792077,
@@ -318,7 +330,11 @@ export const UPCOMING_ENTRIES = [
         "division": "Heavyweight",
         "isTitleBout": false,
         "scheduledRounds": 3,
-        "provenance": null
+        "provenance": {
+          "sourceUrl": "https://www.ufc.com/event/ufc-fight-night-august-22-2026",
+          "retrievedAt": "2026-08-19",
+          "authority": "official"
+        }
       },
       "decisionProbabilitySource": "c6",
       "c6": {
@@ -516,7 +532,11 @@ export const UPCOMING_ENTRIES = [
       "division": "Middleweight",
       "isTitleBout": false,
       "scheduledRounds": 3,
-      "provenance": null
+      "provenance": {
+        "sourceUrl": "https://www.ufc.com/event/ufc-fight-night-august-22-2026",
+        "retrievedAt": "2026-08-19",
+        "authority": "official"
+      }
     },
     "fighterAProb": 0.5386148283994958,
     "fighterBProb": 0.4613851716005042,
@@ -569,7 +589,11 @@ export const UPCOMING_ENTRIES = [
         "division": "Middleweight",
         "isTitleBout": false,
         "scheduledRounds": 3,
-        "provenance": null
+        "provenance": {
+          "sourceUrl": "https://www.ufc.com/event/ufc-fight-night-august-22-2026",
+          "retrievedAt": "2026-08-19",
+          "authority": "official"
+        }
       },
       "decisionProbabilitySource": "c6",
       "c6": {
@@ -767,7 +791,11 @@ export const UPCOMING_ENTRIES = [
       "division": "Lightweight",
       "isTitleBout": false,
       "scheduledRounds": 3,
-      "provenance": null
+      "provenance": {
+        "sourceUrl": "https://www.ufc.com/event/ufc-fight-night-august-22-2026",
+        "retrievedAt": "2026-08-19",
+        "authority": "official"
+      }
     },
     "fighterAProb": 0.37084492977839845,
     "fighterBProb": 0.6291550702216016,
@@ -820,7 +848,11 @@ export const UPCOMING_ENTRIES = [
         "division": "Lightweight",
         "isTitleBout": false,
         "scheduledRounds": 3,
-        "provenance": null
+        "provenance": {
+          "sourceUrl": "https://www.ufc.com/event/ufc-fight-night-august-22-2026",
+          "retrievedAt": "2026-08-19",
+          "authority": "official"
+        }
       },
       "decisionProbabilitySource": "c6",
       "c6": {
@@ -1018,7 +1050,11 @@ export const UPCOMING_ENTRIES = [
       "division": "Women's Flyweight",
       "isTitleBout": false,
       "scheduledRounds": 3,
-      "provenance": null
+      "provenance": {
+        "sourceUrl": "https://www.ufc.com/event/ufc-fight-night-august-22-2026",
+        "retrievedAt": "2026-08-19",
+        "authority": "official"
+      }
     },
     "fighterAProb": 0.6930986753717315,
     "fighterBProb": 0.30690132462826847,
@@ -1071,7 +1107,11 @@ export const UPCOMING_ENTRIES = [
         "division": "Women's Flyweight",
         "isTitleBout": false,
         "scheduledRounds": 3,
-        "provenance": null
+        "provenance": {
+          "sourceUrl": "https://www.ufc.com/event/ufc-fight-night-august-22-2026",
+          "retrievedAt": "2026-08-19",
+          "authority": "official"
+        }
       },
       "decisionProbabilitySource": "c6",
       "c6": {
@@ -1269,7 +1309,11 @@ export const UPCOMING_ENTRIES = [
       "division": "Featherweight",
       "isTitleBout": false,
       "scheduledRounds": 3,
-      "provenance": null
+      "provenance": {
+        "sourceUrl": "https://www.ufc.com/event/ufc-fight-night-august-22-2026",
+        "retrievedAt": "2026-08-19",
+        "authority": "official"
+      }
     },
     "fighterAProb": 0.49508344750541033,
     "fighterBProb": 0.5049165524945897,
@@ -1322,7 +1366,11 @@ export const UPCOMING_ENTRIES = [
         "division": "Featherweight",
         "isTitleBout": false,
         "scheduledRounds": 3,
-        "provenance": null
+        "provenance": {
+          "sourceUrl": "https://www.ufc.com/event/ufc-fight-night-august-22-2026",
+          "retrievedAt": "2026-08-19",
+          "authority": "official"
+        }
       },
       "decisionProbabilitySource": "c6",
       "c6": {
@@ -1520,7 +1568,11 @@ export const UPCOMING_ENTRIES = [
       "division": "Heavyweight",
       "isTitleBout": false,
       "scheduledRounds": 3,
-      "provenance": null
+      "provenance": {
+        "sourceUrl": "https://www.ufc.com/event/ufc-fight-night-august-22-2026",
+        "retrievedAt": "2026-08-19",
+        "authority": "official"
+      }
     },
     "fighterAProb": 0.7598522103553088,
     "fighterBProb": 0.2401477896446912,
@@ -1573,7 +1625,11 @@ export const UPCOMING_ENTRIES = [
         "division": "Heavyweight",
         "isTitleBout": false,
         "scheduledRounds": 3,
-        "provenance": null
+        "provenance": {
+          "sourceUrl": "https://www.ufc.com/event/ufc-fight-night-august-22-2026",
+          "retrievedAt": "2026-08-19",
+          "authority": "official"
+        }
       },
       "decisionProbabilitySource": "c6",
       "c6": {
@@ -1771,7 +1827,11 @@ export const UPCOMING_ENTRIES = [
       "division": "Lightweight",
       "isTitleBout": false,
       "scheduledRounds": 3,
-      "provenance": null
+      "provenance": {
+        "sourceUrl": "https://www.ufc.com/event/ufc-fight-night-august-22-2026",
+        "retrievedAt": "2026-08-19",
+        "authority": "official"
+      }
     },
     "fighterAProb": 0.5810108526063269,
     "fighterBProb": 0.4189891473936731,
@@ -1824,7 +1884,11 @@ export const UPCOMING_ENTRIES = [
         "division": "Lightweight",
         "isTitleBout": false,
         "scheduledRounds": 3,
-        "provenance": null
+        "provenance": {
+          "sourceUrl": "https://www.ufc.com/event/ufc-fight-night-august-22-2026",
+          "retrievedAt": "2026-08-19",
+          "authority": "official"
+        }
       },
       "decisionProbabilitySource": "c6",
       "c6": {
@@ -2022,7 +2086,11 @@ export const UPCOMING_ENTRIES = [
       "division": "Middleweight",
       "isTitleBout": false,
       "scheduledRounds": 3,
-      "provenance": null
+      "provenance": {
+        "sourceUrl": "https://www.ufc.com/event/ufc-fight-night-august-22-2026",
+        "retrievedAt": "2026-08-19",
+        "authority": "official"
+      }
     },
     "fighterAProb": 0.5316283488074618,
     "fighterBProb": 0.4683716511925382,
@@ -2075,7 +2143,11 @@ export const UPCOMING_ENTRIES = [
         "division": "Middleweight",
         "isTitleBout": false,
         "scheduledRounds": 3,
-        "provenance": null
+        "provenance": {
+          "sourceUrl": "https://www.ufc.com/event/ufc-fight-night-august-22-2026",
+          "retrievedAt": "2026-08-19",
+          "authority": "official"
+        }
       },
       "decisionProbabilitySource": "c6",
       "c6": {
@@ -2273,7 +2345,11 @@ export const UPCOMING_ENTRIES = [
       "division": "Women's Strawweight",
       "isTitleBout": false,
       "scheduledRounds": 3,
-      "provenance": null
+      "provenance": {
+        "sourceUrl": "https://www.ufc.com/event/ufc-fight-night-august-22-2026",
+        "retrievedAt": "2026-08-19",
+        "authority": "official"
+      }
     },
     "fighterAProb": 0.6793389827703539,
     "fighterBProb": 0.32066101722964613,
@@ -2326,7 +2402,11 @@ export const UPCOMING_ENTRIES = [
         "division": "Women's Strawweight",
         "isTitleBout": false,
         "scheduledRounds": 3,
-        "provenance": null
+        "provenance": {
+          "sourceUrl": "https://www.ufc.com/event/ufc-fight-night-august-22-2026",
+          "retrievedAt": "2026-08-19",
+          "authority": "official"
+        }
       },
       "decisionProbabilitySource": "c6",
       "c6": {
