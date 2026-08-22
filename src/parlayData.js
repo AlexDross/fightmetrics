@@ -1,5 +1,78 @@
 export const PARLAY_ENTRIES = [
   {
+    "id": "1787409837079-kyvtwk",
+    "createdAt": "2026-08-22T14:43:57.079Z",
+    "pickSource": "human",
+    "eventName": "UFC Sacramento",
+    "eventDate": "2026-08-22",
+    "legs": [
+      {
+        "fightId": "1787193909408-rqezwb",
+        "fighterA": "Anthony Hernandez",
+        "fighterB": "Gregory Rodrigues",
+        "eventName": "UFC Sacramento",
+        "eventDate": "2026-08-22",
+        "pickedFighter": "Anthony Hernandez",
+        "v2DefaultFighter": "Anthony Hernandez",
+        "v2ProbAtBuild": 0.6612935269605572,
+        "overridden": false,
+        "decisionProbabilitySource": "c6",
+        "decisionProbabilityVersion": "c6_sym_zerointercept_full_20260818",
+        "defaultFighter": "Anthony Hernandez",
+        "probabilityAtBuild": 0.6910264309250457
+      },
+      {
+        "fightId": "1787193785348-v78iky",
+        "fighterA": "Reinier de Ridder",
+        "fighterB": "Roman Dolidze",
+        "eventName": "UFC Sacramento",
+        "eventDate": "2026-08-22",
+        "pickedFighter": "Reinier de Ridder",
+        "v2DefaultFighter": "Reinier de Ridder",
+        "v2ProbAtBuild": 0.5518474743678485,
+        "overridden": false,
+        "decisionProbabilitySource": "c6",
+        "decisionProbabilityVersion": "c6_sym_zerointercept_full_20260818",
+        "defaultFighter": "Reinier de Ridder",
+        "probabilityAtBuild": 0.7704661036734367
+      },
+      {
+        "fightId": "1787193508753-uupndv",
+        "fighterA": "Jamall Emmers",
+        "fighterB": "Lerryan Douglas",
+        "eventName": "UFC Sacramento",
+        "eventDate": "2026-08-22",
+        "pickedFighter": "Lerryan Douglas",
+        "v2DefaultFighter": "Lerryan Douglas",
+        "v2ProbAtBuild": 0.5492198608166021,
+        "overridden": false,
+        "decisionProbabilitySource": "c6",
+        "decisionProbabilityVersion": "c6_sym_zerointercept_full_20260818",
+        "defaultFighter": "Lerryan Douglas",
+        "probabilityAtBuild": 0.764515855831416
+      },
+      {
+        "fightId": "1787193292621-2iuhed",
+        "fighterA": "Shanelle Dyer",
+        "fighterB": "Elise Reed",
+        "eventName": "UFC Sacramento",
+        "eventDate": "2026-08-22",
+        "pickedFighter": "Shanelle Dyer",
+        "v2DefaultFighter": "Shanelle Dyer",
+        "v2ProbAtBuild": 0.8127137451059779,
+        "overridden": false,
+        "decisionProbabilitySource": "c6",
+        "decisionProbabilityVersion": "c6_sym_zerointercept_full_20260818",
+        "defaultFighter": "Shanelle Dyer",
+        "probabilityAtBuild": 0.9153895826497577
+      }
+    ],
+    "combinedOdds": "+152",
+    "unitsWagered": 1,
+    "status": "PENDING",
+    "result": null
+  },
+  {
     "id": "1786823321443-sn35hb",
     "createdAt": "2026-08-15T19:48:41.443Z",
     "pickSource": "human",
