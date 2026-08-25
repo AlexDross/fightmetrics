@@ -12,7 +12,7 @@ export const PROP_PICKS = [
     "method": "KO/TKO or Submission",
     "odds": "-125",
     "stake": 1,
-    "result": "PENDING",
+    "result": "LOST",
     "label": "Anthony Hernandez wins inside the distance",
     "propType": "Double Chance"
   },
@@ -29,7 +29,7 @@ export const PROP_PICKS = [
     "method": "KO/TKO",
     "odds": "-200",
     "stake": 1,
-    "result": "PENDING",
+    "result": "LOST",
     "label": "Lerryan Douglas wins by KO/TKO",
     "propType": "Method of Victory"
   },
