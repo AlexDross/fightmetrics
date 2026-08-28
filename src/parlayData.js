@@ -1,5 +1,63 @@
 export const PARLAY_ENTRIES = [
   {
+    "id": "1787956660565-slcl05",
+    "createdAt": "2026-08-28T22:37:40.565Z",
+    "pickSource": "human",
+    "eventName": "UFC Fight Night Shanghai",
+    "eventDate": "2026-08-29",
+    "legs": [
+      {
+        "fightId": "1787667170132-98mcer",
+        "fighterA": "Umar Nurmagomedov",
+        "fighterB": "Song Yadong",
+        "eventName": "UFC Fight Night Shanghai",
+        "eventDate": "2026-08-29",
+        "pickedFighter": "Umar Nurmagomedov",
+        "v2DefaultFighter": "Umar Nurmagomedov",
+        "v2ProbAtBuild": 0.5985323711213446,
+        "overridden": false,
+        "decisionProbabilitySource": "c6",
+        "decisionProbabilityVersion": "c6_sym_zerointercept_full_20260818",
+        "defaultFighter": "Umar Nurmagomedov",
+        "probabilityAtBuild": 0.8159816672249216
+      },
+      {
+        "fightId": "1787666883764-9cj36y",
+        "fighterA": "Rei Tsuruya",
+        "fighterB": "Kevin Borjas",
+        "eventName": "UFC Fight Night Shanghai",
+        "eventDate": "2026-08-29",
+        "pickedFighter": "Rei Tsuruya",
+        "v2DefaultFighter": "Rei Tsuruya",
+        "v2ProbAtBuild": 0.7081682453900219,
+        "overridden": false,
+        "decisionProbabilitySource": "c6",
+        "decisionProbabilityVersion": "c6_sym_zerointercept_full_20260818",
+        "defaultFighter": "Rei Tsuruya",
+        "probabilityAtBuild": 0.8718953491221186
+      },
+      {
+        "fightId": "1787666847181-pd2xm6",
+        "fighterA": "Jack Jenkins",
+        "fighterB": "Sean Woodson",
+        "eventName": "UFC Fight Night Shanghai",
+        "eventDate": "2026-08-29",
+        "pickedFighter": "Sean Woodson",
+        "v2DefaultFighter": "Sean Woodson",
+        "v2ProbAtBuild": 0.5183055411912624,
+        "overridden": false,
+        "decisionProbabilitySource": "c6",
+        "decisionProbabilityVersion": "c6_sym_zerointercept_full_20260818",
+        "defaultFighter": "Sean Woodson",
+        "probabilityAtBuild": 0.5704954806631263
+      }
+    ],
+    "combinedOdds": "+120",
+    "unitsWagered": 1,
+    "status": "PENDING",
+    "result": null
+  },
+  {
     "id": "1787409837079-kyvtwk",
     "createdAt": "2026-08-22T14:43:57.079Z",
     "pickSource": "human",
