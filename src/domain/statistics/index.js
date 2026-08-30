@@ -38,7 +38,7 @@
 //    2397-2432  computeParlaySummary
 //    3172-3207  computeROISummary
 
-import { parseAmericanOdds, stripVig, americanToDecimal } from '../betting';
+import { parseAmericanOdds, stripVig, americanToDecimal, resolveFrozenPerformanceView } from '../betting';
 
 const isPushResult = (value) => value === 'NC' || value === 'DRAW';
 
@@ -301,9 +301,11 @@ const ROI_BET_TIERS = ['STRONG BET', 'BET', 'LEAN', 'NO BET'];
 //   2026-07-12 v2pA/v2pB backfill -- i.e. this is a v1-era tier, not a
 //   v2-specific gate decision, despite the entry now also carrying v2 fields.
 // See BetTierWinRateChart/BetTierRoiChart captions for the user-facing
-// version of this caveat. Per-entry profit still uses v2's own pick (v2pA/
-// v2pB, frozen, read directly -- not recomputed) at that pick's own price,
-// stake-weighted by unitsWagered, matching every other frozen v2 chart below.
+// version of this caveat. Per-entry profit uses the frozen tracked decision
+// (resolveFrozenPerformanceView: the C6 tracked side when C6 drove the entry,
+// else the raw-v2 argmax), read directly -- never recomputed -- at that
+// decision's own captured price, stake-weighted by unitsWagered, matching the
+// headline summary and every other frozen tracked-decision chart below.
 
 function computeBetTierBreakdown(entries) {
   const rows = [];
@@ -311,18 +313,18 @@ function computeBetTierBreakdown(entries) {
     if (!isResolvedWinner(entry.actualWinner, entry)) return;
     if (isPushResult(entry.actualWinner)) return;
     if (entry.confirmedByUser === false) return;
-    if (entry.v2pA == null || entry.v2pB == null) return;
     const tier = entry.betAction;
     if (!tier) return;
 
-    const v2pick = entry.v2pA >= entry.v2pB ? entry.fighterA : entry.fighterB;
-    const v2odds = v2pick === entry.fighterA
-      ? (entry.oddsA || entry.marketOdds)
-      : (entry.oddsB || entry.marketOdds);
-    const dec = americanToDecimal(v2odds);
+    // Grade the frozen tracked decision (C6 when it drove the entry, else raw
+    // v2), grouped by the tier STORED at capture -- so a C6 entry's tier bucket
+    // scores C6's own pick, never raw v2's, matching the headline and card.
+    const view = resolveFrozenPerformanceView(entry);
+    if (!view || view.malformed || view.pickedFighter == null) return;
+    const dec = americanToDecimal(view.odds);
     if (!dec) return;
-    const won = entry.actualWinner === v2pick;
-    const stake = entry.unitsWagered != null ? entry.unitsWagered : 1;
+    const won = entry.actualWinner === view.pickedFighter;
+    const stake = view.stake;
     const profit = (won ? dec - 1 : -1) * stake;
 
     rows.push({ tier, won: won ? 1 : 0, profit, stake });
@@ -425,9 +427,12 @@ function computeMonthlyPerformance(entries) {
   });
 }
 
-// ─── V2-BASIS VARIANTS (for the Statistics tab's v1/v2 toggle) ────────────
-// FROZEN: every function below reads each entry's own STORED v2pA/v2pB and
-// odds fields. ZERO calls to computeMatchupEdges, ZERO reads of fighterMap/
+// ─── FROZEN TRACKED-DECISION VARIANTS (official performance) ──────────────
+// Every function below grades the frozen tracked decision via the shared
+// resolveFrozenPerformanceView: the C6 tracked side (trackedSide/trackedProb
+// at the captured marketOdds) when C6 drove the entry, else the raw-v2 argmax
+// (v2pA/v2pB at that side's odds). It reads only each entry's own STORED
+// fields -- ZERO calls to computeMatchupEdges, ZERO reads of fighterMap/
 // FIGHT_HISTORY/eloModule anywhere in this block. This is a deliberate
 // invariance property, not an optimization: these functions used to LIVE-
 // RECOMPUTE every pick against current fighter data, which was leakage-clean
@@ -452,21 +457,22 @@ function computeV2FrozenRows(entries) {
     if (isPushResult(entry.actualWinner)) return;
     if (!americanToDecimal(entry.marketOdds)) return;
     if (entry.confirmedByUser === false) return;
-    const v2pA = entry.v2pA;
-    const v2pB = entry.v2pB;
-    if (v2pA == null || v2pB == null) return;
-    const v2pick = v2pA >= v2pB ? entry.fighterA : entry.fighterB;
-    const v2odds = v2pick === entry.fighterA
-      ? (entry.oddsA || entry.marketOdds)
-      : (entry.oddsB || entry.marketOdds);
-    const dec = americanToDecimal(v2odds);
+    // Grade the prediction that was actually shown & frozen at save time: the
+    // C6 tracked decision when C6 drove the entry, else the raw-v2 argmax.
+    // resolveFrozenPerformanceView is pure/frozen -- it never recomputes from
+    // current data, and never touches the raw v2pA/v2pB benchmark fields.
+    const view = resolveFrozenPerformanceView(entry);
+    if (!view || view.malformed || view.pickedFighter == null) return;
+    const pick = view.pickedFighter;
+    const odds = view.odds;
+    const dec = americanToDecimal(odds);
     if (!dec) return;
-    const won = entry.actualWinner === v2pick;
-    const stake = entry.unitsWagered != null ? entry.unitsWagered : 1;
+    const won = entry.actualWinner === pick;
+    const stake = view.stake;
     const profit = (won ? dec - 1 : -1) * stake;
-    const rawPick = parseAmericanOdds(v2odds);
+    const rawPick = parseAmericanOdds(odds);
     rows.push({
-      entry, v2pick, won, profit, rawPick, stake,
+      entry, v2pick: pick, source: view.source, won, profit, rawPick, stake,
       eventName: entry.eventName,
       eventDate: entry.eventDate,
     });
@@ -474,7 +480,61 @@ function computeV2FrozenRows(entries) {
   return rows;
 }
 
-// Window composition of the v2-scored population -- same rows as
+// Per-entry outcome + profit for the frozen tracked decision, built on the
+// SAME authoritative selection path as everything else: resolveFrozenPerformance
+// View. The Home "Recent Results" card reads this helper (getOutcome +
+// frozenDecisionCard); the ROI fight card consumes resolveFrozenPerformanceView
+// directly (the same underlying resolver, so it stays authoritative); and the
+// headline uses computeV2FrozenRows, which grades identically. So all three
+// surface the SAME picked fighter, probability, odds, stake, outcome, and
+// profit for a given saved entry -- a C6-driven entry can never be Correct on
+// one surface and a raw-v2 miss on another.
+//
+// gradeable:false (with source/malformed set) means the resolver could not
+// grade this entry -- a malformed C6 record (NEVER regraded on raw v2) or a
+// legacy entry carrying no frozen fields. Each surface then applies its own
+// documented legacy fallback for the non-malformed case (Home -> v1
+// predictedWinner; ROI card -> reconstructed v2). Pure/frozen: no live model.
+function gradeFrozenDecision(entry) {
+  const view = resolveFrozenPerformanceView(entry);
+  const resolved = isResolvedWinner(entry.actualWinner, entry);
+  const push = isPushResult(entry.actualWinner);
+  const decisive =
+    entry.actualWinner === entry.fighterA || entry.actualWinner === entry.fighterB;
+  const gradeable = view != null && !view.malformed && view.pickedFighter != null;
+
+  let outcome = 'pending';
+  if (!entry.actualWinner || entry.actualWinner === '') outcome = 'pending';
+  else if (push) outcome = 'push';
+  else if (gradeable && decisive)
+    outcome = view.pickedFighter === entry.actualWinner ? 'correct' : 'incorrect';
+  // else (malformed C6, or no frozen decision): 'pending' -- caller may apply a
+  // legacy fallback, but this helper never regrades a malformed C6 on raw v2.
+
+  let profit = null;
+  if (resolved) {
+    if (push) profit = 0;
+    else if (gradeable) {
+      const dec = americanToDecimal(view.odds);
+      if (dec) profit = (entry.actualWinner === view.pickedFighter ? dec - 1 : -1) * view.stake;
+    }
+  }
+
+  return {
+    source: view?.source ?? null,
+    malformed: view?.malformed ?? false,
+    gradeable,
+    pickedFighter: gradeable ? view.pickedFighter : null,
+    probability: gradeable ? view.probability : null,
+    odds: gradeable ? view.odds : null,
+    stake: view?.stake ?? (entry.unitsWagered != null ? entry.unitsWagered : 1),
+    outcome,
+    correct: outcome === 'correct',
+    profit,
+  };
+}
+
+// Window composition of the frozen tracked-decision population -- same rows as
 // computeV2FrozenRows, split by capture provenance. Feeds chart captions so
 // they state the real live/reconstructed makeup of whatever SINCE window is
 // active instead of a number baked in at write time.
@@ -485,15 +545,21 @@ function computeV2WindowComposition(entries) {
   return { n: rows.length, liveN, reconN: rows.length - liveN };
 }
 
-// v2-basis accuracy + ROI summary. FROZEN: pick = argmax(stored v2pA, v2pB),
-// never entry.trackedSide (trackedSide is v1's tracked pick -- for 9 of the
-// 42 reconstructed entries in the default window, v1 and v2 disagree on the
-// pick, so scoring trackedSide would silently grade v1's call on those rows;
-// verified directly against committed data, not assumed). Accuracy is gated
-// to v2-scored entries only (v2pA/v2pB both present) -- the SAME gate
-// computeV2FrozenRows applies for ROI's `bets` population below -- so the two
-// hero numbers share one population and move together under the Since filter
-// instead of accuracy silently grading v1's pick on pre-v2-backfill fights.
+// Official frozen-tracked-decision accuracy + ROI summary. FROZEN: each fight
+// is graded on the prediction that was actually displayed and saved -- the C6
+// tracked decision when C6 drove the entry, else the raw-v2 argmax(v2pA, v2pB)
+// -- resolved through the shared resolveFrozenPerformanceView, the SAME
+// resolver computeV2FrozenRows uses for ROI's `bets` population below. So the
+// accuracy numerator, the accuracy denominator, and every ROI/profit/chart
+// number share one population and one scoring basis, and can never disagree
+// with the per-fight Correct/Miss badge (which reads the same frozen C6
+// decision via resolveFrozenDecisionView). Historical raw-v2 rows keep their
+// exact prior grading; pre-C6 history is never converted to C6.
+//
+// `graded` counts DECISIVE fights that carry a gradeable frozen decision
+// (unweighted -- each fight counts once). Pushes/NCs are resolved records but
+// not decisive accuracy outcomes, so they are excluded here; a malformed
+// C6-labelled record is excluded too rather than silently regraded.
 
 function computeV2Summary(entries) {
   let gradedCount = 0;
@@ -501,10 +567,11 @@ function computeV2Summary(entries) {
   entries.forEach((entry) => {
     const decisive = entry.actualWinner === entry.fighterA || entry.actualWinner === entry.fighterB;
     if (!decisive) return;
-    if (entry.v2pA == null || entry.v2pB == null) return;
+    if (entry.confirmedByUser === false) return;
+    const view = resolveFrozenPerformanceView(entry);
+    if (!view || view.malformed || view.pickedFighter == null) return;
     gradedCount++;
-    const winner = entry.v2pA >= entry.v2pB ? entry.fighterA : entry.fighterB;
-    if (winner === entry.actualWinner) v2Correct++;
+    if (view.pickedFighter === entry.actualWinner) v2Correct++;
   });
   const rows = computeV2FrozenRows(entries);
   const bets = rows.length;
@@ -523,9 +590,10 @@ function computeV2Summary(entries) {
   };
 }
 
-// v2-basis variant of Chart 1 (ROI by Market Band): same band scheme, same
-// output shape, but banded by V2's FROZEN pick + its own stored price instead
-// of the tracked/staked side.
+// Frozen-tracked-decision variant of Chart 1 (ROI by Market Band): same band
+// scheme, same output shape, but banded by the frozen tracked decision (C6 when
+// it drove the entry, else raw-v2 argmax) + its own stored price, instead of
+// the tracked/staked side.
 
 function computeRoiByMarketBandV2(entries) {
   const rows = computeV2FrozenRows(entries);
@@ -551,8 +619,9 @@ function computeRoiByMarketBandV2(entries) {
   });
 }
 
-// v2-basis variant of the cumulative P&L chart: same per-event grouping,
-// same output shape, banded on V2's frozen pick's own profit per entry.
+// Frozen-tracked-decision variant of the cumulative P&L chart: same per-event
+// grouping, same output shape, banded on the frozen tracked decision's own
+// profit per entry (C6 when it drove the entry, else raw-v2 argmax).
 
 function computeCumulativePnlV2(entries) {
   const rows = computeV2FrozenRows(entries);
@@ -581,8 +650,9 @@ function computeCumulativePnlV2(entries) {
   });
 }
 
-// v2-basis variant of the monthly performance table: same per-month
-// grouping, same output shape, using V2's frozen pick's own outcome/profit.
+// Frozen-tracked-decision variant of the monthly performance table: same
+// per-month grouping, same output shape, using the frozen tracked decision's
+// own outcome/profit (C6 when it drove the entry, else raw-v2 argmax).
 
 function computeMonthlyPerformanceV2(entries) {
   const rows = computeV2FrozenRows(entries);
@@ -878,6 +948,7 @@ export {
   computeCumulativePnl,
   computeMonthlyPerformance,
   computeV2FrozenRows,
+  gradeFrozenDecision,
   computeV2WindowComposition,
   computeV2Summary,
   computeRoiByMarketBandV2,

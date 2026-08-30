@@ -166,3 +166,101 @@ export function resolveFrozenDecisionView(entry) {
     side,
   };
 }
+
+const PERFORMANCE_PUSH_RESULTS = new Set(['NC', 'DRAW']);
+
+/**
+ * resolveFrozenPerformanceView(entry)
+ *
+ * The single authoritative answer to "which frozen prediction do OFFICIAL
+ * performance metrics grade for this saved entry, at what captured price?".
+ * Official accuracy, ROI, per-event/per-fight profit, and every headline chart
+ * consume this so a C6-driven entry can never be shown Correct on its card
+ * while being counted as a raw-v2 miss in a headline (or vice versa).
+ *
+ * PURE and FROZEN. It reads ONLY fields already stored on the entry and never
+ * calls a live model (no computeMatchupEdges, no computeC6ProbA, no
+ * resolveDecisionProbability). Raw v2pA/v2pB are read but never mutated — they
+ * remain the internal benchmark for raw-v2 diagnostic surfaces.
+ *
+ * Selection rules:
+ *   1. C6-driven entry (decisionProbabilitySource === 'c6'): grade the frozen
+ *      C6 decision that was actually displayed and tracked, resolved through
+ *      resolveFrozenDecisionView (trackedSide / trackedProb), priced at the
+ *      entry's captured tracked odds (marketOdds). This is the primary
+ *      user-facing prediction whenever C6 drove the save.
+ *   2. Otherwise (ordinary v2, or pre-C6 history): grade the frozen raw-v2
+ *      argmax(v2pA, v2pB) at that side's own captured oddsA/oddsB (marketOdds
+ *      fallback) — existing historical behavior, unchanged. Pre-C6 rows are
+ *      never retroactively converted to C6.
+ *
+ * Fail-safe for a malformed C6-labelled record (source === 'c6' but trackedSide
+ * / trackedProb missing, or trackedSide matches neither fighter): returns
+ * `{ source:'c6', malformed:true, pickedFighter:null, ... }`. Such a record is
+ * NEVER silently regraded on raw v2 (that would grade a different fighter than
+ * the one shown) and NEVER recomputed from current data — callers must exclude
+ * it from accuracy and ROI. See decision.test.js for the exercised policy.
+ *
+ * @param {object} entry a saved ROI/Upcoming entry (buildRoiEntry output)
+ * @returns {{
+ *   source:('c6'|'v2'), malformed:boolean, pickedFighter:(string|null),
+ *   probability:(number|null), odds:(string|number|null), stake:number,
+ *   decisive:boolean, push:boolean
+ * }|null} null for a non-C6 entry carrying no frozen v2 fields (not gradeable).
+ */
+export function resolveFrozenPerformanceView(entry) {
+  if (!entry) return null;
+  const push = PERFORMANCE_PUSH_RESULTS.has(entry.actualWinner);
+  const decisive =
+    entry.actualWinner === entry.fighterA || entry.actualWinner === entry.fighterB;
+  const stake = entry.unitsWagered != null ? entry.unitsWagered : 1;
+
+  if (entry.decisionProbabilitySource === DECISION_SOURCE_C6) {
+    const view = resolveFrozenDecisionView(entry);
+    if (!view || view.side == null) {
+      // Labelled C6 but the authoritative decision fields are missing/broken.
+      // Fail explicitly rather than grading raw v2 (a different fighter) or
+      // recomputing — surfaced as malformed so callers drop it from metrics.
+      return {
+        source: DECISION_SOURCE_C6,
+        malformed: true,
+        pickedFighter: null,
+        probability: null,
+        odds: null,
+        stake,
+        decisive,
+        push,
+      };
+    }
+    return {
+      source: DECISION_SOURCE_C6,
+      malformed: false,
+      pickedFighter: view.winner,
+      probability: view.probability,
+      // Captured tracked odds for the decision actually shown. For every real
+      // C6 entry this equals that side's own oddsA/oddsB, so it reconciles
+      // exactly with the ROI card's per-fight profit.
+      odds: entry.marketOdds ?? null,
+      stake,
+      decisive,
+      push,
+    };
+  }
+
+  if (entry.v2pA == null || entry.v2pB == null) return null;
+  const pickA = entry.v2pA >= entry.v2pB;
+  const pickedFighter = pickA ? entry.fighterA : entry.fighterB;
+  const odds = pickA
+    ? entry.oddsA || entry.marketOdds || null
+    : entry.oddsB || entry.marketOdds || null;
+  return {
+    source: DECISION_SOURCE_V2,
+    malformed: false,
+    pickedFighter,
+    probability: pickA ? entry.v2pA : entry.v2pB,
+    odds,
+    stake,
+    decisive,
+    push,
+  };
+}
