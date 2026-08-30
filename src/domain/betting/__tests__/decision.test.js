@@ -2,6 +2,7 @@ import { describe, it, expect, afterEach, vi } from 'vitest';
 import {
   resolveDecisionProbability,
   resolveFrozenDecisionView,
+  resolveFrozenPerformanceView,
   DECISION_SOURCE_V1,
   DECISION_SOURCE_V2,
   DECISION_SOURCE_C6,
@@ -211,5 +212,129 @@ describe('resolveFrozenDecisionView', () => {
     expect(view.winner).toBe('Fighter A');
     expect(view.side).toBe('A');
     expect(view.probability).toBe(0.61);
+  });
+});
+
+// resolveFrozenPerformanceView is the single authoritative "which frozen
+// prediction do OFFICIAL performance metrics grade, at what price" resolver.
+// It must grade the C6 tracked decision for a C6 entry (never raw v2), grade
+// raw-v2 argmax for a non-C6 entry, fail safe on a malformed C6 record, and
+// never recompute from live data. It is pure/frozen.
+describe('resolveFrozenPerformanceView', () => {
+  const c6Entry = (overrides = {}) => ({
+    fighterA: 'Aoriqileng',
+    fighterB: 'Kai Asakura',
+    decisionProbabilitySource: 'c6',
+    trackedSide: 'Kai Asakura', // C6's user-facing decision
+    trackedProb: 0.7432072258238467,
+    c6Version: 'c6_sym_zerointercept_full_20260818',
+    // raw v2 favours the OTHER fighter (Aoriqileng) -- internal benchmark only
+    v2pA: 0.5638694679787072,
+    v2pB: 0.4361305320212928,
+    oddsA: '+350',
+    oddsB: '-450',
+    marketOdds: '-450',
+    unitsWagered: 1,
+    actualWinner: 'Kai Asakura',
+    ...overrides,
+  });
+
+  it('grades the C6 tracked decision, never the raw-v2 argmax, for a C6 entry', () => {
+    const view = resolveFrozenPerformanceView(c6Entry());
+    expect(view.source).toBe(DECISION_SOURCE_C6);
+    expect(view.malformed).toBe(false);
+    expect(view.pickedFighter).toBe('Kai Asakura'); // C6's side
+    expect(view.pickedFighter).not.toBe('Aoriqileng'); // NOT raw v2's argmax
+    expect(view.probability).toBe(0.7432072258238467);
+    expect(view.odds).toBe('-450'); // captured tracked odds (marketOdds)
+    expect(view.decisive).toBe(true);
+    expect(view.push).toBe(false);
+    expect(view.stake).toBe(1);
+  });
+
+  it('does NOT mutate the raw v2pA/v2pB benchmark fields', () => {
+    const entry = c6Entry();
+    const before = { v2pA: entry.v2pA, v2pB: entry.v2pB };
+    resolveFrozenPerformanceView(entry);
+    expect(entry.v2pA).toBe(before.v2pA);
+    expect(entry.v2pB).toBe(before.v2pB);
+  });
+
+  it('grades the frozen raw-v2 argmax (existing behavior) for a non-C6 entry', () => {
+    const entry = c6Entry({ decisionProbabilitySource: 'v2' });
+    const view = resolveFrozenPerformanceView(entry);
+    expect(view.source).toBe(DECISION_SOURCE_V2);
+    expect(view.pickedFighter).toBe('Aoriqileng'); // v2pA >= v2pB -> fighterA
+    expect(view.odds).toBe('+350'); // fighterA's own captured odds
+    expect(view.probability).toBe(entry.v2pA);
+  });
+
+  it('grades raw v2 for a historical entry with no decisionProbabilitySource', () => {
+    const entry = c6Entry();
+    delete entry.decisionProbabilitySource;
+    const view = resolveFrozenPerformanceView(entry);
+    expect(view.source).toBe(DECISION_SOURCE_V2);
+    expect(view.pickedFighter).toBe('Aoriqileng');
+  });
+
+  it('returns null (not gradeable) for a non-C6 entry missing frozen v2 fields', () => {
+    expect(resolveFrozenPerformanceView(c6Entry({ decisionProbabilitySource: 'v2', v2pA: null, v2pB: null }))).toBeNull();
+  });
+
+  it('fails safe & explicit on a malformed C6 record — never silently grades raw v2, never recomputes', () => {
+    // Labelled c6 but the authoritative decision fields are missing/broken. The
+    // record still carries v2pA/v2pB (raw-v2 argmax would be Aoriqileng), so
+    // this proves NONE of the raw-v2 values leak: no winner, probability, or odds.
+    const missingSide = resolveFrozenPerformanceView(c6Entry({ trackedSide: null }));
+    expect(missingSide.source).toBe(DECISION_SOURCE_C6);
+    expect(missingSide.malformed).toBe(true);
+    expect(missingSide.pickedFighter).toBeNull(); // NOT regraded onto raw v2's Aoriqileng
+    expect(missingSide.probability).toBeNull(); // no raw-v2 probability leak
+    expect(missingSide.odds).toBeNull(); // no raw-v2 odds leak
+
+    const missingProb = resolveFrozenPerformanceView(c6Entry({ trackedProb: null }));
+    expect(missingProb.malformed).toBe(true);
+    expect(missingProb.pickedFighter).toBeNull();
+    expect(missingProb.probability).toBeNull();
+    expect(missingProb.odds).toBeNull();
+
+    // trackedSide that matches neither fighter -> unresolvable side, malformed.
+    const badSide = resolveFrozenPerformanceView(c6Entry({ trackedSide: 'Someone Else' }));
+    expect(badSide.malformed).toBe(true);
+    expect(badSide.pickedFighter).toBeNull();
+    expect(badSide.probability).toBeNull();
+    expect(badSide.odds).toBeNull();
+  });
+
+  it('marks pushes/NCs as resolved-but-not-decisive', () => {
+    const nc = resolveFrozenPerformanceView(c6Entry({ actualWinner: 'NC' }));
+    expect(nc.push).toBe(true);
+    expect(nc.decisive).toBe(false);
+    const draw = resolveFrozenPerformanceView(c6Entry({ actualWinner: 'DRAW' }));
+    expect(draw.push).toBe(true);
+    expect(draw.decisive).toBe(false);
+  });
+
+  it('carries the entry stake (unitsWagered), defaulting to 1', () => {
+    expect(resolveFrozenPerformanceView(c6Entry({ unitsWagered: 2.5 })).stake).toBe(2.5);
+    const noStake = c6Entry();
+    delete noStake.unitsWagered;
+    expect(resolveFrozenPerformanceView(noStake).stake).toBe(1);
+  });
+
+  it('C6 uses the captured marketOdds even when it differs from side oddsA/oddsB', () => {
+    // One authoritative odds rule for C6: the captured marketOdds -- NOT the
+    // tracked side's own oddsA/oddsB. Force them apart so any future drift back
+    // to side-odds selection would fail here (and re-open a card/headline gap).
+    const drift = resolveFrozenPerformanceView(
+      c6Entry({
+        trackedSide: 'Kai Asakura', // fighterB
+        oddsB: '-450', // side-specific price for the tracked fighter
+        marketOdds: '-410', // captured tracked price actually used -- differs
+      })
+    );
+    expect(drift.pickedFighter).toBe('Kai Asakura');
+    expect(drift.odds).toBe('-410'); // marketOdds, not oddsB
+    expect(drift.odds).not.toBe('-450');
   });
 });

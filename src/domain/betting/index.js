@@ -469,6 +469,7 @@ export {
 export {
   resolveDecisionProbability,
   resolveFrozenDecisionView,
+  resolveFrozenPerformanceView,
   DECISION_SOURCE_V1,
   DECISION_SOURCE_V2,
   DECISION_SOURCE_C6,

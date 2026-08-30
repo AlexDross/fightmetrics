@@ -103,6 +103,7 @@ import {
   isNoReadProbability,
   resolveDecisionProbability,
   resolveFrozenDecisionView,
+  resolveFrozenPerformanceView,
   DECISION_SOURCE_C6,
   buildParlayLeg,
 } from './domain/betting';
@@ -147,6 +148,7 @@ import {
   computeCumulativePnl,
   computeMonthlyPerformance,
   computeV2FrozenRows,
+  gradeFrozenDecision,
   computeV2WindowComposition,
   computeV2Summary,
   computeRoiByMarketBandV2,
@@ -756,15 +758,15 @@ function RoiByMarketBandChart({ data, modelLabel = 'v1', windowComposition }) {
   const descriptionId = `${chartId}-description`;
   const compositionText = windowComposition
     ? windowComposition.reconN > 0
-      ? `${windowComposition.n} v2-scored fights in window (${windowComposition.liveN} live-captured, ${windowComposition.reconN} reconstructed)`
-      : `${windowComposition.n} v2-scored fights in window (all live-captured)`
+      ? `${windowComposition.n} frozen tracked-decision fights in window (${windowComposition.liveN} live-captured, ${windowComposition.reconN} reconstructed)`
+      : `${windowComposition.n} frozen tracked-decision fights in window (all live-captured)`
     : '';
   return (
     <figure className="bg-slate-900 border border-slate-800 rounded-xl p-4" aria-labelledby={chartId} aria-describedby={descriptionId}>
       <h3 id={chartId} className="text-white font-bold text-sm mb-1">ROI by Market Band</h3>
       <p id={descriptionId} className="text-muted text-xs mb-3">
         {modelLabel === 'v2'
-          ? `Stake-weighted ROI on V2's FROZEN pick (the probability stored at prediction/reconstruction time, at that pick's own price), grouped by that pick's raw market-implied probability. Same v2-scored population as the headline -- ${compositionText}. Dashed line = breakeven (0% ROI).`
+          ? `Stake-weighted ROI on the frozen tracked decision (the probability stored at prediction/reconstruction time, at that decision's own price), grouped by that decision's raw market-implied probability. Same frozen tracked-decision population as the headline -- ${compositionText}. Dashed line = breakeven (0% ROI).`
           : "Flat 1u ROI on the actually-staked side, grouped by that side's raw market-implied probability. Dashed line = breakeven (0% ROI)."}
       </p>
       {!anySamples ? (
@@ -1098,8 +1100,8 @@ function BetTierRoiChart({ data }) {
     <figure className="bg-slate-900 border border-slate-800 rounded-xl p-4" aria-labelledby={chartId} aria-describedby={descriptionId}>
       <h3 id={chartId} className="text-white font-bold text-sm mb-1">ROI by Bet Tier</h3>
       <p id={descriptionId} className="text-muted text-xs mb-3">
-        Stake-weighted ROI on V2's frozen picked side (at that side's own
-        stored price), grouped by the tier STORED on each entry at capture/
+        Stake-weighted ROI on the frozen tracked decision (at that decision's
+        own stored price), grouped by the tier STORED on each entry at capture/
         reconstruction time -- not re-gated against current data. Dashed line
         = breakeven (0% ROI).
         {emptyTiers.length > 0 && ` No graded picks in ${emptyTiers.join('/')} this window.`}
@@ -1159,8 +1161,8 @@ function BetTierRoiChart({ data }) {
 function CumulativePnlChart({ data, modelLabel = 'v1', windowComposition }) {
   const compositionText = windowComposition
     ? windowComposition.reconN > 0
-      ? `${windowComposition.n} v2-scored fights in window (${windowComposition.liveN} live-captured, ${windowComposition.reconN} reconstructed)`
-      : `${windowComposition.n} v2-scored fights in window (all live-captured)`
+      ? `${windowComposition.n} frozen tracked-decision fights in window (${windowComposition.liveN} live-captured, ${windowComposition.reconN} reconstructed)`
+      : `${windowComposition.n} frozen tracked-decision fights in window (all live-captured)`
     : '';
   const chartId = `cumulative-pnl-${modelLabel}`;
   const descriptionId = `${chartId}-description`;
@@ -1169,7 +1171,7 @@ function CumulativePnlChart({ data, modelLabel = 'v1', windowComposition }) {
       <h3 id={chartId} className="text-white font-bold text-sm mb-1">Cumulative P&amp;L by Event</h3>
       <p id={descriptionId} className="text-muted text-xs mb-3">
         {modelLabel === 'v2'
-          ? `Running net units on V2's FROZEN pick (stake-weighted, at that pick's own stored price), one point per event in chronological order. Same v2-scored population as the headline -- ${compositionText}.`
+          ? `Running net units on the frozen tracked decision (stake-weighted, at that decision's own stored price), one point per event in chronological order. Same frozen tracked-decision population as the headline -- ${compositionText}.`
           : 'Running net units on the actually-staked side, one point per event in chronological order.'}
       </p>
       {data.length === 0 ? (
@@ -1232,8 +1234,8 @@ function MonthlyPerformanceTable({ data, large = false, modelLabel = 'v1', windo
   const lastCellPad = large ? 'py-3' : 'py-2';
   const compositionText = windowComposition
     ? windowComposition.reconN > 0
-      ? `${windowComposition.n} v2-scored fights in window (${windowComposition.liveN} live-captured, ${windowComposition.reconN} reconstructed)`
-      : `${windowComposition.n} v2-scored fights in window (all live-captured)`
+      ? `${windowComposition.n} frozen tracked-decision fights in window (${windowComposition.liveN} live-captured, ${windowComposition.reconN} reconstructed)`
+      : `${windowComposition.n} frozen tracked-decision fights in window (all live-captured)`
     : '';
   return (
     <div className={`bg-slate-900 border border-slate-800 rounded-xl ${large ? 'p-6' : 'p-4'}`}>
@@ -1241,7 +1243,7 @@ function MonthlyPerformanceTable({ data, large = false, modelLabel = 'v1', windo
       {large && (
         <p className="text-muted text-xs mb-4">
           {modelLabel === 'v2'
-            ? `Bets, win rate, and net profit on V2's FROZEN pick (stake-weighted), grouped by calendar month. Same v2-scored population as the headline -- ${compositionText}.`
+            ? `Bets, win rate, and net profit on the frozen tracked decision (stake-weighted), grouped by calendar month. Same frozen tracked-decision population as the headline -- ${compositionText}.`
             : 'Bets, win rate, and net profit for the currently selected model, grouped by calendar month.'}
         </p>
       )}
@@ -1426,7 +1428,7 @@ function StatisticsTab({ entries, prospectNameSet, filterSince, setFilterSince, 
                     {summaryV2All.accuracy.toFixed(1)}%
                   </p>
                   <p className="text-muted text-[10px] mt-1">
-                    v2 frozen scoring across {summaryV2All.graded} graded fights (stake-weighted). Frozen at each pick's capture — no lookahead.
+                    Frozen tracked-decision accuracy across {summaryV2All.graded} decisive fights. Each fight counts once. Frozen at each pick's capture — no lookahead.
                   </p>
                 </>
               ) : (
@@ -7376,12 +7378,17 @@ function HomeTab({ summary, entries, allFighters, filterSince }) {
   // never computeMatchupEdges. Same reasoning as the Statistics tab fix:
   // current fighter data now runs past every graded fight's own date, so a
   // live recompute reads each fight's own outcome as an input.
-  const gradedV2Frozen = (e) => {
-    if (e.v2pA == null || e.v2pB == null) return null;
-    return {
-      winner: e.v2pA >= e.v2pB ? e.fighterA : e.fighterB,
-      prob: Math.max(e.v2pA, e.v2pB),
-    };
+  // Frozen decision actually shown & graded on Home's Recent Results cards,
+  // via the SAME shared grader the ROI card and headline use (gradeFrozenDecision
+  // -> resolveFrozenPerformanceView), so a C6-driven entry can never show its
+  // raw-v2 pick here while the headline counts C6 (the Aoriqileng vs Kai Asakura
+  // case). Returns the C6 tracked decision for a C6 entry, the raw-v2 argmax for
+  // an ordinary v2 entry, and null for a malformed C6 record (never silently
+  // regraded on raw v2) or a legacy entry with no frozen fields.
+  const frozenDecisionCard = (e) => {
+    const g = gradeFrozenDecision(e);
+    if (!g.gradeable) return null;
+    return { winner: g.pickedFighter, prob: g.probability, source: g.source };
   };
 
   const may23Entries = useMemo(
@@ -7419,9 +7426,14 @@ function HomeTab({ summary, entries, allFighters, filterSince }) {
     if (!e.actualWinner || e.actualWinner === '') return 'pending';
     if (isPushResult(e.actualWinner)) return 'push';
     if (e.actualWinner === e.fighterA || e.actualWinner === e.fighterB) {
-      const frozen = gradedV2Frozen(e);
-      const effectiveWinner = frozen ? frozen.winner : e.predictedWinner;
-      return effectiveWinner === e.actualWinner ? 'correct' : 'incorrect';
+      const g = gradeFrozenDecision(e);
+      // Malformed C6 record: fail safe -- do NOT grade on raw v2 (a different
+      // fighter than the one shown). Left ungraded rather than silently wrong.
+      if (g.malformed) return 'pending';
+      // C6 entry -> C6 tracked decision; ordinary v2 -> raw-v2 argmax.
+      if (g.gradeable) return g.outcome;
+      // Legacy entry with no frozen fields -> v1 predictedWinner (unchanged).
+      return e.predictedWinner === e.actualWinner ? 'correct' : 'incorrect';
     }
     return 'pending';
   };
@@ -7454,7 +7466,7 @@ function HomeTab({ summary, entries, allFighters, filterSince }) {
                 {summaryV2All.accuracy.toFixed(1)}%
               </p>
               <p className="text-muted text-xs mt-1">
-                v2 frozen scoring across {summaryV2All.graded} graded fights · {filterSince ? `since ${filterSince}` : 'all time'}
+                Frozen tracked-decision accuracy across {summaryV2All.graded} decisive fights · {filterSince ? `since ${filterSince}` : 'all time'}
               </p>
               {/* v1 display hidden 2026-07-21 per single-model view -- restore
                   by re-adding: {v1Acc != null && <p>v1: {v1Acc.toFixed(1)}%</p>} */}
@@ -7498,7 +7510,8 @@ function HomeTab({ summary, entries, allFighters, filterSince }) {
           gradedPicks.map((e) => {
             const outcome = getOutcome(e);
             const tier = betTier(e.betAction ?? 'NO BET');
-            const frozenV2 = gradedV2Frozen(e);
+            const frozenDecision = frozenDecisionCard(e);
+            const isC6Card = frozenDecision?.source === DECISION_SOURCE_C6;
             const accentBorder =
               outcome === 'correct' ? 'border-l-emerald-600' :
               outcome === 'incorrect' ? 'border-l-red-700' :
@@ -7536,18 +7549,20 @@ function HomeTab({ summary, entries, allFighters, filterSince }) {
                     )}
                   </div>
                 </div>
-                {frozenV2 ? (
+                {frozenDecision ? (
                   <p className="text-xs mt-1">
-                    <span className="text-violet-400 font-bold text-[10px] mr-1.5">v2</span>
-                    <span className="text-sm font-semibold text-white">
-                      {frozenV2.winner}
+                    <span className={`font-bold text-[10px] mr-1.5 ${isC6Card ? 'text-sky-400' : 'text-violet-400'}`}>
+                      {isC6Card ? 'C6' : 'v2'}
                     </span>
-                    <span className="text-muted text-xs ml-1.5">{(frozenV2.prob * 100).toFixed(1)}%</span>
+                    <span className="text-sm font-semibold text-white">
+                      {frozenDecision.winner}
+                    </span>
+                    <span className="text-muted text-xs ml-1.5">{(frozenDecision.prob * 100).toFixed(1)}%</span>
                     {tier.label && <span className={`${tier.cls} ml-1.5`}>{tier.label}</span>}
                   </p>
                 ) : (
                   <p className="text-xs text-muted mt-1">
-                    No frozen v2 prediction recorded
+                    No frozen prediction recorded
                     {tier.label && (
                       <>{' · '}<span className={tier.cls}>{tier.label}</span></>
                     )}
@@ -8175,7 +8190,7 @@ function ROITab({
               {roiBannerV2.accuracy.toFixed(1)}%
             </p>
             <p className="text-muted text-[10px] mt-1">
-              v2 frozen scoring across {roiBannerV2.graded} graded fights (stake-weighted). Frozen at each pick's capture — no lookahead.
+              Frozen tracked-decision accuracy across {roiBannerV2.graded} decisive fights. Each fight counts once. Frozen at each pick's capture — no lookahead.
             </p>
           </div>
           <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 h-full">
@@ -8291,54 +8306,90 @@ function ROITab({
             const profit = calcTrackedProfit(entry);
             const trackedEdge = entry.displayEdge;
             const inV2Mode = modelView === 'v2';
-            // v2Data is v2's OWN reconstructed pick/probability (deriveFrozenV2RoiView
-            // reads raw v2pA/v2pB), independent of whichever probability actually
-            // drove this entry's tracked decision. For a C6-driven entry, C6 can
-            // pick a different side than v2's raw argmax -- so v2Data must NOT
-            // stand in for the headline/grading view here. Withholding it (rather
-            // than reading it and overriding downstream) reuses every existing
-            // "else" fallback below, which already reads the entry's own correct
-            // trackedSide/displayWinner/displayBetAction/displayBetFighter fields.
-            // Shared frozen-decision view (domain/betting/decision.js) -- the
-            // ONE place "what did C6 actually decide for this saved entry"
-            // is answered, so Upcoming/ROI/parlay can't independently drift.
-            // null for any non-C6 entry.
-            const frozenDecision = resolveFrozenDecisionView(entry);
-            const isC6Decision = frozenDecision != null;
-            const v2Data = (inV2Mode && !isC6Decision) ? (v2DataMap.get(entry.id) ?? null) : null;
-            const v2pick = (inV2Mode && v2Data) ? v2Data.v2Winner : entry.trackedSide;
-            const effectiveTrackedSide = inV2Mode ? v2pick : entry.trackedSide;
-            const effectiveOdds = inV2Mode
-              ? (v2Data?.v2Odds ?? (v2pick === entry.fighterA ? (entry.oddsA || entry.marketOdds) : (entry.oddsB || entry.marketOdds)))
-              : entry.marketOdds;
+            // ONE authoritative frozen performance view -- the SAME resolver the
+            // headline summary (computeV2Summary / computeV2FrozenRows) grades.
+            // For every entry the resolver can resolve (C6-driven, and ordinary
+            // entries carrying frozen v2pA/v2pB) the picked fighter, probability,
+            // captured odds, and stake ALL come from here, so the card can never
+            // grade a different decision than the headline: C6 -> the frozen C6
+            // tracked decision at the captured marketOdds; non-C6 -> the raw-v2
+            // argmax at that side's own odds. No parallel pick/odds/profit
+            // selection lives alongside this for those entries.
+            const perf = resolveFrozenPerformanceView(entry);
+            const usesResolver = perf != null && !perf.malformed && perf.pickedFighter != null;
+            // A malformed C6 record is NEVER silently regraded, priced, or
+            // DISPLAYED on raw v2 -- it is dropped from grading exactly as the
+            // summary drops it, and shows a neutral "unavailable" frozen decision
+            // (no v2 winner/probability/badge/odds/recommendation).
+            const malformedC6 = perf != null && perf.malformed;
+            const decisionUnavailable = malformedC6;
+            const isC6Decision = perf?.source === DECISION_SOURCE_C6 && !perf.malformed;
+            // v2Data (deriveFrozenV2RoiView / legacy computeMatchupEdges
+            // reconstruction) is the PRESERVED compatibility path for pre-v2pA
+            // legacy entries the resolver cannot grade (perf === null), and the
+            // source for the bet-recommendation display (edge / tier / rec
+            // fighter) the resolver does not cover. It never overrides pick/odds/
+            // profit for an entry the resolver resolved, and is WITHHELD entirely
+            // for a malformed C6 record so it can't supply a raw-v2 fallback.
+            const v2Data = (inV2Mode && !isC6Decision && !malformedC6)
+              ? (v2DataMap.get(entry.id) ?? null)
+              : null;
+            // Legacy-gradeable: no resolver decision and not a malformed C6, but a
+            // reconstructed v2 pick exists (historical compatibility, unchanged).
+            const legacyGradeable = !usesResolver && !malformedC6 && v2Data != null;
+            const gradeable = usesResolver || legacyGradeable;
+            const effectiveTrackedSide = decisionUnavailable
+              ? null
+              : usesResolver
+              ? perf.pickedFighter
+              : (v2Data ? v2Data.v2Winner : entry.displayWinner);
+            const effectiveOdds = decisionUnavailable
+              ? null
+              : usesResolver
+              ? perf.odds
+              : (v2Data ? v2Data.v2Odds : entry.marketOdds);
+            const stake = perf?.stake ?? (entry.unitsWagered != null ? entry.unitsWagered : 1);
             const effectiveProfit = (() => {
               if (!isResolvedWinner(entry.actualWinner, entry)) return null;
               if (isPushResult(entry.actualWinner)) return 0;
+              if (!gradeable) return null; // malformed C6 / no decision -> not priced
               const dec = americanToDecimal(effectiveOdds);
               if (!dec) return null;
-              // Same unitsWagered-aware stake as calcTrackedProfit -- the amount
-              // actually risked on this entry doesn't change with the view mode,
-              // only which side's odds are used to price the payout.
-              const stake = entry.unitsWagered != null ? entry.unitsWagered : 1;
               return entry.actualWinner === effectiveTrackedSide ? stake * (dec - 1) : -stake;
             })();
-            const correct = decisive && entry.actualWinner === effectiveTrackedSide;
-            // C6-driven entries: display the frozen C6 decision, never
-            // entry.displayWinner/displayProb (those are the v1 snapshot,
-            // preserved unchanged for the v1 accuracy stats) and never
-            // v2Data (v2's own raw reconstructed pick, withheld above).
-            const effWinner = isC6Decision
-              ? frozenDecision.winner
-              : (inV2Mode && v2Data) ? v2Data.v2Winner : entry.displayWinner;
-            const effProb = isC6Decision
-              ? frozenDecision.probability
-              : (inV2Mode && v2Data) ? v2Data.v2WinProb : (entry.displayProb ?? 0);
-            const effFairLine = isC6Decision
-              ? frozenDecision.fairLine
-              : (inV2Mode && v2Data) ? v2Data.v2FairLine : americanOdds(entry.displayProb ?? 0);
-            const effEdge = (inV2Mode && v2Data && v2Data.v2Edge != null) ? v2Data.v2Edge : trackedEdge;
-            const effBetAction = (inV2Mode && v2Data) ? v2Data.v2BetAction : entry.displayBetAction;
-            const effBetFighter = (inV2Mode && v2Data) ? v2Data.v2BetFighter : entry.displayBetFighter;
+            // Correct/Miss only for a gradeable, decisive fight. A malformed C6
+            // record stays ungraded (shown Pending), never a false Miss/Correct.
+            const correct = gradeable && decisive && entry.actualWinner === effectiveTrackedSide;
+            const ungraded = graded && !isPushResult(entry.actualWinner) && !gradeable;
+            // Display of the frozen decision -- winner/probability/fair line
+            // derive from the SAME source that was graded (resolver, else legacy
+            // v2Data, else v1 snapshot), so the "Model Pick" shown is exactly the
+            // decision graded above. A malformed C6 record shows nothing here (the
+            // render switches to a neutral unavailable state below).
+            const effWinner = decisionUnavailable
+              ? null
+              : usesResolver
+              ? perf.pickedFighter
+              : (v2Data ? v2Data.v2Winner : entry.displayWinner);
+            const effProb = decisionUnavailable
+              ? 0
+              : usesResolver
+              ? perf.probability
+              : (v2Data ? v2Data.v2WinProb : (entry.displayProb ?? 0));
+            const effFairLine = decisionUnavailable
+              ? '—'
+              : usesResolver
+              ? americanOdds(perf.probability)
+              : (v2Data ? v2Data.v2FairLine : americanOdds(entry.displayProb ?? 0));
+            const effEdge = decisionUnavailable
+              ? null
+              : (inV2Mode && v2Data && v2Data.v2Edge != null) ? v2Data.v2Edge : trackedEdge;
+            const effBetAction = decisionUnavailable
+              ? 'NO BET'
+              : (inV2Mode && v2Data) ? v2Data.v2BetAction : entry.displayBetAction;
+            const effBetFighter = decisionUnavailable
+              ? ''
+              : (inV2Mode && v2Data) ? v2Data.v2BetFighter : entry.displayBetFighter;
             const actionableBetEff = effBetAction === 'LEAN' || effBetAction === 'BET' || effBetAction === 'STRONG BET';
 
             return (
@@ -8368,7 +8419,7 @@ function ROITab({
                       )}
                       <span
                         className={`text-xs font-bold px-2 py-0.5 rounded-full border ${
-                          !graded
+                          !graded || ungraded
                             ? 'bg-slate-800 text-secondary border-slate-700'
                             : correct
                             ? 'bg-emerald-900/40 text-emerald-400 border-emerald-800'
@@ -8381,6 +8432,8 @@ function ROITab({
                           ? 'Pending'
                           : isPushResult(entry.actualWinner)
                           ? 'Push'
+                          : ungraded
+                          ? 'Pending'
                           : correct
                           ? 'Correct'
                           : 'Miss'}
@@ -8418,8 +8471,23 @@ function ROITab({
                   </div>
                 </div>
 
-                {/* Model pick — v1 or v2 single-model view */}
-                {inV2Mode ? (
+                {/* Model pick — neutral unavailable state for a malformed C6
+                    record (never a raw-v2 fallback), else v2/C6 or v1 view */}
+                {decisionUnavailable ? (
+                  <div className="bg-slate-800/40 rounded-lg p-4 mb-3">
+                    <div className="flex items-center gap-2">
+                      <p className="text-muted text-xs uppercase tracking-wider">
+                        Model Pick
+                      </p>
+                      <span className="text-[10px] font-bold text-slate-400 bg-slate-800 border border-slate-700 px-1.5 py-0.5 rounded-sm uppercase">
+                        Unavailable
+                      </span>
+                    </div>
+                    <p className="text-slate-400 text-sm mt-1">
+                      Frozen decision unavailable — not graded.
+                    </p>
+                  </div>
+                ) : inV2Mode ? (
                   <div className="bg-slate-800/40 rounded-lg p-4 mb-3 flex items-baseline justify-between gap-3">
                     <div>
                       <div className="flex items-center gap-2">
@@ -8545,7 +8613,7 @@ function ROITab({
                 <p className="sm:hidden text-muted text-xs">
                   {entry.eventName || '—'}
                   {entry.eventDate ? ` · ${entry.eventDate}` : ''}
-                  {' · v2 Pick: '}{effectiveTrackedSide || '—'}
+                  {' · Pick: '}{effectiveTrackedSide || '—'}
                   {' · Market: '}{effectiveOdds || '—'}
                   {' · Winner: '}{entry.actualWinner || 'Pending'}
                 </p>
@@ -8583,7 +8651,7 @@ function ROITab({
                   </div>
                   <div>
                     <label htmlFor={`roi-pick-${entry.id}`} className="text-muted text-xs font-semibold uppercase tracking-wider block mb-1.5">
-                      v2 Pick
+                      Pick
                     </label>
                     <input
                       id={`roi-pick-${entry.id}`}
@@ -8596,7 +8664,7 @@ function ROITab({
                   </div>
                   <div>
                     <label htmlFor={`roi-odds-${entry.id}`} className="text-muted text-xs font-semibold uppercase tracking-wider block mb-1.5">
-                      v2 Odds
+                      Odds
                     </label>
                     <input
                       id={`roi-odds-${entry.id}`}
