@@ -126,7 +126,20 @@ import {
   describeBoutContextSuffix,
   missingBoutContextFields,
   hasUnknownBoutContext,
+  PROVENANCE_AUTHORITIES,
 } from './domain/boutContext';
+// Provenance export gate + retrospective event-level repair. The single choke
+// point that makes it impossible to copy paste-ready data whose bout context
+// lacks a complete official/secondary source.
+import {
+  buildExportedCode,
+  ProvenanceExportError,
+  applyEventProvenance,
+  InvalidProvenanceInputError,
+  offendingEvents,
+  normalizeExportProvenance,
+  PROVENANCE_REQUIRED_FIELDS,
+} from './domain/provenance';
 
 // Foundation Stage 3: extracted verbatim -- see src/domain/statistics/index.js
 import {
@@ -2452,6 +2465,135 @@ function BuildParlayPanel({ legInputs, onConfirm, onCancel }) {
   );
 }
 
+// Gated "Copy Updated …Data.js" control + retrospective event-level provenance
+// repair. Used by BOTH the Upcoming and ROI export points so the guard cannot
+// drift between them.
+//
+// The copy button never emits paste-ready data whose bout context lacks a
+// complete official/secondary source: buildExportedCode throws and this shows an
+// actionable error naming every affected record. To unblock, the user supplies
+// the event's real source (URL / retrieved date / authority) once and applies it
+// to that event — which sets TOP-LEVEL provenance only, never the capture-time
+// audit copy. Nothing is fabricated: the current date is never auto-filled and
+// no URL is guessed.
+function ProvenanceExportControls({ varName, fileLabel, entries, onApplyEventProvenance }) {
+  const [feedback, setFeedback] = useState(null); // { type: 'ok' | 'err', text }
+  const [forms, setForms] = useState({}); // "<name> <date>" -> { sourceUrl, retrievedAt, authority }
+  const offenders = useMemo(() => offendingEvents(entries), [entries]);
+  const keyOf = (ev) => `${ev.eventName} ${ev.eventDate}`;
+
+  const handleCopy = async () => {
+    try {
+      const code = buildExportedCode(varName, entries);
+      await navigator.clipboard.writeText(code);
+      setFeedback({ type: 'ok', text: `Copied ${fileLabel} (${entries.length} record${entries.length === 1 ? '' : 's'}).` });
+    } catch (e) {
+      const text = e instanceof ProvenanceExportError ? e.message : `Copy failed: ${e.message}`;
+      setFeedback({ type: 'err', text });
+    }
+  };
+
+  const handleApply = (ev) => {
+    const raw = forms[keyOf(ev)] ?? {};
+    const norm = normalizeExportProvenance(raw);
+    if (!norm.ok) {
+      setFeedback({ type: 'err', text: `Cannot apply to ${ev.eventName} ${ev.eventDate}: ${norm.errors.join('; ')}.` });
+      return;
+    }
+    try {
+      onApplyEventProvenance({ eventName: ev.eventName, eventDate: ev.eventDate }, norm.provenance);
+      setFeedback({
+        type: 'ok',
+        text: `Applied source to ${ev.eventName} ${ev.eventDate} (${ev.count} record${ev.count === 1 ? '' : 's'}). Top-level provenance only — capture-time audit left unchanged.`,
+      });
+    } catch (e) {
+      const text = e instanceof InvalidProvenanceInputError ? e.message : `Apply failed: ${e.message}`;
+      setFeedback({ type: 'err', text });
+    }
+  };
+
+  const setField = (ev, field, value) =>
+    setForms((prev) => ({ ...prev, [keyOf(ev)]: { ...(prev[keyOf(ev)] ?? {}), [field]: value } }));
+
+  return (
+    <div className="flex flex-col items-end gap-2">
+      <button
+        onClick={handleCopy}
+        title={offenders.length ? `${offenders.length} event(s) still need a source before this exports cleanly` : undefined}
+        className="px-3 py-2 rounded-lg border border-slate-700 text-slate-300 text-xs font-semibold hover:text-white hover:border-slate-600 transition-colors"
+      >
+        Copy Updated {fileLabel}
+      </button>
+
+      {offenders.length > 0 && (
+        <div className="w-full max-w-md rounded-lg border border-amber-700/60 bg-amber-950/30 p-3 text-left">
+          <p className="text-amber-300 text-xs font-semibold mb-2">
+            {offenders.reduce((n, e) => n + e.count, 0)} record(s) in {offenders.length} event(s) need a verified source
+            before {fileLabel} can be copied. Enter the event's official/secondary source, then apply:
+          </p>
+          <div className="flex flex-col gap-3">
+            {offenders.map((ev) => {
+              const f = forms[keyOf(ev)] ?? {};
+              return (
+                <div key={keyOf(ev)} className="rounded-md border border-slate-700 p-2">
+                  <p className="text-slate-200 text-xs font-semibold mb-1">
+                    {ev.eventName} · {ev.eventDate} · {ev.count} record{ev.count === 1 ? '' : 's'}
+                  </p>
+                  <div className="flex flex-col gap-1.5">
+                    <input
+                      type="url"
+                      inputMode="url"
+                      placeholder="Source URL (e.g. official UFC event page)"
+                      value={f.sourceUrl ?? ''}
+                      onChange={(e) => setField(ev, 'sourceUrl', e.target.value)}
+                      className="px-2 py-1 rounded bg-slate-900 border border-slate-700 text-slate-200 text-xs"
+                    />
+                    <div className="flex gap-1.5">
+                      <input
+                        type="date"
+                        aria-label="Retrieved date"
+                        value={f.retrievedAt ?? ''}
+                        onChange={(e) => setField(ev, 'retrievedAt', e.target.value)}
+                        className="px-2 py-1 rounded bg-slate-900 border border-slate-700 text-slate-200 text-xs flex-1"
+                      />
+                      <select
+                        aria-label="Authority"
+                        value={f.authority ?? ''}
+                        onChange={(e) => setField(ev, 'authority', e.target.value || undefined)}
+                        className="px-2 py-1 rounded bg-slate-900 border border-slate-700 text-slate-200 text-xs"
+                      >
+                        <option value="">authority…</option>
+                        {PROVENANCE_AUTHORITIES.map((a) => (
+                          <option key={a} value={a}>{a}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <button
+                      onClick={() => handleApply(ev)}
+                      className="self-start px-2 py-1 rounded border border-blue-700 text-blue-300 text-xs font-semibold hover:text-white hover:border-blue-500 transition-colors"
+                    >
+                      Apply source to this event
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          <p className="text-muted text-[10px] mt-2">
+            Requires {PROVENANCE_REQUIRED_FIELDS.join(', ')}. Nothing is auto-filled: enter the source you actually verified.
+          </p>
+        </div>
+      )}
+
+      {feedback && (
+        <p className={`text-xs max-w-md whitespace-pre-line text-left ${feedback.type === 'ok' ? 'text-emerald-400' : 'text-red-400'}`}>
+          {feedback.text}
+        </p>
+      )}
+    </div>
+  );
+}
+
 function UpcomingEventTab({
   entries,
   onGrade,
@@ -2468,13 +2610,15 @@ function UpcomingEventTab({
   parlayEntries,
   roiEntries,
   onDeleteParlay,
+  onApplyEventProvenance,
 }) {
   const fighterMap = useMemo(() => {
     const m = new Map();
     (allFighters ?? []).forEach((f) => m.set(f.FIGHTER, f));
     return m;
   }, [allFighters]);
-  const exportedCode = `export const UPCOMING_ENTRIES = ${JSON.stringify(entries, null, 2)};\n`;
+  // Fights export goes through the provenance-gated <ProvenanceExportControls>
+  // below (buildExportedCode), which validates before serializing.
   // Same builders ROITab uses for its own Props/Parlays export buttons --
   // one serialization each, reused here for the Upcoming-side access point.
   const propsExportedCode = buildPropsExportedCode(propPicks);
@@ -2662,17 +2806,19 @@ function UpcomingEventTab({
           </p>
         </div>
         {subTab === 'fights' && (
-          <div className="hidden sm:flex items-center gap-2">
+          <div className="hidden sm:flex items-start gap-2">
             {/* Ungated on entries.length -- an empty array is still a valid,
                 meaningful export (a fully-graded/cleared card), and hiding the
                 button once the last entry leaves made a clean upcomingData.js
-                impossible to produce. */}
-            <button
-              onClick={() => navigator.clipboard.writeText(exportedCode)}
-              className="px-3 py-2 rounded-lg border border-slate-700 text-slate-300 text-xs font-semibold hover:text-white hover:border-slate-600 transition-colors"
-            >
-              Copy Updated upcomingData.js
-            </button>
+                impossible to produce. The gate is provenance, not count: the
+                shared control refuses to copy any bout-context record that lacks
+                a complete official/secondary source, and offers per-event repair. */}
+            <ProvenanceExportControls
+              varName="UPCOMING_ENTRIES"
+              fileLabel="upcomingData.js"
+              entries={entries}
+              onApplyEventProvenance={onApplyEventProvenance}
+            />
             {/* v1 toggle hidden 2026-07-22 per single-model view (v2 only) --
                 restore by re-adding the ['v1','v2'] button block that used to
                 sit here (called setModelToggle(v)). modelToggle is App-level
@@ -4661,19 +4807,36 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
   const [boutDivision, setBoutDivision] = useState('');
   const [boutTitleStatus, setBoutTitleStatus] = useState('');
   const [boutRounds, setBoutRounds] = useState('');
+  // Optional source for the scheduled context. When the user supplies a complete
+  // official/secondary citation here, the writer stamps it into BOTH the
+  // top-level boutContext and the capture-time copy, so a freshly saved
+  // prediction is exportable immediately. Left blank it stays null (unknown) and
+  // the export gate will require the source before that record can be copied.
+  const [boutSourceUrl, setBoutSourceUrl] = useState('');
+  const [boutRetrievedAt, setBoutRetrievedAt] = useState('');
+  const [boutAuthority, setBoutAuthority] = useState('');
 
   // One object, built once, used by BOTH the live preview and the save path so a
   // saved prediction can never have been computed under different context than
-  // the one the user was looking at.
+  // the one the user was looking at. Provenance is attached only when COMPLETE
+  // (never fabricated, never a current-date fallback); an incomplete source is
+  // treated as no source rather than a half-citation.
   const boutContext = useMemo(
-    () =>
-      normalizeBoutContext({
+    () => {
+      const prov = normalizeExportProvenance({
+        sourceUrl: boutSourceUrl || undefined,
+        retrievedAt: boutRetrievedAt || undefined,
+        authority: boutAuthority || undefined,
+      });
+      return normalizeBoutContext({
         division: boutDivision || null,
         isTitleBout:
           boutTitleStatus === '' ? null : boutTitleStatus === 'title',
         scheduledRounds: boutRounds === '' ? null : Number(boutRounds),
-      }),
-    [boutDivision, boutTitleStatus, boutRounds]
+        ...(prov.ok ? { provenance: prov.provenance } : {}),
+      });
+    },
+    [boutDivision, boutTitleStatus, boutRounds, boutSourceUrl, boutRetrievedAt, boutAuthority]
   );
 
   const boutContextIssues = useMemo(
@@ -5131,6 +5294,55 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                   <option value="">Unknown</option>
                   <option value="3">3 rounds</option>
                   <option value="5">5 rounds</option>
+                </select>
+              </div>
+            </div>
+            {/* Source of the scheduled context. Optional, but a saved bout that
+                carries any division/title/rounds must be sourced before it can be
+                exported (the copy gate enforces it). Fill all three here and the
+                save stamps the citation into both the authoritative and the
+                capture-time copy. Nothing is auto-filled. */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
+              <div className="sm:col-span-3">
+                <label htmlFor="simulator-prov-url" className="text-muted text-xs font-semibold uppercase tracking-wider block mb-1.5">
+                  Bout-context source URL
+                </label>
+                <input
+                  id="simulator-prov-url"
+                  type="url"
+                  inputMode="url"
+                  placeholder="Official UFC event / weigh-in page you verified"
+                  value={boutSourceUrl}
+                  onChange={(e) => setBoutSourceUrl(e.target.value)}
+                  className="w-full h-10 bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:border-red-500"
+                />
+              </div>
+              <div>
+                <label htmlFor="simulator-prov-date" className="text-muted text-xs font-semibold uppercase tracking-wider block mb-1.5">
+                  Retrieved on
+                </label>
+                <input
+                  id="simulator-prov-date"
+                  type="date"
+                  value={boutRetrievedAt}
+                  onChange={(e) => setBoutRetrievedAt(e.target.value)}
+                  className="w-full h-10 bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:border-red-500"
+                />
+              </div>
+              <div>
+                <label htmlFor="simulator-prov-authority" className="text-muted text-xs font-semibold uppercase tracking-wider block mb-1.5">
+                  Authority
+                </label>
+                <select
+                  id="simulator-prov-authority"
+                  value={boutAuthority}
+                  onChange={(e) => setBoutAuthority(e.target.value)}
+                  className="w-full h-10 bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:border-red-500"
+                >
+                  <option value="">Unset</option>
+                  {PROVENANCE_AUTHORITIES.map((a) => (
+                    <option key={a} value={a}>{a}</option>
+                  ))}
                 </select>
               </div>
             </div>
@@ -7221,6 +7433,17 @@ export default function App() {
     setUpcomingEntries((prev) => removePendingEntry(prev, id));
   };
 
+  // Retrospective, event-scoped provenance repair. Sets TOP-LEVEL
+  // boutContext.provenance on the selected event's context-bearing records only;
+  // applyEventProvenance never touches the capture-time audit copy and never
+  // fabricates (it throws on incomplete input, surfaced by the caller).
+  const handleApplyUpcomingProvenance = (selector, provenance) => {
+    setUpcomingEntries((prev) => applyEventProvenance(prev, selector, provenance));
+  };
+  const handleApplyRoiProvenance = (selector, provenance) => {
+    setRoiEntries((prev) => applyEventProvenance(prev, selector, provenance));
+  };
+
   const handleUpdateUpcomingEntry = (id, patch) => {
     setUpcomingEntries((prev) =>
       prev.map((entry) => (entry.id === id ? { ...entry, ...patch } : entry))
@@ -7269,6 +7492,7 @@ export default function App() {
           parlayEntries={parlayEntries}
           roiEntries={roiEntries}
           onDeleteParlay={handleDeleteParlay}
+          onApplyEventProvenance={handleApplyUpcomingProvenance}
         />
       )}
       {view === 'explore' && <ExploreTab allFighters={fightersWithProspectsFiltered} />}
@@ -7288,6 +7512,7 @@ export default function App() {
           onDeletePropPick={handleDeletePropPick}
           parlayEntries={parlayEntries}
           onDeleteParlay={handleDeleteParlay}
+          onApplyEventProvenance={handleApplyRoiProvenance}
         />
       )}
       {view === 'statistics' && (
@@ -7732,12 +7957,11 @@ function ROITab({
   onDeletePropPick,
   parlayEntries,
   onDeleteParlay,
+  onApplyEventProvenance,
 }) {
-  const exportedCode = `export const ROI_ENTRIES = ${JSON.stringify(
-    entries,
-    null,
-    2
-  )};\n`;
+  // ROI fights export goes through the provenance-gated
+  // <ProvenanceExportControls> below (buildExportedCode), which validates before
+  // serializing.
   // Mirrors exportedCode above, but serializes the live propPicks state (the
   // same state onGradePropPick/onAddPropPick mutate) rather than roiEntries --
   // props stay isolated from ROI_ENTRIES even in the export path.
@@ -8071,12 +8295,12 @@ function ROITab({
                 the button once the last entry left made a clean roiData.js
                 impossible to produce. Confirm All / Clear All stay gated
                 below -- both are meaningless with zero entries. */}
-            <button
-              onClick={() => navigator.clipboard.writeText(exportedCode)}
-              className="px-3 py-2 rounded-lg border border-slate-700 text-slate-300 text-xs font-semibold hover:text-white hover:border-slate-600 transition-colors"
-            >
-              Copy Updated roiData.js
-            </button>
+            <ProvenanceExportControls
+              varName="ROI_ENTRIES"
+              fileLabel="roiData.js"
+              entries={entries}
+              onApplyEventProvenance={onApplyEventProvenance}
+            />
 
             {entries.length > 0 && (
               <>
