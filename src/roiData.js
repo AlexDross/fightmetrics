@@ -14,7 +14,11 @@ export const ROI_ENTRIES = [
       "division": "Bantamweight",
       "isTitleBout": false,
       "scheduledRounds": 5,
-      "provenance": null
+      "provenance": {
+        "sourceUrl": "https://www.ufc.com/event/ufc-fight-night-august-29-2026",
+        "retrievedAt": "2026-08-30",
+        "authority": "official"
+      }
     },
     "fighterAProb": 0.5731924495838231,
     "fighterBProb": 0.4268075504161769,
@@ -265,7 +269,11 @@ export const ROI_ENTRIES = [
       "division": "Women's Strawweight",
       "isTitleBout": false,
       "scheduledRounds": 3,
-      "provenance": null
+      "provenance": {
+        "sourceUrl": "https://www.ufc.com/event/ufc-fight-night-august-29-2026",
+        "retrievedAt": "2026-08-30",
+        "authority": "official"
+      }
     },
     "fighterAProb": 0.3258276154817579,
     "fighterBProb": 0.6741723845182421,
@@ -516,7 +524,11 @@ export const ROI_ENTRIES = [
       "division": "Bantamweight",
       "isTitleBout": false,
       "scheduledRounds": 3,
-      "provenance": null
+      "provenance": {
+        "sourceUrl": "https://www.ufc.com/event/ufc-fight-night-august-29-2026",
+        "retrievedAt": "2026-08-30",
+        "authority": "official"
+      }
     },
     "fighterAProb": 0.5302174912300772,
     "fighterBProb": 0.4697825087699228,
@@ -767,7 +779,11 @@ export const ROI_ENTRIES = [
       "division": "Flyweight",
       "isTitleBout": false,
       "scheduledRounds": 3,
-      "provenance": null
+      "provenance": {
+        "sourceUrl": "https://www.ufc.com/event/ufc-fight-night-august-29-2026",
+        "retrievedAt": "2026-08-30",
+        "authority": "official"
+      }
     },
     "fighterAProb": 0.5754197888076221,
     "fighterBProb": 0.4245802111923779,
@@ -1018,7 +1034,11 @@ export const ROI_ENTRIES = [
       "division": "Flyweight",
       "isTitleBout": false,
       "scheduledRounds": 3,
-      "provenance": null
+      "provenance": {
+        "sourceUrl": "https://www.ufc.com/event/ufc-fight-night-august-29-2026",
+        "retrievedAt": "2026-08-30",
+        "authority": "official"
+      }
     },
     "fighterAProb": 0.6596716355718085,
     "fighterBProb": 0.3403283644281915,
@@ -1269,7 +1289,11 @@ export const ROI_ENTRIES = [
       "division": "Featherweight",
       "isTitleBout": false,
       "scheduledRounds": 3,
-      "provenance": null
+      "provenance": {
+        "sourceUrl": "https://www.ufc.com/event/ufc-fight-night-august-29-2026",
+        "retrievedAt": "2026-08-30",
+        "authority": "official"
+      }
     },
     "fighterAProb": 0.471476897222759,
     "fighterBProb": 0.528523102777241,
@@ -1520,7 +1544,11 @@ export const ROI_ENTRIES = [
       "division": "Women's Strawweight",
       "isTitleBout": false,
       "scheduledRounds": 3,
-      "provenance": null
+      "provenance": {
+        "sourceUrl": "https://www.ufc.com/event/ufc-fight-night-august-29-2026",
+        "retrievedAt": "2026-08-30",
+        "authority": "official"
+      }
     },
     "fighterAProb": 0.2604889086510812,
     "fighterBProb": 0.7395110913489188,

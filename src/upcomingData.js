@@ -14,7 +14,11 @@ export const UPCOMING_ENTRIES = [
       "division": "Lightweight",
       "isTitleBout": false,
       "scheduledRounds": 3,
-      "provenance": null
+      "provenance": {
+        "sourceUrl": "https://www.ufc.com/event/ufc-fight-night-september-05-2026",
+        "retrievedAt": "2026-08-31",
+        "authority": "official"
+      }
     },
     "fighterAProb": 0.5613510662998984,
     "fighterBProb": 0.4386489337001016,
@@ -265,7 +269,11 @@ export const UPCOMING_ENTRIES = [
       "division": "Middleweight",
       "isTitleBout": false,
       "scheduledRounds": 3,
-      "provenance": null
+      "provenance": {
+        "sourceUrl": "https://www.ufc.com/event/ufc-fight-night-september-05-2026",
+        "retrievedAt": "2026-08-31",
+        "authority": "official"
+      }
     },
     "fighterAProb": 0.3108317762917277,
     "fighterBProb": 0.6891682237082724,
@@ -516,7 +524,11 @@ export const UPCOMING_ENTRIES = [
       "division": "Welterweight",
       "isTitleBout": false,
       "scheduledRounds": 3,
-      "provenance": null
+      "provenance": {
+        "sourceUrl": "https://www.ufc.com/event/ufc-fight-night-september-05-2026",
+        "retrievedAt": "2026-08-31",
+        "authority": "official"
+      }
     },
     "fighterAProb": 0.4700060328601696,
     "fighterBProb": 0.5299939671398304,
@@ -767,7 +779,11 @@ export const UPCOMING_ENTRIES = [
       "division": "Featherweight",
       "isTitleBout": false,
       "scheduledRounds": 3,
-      "provenance": null
+      "provenance": {
+        "sourceUrl": "https://www.ufc.com/event/ufc-fight-night-september-05-2026",
+        "retrievedAt": "2026-08-31",
+        "authority": "official"
+      }
     },
     "fighterAProb": 0.5724495153971637,
     "fighterBProb": 0.4275504846028363,
@@ -1018,7 +1034,11 @@ export const UPCOMING_ENTRIES = [
       "division": "Featherweight",
       "isTitleBout": false,
       "scheduledRounds": 3,
-      "provenance": null
+      "provenance": {
+        "sourceUrl": "https://www.ufc.com/event/ufc-fight-night-september-05-2026",
+        "retrievedAt": "2026-08-31",
+        "authority": "official"
+      }
     },
     "fighterAProb": 0.4365086334878839,
     "fighterBProb": 0.5634913665121162,
@@ -1269,7 +1289,11 @@ export const UPCOMING_ENTRIES = [
       "division": "Heavyweight",
       "isTitleBout": false,
       "scheduledRounds": 3,
-      "provenance": null
+      "provenance": {
+        "sourceUrl": "https://www.ufc.com/event/ufc-fight-night-september-05-2026",
+        "retrievedAt": "2026-08-31",
+        "authority": "official"
+      }
     },
     "fighterAProb": 0.5674794397010339,
     "fighterBProb": 0.43252056029896613,
@@ -1520,7 +1544,11 @@ export const UPCOMING_ENTRIES = [
       "division": "Featherweight",
       "isTitleBout": false,
       "scheduledRounds": 3,
-      "provenance": null
+      "provenance": {
+        "sourceUrl": "https://www.ufc.com/event/ufc-fight-night-september-05-2026",
+        "retrievedAt": "2026-08-31",
+        "authority": "official"
+      }
     },
     "fighterAProb": 0.5839769690079609,
     "fighterBProb": 0.4160230309920391,
@@ -1771,7 +1799,11 @@ export const UPCOMING_ENTRIES = [
       "division": "Light Heavyweight",
       "isTitleBout": false,
       "scheduledRounds": 3,
-      "provenance": null
+      "provenance": {
+        "sourceUrl": "https://www.ufc.com/event/ufc-fight-night-september-05-2026",
+        "retrievedAt": "2026-08-31",
+        "authority": "official"
+      }
     },
     "fighterAProb": 0.36855530178963836,
     "fighterBProb": 0.6314446982103616,
@@ -2022,7 +2054,11 @@ export const UPCOMING_ENTRIES = [
       "division": "Featherweight",
       "isTitleBout": false,
       "scheduledRounds": 3,
-      "provenance": null
+      "provenance": {
+        "sourceUrl": "https://www.ufc.com/event/ufc-fight-night-september-05-2026",
+        "retrievedAt": "2026-08-31",
+        "authority": "official"
+      }
     },
     "fighterAProb": 0.6558845596327465,
     "fighterBProb": 0.3441154403672535,
@@ -2273,7 +2309,11 @@ export const UPCOMING_ENTRIES = [
       "division": "Women's Bantamweight",
       "isTitleBout": false,
       "scheduledRounds": 3,
-      "provenance": null
+      "provenance": {
+        "sourceUrl": "https://www.ufc.com/event/ufc-fight-night-september-05-2026",
+        "retrievedAt": "2026-08-31",
+        "authority": "official"
+      }
     },
     "fighterAProb": 0.34040118833804744,
     "fighterBProb": 0.6595988116619526,
