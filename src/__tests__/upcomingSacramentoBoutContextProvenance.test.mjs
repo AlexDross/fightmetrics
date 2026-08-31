@@ -1,20 +1,32 @@
 // UFC SACRAMENTO (2026-08-22) — official bout-context provenance.
 //
-// The ten committed UFC Sacramento entries carried a scheduled boutContext
-// (division/isTitleBout/scheduledRounds) with `provenance: null` in both
+// RE-SCOPED after the UFC Sacramento grading handoff (2026-08-22 event, graded
+// 2026-08-25). This guard was written while Sacramento was the PENDING card, so
+// it read UPCOMING_ENTRIES. The card has since been contested and graded, and
+// the handoff moved those ten records into roiData.js — the same lifecycle the
+// UFC 330 guard (upcomingBoutContext.test.mjs) already documents and follows,
+// and the same rule migrateV0ToV1 enforces ("ROI and Upcoming updates must be
+// committed together"). The guard therefore FOLLOWS THE RECORDS into ROI: same
+// official citation, same exact-value requirement, same C6 field checks, now
+// held against the graded ROI rows. Nothing was weakened — the identical
+// assertions run against the record's authoritative post-handoff location, and
+// a new assertion pins that no Sacramento row is left pending in Upcoming.
+//
+// The ten Sacramento entries carry the official weigh-in citation in both
 // locations buildRoiEntry stamps it: the top-level `boutContext` and the
 // capture-time copy at `_provenance.boutContext`. gradingHandoffIntegrity
 // test #4 catches a null `boutContext.provenance` generically; this suite is
-// the narrow, exact-value guard for the Sacramento repair specifically —
-// it also covers `_provenance.boutContext.provenance`, which test #4 does
-// not, and it checks for the EXACT verified citation rather than merely a
-// truthy placeholder.
+// the narrow, exact-value guard for the Sacramento repair specifically — it
+// also covers `_provenance.boutContext.provenance`, which test #4 does not, and
+// it checks for the EXACT verified citation rather than merely a truthy
+// placeholder.
 //
 // Official source verified 2026-08-19:
 //   https://www.ufc.com/event/ufc-fight-night-august-22-2026
 // (UFC Fight Night: Hernandez vs Rodrigues, Sacramento, CA — confirms the
 // event, date, and all ten committed matchups.)
 import { describe, it, expect } from 'vitest';
+import { ROI_ENTRIES } from '../roiData.js';
 import { UPCOMING_ENTRIES } from '../upcomingData.js';
 import { LEGACY_FIELD_MAP } from '../data/migration/legacyFieldMap.mjs';
 
@@ -24,14 +36,21 @@ const OFFICIAL_PROVENANCE = Object.freeze({
   authority: 'official',
 });
 
-const SACRAMENTO = UPCOMING_ENTRIES.filter(
+// The graded Sacramento records, in roiData.js. Grading preserved their ids
+// (verified: the ten upcoming ids became the ten graded ids unchanged), so this
+// is the same saved prediction the guard was always written against.
+const SACRAMENTO = ROI_ENTRIES.filter(
   (e) => e.eventName === 'UFC Sacramento' && e.eventDate === '2026-08-22'
 );
 const key = (e) => `${e.fighterA} vs ${e.fighterB}`;
 
 describe('UFC Sacramento bout context provenance — official values', () => {
-  it('is exactly the ten committed Sacramento entries', () => {
+  it('is exactly the ten graded Sacramento entries', () => {
     expect(SACRAMENTO.length).toBe(10);
+  });
+
+  it('the handoff is complete: nothing Sacramento is still pending in Upcoming', () => {
+    expect(UPCOMING_ENTRIES.filter((e) => e.eventName === 'UFC Sacramento')).toEqual([]);
   });
 
   it('every entry has non-null boutContext.provenance', () => {
@@ -92,12 +111,10 @@ describe('UFC Sacramento bout context provenance — official values', () => {
       });
       expect(typeof e.trackedSide, key(e)).toBe('string');
       expect(['LEAN', 'BET', 'STRONG BET', 'NO BET'], key(e)).toContain(e.betAction);
-      // These ten rows were RE-ENTERED with user-facing C6 active (the
-      // provenance repair below only touches boutContext, never the decision
-      // layer). So the decision source is 'c6' and the C6 fields must be
-      // present and well-formed -- this guards that the repair did not corrupt
-      // them, the same role the old "no C6 fields" assertion served before C6
-      // drove these rows.
+      // These ten rows were entered with user-facing C6 active (the provenance
+      // repair only touches boutContext, never the decision layer). So the
+      // decision source is 'c6' and the C6 fields must be present and
+      // well-formed -- this guards that the repair did not corrupt them.
       expect(e.decisionProbabilitySource, key(e)).toBe('c6');
       expect(e.c6Version, key(e)).toBe('c6_sym_zerointercept_full_20260818');
       ['c6ProbA', 'c6ProbB'].forEach((f) => {
