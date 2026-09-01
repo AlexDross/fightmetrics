@@ -208,7 +208,18 @@ describe('4. public and member routing over HTTP', () => {
   });
 
   it('anon cannot reach app_private tables through PostgREST', async () => {
-    const { REST_URL, ANON_KEY } = await import('./helpers.mjs').then((m) => m.status());
+    const localStatus = await import('./helpers.mjs').then((m) => m.status());
+
+    // Regression guard for the harness itself, asserted where status() is
+    // already being called. `supabase status -o json` also returns API_URL,
+    // DB_URL, GRAPHQL_URL, PUBLISHABLE_KEY, SECRET_KEY and SERVICE_ROLE_KEY;
+    // returning the parsed object wholesale handed every importer the
+    // service-role key and the database URL. status() must expose the allowlist
+    // and nothing else — key NAMES only here, never their values.
+    expect(Object.keys(localStatus).sort())
+      .toEqual(['ANON_KEY', 'JWT_SECRET', 'REST_URL']);
+
+    const { REST_URL, ANON_KEY } = localStatus;
     const res = await fetch(`${REST_URL}/workspaces`, {
       headers: { apikey: ANON_KEY, Authorization: `Bearer ${ANON_KEY}` },
     });
