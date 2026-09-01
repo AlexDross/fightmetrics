@@ -11,13 +11,68 @@ import { createHmac } from 'node:crypto';
 
 let cachedStatus = null;
 
-/** Local stack coordinates, read once from the CLI. */
+/**
+ * The ONLY status fields this harness consumes, and therefore the only ones it
+ * keeps. Names only — never values. `status()` returns exactly these three.
+ */
+const REQUIRED_STATUS_FIELDS = ['REST_URL', 'ANON_KEY', 'JWT_SECRET'];
+
+/**
+ * Local stack coordinates, read once from the CLI and reduced to an allowlist.
+ *
+ * The CLI response carries considerably MORE than this harness needs — measured
+ * on the local stack it also returns `API_URL`, `DB_URL`, `GRAPHQL_URL`,
+ * `PUBLISHABLE_KEY`, `SECRET_KEY` and `SERVICE_ROLE_KEY`. Returning the parsed
+ * object wholesale handed every importer the service-role/secret key and the
+ * database URL, neither of which anything here uses. So the parsed object is
+ * validated and then DISCARDED: only `REST_URL`, `ANON_KEY` and `JWT_SECRET` are
+ * copied into a frozen object, and every other field — service-role/secret key,
+ * publishable key, database and API URLs included — is dropped on the floor and
+ * is unreachable from outside this module.
+ *
+ * The three that are kept are genuinely needed: the suite signs its own
+ * GoTrue-shaped tokens with `JWT_SECRET` so PostgREST exercises the real
+ * authenticated path. They still must not leave this process, so stdout and
+ * stderr are both captured explicitly (inheriting stderr would put CLI
+ * diagnostics straight into the test log), the raw string is never returned or
+ * logged, and every failure below is re-thrown as a message written by hand. No
+ * `cause`, no stdout, no stderr, no child-process error object is attached to any
+ * of them — each of those can carry the keys verbatim, and a thrown error is
+ * printed in full by the runner and by CI.
+ */
 export function status() {
   if (cachedStatus) return cachedStatus;
-  const raw = execFileSync('npx', ['supabase', 'status', '-o', 'json'], {
-    encoding: 'utf8', maxBuffer: 1024 * 1024,
-  });
-  cachedStatus = JSON.parse(raw);
+
+  let raw;
+  try {
+    raw = execFileSync('npx', ['supabase', 'status', '-o', 'json'], {
+      encoding: 'utf8',
+      maxBuffer: 1024 * 1024,
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+  } catch {
+    throw new Error(
+      'supabase status failed: is the local stack running? (`npm run db:start`)');
+  }
+
+  let parsed;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    throw new Error('supabase status did not return parseable JSON');
+  }
+
+  const missing = REQUIRED_STATUS_FIELDS.filter(
+    (k) => typeof parsed[k] !== 'string' || parsed[k] === '');
+  if (missing.length) {
+    throw new Error(
+      `supabase status is missing required field(s): ${missing.join(', ')}`);
+  }
+
+  // Allowlist, not a filter of known-bad keys: anything the CLI adds in a future
+  // version is excluded by construction rather than by having been anticipated.
+  cachedStatus = Object.freeze(Object.fromEntries(
+    REQUIRED_STATUS_FIELDS.map((k) => [k, parsed[k]])));
   return cachedStatus;
 }
 

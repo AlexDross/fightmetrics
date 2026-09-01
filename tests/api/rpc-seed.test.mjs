@@ -4,10 +4,23 @@
 // row and its memberships and nothing else, so every row these tests observe was
 // authored by the seed RPC itself and cannot be confused with fixture SQL.
 //
-// The payload is the REAL migrated corpus (see seedCorpus.mjs), not a fixture —
-// 18 events, 178 prediction runs, 273 prediction snapshots, 182 roots and 167
-// stored computed-profit rows — so what is proven here is proven on the corpus
-// production will hold.
+// The payload is the REAL migrated harness corpus (see seedCorpus.mjs), not a
+// fixture: it is `migrateV0ToV1` run over the currently bundled ROI, upcoming
+// and prop data. What these tests prove is seed fidelity FOR THAT CORPUS — real
+// migration output, real HTTP, real settlement — rather than a hand-built shape
+// chosen to be easy to seed.
+//
+// It is NOT the exact corpus production will hold. The harness deliberately
+// passes `parlayEntries: []` (see seedCorpus.mjs), while the production data
+// carries parlays. Gate 5 must rebuild and reconcile the complete latest
+// migration input, parlays included, before it seeds anything hosted; this suite
+// does not stand in for that step.
+//
+// Corpus SIZE is mutable — bundled data grows every time a card is added or
+// graded — so no cardinality is written down in this file. Every count is derived
+// at run time from CORPUS, ROOT_COUNT, COMPUTED_PROFIT_ROWS and their siblings,
+// and cross-checked against what Postgres actually stored. A literal here would
+// silently become a lie the next time the seed data moves.
 //
 // The file is deliberately ORDER-DEPENDENT: seed -> determinism -> profit
 // recomputation -> idempotency -> tombstones. Each block builds on the state the
@@ -153,7 +166,8 @@ describe('the initial seed', () => {
     expect(res.status, JSON.stringify(res.body).slice(0, 400)).toBe(200);
     const out = res.body[0];
     expect(out.seed_version).toBe(SEED_V1);
-    expect(out.roots_seeded).toBe(ROOT_COUNT);          // 182 = 178 + 4 + 0
+    // ROOT_COUNT is derived: one root per prediction run, prop and parlay.
+    expect(out.roots_seeded).toBe(ROOT_COUNT);
     expect(out.roots_skipped_live).toBe(0);
     expect(out.roots_skipped_tombstoned).toBe(0);
     expect(out.rows_inserted).toEqual(CORPUS);
@@ -225,7 +239,7 @@ describe('seeding is deterministic', () => {
   });
 });
 
-describe('the 167 stored computed-profit rows recompute exactly in PostgreSQL', () => {
+describe('every stored computed-profit row recomputes exactly in PostgreSQL', () => {
   // The recomputation runs through app_private.settlement_for — the SAME
   // function grading uses in production — not a reimplementation written to
   // agree with the stored value.
@@ -248,18 +262,24 @@ describe('the 167 stored computed-profit rows recompute exactly in PostgreSQL', 
          WHERE t.workspace_id='${WS_SEED}' AND t.financial_status='computed'
       ) q;`);
 
-  it('there are exactly 167 stored computed rows to recompute', () => {
-    expect(COMPUTED_PROFIT_ROWS.length).toBe(167);
+  it('the derived computed-row count is what Postgres actually stored', () => {
+    // The expectation is the corpus itself, not a transcribed number: the point
+    // of the assertion is that JavaScript and Postgres agree on the cardinality,
+    // whatever the current bundled data happens to make it.
+    expect(COMPUTED_PROFIT_ROWS.length).toBeGreaterThan(0);
     expect(catalogScalar(`
       SELECT count(*) FROM app_private.tracked_positions
        WHERE workspace_id='${WS_SEED}' AND financial_status='computed';`))
       .toBe(String(COMPUTED_PROFIT_ROWS.length));
   });
 
-  it('all 167 agree with Postgres EXACTLY — zero deviation, zero ULPs', () => {
+  it('every one agrees with Postgres EXACTLY — zero deviation, zero ULPs', () => {
     const [total, mismatches, bitMismatches, maxDev, unionMismatches] =
       recomputation().split(' ');
-    expect(Number(total)).toBe(167);
+    // Recompute the WHOLE stored set, never a subset: if the corpus grew and the
+    // recomputation silently covered fewer rows, the four zeros below would be
+    // vacuous. This is the guard that keeps them meaningful.
+    expect(Number(total)).toBe(COMPUTED_PROFIT_ROWS.length);
     expect(mismatches).toBe('0');
     expect(bitMismatches).toBe('0');
     expect(Number(maxDev)).toBe(0);
@@ -280,7 +300,7 @@ describe('the 167 stored computed-profit rows recompute exactly in PostgreSQL', 
     // 0.6666666666666665 — NOT the 0.6666666666666666 that 100/150 displays as.
     // The subtraction after the addition loses the last bit. Recomputing the
     // seeded corpus with the naive form therefore DISAGREES on real stored rows,
-    // which is exactly the sensitivity the 167-row agreement above is claiming.
+    // which is exactly the sensitivity the whole-corpus agreement above claims.
     const naiveMismatches = Number(catalogScalar(`
       SELECT count(*) FROM app_private.tracked_positions t
         JOIN app_private.market_snapshots m

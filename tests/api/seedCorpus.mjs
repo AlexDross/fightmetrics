@@ -1,15 +1,26 @@
-// Stage 7 Gate 3 — the REAL migrated corpus, built exactly as the contract
-// suite builds it.
+// Stage 7 — the REAL migrated corpus, built exactly as the contract suite
+// builds it.
 //
 // This is not a fixture. It is the same `migrateV0ToV1` output the in-memory
-// repositories are tested against, so `fm_rpc_seed_store` is proven on the
-// corpus Postgres will actually hold — 18 events, 178 prediction runs, 273
-// prediction snapshots, 182 roots and 167 stored computed-profit rows.
+// repositories are tested against, run over the CURRENTLY BUNDLED ROI, upcoming
+// and prop data, so `fm_rpc_seed_store` is proven on real migration output — for
+// THIS harness corpus, which is not identical to the production one (see the
+// parlay note below).
 //
-// `parlayEntries: []` matches the contract suite: the production parlay lives in
-// parlayData.js but the migrated corpus carries none, so migrated parlays are 0.
-// That is a harness choice, stated here so the 182 = 178 + 4 + 0 derivation is
-// legible rather than looking like data loss.
+// Because those inputs are live — every graded card and every new event moves
+// them — this module deliberately publishes no fixed sizes. Callers must assert
+// against the exported derivations (`CORPUS`, `ROOT_COUNT`,
+// `COMPUTED_PROFIT_ROWS`, …), never against a transcribed number. A count
+// written down in a test is correct only until the next data refresh, and the
+// suite has already been broken once that way.
+//
+// `parlayEntries: []` matches the contract suite: parlays live in parlayData.js
+// but are deliberately withheld from the migration harness, so `SEED_STORE.parlays`
+// is empty by construction. **That is a test-harness choice, not deletion of
+// production data** — the entries in parlayData.js are untouched — and it is why
+// `ROOT_COUNT` reduces to the prediction-run and prop roots alone. It is also why
+// the hosted rollout cannot seed from this corpus: Gate 5 must rebuild and
+// reconcile the complete migration input, parlays included, first.
 import { ROI_ENTRIES } from '../../src/roiData.js';
 import { UPCOMING_ENTRIES } from '../../src/upcomingData.js';
 import { PROP_PICKS } from '../../src/propPicksData.js';

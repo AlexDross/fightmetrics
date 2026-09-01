@@ -14,9 +14,9 @@ Base: `main` @ `89f6c45`. Backend decision: Supabase/Postgres.
 | 0 · Preflight | Docker runtime present and running; ports 54321–54324 free; Node supports the pinned CLI | ✅ |
 | 1 | This document + `feat(data): add repository interfaces over the durable schema` — in-memory only | ✅ |
 | 2 | `feat(data): add Postgres schema, roles, policies and RPCs` — pinned Supabase CLI as devDependency, committed `supabase/`, full local stack, all SQL/API tests. **No hosted project.** | ✅ |
-| 2 · status | **COMPLETE.** Every item this row once carried as outstanding was finished — the last two, the non-contract `fm_rpc_seed_store` and the 167-row stored-profit recomputation, landed at Gate 3 (see the Gate 3 status row). Both the profit-equality and the probability-complementarity constraints are now **final**, not provisional. *The per-cluster narrative below is retained as the HISTORICAL record of how each cluster landed and what was outstanding at the time; where it says something is outstanding, read it as "was outstanding then", and take the current status from this sentence and from the Gate 3 row.* RPC clusters 1–8 landed (all contract SQL surfaces complete). Landed: roles, ownership transfer, ACLs, `app_private` schema, all 15 tables with composite FKs and the deferrable run↔snapshot cycle, revision/slug/settlement triggers, RLS on every table, a working authenticated path (caller resolution + zero-owner bootstrap), the `fm_read_*`/`fm_member_*` surfaces **for everything the current app renders**, SQL-side measurements, and — as of cluster 7 — 159 assertions green under `npm run test:db` and 129 under `npm run test:api`, including StoreSchema validation of the export and genuine two-client claim concurrency. (The per-cluster API/pgTAP counts below are the historical measurements at each cluster's landing.) **RPC cluster 1 (tracked-position edits)** is complete: `fm_rpc_change_tracked_corner`, `fm_rpc_amend_tracked_price`, `fm_rpc_confirm_entry` and `fm_member_undo_list`, with authorization, expected-revision conflicts, `stale_write` carrying the live server revision, undo records, settled-edit recomputation and rollback proof — 40 API assertions and 159 pgTAP. **RPC cluster 2 (bout lifecycle)** is complete: `fm_rpc_grade_bout`, `fm_rpc_return_bout_to_pending` and the deferred `fm_member_wagers_by_bout` read, with full revision-vector validation under row locks, `stale_write` carrying the real server revision, undo prior-state, mixed outcomes, and grade/return proven true inverses — 66 API assertions. **RPC cluster 3 (undo foundation)** is complete: `fm_rpc_undo` for all five implemented operations (tracked-corner change, price amendment, confirmation, grade, return-to-pending), with the table-owner `lock_undo_row`/`current_revision`/`check_undo_vector`/`remove_created_rows`/`restore_position` helpers, creator/role/workspace/TTL/single-use/consumed enforcement, undo-row-lock serialization of concurrent undos, `stale_write` naming every drifted row, atomic rollback, safe removal of forward-created market snapshots, exact prior-state round trips for every operation, no undo-of-undo, `prior_state` withheld from the read surface, and `absent_ids` validated with restoration reserved for cluster 4 — **19 API assertions, 85 API total**. `is_string_map` is now `EXECUTE`-granted to `fm_member_api` (four constraint helpers, not three), because settling a wager during grade/undo re-evaluates its `external_ids` CHECK. **RPC cluster 4 (deletion)** is complete: `fm_rpc_delete_pending_run` and `fm_rpc_clear_graded`, with the table-owner `delete_aggregate`/`check_graded_vector`/`deleted_row_exists`/`assert_ids_absent`/`restore_deleted_aggregate`/`untombstone_roots` helpers; proven-orphan pruning in the documented order (position → assessment → market → snapshots → run → stop), the run-survives-iff-a-wager-pins-its-assessment rule, unconditional root tombstoning with tombstone-as-authoritative `notFound` (no double delete), conflict-checked on the tracked position (delete) and an owner-only graded vector (clear), and the `absent_ids` restoration path in `fm_rpc_undo` that re-inserts a deleted aggregate column-complete (`to_jsonb`/`jsonb_populate_record`, immutable rows via plain `INSERT`, run↔snapshot cycle deferred) after `assert_ids_absent`, then un-tombstones — **10 API assertions, 95 API total**. Deletion is by run root only, matching the frozen contract and the in-memory reference; the stray `delete_tracked_position` RPC was withdrawn (see §5/§6). **RPC cluster 5 (prediction save)** is complete: `fm_rpc_save_prediction_run` and `fm_member_prediction_aggregate`, with the table-owner `insert_prediction_aggregate` (domain-shape → columns, reconstructing the finishProjection/settlement/reviewState/reconstruction unions, cyclic pair deferred, live ledger root written as owner) and `remove_created_aggregate` helpers; owner/editor with the bout lock (it creates a dependent), and a `save_prediction_run` branch in `fm_rpc_undo` that removes exactly the created rows and the ledger row after `check_undo_vector` proves the created position is untouched. This **closes the HTTP write leg for complementarity**: `probA`/`probB` cross PostgREST as JS numbers on the way in and read back `Object.is`-identical, summing to exactly 1 — **7 API assertions, 102 API total**. **RPC cluster 6 (wagers)** is complete: `fm_rpc_create_wager`, `fm_rpc_update_stake`, `fm_rpc_update_notes`, `fm_rpc_settle_wager` and `fm_rpc_delete_wager`, with the `lock_wager` helper and five new `fm_rpc_undo` branches; every one is bout-lock-bound (reads the wager's bout, locks the dependent set, then checks the wager's expected revision), `settle` takes a forced outcome the deferred settlement trigger validates against the bout, `updateStake` refuses a settled wager and validates the decimal string inline, and undo covers create→delete, delete→re-insert and stake/notes/settle→restore — **13 API assertions, 115 API total**. **Cluster 6 follow-up (fixture isolation):** the recurring shared-fixture coupling — save and wager beforeAll blocks seeding the shared WS_PUBLIC through the parameterized `applyFixture` — was eliminated at its root: `applyFixture()` is now parameterless and WS_PUBLIC's probability is the centrally-owned `PUBLIC_PROB_A`/`PUBLIC_PROB_B` constant no caller can override; a test that needs a different explicit probability seeds its own isolated workspace via `seedComplement`, and a new `fixture-isolation.test.mjs` proves both WS_PUBLIC's caller-independence and self-contained explicit-probability selection (**+3 assertions, 118 API total across eight files**). The exact self-resetting `npm run test:api` was run end-to-end: `db:reset` exit 0, then 118/118. **RPC cluster 7 (props, parlays, rename, confirm-all)** is complete: `fm_rpc_rename_event`, `fm_rpc_confirm_all_pending`, `fm_rpc_save_prop`/`_settle_prop`/`_delete_prop`, `fm_rpc_save_parlay`/`_delete_parlay`, with the table-owner `write_ledger_root`/`tombstone_root` and `check_pending_vector` helpers and seven new `fm_rpc_undo` branches; rename is card-wide and returns `affectedBouts`; confirm-all validates a vector over every pending position under row locks; props are ledger roots (create→live, settle→revision-checked, delete→tombstone) and parlays are immutable ledger roots (create with legs under the deferred leg-count trigger, delete removes legs+parlay); none is a bout-grade dependent so none takes the bout lock; undo covers every operation (rename/confirm-all/settle→restore, create→delete, delete→re-insert) — **11 API assertions, 129 API total**. The exact self-resetting `npm run test:api` was run end-to-end again: `db:reset` exit 0, then 129/129 across nine files. **RPC cluster 8 (workspace)** is complete: `fm_member_workspace` and `fm_member_seed_version` (member reads; current carries the workspace revision), `fm_rpc_set_seed_version` (owner-only, revision-checked), `fm_rpc_import_store` and `fm_rpc_reset_workspace` (owner-only, backup-confirmed), with the table-owner `clear_workspace_entities` and `import_store_entities` helpers; import is an ATOMIC whole-store replacement — clear then insert in one transaction, so a store violating any CHECK/FK/trigger aborts with no partial write — rejects an unknown future schema version, clears seed_version, and rebuilds the ledger; both import and reset bypass RLS in the helper (to clear other users' undo and the owner-only ledger) while the owner gate is enforced in the public RPC; StoreSchema round-trip is proven by export→reset→import→export equality **for a canonical backup** (see §11: arbitrary valid `migratedAt` spellings normalize to the same instant, not the same text). **Cluster 8 corrective (envelope gate + serialization):** the first cut coalesced missing collections to `[]` and cleared BEFORE validating the envelope, so a meta-only payload (`{meta:{schemaVersion,migratedAt}}`) that fails StoreSchema returned 200 and destroyed every collection. Fixed at the root: `app_private.assert_store_envelope` now runs BEFORE any clear and enforces the complete Store envelope — exactly the eleven top-level keys (no missing, no extra); `meta` exactly `{schemaVersion, migratedAt}`; and every one of the ten collections present as a JSON array — rejecting each violation with a stable `23514` `invalidStoreEnvelope` marker while the existing store stays byte-for-byte unchanged. A **second corrective** deepened the `meta` checks to the actual MetaSchema (they had only checked JSON type): `schemaVersion` must be an integer `>= 1` within int4 range (fractional/zero/negative/oversized/non-number all rejected here, before the `::int` cast and the `workspaces_schema_version_positive` CHECK could be reached), and a non-null `migratedAt` must match the FULL grammar of `z.iso.datetime({offset:true})` — `date T HH:MM` with **optional** `:SS` and `.fraction`, then a required `Z` or `±HH:MM` — AND cast to `timestamptz` (which is the calendar-validity check; malformed, no-offset and impossible dates rejected here, before the cast could raise `22P02`/`22007`). A **third corrective** widened the shape check, which had wrongly required seconds and so rejected minute-precision spellings (`…T05:28Z`, `…T05:28+03:15`) that MetaSchema accepts. A **fourth corrective** established ONE durable timestamp contract shared by JavaScript and PostgreSQL, closing two remaining mismatches: the SQL grammar used unrestricted `\d{2}` time fields, so Zod-invalid hour 24 and second 60 passed (PostgreSQL silently normalises both — measured `…T24:00Z` → next day); and `z.iso.datetime({offset:true})` accepts offsets up to ±23:59 that `timestamptz` cannot represent (±15:59 max). `isoDateTime()` in `src/data/schemas/primitives.mjs` is now **refined** to the representable offset range while keeping Zod's calendar/clock validation, and `assert_store_envelope` carries the same bounds (hour 00–23, minute 00–59, optional second 00–59, fraction only with seconds, offset ≤ ±15:59). A **fifth corrective** closed the last calendar boundary: Zod accepts year `0000` but PostgreSQL rejects it (`date/time field value out of range` — its proleptic Gregorian calendar has no year zero), so both sides now enforce the shared year range **0001–9999**. 17 paired conformance tests assert MetaSchema and the HTTP import agree case for case — the authoritative timestamp matrix, which replaced an older redundant form-only block — and all 54 persisted timestamps across five workspaces re-validate under the refined schema. The helper is `STABLE` for that offset-anchored cast and converts every such failure to `23514` `invalidStoreEnvelope`. import and reset also take a `FOR UPDATE` lock on the workspace row so two concurrent destructive replacements serialize (see §11 for the scope). The fixture carries a wager so the round trip exercises all ten collections, the tests assert all ten (plus parlay legs and the ledger) on reset, and positive tests cover every accepted `migratedAt` form (minute/seconds/fractional, `Z`/explicit offset) asserting **instant** equivalence after export (`timestamptz` normalizes the offset, so the exported spelling differs) — **43 API assertions, 172 API total**. The exact self-resetting `npm run test:api` was run end-to-end: `db:reset` exit 0, then 172/172 across ten files. **All 25 contract mutation methods and all 40 SQL-backed contract methods are now implemented.** *(Historical, at cluster 8: the non-contract `fm_rpc_seed_store` and the stored-profit recomputation were the only things still open, and the profit-equality constraint was still provisional.)* **Both closed at Gate 3.** `fm_rpc_seed_store` has landed and all **167** stored computed rows recomputed in PostgreSQL with zero value mismatches, zero bit mismatches and deviation 0. **Nothing remains outstanding for Gate 2.** | ✅ |
+| 2 · status | **COMPLETE.** Every item this row once carried as outstanding was finished — the last two, the non-contract `fm_rpc_seed_store` and the 167-row stored-profit recomputation, landed at Gate 3 (see the Gate 3 status row). Both the profit-equality and the probability-complementarity constraints are now **final**, not provisional. *The per-cluster narrative below is retained as the HISTORICAL record of how each cluster landed and what was outstanding at the time; where it says something is outstanding, read it as "was outstanding then", and take the current status from this sentence and from the Gate 3 row.* RPC clusters 1–8 landed (all contract SQL surfaces complete). Landed: roles, ownership transfer, ACLs, `app_private` schema, all 15 tables with composite FKs and the deferrable run↔snapshot cycle, revision/slug/settlement triggers, RLS on every table, a working authenticated path (caller resolution + zero-owner bootstrap), the `fm_read_*`/`fm_member_*` surfaces **for everything the current app renders**, SQL-side measurements, and — as of cluster 7 — 159 assertions green under `npm run test:db` and 129 under `npm run test:api`, including StoreSchema validation of the export and genuine two-client claim concurrency. (The per-cluster API/pgTAP counts below are the historical measurements at each cluster's landing.) **RPC cluster 1 (tracked-position edits)** is complete: `fm_rpc_change_tracked_corner`, `fm_rpc_amend_tracked_price`, `fm_rpc_confirm_entry` and `fm_member_undo_list`, with authorization, expected-revision conflicts, `stale_write` carrying the live server revision, undo records, settled-edit recomputation and rollback proof — 40 API assertions and 159 pgTAP. **RPC cluster 2 (bout lifecycle)** is complete: `fm_rpc_grade_bout`, `fm_rpc_return_bout_to_pending` and the deferred `fm_member_wagers_by_bout` read, with full revision-vector validation under row locks, `stale_write` carrying the real server revision, undo prior-state, mixed outcomes, and grade/return proven true inverses — 66 API assertions. **RPC cluster 3 (undo foundation)** is complete: `fm_rpc_undo` for all five implemented operations (tracked-corner change, price amendment, confirmation, grade, return-to-pending), with the table-owner `lock_undo_row`/`current_revision`/`check_undo_vector`/`remove_created_rows`/`restore_position` helpers, creator/role/workspace/TTL/single-use/consumed enforcement, undo-row-lock serialization of concurrent undos, `stale_write` naming every drifted row, atomic rollback, safe removal of forward-created market snapshots, exact prior-state round trips for every operation, no undo-of-undo, `prior_state` withheld from the read surface, and `absent_ids` validated with restoration reserved for cluster 4 — **19 API assertions, 85 API total**. `is_string_map` is now `EXECUTE`-granted to `fm_member_api` (four constraint helpers, not three), because settling a wager during grade/undo re-evaluates its `external_ids` CHECK. **RPC cluster 4 (deletion)** is complete: `fm_rpc_delete_pending_run` and `fm_rpc_clear_graded`, with the table-owner `delete_aggregate`/`check_graded_vector`/`deleted_row_exists`/`assert_ids_absent`/`restore_deleted_aggregate`/`untombstone_roots` helpers; proven-orphan pruning in the documented order (position → assessment → market → snapshots → run → stop), the run-survives-iff-a-wager-pins-its-assessment rule, unconditional root tombstoning with tombstone-as-authoritative `notFound` (no double delete), conflict-checked on the tracked position (delete) and an owner-only graded vector (clear), and the `absent_ids` restoration path in `fm_rpc_undo` that re-inserts a deleted aggregate column-complete (`to_jsonb`/`jsonb_populate_record`, immutable rows via plain `INSERT`, run↔snapshot cycle deferred) after `assert_ids_absent`, then un-tombstones — **10 API assertions, 95 API total**. Deletion is by run root only, matching the frozen contract and the in-memory reference; the stray `delete_tracked_position` RPC was withdrawn (see §5/§6). **RPC cluster 5 (prediction save)** is complete: `fm_rpc_save_prediction_run` and `fm_member_prediction_aggregate`, with the table-owner `insert_prediction_aggregate` (domain-shape → columns, reconstructing the finishProjection/settlement/reviewState/reconstruction unions, cyclic pair deferred, live ledger root written as owner) and `remove_created_aggregate` helpers; owner/editor with the bout lock (it creates a dependent), and a `save_prediction_run` branch in `fm_rpc_undo` that removes exactly the created rows and the ledger row after `check_undo_vector` proves the created position is untouched. This **closes the HTTP write leg for complementarity**: `probA`/`probB` cross PostgREST as JS numbers on the way in and read back `Object.is`-identical, summing to exactly 1 — **7 API assertions, 102 API total**. **RPC cluster 6 (wagers)** is complete: `fm_rpc_create_wager`, `fm_rpc_update_stake`, `fm_rpc_update_notes`, `fm_rpc_settle_wager` and `fm_rpc_delete_wager`, with the `lock_wager` helper and five new `fm_rpc_undo` branches; every one is bout-lock-bound (reads the wager's bout, locks the dependent set, then checks the wager's expected revision), `settle` takes a forced outcome the deferred settlement trigger validates against the bout, `updateStake` refuses a settled wager and validates the decimal string inline, and undo covers create→delete, delete→re-insert and stake/notes/settle→restore — **13 API assertions, 115 API total**. **Cluster 6 follow-up (fixture isolation):** the recurring shared-fixture coupling — save and wager beforeAll blocks seeding the shared WS_PUBLIC through the parameterized `applyFixture` — was eliminated at its root: `applyFixture()` is now parameterless and WS_PUBLIC's probability is the centrally-owned `PUBLIC_PROB_A`/`PUBLIC_PROB_B` constant no caller can override; a test that needs a different explicit probability seeds its own isolated workspace via `seedComplement`, and a new `fixture-isolation.test.mjs` proves both WS_PUBLIC's caller-independence and self-contained explicit-probability selection (**+3 assertions, 118 API total across eight files**). The exact self-resetting `npm run test:api` was run end-to-end: `db:reset` exit 0, then 118/118. **RPC cluster 7 (props, parlays, rename, confirm-all)** is complete: `fm_rpc_rename_event`, `fm_rpc_confirm_all_pending`, `fm_rpc_save_prop`/`_settle_prop`/`_delete_prop`, `fm_rpc_save_parlay`/`_delete_parlay`, with the table-owner `write_ledger_root`/`tombstone_root` and `check_pending_vector` helpers and seven new `fm_rpc_undo` branches; rename is card-wide and returns `affectedBouts`; confirm-all validates a vector over every pending position under row locks; props are ledger roots (create→live, settle→revision-checked, delete→tombstone) and parlays are immutable ledger roots (create with legs under the deferred leg-count trigger, delete removes legs+parlay); none is a bout-grade dependent so none takes the bout lock; undo covers every operation (rename/confirm-all/settle→restore, create→delete, delete→re-insert) — **11 API assertions, 129 API total**. The exact self-resetting `npm run test:api` was run end-to-end again: `db:reset` exit 0, then 129/129 across nine files. **RPC cluster 8 (workspace)** is complete: `fm_member_workspace` and `fm_member_seed_version` (member reads; current carries the workspace revision), `fm_rpc_set_seed_version` (owner-only, revision-checked), `fm_rpc_import_store` and `fm_rpc_reset_workspace` (owner-only, backup-confirmed), with the table-owner `clear_workspace_entities` and `import_store_entities` helpers; import is an ATOMIC whole-store replacement — clear then insert in one transaction, so a store violating any CHECK/FK/trigger aborts with no partial write — rejects an unknown future schema version, clears seed_version, and rebuilds the ledger; both import and reset bypass RLS in the helper (to clear other users' undo and the owner-only ledger) while the owner gate is enforced in the public RPC; StoreSchema round-trip is proven by export→reset→import→export equality **for a canonical backup** (see §11: arbitrary valid `migratedAt` spellings normalize to the same instant, not the same text). **Cluster 8 corrective (envelope gate + serialization):** the first cut coalesced missing collections to `[]` and cleared BEFORE validating the envelope, so a meta-only payload (`{meta:{schemaVersion,migratedAt}}`) that fails StoreSchema returned 200 and destroyed every collection. Fixed at the root: `app_private.assert_store_envelope` now runs BEFORE any clear and enforces the complete Store envelope — exactly the eleven top-level keys (no missing, no extra); `meta` exactly `{schemaVersion, migratedAt}`; and every one of the ten collections present as a JSON array — rejecting each violation with a stable `23514` `invalidStoreEnvelope` marker while the existing store stays byte-for-byte unchanged. A **second corrective** deepened the `meta` checks to the actual MetaSchema (they had only checked JSON type): `schemaVersion` must be an integer `>= 1` within int4 range (fractional/zero/negative/oversized/non-number all rejected here, before the `::int` cast and the `workspaces_schema_version_positive` CHECK could be reached), and a non-null `migratedAt` must match the FULL grammar of `z.iso.datetime({offset:true})` — `date T HH:MM` with **optional** `:SS` and `.fraction`, then a required `Z` or `±HH:MM` — AND cast to `timestamptz` (which is the calendar-validity check; malformed, no-offset and impossible dates rejected here, before the cast could raise `22P02`/`22007`). A **third corrective** widened the shape check, which had wrongly required seconds and so rejected minute-precision spellings (`…T05:28Z`, `…T05:28+03:15`) that MetaSchema accepts. A **fourth corrective** established ONE durable timestamp contract shared by JavaScript and PostgreSQL, closing two remaining mismatches: the SQL grammar used unrestricted `\d{2}` time fields, so Zod-invalid hour 24 and second 60 passed (PostgreSQL silently normalises both — measured `…T24:00Z` → next day); and `z.iso.datetime({offset:true})` accepts offsets up to ±23:59 that `timestamptz` cannot represent (±15:59 max). `isoDateTime()` in `src/data/schemas/primitives.mjs` is now **refined** to the representable offset range while keeping Zod's calendar/clock validation, and `assert_store_envelope` carries the same bounds (hour 00–23, minute 00–59, optional second 00–59, fraction only with seconds, offset ≤ ±15:59). A **fifth corrective** closed the last calendar boundary: Zod accepts year `0000` but PostgreSQL rejects it (`date/time field value out of range` — its proleptic Gregorian calendar has no year zero), so both sides now enforce the shared year range **0001–9999**. 17 paired conformance tests assert MetaSchema and the HTTP import agree case for case — the authoritative timestamp matrix, which replaced an older redundant form-only block — and all 54 persisted timestamps across five workspaces re-validate under the refined schema. The helper is `STABLE` for that offset-anchored cast and converts every such failure to `23514` `invalidStoreEnvelope`. import and reset also take a `FOR UPDATE` lock on the workspace row so two concurrent destructive replacements serialize (see §11 for the scope). The fixture carries a wager so the round trip exercises all ten collections, the tests assert all ten (plus parlay legs and the ledger) on reset, and positive tests cover every accepted `migratedAt` form (minute/seconds/fractional, `Z`/explicit offset) asserting **instant** equivalence after export (`timestamptz` normalizes the offset, so the exported spelling differs) — **43 API assertions, 172 API total**. The exact self-resetting `npm run test:api` was run end-to-end: `db:reset` exit 0, then 172/172 across ten files. **All 25 contract mutation methods and all 40 SQL-backed contract methods are now implemented.** *(Historical, at cluster 8: the non-contract `fm_rpc_seed_store` and the stored-profit recomputation were the only things still open, and the profit-equality constraint was still provisional.)* **Both closed at Gate 3.** `fm_rpc_seed_store` has landed and all **167** stored computed rows recomputed in PostgreSQL with zero value mismatches, zero bit mismatches and deviation 0 — 167 being the corpus size **at Gate 3**, since re-measured at 194 with the same four zeros (see the Pre-Gate-4 audit). **Nothing remains outstanding for Gate 2.** | ✅ |
 | 3 | `feat(data): migrate seed data into the durable schema` | ✅ |
-| 3 · status | **COMPLETE.** `fm_rpc_seed_store` and `app_private.seed_store_entities` landed: owner-only, revision-checked on the workspace row, envelope-gated by the same `assert_store_envelope` import uses, serialized by the same workspace `FOR UPDATE` lock, and **not undoable** by design. The whole migrated corpus loads in one transaction — 18 events, 178 bouts, 178 prediction runs, 273 prediction snapshots, 177 market snapshots, 178 assessments, 178 tracked positions, 4 props, **182 ledger roots** — in ~200 ms over real HTTP. Seeding is proven **deterministic** (the same store into two independent workspaces is identical column-for-column, and every persisted double is bit-identical by `float8send`), **idempotent** (re-applying the same version, and advancing the version, both insert exactly zero rows and leave the content digest unchanged), and **non-resurrecting** (after deleting one pending root and clearing all 168 graded roots, a later seed at a new version returns `roots_seeded 0`, `roots_skipped_tombstoned 169`, and inserts nothing — while all 18 events and 178 bouts survive as card history). **All 167 stored computed-profit rows were recomputed through `app_private.settlement_for` in PostgreSQL with zero value mismatches, zero bit mismatches and maximum deviation exactly 0**, so the profit-equality constraint is no longer provisional (§4, §12). One real defect was found and fixed by this gate's own tests: a bulk seed left the tables with no planner statistics and `fm_member_roi`/`fm_member_upcoming` hit the 8 s statement timeout (`57014`) on the seeded corpus; the seed now `ANALYZE`s what it loaded and both return in 26 ms / 9 ms. **197 API assertions across eleven files, 174 pgTAP across three.** | ✅ |
+| 3 · status | **COMPLETE.** *(Every number in this row is the measurement taken when Gate 3 landed and is retained as that gate's audit record; the corpus has since grown with `main`'s live data — see "Pre-Gate-4 baseline synchronization audit" above for the current figures.)* `fm_rpc_seed_store` and `app_private.seed_store_entities` landed: owner-only, revision-checked on the workspace row, envelope-gated by the same `assert_store_envelope` import uses, serialized by the same workspace `FOR UPDATE` lock, and **not undoable** by design. The whole migrated corpus loads in one transaction — 18 events, 178 bouts, 178 prediction runs, 273 prediction snapshots, 177 market snapshots, 178 assessments, 178 tracked positions, 4 props, **182 ledger roots** — in ~200 ms over real HTTP. Seeding is proven **deterministic** (the same store into two independent workspaces is identical column-for-column, and every persisted double is bit-identical by `float8send`), **idempotent** (re-applying the same version, and advancing the version, both insert exactly zero rows and leave the content digest unchanged), and **non-resurrecting** (after deleting one pending root and clearing all 168 graded roots, a later seed at a new version returns `roots_seeded 0`, `roots_skipped_tombstoned 169`, and inserts nothing — while all 18 events and 178 bouts survive as card history). **All 167 stored computed-profit rows were recomputed through `app_private.settlement_for` in PostgreSQL with zero value mismatches, zero bit mismatches and maximum deviation exactly 0**, so the profit-equality constraint is no longer provisional (§4, §12). One real defect was found and fixed by this gate's own tests: a bulk seed left the tables with no planner statistics and `fm_member_roi`/`fm_member_upcoming` hit the 8 s statement timeout (`57014`) on the seeded corpus; the seed now `ANALYZE`s what it loaded and both return in 26 ms / 9 ms. **197 API assertions across eleven files, 174 pgTAP across three.** | ✅ |
 | 4 | `feat(auth): add magic-link sign-in and read-only public state` | **DEFERRED — not started** |
 | 5 | **Hosted rollout** — Alex creates/links the project, `db push --dry-run` → `db push`, Vercel vars, invite owner, claim, approve seed | **DEFERRED — not started** |
 | 6 | `feat(data): back repositories with Postgres` — runtime rewire; dead handlers removed after proving zero call sites | **DEFERRED — not started** |
@@ -31,6 +31,66 @@ approval; nothing in this commit presumes it.
 Every gate re-runs: full Vitest suite, browser probe, production build, JS/CSS
 byte comparison, leak checks, fixture/reference integrity, and confirmation that
 the 22 untracked user files are untouched.
+
+### Pre-Gate-4 baseline synchronization audit — 2026-09-01
+
+**Read this section for the CURRENT state of the corpus.** Every measurement
+elsewhere in this document is the measurement taken when its own gate landed and
+is retained deliberately as the audit record of that gate. None of them has been
+rewritten, and none of them should be read as describing `main` today.
+
+Audited base: `origin/main` @ **`a3f6bdde9ba9ddd228921ad7ade6749b4a595e96`**.
+
+**What moved, and why.** Nothing in Stage 7 changed. `src/roiData.js`,
+`src/upcomingData.js` and `src/propPicksData.js` are bundled *live* data, and
+`main` has kept refreshing them since Gate 3 — cards graded, cards added. Those
+three files are the sole inputs to `migrateV0ToV1`, which is what builds the
+migrated corpus, so the corpus grew with them. No SQL, migration, RLS policy,
+RPC, repository or settlement rule was touched; the catalog fingerprint is
+unmoved.
+
+**Current derived corpus** (re-derived independently in JavaScript from the
+bundled data and cross-measured in PostgreSQL after a clean seed; the two agree):
+
+| quantity | value |
+|---|---|
+| events | 21 |
+| bouts · prediction runs · assessments · tracked positions | 205 each |
+| prediction snapshots | 327 |
+| market snapshots | 204 |
+| props | 11 |
+| migrated parlays | 0 — the harness passes `parlayEntries: []` by design |
+| **seed-ledger roots** | **216** |
+| graded runs / pending runs | 195 / 10 |
+| computed-profit rows | 194 |
+| uncomputable settled rows | 1 |
+
+Internally consistent: 195 + 10 = 205 · 194 + 1 = 195 · 205 + 11 + 0 = 216.
+
+**Profit equality still holds exactly, on the larger corpus.** All 194 stored
+computed rows were recomputed through `app_private.settlement_for` — the same
+function grading uses in production — with:
+
+```
+rows=194  value_mismatches=0  bit_mismatches=0  max_deviation=0  union_mismatches=0
+```
+
+**What was actually wrong.** `npm run test:api` failed 2 of 197 assertions, both
+in `tests/api/rpc-seed.test.mjs`, both `expected 194 to be 167`. They were the
+only two hard-coded corpus cardinalities left in that suite; every other count in
+it already derived from `seedCorpus.mjs`. **These were stale cardinality
+literals, not a persistence defect** — the recomputation above is the proof, and
+the offline contract suite had already been converted to derived counts on `main`
+(`53a1066`, "Make repository contract tests data-driven") without the API suite
+following, because CI never ran it.
+
+**Both remedies landed together.** Live corpus cardinality is now derived in the
+executable API test rather than transcribed, and the local-Supabase CI job this
+document had always specified now exists, so the API suite runs on every pull
+request and push to `main` instead of never running at all. Note the limit
+honestly: `main` is not branch-protected, so that check is *visible*, not
+*enforcing* — until a branch-protection rule or ruleset exists it must be treated
+as required by hand, and configuring one is outside this remediation.
 
 ### Pre-Gate-3 synchronization with `main`
 
@@ -92,7 +152,8 @@ found behind it: a fighter-identity assertion that had been unreachable since th
 Vite refactor, and the entry golden pinning `_provenance.sourceManifest`, which
 changes on every data refresh by construction.
 
-**Migration counts are UNCHANGED by that landing**, and this is the load-bearing
+**Migration counts are UNCHANGED by that landing** *(as of that landing — the
+corpus has grown since; see the Pre-Gate-4 audit)*, and this is the load-bearing
 point for Stage 7: the workflow regenerates `fightersData.js`, `fightHistory.js`,
 `eloModule.js` and `sourceManifest.js` only. It never touches `roiData.js` or
 `upcomingData.js`, which are the sole inputs to `migrateV0ToV1`. Re-measured on
@@ -107,6 +168,9 @@ the merged tree:
 | computed-profit rows | 167 |
 | props / parlays | 4 / 0 |
 | **seed-ledger roots** | **182** (178 + 4 + 0) |
+
+The table above is the measurement at the Update Fighters landing, retained as
+the record of that step rather than as a claim about `main` today.
 
 Generated-data totals **did** move, and are recorded for reference rather than
 asserted by Stage 7: roster `_D2` 2,291 · fighter histories 2,737 · Elo ratings
@@ -621,15 +685,23 @@ wagers, each against **its own** `market_snapshot_id`:
 A deferred trigger on `bouts` re-checks **every** dependent position and wager
 after grading or return-to-pending.
 
-Profit equality is exact (`<>`, no epsilon) because recomputing all 167 stored
-computed rows in JS reproduced them bit-for-bit, deviation `0`. **Gate 3 re-ran
+Profit equality is exact (`<>`, no epsilon) because recomputing **every** stored
+computed row in JS reproduced them bit-for-bit, deviation `0`. **Gate 3 re-ran
 this in real Postgres and the comparison is now FINAL, not provisional.** The
 recomputation goes through `app_private.settlement_for` — the same function
-grading uses in production, not a reimplementation written to agree — over the
-167 rows of the seeded corpus (100 won, 64 lost, 2 void, 1 push):
+grading uses in production, not a reimplementation written to agree. The row
+count is the corpus size, which is mutable; the four zeros are the contract.
+Measured at Gate 3, over 167 rows (100 won, 64 lost, 2 void, 1 push):
 
 ```
 rows=167  value_mismatches=0  bit_mismatches=0  max_deviation=0  union_mismatches=0
+```
+
+Re-measured at the Pre-Gate-4 audit on the grown corpus (118 won, 73 lost,
+2 void, 1 push), unchanged in substance:
+
+```
+rows=194  value_mismatches=0  bit_mismatches=0  max_deviation=0  union_mismatches=0
 ```
 
 `union_mismatches` covers `settlement_status`, `settlement_outcome` and
@@ -830,7 +902,7 @@ returns `revision text`.
 
 | RPC | Auth | Transaction scope | Undo | Tombstone |
 |---|---|---|---|---|
-| `fm_rpc_seed_store` ✅ | owner | 11 entity tables + `seed_items` + `seed_version` | ✗ | creates **182** roots |
+| `fm_rpc_seed_store` ✅ | owner | 11 entity tables + `seed_items` + `seed_version` | ✗ | creates one root per prediction run, prop and parlay |
 | `fm_rpc_save_prediction_run` ✅ | owner/editor | run+snapshots+market+assessment+position (event/bout must pre-exist) | ✓ delete | ✗ |
 | `fm_rpc_grade_bout` | owner/editor | bout result + every settlement on it | ✓ vector | ✗ |
 | `fm_rpc_return_bout_to_pending` | owner/editor | inverse of grade | ✓ vector | ✗ |
@@ -965,10 +1037,14 @@ which rely on the mandatory backup.
 
 ## 7. Seed ledger and pruning
 
-**182 logical roots: 178 prediction runs + 4 props + 0 parlays** (measured after
-the pre-Gate-3 sync of `origin/main`, which refreshed the live ROI/upcoming
-data). The Gate-1 figure was 164 = 160 + 4 + 0; the corpus grew by two cards,
-and every count below is the post-sync measurement.
+**One logical root per prediction run, per prop and per parlay** — that
+derivation is the durable rule; the total is whatever the live data currently
+makes it, and it moves every time `main` refreshes ROI/upcoming.
+
+Measured sizes, retained as the record of each step rather than as current
+figures: 164 = 160 + 4 + 0 at Gate 1; **182 = 178 + 4 + 0** after the pre-Gate-3
+sync of `origin/main`, which is the measurement every count in the rest of this
+section is stated against; **216 = 205 + 11 + 0** at the Pre-Gate-4 audit.
 
 ```sql
 seed_items(workspace_id, root_type, root_id, first_seed_version, removed_at)
@@ -976,8 +1052,8 @@ seed_items(workspace_id, root_type, root_id, first_seed_version, removed_at)
 ```
 
 **Events and Bouts are never tombstoned** — they are shared card structure. This
-is not hypothetical: 4 bouts are already referenced by both a prop and a
-prediction run, and all 16 events carry multiple bouts.
+is not hypothetical: bouts are already referenced by both a prop and a
+prediction run, and every event carries multiple bouts.
 
 Rules, all in one transaction with the inserts *and* the `seed_version` write:
 
@@ -1073,7 +1149,7 @@ off the run by `run_id`, so if the run row survives — which happens exactly wh
 a wager pinned its assessment through step 2 — then **none** of its snapshots are
 orphans, whatever else does or does not point at them. Testing a snapshot only
 against *other* runs' `decision_snapshot_id` is not enough: measured on the
-migrated corpus, **95 of 273 snapshots are referenced by no
+migrated corpus as it stood at Gate 3, **95 of 273 snapshots are referenced by no
 `decision_snapshot_id` and no `prediction_snapshot_id`** and are reachable only
 through `run_id`. On run `1779253814932-7igxlf` that rule deleted the `v2`
 snapshot while leaving the run alive, and **both `StoreSchema` and
@@ -1398,9 +1474,58 @@ prove nothing. The current store has 3,799 numeric leaves and 0 negative zeros.
 | Tier | Runs where |
 |---|---|
 | Repository contract vs in-memory fake | every `npm test`, offline |
-| SQL + RLS + RPC via **local Supabase** | `npm run test:db`, CI service job |
+| SQL + RLS + RPC via **local Supabase** | `npm run test:db`, and the `Database and API` CI job |
 | API-level repository tests vs local URL/key | `npm run test:api` — **197 assertions across eleven files, real HTTP, self-resetting** |
 | Manual acceptance (phone/desktop, hard refresh) | pre-merge checklist |
+
+**CI runs both database tiers.** `.github/workflows/ci.yml` carries two jobs:
+`Test and build` (offline — Vitest, rankings, roster/identity, deterministic
+regeneration, production build, build-output checks) and **`Database and API`**,
+which checks out on its own `ubuntu-latest` runner, installs with
+`npm ci --include=dev`, sets up the CLI with `supabase/setup-cli@v1` pinned to
+the committed **2.110.0**, starts a **local, unlinked** stack with the committed
+`npm run db:start`, then runs `npm run test:db` and `npm run test:api`, and stops
+the stack in an `always()` step that cannot change the job's outcome. No project
+ref, no `supabase link`, no `--linked`, no hosted credentials, no production data
+and no repository secrets are involved.
+
+**Credential hygiene, stated precisely.** The local stack's keys are the shared
+dev defaults, but they are kept out of the CI log deliberately rather than by
+luck:
+
+- **Startup and teardown output is suppressed** (`>/dev/null 2>&1`). This is
+  necessary, not cosmetic: on a successful start the CLI prints the anon key, the
+  service-role/secret key, the JWT secret and the database URL. The redirection
+  leaves the exit status untouched, so a failed start still fails the step.
+- **The workflow never invokes `supabase status` itself**, and its failure-only
+  diagnostics are limited to container names/status and the Postgres log.
+- **`supabase status -o json` IS executed** — inside `npm run test:api`, by
+  `tests/api/helpers.mjs`, which needs the local REST URL, anon key and JWT
+  secret to mint the GoTrue-shaped tokens that exercise the real authenticated
+  path. *(An earlier revision of this document claimed `supabase status` was
+  never run in CI in any form. That was false and is corrected here.)*
+- **The harness captures that JSON internally, reduces it to an allowlist, and
+  keeps only that.** The CLI response is wider than the harness needs — it also
+  carries `API_URL`, `DB_URL`, `GRAPHQL_URL`, `PUBLISHABLE_KEY`, `SECRET_KEY` and
+  `SERVICE_ROLE_KEY` — so after validating that `REST_URL`, `ANON_KEY` and
+  `JWT_SECRET` are present strings, the parsed object is discarded and `status()`
+  returns a **frozen object containing exactly those three fields**. The
+  service-role/secret key, the publishable key and the database URL are never
+  retained and are unreachable from outside the module; nothing in the suite uses
+  them. An assertion in `tests/api/api.test.mjs` pins the exposed key set, by
+  name, so a future CLI field cannot quietly re-enter. The helper also pipes both
+  stdout and stderr, never logs or returns the raw output, and reports every
+  failure — command failure, unparseable JSON, missing field — through a
+  hand-written sanitized error that names fields but never values and attaches no
+  `cause`, stdout, stderr or child-process error object.
+
+**What the job does and does not enforce.** `Database and API` runs as its own
+check on pull requests and on pushes to `main`, so its result is visible on every
+PR. It does **not** enforce a merge prohibition: `main` is not branch-protected,
+so a red check does not block a merge. **During this rollout the check must be
+treated as required by hand.** Enforceable gating would require a
+branch-protection rule or a repository ruleset; neither is configured, and
+configuring one is explicitly outside this remediation.
 
 ```
 supabase/config.toml            committed, CLI version pinned

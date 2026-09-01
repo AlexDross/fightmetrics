@@ -153,6 +153,104 @@ jobs:
 
           echo "build/ output checks passed"
 
+  # The Stage 7 tier that needs a database. It is deliberately a SEPARATE job so
+  # a failure here reads as a database failure rather than being folded into the
+  # build. The two stale corpus literals that reached `main` in
+  # `tests/api/rpc-seed.test.mjs` did so precisely because nothing in CI ran
+  # `test:api`.
+  #
+  # ENFORCEMENT, stated accurately: this job runs as its own check on pull
+  # requests and on pushes to `main`, so its result is visible on every PR — but
+  # `main` is NOT branch-protected, so a red check here does not by itself block
+  # a merge. During this rollout the check must be treated as required BY HAND.
+  # Making it enforceable needs a branch-protection rule or a repository ruleset,
+  # which is not configured and is deliberately outside this change.
+  database:
+    name: Database and API
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --include=dev
+
+      # Pinned to the exact version committed as a devDependency, so CI and a
+      # developer's machine run the same CLI. Bumping one without the other is a
+      # drift this pin makes visible.
+      - name: Set up Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: 2.110.0
+
+      # LOCAL and UNLINKED, always. This starts the stack from the committed
+      # `supabase/` directory on the runner's own Docker: no project ref, no
+      # `supabase link`, no `--linked`, no hosted credentials and no production
+      # data. `npm run db:start` is the committed command, so CI exercises the
+      # same full stack a developer does.
+      #
+      # OUTPUT IS SUPPRESSED, and that is load-bearing rather than tidiness: on a
+      # successful start the CLI prints the local anon key, the service-role /
+      # secret key, the JWT secret and the database URL to stdout, and on a slow
+      # start it dumps container logs to stderr. They are only the well-known
+      # local dev defaults, but CI logs are not the place for any of it. The
+      # redirection does not touch the exit status, so a failed start still fails
+      # the step; the failure-only diagnostics below are where troubleshooting
+      # evidence comes from.
+      - name: Start local Supabase stack
+        run: npm run db:start >/dev/null 2>&1
+
+      - name: pgTAP suites
+        run: npm run test:db
+
+      # Self-resetting: `test:api` runs `db:reset` before the suite.
+      - name: API suites over real HTTP
+        run: npm run test:api
+
+      # Diagnostics only on failure, and deliberately narrow: container names and
+      # health, plus the Postgres log. Nothing here prints keys, and this
+      # workflow never invokes `supabase status` itself.
+      #
+      # `supabase status -o json` IS executed — inside `npm run test:api`, by
+      # `tests/api/helpers.mjs`, which needs the REST URL, the anon key and the
+      # JWT secret to sign the tokens that exercise the real authenticated path.
+      # That helper captures both stdout and stderr, reduces the response to
+      # exactly those three fields (the service-role/secret key, publishable key
+      # and database URL are discarded, not merely unused), keeps them
+      # in-process, logs nothing, and re-throws every failure as a hand-written
+      # message with no child-process error, stdout or stderr attached. Saying
+      # the command is never run would be false; what is true is that its output
+      # never reaches this log.
+      - name: Container diagnostics
+        if: failure()
+        run: |
+          docker ps -a --format 'table {{.Names}}\t{{.Status}}'
+          echo '--- postgres log (tail) ---'
+          docker logs --tail 100 supabase_db_fightmetrics 2>&1 || true
+
+      # Runs whether the suites passed or failed, and cannot change the job's
+      # outcome in either direction: `always()` guarantees the teardown, and
+      # `continue-on-error` keeps a teardown hiccup from turning a real pass into
+      # a failure or a real failure into a pass.
+      #
+      # Output suppressed for the same reason as the start step. `supabase stop`
+      # is not known to print keys, but it is CLI output from the same tool on a
+      # path whose contents are not part of any contract, and the teardown has
+      # nothing to say that is worth reading. Semantics are unchanged: `always()`
+      # and `continue-on-error` still govern when it runs and what it can affect.
+      - name: Stop local Supabase stack
+        if: always()
+        continue-on-error: true
+        run: npm run db:stop >/dev/null 2>&1
+
 # Deliberately no `git diff --check` step here: on a fresh checkout the working
 # tree always matches the index, so it would pass unconditionally and prove
 # nothing. It is a local pre-commit check and is run as such.
