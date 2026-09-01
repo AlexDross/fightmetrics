@@ -138,6 +138,8 @@ import {
   InvalidProvenanceInputError,
   offendingEvents,
   normalizeExportProvenance,
+  provenanceForCurrentEvent,
+  eventKey,
   PROVENANCE_REQUIRED_FIELDS,
 } from './domain/provenance';
 
@@ -2478,9 +2480,9 @@ function BuildParlayPanel({ legInputs, onConfirm, onCancel }) {
 // no URL is guessed.
 function ProvenanceExportControls({ varName, fileLabel, entries, onApplyEventProvenance }) {
   const [feedback, setFeedback] = useState(null); // { type: 'ok' | 'err', text }
-  const [forms, setForms] = useState({}); // "<name> <date>" -> { sourceUrl, retrievedAt, authority }
+  const [forms, setForms] = useState({}); // eventKey(name, date) -> { sourceUrl, retrievedAt, authority }
   const offenders = useMemo(() => offendingEvents(entries), [entries]);
-  const keyOf = (ev) => `${ev.eventName} ${ev.eventDate}`;
+  const keyOf = (ev) => eventKey(ev.eventName, ev.eventDate);
 
   const handleCopy = async () => {
     try {
@@ -4815,12 +4817,33 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
   const [boutSourceUrl, setBoutSourceUrl] = useState('');
   const [boutRetrievedAt, setBoutRetrievedAt] = useState('');
   const [boutAuthority, setBoutAuthority] = useState('');
+  // The (eventName, eventDate) the source was entered against. A source is bound
+  // to ONE event: it must never carry from Event A onto Event B. Editing any
+  // provenance field re-binds it to the currently selected event.
+  const [provEnteredFor, setProvEnteredFor] = useState(null);
+  const bindProvenanceToCurrentEvent = () => setProvEnteredFor({ eventName, eventDate });
+  const handleBoutSourceUrl = (v) => { setBoutSourceUrl(v); bindProvenanceToCurrentEvent(); };
+  const handleBoutRetrievedAt = (v) => { setBoutRetrievedAt(v); bindProvenanceToCurrentEvent(); };
+  const handleBoutAuthority = (v) => { setBoutAuthority(v); bindProvenanceToCurrentEvent(); };
+
+  // Changing the event clears a source entered for a different one, so it can
+  // never be stamped onto the new event. Same event (e.g. entering the next
+  // fight on the same card) keeps the source — provEnteredFor still matches.
+  useEffect(() => {
+    if (provEnteredFor && (provEnteredFor.eventName !== eventName || provEnteredFor.eventDate !== eventDate)) {
+      setBoutSourceUrl('');
+      setBoutRetrievedAt('');
+      setBoutAuthority('');
+      setProvEnteredFor(null);
+    }
+  }, [eventName, eventDate, provEnteredFor]);
 
   // One object, built once, used by BOTH the live preview and the save path so a
   // saved prediction can never have been computed under different context than
   // the one the user was looking at. Provenance is attached only when COMPLETE
-  // (never fabricated, never a current-date fallback); an incomplete source is
-  // treated as no source rather than a half-citation.
+  // (never fabricated, never a current-date fallback) AND still bound to the
+  // currently selected event; an incomplete or cross-event source is treated as
+  // no source rather than a half or wrong citation.
   const boutContext = useMemo(
     () => {
       const prov = normalizeExportProvenance({
@@ -4828,15 +4851,22 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
         retrievedAt: boutRetrievedAt || undefined,
         authority: boutAuthority || undefined,
       });
+      const scopedProvenance = prov.ok
+        ? provenanceForCurrentEvent({
+            provenance: prov.provenance,
+            enteredFor: provEnteredFor,
+            current: { eventName, eventDate },
+          })
+        : null;
       return normalizeBoutContext({
         division: boutDivision || null,
         isTitleBout:
           boutTitleStatus === '' ? null : boutTitleStatus === 'title',
         scheduledRounds: boutRounds === '' ? null : Number(boutRounds),
-        ...(prov.ok ? { provenance: prov.provenance } : {}),
+        ...(scopedProvenance ? { provenance: scopedProvenance } : {}),
       });
     },
-    [boutDivision, boutTitleStatus, boutRounds, boutSourceUrl, boutRetrievedAt, boutAuthority]
+    [boutDivision, boutTitleStatus, boutRounds, boutSourceUrl, boutRetrievedAt, boutAuthority, provEnteredFor, eventName, eventDate]
   );
 
   const boutContextIssues = useMemo(
@@ -5313,7 +5343,7 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                   inputMode="url"
                   placeholder="Official UFC event / weigh-in page you verified"
                   value={boutSourceUrl}
-                  onChange={(e) => setBoutSourceUrl(e.target.value)}
+                  onChange={(e) => handleBoutSourceUrl(e.target.value)}
                   className="w-full h-10 bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:border-red-500"
                 />
               </div>
@@ -5325,7 +5355,7 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                   id="simulator-prov-date"
                   type="date"
                   value={boutRetrievedAt}
-                  onChange={(e) => setBoutRetrievedAt(e.target.value)}
+                  onChange={(e) => handleBoutRetrievedAt(e.target.value)}
                   className="w-full h-10 bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:border-red-500"
                 />
               </div>
@@ -5336,7 +5366,7 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                 <select
                   id="simulator-prov-authority"
                   value={boutAuthority}
-                  onChange={(e) => setBoutAuthority(e.target.value)}
+                  onChange={(e) => handleBoutAuthority(e.target.value)}
                   className="w-full h-10 bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:border-red-500"
                 >
                   <option value="">Unset</option>

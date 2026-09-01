@@ -11,7 +11,8 @@ const { fighterFixtures } = loadFixture('fighters.golden.json');
 const names = Object.keys(fighterFixtures);
 const fA = fighterFixtures[names[0]];
 const fB = fighterFixtures[names[1]];
-const OFFICIAL = { sourceUrl: 'https://www.ufc.com/event/ufc-fight-night-example', retrievedAt: '2026-09-12', authority: 'official' };
+// Past, absolute-https citation so it never trips the future-date rule at run time.
+const OFFICIAL = { sourceUrl: 'https://www.ufc.com/event/ufc-fight-night-example', retrievedAt: '2026-06-01', authority: 'official' };
 
 const save = (boutContext) => buildRoiEntry({
   fA, fB, oddsA: '-150', oddsB: '+130',
