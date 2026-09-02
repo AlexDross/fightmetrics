@@ -42,8 +42,15 @@ export default defineConfig({
 
   // Foundation Stage 4. The domain modules are pure ES modules with no DOM
   // dependency, so the suite runs in plain Node -- no jsdom, no browser, no
-  // dev server. Deliberately NOT a DOM environment: adding one would invite
-  // tests that render components, which belongs to a later stage.
+  // dev server. The DEFAULT stays `node` for exactly that reason.
+  //
+  // Stage 7 Gate 4 is the "later stage" the original note pointed at: the auth
+  // provider and the Info-footer sign-in UI are React components whose contract
+  // is behavioural -- listener cleanup, sign-out actually clearing state, an
+  // expired-link notice being dismissible -- and none of that is observable
+  // without a DOM. Those two files opt in PER FILE with a
+  // `// @vitest-environment jsdom` docblock, so every other test in the suite
+  // still runs in plain Node and pays nothing for it.
   test: {
     environment: 'node',
     // Two entries rather than a {js,mjs} brace group: brace groups have already

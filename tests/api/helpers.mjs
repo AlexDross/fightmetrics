@@ -103,6 +103,31 @@ export function authToken(userId) {
 }
 
 /**
+ * The same token, already EXPIRED.
+ *
+ * Gate 4 needs a real expired credential to prove that PostgREST's PGRST3xx
+ * codes — which arrive with no HTTP status attached to the SDK error — resolve
+ * to `unauthenticated` rather than a generic server error. Minted here, from the
+ * local secret, so no token is ever committed, printed or snapshotted.
+ */
+export function expiredAuthToken(userId) {
+  const { JWT_SECRET } = status();
+  const header = b64url(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
+  const past = Math.floor(Date.now() / 1000) - 3600;
+  const payload = b64url(JSON.stringify({
+    iss: 'supabase-demo',
+    role: 'authenticated',
+    aud: 'authenticated',
+    sub: userId,
+    iat: past - 60,
+    exp: past,
+  }));
+  const data = `${header}.${payload}`;
+  const sig = b64url(createHmac('sha256', JWT_SECRET).update(data).digest());
+  return `${data}.${sig}`;
+}
+
+/**
  * Call a public RPC over HTTP. `as` is 'anon' or a user id.
  *
  * Returns { status, body } and never throws on a non-2xx: the error SHAPE is
