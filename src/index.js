@@ -10,6 +10,10 @@ import './style.css';
 import { BrowserRouter } from 'react-router-dom';
 
 import App from './App';
+// Stage 7 Gate 4: auth/membership state only. It owns no App collection and
+// performs no data read — when Supabase is unconfigured it constructs no client
+// and issues no request, so this wrapper is inert in the current build.
+import { AuthProvider } from './auth/AuthProvider.jsx';
 
 const rootElement = document.getElementById('root');
 const root = createRoot(rootElement);
@@ -26,7 +30,9 @@ const root = createRoot(rootElement);
 root.render(
   <StrictMode>
     <BrowserRouter>
-      <App />
+      <AuthProvider>
+        <App />
+      </AuthProvider>
     </BrowserRouter>
   </StrictMode>
 );

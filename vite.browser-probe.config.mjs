@@ -36,6 +36,14 @@ export default defineConfig({
         repoTypes: 'src/data/repositories/types.mjs',
         repoInterfaces: 'src/data/repositories/interfaces.mjs',
         repoInMemory: 'src/data/repositories/inMemory.mjs',
+        // Stage 7 Gate 4: every new browser-side module, including the ONE that
+        // imports @supabase/supabase-js. Probing the client module is the point
+        // — it is the only place a Node builtin could enter through the SDK.
+        supabaseConfig: 'src/data/supabase/config.mjs',
+        supabaseClient: 'src/data/supabase/client.mjs',
+        authCallback: 'src/data/supabase/authCallback.mjs',
+        repoAuthState: 'src/data/repositories/authState.mjs',
+        repoSupabaseAuth: 'src/data/repositories/supabaseAuth.mjs',
       },
       formats: ['es'],
     },

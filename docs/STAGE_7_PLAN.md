@@ -17,16 +17,23 @@ Base: `main` @ `89f6c45`. Backend decision: Supabase/Postgres.
 | 2 · status | **COMPLETE.** Every item this row once carried as outstanding was finished — the last two, the non-contract `fm_rpc_seed_store` and the 167-row stored-profit recomputation, landed at Gate 3 (see the Gate 3 status row). Both the profit-equality and the probability-complementarity constraints are now **final**, not provisional. *The per-cluster narrative below is retained as the HISTORICAL record of how each cluster landed and what was outstanding at the time; where it says something is outstanding, read it as "was outstanding then", and take the current status from this sentence and from the Gate 3 row.* RPC clusters 1–8 landed (all contract SQL surfaces complete). Landed: roles, ownership transfer, ACLs, `app_private` schema, all 15 tables with composite FKs and the deferrable run↔snapshot cycle, revision/slug/settlement triggers, RLS on every table, a working authenticated path (caller resolution + zero-owner bootstrap), the `fm_read_*`/`fm_member_*` surfaces **for everything the current app renders**, SQL-side measurements, and — as of cluster 7 — 159 assertions green under `npm run test:db` and 129 under `npm run test:api`, including StoreSchema validation of the export and genuine two-client claim concurrency. (The per-cluster API/pgTAP counts below are the historical measurements at each cluster's landing.) **RPC cluster 1 (tracked-position edits)** is complete: `fm_rpc_change_tracked_corner`, `fm_rpc_amend_tracked_price`, `fm_rpc_confirm_entry` and `fm_member_undo_list`, with authorization, expected-revision conflicts, `stale_write` carrying the live server revision, undo records, settled-edit recomputation and rollback proof — 40 API assertions and 159 pgTAP. **RPC cluster 2 (bout lifecycle)** is complete: `fm_rpc_grade_bout`, `fm_rpc_return_bout_to_pending` and the deferred `fm_member_wagers_by_bout` read, with full revision-vector validation under row locks, `stale_write` carrying the real server revision, undo prior-state, mixed outcomes, and grade/return proven true inverses — 66 API assertions. **RPC cluster 3 (undo foundation)** is complete: `fm_rpc_undo` for all five implemented operations (tracked-corner change, price amendment, confirmation, grade, return-to-pending), with the table-owner `lock_undo_row`/`current_revision`/`check_undo_vector`/`remove_created_rows`/`restore_position` helpers, creator/role/workspace/TTL/single-use/consumed enforcement, undo-row-lock serialization of concurrent undos, `stale_write` naming every drifted row, atomic rollback, safe removal of forward-created market snapshots, exact prior-state round trips for every operation, no undo-of-undo, `prior_state` withheld from the read surface, and `absent_ids` validated with restoration reserved for cluster 4 — **19 API assertions, 85 API total**. `is_string_map` is now `EXECUTE`-granted to `fm_member_api` (four constraint helpers, not three), because settling a wager during grade/undo re-evaluates its `external_ids` CHECK. **RPC cluster 4 (deletion)** is complete: `fm_rpc_delete_pending_run` and `fm_rpc_clear_graded`, with the table-owner `delete_aggregate`/`check_graded_vector`/`deleted_row_exists`/`assert_ids_absent`/`restore_deleted_aggregate`/`untombstone_roots` helpers; proven-orphan pruning in the documented order (position → assessment → market → snapshots → run → stop), the run-survives-iff-a-wager-pins-its-assessment rule, unconditional root tombstoning with tombstone-as-authoritative `notFound` (no double delete), conflict-checked on the tracked position (delete) and an owner-only graded vector (clear), and the `absent_ids` restoration path in `fm_rpc_undo` that re-inserts a deleted aggregate column-complete (`to_jsonb`/`jsonb_populate_record`, immutable rows via plain `INSERT`, run↔snapshot cycle deferred) after `assert_ids_absent`, then un-tombstones — **10 API assertions, 95 API total**. Deletion is by run root only, matching the frozen contract and the in-memory reference; the stray `delete_tracked_position` RPC was withdrawn (see §5/§6). **RPC cluster 5 (prediction save)** is complete: `fm_rpc_save_prediction_run` and `fm_member_prediction_aggregate`, with the table-owner `insert_prediction_aggregate` (domain-shape → columns, reconstructing the finishProjection/settlement/reviewState/reconstruction unions, cyclic pair deferred, live ledger root written as owner) and `remove_created_aggregate` helpers; owner/editor with the bout lock (it creates a dependent), and a `save_prediction_run` branch in `fm_rpc_undo` that removes exactly the created rows and the ledger row after `check_undo_vector` proves the created position is untouched. This **closes the HTTP write leg for complementarity**: `probA`/`probB` cross PostgREST as JS numbers on the way in and read back `Object.is`-identical, summing to exactly 1 — **7 API assertions, 102 API total**. **RPC cluster 6 (wagers)** is complete: `fm_rpc_create_wager`, `fm_rpc_update_stake`, `fm_rpc_update_notes`, `fm_rpc_settle_wager` and `fm_rpc_delete_wager`, with the `lock_wager` helper and five new `fm_rpc_undo` branches; every one is bout-lock-bound (reads the wager's bout, locks the dependent set, then checks the wager's expected revision), `settle` takes a forced outcome the deferred settlement trigger validates against the bout, `updateStake` refuses a settled wager and validates the decimal string inline, and undo covers create→delete, delete→re-insert and stake/notes/settle→restore — **13 API assertions, 115 API total**. **Cluster 6 follow-up (fixture isolation):** the recurring shared-fixture coupling — save and wager beforeAll blocks seeding the shared WS_PUBLIC through the parameterized `applyFixture` — was eliminated at its root: `applyFixture()` is now parameterless and WS_PUBLIC's probability is the centrally-owned `PUBLIC_PROB_A`/`PUBLIC_PROB_B` constant no caller can override; a test that needs a different explicit probability seeds its own isolated workspace via `seedComplement`, and a new `fixture-isolation.test.mjs` proves both WS_PUBLIC's caller-independence and self-contained explicit-probability selection (**+3 assertions, 118 API total across eight files**). The exact self-resetting `npm run test:api` was run end-to-end: `db:reset` exit 0, then 118/118. **RPC cluster 7 (props, parlays, rename, confirm-all)** is complete: `fm_rpc_rename_event`, `fm_rpc_confirm_all_pending`, `fm_rpc_save_prop`/`_settle_prop`/`_delete_prop`, `fm_rpc_save_parlay`/`_delete_parlay`, with the table-owner `write_ledger_root`/`tombstone_root` and `check_pending_vector` helpers and seven new `fm_rpc_undo` branches; rename is card-wide and returns `affectedBouts`; confirm-all validates a vector over every pending position under row locks; props are ledger roots (create→live, settle→revision-checked, delete→tombstone) and parlays are immutable ledger roots (create with legs under the deferred leg-count trigger, delete removes legs+parlay); none is a bout-grade dependent so none takes the bout lock; undo covers every operation (rename/confirm-all/settle→restore, create→delete, delete→re-insert) — **11 API assertions, 129 API total**. The exact self-resetting `npm run test:api` was run end-to-end again: `db:reset` exit 0, then 129/129 across nine files. **RPC cluster 8 (workspace)** is complete: `fm_member_workspace` and `fm_member_seed_version` (member reads; current carries the workspace revision), `fm_rpc_set_seed_version` (owner-only, revision-checked), `fm_rpc_import_store` and `fm_rpc_reset_workspace` (owner-only, backup-confirmed), with the table-owner `clear_workspace_entities` and `import_store_entities` helpers; import is an ATOMIC whole-store replacement — clear then insert in one transaction, so a store violating any CHECK/FK/trigger aborts with no partial write — rejects an unknown future schema version, clears seed_version, and rebuilds the ledger; both import and reset bypass RLS in the helper (to clear other users' undo and the owner-only ledger) while the owner gate is enforced in the public RPC; StoreSchema round-trip is proven by export→reset→import→export equality **for a canonical backup** (see §11: arbitrary valid `migratedAt` spellings normalize to the same instant, not the same text). **Cluster 8 corrective (envelope gate + serialization):** the first cut coalesced missing collections to `[]` and cleared BEFORE validating the envelope, so a meta-only payload (`{meta:{schemaVersion,migratedAt}}`) that fails StoreSchema returned 200 and destroyed every collection. Fixed at the root: `app_private.assert_store_envelope` now runs BEFORE any clear and enforces the complete Store envelope — exactly the eleven top-level keys (no missing, no extra); `meta` exactly `{schemaVersion, migratedAt}`; and every one of the ten collections present as a JSON array — rejecting each violation with a stable `23514` `invalidStoreEnvelope` marker while the existing store stays byte-for-byte unchanged. A **second corrective** deepened the `meta` checks to the actual MetaSchema (they had only checked JSON type): `schemaVersion` must be an integer `>= 1` within int4 range (fractional/zero/negative/oversized/non-number all rejected here, before the `::int` cast and the `workspaces_schema_version_positive` CHECK could be reached), and a non-null `migratedAt` must match the FULL grammar of `z.iso.datetime({offset:true})` — `date T HH:MM` with **optional** `:SS` and `.fraction`, then a required `Z` or `±HH:MM` — AND cast to `timestamptz` (which is the calendar-validity check; malformed, no-offset and impossible dates rejected here, before the cast could raise `22P02`/`22007`). A **third corrective** widened the shape check, which had wrongly required seconds and so rejected minute-precision spellings (`…T05:28Z`, `…T05:28+03:15`) that MetaSchema accepts. A **fourth corrective** established ONE durable timestamp contract shared by JavaScript and PostgreSQL, closing two remaining mismatches: the SQL grammar used unrestricted `\d{2}` time fields, so Zod-invalid hour 24 and second 60 passed (PostgreSQL silently normalises both — measured `…T24:00Z` → next day); and `z.iso.datetime({offset:true})` accepts offsets up to ±23:59 that `timestamptz` cannot represent (±15:59 max). `isoDateTime()` in `src/data/schemas/primitives.mjs` is now **refined** to the representable offset range while keeping Zod's calendar/clock validation, and `assert_store_envelope` carries the same bounds (hour 00–23, minute 00–59, optional second 00–59, fraction only with seconds, offset ≤ ±15:59). A **fifth corrective** closed the last calendar boundary: Zod accepts year `0000` but PostgreSQL rejects it (`date/time field value out of range` — its proleptic Gregorian calendar has no year zero), so both sides now enforce the shared year range **0001–9999**. 17 paired conformance tests assert MetaSchema and the HTTP import agree case for case — the authoritative timestamp matrix, which replaced an older redundant form-only block — and all 54 persisted timestamps across five workspaces re-validate under the refined schema. The helper is `STABLE` for that offset-anchored cast and converts every such failure to `23514` `invalidStoreEnvelope`. import and reset also take a `FOR UPDATE` lock on the workspace row so two concurrent destructive replacements serialize (see §11 for the scope). The fixture carries a wager so the round trip exercises all ten collections, the tests assert all ten (plus parlay legs and the ledger) on reset, and positive tests cover every accepted `migratedAt` form (minute/seconds/fractional, `Z`/explicit offset) asserting **instant** equivalence after export (`timestamptz` normalizes the offset, so the exported spelling differs) — **43 API assertions, 172 API total**. The exact self-resetting `npm run test:api` was run end-to-end: `db:reset` exit 0, then 172/172 across ten files. **All 25 contract mutation methods and all 40 SQL-backed contract methods are now implemented.** *(Historical, at cluster 8: the non-contract `fm_rpc_seed_store` and the stored-profit recomputation were the only things still open, and the profit-equality constraint was still provisional.)* **Both closed at Gate 3.** `fm_rpc_seed_store` has landed and all **167** stored computed rows recomputed in PostgreSQL with zero value mismatches, zero bit mismatches and deviation 0 — 167 being the corpus size **at Gate 3**, since re-measured at 194 with the same four zeros (see the Pre-Gate-4 audit). **Nothing remains outstanding for Gate 2.** | ✅ |
 | 3 | `feat(data): migrate seed data into the durable schema` | ✅ |
 | 3 · status | **COMPLETE.** *(Every number in this row is the measurement taken when Gate 3 landed and is retained as that gate's audit record; the corpus has since grown with `main`'s live data — see "Pre-Gate-4 baseline synchronization audit" above for the current figures.)* `fm_rpc_seed_store` and `app_private.seed_store_entities` landed: owner-only, revision-checked on the workspace row, envelope-gated by the same `assert_store_envelope` import uses, serialized by the same workspace `FOR UPDATE` lock, and **not undoable** by design. The whole migrated corpus loads in one transaction — 18 events, 178 bouts, 178 prediction runs, 273 prediction snapshots, 177 market snapshots, 178 assessments, 178 tracked positions, 4 props, **182 ledger roots** — in ~200 ms over real HTTP. Seeding is proven **deterministic** (the same store into two independent workspaces is identical column-for-column, and every persisted double is bit-identical by `float8send`), **idempotent** (re-applying the same version, and advancing the version, both insert exactly zero rows and leave the content digest unchanged), and **non-resurrecting** (after deleting one pending root and clearing all 168 graded roots, a later seed at a new version returns `roots_seeded 0`, `roots_skipped_tombstoned 169`, and inserts nothing — while all 18 events and 178 bouts survive as card history). **All 167 stored computed-profit rows were recomputed through `app_private.settlement_for` in PostgreSQL with zero value mismatches, zero bit mismatches and maximum deviation exactly 0**, so the profit-equality constraint is no longer provisional (§4, §12). One real defect was found and fixed by this gate's own tests: a bulk seed left the tables with no planner statistics and `fm_member_roi`/`fm_member_upcoming` hit the 8 s statement timeout (`57014`) on the seeded corpus; the seed now `ANALYZE`s what it loaded and both return in 26 ms / 9 ms. **197 API assertions across eleven files, 174 pgTAP across three.** | ✅ |
-| 4 | `feat(auth): add magic-link sign-in and read-only public state` | **DEFERRED — not started** |
+| 4 | `feat(auth): add magic-link sign-in and read-only public state` | **IMPLEMENTED — pending review, NOT merged** |
+| 4 · status | **IMPLEMENTED, uncommitted, awaiting review.** Magic-link/OTP sign-in, resolved membership, and the read-only public/member state landed behind the repository/provider boundary. `@supabase/supabase-js` is pinned at `2.112.4` and imported by **exactly one module**, `src/data/supabase/client.mjs`; `src/App.js` imports a React component and nothing else. Configuration is all-or-none over `VITE_SUPABASE_URL` + `VITE_SUPABASE_PUBLISHABLE_KEY`, and a key classifier REJECTS a secret key, a personal access token, a Postgres URL or a `service_role` JWT pasted into the publishable slot. **Unconfigured is a real disabled mode**: no client, no request, no panel, no wall — measured in a real browser at 2 resources loaded and zero auth requests. `persistSession`/`detectSessionInUrl`/`autoRefreshToken` are all true; `shouldCreateUser:false` is verified against real GoTrue; the redirect is derived from the live origin and always lands on `/`. **235 new tests** (offline 773 → **1,008**), **16 new real-stack API tests** (197 → **213**), all green. **Four Codex review corrections applied:** PostgREST `PGRST301/302/303` now map to `unauthenticated` (they arrive with no HTTP status, and an expired JWT was reading as a generic server error); session resolution has its own error mapping and an `unauthenticated` refresh clears session and role atomically; the publishable key is validated by full match, not prefix; and the rendered user-UUID fragment is gone. **No SQL, migration, RLS, RPC, seed behaviour or bundled application data was touched.** Gates 5–7 remain deferred. | ✅ |
 | 5 | **Hosted rollout** — Alex creates/links the project, `db push --dry-run` → `db push`, Vercel vars, invite owner, claim, approve seed | **DEFERRED — not started** |
 | 6 | `feat(data): back repositories with Postgres` — runtime rewire; dead handlers removed after proving zero call sites | **DEFERRED — not started** |
 | 7 | `feat(data): add save status, undo, and JSON export/import` | **DEFERRED — not started** |
 
-**Gates 4–7 are explicitly DEFERRED.** Work stops at Gate 3. No authentication has
-been started, no hosted project exists or is linked, no repository is backed by
-Postgres, and no runtime behaviour has changed — the production bundle is
-byte-identical to the approved baseline (§12). Resuming requires explicit
-approval; nothing in this commit presumes it.
+**Gates 5–7 remain explicitly DEFERRED.** *(This paragraph previously said 4–7;
+Gate 4 is now implemented and awaiting review.)* No hosted project exists or is
+linked, no repository is backed by Postgres, and no mutation has been rewired.
+
+**Gate 4 does change the production bundle, for the first time in Stage 7**, and
+that is expected rather than a regression: it adds the Supabase client, the auth
+repository, the provider and the Info-footer panel. The byte-identity claim in
+§12 therefore ends at Gate 3 and is superseded by the Gate 4 measurements in that
+section. What has NOT changed is behaviour without configuration: with the two
+variables absent the panel renders nothing, no client is constructed and no
+request is made, so the deployed site behaves exactly as it does today.
 
 Every gate re-runs: full Vitest suite, browser probe, production build, JS/CSS
 byte comparison, leak checks, fixture/reference integrity, and confirmation that
@@ -1210,6 +1217,109 @@ RepositoryError =
 Error mapping: `42501` → `forbidden`; `23505/23503/23514` → `validation`;
 network → `offline`; missing JWT → `unauthenticated`.
 
+**PostgREST's `PGRST3xx` codes are a THIRD channel, and are checked first.**
+They are neither a SQLSTATE nor an HTTP status, and — measured against the local
+stack — they arrive with **no status attached to the SDK error object at all**:
+an expired JWT returns `{ code: 'PGRST303', message: 'JWT expired' }` and nothing
+else. A status-only mapping therefore fell through to a generic `server` error
+and told the user the server was broken when their session had merely ended.
+
+Using PostgREST's own documented meanings:
+
+| code | PostgREST meaning | maps to |
+|---|---|---|
+| `PGRST301` | the provided JWT could not be decoded, or is invalid | `unauthenticated` |
+| `PGRST302` | the request lacks bearer authentication while anonymous access is disabled | `unauthenticated` |
+| `PGRST303` | JWT claims validation or parsing failed — **the expired JWT observed against the local stack lands here** | `unauthenticated` |
+| `PGRST300` | **the server's JWT secret is missing** | `server` — deliberately NOT unauthenticated: it is a deployment fault, and presenting it as "your session ended" would send the user round a sign-in loop that cannot succeed, because no credential they present can fix a server with no secret |
+
+### Session errors are classified separately from sign-in errors
+
+`mapAuthError` is written for the SIGN-IN path, where a `400` means "that email
+was rejected" and belongs in the email field. Reusing it for session resolution
+was wrong: a missing, malformed or expired refresh token also returns `400`, and
+reporting that as a validation error on an email address nobody typed is
+something the UI cannot act on.
+
+`mapSessionError` therefore classifies on its own terms, **in this order**:
+
+1. a transport fault → `offline`;
+2. `PGRST301` / `PGRST302` / `PGRST303` → `unauthenticated`, and they win even
+   over a misleading status, because they are the most specific signal available;
+3. `PGRST300` → `server`, checked before any message matching so that no
+   phrasing of it can be mistaken for a credential problem;
+4. **any HTTP 5xx → `server`**, checked before the message match: a 500 saying
+   "JWT signing service unavailable" is an outage, not an expired session;
+5. only then, PRECISE credential signals → `unauthenticated` — an absent or
+   rejected refresh token, a session that is gone or expired, a token that is
+   expired, malformed or undecodable, claims that failed validation;
+6. `400` / `401` / `403` → `unauthenticated` (a 400 during SESSION RESOLUTION is
+   a credential problem, not an email one — that distinction is the whole reason
+   this function is separate from `mapAuthError`);
+7. everything else → `server`.
+
+**A credential NOUN alone never decides.** This was got wrong twice. A bare `jwt`
+alternative swallowed `JWT secret missing` and `JWT signing service unavailable`;
+removing it left a bare `refresh[_ ]?token` alternative, which then swallowed
+`Refresh token service unavailable`, `Refresh token configuration missing` and
+`Refresh token database timeout`. Every one of those is an INFRASTRUCTURE outage
+around the credential system, and signing a valid member out over one starts a
+loop they cannot escape.
+
+Step 5 is therefore two checks, in order:
+
+- **an exact code allowlist** — `refresh_token_not_found`,
+  `refresh_token_already_used`, `refresh_token_revoked`, `session_not_found`,
+  `session_expired`, `bad_jwt`, `no_authorization`, `user_not_found` — matched
+  case-insensitively and **WHOLE, against the error's `code` ONLY**. A code is a
+  contract; a message is prose that changes between releases. Adding a code
+  requires evidence that GoTrue emits it as a credential failure plus a focused
+  test; the list is exported so the suite asserts every member maps to
+  `unauthenticated` and that coverage cannot go stale.
+- **otherwise the free-form MESSAGE ONLY**, which must contain a credential noun
+  and a failure condition (`missing`, `not found`, `invalid`, `malformed`,
+  `expired`, `revoked`, `rejected`, `reused`, `already used`, `bad`, …)
+  **adjacent to each other**, in either order, separated only by whitespace,
+  `_`, `-` or a copula/article.
+
+**The two channels are literally separate: the allowlist reads only `code`, the
+heuristic reads only `message`, and an unknown code is never substring-classified.**
+An earlier version tested `code + message` together, which quietly undid the
+exactness of the allowlist — `refresh_token_not_found_in_database` contains
+`refresh_token_not_found`, so an unknown infrastructure code matched through the
+code half and signed a valid member out. `invalid_token_backend_error`,
+`session_not_found_in_cache_backend` and `refresh_token_not_found_in_database` are
+outages named after the subsystem that broke, not statements about the user's
+credential, and all three now stay `server`.
+
+**Adjacency is the load-bearing part.** "Refresh token configuration missing"
+contains a credential noun *and* the word "missing", yet the condition attaches
+to the configuration rather than to the token — so it must not match, and it does
+not. Two entries in the matcher (`missing sub`, `not authenticated`) are complete
+standalone phrases rather than noun+condition pairs, and are listed as such
+rather than pretended to fit the rule.
+
+**One documented limit, stated rather than hidden.** A message that literally
+contains a failure phrase — "internal handler for `refresh_token_not_found`
+crashed" — still matches, because no regex can tell a quoted phrase from a
+reported one. Distinguishing them needs a code, which is why the allowlist is
+checked first. The failure mode is a spurious sign-out, never a spurious
+authorisation, so it errs in the safe direction. A test pins this behaviour
+explicitly.
+
+Regressions cover all three defects in full — the three JWT-phrased server
+faults, the four refresh-token infrastructure faults, five unknown infrastructure
+CODES that merely contain an allowlisted one, both directions of the `PGRST300` /
+`PGRST3xx` split, the bare-noun rule itself (six credential nouns alone →
+`server`; the same six with an adjacent condition → `unauthenticated`), the
+channel separation (the same string as a MESSAGE is a credential assertion, as a
+CODE it is nothing), and every allowlisted code driven from the exported list —
+plus the end-to-end provider consequence: a JWT-secret-missing server, a
+signing-service 500 and a refresh-token outage all keep the member signed in,
+while an expired JWT and a missing refresh token both sign them out.
+
+`signIn()` keeps its existing email treatment unchanged.
+
 `P0001` is Postgres's **generic** `RAISE EXCEPTION` and the RPCs use it for
 several unrelated conditions ("workspace already claimed", "bout is still
 pending"). It maps to `conflict` **only** when the message carries the stable
@@ -1316,16 +1426,125 @@ place, are successes that change nothing — in the second case the caller staye
 fully authorised after signing out. Every state row above must be reachable by
 calling the API, not only by constructing a repository in that state.
 
-`authRepository` + provider exposing `{ session, status, signIn(email), signOut() }`.
-Magic-link/OTP with `shouldCreateUser: false`; **open signup disabled at project
-level** — the client flag is UX, not the security boundary. `persistSession`,
-`detectSessionInUrl`, `autoRefreshToken` all true. Unobtrusive sign-in link in
-the Info footer, **no login wall**. `onAuthStateChange` refetches on
-sign-in/sign-out; `visibilitychange` + `focus` drive refetch-on-focus; each
-successful write refreshes affected queries. Expired link → `/` with a
-dismissible notice. Redirects: `localhost:3001`, Vercel preview wildcard,
-production. **No Realtime in Stage 7** — refetch-on-focus plus post-write refresh
-is sufficient and simpler.
+`authRepository` + provider. Magic-link/OTP with `shouldCreateUser: false`;
+**open signup disabled at project level** — the client flag is UX, not the
+security boundary. `persistSession`, `detectSessionInUrl`, `autoRefreshToken` all
+true. Unobtrusive sign-in link in the Info footer, **no login wall**.
+`onAuthStateChange` refetches on sign-in/sign-out; `visibilitychange` + `focus`
+drive refetch-on-focus; each successful write refreshes affected queries (Gate 6).
+Expired link → `/` with a dismissible notice. **No Realtime in Stage 7** —
+refetch-on-focus plus post-write refresh is sufficient and simpler.
+
+### Gate 4 as built
+
+**Module boundary.** `@supabase/supabase-js` (pinned `2.112.4`) is imported by
+**exactly one file**, `src/data/supabase/client.mjs` — asserted by a test that
+walks all of `src/`. Above it:
+
+| module | responsibility |
+|---|---|
+| `src/data/supabase/config.mjs` | read + validate the two public variables; classify the key |
+| `src/data/supabase/client.mjs` | the only SDK import; fixes the three auth options |
+| `src/data/supabase/authCallback.mjs` | classify the magic-link callback; clean the URL |
+| `src/data/repositories/authState.mjs` | the two axes of §10, as pure functions |
+| `src/data/repositories/supabaseAuth.mjs` | the contract-conforming `authRepository` |
+| `src/auth/AuthProvider.jsx` | lifecycle, listeners, sequencing, notices |
+| `src/auth/AuthFooterPanel.jsx` | the Info-footer UI |
+
+`src/App.js` imports `AuthFooterPanel` and nothing else — no SDK, no client, no
+transport type, no `fm_*` name, no `.rpc(`, no `.auth.`.
+
+**Configuration is all-or-none, and actively rejects server credentials.** Only
+`VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` are read. The URL must be
+http/https with no userinfo, query or fragment. The key must FULL-match
+`^sb_publishable_[A-Za-z0-9_-]+$` or be a JWT whose `role` claim is `anon`;
+`sb_secret_…`, `sbp_…`, a `postgres(ql)://` string and a `service_role` JWT are
+each rejected with a distinct code. **Diagnostics carry key NAMES and reason
+codes only, never a value.** One-of-two is `invalid`, never `configured`: a
+half-configured client turns every request into an opaque 401 that reads as a
+server fault.
+
+The key check is a **full match, not a prefix test**. A `startsWith` check
+accepted the bare `sb_publishable_`, a prefix followed by whitespace, and a
+prefix followed by punctuation or non-ASCII text — none of which is a key, and
+each of which would have been handed to the SDK to fail later as an opaque 401.
+The suffix must be non-empty URL-safe ASCII; anything else is rejected as
+`malformedPublishableKey`. The **length is deliberately not pinned**: it is not a
+documented contract, and pinning it would reject every valid key the day the
+issuer changes, for no security gain.
+
+**Disabled mode is a real mode.** Both variables absent ⇒ no client is
+constructed, no request is issued, the panel renders `null`, and nothing else in
+the app changes. Measured in a real browser on the production build: the page
+loads **2 resources** (JS + CSS) and makes **zero** auth requests.
+
+**The `fm_member_*` grant, measured.** The migration grants `fm_read_*` to
+`anon, authenticated` and `fm_member_*`/`fm_rpc_*` to `authenticated` only, so an
+**anonymous `fm_member_whoami` is refused by Postgres** (`42501`) before the
+function body runs. This is by design and is why the provider resolves the
+SESSION first and asks for membership only once one exists — an anonymous
+membership request is both pointless and refused. Proven at the API tier in
+`tests/api/gate4-auth.test.mjs`.
+
+**Provider shape — a deliberate widening of the shape stated above.** §10
+previously specified `{ session, status, signIn(email), signOut() }`. That is
+sufficient for authentication but cannot express the *membership* axis the rest
+of §10 requires, so the context value is
+`{ status, configStatus, configDiagnostic, session, role, readSurface, canWrite,
+claimEligible, notice, error, pending, linkSentTo, signIn, signOut,
+claimOwnership, dismissNotice, refresh }`. `session` and `role` stay separate
+fields — the widening exists to KEEP them separate, not to merge them. The
+original four are all present and unchanged in meaning.
+
+**Read routing is decided, not yet wired.** `readSurfaceForRole` resolves
+`public` vs `member` by membership, and the provider publishes it. No App
+collection is read from Postgres at Gate 4 — see the boundary note below.
+
+### The Gate 4 / Gate 6 boundary
+
+Gate 4 owns exactly two facts: is there a session, and what membership does it
+resolve to. It reads **no** App collection and writes **nothing**. Upcoming, ROI,
+Props, Parlays, wagers, grading and the clipboard handlers are untouched, and the
+member UI says so explicitly — "edits you make here still live only in this
+browser".
+
+This is deliberate. "Read-only public/member state" cannot be implemented as
+*Postgres-backed reads of mutable App collections* without making Postgres
+authoritative for data the client still mutates locally, which would create two
+writable sources of truth before the rewire that reconciles them. So Gate 4
+resolves and publishes the routing decision, and Gate 6 acts on it.
+
+### Sign-out is a transition at BOTH layers
+
+The repository re-reads the session after `signOut()` and reports a **failure**
+if one survives, rather than returning `{signedOut:true}` over a live session.
+The provider clears session and role itself on success instead of waiting for the
+`SIGNED_OUT` event, so there is no window in which a member UI renders after a
+completed sign-out. A monotonic sequence counter discards any in-flight
+resolution that lands after a newer transition — without it, a slow `whoami`
+started before sign-out re-grants a role the user no longer holds.
+
+### An expired session signs the user out; a flaky network does not
+
+These are two different failures, and the provider treats them differently on
+purpose:
+
+| `session()` result | provider behaviour | rationale |
+|---|---|---|
+| `unauthenticated` | **clears session AND role atomically** → `signedOut`, `canWrite:false`, `readSurface:'public'` | A real answer: the stored credential is gone or expired. Leaving a resolved member in place is what keeps a UI looking authorised after its session has already ended. |
+| `offline` / `server` | **retains the last known identity**, surfaces the error only | These are the ABSENCE of an answer, not an answer. A flaky network is not a sign-out. Writes are confirmed-only (§9) and the server re-checks every one, so a stale-optimistic identity authorises nothing on its own. |
+
+Both branches are reached through the ordinary refresh path — `focus` and
+`visibilitychange` — and both are covered by regressions, including the recovery
+case where the network returns and the member state resolves cleanly again.
+
+### The user UUID is not rendered
+
+The panel used to show a `session <first-8-of-uuid>…` line; it has been removed.
+The id is a stable internal identifier that tells the signed-in person nothing
+they do not already know, and printing even a prefix puts it into screenshots and
+support threads for no benefit. The UI tests assert that neither the full id nor
+its prefix appears, for a member or for a signed-in non-member.
 
 ---
 
@@ -1474,6 +1693,9 @@ prove nothing. The current store has 3,799 numeric leaves and 0 negative zeros.
 | Tier | Runs where |
 |---|---|
 | Repository contract vs in-memory fake | every `npm test`, offline |
+| Gate 4 auth: config, client, callback, state, repository | every `npm test`, offline (node) |
+| Gate 4 provider + UI | every `npm test`, per-file `jsdom` opt-in |
+| Gate 4 auth against real local PostgREST/GoTrue | `npm run test:api` — includes a locally signed EXPIRED JWT proving `PGRST303` → `unauthenticated`; the token is minted from the local secret and never printed or snapshotted |
 | SQL + RLS + RPC via **local Supabase** | `npm run test:db`, and the `Database and API` CI job |
 | API-level repository tests vs local URL/key | `npm run test:api` — **197 assertions across eleven files, real HTTP, self-resetting** |
 | Manual acceptance (phone/desktop, hard refresh) | pre-merge checklist |
@@ -1729,7 +1951,44 @@ css    51993  4f72dadb556c0ea47a480c772cdb8f32b6d7212a14a7d6be020c27ad7cb299cb
 
 **Gate 3 reproduces this baseline byte for byte** — same filenames
 (`index-BNNY8Yhh.js`), same sizes, same digests — which is the evidence that the
-gate is runtime-inert: it adds SQL, tests and docs only. The leak check re-run
+gate is runtime-inert: it adds SQL, tests and docs only.
+
+**Gate 4 moves the bundle, and it is the first Stage 7 gate that legitimately
+does.** Measured on the same tree, before and after:
+
+| | before Gate 4 | after Gate 4 | delta |
+|---|---|---|---|
+| JS | `index-CC4q9HKm.js` 5,390,320 B | `index-Bs7wMpkh.js` 5,627,412 B | +237,092 B |
+| CSS | `index-CIOvhUWu.css` 56,096 B | `index-BeM6qebP.css` 56,732 B | +636 B |
+
+Current digests: JS `35fdf7d4e57a5d5e5a3d20d28563aaa4a940030755903d68dce2e4606b618669`,
+CSS `548bc7b650a8beeb848ef0230fe8547482fcd85ac648734180db873bfb4a9a8e`. The CSS has
+been byte-identical across every review round since the panel landed, which is the
+evidence that the session-mapping corrections changed logic only.
+
+The JS delta is `@supabase/supabase-js` plus roughly 800 lines of auth code; the
+CSS delta is the Tailwind utilities the new Info-footer panel uses, which is why
+it is small and why nothing else in the stylesheet moved.
+
+**The leak-check standard is amended for Gate 4, in one specific way.** `fm_rpc_*`
+and `fm_member_*` were previously required to be ABSENT from the bundle, which was
+correct while Stage 7 was runtime-inert. The client now calls two public RPCs, so
+their NAMES are legitimately present:
+
+```
+fm_member_whoami                  1
+fm_rpc_claim_workspace_ownership  1
+```
+
+Everything else stays zero, in both an unconfigured and a configured build:
+`SERVICE_ROLE`, `JWT_SECRET`, `supabase_admin`, `postgresql://`, `postgres://`,
+`app_private`, `fm_read_*`, `prior_state`, `seed_items`, `seed_store_entities`,
+`DB_URL`, and any `eyJ…` JWT. Three literals DO appear and are **rejection
+guards, not values** — `service_role`, `sb_secret_` and `sbp_` are the prefixes
+the key classifier and the error scrubber match in order to REFUSE and REDACT
+them; one further `sb_secret_` is the SDK's own key-format check. A configured
+build additionally contains the publishable key and the project URL, which is the
+approved public class and the entire point of those two variables. The leak check re-run
 against that bundle is still zero for `service_role`, `JWT_SECRET`,
 `supabase_admin`, a Postgres URL, `app_private`, `fm_rpc_*`, `fm_member_*`,
 `prior_state`, and now also `seed_store_entities` and `seed_items`.
@@ -1941,6 +2200,38 @@ the repository.
 | 8 | Verify empty workspace; invite owner; sign in; call ownership claim | Alex |
 | 9 | Seed via the reviewed transactional RPC, after explicit approval | Alex triggers |
 | 10 | Deploy runtime rewire; phone + desktop acceptance | both |
+
+### Gate 5 prerequisites that require Alex, restated after Gate 4
+
+Gate 4 built the client half and nothing else. Every item below is external to
+this repository and cannot be done from here:
+
+1. **Create the hosted Supabase project.** Nothing is linked; no project ref
+   exists anywhere in the repo or the working tree.
+2. **Disable open signup at the project level.** `shouldCreateUser: false` is
+   sent by the client and honoured by GoTrue, but it is UX, not the security
+   boundary — a caller can always craft a request without it.
+3. **Configure Site URL and redirect URLs** for production, the Vercel preview
+   wildcard and `http://localhost:3001`. The client derives its redirect from the
+   live origin and always returns to `/`; that origin must be allow-listed
+   server-side or the link will be refused.
+4. **Set `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` in Vercel** for
+   preview and production. These two, and only these two — the app reads no other
+   variable, and a secret pasted into the publishable slot is rejected at boot
+   with a value-free diagnostic rather than shipped.
+5. **Push the committed migrations** (`db push --dry-run`, reviewed, then
+   `db push`). Never `db reset --linked`, never `--include-seed`.
+6. **Create the workspace row** with slug `fightmetrics` — the client resolves
+   that slug and nothing else. Without the row, `whoami` returns `notFound`.
+7. **Invite the owner account and sign in once.** Signup is invitation-only, so
+   the first owner cannot bootstrap themselves through the UI.
+8. **Perform the ownership claim**, deliberately, from the signed-in
+   non-member state. Gate 4 exposes it as an explicit button and never calls it
+   automatically; no hosted owner was created, invited or claimed in Gate 4.
+9. **Approve the seed** and trigger `fm_rpc_seed_store`. Note the open item from
+   the Pre-Gate-4 audit: the harness corpus deliberately excludes parlays
+   (`parlayEntries: []`), so the complete migration input must be rebuilt and
+   reconciled — parlays included — before anything hosted is seeded.
 
 ---
 

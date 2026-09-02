@@ -199,6 +199,11 @@ const simulatorAge = (f, eventDate) =>
 const fmtAge = (age, dec = 0) =>
   Number.isFinite(age) ? age.toFixed(dec) : '—';
 import { isChampionRecord } from './domain/rankings/current.js';
+// Stage 7 Gate 4: the sign-in affordance for the Info footer. This is a
+// PROVIDER/REPOSITORY boundary import — App.js sees a React component and never
+// @supabase/supabase-js, a raw client, a transport response type or an fm_* RPC
+// name. Proven by src/auth/__tests__/appBoundary.test.mjs.
+import AuthFooterPanel from './auth/AuthFooterPanel.jsx';
 
 
 const ufcRankLabel = (r) => {
@@ -9177,6 +9182,10 @@ function InfoTab() {
           </ul>
         </div>
       </div>
+
+      {/* Section 5 — Account (Stage 7 Gate 4). Renders nothing at all unless
+          Supabase is configured, so the current build is visually unchanged. */}
+      <AuthFooterPanel />
 
     </div>
   );
