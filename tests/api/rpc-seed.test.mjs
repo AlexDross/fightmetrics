@@ -372,28 +372,21 @@ describe('seeding is idempotent', () => {
   });
 });
 
+// This block runs against the REAL migrated corpus, which currently has zero
+// pending roots: every prediction in it is graded. It therefore no longer
+// deletes a pending run of its own, and it must not invent one — a synthetic
+// Upcoming record would make the fixture disagree with the committed data it
+// exists to exercise.
+//
+// Pending-run deletion is covered independently, so nothing is lost:
+//   * rpc-delete.test.mjs        — deleting a pending run and creating its
+//                                  tombstone, on its own purpose-built fixture;
+//   * supabase/tests/01_behaviour.test.sql — a deleted pending seed root is not
+//                                  resurrected by a later seed, proven in SQL.
+// What this block still proves, and is the only place that proves it against
+// the real corpus, is that EVERY graded tombstone is respected by reseeding.
 describe('tombstoned roots are never resurrected', () => {
   const tombstonedCount = () => ledger(WS_SEED).tombstoned;
-
-  it('deleting a pending run root tombstones it and removes its aggregate', async () => {
-    const row = (await rpc('fm_member_upcoming', { p_slug: SLUG }, { as: USER_MEMBER }))
-      .body.sort((a, b) => a.tracked_position_id.localeCompare(b.tracked_position_id))[0];
-    const runId = catalogScalar(`
-      SELECT a.run_id FROM app_private.betting_assessments a
-        JOIN app_private.tracked_positions t
-          ON t.workspace_id=a.workspace_id AND t.assessment_id=a.id
-       WHERE t.workspace_id='${WS_SEED}' AND t.id='${row.tracked_position_id}';`);
-    const res = await rpc('fm_rpc_delete_pending_run', {
-      p_slug: SLUG, p_run_id: runId, p_expected_revision: row.revision },
-      { as: USER_MEMBER });
-    expect(res.status, JSON.stringify(res.body)).toBe(200);
-    expect(res.body[0].physically_removed).toBe(true);
-    expect(catalogScalar(`
-      SELECT removed_at IS NOT NULL FROM app_private.seed_items
-       WHERE workspace_id='${WS_SEED}' AND root_type='predictionRun'
-         AND root_id='${runId}';`)).toBe('t');
-    expect(count(WS_SEED, 'prediction_runs')).toBe(CORPUS.predictionRuns - 1);
-  });
 
   it('clearing ROI tombstones every graded root', async () => {
     const vector = ((await rpc('fm_member_roi', { p_slug: SLUG }, { as: USER_MEMBER })).body ?? [])
@@ -407,11 +400,13 @@ describe('tombstoned roots are never resurrected', () => {
     // No wager pins any assessment in the migrated corpus, so every graded
     // aggregate is a proven orphan and goes physically as well as logically.
     expect(res.body[0].physically_removed).toBe(GRADED_RUN_IDS.length);
-    expect(tombstonedCount()).toBe(GRADED_RUN_IDS.length + 1);
+    expect(tombstonedCount()).toBe(GRADED_RUN_IDS.length);
   });
 
   it('ADVANCING the seed version brings nothing back', async () => {
-    const survivingRuns = PENDING_RUN_IDS.length - 1;
+    // Whatever the corpus's pending side is, that is exactly what survives
+    // clearing ROI — derived, never a literal.
+    const survivingRuns = PENDING_RUN_IDS.length;
     const before = allCounts(WS_SEED);
     expect(before.predictionRuns).toBe(survivingRuns);
     expect(before.trackedPositions).toBe(survivingRuns);
@@ -420,8 +415,8 @@ describe('tombstoned roots are never resurrected', () => {
     expect(res.status, JSON.stringify(res.body)).toBe(200);
     const out = res.body[0];
     expect(out.roots_seeded).toBe(0);
-    expect(out.roots_skipped_tombstoned).toBe(GRADED_RUN_IDS.length + 1);
-    expect(out.roots_skipped_live).toBe(ROOT_COUNT - GRADED_RUN_IDS.length - 1);
+    expect(out.roots_skipped_tombstoned).toBe(GRADED_RUN_IDS.length);
+    expect(out.roots_skipped_live).toBe(ROOT_COUNT - GRADED_RUN_IDS.length);
     // Not one row of any kind returns — this is the assertion `ON CONFLICT DO
     // NOTHING` alone could never make true, because the deleted ids no longer
     // conflict with anything.
@@ -433,7 +428,7 @@ describe('tombstoned roots are never resurrected', () => {
     expect((await rpc('fm_member_roi', { p_slug: SLUG }, { as: USER_MEMBER })).body)
       .toEqual([]);
     expect((await rpc('fm_member_upcoming', { p_slug: SLUG }, { as: USER_MEMBER })).body.length)
-      .toBe(PENDING_RUN_IDS.length - 1);
+      .toBe(PENDING_RUN_IDS.length);
     expect(catalogScalar(`
       SELECT count(*) FROM app_private.prediction_runs r
         JOIN app_private.seed_items s

@@ -129,3 +129,95 @@ describe('grading handoff integrity — ROI and Upcoming', () => {
     expect(Boolean(stripped.boutContext.provenance)).toBe(false);
   });
 });
+
+// ─── UFC Fight Night Paris, 2026-09-05 — the card that broke the handoff ─────
+//
+// Ten predictions were saved for this card. Nine were graded into roiData.js by
+// d9b36e0 while upcomingData.js was left untouched, which is the handoff break
+// the generic suite above guards. The tenth is a different case and is the
+// reason this block exists.
+//
+// OFFICIAL EVIDENCE (ufc.com/news/updates-ufc-fight-night-paris-2026 and
+// ufc.com/event/ufc-fight-night-september-05-2026): Mairon Santos WITHDREW from
+// the September 5 bout because of illness and Pavel Andrusca replaced him, so
+// Nathaniel Wood fought Andrusca. The saved prediction
+// 1788113567606-rzyj6e describes Wood vs SANTOS — a pairing that never took
+// place.
+//
+// It was therefore CANCELED, not decided. The only correct disposition is
+// removal from Upcoming with NO ROI record:
+//   * grading it would invent a result for a bout nobody fought, and
+//   * grading it from the Wood-vs-Andrusca result would be worse — scoring a
+//     prediction computed against Santos's statistics using a different
+//     fighter's outcome.
+// A future Wood vs Santos booking must be saved as a NEW event-specific
+// prediction, never by reviving this id.
+describe('UFC Fight Night Paris 2026-09-05 — canceled Wood vs Santos prediction', () => {
+  const CANCELED_ID = '1788113567606-rzyj6e';
+  const isParis = (e) =>
+    e.eventName === 'UFC Fight Night Paris' && e.eventDate === '2026-09-05';
+
+  it('the canceled prediction is gone from Upcoming', () => {
+    expect(
+      UPCOMING_ENTRIES.filter((e) => id(e) === CANCELED_ID).map(label),
+      'the canceled Wood vs Santos prediction is still pending'
+    ).toEqual([]);
+  });
+
+  it('the canceled prediction was NOT graded into ROI', () => {
+    expect(
+      ROI_ENTRIES.filter((e) => id(e) === CANCELED_ID).map(label),
+      'a canceled bout must never receive an ROI record'
+    ).toEqual([]);
+  });
+
+  it('no September 5 Paris entry remains pending', () => {
+    expect(
+      UPCOMING_ENTRIES.filter(isParis).map(label),
+      'the September 5 Paris card is settled or canceled — nothing may still be pending'
+    ).toEqual([]);
+  });
+
+  // The distinction that matters: removed as canceled, NOT rewritten or scored
+  // off the replacement bout.
+  it('no ROI record scores Wood vs Santos, under any id', () => {
+    expect(
+      ROI_ENTRIES.filter(
+        (e) => boutKey(e) === '2026-09-05|Mairon Santos vs Nathaniel Wood'
+      ).map(label),
+      'a bout that never happened has been given a result'
+    ).toEqual([]);
+  });
+
+  it('the prediction was not rewritten as the September 5 Wood vs Andrusca bout', () => {
+    // Rewriting the saved pairing to match the fight that actually happened
+    // would launder a canceled prediction into a graded one, so the September 5
+    // replacement bout must appear in neither file.
+    //
+    // Scoped to that one bout on that one date, deliberately. Pavel Andrusca is
+    // an active fighter: a genuine prediction for him at some future event is
+    // legitimate data and must not fail this suite. Only the 2026-09-05
+    // Wood-vs-Andrusca pairing is forbidden, and it is matched through the same
+    // normalized boutKey the generic checks use.
+    const REPLACEMENT_BOUT = '2026-09-05|Nathaniel Wood vs Pavel Andrusca';
+    expect(
+      [...ROI_ENTRIES, ...UPCOMING_ENTRIES]
+        .filter((e) => boutKey(e) === REPLACEMENT_BOUT)
+        .map(label),
+      'the September 5 replacement bout must not be introduced as a prediction'
+    ).toEqual([]);
+  });
+
+  it('is not vacuous — the canceled id really was present before the repair', () => {
+    // Guards against the block above silently becoming assertions over an
+    // empty corpus: the id must still be a well-formed target, and the
+    // pre-repair shape must be exactly what these checks would have caught.
+    const asStillPending = [
+      { id: CANCELED_ID, fighterA: 'Nathaniel Wood', fighterB: 'Mairon Santos',
+        eventName: 'UFC Fight Night Paris', eventDate: '2026-09-05' },
+    ];
+    expect(asStillPending.filter((e) => id(e) === CANCELED_ID)).toHaveLength(1);
+    expect(asStillPending.filter(isParis)).toHaveLength(1);
+    expect(boutKey(asStillPending[0])).toBe('2026-09-05|Mairon Santos vs Nathaniel Wood');
+  });
+});
