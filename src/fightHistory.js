@@ -284,7 +284,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "2:35",
-      "wc": "Unknown",
+      "wc": "Lightweight",
       "tb": false,
       "ev": "UFC Fight Night: Hooker vs. Parnasse"
     }
@@ -1761,7 +1761,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Unknown",
+      "wc": "Featherweight",
       "tb": false,
       "ev": "UFC Fight Night: Hooker vs. Parnasse"
     }
@@ -1774,7 +1774,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Unknown",
+      "wc": "Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Hooker vs. Parnasse"
     }
@@ -1787,7 +1787,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Unknown",
+      "wc": "Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Hooker vs. Parnasse"
     }
@@ -1925,7 +1925,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "4:35",
-      "wc": "Unknown",
+      "wc": "Middleweight",
       "tb": false,
       "ev": "UFC Fight Night: Hooker vs. Parnasse"
     }
@@ -1962,7 +1962,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "4:22",
-      "wc": "Unknown",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Hooker vs. Parnasse"
     }
@@ -1975,7 +1975,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "4:22",
-      "wc": "Unknown",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Hooker vs. Parnasse"
     }
