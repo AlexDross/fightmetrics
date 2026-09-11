@@ -4,12 +4,14 @@
 // URL, the retrieved-on date, and the authority select. They asked the user to
 // vouch for a source at the moment of prediction, which is the wrong moment:
 // the citation is a property of the event, not of one matchup, and entering it
-// per-bout invited both busywork and half-filled citations. Sourcing is now
-// exclusively retrospective, through <ProvenanceExportControls>.
+// per-bout invited both busywork and half-filled citations. The retrospective
+// <ProvenanceExportControls> workflow that replaced it has since been removed
+// from the production UI as well (see provenanceExportUiRemoved.test.js); bout
+// provenance is no longer collected anywhere in the app. The DOMAIN gate is
+// untouched, which is why (3) below still holds.
 //
 // What must remain true after that removal, and is asserted below:
-//   1. the three controls are gone from the Simulator (and only from there --
-//      ProvenanceExportControls still has its own Authority control),
+//   1. the three controls are gone from the Simulator,
 //   2. the Simulator still collects and still SAVES division/title/rounds,
 //   3. a Simulator save fabricates no provenance: it is an honest null, and the
 //      export gate still refuses to copy it until a source is supplied.
@@ -80,18 +82,15 @@ describe('(1) the three bout-provenance controls no longer render in the Simulat
     expect(SIMULATOR).not.toContain('provenance:');
   });
 
-  // The removal is scoped to the Simulator: the retrospective repair workflow
-  // keeps every one of its own provenance inputs.
-  it('keeps ProvenanceExportControls and its Authority input intact', () => {
-    const start = APP.indexOf('function ProvenanceExportControls(');
-    expect(start, 'ProvenanceExportControls not found').toBeGreaterThan(-1);
-    const end = APP.indexOf('function UpcomingEventTab(', start);
-    expect(end, 'component after ProvenanceExportControls not found').toBeGreaterThan(start);
-    const exportControls = APP.slice(start, end);
-    expect(exportControls).toContain('aria-label="Authority"');
-    expect(exportControls).toContain('normalizeExportProvenance');
-    expect(APP).toContain('applyEventProvenance');
-    expect(APP).toContain('onApplyEventProvenance');
+  // Superseded: this used to assert that ProvenanceExportControls SURVIVED,
+  // because PR #30's removal was scoped to the Simulator. The component has
+  // since been removed from the production UI entirely, so the Simulator is no
+  // longer the only place without these inputs -- nowhere has them. The
+  // UI-wide absence is asserted in provenanceExportUiRemoved.test.js; what
+  // remains this file's job is that the Simulator itself stays clean.
+  it('no longer routes the user to a retrospective sourcing control', () => {
+    expect(APP).not.toContain('ProvenanceExportControls');
+    expect(APP).not.toContain('onApplyEventProvenance');
   });
 });
 

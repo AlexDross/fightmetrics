@@ -126,21 +126,7 @@ import {
   describeBoutContextSuffix,
   missingBoutContextFields,
   hasUnknownBoutContext,
-  PROVENANCE_AUTHORITIES,
 } from './domain/boutContext';
-// Provenance export gate + retrospective event-level repair. The single choke
-// point that makes it impossible to copy paste-ready data whose bout context
-// lacks a complete official/secondary source.
-import {
-  buildExportedCode,
-  ProvenanceExportError,
-  applyEventProvenance,
-  InvalidProvenanceInputError,
-  offendingEvents,
-  normalizeExportProvenance,
-  eventKey,
-  PROVENANCE_REQUIRED_FIELDS,
-} from './domain/provenance';
 
 // Foundation Stage 3: extracted verbatim -- see src/domain/statistics/index.js
 import {
@@ -2471,135 +2457,13 @@ function BuildParlayPanel({ legInputs, onConfirm, onCancel }) {
   );
 }
 
-// Gated "Copy Updated …Data.js" control + retrospective event-level provenance
-// repair. Used by BOTH the Upcoming and ROI export points so the guard cannot
-// drift between them.
-//
-// The copy button never emits paste-ready data whose bout context lacks a
-// complete official/secondary source: buildExportedCode throws and this shows an
-// actionable error naming every affected record. To unblock, the user supplies
-// the event's real source (URL / retrieved date / authority) once and applies it
-// to that event — which sets TOP-LEVEL provenance only, never the capture-time
-// audit copy. Nothing is fabricated: the current date is never auto-filled and
-// no URL is guessed.
-function ProvenanceExportControls({ varName, fileLabel, entries, onApplyEventProvenance }) {
-  const [feedback, setFeedback] = useState(null); // { type: 'ok' | 'err', text }
-  const [forms, setForms] = useState({}); // eventKey(name, date) -> { sourceUrl, retrievedAt, authority }
-  const offenders = useMemo(() => offendingEvents(entries), [entries]);
-  const keyOf = (ev) => eventKey(ev.eventName, ev.eventDate);
-
-  const handleCopy = async () => {
-    try {
-      const code = buildExportedCode(varName, entries);
-      await navigator.clipboard.writeText(code);
-      setFeedback({ type: 'ok', text: `Copied ${fileLabel} (${entries.length} record${entries.length === 1 ? '' : 's'}).` });
-    } catch (e) {
-      const text = e instanceof ProvenanceExportError ? e.message : `Copy failed: ${e.message}`;
-      setFeedback({ type: 'err', text });
-    }
-  };
-
-  const handleApply = (ev) => {
-    const raw = forms[keyOf(ev)] ?? {};
-    const norm = normalizeExportProvenance(raw);
-    if (!norm.ok) {
-      setFeedback({ type: 'err', text: `Cannot apply to ${ev.eventName} ${ev.eventDate}: ${norm.errors.join('; ')}.` });
-      return;
-    }
-    try {
-      onApplyEventProvenance({ eventName: ev.eventName, eventDate: ev.eventDate }, norm.provenance);
-      setFeedback({
-        type: 'ok',
-        text: `Applied source to ${ev.eventName} ${ev.eventDate} (${ev.count} record${ev.count === 1 ? '' : 's'}). Top-level provenance only — capture-time audit left unchanged.`,
-      });
-    } catch (e) {
-      const text = e instanceof InvalidProvenanceInputError ? e.message : `Apply failed: ${e.message}`;
-      setFeedback({ type: 'err', text });
-    }
-  };
-
-  const setField = (ev, field, value) =>
-    setForms((prev) => ({ ...prev, [keyOf(ev)]: { ...(prev[keyOf(ev)] ?? {}), [field]: value } }));
-
-  return (
-    <div className="flex flex-col items-end gap-2">
-      <button
-        onClick={handleCopy}
-        title={offenders.length ? `${offenders.length} event(s) still need a source before this exports cleanly` : undefined}
-        className="px-3 py-2 rounded-lg border border-slate-700 text-slate-300 text-xs font-semibold hover:text-white hover:border-slate-600 transition-colors"
-      >
-        Copy Updated {fileLabel}
-      </button>
-
-      {offenders.length > 0 && (
-        <div className="w-full max-w-md rounded-lg border border-amber-700/60 bg-amber-950/30 p-3 text-left">
-          <p className="text-amber-300 text-xs font-semibold mb-2">
-            {offenders.reduce((n, e) => n + e.count, 0)} record(s) in {offenders.length} event(s) need a verified source
-            before {fileLabel} can be copied. Enter the event's official/secondary source, then apply:
-          </p>
-          <div className="flex flex-col gap-3">
-            {offenders.map((ev) => {
-              const f = forms[keyOf(ev)] ?? {};
-              return (
-                <div key={keyOf(ev)} className="rounded-md border border-slate-700 p-2">
-                  <p className="text-slate-200 text-xs font-semibold mb-1">
-                    {ev.eventName} · {ev.eventDate} · {ev.count} record{ev.count === 1 ? '' : 's'}
-                  </p>
-                  <div className="flex flex-col gap-1.5">
-                    <input
-                      type="url"
-                      inputMode="url"
-                      placeholder="Source URL (e.g. official UFC event page)"
-                      value={f.sourceUrl ?? ''}
-                      onChange={(e) => setField(ev, 'sourceUrl', e.target.value)}
-                      className="px-2 py-1 rounded bg-slate-900 border border-slate-700 text-slate-200 text-xs"
-                    />
-                    <div className="flex gap-1.5">
-                      <input
-                        type="date"
-                        aria-label="Retrieved date"
-                        value={f.retrievedAt ?? ''}
-                        onChange={(e) => setField(ev, 'retrievedAt', e.target.value)}
-                        className="px-2 py-1 rounded bg-slate-900 border border-slate-700 text-slate-200 text-xs flex-1"
-                      />
-                      <select
-                        aria-label="Authority"
-                        value={f.authority ?? ''}
-                        onChange={(e) => setField(ev, 'authority', e.target.value || undefined)}
-                        className="px-2 py-1 rounded bg-slate-900 border border-slate-700 text-slate-200 text-xs"
-                      >
-                        <option value="">authority…</option>
-                        {PROVENANCE_AUTHORITIES.map((a) => (
-                          <option key={a} value={a}>{a}</option>
-                        ))}
-                      </select>
-                    </div>
-                    <button
-                      onClick={() => handleApply(ev)}
-                      className="self-start px-2 py-1 rounded border border-blue-700 text-blue-300 text-xs font-semibold hover:text-white hover:border-blue-500 transition-colors"
-                    >
-                      Apply source to this event
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-          <p className="text-muted text-[10px] mt-2">
-            Requires {PROVENANCE_REQUIRED_FIELDS.join(', ')}. Nothing is auto-filled: enter the source you actually verified.
-          </p>
-        </div>
-      )}
-
-      {feedback && (
-        <p className={`text-xs max-w-md whitespace-pre-line text-left ${feedback.type === 'ok' ? 'text-emerald-400' : 'text-red-400'}`}>
-          {feedback.text}
-        </p>
-      )}
-    </div>
-  );
-}
-
+// modelToggle / setModelToggle are wired but uncalled. The ['v1','v2'] toggle
+// was hidden 2026-07-22 per the single-model view (v2 only); it used to sit in
+// the fights-tab header row, which no longer exists. modelToggle is App-level
+// state, still useState('v2') by default -- left wired rather than unwound, so
+// restoring the toggle means re-adding a button block that calls
+// setModelToggle(v). modelPickByEntryId's pA/pB selection and the "v2" badge
+// below are now permanently on the v2 branch.
 function UpcomingEventTab({
   entries,
   onGrade,
@@ -2616,15 +2480,12 @@ function UpcomingEventTab({
   parlayEntries,
   roiEntries,
   onDeleteParlay,
-  onApplyEventProvenance,
 }) {
   const fighterMap = useMemo(() => {
     const m = new Map();
     (allFighters ?? []).forEach((f) => m.set(f.FIGHTER, f));
     return m;
   }, [allFighters]);
-  // Fights export goes through the provenance-gated <ProvenanceExportControls>
-  // below (buildExportedCode), which validates before serializing.
   // Same builders ROITab uses for its own Props/Parlays export buttons --
   // one serialization each, reused here for the Upcoming-side access point.
   const propsExportedCode = buildPropsExportedCode(propPicks);
@@ -2811,30 +2672,6 @@ function UpcomingEventTab({
             Save matchups from the Simulator to track pending picks.
           </p>
         </div>
-        {subTab === 'fights' && (
-          <div className="hidden sm:flex items-start gap-2">
-            {/* Ungated on entries.length -- an empty array is still a valid,
-                meaningful export (a fully-graded/cleared card), and hiding the
-                button once the last entry leaves made a clean upcomingData.js
-                impossible to produce. The gate is provenance, not count: the
-                shared control refuses to copy any bout-context record that lacks
-                a complete official/secondary source, and offers per-event repair. */}
-            <ProvenanceExportControls
-              varName="UPCOMING_ENTRIES"
-              fileLabel="upcomingData.js"
-              entries={entries}
-              onApplyEventProvenance={onApplyEventProvenance}
-            />
-            {/* v1 toggle hidden 2026-07-22 per single-model view (v2 only) --
-                restore by re-adding the ['v1','v2'] button block that used to
-                sit here (called setModelToggle(v)). modelToggle is App-level
-                state (App.js ~9041), still passed down as a prop and still
-                useState('v2') by default -- left wired-but-uncalled here
-                rather than unwound, so restoring is just re-adding the
-                buttons. modelPickByEntryId's pA/pB selection and the "v2"
-                badge below are now permanently on the v2 branch. */}
-          </div>
-        )}
         {subTab === 'props' && (
           <button
             onClick={() => navigator.clipboard.writeText(propsExportedCode)}
@@ -2970,7 +2807,7 @@ function UpcomingEventTab({
                       onClick={() => {
                         const label = `${entry.fighterA} vs. ${entry.fighterB}`;
                         const meta = [entry.eventName, entry.eventDate].filter(Boolean).join(' · ');
-                        if (window.confirm(`Delete this pick?\n\n${label}${meta ? `\n${meta}` : ''}\n\nThis cannot be undone unless you've already run "Copy Updated upcomingData.js".`)) {
+                        if (window.confirm(`Delete this pick?\n\n${label}${meta ? `\n${meta}` : ''}\n\nThis cannot be undone.`)) {
                           onDelete(entry.id);
                         }
                       }}
@@ -4817,8 +4654,8 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
   // saved prediction can never have been computed under different context than
   // the one the user was looking at. No provenance is attached here: the
   // Simulator does not collect a citation, and inventing one would be worse
-  // than the honest null the export gate already knows how to demand. A saved
-  // entry's source is supplied retrospectively by <ProvenanceExportControls>.
+  // than the honest null the domain gate already knows how to demand. Bout
+  // provenance is not collected anywhere in the UI.
   const boutContext = useMemo(
     () =>
       normalizeBoutContext({
@@ -7375,17 +7212,6 @@ export default function App() {
     setUpcomingEntries((prev) => removePendingEntry(prev, id));
   };
 
-  // Retrospective, event-scoped provenance repair. Sets TOP-LEVEL
-  // boutContext.provenance on the selected event's context-bearing records only;
-  // applyEventProvenance never touches the capture-time audit copy and never
-  // fabricates (it throws on incomplete input, surfaced by the caller).
-  const handleApplyUpcomingProvenance = (selector, provenance) => {
-    setUpcomingEntries((prev) => applyEventProvenance(prev, selector, provenance));
-  };
-  const handleApplyRoiProvenance = (selector, provenance) => {
-    setRoiEntries((prev) => applyEventProvenance(prev, selector, provenance));
-  };
-
   const handleUpdateUpcomingEntry = (id, patch) => {
     setUpcomingEntries((prev) =>
       prev.map((entry) => (entry.id === id ? { ...entry, ...patch } : entry))
@@ -7434,7 +7260,6 @@ export default function App() {
           parlayEntries={parlayEntries}
           roiEntries={roiEntries}
           onDeleteParlay={handleDeleteParlay}
-          onApplyEventProvenance={handleApplyUpcomingProvenance}
         />
       )}
       {view === 'explore' && <ExploreTab allFighters={fightersWithProspectsFiltered} />}
@@ -7454,7 +7279,6 @@ export default function App() {
           onDeletePropPick={handleDeletePropPick}
           parlayEntries={parlayEntries}
           onDeleteParlay={handleDeleteParlay}
-          onApplyEventProvenance={handleApplyRoiProvenance}
         />
       )}
       {view === 'statistics' && (
@@ -7899,11 +7723,7 @@ function ROITab({
   onDeletePropPick,
   parlayEntries,
   onDeleteParlay,
-  onApplyEventProvenance,
 }) {
-  // ROI fights export goes through the provenance-gated
-  // <ProvenanceExportControls> below (buildExportedCode), which validates before
-  // serializing.
   // Mirrors exportedCode above, but serializes the live propPicks state (the
   // same state onGradePropPick/onAddPropPick mutate) rather than roiEntries --
   // props stay isolated from ROI_ENTRIES even in the export path.
@@ -8230,22 +8050,8 @@ function ROITab({
           </p>
         </div>
         <div className="hidden sm:flex items-center gap-2">
-          {!isProps && !isParlays && (
+          {!isProps && !isParlays && entries.length > 0 && (
             <>
-            {/* Ungated on entries.length -- an empty array is still a valid,
-                meaningful export (a fully-cleared ROI history), and hiding
-                the button once the last entry left made a clean roiData.js
-                impossible to produce. Confirm All / Clear All stay gated
-                below -- both are meaningless with zero entries. */}
-            <ProvenanceExportControls
-              varName="ROI_ENTRIES"
-              fileLabel="roiData.js"
-              entries={entries}
-              onApplyEventProvenance={onApplyEventProvenance}
-            />
-
-            {entries.length > 0 && (
-              <>
               {displayedEntries.some((e) => e.autoGenerated && e.confirmedByUser === false) && (
                 <button
                   onClick={() =>
@@ -8270,7 +8076,7 @@ function ROITab({
                 onClick={() => {
                   const count = entries.length;
                   const step1 = window.confirm(
-                    `Clear ALL ${count} ROI ${count === 1 ? 'entry' : 'entries'}?\n\nThis permanently deletes your entire graded bet history — every tracked pick, all P&L, everything.\n\nThis is NOT recoverable unless you've already run "Copy Updated roiData.js" and saved the result somewhere.\n\nClick OK to continue to the final confirmation.`
+                    `Clear ALL ${count} ROI ${count === 1 ? 'entry' : 'entries'}?\n\nThis permanently deletes your entire graded bet history — every tracked pick, all P&L, everything.\n\nThis is NOT recoverable.\n\nClick OK to continue to the final confirmation.`
                   );
                   if (!step1) return;
                   const typed = window.prompt(
@@ -8287,8 +8093,6 @@ function ROITab({
               >
                 Clear All
               </button>
-              </>
-            )}
             </>
           )}
           {isProps && (
@@ -8626,7 +8430,7 @@ function ROITab({
                         const label = `${entry.fighterA} vs. ${entry.fighterB}`;
                         const meta = [entry.eventName, entry.eventDate].filter(Boolean).join(' · ');
                         const result = entry.actualWinner && entry.actualWinner !== '' ? `Result: ${entry.actualWinner}` : 'Result: Pending';
-                        if (window.confirm(`Delete this graded pick?\n\n${label}${meta ? `\n${meta}` : ''}\n${result}\n\nThis cannot be undone unless you've already run "Copy Updated roiData.js".`)) {
+                        if (window.confirm(`Delete this graded pick?\n\n${label}${meta ? `\n${meta}` : ''}\n${result}\n\nThis cannot be undone.`)) {
                           onDeleteEntry(entry.id);
                         }
                       }}
