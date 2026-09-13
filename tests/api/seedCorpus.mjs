@@ -2,10 +2,9 @@
 // builds it.
 //
 // This is not a fixture. It is the same `migrateV0ToV1` output the in-memory
-// repositories are tested against, run over the CURRENTLY BUNDLED ROI, upcoming
-// and prop data, so `fm_rpc_seed_store` is proven on real migration output — for
-// THIS harness corpus, which is not identical to the production one (see the
-// parlay note below).
+// repositories are tested against, run over the CURRENTLY BUNDLED ROI, upcoming,
+// prop and parlay data, so `fm_rpc_seed_store` is proven on real migration output
+// — on the SAME input the hosted rollout will seed from.
 //
 // Because those inputs are live — every graded card and every new event moves
 // them — this module deliberately publishes no fixed sizes. Callers must assert
@@ -14,16 +13,19 @@
 // written down in a test is correct only until the next data refresh, and the
 // suite has already been broken once that way.
 //
-// `parlayEntries: []` matches the contract suite: parlays live in parlayData.js
-// but are deliberately withheld from the migration harness, so `SEED_STORE.parlays`
-// is empty by construction. **That is a test-harness choice, not deletion of
-// production data** — the entries in parlayData.js are untouched — and it is why
-// `ROOT_COUNT` reduces to the prediction-run and prop roots alone. It is also why
-// the hosted rollout cannot seed from this corpus: Gate 5 must rebuild and
-// reconcile the complete migration input, parlays included, first.
+// Parlays are now INCLUDED. This harness previously passed `parlayEntries: []`,
+// which made `SEED_STORE.parlays` empty by construction and meant the corpus this
+// suite proved `fm_rpc_seed_store` against was not the corpus Gate 5 would seed —
+// the one documented blocker on any hosted seed. It now passes the real
+// `PARLAY_ENTRIES`, so the harness corpus and the production migration input are
+// the SAME input, and `ROOT_COUNT` carries prediction-run, prop AND parlay roots.
+// `migrateV0ToV1` resolves every parlay leg's `fightId` to a migrated bout; a leg
+// that did not resolve would surface as a migration error rather than a silent
+// drop, so inclusion is verified rather than assumed.
 import { ROI_ENTRIES } from '../../src/roiData.js';
 import { UPCOMING_ENTRIES } from '../../src/upcomingData.js';
 import { PROP_PICKS } from '../../src/propPicksData.js';
+import { PARLAY_ENTRIES } from '../../src/parlayData.js';
 import { migrateV0ToV1 } from '../../src/data/migration/migrateV0ToV1.mjs';
 
 // Fixed deps, so the corpus is byte-identical on every run and in every
@@ -35,7 +37,7 @@ const deps = {
 
 export const { store: SEED_STORE } = migrateV0ToV1(
   { roiEntries: ROI_ENTRIES, upcomingEntries: UPCOMING_ENTRIES,
-    propPicks: PROP_PICKS, parlayEntries: [] },
+    propPicks: PROP_PICKS, parlayEntries: PARLAY_ENTRIES },
   deps
 );
 

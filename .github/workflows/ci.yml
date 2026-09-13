@@ -195,7 +195,12 @@ jobs:
       # `supabase/` directory on the runner's own Docker: no project ref, no
       # `supabase link`, no `--linked`, no hosted credentials and no production
       # data. `npm run db:start` is the committed command, so CI exercises the
-      # same full stack a developer does.
+      # same stack a developer does — as of 2026-09-13 that is the MINIMAL
+      # service set (db, kong, rest, auth), not the full one. Those four are
+      # everything `test:db` and `test:api` touch; the excluded ancillary
+      # services cannot start inside this project's 2.0 GB Docker VM and used to
+      # take the whole stack down with them. `db:start:full` keeps the
+      # unrestricted form available for a machine with room for it.
       #
       # OUTPUT IS SUPPRESSED, and that is load-bearing rather than tidiness: on a
       # successful start the CLI prints the local anon key, the service-role /
