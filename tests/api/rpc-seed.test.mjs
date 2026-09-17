@@ -5,16 +5,18 @@
 // authored by the seed RPC itself and cannot be confused with fixture SQL.
 //
 // The payload is the REAL migrated harness corpus (see seedCorpus.mjs), not a
-// fixture: it is `migrateV0ToV1` run over the currently bundled ROI, upcoming
-// and prop data. What these tests prove is seed fidelity FOR THAT CORPUS — real
-// migration output, real HTTP, real settlement — rather than a hand-built shape
-// chosen to be easy to seed.
+// fixture: it is `migrateV0ToV1` run over the currently bundled ROI, upcoming,
+// prop AND parlay data. What these tests prove is seed fidelity FOR THAT CORPUS
+// — real migration output, real HTTP, real settlement — rather than a hand-built
+// shape chosen to be easy to seed.
 //
-// It is NOT the exact corpus production will hold. The harness deliberately
-// passes `parlayEntries: []` (see seedCorpus.mjs), while the production data
-// carries parlays. Gate 5 must rebuild and reconcile the complete latest
-// migration input, parlays included, before it seeds anything hosted; this suite
-// does not stand in for that step.
+// It is the SAME migration input the hosted rollout will seed from. Until
+// 2026-09-13 the harness passed `parlayEntries: []`, so parlays were absent from
+// everything this suite proved; that gap is closed (see seedCorpus.mjs) and the
+// four bundled parlays and their fifteen legs now travel the full seed path.
+// What remains outside this suite is the hosted execution itself: Gate 5 still
+// re-derives the corpus from the data committed at that moment, since bundled
+// data keeps moving.
 //
 // Corpus SIZE is mutable — bundled data grows every time a card is added or
 // graded — so no cardinality is written down in this file. Every count is derived
@@ -180,12 +182,22 @@ describe('the initial seed', () => {
       SELECT count(*) FROM app_private.seed_items
        WHERE workspace_id='${WS_SEED}' AND first_seed_version='${SEED_V1}';`))
       .toBe(String(ROOT_COUNT));
-    // Root types are exactly the three the ledger recognises, in the derived split.
+    // Root types are exactly the three the ledger recognises, in the derived
+    // split. Built by GROUP BY, so a root type the corpus has none of produces
+    // no row at all and must be omitted from the expectation rather than
+    // written as `=0` — which is why this is filtered, not transcribed. (It was
+    // transcribed, listing only two of the three, and silently agreed with the
+    // database for exactly as long as the harness withheld parlays.)
+    const expectedSplit = [
+      ['parlay', SEED_STORE.parlays.length],
+      ['predictionRun', SEED_STORE.predictionRuns.length],
+      ['prop', SEED_STORE.props.length],
+    ].filter(([, n]) => n > 0).map(([t, n]) => `${t}=${n}`).join(',');
     expect(catalogScalar(`
       SELECT string_agg(root_type || '=' || n, ',' ORDER BY root_type) FROM (
         SELECT root_type, count(*) AS n FROM app_private.seed_items
          WHERE workspace_id='${WS_SEED}' GROUP BY root_type) s;`))
-      .toBe(`predictionRun=${SEED_STORE.predictionRuns.length},prop=${SEED_STORE.props.length}`);
+      .toBe(expectedSplit);
   });
 
   it('a virgin workspace adopts the store meta; seed_version is recorded', async () => {
@@ -372,11 +384,13 @@ describe('seeding is idempotent', () => {
   });
 });
 
-// This block runs against the REAL migrated corpus, which currently has zero
-// pending roots: every prediction in it is graded. It therefore no longer
-// deletes a pending run of its own, and it must not invent one — a synthetic
-// Upcoming record would make the fixture disagree with the committed data it
-// exists to exercise.
+// This block runs against the REAL migrated corpus, whose pending side depends
+// entirely on when the bundled data was last graded — it has been zero, and at
+// the time of writing is not. It therefore does not delete a pending run of its
+// own, and it must not invent one — a synthetic Upcoming record would make the
+// fixture disagree with the committed data it exists to exercise. Every
+// assertion below is derived from PENDING_RUN_IDS / GRADED_RUN_IDS so that the
+// block is correct for either state.
 //
 // Pending-run deletion is covered independently, so nothing is lost:
 //   * rpc-delete.test.mjs        — deleting a pending run and creating its
