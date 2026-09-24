@@ -5324,7 +5324,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "0:36",
-      "wc": "Unknown",
+      "wc": "Featherweight",
       "tb": false,
       "ev": "Noche UFC: Silva vs. Delgado"
     }
@@ -5337,7 +5337,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "0:36",
-      "wc": "Unknown",
+      "wc": "Featherweight",
       "tb": false,
       "ev": "Noche UFC: Silva vs. Delgado"
     }
