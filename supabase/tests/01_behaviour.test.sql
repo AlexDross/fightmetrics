@@ -48,6 +48,10 @@ GRANT fm_table_owner TO postgres WITH SET TRUE, INHERIT FALSE;
 SET LOCAL ROLE fm_table_owner;
 SET LOCAL search_path = public, extensions;
 
+-- The document-store migration pre-creates the production 'fightmetrics'
+-- workspace (empty). Replace it with this fixture's fixed-id row; ROLLBACK
+-- restores it.
+DELETE FROM app_private.workspaces WHERE slug = 'fightmetrics';
 INSERT INTO app_private.workspaces (id, slug, is_public, schema_version, migrated_at)
 VALUES ('aaaaaaaa-0000-4000-8000-000000000001', 'fightmetrics', true, 1, now());
 

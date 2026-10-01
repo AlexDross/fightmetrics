@@ -189,6 +189,18 @@ import { isChampionRecord } from './domain/rankings/current.js';
 // @supabase/supabase-js, a raw client, a transport response type or an fm_* RPC
 // name. Proven by src/auth/__tests__/appBoundary.test.mjs.
 import AuthFooterPanel from './auth/AuthFooterPanel.jsx';
+import { useDocumentStore } from './store/useDocumentStore.js';
+import SaveStatus from './store/SaveStatus.jsx';
+
+// The bundled snapshot: the dataset in local (unconfigured) mode, and the
+// fallback the document store shows while loading or when the server is
+// unreachable. Module-level so its identity is stable across renders.
+const BUNDLED_COLLECTIONS = Object.freeze({
+  upcoming: UPCOMING_ENTRIES,
+  roi: ROI_ENTRIES,
+  propPicks: PROP_PICKS,
+  parlays: PARLAY_ENTRIES,
+});
 
 
 const ufcRankLabel = (r) => {
@@ -2289,10 +2301,13 @@ const methodColor = (m) => {
 export const MODEL_VERSION = 'DrossPom Composite v1.0 · Logistic v2.0';
 
 // Local edit buffer (separate from the committed value) so a controlled
-// number input can hold an in-progress "2." without React snapping it back
-// to "2" on every keystroke -- only well-formed numbers get committed up.
+// number input can hold an in-progress "2." without React snapping it back.
+// Commits ONCE, on blur or Enter -- each commit is a server write -- and
+// resyncs from the saved value whenever it is not being edited.
 function UnitsStakedInput({ value, onCommit, id, ariaLabel, describedBy }) {
   const [raw, setRaw] = useState(String(value));
+  const [editing, setEditing] = useState(false);
+  useEffect(() => { if (!editing) setRaw(String(value)); }, [value, editing]);
   return (
     <input
       id={id}
@@ -2302,14 +2317,36 @@ function UnitsStakedInput({ value, onCommit, id, ariaLabel, describedBy }) {
       step="0.1"
       min="0"
       value={raw}
-      onChange={(e) => {
-        const next = e.target.value;
-        setRaw(next);
-        const n = Number(next);
-        if (next !== '' && !Number.isNaN(n)) onCommit(n);
+      onFocus={() => setEditing(true)}
+      onChange={(e) => setRaw(e.target.value)}
+      onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.blur(); }}
+      onBlur={() => {
+        setEditing(false);
+        const n = Number(raw);
+        if (raw !== '' && !Number.isNaN(n) && n !== value) onCommit(n);
+        else setRaw(String(value));
       }}
-      onBlur={() => setRaw(String(value))}
       className="w-20 bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-1.5 focus:border-red-500"
+    />
+  );
+}
+
+// A text input that edits a local buffer and commits once, on blur or Enter --
+// for fields whose every commit is a server write. Resyncs from `value`
+// whenever it is not being edited.
+function BufferedTextInput({ value, onCommit, ...props }) {
+  const [raw, setRaw] = useState(value);
+  const [editing, setEditing] = useState(false);
+  useEffect(() => { if (!editing) setRaw(value); }, [value, editing]);
+  return (
+    <input
+      {...props}
+      type="text"
+      value={raw}
+      onFocus={() => setEditing(true)}
+      onChange={(e) => setRaw(e.target.value)}
+      onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.blur(); }}
+      onBlur={() => { setEditing(false); if (raw !== value) onCommit(raw); }}
     />
   );
 }
@@ -5218,8 +5255,9 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                     unitsWagered: unitsWagered.trim() ? Number(unitsWagered) : 1,
                     boutContext,
                   });
-                  onSaveToUpcoming?.(entry);
-                  setSaveFeedback('Saved to Upcoming.');
+                  Promise.resolve(onSaveToUpcoming?.(entry)).then((ok) => {
+                    setSaveFeedback(ok === false ? 'Not saved — see the status message.' : 'Saved to Upcoming.');
+                  });
                 }}
                 className="px-4 py-2 rounded-lg border border-blue-700 text-blue-300 text-sm font-semibold hover:text-white hover:border-blue-500 transition-colors disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:text-blue-300 disabled:hover:border-blue-700"
               >
@@ -7087,19 +7125,25 @@ export default function App() {
   // today's entries are included.
   const now = new Date();
   const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-  // Excludes anything already graded in ROI_ENTRIES (the raw file import, not
-  // derived roiEntries state -- this runs before that state exists) so a
-  // stale upcomingData.js export can't resurrect a graded fight as a ghost
-  // pending entry on reload. Matches by id, which buildRoiEntry/
-  // handleGradeUpcoming stamp once and carry unchanged from Upcoming into
-  // ROI. Composes with isUpcomingVisible rather than replacing it -- both
-  // conditions must hold.
-  const [upcomingEntries, setUpcomingEntries] = useState(() =>
-    filterVisibleUpcoming(UPCOMING_ENTRIES, ROI_ENTRIES, today)
+  // The four collections come from the document store: Supabase when
+  // configured, the bundled snapshot otherwise (see useDocumentStore).
+  const store = useDocumentStore(BUNDLED_COLLECTIONS);
+  const {
+    upcoming: storedUpcoming, roi: storedRoi, propPicks, parlays: parlayEntries,
+  } = store.collections;
+  // Excludes anything already graded in ROI (matched by id, which
+  // buildRoiEntry/handleGradeUpcoming stamp once and carry unchanged from
+  // Upcoming into ROI) so a stale pending copy can't resurrect a graded fight
+  // as a ghost entry. Composes with isUpcomingVisible -- both must hold.
+  const upcomingEntries = useMemo(
+    () => filterVisibleUpcoming(storedUpcoming, storedRoi, today),
+    [storedUpcoming, storedRoi, today]
   );
-  const [roiEntries, setRoiEntries] = useState(() => {
+  // Display-only enrichment: older rows predate finish projections, so they
+  // are computed at read time and never written back.
+  const roiEntries = useMemo(() => {
     const fightersByName = Object.fromEntries(FIGHTERS.map((f) => [f.FIGHTER, f]));
-    return ROI_ENTRIES.map((entry) => {
+    return storedRoi.map((entry) => {
       if (entry.projectedFinish !== undefined) return entry;
       const fA = fightersByName[entry.fighterA];
       const fB = fightersByName[entry.fighterB];
@@ -7114,7 +7158,7 @@ export default function App() {
         actualFinish: entry.actualFinish ?? '',
       };
     });
-  });
+  }, [storedRoi]);
 
   const fightersWithProspectsFiltered = useMemo(() => FIGHTERS, []);
 
@@ -7133,90 +7177,65 @@ export default function App() {
     [roiEntries, prospectNameSet]
   );
 
-  const handleSavePrediction = (entry) => {
-    setRoiEntries((prev) => [entry, ...prev]);
-  };
+  // Every handler below builds document ops and commits them as ONE atomic
+  // batch. Updates are built LAZILY from the store's current collections (the
+  // function form of commit), and merge into the STORED object -- never the
+  // display-enriched one, so read-time projections are not persisted.
+  const put = (collection, payload) => ({ op: 'put', collection, payload });
+  const del = (collection, id) => ({ op: 'delete', collection, id });
+  const find = (c, collection, id) => c[collection].find((e) => e.id === id);
+  const patch = (collection, id, fields) => store.commit((c) => {
+    const current = find(c, collection, id);
+    return current ? [put(collection, { ...current, ...fields })] : [];
+  });
 
-  const handleUpdateROIEntry = (id, patch) => {
-    setRoiEntries((prev) =>
-      prev.map((entry) => (entry.id === id ? { ...entry, ...patch } : entry))
-    );
-  };
+  const handleSavePrediction = (entry) => store.commit([put('roi', entry)]);
 
-  const handleDeleteROIEntry = (id) => {
-    setRoiEntries((prev) => prev.filter((entry) => entry.id !== id));
-  };
+  const handleUpdateROIEntry = (id, fields) => patch('roi', id, fields);
 
-  const handleClearROI = () => {
-    setRoiEntries([]);
-  };
+  const handleDeleteROIEntry = (id) => store.commit([del('roi', id)]);
 
-  // Isolated Props state -- entirely separate from roiEntries/upcomingEntries,
+  const handleClearROI = () => store.commit((c) => c.roi.map((e) => del('roi', e.id)));
+
+  // Props and parlays stay isolated from roi/upcoming -- separate collections,
   // never read by or merged into any model-related computation.
-  const [propPicks, setPropPicks] = useState(PROP_PICKS);
+  const handleAddPropPick = (pick) => store.commit([put('propPicks', pick)]);
 
-  const handleAddPropPick = (pick) => {
-    setPropPicks((prev) => [pick, ...prev]);
-  };
+  const handleGradePropPick = (id, result) => patch('propPicks', id, { result });
 
-  const handleGradePropPick = (id, result) => {
-    setPropPicks((prev) =>
-      prev.map((p) => (p.id === id ? { ...p, result } : p))
-    );
-  };
+  const handleDeletePropPick = (id) => store.commit([del('propPicks', id)]);
 
-  const handleDeletePropPick = (id) => {
-    setPropPicks((prev) => prev.filter((p) => p.id !== id));
-  };
+  const handleAddParlay = (parlay) => store.commit([put('parlays', parlay)]);
 
-  // Isolated Parlay state -- entirely separate from roiEntries/upcomingEntries/
-  // propPicks, never read by or merged into any model-related computation.
-  // Grading (added in a later commit) will read roiEntries read-only to
-  // resolve each leg's actual winner; it will never write parlay data back
-  // into roiEntries/upcomingEntries.
-  const [parlayEntries, setParlayEntries] = useState(PARLAY_ENTRIES);
+  const handleUpdateParlay = (id, fields) => patch('parlays', id, fields);
 
-  const handleAddParlay = (parlay) => {
-    setParlayEntries((prev) => [parlay, ...prev]);
-  };
-
-  const handleUpdateParlay = (id, patch) => {
-    setParlayEntries((prev) =>
-      prev.map((p) => (p.id === id ? { ...p, ...patch } : p))
-    );
-  };
-
-  const handleDeleteParlay = (id) => {
-    setParlayEntries((prev) => prev.filter((p) => p.id !== id));
-  };
+  const handleDeleteParlay = (id) => store.commit([del('parlays', id)]);
 
   const handleSaveToUpcoming = (entry) => {
-    setUpcomingEntries((prev) => addPendingEntry(prev, entry));
+    // addPendingEntry returns its input unchanged for an already-pending
+    // matchup: a duplicate save is a silent no-op, as before.
+    if (addPendingEntry(upcomingEntries, entry) === upcomingEntries) return Promise.resolve(true);
+    return store.commit([put('upcoming', entry)]);
   };
 
-  const handleSaveToUpcomingAndOpen = (entry) => {
-    handleSaveToUpcoming(entry);
+  const handleSaveToUpcomingAndOpen = async (entry) => {
+    const ok = await handleSaveToUpcoming(entry);
     // Programmatic navigation (this is a side effect of saving, not a link the
     // user clicked). Pushes, so Back returns to the Simulator.
-    navigate(pathForView('upcoming'));
+    if (ok) navigate(pathForView('upcoming'));
+    return ok;
   };
 
-  const handleGradeUpcoming = (id, actualWinner) => {
-    const entry = upcomingEntries.find((e) => e.id === id);
-    if (!entry) return;
-    setRoiEntries((prev) => [createGradedEntry(entry, actualWinner), ...prev]);
-    setUpcomingEntries((prev) => removePendingEntry(prev, id));
-  };
+  // Grading moves the entry: delete from upcoming and create in roi in the
+  // same batch, so it can never exist in both or neither.
+  const handleGradeUpcoming = (id, actualWinner) => store.commit((c) => {
+    const entry = find(c, 'upcoming', id);
+    return entry ? [del('upcoming', id), put('roi', createGradedEntry(entry, actualWinner))] : [];
+  });
 
-  const handleDeleteUpcoming = (id) => {
-    setUpcomingEntries((prev) => removePendingEntry(prev, id));
-  };
+  const handleDeleteUpcoming = (id) => store.commit([del('upcoming', id)]);
 
-  const handleUpdateUpcomingEntry = (id, patch) => {
-    setUpcomingEntries((prev) =>
-      prev.map((entry) => (entry.id === id ? { ...entry, ...patch } : entry))
-    );
-  };
+  const handleUpdateUpcomingEntry = (id, fields) => patch('upcoming', id, fields);
 
   return (
     <div
@@ -7224,6 +7243,7 @@ export default function App() {
     >
       <Header view={view} />
       {belowSm && <BottomNav view={view} />}
+      <SaveStatus store={store} />
       <main id="main-content" tabIndex={-1}>
       {/*
         Unknown path: replace rather than push, so a mistyped URL does not leave
@@ -8593,14 +8613,11 @@ function ROITab({
                     <label htmlFor={`roi-event-name-${entry.id}`} className="text-muted text-xs font-semibold uppercase tracking-wider block mb-1.5">
                       Event Name
                     </label>
-                    <input
+                    <BufferedTextInput
                       id={`roi-event-name-${entry.id}`}
                       aria-label={`Event name for ${entry.fighterA} versus ${entry.fighterB}`}
-                      type="text"
                       value={entry.eventName || ''}
-                      onChange={(e) =>
-                        onUpdateEntry(entry.id, { eventName: e.target.value })
-                      }
+                      onCommit={(v) => onUpdateEntry(entry.id, { eventName: v })}
                       className="w-full bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:border-red-500"
                     />
                   </div>
