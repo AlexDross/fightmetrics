@@ -6,19 +6,22 @@
 //   node scripts/fm-store.mjs claim           claim the (owner-less) workspace as this user
 //   node scripts/fm-store.mjs status          document counts on the server vs the bundled files
 //   node scripts/fm-store.mjs seed            load the bundled files into an EMPTY workspace
-//   node scripts/fm-store.mjs export [--write-files]
+//   node scripts/fm-store.mjs export [--write-files] [--public]
 //                                             print the server's collections as JSON, or
 //                                             overwrite src/*Data.js with them (refresh the
-//                                             bundled snapshot / rollback copy)
+//                                             bundled snapshot / rollback copy).
+//                                             --public reads the public copy, no login.
+//   node scripts/fm-store.mjs login <email> --create
+//                                             first login only: also creates the account
 //   node scripts/fm-store.mjs logout
 //
-// Reads VITE_SUPABASE_URL / VITE_SUPABASE_PUBLISHABLE_KEY from .env.local.
+// Reads FM_SUPABASE_URL / FM_SUPABASE_PUBLISHABLE_KEY from .env.local.
 // Uses only the publishable key and the owner's own session: no service-role
 // key exists anywhere in this tool, and every write is checked by RLS and
 // fm_rpc_apply_documents exactly as a write from the app is.
 import { createServer } from 'node:http';
 import {
-  SLUG, clearSession, openStore, readBundled, scriptClient, sessionPath, supabaseConfig, writeDataFile,
+  SLUG, clearSession, loadPublic, openStore, readBundled, scriptClient, sessionPath, supabaseConfig, writeDataFile,
 } from './lib/documentStore.mjs';
 import { COLLECTIONS, seedOps } from '../src/data/documents/collections.mjs';
 
@@ -30,11 +33,11 @@ const counts = (c) => COLLECTIONS.map((k) => `${k} ${c[k].length}`).join(' | ');
 
 function requireConfig() {
   const config = supabaseConfig();
-  if (!config) die('Supabase is not configured: set VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY in .env.local');
+  if (!config) die('Supabase is not configured: set FM_SUPABASE_URL and FM_SUPABASE_PUBLISHABLE_KEY in .env.local');
   return config;
 }
 
-async function login(email) {
+async function login(email, { create = false } = {}) {
   if (!email) die('usage: fm-store.mjs login <email>');
   const config = requireConfig();
   const client = scriptClient(config);
@@ -60,7 +63,9 @@ async function login(email) {
 
   const { error } = await client.auth.signInWithOtp({
     email,
-    options: { emailRedirectTo: CALLBACK_URL, shouldCreateUser: false },
+    // The app never creates users; the very first owner login may (--create),
+    // while sign-ups are still enabled on the project.
+    options: { emailRedirectTo: CALLBACK_URL, shouldCreateUser: create },
   });
   if (error) die(`could not send the link: ${error.message}`);
   console.log(`Magic link sent to ${email}. Open it on THIS computer; waiting on ${CALLBACK_URL} ...`);
@@ -120,10 +125,15 @@ async function seed() {
   console.log(`seeded ${data.length} documents into "${SLUG}" (${counts(bundled)})`);
 }
 
-async function exportCmd(writeFiles) {
-  const store = await openStore();
-  if (store.backend !== 'supabase') die('export needs Supabase configured in .env.local');
-  const collections = await store.load();
+async function exportCmd(writeFiles, { publicCopy = false } = {}) {
+  let collections;
+  if (publicCopy) {
+    collections = await loadPublic(requireConfig()).catch((e) => die(e.message));
+  } else {
+    const store = await openStore();
+    if (store.backend !== 'supabase') die('export needs Supabase configured in .env.local');
+    collections = await store.load();
+  }
   if (!writeFiles) { process.stdout.write(`${JSON.stringify(collections, null, 2)}\n`); return; }
   for (const k of COLLECTIONS) writeDataFile(k, collections[k]);
   console.log(`wrote src/*Data.js from the server (${counts(collections)})`);
@@ -131,12 +141,12 @@ async function exportCmd(writeFiles) {
 
 const [cmd, ...rest] = process.argv.slice(2);
 const run = {
-  login: () => login(rest[0]),
+  login: () => login(rest.find((a) => !a.startsWith('--')), { create: rest.includes('--create') }),
   whoami: () => whoami(),
   claim,
   status,
   seed,
-  export: () => exportCmd(rest.includes('--write-files')),
+  export: () => exportCmd(rest.includes('--write-files'), { publicCopy: rest.includes('--public') }),
   logout: async () => { clearSession(requireConfig().url); console.log('signed out (local session removed)'); },
 }[cmd];
 if (!run) die('usage: fm-store.mjs login <email> | whoami | claim | status | seed | export [--write-files] | logout');

@@ -16,7 +16,10 @@ export function mapDocumentError(error) {
   const message = typeof error?.message === 'string' ? error.message : '';
   const stale = error?.code === 'P0001' ? STALE_RE.exec(message) : null;
   if (stale) return { kind: 'conflict', currentRevision: stale[1] };
-  return mapPostgrestError(error);
+  // mapPostgrestError returns a Result ({ ok:false, error }); callers here
+  // want the bare RepositoryError.
+  const mapped = mapPostgrestError(error);
+  return mapped?.error ?? mapped;
 }
 
 /**

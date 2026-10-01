@@ -63,8 +63,8 @@ values in `src/roiData.js` are what the track record is actually built from.
 ## 1. Check where the data lives
 
 Picks live in the **Supabase document store**, not in git. `enter_upcoming.mjs`
-reads and writes it whenever `.env.local` sets `VITE_SUPABASE_URL` +
-`VITE_SUPABASE_PUBLISHABLE_KEY`, as the signed-in owner:
+reads and writes it whenever `.env.local` sets `FM_SUPABASE_URL` +
+`FM_SUPABASE_PUBLISHABLE_KEY`, as the signed-in owner:
 
 ```bash
 node scripts/fm-store.mjs whoami

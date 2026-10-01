@@ -1,8 +1,11 @@
 // Document store access for command-line tools (/enter-card, /grade-card,
 // fm-store). Two backends behind one interface:
 //
-//   supabase  when .env.local (or the environment) sets VITE_SUPABASE_URL and
-//             VITE_SUPABASE_PUBLISHABLE_KEY. Reads the member surface and
+//   supabase  when .env.local (or the environment) sets FM_SUPABASE_URL and
+//             FM_SUPABASE_PUBLISHABLE_KEY. These are deliberately NOT the
+//             VITE_ names: Vite exposes only VITE_* to the app, so putting
+//             production values here never points `npm run dev` at production.
+//             (The VITE_ names are still accepted as a fallback.) Reads the member surface and
 //             writes through fm_rpc_apply_documents as the signed-in owner
 //             (session from `node scripts/fm-store.mjs login`).
 //   files     the bundled src/*Data.js snapshot -- the pre-Supabase behaviour.
@@ -70,9 +73,20 @@ function readEnvLocal() {
 
 export function supabaseConfig() {
   const file = readEnvLocal();
-  const url = process.env.VITE_SUPABASE_URL || file.VITE_SUPABASE_URL;
-  const key = process.env.VITE_SUPABASE_PUBLISHABLE_KEY || file.VITE_SUPABASE_PUBLISHABLE_KEY;
+  const pick = (name) => process.env[`FM_${name}`] || file[`FM_${name}`]
+    || process.env[`VITE_${name}`] || file[`VITE_${name}`];
+  const url = pick('SUPABASE_URL');
+  const key = pick('SUPABASE_PUBLISHABLE_KEY');
   return url && key ? { url, key } : null;
+}
+
+/** Read the PUBLIC copy -- no session needed (the snapshot workflow uses it). */
+export async function loadPublic(config) {
+  const client = createClient(config.url, config.key, { auth: { persistSession: false, autoRefreshToken: false } });
+  const { data, error } = await client.rpc('fm_read_documents', { p_slug: SLUG });
+  if (error) throw new Error(`public read failed: ${describe(mapDocumentError(error))}`);
+  if (!data.length) throw new Error(`workspace "${SLUG}" has no public documents`);
+  return rowsToCollections(data).collections;
 }
 
 // Session lives OUTSIDE the repository, readable only by this user.
@@ -125,7 +139,7 @@ const describe = (error) =>
     : error?.kind === 'unauthenticated'
       ? 'not signed in -- run: node scripts/fm-store.mjs login <email>'
       : error?.kind === 'forbidden'
-        ? 'this account is not an owner/editor of the workspace'
+        ? 'not signed in, or not an owner/editor -- run: node scripts/fm-store.mjs whoami'
         : `${error?.kind ?? 'error'}${error?.message ? `: ${error.message}` : ''}`;
 
 /**

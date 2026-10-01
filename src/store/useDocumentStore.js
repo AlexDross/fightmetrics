@@ -154,6 +154,9 @@ export function useDocumentStore(bundled) {
       if (result.error?.kind === 'conflict') await reload();
       return false;
     }
+    // Any read still in flight started before this write landed; its result
+    // would roll the screen and the revisions back, so it is discarded.
+    loadSeqRef.current += 1;
     revisionsRef.current = applyResultRevisions(revisionsRef.current, result.data);
     setBoth(applyOpsLocally(collectionsRef.current, ops));
     setSaveState({ status: 'saved', message: null });

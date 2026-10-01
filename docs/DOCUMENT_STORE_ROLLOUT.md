@@ -42,23 +42,25 @@ public `fightmetrics` workspace. Never run `db reset --linked`.
 
 ## 3. Owner session, claim, seed (this machine)
 
-Put the two public values in `.env.local` (gitignored):
+Put the two public values in `.env.local` (gitignored) under the **FM_** names
+— not `VITE_*`, which would point `npm run dev` at production:
 
 ```
-VITE_SUPABASE_URL=https://<ref>.supabase.co
-VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_...
+FM_SUPABASE_URL=https://<ref>.supabase.co
+FM_SUPABASE_PUBLISHABLE_KEY=sb_publishable_...
 ```
 
 Then:
 
 ```bash
-node scripts/fm-store.mjs login you@example.com
+node scripts/fm-store.mjs login you@example.com --create   # first time only; plain `login` afterwards
 node scripts/fm-store.mjs claim
 node scripts/fm-store.mjs seed
 node scripts/fm-store.mjs status
 ```
 
-Open the magic link on this computer. `claim` makes you the owner; it only
+Open the magic link on this computer. `--create` makes the account on that
+first sign-in (do it before turning sign-ups off). `claim` makes you the owner; it only
 works while the workspace has no owner. `seed` loads the bundled
 `src/*Data.js` in one atomic batch, and refuses if the workspace already holds
 documents. `status` should show identical counts for the files and the server.
@@ -68,6 +70,12 @@ documents. `status` should show identical counts for the files and the server.
 Set `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` for **Production**
 (and Preview if you want previews live too), then redeploy. Vite inlines them
 at build time, so only a new build picks them up.
+
+Also set the same two values as GitHub **repository variables**
+`FM_SUPABASE_URL` / `FM_SUPABASE_PUBLISHABLE_KEY`. That switches on
+`.github/workflows/snapshot-documents.yml`, which commits the server's public
+copy over `src/*Data.js` daily (after the unit suite passes) so research
+scripts, the manifest generator and the rollback copy stay current.
 
 ## 5. Verify
 

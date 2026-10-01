@@ -13,7 +13,7 @@ Upcoming tab's winner dropdown makes (`handleGradeUpcoming` in `src/App.js`).
 
 Picks live in the **Supabase document store** (fightmetrics.app reads them live),
 not in git. `scripts/grade_upcoming.mjs` reads and writes the store whenever
-`.env.local` sets `VITE_SUPABASE_URL` + `VITE_SUPABASE_PUBLISHABLE_KEY`, as the
+`.env.local` sets `FM_SUPABASE_URL` + `FM_SUPABASE_PUBLISHABLE_KEY`, as the
 signed-in owner. Confirm the session first:
 
 ```bash
