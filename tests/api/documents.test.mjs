@@ -140,3 +140,58 @@ describe('document store', () => {
     expect(Object.is(row.payload.c, 0.1 + 0.2)).toBe(true);
   });
 });
+
+// Semantic parity over the REAL corpus (the check the 2026-09-30 engineering
+// review asked for). Every bundled record goes through the production write
+// path and back through the production read path and the client adapter, and
+// must come out as the identical text -- so decision source (C6 vs v2 vs v1),
+// frozen probabilities, selected fighter, odds, bout context and parlay
+// defaults cannot change meaning, because nothing is re-derived at all.
+describe('document store: full-corpus round trip', () => {
+  const WS_CORPUS = '11110000-0000-4000-8000-0000000000d3';
+  const SLUG = 'api-docs-corpus';
+
+  it('every bundled record round-trips byte-identical through the RPC and rowsToCollections', async () => {
+    const { readBundled } = await import('../../scripts/lib/documentStore.mjs');
+    const { seedOps, rowsToCollections, COLLECTIONS } = await import('../../src/data/documents/collections.mjs');
+    sql(`
+BEGIN;
+GRANT fm_table_owner TO postgres WITH SET TRUE, INHERIT FALSE;
+SET LOCAL ROLE fm_table_owner;
+DELETE FROM app_private.documents WHERE workspace_id = '${WS_CORPUS}';
+DELETE FROM app_private.workspace_members WHERE workspace_id = '${WS_CORPUS}';
+INSERT INTO app_private.workspaces (id, slug, is_public) VALUES ('${WS_CORPUS}', '${SLUG}', true) ON CONFLICT DO NOTHING;
+INSERT INTO app_private.workspace_members (workspace_id, user_id, role) VALUES ('${WS_CORPUS}', '${USER_MEMBER}', 'owner');
+RESET ROLE;
+REVOKE fm_table_owner FROM postgres;
+COMMIT;
+`);
+    const bundled = readBundled();
+    const seeded = await apply(SLUG, seedOps(bundled));
+    expect(seeded.status).toBe(200);
+
+    for (const [surface, res] of [
+      ['public', await rpc('fm_read_documents', { p_slug: SLUG })],
+      ['member', await memberDocs(SLUG)],
+    ]) {
+      const { collections } = rowsToCollections(res.body);
+      for (const k of COLLECTIONS) {
+        expect(collections[k].length, `${surface} ${k} count`).toBe(bundled[k].length);
+        expect(JSON.stringify(collections[k]), `${surface} ${k} text`).toBe(JSON.stringify(bundled[k]));
+      }
+    }
+
+    // Spot-check the records the review named: C6 decisions keep their C6
+    // probability and source, distinct from raw v2.
+    const { collections } = rowsToCollections((await memberDocs(SLUG)).body);
+    const c6 = [...collections.roi, ...collections.upcoming].filter((e) => e.decisionProbabilitySource === 'c6');
+    expect(c6.length).toBe([...bundled.roi, ...bundled.upcoming].filter((e) => e.decisionProbabilitySource === 'c6').length);
+    expect(c6.length).toBeGreaterThan(0);
+    for (const e of c6) {
+      expect(typeof e.c6ProbA).toBe('number');
+      expect(e).toHaveProperty('v2pA');
+    }
+    const withContext = [...collections.roi, ...collections.upcoming].filter((e) => e.boutContext);
+    expect(withContext.length).toBe([...bundled.roi, ...bundled.upcoming].filter((e) => e.boutContext).length);
+  });
+});

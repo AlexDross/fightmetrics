@@ -14,7 +14,7 @@
 // Both return the same collections and accept the same ops, and both apply
 // ops with collections.mjs semantics, so a script cannot tell them apart
 // except by where the change lands.
-import { readFileSync, writeFileSync, existsSync, mkdirSync, rmSync, chmodSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync, mkdirSync, rmSync, chmodSync, renameSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { resolve, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -49,10 +49,17 @@ export function readDataFile(key) {
   return JSON.parse(splitDataFile(key).body);
 }
 
+const renderDataFile = (key, entries) =>
+  `${splitDataFile(key).header}${DATA_FILES[key].decl}${JSON.stringify(entries, null, 2)};\n`;
+
 export function writeDataFile(key, entries) {
-  const { path, decl } = DATA_FILES[key];
-  const { header } = splitDataFile(key);
-  writeFileSync(path, `${header}${decl}${JSON.stringify(entries, null, 2)};\n`);
+  writeFileSync(DATA_FILES[key].path, renderDataFile(key, entries));
+}
+
+function stageDataFile(key, entries) {
+  const tmp = `${DATA_FILES[key].path}.tmp-${process.pid}`;
+  writeFileSync(tmp, renderDataFile(key, entries));
+  return tmp;
 }
 
 export function readBundled() {
@@ -158,7 +165,12 @@ export async function openStore({ argv = process.argv } = {}) {
       async apply(ops) {
         const before = readBundled();
         const after = applyOpsLocally(before, ops);
-        for (const k of COLLECTIONS) if (after[k] !== before[k]) writeDataFile(k, after[k]);
+        // Stage every changed file first, then rename them all into place, so
+        // a failure while writing (a grade touches two files) leaves the old
+        // files intact instead of an entry missing from both.
+        const changed = COLLECTIONS.filter((k) => after[k] !== before[k]);
+        const staged = changed.map((k) => [k, stageDataFile(k, after[k])]);
+        for (const [k, tmp] of staged) renameSync(tmp, DATA_FILES[k].path);
         return after;
       },
     };
