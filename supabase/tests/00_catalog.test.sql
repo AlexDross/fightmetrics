@@ -80,7 +80,7 @@ SELECT is((SELECT count(*) FROM pg_catalog.pg_class c
 SELECT is((SELECT count(*) FROM pg_catalog.pg_class c
              JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
             WHERE n.nspname = 'app_private' AND c.relkind = 'r'),
-          15::bigint, 'all 15 tables are present');
+          16::bigint, 'all 16 tables are present (15 + documents)');
 
 -- Immutable tables are denied UPDATE twice: no policy here, no grant below.
 SELECT is((SELECT count(*) FROM pg_catalog.pg_policies
@@ -135,7 +135,7 @@ SELECT is((SELECT count(*) FROM pg_catalog.pg_class c
             WHERE n.nspname = 'app_private' AND c.relkind = 'r'
               AND a.privilege_type = 'SELECT'
               AND pg_catalog.pg_get_userbyid(a.grantee) = 'fm_member_api'),
-          15::bigint, 'control: fm_member_api has SELECT on exactly 15 tables');
+          16::bigint, 'control: fm_member_api has SELECT on exactly 16 tables');
 
 SELECT is((SELECT count(*) FROM pg_catalog.pg_class c
              JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
@@ -143,7 +143,7 @@ SELECT is((SELECT count(*) FROM pg_catalog.pg_class c
             WHERE n.nspname = 'app_private' AND c.relkind = 'r'
               AND a.privilege_type = 'SELECT'
               AND pg_catalog.pg_get_userbyid(a.grantee) = 'fm_public_reader'),
-          15::bigint, 'control: fm_public_reader has SELECT on exactly 15 tables');
+          16::bigint, 'control: fm_public_reader has SELECT on exactly 16 tables');
 
 SELECT is((SELECT count(*) FROM pg_catalog.pg_class c
              JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
@@ -151,7 +151,7 @@ SELECT is((SELECT count(*) FROM pg_catalog.pg_class c
             WHERE n.nspname = 'app_private' AND c.relkind = 'r'
               AND a.privilege_type = 'UPDATE'
               AND pg_catalog.pg_get_userbyid(a.grantee) = 'fm_member_api'),
-          9::bigint, 'control: fm_member_api has UPDATE on exactly the 9 mutable tables');
+          10::bigint, 'control: fm_member_api has UPDATE on exactly the 10 mutable tables (9 + documents)');
 
 SELECT ok(NOT has_schema_privilege('anon', 'app_private', 'USAGE'),
           'anon has no USAGE on app_private');
@@ -280,7 +280,9 @@ SELECT set_eq(
            ('fm_rpc_reset_workspace'),
            -- Gate 3. The ONE non-contract RPC: it populates a workspace, it does
            -- not serve the repository, and it must not be counted against the 46.
-           ('fm_rpc_seed_store')$$,
+           ('fm_rpc_seed_store'),
+           -- Document store (20260930120000): the runtime read/write path.
+           ('fm_read_documents'),('fm_member_documents'),('fm_rpc_apply_documents')$$,
   'the public API surface is exactly the documented function set');
 
 -- ── Constraint helpers reachable by the writing role ────────────────────────

@@ -176,4 +176,4 @@ jobs:
           fi
 
       - name: Trigger Vercel redeploy
-        run: curl -X POST "${{ secrets.VERCEL_DEPLOY_HOOK }}"
+        run: curl -fsS -X POST "${{ secrets.VERCEL_DEPLOY_HOOK }}"

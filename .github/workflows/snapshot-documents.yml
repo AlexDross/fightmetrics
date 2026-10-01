@@ -1,0 +1,63 @@
+name: Snapshot document store
+
+# Keeps src/upcomingData.js, roiData.js, propPicksData.js and parlayData.js in
+# step with the Supabase document store, which is the source of truth once the
+# app runs live. Those files are still read by research/backtest scripts and
+# generate_source_manifest.py, and are the app's offline fallback and rollback
+# copy, so they must not silently go stale.
+#
+# Reads the PUBLIC copy (publishable key, no login, no secret). Commits only
+# when something changed, and only after the full unit suite passes on the
+# snapshot, so a bad row never lands on main through this path.
+#
+# Inert until the repository variables FM_SUPABASE_URL and
+# FM_SUPABASE_PUBLISHABLE_KEY are set.
+
+on:
+  schedule:
+    - cron: '30 9 * * *'   # daily 09:30 UTC, after US cards finish
+  workflow_dispatch:
+
+concurrency:
+  group: snapshot-documents
+  cancel-in-progress: false
+
+jobs:
+  snapshot:
+    if: ${{ vars.FM_SUPABASE_URL != '' && vars.FM_SUPABASE_PUBLISHABLE_KEY != '' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci --include=dev
+      - name: Export the public copy over src/*Data.js
+        env:
+          FM_SUPABASE_URL: ${{ vars.FM_SUPABASE_URL }}
+          FM_SUPABASE_PUBLISHABLE_KEY: ${{ vars.FM_SUPABASE_PUBLISHABLE_KEY }}
+        run: node scripts/fm-store.mjs export --write-files --public
+      - name: Detect changes
+        id: diff
+        run: |
+          if git diff --quiet -- src/upcomingData.js src/roiData.js src/propPicksData.js src/parlayData.js; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            git diff --stat
+          fi
+      - name: Unit suite on the snapshot
+        if: steps.diff.outputs.changed == 'true'
+        run: npm test
+      - name: Commit and push
+        if: steps.diff.outputs.changed == 'true'
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add src/upcomingData.js src/roiData.js src/propPicksData.js src/parlayData.js
+          git commit -m "data: snapshot document store $(date -u +'%Y-%m-%d')"
+          git pull --rebase --quiet
+          git push

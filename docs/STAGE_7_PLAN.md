@@ -19,9 +19,52 @@ Base: `main` @ `89f6c45`. Backend decision: Supabase/Postgres.
 | 3 · status | **COMPLETE.** *(Every number in this row is the measurement taken when Gate 3 landed and is retained as that gate's audit record; the corpus has since grown with `main`'s live data — see "Pre-Gate-4 baseline synchronization audit" above for the current figures.)* `fm_rpc_seed_store` and `app_private.seed_store_entities` landed: owner-only, revision-checked on the workspace row, envelope-gated by the same `assert_store_envelope` import uses, serialized by the same workspace `FOR UPDATE` lock, and **not undoable** by design. The whole migrated corpus loads in one transaction — 18 events, 178 bouts, 178 prediction runs, 273 prediction snapshots, 177 market snapshots, 178 assessments, 178 tracked positions, 4 props, **182 ledger roots** — in ~200 ms over real HTTP. Seeding is proven **deterministic** (the same store into two independent workspaces is identical column-for-column, and every persisted double is bit-identical by `float8send`), **idempotent** (re-applying the same version, and advancing the version, both insert exactly zero rows and leave the content digest unchanged), and **non-resurrecting** (after deleting one pending root and clearing all 168 graded roots, a later seed at a new version returns `roots_seeded 0`, `roots_skipped_tombstoned 169`, and inserts nothing — while all 18 events and 178 bouts survive as card history). **All 167 stored computed-profit rows were recomputed through `app_private.settlement_for` in PostgreSQL with zero value mismatches, zero bit mismatches and maximum deviation exactly 0**, so the profit-equality constraint is no longer provisional (§4, §12). One real defect was found and fixed by this gate's own tests: a bulk seed left the tables with no planner statistics and `fm_member_roi`/`fm_member_upcoming` hit the 8 s statement timeout (`57014`) on the seeded corpus; the seed now `ANALYZE`s what it loaded and both return in 26 ms / 9 ms. **197 API assertions across eleven files, 174 pgTAP across three.** | ✅ |
 | 4 | `feat(auth): add magic-link sign-in and read-only public state` | **MERGED** |
 | 4 · status | **COMPLETE AND MERGED** — reviewed as PR #28 and merged as `3c94071`, verified here with `git merge-base --is-ancestor 3c94071 HEAD` on 2026-09-13 against `main` @ `126eb4e`. *(This row previously read "IMPLEMENTED, uncommitted, awaiting review"; that was written before the merge and was stale.)* Magic-link/OTP sign-in, resolved membership, and the read-only public/member state landed behind the repository/provider boundary. `@supabase/supabase-js` is pinned at `2.112.4` and imported by **exactly one module**, `src/data/supabase/client.mjs`; `src/App.js` imports a React component and nothing else. Configuration is all-or-none over `VITE_SUPABASE_URL` + `VITE_SUPABASE_PUBLISHABLE_KEY`, and a key classifier REJECTS a secret key, a personal access token, a Postgres URL or a `service_role` JWT pasted into the publishable slot. **Unconfigured is a real disabled mode**: no client, no request, no panel, no wall — measured in a real browser at 2 resources loaded and zero auth requests. `persistSession`/`detectSessionInUrl`/`autoRefreshToken` are all true; `shouldCreateUser:false` is verified against real GoTrue; the redirect is derived from the live origin and always lands on `/`. **235 new tests** (offline 773 → **1,008**), **16 new real-stack API tests** (197 → **213**), all green. **Four Codex review corrections applied:** PostgREST `PGRST301/302/303` now map to `unauthenticated` (they arrive with no HTTP status, and an expired JWT was reading as a generic server error); session resolution has its own error mapping and an `unauthenticated` refresh clears session and role atomically; the publishable key is validated by full match, not prefix; and the rendered user-UUID fragment is gone. **No SQL, migration, RLS, RPC, seed behaviour or bundled application data was touched.** Gates 5–7 remain deferred. | ✅ |
-| 5 | **Hosted rollout** — Alex creates/links the project, `db push --dry-run` → `db push`, Vercel vars, invite owner, claim, approve seed | **DEFERRED — not started.** As of 2026-09-13 the one *repository-side* blocker (the parlay gap in the migration corpus) is CLOSED; every remaining step is external and needs Alex — see §13. |
-| 6 | `feat(data): back repositories with Postgres` — runtime rewire; dead handlers removed after proving zero call sites | **DEFERRED — not started** |
-| 7 | `feat(data): add save status, undo, and JSON export/import` | **DEFERRED — not started** |
+| 5 | **Hosted rollout** — Alex creates/links the project, `db push --dry-run` → `db push`, Vercel vars, sign in, claim, seed | **Superseded by the document-store rollout** — see "Document store pivot" below and `docs/DOCUMENT_STORE_ROLLOUT.md`. |
+| 6 | Runtime rewire | **DONE as the document store (2026-09-30)**, not as the normalized repositories — see "Document store pivot". |
+| 7 | Save status / undo / export-import | **Save status DONE** (Saving… / Saved / refused, conflict re-read). Undo UI and an in-app JSON export/import screen are **deferred**; `fm-store export` covers backup. |
+
+### Document store pivot — 2026-09-30
+
+**The normalized schema cannot hold the live app's data**, so the runtime does
+not use it. Measured by running every bundled entry (237 ROI + 10 Upcoming)
+through `migrateV0ToV1`: the **C6 decision layer** (`c6ProbA/B`, `c6Version`,
+`decisionProbabilitySource` — 69 rows, every pick since C6 went live) and
+**`boutContext`** (79 rows) are dropped, because `prediction_snapshots.basis`
+allows only `legacy-v1-unversioned`/`v2` and `bouts` has no context columns.
+`legacyFieldMap.mjs` documents an intended mapping for them, but nothing
+implements it, so the Gate 6 blocker note's "the data is not lost" was wrong.
+`fm_rpc_save_prediction_run` also cannot create events or bouts, so a new card
+could not be saved at all.
+
+Alex chose (2026-09-30), for speed: a **document store** —
+`20260930120000_stage7_document_store.sql`. One table,
+`app_private.documents (workspace_id, collection, id, payload json, ord,
+revision)`, holding the exact objects the app renders (`upcoming`, `roi`,
+`propPicks`, `parlays`). `json`, not `jsonb`, so the stored text — key order
+and number spelling — round-trips byte-for-byte to the bundled data files.
+Same role model as Gate 2 (table owned by `fm_table_owner`, RLS, functions owned
+by `fm_public_reader`/`fm_member_api`); reuses workspaces, membership, whoami and
+the zero-owner claim. Three functions:
+
+| Function | Who | What |
+|---|---|---|
+| `fm_read_documents(slug)` | anon + authenticated | public workspaces, no revisions |
+| `fm_member_documents(slug)` | members | with revision tokens |
+| `fm_rpc_apply_documents(slug, ops json)` | owner/editor | atomic batch of `put`/`delete`; `expectedRevision` (`"0"` = must be new) → `stale_write` on mismatch |
+
+Runtime: `src/store/useDocumentStore.js` (React) over
+`src/data/repositories/supabaseDocuments.mjs` and the pure
+`src/data/documents/collections.mjs`. Writes are confirmed-only, serialized,
+built from the latest saved state, and always carry revisions. Unconfigured
+builds keep the bundled-data, browser-only behaviour. The CLI
+(`scripts/fm-store.mjs`, `scripts/lib/documentStore.mjs`) seeds, exports and
+gives `/enter-card` + `/grade-card` the same write path as the owner.
+
+**What this gives up**, deliberately: server-side settlement/profit checks,
+the normalized read surfaces, and server undo. The normalized schema and its
+tests stay in place (the migration still applies and all 174 pgTAP assertions
+run); it is simply not on the runtime path. `stage7/gate5a-refresh` (normalized
+repositories, seed payload tooling) is parked, not merged.
 
 **Gates 5–7 remain explicitly DEFERRED.** *(This paragraph previously said 4–7;
 Gate 4 is now merged.)* All three clauses below were re-verified on 2026-09-13

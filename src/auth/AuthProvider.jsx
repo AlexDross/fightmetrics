@@ -16,6 +16,7 @@ import { CONFIG_STATUS, describeConfigIssues } from '../data/supabase/config.mjs
 import { createSupabaseClientFromEnv } from '../data/supabase/client.mjs';
 import { readAuthCallback, clearAuthCallbackUrl } from '../data/supabase/authCallback.mjs';
 import { createSupabaseAuthRepository } from '../data/repositories/supabaseAuth.mjs';
+import { createDocumentsRepository } from '../data/repositories/supabaseDocuments.mjs';
 import { AUTH_STATES, resolveAuthState } from '../data/repositories/authState.mjs';
 
 const AuthContext = createContext(null);
@@ -39,6 +40,7 @@ const DISABLED_VALUE = Object.freeze({
   claimOwnership: async () => ({ ok: false, error: { kind: 'unauthenticated' } }),
   dismissNotice: () => {},
   refresh: async () => {},
+  documents: null,
 });
 
 export const useAuth = () => useContext(AuthContext) ?? DISABLED_VALUE;
@@ -71,6 +73,14 @@ export function AuthProvider({ children, deps }) {
   }, [boot, deps]);
 
   const enabled = repository !== null;
+
+  // The document store rides the same client. Null when unconfigured, so the
+  // app falls back to its bundled data with no request of any kind.
+  const documents = useMemo(() => {
+    if (boot.status !== CONFIG_STATUS.CONFIGURED || !boot.client?.rpc) return null;
+    const make = deps?.createDocumentsRepository ?? ((client) => createDocumentsRepository({ client }));
+    return make(boot.client);
+  }, [boot, deps]);
 
   const [session, setSession] = useState(null);
   const [role, setRole] = useState(null);
@@ -249,8 +259,9 @@ export function AuthProvider({ children, deps }) {
     notice, error, pending, linkSentTo,
     signIn, signOut, claimOwnership, dismissNotice,
     refresh: resolveBoth,
+    documents,
   }), [enabled, resolved, state, boot, notice, error, pending, linkSentTo,
-       signIn, signOut, claimOwnership, dismissNotice, resolveBoth]);
+       signIn, signOut, claimOwnership, dismissNotice, resolveBoth, documents]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

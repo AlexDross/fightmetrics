@@ -180,8 +180,9 @@ export default function AuthFooterPanel() {
               <ReadOnlyBadge>{`Signed in · ${role}`}</ReadOnlyBadge>
               <p className={`${LABEL} mt-2`}>
                 Membership resolved as <span className="text-slate-200 font-semibold">{role}</span>.
-                Saving to the database is not enabled yet, so edits you make here
-                still live only in this browser.
+                {role === 'viewer'
+                  ? 'Viewers can read the workspace but not change it.'
+                  : 'Changes you make are saved to the database and sync across your devices.'}
               </p>
               <SignOutButton pending={pending} signOut={signOut} />
             </>

@@ -1,5 +1,18 @@
 // Stage 6 — pure v0 -> v1 migration.
 //
+// ⚠ KNOWN LOSSY — NOT ON THE RUNTIME PATH. Do not use this to import
+// production data. It drops the C6 decision layer (c6ProbA/B, c6Version,
+// decisionProbabilitySource: the run's decision silently becomes raw v2),
+// treats ANY modelUsed value as v2 (so an explicit v1 save becomes v2), and
+// drops boutContext (scheduled rounds, title status, source provenance).
+// Measured 2026-09-30: 69 C6 rows and 79 context rows affected. The live app
+// persists through the document store instead (migration 20260930120000),
+// which stores records verbatim. Before this migrator is ever used for a real
+// import it needs a c6 basis, a source-faithful decision selection that
+// rejects unsupported sources, and durable bout-context fields — proven by
+// semantic parity tests, not field-map descriptions. See
+// docs/STAGE_7_PLAN.md "Document store pivot".
+//
 // PURE: no Date.now(), no Math.random(), no I/O. Everything non-deterministic
 // arrives through `deps` ({ migratedAt, newId }), so migrating the same input
 // twice produces byte-identical output — asserted by the idempotence test.

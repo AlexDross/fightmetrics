@@ -187,10 +187,15 @@ describe('member', () => {
     expect(button('Claim ownership')).toBeUndefined();
   });
 
-  it('does NOT claim that edits are durable before Gate 6', async () => {
+  it('tells writers their edits persist, and viewers that they cannot edit', async () => {
     await render({ repository: repositoryFor({ userId: USER, role: 'owner' }) });
-    expect(text()).toContain('Saving to the database is not enabled yet');
-    expect(text()).toContain('still live only in this browser');
+    expect(text()).toContain('saved to the database and sync across your devices');
+  });
+
+  it('a viewer is told the workspace is read-only for them', async () => {
+    await render({ repository: repositoryFor({ userId: USER, role: 'viewer' }) });
+    expect(text()).toContain('Viewers can read the workspace but not change it.');
+    expect(text()).not.toContain('saved to the database');
   });
 
   it('signing out returns the panel to the signed-out state', async () => {
