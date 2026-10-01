@@ -66,10 +66,19 @@ GRANT INSERT, UPDATE, DELETE ON app_private.documents TO fm_member_api;
 -- The production workspace. Created here so the hosted rollout needs no
 -- hand-run SQL; the first signed-in user claims it through
 -- fm_rpc_claim_workspace_ownership.
-SET LOCAL ROLE fm_table_owner;
-INSERT INTO app_private.workspaces (slug, is_public) VALUES ('fightmetrics', true)
-  ON CONFLICT (slug) DO NOTHING;
-RESET ROLE;
+--
+-- The role switch restores the EXACT role that was active, never RESET ROLE:
+-- on hosted Supabase the CLI connects as a temporary login role and then
+-- switches to postgres, so RESET ROLE would drop to that login role and every
+-- statement after it would fail for lack of privileges.
+DO $$
+DECLARE v_role text := current_user;
+BEGIN
+  EXECUTE 'SET LOCAL ROLE fm_table_owner';
+  INSERT INTO app_private.workspaces (slug, is_public) VALUES ('fightmetrics', true)
+    ON CONFLICT (slug) DO NOTHING;
+  EXECUTE format('SET LOCAL ROLE %I', v_role);
+END $$;
 
 -- ── Reads ───────────────────────────────────────────────────────────────────
 -- Public: public workspaces only, no revision tokens.
