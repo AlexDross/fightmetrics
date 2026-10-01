@@ -195,3 +195,85 @@ COMMIT;
     expect(withContext.length).toBe([...bundled.roi, ...bundled.upcoming].filter((e) => e.boutContext).length);
   });
 });
+
+// Hardening (20261001120000), from the 2026-10-01 audit.
+describe('document store hardening', () => {
+  const WS_H = '11110000-0000-4000-8000-0000000000d4';
+  const H = 'api-docs-hardening';
+
+  beforeAll(() => {
+    sql(`
+BEGIN;
+GRANT fm_table_owner TO postgres WITH SET TRUE, INHERIT FALSE;
+SET LOCAL ROLE fm_table_owner;
+DELETE FROM app_private.documents WHERE workspace_id = '${WS_H}';
+DELETE FROM app_private.workspace_members WHERE workspace_id = '${WS_H}';
+INSERT INTO app_private.workspaces (id, slug, is_public) VALUES ('${WS_H}', '${H}', true) ON CONFLICT DO NOTHING;
+UPDATE app_private.workspaces SET migrated_at = NULL WHERE id = '${WS_H}';
+INSERT INTO app_private.workspace_members (workspace_id, user_id, role) VALUES ('${WS_H}', '${USER_MEMBER}', 'owner');
+RESET ROLE;
+REVOKE fm_table_owner FROM postgres;
+COMMIT;
+`);
+  });
+
+  const status = async (as) => (await rpc('fm_read_document_status', { p_slug: H }, as ? { as } : undefined)).body[0];
+
+  it('status: uninitialized and empty until the first put, then initialized', async () => {
+    expect(await status()).toEqual({ initialized: false, document_count: 0 });
+    await apply(H, [{ op: 'put', collection: 'roi', payload: { id: 'first' } }]);
+    expect(await status()).toEqual({ initialized: true, document_count: 1 });
+    // Deleting everything leaves it INITIALIZED: empty, not unseeded.
+    await apply(H, [{ op: 'delete', collection: 'roi', id: 'first' }]);
+    expect(await status()).toEqual({ initialized: true, document_count: 0 });
+  });
+
+  it('status is not visible to anon for a private workspace', async () => {
+    const r = await rpc('fm_read_document_status', { p_slug: PRIV });
+    expect(r.body).toEqual([]);
+    const m = await rpc('fm_read_document_status', { p_slug: PRIV }, { as: USER_MEMBER });
+    expect(m.body[0].document_count).toBeGreaterThan(0);
+  });
+
+  it('concurrent creates of the SAME id: exactly one wins, the rest are stale_write (not a raw 23505)', async () => {
+    const tries = await Promise.all(Array.from({ length: 8 }, (_, i) =>
+      apply(H, [{ op: 'put', collection: 'upcoming', payload: { id: 'race', n: i }, expectedRevision: '0' }])));
+    expect(tries.filter((t) => t.status === 200)).toHaveLength(1);
+    for (const t of tries.filter((x) => x.status !== 200)) {
+      expect(t.body.code).toBe('P0001');
+      expect(t.body.message).toBe('stale_write revision=1');
+    }
+  });
+
+  it('concurrent creates of DIFFERENT ids get distinct, serialized positions', async () => {
+    const ids = Array.from({ length: 8 }, (_, i) => `par${i}`);
+    const res = await Promise.all(ids.map((id) => apply(H, [{ op: 'put', collection: 'propPicks', payload: { id } }])));
+    expect(res.every((r) => r.status === 200)).toBe(true);
+    const ords = scalar(`SELECT count(DISTINCT ord) || '/' || count(*) FROM app_private.documents WHERE workspace_id = '${WS_H}' AND collection = 'propPicks';`);
+    expect(ords).toBe('8/8');
+  });
+
+  it('a read beyond the PostgREST row cap is complete through the repository', async () => {
+    const { createClient } = await import('@supabase/supabase-js');
+    const { createDocumentsRepository } = await import('../../src/data/repositories/supabaseDocuments.mjs');
+    // 1003 roi rows; upcoming sorts after... nothing here, so add 2 upcoming
+    // that sort LAST by collection name? 'upcoming' > 'roi', so yes.
+    const big = Array.from({ length: 1003 }, (_, i) => ({ op: 'put', collection: 'roi', payload: { id: `big${String(i).padStart(4, '0')}` }, position: 'bottom' }));
+    expect((await apply(H, big.slice(0, 1000))).status).toBe(200);
+    expect((await apply(H, big.slice(1000))).status).toBe(200);
+    const total = Number(scalar(`SELECT count(*) FROM app_private.documents WHERE workspace_id = '${WS_H}';`));
+    expect(total).toBeGreaterThan(1000);
+
+    // Prove the cap is real: a single unpaged read is truncated.
+    const single = await rpc('fm_read_documents', { p_slug: H });
+    expect(single.body.length).toBeLessThan(total);
+
+    const { REST_URL, ANON_KEY } = (await import('./helpers.mjs')).status();
+    const client = createClient(REST_URL.replace(/\/rest\/v1$/, ''), ANON_KEY, { auth: { persistSession: false } });
+    const r = await createDocumentsRepository({ client, slug: H }).load({ member: false });
+    expect(r.ok).toBe(true);
+    const n = Object.values(r.data.collections).reduce((a, c) => a + c.length, 0);
+    expect(n).toBe(total);
+    expect(r.data.collections.upcoming.map((e) => e.id)).toContain('race');
+  });
+});

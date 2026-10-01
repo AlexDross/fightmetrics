@@ -7,11 +7,16 @@
 //   loading   configured, first read in flight. Bundled data shown read-only.
 //   live      server is the source of truth. Writes are CONFIRMED-ONLY: local
 //             state changes strictly after fm_rpc_apply_documents returns.
-//   unseeded  the workspace has no documents yet. Bundled data, read-only.
+//   unseeded  the workspace was never populated. Bundled data, read-only.
+//             (A workspace that WAS populated and is now empty is live and
+//             empty -- the server's `initialized` flag tells them apart.)
 //   offline   the read failed. Bundled data, read-only, retried on focus.
 //
 // Every write carries the revision it was based on, so a change made on
 // another device is a conflict (re-read and redo), never a silent overwrite.
+// A write whose outcome is UNKNOWN (network or server failure: it may or may
+// not have landed) blocks further writes until a re-read has reconciled the
+// screen with the server, so a retry can never duplicate it.
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useAuth } from '../auth/AuthProvider.jsx';
 import {
@@ -27,13 +32,18 @@ const SAVED_BADGE_MS = 2_500;
 
 const isEmpty = (c) => !c.upcoming.length && !c.roi.length && !c.propPicks.length && !c.parlays.length;
 
+// Failures that do NOT prove the write was rejected.
+const isAmbiguous = (error) => !['conflict', 'unauthenticated', 'forbidden', 'validation', 'notFound']
+  .includes(error?.kind);
+
 function describeError(error) {
   switch (error?.kind) {
-    case 'offline': return 'Offline — not saved.';
+    case 'offline': return 'Connection lost — the save may not have gone through. Reloaded to check.';
     case 'unauthenticated': return 'Signed out — sign in again to save.';
     case 'forbidden': return 'Your account cannot edit this workspace.';
     case 'conflict': return 'Changed on another device — reloaded. Redo your change.';
-    default: return 'Save failed — try again.';
+    case 'validation': return 'The server rejected this change.';
+    default: return 'Couldn’t confirm the save — reloaded the latest data. Check it before retrying.';
   }
 }
 
@@ -52,6 +62,8 @@ export function useDocumentStore(bundled) {
   // Which surface the on-screen data came from. Writes need the member
   // surface, because only it carries revision tokens.
   const [surface, setSurface] = useState(null);
+  // A background refresh failed while live: the screen may be out of date.
+  const [refreshFailed, setRefreshFailed] = useState(false);
 
   const revisionsRef = useRef({});
   const collectionsRef = useRef(bundled);
@@ -59,34 +71,45 @@ export function useDocumentStore(bundled) {
   const loadSeqRef = useRef(0);
   const savingRef = useRef(false);
   const savedTimerRef = useRef(null);
+  const reconcileRef = useRef(false);
+  // Latest values for the queued writer, which runs after the render that
+  // enqueued it and must not act on a stale closure.
+  const liveRef = useRef({});
+  liveRef.current = { mode, surface, canWrite: auth.canWrite, signedIn: Boolean(auth.session) };
 
   const setBoth = useCallback((next) => {
     collectionsRef.current = next;
     setCollections(next);
   }, []);
 
+  /** Resolves true when the screen now reflects the server. */
   const reload = useCallback(async () => {
-    if (!documents) return;
+    if (!documents) return false;
     const seq = ++loadSeqRef.current;
     lastLoadRef.current = Date.now();
     const result = await documents.load({ member });
     const loadedSurface = member ? 'member' : 'public';
-    if (seq !== loadSeqRef.current) return; // a newer load superseded this one
+    if (seq !== loadSeqRef.current) return false; // a newer load superseded this one
     if (!result.ok) {
-      // Keep whatever is on screen; only fall back to bundled on first load.
-      setMode((m) => (m === STORE_MODES.LIVE ? m : STORE_MODES.OFFLINE));
-      return;
+      // Keep whatever is on screen (flagged as possibly stale when live);
+      // only fall back to bundled on first load.
+      if (liveRef.current.mode === STORE_MODES.LIVE) setRefreshFailed(true);
+      else setMode(STORE_MODES.OFFLINE);
+      return false;
     }
-    if (isEmpty(result.data.collections)) {
+    setRefreshFailed(false);
+    reconcileRef.current = false;
+    if (!result.data.initialized && isEmpty(result.data.collections)) {
       revisionsRef.current = {};
       setBoth(bundled);
       setMode(STORE_MODES.UNSEEDED);
-      return;
+      return true;
     }
     revisionsRef.current = result.data.revisions;
     setBoth(result.data.collections);
     setSurface(loadedSurface);
     setMode(STORE_MODES.LIVE);
+    return true;
   }, [documents, member, bundled, setBoth]);
 
   // The public copy loads IMMEDIATELY, without waiting for auth, so the server
@@ -119,13 +142,15 @@ export function useDocumentStore(bundled) {
 
   const canWrite = mode === STORE_MODES.LOCAL || (mode === STORE_MODES.LIVE && auth.canWrite);
 
-  // Latest values for the queued writer, which runs after the render that
-  // enqueued it and must not act on a stale closure.
-  const liveRef = useRef({});
-  liveRef.current = { mode, surface, canWrite: auth.canWrite, signedIn: Boolean(auth.session) };
   const queueRef = useRef(Promise.resolve());
 
   const runCommit = useCallback(async (opsOrFn) => {
+    // An earlier write's outcome is unknown: reconcile before writing again,
+    // otherwise a retry of something that DID land would duplicate it.
+    if (reconcileRef.current && !(await reload())) {
+      setSaveState({ status: 'failed', message: 'Still can’t reach the server — not saved.' });
+      return false;
+    }
     const ops = typeof opsOrFn === 'function' ? opsOrFn(collectionsRef.current) : opsOrFn;
     if (!ops?.length) return true;
     const live = liveRef.current;
@@ -152,6 +177,10 @@ export function useDocumentStore(bundled) {
     if (!result.ok) {
       setSaveState({ status: 'failed', message: describeError(result.error) });
       if (result.error?.kind === 'conflict') await reload();
+      else if (isAmbiguous(result.error)) {
+        reconcileRef.current = true;
+        await reload();
+      }
       return false;
     }
     // Any read still in flight started before this write landed; its result
@@ -190,6 +219,6 @@ export function useDocumentStore(bundled) {
   const dismiss = useCallback(() => setSaveState({ status: 'idle', message: null }), []);
 
   return useMemo(() => ({
-    collections, mode, saveState, canWrite, commit, reload, dismiss,
-  }), [collections, mode, saveState, canWrite, commit, reload, dismiss]);
+    collections, mode, saveState, canWrite, refreshFailed, commit, reload, dismiss,
+  }), [collections, mode, saveState, canWrite, refreshFailed, commit, reload, dismiss]);
 }

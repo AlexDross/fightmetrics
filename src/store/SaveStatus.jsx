@@ -15,7 +15,7 @@ const TONE = {
 };
 
 export default function SaveStatus({ store }) {
-  const { saveState, mode, dismiss } = store;
+  const { saveState, mode, refreshFailed, dismiss } = store;
   let tone = null;
   let text = null;
   let dismissible = false;
@@ -26,6 +26,10 @@ export default function SaveStatus({ store }) {
     tone = saveState.status; text = saveState.message; dismissible = true;
   } else if (mode === STORE_MODES.OFFLINE) {
     tone = 'notice'; text = 'Offline — showing the last published snapshot.';
+  } else if (mode === STORE_MODES.UNSEEDED) {
+    tone = 'notice'; text = 'Database not set up yet — showing the published snapshot.';
+  } else if (refreshFailed) {
+    tone = 'notice'; text = 'Couldn’t refresh — this may be out of date.';
   }
 
   if (!text) return null;

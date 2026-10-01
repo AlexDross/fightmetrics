@@ -90,10 +90,30 @@ no commit or deploy per card.
 
 ## Rollback
 
-1. `node scripts/fm-store.mjs export --write-files` and commit, so the bundled
-   snapshot carries everything entered since the switch.
-2. Remove the two Vercel variables and redeploy. The app is back in local
-   mode on the bundled files.
+The website, the CLI and the snapshot workflow are three separate writers or
+readers. Switch ALL of them, in this order, or the bundled files and the
+database diverge (the CLI would keep writing the database while the site reads
+the files, and the next snapshot would overwrite file-only changes).
 
-The database is untouched by either step, so switching back on is just
-re-adding the variables.
+1. **Pause writes.** No `/enter-card`, `/grade-card` or in-app edits until done.
+2. **Take a complete, validated export** while the database is reachable:
+   `node scripts/fm-store.mjs export --write-files`, then `npm test`, then
+   commit the four `src/*Data.js` files. (If the database is unreachable, use
+   the newest `documents-<run>` artifact from the *Snapshot document store*
+   workflow — each run keeps a raw `documents.json` for 90 days.)
+3. **Stop the snapshot writer:** `gh variable delete FM_SUPABASE_URL` and
+   `gh variable delete FM_SUPABASE_PUBLISHABLE_KEY` (the workflow is inert
+   without them).
+4. **Switch the CLI to files:** remove the two `FM_SUPABASE_*` lines from
+   `.env.local` (or run every command with `--files` / `FM_STORE=files`).
+5. **Switch the site:** remove `VITE_SUPABASE_URL` and
+   `VITE_SUPABASE_PUBLISHABLE_KEY` from Vercel Production and redeploy
+   (`vercel redeploy <current production url> --target production`).
+
+The database itself is untouched. **There is no automatic file → database
+sync** (`seed` deliberately refuses an initialized workspace). To switch back
+on: if the files changed while rolled back, re-apply those changes through the
+CLI after step 4 is restored (`enter_upcoming.mjs` / `grade_upcoming.mjs`, which
+write the database once `FM_SUPABASE_*` is back), confirm
+`node scripts/fm-store.mjs status` shows matching counts, then restore step 5
+and finally step 3.

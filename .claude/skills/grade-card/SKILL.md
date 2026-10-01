@@ -44,8 +44,9 @@ still empty. Add `--all` to include events that have not happened yet (only
 useful to inspect — never grade a fight that has not occurred). If nothing is
 pending, say so and stop.
 
-This script is untracked and local-only — it is not on `origin/main`. If it is
-missing, say so rather than hand-editing the data files.
+The script is tracked in the repo (`scripts/grade_upcoming.mjs`). If it is
+ever missing, say so rather than hand-editing data — never edit the database or
+the data files by hand.
 
 Sanity-check the pending set against what the user asked for *before* spending
 research calls. If they named an event and it is not in the list, resolve that
