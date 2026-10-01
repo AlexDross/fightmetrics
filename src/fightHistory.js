@@ -510,7 +510,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 1,
       "ti": "0:57",
-      "wc": "Unknown",
+      "wc": "Light Heavyweight",
       "tb": false,
       "ev": "UFC Fight Night: Rosas Jr. vs. Barcelos"
     }
@@ -635,7 +635,7 @@ export const FIGHT_HISTORY = {
       "me": "DQ",
       "rn": 1,
       "ti": "2:19",
-      "wc": "Unknown",
+      "wc": "Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Rosas Jr. vs. Barcelos"
     }
@@ -648,7 +648,7 @@ export const FIGHT_HISTORY = {
       "me": "DQ",
       "rn": 1,
       "ti": "2:19",
-      "wc": "Unknown",
+      "wc": "Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Rosas Jr. vs. Barcelos"
     }
@@ -661,7 +661,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "3:19",
-      "wc": "Unknown",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Rosas Jr. vs. Barcelos"
     }
@@ -674,7 +674,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "3:19",
-      "wc": "Unknown",
+      "wc": "Women's Strawweight",
       "tb": false,
       "ev": "UFC Fight Night: Rosas Jr. vs. Barcelos"
     }
