@@ -114,15 +114,19 @@ async function status() {
 async function seed() {
   const store = await openStore();
   if (store.backend !== 'supabase') die('seed needs Supabase configured in .env.local');
-  const { data: existing, error } = await store.client.rpc('fm_member_documents', { p_slug: SLUG });
-  if (error) die(`cannot read workspace: ${error.message}`);
-  if (existing.length) die(`refusing: workspace "${SLUG}" already holds ${existing.length} documents`);
+  const st = await store.repo.status();
+  if (!st.ok) die(`cannot read workspace status: ${st.error.kind}`);
+  // An INITIALIZED workspace is never re-seeded, even when empty: it was
+  // emptied deliberately, and re-seeding would resurrect the old snapshot.
+  if (st.data.initialized || st.data.count > 0) {
+    die(`refusing: workspace "${SLUG}" is already initialized (${st.data.count} documents)`);
+  }
   const bundled = readBundled();
   const ops = seedOps(bundled);
   // One batch: the seed lands completely or not at all.
-  const { data, error: applyError } = await store.client.rpc('fm_rpc_apply_documents', { p_slug: SLUG, p_ops: ops });
-  if (applyError) die(`seed failed, nothing written: ${applyError.message}`);
-  console.log(`seeded ${data.length} documents into "${SLUG}" (${counts(bundled)})`);
+  const result = await store.repo.apply(ops);
+  if (!result.ok) die(`seed failed, nothing written: ${result.error.kind}${result.error.message ? ` ${result.error.message}` : ''}`);
+  console.log(`seeded ${result.data.length} documents into "${SLUG}" (${counts(bundled)})`);
 }
 
 async function exportCmd(writeFiles, { publicCopy = false } = {}) {

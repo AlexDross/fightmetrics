@@ -14,15 +14,15 @@
 // Both return the same collections and accept the same ops, and both apply
 // ops with collections.mjs semantics, so a script cannot tell them apart
 // except by where the change lands.
-import { readFileSync, writeFileSync, existsSync, mkdirSync, rmSync, chmodSync, renameSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync, mkdirSync, rmSync, chmodSync, renameSync, openSync, closeSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { resolve, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createClient } from '@supabase/supabase-js';
 import {
-  COLLECTIONS, applyOpsLocally, rowsToCollections, withExpectedRevisions,
+  COLLECTIONS, applyOpsLocally, applyResultRevisions, withExpectedRevisions,
 } from '../../src/data/documents/collections.mjs';
-import { mapDocumentError } from '../../src/data/repositories/supabaseDocuments.mjs';
+import { createDocumentsRepository } from '../../src/data/repositories/supabaseDocuments.mjs';
 
 export const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
 export const SLUG = process.env.FM_WORKSPACE_SLUG || 'fightmetrics';
@@ -66,6 +66,48 @@ export function readBundled() {
   return Object.fromEntries(COLLECTIONS.map((k) => [k, readDataFile(k)]));
 }
 
+// ── file-mode write protocol: lock + roll-forward journal ───────────────────
+// A grade touches two files, and two renames are not one atomic step. So:
+// every changed file is fully staged first; then a journal naming the staged
+// files is written (itself atomically, by rename); then the renames run; then
+// the journal is removed. A crash anywhere after the journal exists leaves it
+// behind, and the next file-mode command finishes the renames before doing
+// anything else -- the write rolls FORWARD, it is never left half-applied.
+// A lock file keeps two file-mode commands from interleaving.
+const JOURNAL = resolve(ROOT, '.fm-store-journal.json');
+const LOCK = resolve(ROOT, '.fm-store.lock');
+
+function withFileLock(fn) {
+  let fd;
+  try {
+    fd = openSync(LOCK, 'wx');
+  } catch {
+    throw new Error(`another file-mode write is in progress (${LOCK} exists; delete it only if no fm-store/enter/grade command is running)`);
+  }
+  try {
+    return fn();
+  } finally {
+    closeSync(fd);
+    rmSync(LOCK, { force: true });
+  }
+}
+
+function recoverJournal() {
+  if (!existsSync(JOURNAL)) return;
+  const { files } = JSON.parse(readFileSync(JOURNAL, 'utf8'));
+  for (const { tmp, dest } of files) if (existsSync(tmp)) renameSync(tmp, dest);
+  rmSync(JOURNAL);
+  console.error('recovered an interrupted file-mode write (completed its pending renames)');
+}
+
+function commitFiles(staged) {
+  const files = staged.map(([k, tmp]) => ({ tmp, dest: DATA_FILES[k].path }));
+  writeFileSync(`${JOURNAL}.tmp`, JSON.stringify({ files }));
+  renameSync(`${JOURNAL}.tmp`, JOURNAL);
+  for (const { tmp, dest } of files) renameSync(tmp, dest);
+  rmSync(JOURNAL);
+}
+
 // ── configuration ───────────────────────────────────────────────────────────
 function readEnvLocal() {
   const out = {};
@@ -87,13 +129,16 @@ export function supabaseConfig() {
   return url && key ? { url, key } : null;
 }
 
-/** Read the PUBLIC copy -- no session needed (the snapshot workflow uses it). */
+/**
+ * Read the PUBLIC copy -- no session needed (the snapshot workflow uses it).
+ * Complete or it throws: never a silently truncated export.
+ */
 export async function loadPublic(config) {
   const client = createClient(config.url, config.key, { auth: { persistSession: false, autoRefreshToken: false } });
-  const { data, error } = await client.rpc('fm_read_documents', { p_slug: SLUG });
-  if (error) throw new Error(`public read failed: ${describe(mapDocumentError(error))}`);
-  if (!data.length) throw new Error(`workspace "${SLUG}" has no public documents`);
-  return rowsToCollections(data).collections;
+  const result = await createDocumentsRepository({ client, slug: SLUG }).load({ member: false });
+  if (!result.ok) throw new Error(`public read failed: ${describe(result.error)}`);
+  if (!result.data.initialized) throw new Error(`workspace "${SLUG}" has never been seeded`);
+  return result.data.collections;
 }
 
 // Session lives OUTSIDE the repository, readable only by this user.
@@ -104,10 +149,14 @@ export function sessionPath(url) {
 
 function fileStorage(path) {
   const read = () => (existsSync(path) ? JSON.parse(readFileSync(path, 'utf8')) : {});
+  // Atomic replace: a crash or a concurrent refresh can never leave a
+  // half-written session file behind.
   const write = (obj) => {
     mkdirSync(dirname(path), { recursive: true, mode: 0o700 });
-    writeFileSync(path, JSON.stringify(obj), { mode: 0o600 });
-    chmodSync(path, 0o600);
+    const tmp = `${path}.tmp-${process.pid}`;
+    writeFileSync(tmp, JSON.stringify(obj), { mode: 0o600 });
+    chmodSync(tmp, 0o600);
+    renameSync(tmp, path);
   };
   return {
     getItem: (k) => read()[k] ?? null,
@@ -141,7 +190,9 @@ export function scriptClient(config) {
 
 // ── the store ───────────────────────────────────────────────────────────────
 const describe = (error) =>
-  error?.kind === 'conflict'
+  error?.code === 'incompleteRead'
+    ? 'could not read every document -- not signed in as a member (node scripts/fm-store.mjs whoami), or the data kept changing'
+    : error?.kind === 'conflict'
     ? 'changed since it was read (stale revision) -- re-run'
     : error?.kind === 'unauthenticated'
       ? 'not signed in -- run: node scripts/fm-store.mjs login <email>'
@@ -161,51 +212,52 @@ export async function openStore({ argv = process.argv } = {}) {
     return {
       backend: 'files',
       describeTarget: 'src/*Data.js (bundled files)',
-      async load() { return readBundled(); },
+      async load() { return withFileLock(() => { recoverJournal(); return readBundled(); }); },
       async apply(ops) {
-        const before = readBundled();
-        const after = applyOpsLocally(before, ops);
-        // Stage every changed file first, then rename them all into place, so
-        // a failure while writing (a grade touches two files) leaves the old
-        // files intact instead of an entry missing from both.
-        const changed = COLLECTIONS.filter((k) => after[k] !== before[k]);
-        const staged = changed.map((k) => [k, stageDataFile(k, after[k])]);
-        for (const [k, tmp] of staged) renameSync(tmp, DATA_FILES[k].path);
-        return after;
+        return withFileLock(() => {
+          recoverJournal();
+          const before = readBundled();
+          const after = applyOpsLocally(before, ops);
+          const changed = COLLECTIONS.filter((k) => after[k] !== before[k]);
+          commitFiles(changed.map((k) => [k, stageDataFile(k, after[k])]));
+          return after;
+        });
       },
     };
   }
 
   const client = scriptClient(config);
+  const repo = createDocumentsRepository({ client, slug: SLUG });
   let revisions = {};
   let loaded = null;
 
   async function load() {
     // A stored session is refreshed here if it expired.
     if (!process.env.FM_ACCESS_TOKEN) await client.auth.getSession();
-    const { data, error } = await client.rpc('fm_member_documents', { p_slug: SLUG });
-    if (error) throw new Error(`load failed: ${describe(mapDocumentError(error))}`);
-    const result = rowsToCollections(data);
-    revisions = result.revisions;
-    loaded = result.collections;
-    if (!data.length) {
-      throw new Error(
-        `no documents visible in workspace "${SLUG}" -- either it is not seeded ` +
-        '(node scripts/fm-store.mjs seed) or you are not signed in as a member ' +
-        '(node scripts/fm-store.mjs login <email>)'
-      );
+    const result = await repo.load({ member: true });
+    if (!result.ok) throw new Error(`load failed: ${describe(result.error)}`);
+    if (!result.data.initialized) {
+      throw new Error(`workspace "${SLUG}" has never been seeded (node scripts/fm-store.mjs seed)`);
     }
+    revisions = result.data.revisions;
+    loaded = result.data.collections;
     return loaded;
   }
 
   async function apply(ops) {
     if (!loaded) await load();
-    const { data, error } = await client.rpc('fm_rpc_apply_documents', {
-      p_slug: SLUG, p_ops: withExpectedRevisions(ops, revisions),
-    });
-    if (error) throw new Error(`write refused: ${describe(mapDocumentError(error))}`);
+    const result = await repo.apply(withExpectedRevisions(ops, revisions));
+    if (!result.ok) {
+      const outcome = ['conflict', 'unauthenticated', 'forbidden', 'validation'].includes(result.error?.kind)
+        ? 'write refused'
+        : 'write outcome UNKNOWN (it may have landed) -- run `node scripts/fm-store.mjs status` / re-list before retrying';
+      throw new Error(`${outcome}: ${describe(result.error)}`);
+    }
+    // Fold the new revisions in, so a second apply through this same store
+    // carries current tokens instead of stale ones.
+    revisions = applyResultRevisions(revisions, result.data);
     loaded = applyOpsLocally(loaded, ops);
-    return { collections: loaded, results: data };
+    return { collections: loaded, results: result.data };
   }
 
   return {
@@ -214,5 +266,6 @@ export async function openStore({ argv = process.argv } = {}) {
     load,
     apply,
     client,
+    repo,
   };
 }

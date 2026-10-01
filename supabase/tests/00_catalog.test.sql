@@ -282,7 +282,8 @@ SELECT set_eq(
            -- not serve the repository, and it must not be counted against the 46.
            ('fm_rpc_seed_store'),
            -- Document store (20260930120000): the runtime read/write path.
-           ('fm_read_documents'),('fm_member_documents'),('fm_rpc_apply_documents')$$,
+           ('fm_read_documents'),('fm_member_documents'),('fm_rpc_apply_documents'),
+           ('fm_read_document_status')$$,
   'the public API surface is exactly the documented function set');
 
 -- ── Constraint helpers reachable by the writing role ────────────────────────

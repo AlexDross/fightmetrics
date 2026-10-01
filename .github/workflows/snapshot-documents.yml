@@ -35,11 +35,25 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci --include=dev
-      - name: Export the public copy over src/*Data.js
+      # The export is complete or it fails (paginated, checked against the
+      # server's own document count), so a truncated read can never be
+      # written over the files.
+      - name: Export the public copy
         env:
           FM_SUPABASE_URL: ${{ vars.FM_SUPABASE_URL }}
           FM_SUPABASE_PUBLISHABLE_KEY: ${{ vars.FM_SUPABASE_PUBLISHABLE_KEY }}
-        run: node scripts/fm-store.mjs export --write-files --public
+        run: |
+          mkdir -p snapshot
+          node scripts/fm-store.mjs export --public > snapshot/documents.json
+          node scripts/fm-store.mjs export --write-files --public
+      # An independent, versioned copy of every run's raw export, kept even
+      # when the unit suite refuses to commit it.
+      - name: Keep the raw export as an artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: documents-${{ github.run_id }}
+          path: snapshot/documents.json
+          retention-days: 90
       - name: Detect changes
         id: diff
         run: |
@@ -52,6 +66,9 @@ jobs:
       - name: Unit suite on the snapshot
         if: steps.diff.outputs.changed == 'true'
         run: npm test
+      # Another writer (fighter/rankings refresh) may push in between: rebase,
+      # re-run the suite on the COMBINED tree, and retry a bounded number of
+      # times. Never pushes a combination that was not tested.
       - name: Commit and push
         if: steps.diff.outputs.changed == 'true'
         run: |
@@ -59,5 +76,12 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add src/upcomingData.js src/roiData.js src/propPicksData.js src/parlayData.js
           git commit -m "data: snapshot document store $(date -u +'%Y-%m-%d')"
-          git pull --rebase --quiet
-          git push
+          for attempt in 1 2 3; do
+            git pull --rebase --quiet
+            npm test
+            if git push; then exit 0; fi
+            echo "push rejected (attempt $attempt); retrying"
+            sleep $((attempt * 15))
+          done
+          echo "could not push after 3 attempts" >&2
+          exit 1

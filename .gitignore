@@ -27,3 +27,9 @@ src/fightersData_test.js
 
 # Stage 6 browser-compatibility probe output
 build-browser-probe
+
+# fm-store file-mode write protocol (scripts/lib/documentStore.mjs)
+.fm-store.lock
+.fm-store-journal.json
+.fm-store-journal.json.tmp
+src/*.tmp-*
