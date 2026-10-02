@@ -15,8 +15,11 @@
 // Every write carries the revision it was based on, so a change made on
 // another device is a conflict (re-read and redo), never a silent overwrite.
 // A write whose outcome is UNKNOWN (network or server failure: it may or may
-// not have landed) blocks further writes until a re-read has reconciled the
-// screen with the server, so a retry can never duplicate it.
+// not have landed) is kept and RE-SENT VERBATIM -- same ids, same payloads --
+// before anything else is written. The server treats an op whose effect is
+// already in place as a no-op success (migration 20261002120000), and its
+// per-collection lock makes a replay wait for an original still in flight, so
+// an unconfirmed write lands exactly once however many times it is retried.
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useAuth } from '../auth/AuthProvider.jsx';
 import {
@@ -38,12 +41,12 @@ const isAmbiguous = (error) => !['conflict', 'unauthenticated', 'forbidden', 'va
 
 function describeError(error) {
   switch (error?.kind) {
-    case 'offline': return 'Connection lost — the save may not have gone through. Reloaded to check.';
+    case 'offline': return 'Connection lost — your save will be confirmed automatically before your next change.';
     case 'unauthenticated': return 'Signed out — sign in again to save.';
     case 'forbidden': return 'Your account cannot edit this workspace.';
     case 'conflict': return 'Changed on another device — reloaded. Redo your change.';
     case 'validation': return 'The server rejected this change.';
-    default: return 'Couldn’t confirm the save — reloaded the latest data. Check it before retrying.';
+    default: return 'Couldn’t confirm the save — it will be retried automatically before your next change.';
   }
 }
 
@@ -71,7 +74,8 @@ export function useDocumentStore(bundled) {
   const loadSeqRef = useRef(0);
   const savingRef = useRef(false);
   const savedTimerRef = useRef(null);
-  const reconcileRef = useRef(false);
+  // The one write whose outcome is unknown: { sent, ops }. See runCommit.
+  const pendingRef = useRef(null);
   // Latest values for the queued writer, which runs after the render that
   // enqueued it and must not act on a stale closure.
   const liveRef = useRef({});
@@ -98,7 +102,6 @@ export function useDocumentStore(bundled) {
       return false;
     }
     setRefreshFailed(false);
-    reconcileRef.current = false;
     if (!result.data.initialized && isEmpty(result.data.collections)) {
       revisionsRef.current = {};
       setBoth(bundled);
@@ -131,6 +134,8 @@ export function useDocumentStore(bundled) {
     if (!documents || typeof window === 'undefined') return undefined;
     const onFocus = () => {
       if (savingRef.current) return;
+      // An unconfirmed write is confirmed first (an empty commit replays it).
+      if (pendingRef.current) { commitRef.current?.(() => []); return; }
       if (Date.now() - lastLoadRef.current < REFRESH_ON_FOCUS_AFTER_MS) return;
       reload();
     };
@@ -144,12 +149,50 @@ export function useDocumentStore(bundled) {
 
   const queueRef = useRef(Promise.resolve());
 
+  /** A confirmed write: fold revisions, show it, discard stale reads. */
+  const settle = useCallback((ops, result) => {
+    // Any read still in flight started before this write landed; its result
+    // would roll the screen and the revisions back, so it is discarded.
+    loadSeqRef.current += 1;
+    revisionsRef.current = applyResultRevisions(revisionsRef.current, result.data);
+    setBoth(applyOpsLocally(collectionsRef.current, ops));
+    clearTimeout(savedTimerRef.current);
+    setSaveState({ status: 'saved', message: null });
+    savedTimerRef.current = setTimeout(() => setSaveState({ status: 'idle', message: null }), SAVED_BADGE_MS);
+  }, [setBoth]);
+
+  /**
+   * Re-send the unconfirmed write exactly as first sent. 'ok' (it is in place
+   * now, whether this send or the original put it there), 'rejected' (the
+   * server definitively refused it), or 'unknown' (still unreachable).
+   */
+  const replayPending = useCallback(async () => {
+    const pending = pendingRef.current;
+    savingRef.current = true;
+    const result = await documents.apply(pending.sent);
+    savingRef.current = false;
+    if (result.ok) {
+      pendingRef.current = null;
+      settle(pending.ops, result);
+      return 'ok';
+    }
+    if (isAmbiguous(result.error)) return 'unknown';
+    pendingRef.current = null;
+    setSaveState({ status: 'failed', message: describeError(result.error) });
+    await reload();
+    return 'rejected';
+  }, [documents, reload, settle]);
+
   const runCommit = useCallback(async (opsOrFn) => {
-    // An earlier write's outcome is unknown: reconcile before writing again,
-    // otherwise a retry of something that DID land would duplicate it.
-    if (reconcileRef.current && !(await reload())) {
-      setSaveState({ status: 'failed', message: 'Still can’t reach the server — not saved.' });
-      return false;
+    // Nothing new is written while an earlier write is unconfirmed: confirm
+    // it first (by replaying it), or a retry of something that DID land, or
+    // is still landing, would duplicate it.
+    if (pendingRef.current) {
+      const outcome = await replayPending();
+      if (outcome === 'unknown') {
+        setSaveState({ status: 'failed', message: 'Still can’t reach the server — your last save isn’t confirmed yet, so nothing new was saved.' });
+        return false;
+      }
     }
     const ops = typeof opsOrFn === 'function' ? opsOrFn(collectionsRef.current) : opsOrFn;
     if (!ops?.length) return true;
@@ -172,26 +215,27 @@ export function useDocumentStore(bundled) {
     clearTimeout(savedTimerRef.current);
     savingRef.current = true;
     setSaveState({ status: 'saving', message: null });
-    const result = await documents.apply(withExpectedRevisions(ops, revisionsRef.current));
+    const sent = withExpectedRevisions(ops, revisionsRef.current);
+    const result = await documents.apply(sent);
     savingRef.current = false;
-    if (!result.ok) {
-      setSaveState({ status: 'failed', message: describeError(result.error) });
-      if (result.error?.kind === 'conflict') await reload();
-      else if (isAmbiguous(result.error)) {
-        reconcileRef.current = true;
-        await reload();
-      }
+    if (result.ok) {
+      settle(ops, result);
+      return true;
+    }
+    if (isAmbiguous(result.error)) {
+      // Unknown outcome: keep it, and try once more straight away (a brief
+      // blip resolves here, invisibly). Still unknown -> it is replayed
+      // before the next write, and on focus.
+      pendingRef.current = { sent, ops };
+      const outcome = await replayPending();
+      if (outcome === 'ok') return true;
+      if (outcome === 'unknown') setSaveState({ status: 'failed', message: describeError(result.error) });
       return false;
     }
-    // Any read still in flight started before this write landed; its result
-    // would roll the screen and the revisions back, so it is discarded.
-    loadSeqRef.current += 1;
-    revisionsRef.current = applyResultRevisions(revisionsRef.current, result.data);
-    setBoth(applyOpsLocally(collectionsRef.current, ops));
-    setSaveState({ status: 'saved', message: null });
-    savedTimerRef.current = setTimeout(() => setSaveState({ status: 'idle', message: null }), SAVED_BADGE_MS);
-    return true;
-  }, [documents, reload, setBoth]);
+    setSaveState({ status: 'failed', message: describeError(result.error) });
+    if (result.error?.kind === 'conflict') await reload();
+    return false;
+  }, [documents, reload, replayPending, settle]);
 
   /**
    * Apply a batch of document ops -- or a function of the CURRENT collections
@@ -215,6 +259,8 @@ export function useDocumentStore(bundled) {
     queueRef.current = next.catch(() => false);
     return next;
   }, [runCommit, setBoth]);
+  const commitRef = useRef(null);
+  commitRef.current = commit;
 
   const dismiss = useCallback(() => setSaveState({ status: 'idle', message: null }), []);
 

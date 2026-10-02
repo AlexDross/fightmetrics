@@ -117,10 +117,11 @@ describe('document store', () => {
     expect((await apply(PUB, [{ op: 'put', collection: 'roi', payload: [1] }])).body.code).toBe('22023');
   });
 
-  it('deleting a missing row is a no-op unless a revision is expected', async () => {
+  it('deleting a missing row succeeds, with or without an expected revision (replay-safe)', async () => {
     expect((await apply(PUB, [{ op: 'delete', collection: 'roi', id: 'ghost' }])).status).toBe(200);
-    expect((await apply(PUB, [{ op: 'delete', collection: 'roi', id: 'ghost', expectedRevision: '1' }])).body.message)
-      .toBe('stale_write revision=0');
+    const r = await apply(PUB, [{ op: 'delete', collection: 'roi', id: 'ghost', expectedRevision: '1' }]);
+    expect(r.status).toBe(200);
+    expect(r.body[0].deleted).toBe(true);
   });
 
   it('preserves key order and the exact payload text', async () => {
@@ -218,14 +219,49 @@ COMMIT;
   });
 
   const status = async (as) => (await rpc('fm_read_document_status', { p_slug: H }, as ? { as } : undefined)).body[0];
+  const pick = ({ initialized, document_count }) => ({ initialized, document_count });
 
   it('status: uninitialized and empty until the first put, then initialized', async () => {
-    expect(await status()).toEqual({ initialized: false, document_count: 0 });
+    expect(pick(await status())).toEqual({ initialized: false, document_count: 0 });
     await apply(H, [{ op: 'put', collection: 'roi', payload: { id: 'first' } }]);
-    expect(await status()).toEqual({ initialized: true, document_count: 1 });
+    expect(pick(await status())).toEqual({ initialized: true, document_count: 1 });
     // Deleting everything leaves it INITIALIZED: empty, not unseeded.
     await apply(H, [{ op: 'delete', collection: 'roi', id: 'first' }]);
-    expect(await status()).toEqual({ initialized: true, document_count: 0 });
+    expect(pick(await status())).toEqual({ initialized: true, document_count: 0 });
+  });
+
+  it('every batch bumps the generation, including a count-preserving grade', async () => {
+    await apply(H, [{ op: 'put', collection: 'upcoming', payload: { id: 'gen-u' } }]);
+    const g0 = BigInt((await status()).generation);
+    // A grade: same total count before and after.
+    await apply(H, [{ op: 'delete', collection: 'upcoming', id: 'gen-u' }, { op: 'put', collection: 'roi', payload: { id: 'gen-u', actualWinner: 'X' } }]);
+    const s1 = await status();
+    expect(BigInt(s1.generation)).toBe(g0 + 1n);
+  });
+
+  it('replaying an identical put is a no-op success -- before or after it landed, any revision', async () => {
+    const op = { op: 'put', collection: 'parlays', payload: { id: 'replay-1', legs: [1, 2], odds: '+250' }, expectedRevision: '0' };
+    const first = await apply(H, [op]);
+    expect(first.body[0].revision).toBe('1');
+    const replay = await apply(H, [op]);              // lost-response retry, same expectedRevision '0'
+    expect(replay.status).toBe(200);
+    expect(replay.body[0].revision).toBe('1');
+    // A DIFFERENT payload under the stale token is still refused.
+    const changed = await apply(H, [{ ...op, payload: { ...op.payload, odds: '+300' } }]);
+    expect(changed.body.message).toBe('stale_write revision=1');
+    // An update replayed after it landed (token now stale, content identical) succeeds.
+    const upd = { op: 'put', collection: 'parlays', payload: { ...op.payload, odds: '+275' }, expectedRevision: '1' };
+    expect((await apply(H, [upd])).body[0].revision).toBe('2');
+    expect((await apply(H, [upd])).body[0].revision).toBe('2');
+    const rows = Number(scalar(`SELECT count(*) FROM app_private.documents WHERE workspace_id = '${WS_H}' AND id = 'replay-1';`));
+    expect(rows).toBe(1);
+  });
+
+  it('a replay that races the original still in flight waits for it -- never a second row', async () => {
+    const op = { op: 'put', collection: 'propPicks', payload: { id: 'inflight-1', label: 'x' }, expectedRevision: '0' };
+    const results = await Promise.all(Array.from({ length: 6 }, () => apply(H, [op])));
+    expect(results.every((r) => r.status === 200)).toBe(true);
+    expect(Number(scalar(`SELECT count(*) FROM app_private.documents WHERE workspace_id = '${WS_H}' AND id = 'inflight-1';`))).toBe(1);
   });
 
   it('status is not visible to anon for a private workspace', async () => {
@@ -235,7 +271,7 @@ COMMIT;
     expect(m.body[0].document_count).toBeGreaterThan(0);
   });
 
-  it('concurrent creates of the SAME id: exactly one wins, the rest are stale_write (not a raw 23505)', async () => {
+  it('concurrent creates of the SAME id with DIFFERENT content: one wins, the rest are stale_write (not a raw 23505)', async () => {
     const tries = await Promise.all(Array.from({ length: 8 }, (_, i) =>
       apply(H, [{ op: 'put', collection: 'upcoming', payload: { id: 'race', n: i }, expectedRevision: '0' }])));
     expect(tries.filter((t) => t.status === 200)).toHaveLength(1);
@@ -249,7 +285,7 @@ COMMIT;
     const ids = Array.from({ length: 8 }, (_, i) => `par${i}`);
     const res = await Promise.all(ids.map((id) => apply(H, [{ op: 'put', collection: 'propPicks', payload: { id } }])));
     expect(res.every((r) => r.status === 200)).toBe(true);
-    const ords = scalar(`SELECT count(DISTINCT ord) || '/' || count(*) FROM app_private.documents WHERE workspace_id = '${WS_H}' AND collection = 'propPicks';`);
+    const ords = scalar(`SELECT count(DISTINCT ord) || '/' || count(*) FROM app_private.documents WHERE workspace_id = '${WS_H}' AND collection = 'propPicks' AND id LIKE 'par%';`);
     expect(ords).toBe('8/8');
   });
 
@@ -275,5 +311,61 @@ COMMIT;
     const n = Object.values(r.data.collections).reduce((a, c) => a + c.length, 0);
     expect(n).toBe(total);
     expect(r.data.collections.upcoming.map((e) => e.id)).toContain('race');
+  });
+});
+
+// The audit's reproduction: a grade lands between pages of a multi-page read.
+// Counts are unchanged by a grade, so only the generation check catches it.
+describe('document store: paged read across a concurrent grade', () => {
+  const WS_P = '11110000-0000-4000-8000-0000000000d5';
+  const P = 'api-docs-paging';
+
+  it('never returns a copy missing the graded pick (or holding a duplicate)', async () => {
+    sql(`
+BEGIN;
+GRANT fm_table_owner TO postgres WITH SET TRUE, INHERIT FALSE;
+SET LOCAL ROLE fm_table_owner;
+DELETE FROM app_private.documents WHERE workspace_id = '${WS_P}';
+DELETE FROM app_private.workspace_members WHERE workspace_id = '${WS_P}';
+INSERT INTO app_private.workspaces (id, slug, is_public) VALUES ('${WS_P}', '${P}', true) ON CONFLICT DO NOTHING;
+INSERT INTO app_private.workspace_members (workspace_id, user_id, role) VALUES ('${WS_P}', '${USER_MEMBER}', 'owner');
+RESET ROLE;
+REVOKE fm_table_owner FROM postgres;
+COMMIT;
+`);
+    const roi = Array.from({ length: 1000 }, (_, i) => ({ op: 'put', collection: 'roi', payload: { id: `r${String(i).padStart(3, '0')}` }, position: 'bottom' }));
+    expect((await apply(P, roi)).status).toBe(200);
+    expect((await apply(P, [{ op: 'put', collection: 'upcoming', payload: { id: 'grade-me' } }])).status).toBe(200);
+
+    const { createClient } = await import('@supabase/supabase-js');
+    const { createDocumentsRepository } = await import('../../src/data/repositories/supabaseDocuments.mjs');
+    const { REST_URL, ANON_KEY } = (await import('./helpers.mjs')).status();
+    const real = createClient(REST_URL.replace(/\/rest\/v1$/, ''), ANON_KEY, { auth: { persistSession: false } });
+    // Grade the upcoming doc right after the FIRST page of the FIRST attempt.
+    let pageCalls = 0; let graded = false;
+    const client = {
+      rpc(fn, args) {
+        const b = real.rpc(fn, args);
+        if (fn !== 'fm_read_documents') return b;
+        return { range: async (from, to) => {
+          const r = await b.range(from, to);
+          pageCalls += 1;
+          if (pageCalls === 1 && !graded) {
+            graded = true;
+            const g = await apply(P, [{ op: 'delete', collection: 'upcoming', id: 'grade-me' }, { op: 'put', collection: 'roi', payload: { id: 'grade-me', actualWinner: 'X' } }]);
+            expect(g.status).toBe(200);
+          }
+          return r;
+        } };
+      },
+    };
+    const r = await createDocumentsRepository({ client, slug: P, pageSize: 500 }).load({ member: false });
+    expect(graded).toBe(true);
+    expect(r.ok).toBe(true);
+    const all = Object.entries(r.data.collections).flatMap(([c, xs]) => xs.map((x) => `${c}:${x.id}`));
+    expect(new Set(all).size).toBe(all.length);          // no duplicates
+    expect(all).toContain('roi:grade-me');               // the graded pick is present
+    expect(all).not.toContain('upcoming:grade-me');
+    expect(all.length).toBe(1001);
   });
 });

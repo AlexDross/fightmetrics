@@ -35,25 +35,28 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci --include=dev
-      # The export is complete or it fails (paginated, checked against the
-      # server's own document count), so a truncated read can never be
-      # written over the files.
-      - name: Export the public copy
+      # ONE read of the database. The export is complete and consistent or it
+      # fails (paged, generation- and count-checked), so a partial read can
+      # never be written over the files.
+      - name: Capture the public copy
+        id: capture
         env:
           FM_SUPABASE_URL: ${{ vars.FM_SUPABASE_URL }}
           FM_SUPABASE_PUBLISHABLE_KEY: ${{ vars.FM_SUPABASE_PUBLISHABLE_KEY }}
         run: |
           mkdir -p snapshot
           node scripts/fm-store.mjs export --public > snapshot/documents.json
-          node scripts/fm-store.mjs export --write-files --public
-      # An independent, versioned copy of every run's raw export, kept even
-      # when the unit suite refuses to commit it.
-      - name: Keep the raw export as an artifact
+      # The archived backup is exactly the capture the files are rendered from,
+      # and it is kept even if a later step (rendering, tests, push) fails.
+      - name: Keep the capture as an artifact
+        if: ${{ always() && steps.capture.outcome == 'success' }}
         uses: actions/upload-artifact@v4
         with:
           name: documents-${{ github.run_id }}
           path: snapshot/documents.json
           retention-days: 90
+      - name: Render src/*Data.js from the capture
+        run: node scripts/fm-store.mjs write-files snapshot/documents.json
       - name: Detect changes
         id: diff
         run: |

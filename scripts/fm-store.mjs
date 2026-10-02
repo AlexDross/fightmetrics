@@ -13,6 +13,10 @@
 //                                             --public reads the public copy, no login.
 //   node scripts/fm-store.mjs login <email> --create
 //                                             first login only: also creates the account
+//   node scripts/fm-store.mjs write-files <capture.json>
+//                                             overwrite src/*Data.js from a saved export
+//                                             (so the snapshot job renders from the SAME
+//                                             capture it archives)
 //   node scripts/fm-store.mjs logout
 //
 // Reads FM_SUPABASE_URL / FM_SUPABASE_PUBLISHABLE_KEY from .env.local.
@@ -20,6 +24,7 @@
 // key exists anywhere in this tool, and every write is checked by RLS and
 // fm_rpc_apply_documents exactly as a write from the app is.
 import { createServer } from 'node:http';
+import { readFileSync } from 'node:fs';
 import {
   SLUG, clearSession, loadPublic, openStore, readBundled, scriptClient, sessionPath, supabaseConfig, writeDataFile,
 } from './lib/documentStore.mjs';
@@ -143,6 +148,16 @@ async function exportCmd(writeFiles, { publicCopy = false } = {}) {
   console.log(`wrote src/*Data.js from the server (${counts(collections)})`);
 }
 
+function writeFilesFrom(path) {
+  if (!path) die('usage: fm-store.mjs write-files <capture.json>');
+  const capture = JSON.parse(readFileSync(path, 'utf8'));
+  for (const k of COLLECTIONS) {
+    if (!Array.isArray(capture[k])) die(`capture is missing collection "${k}" -- refusing to write anything`);
+  }
+  for (const k of COLLECTIONS) writeDataFile(k, capture[k]);
+  console.log(`wrote src/*Data.js from ${path} (${counts(capture)})`);
+}
+
 const [cmd, ...rest] = process.argv.slice(2);
 const run = {
   login: () => login(rest.find((a) => !a.startsWith('--')), { create: rest.includes('--create') }),
@@ -151,7 +166,8 @@ const run = {
   status,
   seed,
   export: () => exportCmd(rest.includes('--write-files'), { publicCopy: rest.includes('--public') }),
+  'write-files': () => writeFilesFrom(rest.find((a) => !a.startsWith('--'))),
   logout: async () => { clearSession(requireConfig().url); console.log('signed out (local session removed)'); },
 }[cmd];
-if (!run) die('usage: fm-store.mjs login <email> | whoami | claim | status | seed | export [--write-files] | logout');
+if (!run) die('usage: fm-store.mjs login <email> | whoami | claim | status | seed | export [--write-files] [--public] | write-files <capture.json> | logout');
 await run();
