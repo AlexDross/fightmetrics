@@ -471,6 +471,54 @@ class MalformedUfcHtml(unittest.TestCase):
         self.assertIn('Cannot parse', str(ctx.exception))
 
 
+class MultipleMediaSnapshots(unittest.TestCase):
+    """History keeps rows from EVERY post-cutoff media snapshot, not just the
+    newest. scripts/verify-rankings.mjs must accept all of these dates (the
+    weekly job failed for seven runs when it accepted only the latest)."""
+
+    @staticmethod
+    def media(date, contenders):
+        return {
+            'schemaVersion': 1,
+            'sourceSystem': 'media',
+            'sourceUpdatedAt': date,
+            'divisions': {
+                'Lightweight': {
+                    'champions': [{'displayName': 'Champ', 'rank': 0}],
+                    'contenders': [
+                        {'displayName': name, 'rank': rank}
+                        for rank, name in enumerate(contenders, start=1)
+                    ],
+                },
+            },
+        }
+
+    def test_history_carries_rows_from_each_post_cutoff_snapshot(self):
+        cutoff = int(ur.HISTORY_CUTOFF.replace('-', ''))
+        cache = {
+            'snapshotDates': [str(cutoff)],
+            'history': {
+                ur.history_key('Lightweight', 'champ'): [[cutoff, 0]],
+                ur.history_key('Lightweight', 'alpha'): [[cutoff, 1]],
+            },
+        }
+        snapshots = [
+            self.media('2026-08-04', ['Alpha', 'Bravo']),
+            self.media('2026-08-11', ['Bravo', 'Alpha']),
+            {**self.media('2026-08-12', ['Charlie']), 'sourceSystem': 'meta'},
+        ]
+        history, _combined = ur.build_history(cache, snapshots, {})
+        post_cutoff = sorted({
+            date for entries in history.values()
+            for date, _ in entries if date > cutoff
+        })
+        self.assertEqual(post_cutoff, [20260804, 20260811])
+        self.assertEqual(
+            history[ur.history_key('Lightweight', 'alpha')],
+            [[cutoff, 1], [20260811, 2]],
+        )
+
+
 class GeneratedArtifact(unittest.TestCase):
     """The committed artifacts must satisfy the invariants the app relies on."""
 

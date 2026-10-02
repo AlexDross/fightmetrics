@@ -8,6 +8,9 @@
 // schedule and would rewrite goldens. This runs in CI and in the rankings
 // workflow instead.
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import {
   CURRENT_MEDIA_P4P,
@@ -29,8 +32,14 @@ import {
   resolveCurrentRanking,
 } from '../src/domain/rankings/current.js';
 import { getHistoricalRank } from '../src/domain/rankings/history.js';
+import {
+  loadMediaSnapshotDates,
+  unbackedPostCutoffDates,
+  ymd,
+} from './lib/rankingsSnapshots.mjs';
 
 const CUTOFF = 20260618;
+const SNAPSHOT_DIR = fileURLToPath(new URL('../data/rankings/snapshots/', import.meta.url));
 
 // ── artifact shape ──────────────────────────────────────────────────────────
 assert.equal(RANKINGS_METADATA.schemaVersion, 4);
@@ -93,18 +102,24 @@ for (const division of RANKINGS_HISTORY_METADATA.history.retiredDivisions) {
 }
 
 // Kaggle-era rows must not have leaked past the reviewed cutoff except through
-// source-labelled official media snapshots.
-const officialDates = new Set([
-  Number(RANKINGS_HISTORY_METADATA.officialUfc.mediaSnapshot.replaceAll('-', '')),
-]);
-for (const [key, entries] of Object.entries(DIVISION_RANK_HISTORY)) {
-  for (const [date] of entries) {
-    assert.ok(
-      date <= CUTOFF || officialDates.has(date),
-      `${key} has post-cutoff date ${date} from no known media snapshot`
-    );
-  }
-}
+// source-labelled official media snapshots. update_rankings.py extends history
+// with EVERY committed media snapshot, so every one of their dates is allowed.
+const mediaDates = loadMediaSnapshotDates(SNAPSHOT_DIR);
+const newestMedia = mediaDates[mediaDates.length - 1];
+assert.equal(
+  ymd(RANKINGS_HISTORY_METADATA.officialUfc.mediaSnapshot), newestMedia,
+  'History artifact is not built from the newest committed media snapshot'
+);
+assert.equal(
+  ymd(RANKINGS_METADATA.officialUfc.mediaSnapshot), newestMedia,
+  'Runtime artifact is not built from the newest committed media snapshot'
+);
+const unbacked = unbackedPostCutoffDates(DIVISION_RANK_HISTORY, CUTOFF, mediaDates);
+assert.deepEqual(
+  unbacked.slice(0, 10), [],
+  `${unbacked.length} post-cutoff history rows from no committed media snapshot ` +
+    `(known: ${mediaDates.join(', ')})`
+);
 
 // ── point-in-time behaviour ─────────────────────────────────────────────────
 assert.equal(
@@ -123,12 +138,38 @@ assert.equal(
 );
 
 // ── current rankings ────────────────────────────────────────────────────────
-assert.equal(getCurrentRanking('Quillan Salkilld', 'Lightweight')?.rank, 12);
-assert.equal(getCurrentRanking('Jan Blachowicz', 'Light Heavyweight')?.rank, 9);
-assert.equal(getCurrentRanking('Michael Page', 'Welterweight')?.rank, 14);
-assert.equal(getCurrentRanking('Michael Page', 'Lightweight'), null);
-assert.equal(getCurrentRanking("Lone'er Kavanagh", 'Flyweight')?.rank, 6);
-assert.ok(getCurrentP4PRanking('Islam Makhachev'));
+// Checked against the newest committed media snapshot rather than hard-coded
+// ranks: UFC reshuffles the tables weekly, and fixed spot checks (Salkilld #12,
+// Page #14, ...) failed the first refresh that moved anyone. Every published
+// slot must resolve to its own rank, under the published name and an
+// ASCII-apostrophe spelling (Lone’er / Lone'er), and to nothing in a division
+// where that fighter holds no slot.
+const newestMediaSnapshot = JSON.parse(
+  fs.readFileSync(path.join(SNAPSHOT_DIR, `${RANKINGS_METADATA.officialUfc.mediaSnapshot}-media.json`), 'utf8')
+);
+const asciiName = (name) => name.replace(/[\u2018\u2019\u02bc]/g, "'");
+const slotsByName = new Map();
+for (const [division, table] of Object.entries(newestMediaSnapshot.divisions)) {
+  for (const record of [...table.champions, ...table.contenders]) {
+    slotsByName.set(record.displayName, [...(slotsByName.get(record.displayName) ?? []), division]);
+    for (const name of new Set([record.displayName, asciiName(record.displayName)])) {
+      assert.equal(
+        getCurrentRanking(name, division)?.rank, record.rank,
+        `${name} should be ${division} #${record.rank}`
+      );
+    }
+  }
+}
+const activeDivisions = Object.keys(newestMediaSnapshot.divisions);
+for (const [name, divisions] of slotsByName) {
+  const elsewhere = activeDivisions.find((division) => !divisions.includes(division));
+  assert.equal(getCurrentRanking(name, elsewhere), null, `${name} must not be ranked in ${elsewhere}`);
+}
+for (const table of Object.values(newestMediaSnapshot.poundForPound)) {
+  for (const record of table) {
+    assert.ok(getCurrentP4PRanking(record.displayName), `${record.displayName} missing from P4P`);
+  }
+}
 
 const ambiguities = listCurrentRankingAmbiguities();
 assert.deepEqual(
