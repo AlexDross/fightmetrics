@@ -38,14 +38,23 @@ export function mapDocumentError(error) {
 export function createDocumentsRepository({ client, slug = DEFAULT_WORKSPACE_SLUG, pageSize = READ_PAGE_SIZE }) {
   if (!client?.rpc) throw new Error('createDocumentsRepository requires a Supabase client');
 
-  /** `{ initialized, count }` for the workspace, as this caller may see it. */
+  /** `{ initialized, count, generation }` for the workspace, as this caller may see it. */
   async function status() {
     try {
       const { data, error } = await client.rpc('fm_read_document_status', { p_slug: slug });
       if (error) return { ok: false, error: mapDocumentError(error) };
       const row = Array.isArray(data) ? data[0] : data;
       if (!row) return { ok: false, error: { kind: 'notFound' } };
-      return { ok: true, data: { initialized: Boolean(row.initialized), count: Number(row.document_count) } };
+      return {
+        ok: true,
+        data: {
+          initialized: Boolean(row.initialized),
+          count: Number(row.document_count),
+          // Bumped by every write batch. Absent on a server older than
+          // migration 20261002120000; then only the count can be compared.
+          generation: row.generation == null ? null : String(row.generation),
+        },
+      };
     } catch (error) {
       return { ok: false, error: mapDocumentError(error) };
     }
@@ -62,9 +71,12 @@ export function createDocumentsRepository({ client, slug = DEFAULT_WORKSPACE_SLU
   }
 
   /**
-   * A COMPLETE read or a failure -- never a silently partial one. The rows
-   * must equal the server's document count taken before and after them; a
-   * write landing in between makes them disagree, and the read is retried.
+   * A COMPLETE, CONSISTENT read or a failure -- never a silently partial one.
+   * Accepted only when the workspace generation is unchanged across the whole
+   * paged read (no write landed in between -- a grade moves a row WITHOUT
+   * changing the count, so counts alone cannot prove this), the rows equal the
+   * server's count, and no (collection, id) pair appears twice. Otherwise the
+   * read is retried.
    */
   async function load({ member }) {
     try {
@@ -76,7 +88,12 @@ export function createDocumentsRepository({ client, slug = DEFAULT_WORKSPACE_SLU
         if (!read.ok) return read;
         const after = await status();
         if (!after.ok) return after;
-        if (read.data.length === before.data.count && before.data.count === after.data.count) {
+        const keys = new Set(read.data.map((r) => `${r.collection}\u0000${r.id}`));
+        const consistent = before.data.generation === after.data.generation
+          && read.data.length === before.data.count
+          && before.data.count === after.data.count
+          && keys.size === read.data.length;
+        if (consistent) {
           return { ok: true, data: { ...rowsToCollections(read.data), initialized: after.data.initialized } };
         }
       }

@@ -31,12 +31,18 @@ function fakeDocuments({ initial = [], initialized = true } = {}) {
   return repo;
 }
 
+// Mirrors fm_rpc_apply_documents' replay rule: an op whose effect is already
+// in place (identical payload / row already gone) is a no-op success.
 function commitOnServer(server, ops) {
   const results = [];
   for (const op of ops) {
     const id = op.op === 'put' ? op.payload.id : op.id;
     const i = server.rows.findIndex((r) => r.collection === op.collection && r.id === id);
     if (op.op === 'delete') { if (i >= 0) server.rows.splice(i, 1); results.push({ collection: op.collection, id, deleted: true }); continue; }
+    if (i >= 0 && JSON.stringify(server.rows[i].payload) === JSON.stringify(op.payload)) {
+      results.push({ collection: op.collection, id, revision: String(server.rows[i].revision), deleted: false });
+      continue;
+    }
     if (i >= 0) { server.rows[i] = { ...server.rows[i], payload: op.payload, revision: server.rows[i].revision + 1 }; results.push({ collection: op.collection, id, revision: String(server.rows[i].revision), deleted: false }); }
     else { server.rows.unshift({ collection: op.collection, id, payload: op.payload, revision: 1 }); results.push({ collection: op.collection, id, revision: '1', deleted: false }); }
   }
@@ -90,34 +96,59 @@ describe('useDocumentStore', () => {
     expect(docs.server.rows.filter((r) => r.collection === 'upcoming')).toHaveLength(1);
   });
 
-  it('a save whose response is lost reconciles before any retry, so it cannot duplicate', async () => {
+  it('a lost response is confirmed by replaying the SAME write: one row, and the save reports success', async () => {
     const docs = fakeDocuments({ initial: [{ collection: 'roi', id: 'r', payload: { id: 'r' }, revision: 1 }] });
-    // The server COMMITS, but the client sees a network failure.
-    docs.applyBehaviour = async (ops) => { commitOnServer(docs.server, ops); return { ok: false, error: { kind: 'offline' } }; };
+    // The server COMMITS, but the first response is lost.
+    let first = true;
+    docs.applyBehaviour = async (ops) => {
+      const r = commitOnServer(docs.server, ops);
+      if (first) { first = false; return { ok: false, error: { kind: 'offline' } }; }
+      return r;
+    };
     await mount(docs);
-    let first;
-    await act(async () => { first = await store.commit(saveIfNotPending({ id: 'p1', matchup: 'X|Y' })); });
-    expect(first).toBe(false);
-    // The reconcile re-read shows what actually landed.
-    expect(store.collections.upcoming.map((e) => e.id)).toEqual(['p1']);
-    docs.applyBehaviour = null;
-    // The user retries: the dedupe now sees p1, so nothing new is written.
-    await act(async () => { await store.commit(saveIfNotPending({ id: 'p2', matchup: 'X|Y' })); });
-    expect(docs.server.rows.filter((r) => r.collection === 'upcoming')).toHaveLength(1);
+    const parlay = { id: 'draft-1', legs: ['a', 'b'], combinedOdds: '+250' }; // stable draft id
+    let ok;
+    await act(async () => { ok = await store.commit([{ op: 'put', collection: 'parlays', payload: parlay }]); });
+    expect(ok).toBe(true);                                   // so the form closes
+    expect(docs.server.rows.filter((r) => r.collection === 'parlays')).toHaveLength(1);
+    // A user retry of the same draft is an idempotent no-op, not a second row.
+    await act(async () => { await store.commit([{ op: 'put', collection: 'parlays', payload: parlay }]); });
+    expect(docs.server.rows.filter((r) => r.collection === 'parlays')).toHaveLength(1);
+    expect(store.collections.parlays.map((p) => p.id)).toEqual(['draft-1']);
   });
 
-  it('while the server stays unreachable, further writes are refused until reconciled', async () => {
+  it('an original that lands AFTER the check still yields one row (replay first, then dedupe)', async () => {
+    const docs = fakeDocuments({ initial: [{ collection: 'roi', id: 'r', payload: { id: 'r' }, revision: 1 }] });
+    let landLater;
+    // Every send of the first op times out; the original is still in flight.
+    docs.applyBehaviour = async (ops) => {
+      if (!landLater) landLater = () => commitOnServer(docs.server, ops);
+      return { ok: false, error: { kind: 'offline' } };
+    };
+    await mount(docs);
+    let ok;
+    await act(async () => { ok = await store.commit(saveIfNotPending({ id: 'A', matchup: 'X|Y' })); });
+    expect(ok).toBe(false);
+    // The original finally commits on the server, after the client gave up.
+    landLater();
+    docs.applyBehaviour = null;
+    // The user saves the same matchup again; the click builds a NEW id.
+    await act(async () => { await store.commit(saveIfNotPending({ id: 'B', matchup: 'X|Y' })); });
+    expect(docs.server.rows.filter((r) => r.collection === 'upcoming').map((r) => r.id)).toEqual(['A']);
+    expect(store.collections.upcoming.map((e) => e.id)).toEqual(['A']);
+  });
+
+  it('while the server stays unreachable, the unconfirmed write is retried and nothing NEW is sent', async () => {
     const docs = fakeDocuments({ initial: [{ collection: 'roi', id: 'r', payload: { id: 'r' }, revision: 1 }] });
     await mount(docs);
     docs.applyBehaviour = async () => ({ ok: false, error: { kind: 'offline' } });
-    docs.load.mockImplementation(async () => ({ ok: false, error: { kind: 'offline' } }));
     await act(async () => { await store.commit([{ op: 'put', collection: 'roi', payload: { id: 'n1' } }]); });
-    const callsBefore = docs.apply.mock.calls.length;
     let ok;
     await act(async () => { ok = await store.commit([{ op: 'put', collection: 'roi', payload: { id: 'n2' } }]); });
     expect(ok).toBe(false);
-    expect(docs.apply.mock.calls.length).toBe(callsBefore);
-    expect(store.refreshFailed).toBe(true);
+    const sentIds = docs.apply.mock.calls.flatMap(([ops]) => ops.map((o) => o.payload?.id ?? o.id));
+    expect(sentIds).not.toContain('n2');
+    expect(new Set(sentIds)).toEqual(new Set(['n1']));
   });
 
   it('a conflict re-reads the server state', async () => {

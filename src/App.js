@@ -1568,6 +1568,8 @@ function PropEntryForm({
 }) {
   const formId = useId();
   const isManual = mode === 'manual';
+  // One identity per draft; see handleSubmit.
+  const [draftIdentity] = useState(() => ({ id: createPredictionId(), createdAt: new Date().toISOString() }));
   const [manualEventName, setManualEventName] = useState('');
   const [manualEventDate, setManualEventDate] = useState('');
   const [manualFighterA, setManualFighterA] = useState(null);
@@ -1594,8 +1596,10 @@ function PropEntryForm({
   const handleSubmit = () => {
     if (!canSubmit) return;
     onAdd({
-      id: createPredictionId(),
-      createdAt: new Date().toISOString(),
+      // Fixed for the life of this draft: a retry after an unconfirmed save
+      // re-sends the SAME document, which the store recognizes, never a new one.
+      id: draftIdentity.id,
+      createdAt: draftIdentity.createdAt,
       pickSource: 'human',
       upcomingId: isManual ? null : (upcomingId ?? null),
       eventName,
@@ -2365,6 +2369,7 @@ function BufferedTextInput({ value, onCommit, ...props }) {
 // (App.js:2746-2764).
 function BuildParlayPanel({ legInputs, onConfirm, onCancel }) {
   const formId = useId();
+  const [draftIdentity] = useState(() => ({ id: createPredictionId(), createdAt: new Date().toISOString() }));
   const [picks, setPicks] = useState(() =>
     legInputs.map((l) => ({ ...l, pickedFighter: l.defaultFighter, overridden: false }))
   );
@@ -2390,8 +2395,9 @@ function BuildParlayPanel({ legInputs, onConfirm, onCancel }) {
     // directly without rendering this component.
     const legs = picks.map(buildParlayLeg);
     onConfirm({
-      id: createPredictionId(),
-      createdAt: new Date().toISOString(),
+      // Fixed for the life of this draft -- see PropEntryForm.
+      id: draftIdentity.id,
+      createdAt: draftIdentity.createdAt,
       pickSource: 'human',
       eventName: legs[0]?.eventName || '',
       eventDate: legs[0]?.eventDate || '',

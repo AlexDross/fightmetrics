@@ -25,13 +25,16 @@ import {
 import { createDocumentsRepository } from '../../src/data/repositories/supabaseDocuments.mjs';
 
 export const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
+// Where the four bundled data files (and the file-mode journal and lock) live.
+// Overridable ONLY so tests can run the file backend against a scratch copy.
+const DATA_ROOT = process.env.FM_DATA_ROOT ? resolve(process.env.FM_DATA_ROOT) : ROOT;
 export const SLUG = process.env.FM_WORKSPACE_SLUG || 'fightmetrics';
 
 export const DATA_FILES = Object.freeze({
-  upcoming: { path: resolve(ROOT, 'src/upcomingData.js'), decl: 'export const UPCOMING_ENTRIES = ' },
-  roi: { path: resolve(ROOT, 'src/roiData.js'), decl: 'export const ROI_ENTRIES = ' },
-  propPicks: { path: resolve(ROOT, 'src/propPicksData.js'), decl: 'export const PROP_PICKS = ' },
-  parlays: { path: resolve(ROOT, 'src/parlayData.js'), decl: 'export const PARLAY_ENTRIES = ' },
+  upcoming: { path: resolve(DATA_ROOT, 'src/upcomingData.js'), decl: 'export const UPCOMING_ENTRIES = ' },
+  roi: { path: resolve(DATA_ROOT, 'src/roiData.js'), decl: 'export const ROI_ENTRIES = ' },
+  propPicks: { path: resolve(DATA_ROOT, 'src/propPicksData.js'), decl: 'export const PROP_PICKS = ' },
+  parlays: { path: resolve(DATA_ROOT, 'src/parlayData.js'), decl: 'export const PARLAY_ENTRIES = ' },
 });
 
 // ── bundled files ───────────────────────────────────────────────────────────
@@ -73,17 +76,39 @@ export function readBundled() {
 // the journal is removed. A crash anywhere after the journal exists leaves it
 // behind, and the next file-mode command finishes the renames before doing
 // anything else -- the write rolls FORWARD, it is never left half-applied.
-// A lock file keeps two file-mode commands from interleaving.
-const JOURNAL = resolve(ROOT, '.fm-store-journal.json');
-const LOCK = resolve(ROOT, '.fm-store.lock');
+// A lock file keeps two file-mode commands from interleaving. It records its
+// holder's pid, so a lock left behind by a KILLED process (whose `finally`
+// never ran) is recognized as abandoned and cleared -- recovery then proceeds
+// on its own instead of needing someone to delete the lock by hand.
+const JOURNAL = resolve(DATA_ROOT, '.fm-store-journal.json');
+const LOCK = resolve(DATA_ROOT, '.fm-store.lock');
+
+const isAlive = (pid) => {
+  try { process.kill(pid, 0); return true; } catch (e) { return e.code === 'EPERM'; }
+};
+
+function acquireLock() {
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    try {
+      const fd = openSync(LOCK, 'wx');
+      writeFileSync(fd, String(process.pid));
+      return fd;
+    } catch (e) {
+      if (e.code !== 'EEXIST') throw e;
+      const holder = Number(String(existsSync(LOCK) ? readFileSync(LOCK, 'utf8') : '').trim());
+      if (Number.isInteger(holder) && holder > 0 && isAlive(holder)) {
+        throw new Error(`another file-mode write is in progress (pid ${holder})`);
+      }
+      // Abandoned (holder dead, or an unreadable/empty lock): clear and retry.
+      console.error(`clearing an abandoned file-mode lock${holder ? ` (pid ${holder} is gone)` : ''}`);
+      rmSync(LOCK, { force: true });
+    }
+  }
+  throw new Error(`could not acquire ${LOCK}`);
+}
 
 function withFileLock(fn) {
-  let fd;
-  try {
-    fd = openSync(LOCK, 'wx');
-  } catch {
-    throw new Error(`another file-mode write is in progress (${LOCK} exists; delete it only if no fm-store/enter/grade command is running)`);
-  }
+  const fd = acquireLock();
   try {
     return fn();
   } finally {
@@ -104,7 +129,11 @@ function commitFiles(staged) {
   const files = staged.map(([k, tmp]) => ({ tmp, dest: DATA_FILES[k].path }));
   writeFileSync(`${JOURNAL}.tmp`, JSON.stringify({ files }));
   renameSync(`${JOURNAL}.tmp`, JOURNAL);
-  for (const { tmp, dest } of files) renameSync(tmp, dest);
+  files.forEach(({ tmp, dest }, i) => {
+    renameSync(tmp, dest);
+    // Test hook: die between renames, exactly like a crash would.
+    if (i === 0 && process.env.FM_TEST_KILL_AFTER_FIRST_RENAME === '1') process.kill(process.pid, 'SIGKILL');
+  });
   rmSync(JOURNAL);
 }
 
