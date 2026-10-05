@@ -7,21 +7,26 @@
 //   paper     every LEAN, frozen at save, 1u, at the saved price (hypothetical)
 //   actual    bets you recorded at fight day: accepted price, real stake
 //
-// plus a baseline (every C6 pick in the experiment at 1u) and the BET
-// calibration diagnostic (mean C6 probability vs actual win rate).
+// plus a baseline (every C6 pick in the experiment at 1u), the BET
+// calibration diagnostic (mean C6 probability vs actual win rate), and mean
+// closing-line value (closing.js) for strategy and paper -- the success test
+// needs it positive, not just ROI.
 //
 // Only live captures stamped with the frozen gate version count
 // (isV3ExperimentEntry). Pure; reads stored fields only, never a model.
 
 import { americanToDecimal, isV3ExperimentEntry } from '../betting';
+import { closingLineValue } from '../betting/closing.js';
 
 const isPush = (w) => w === 'NC' || w === 'DRAW';
 const isDecisive = (e) => e.actualWinner === e.fighterA || e.actualWinner === e.fighterB;
 
 function settle(rows) {
   // rows: [{ won:boolean|null(push), stake, decimal, prob? }]
-  let wins = 0, losses = 0, pushes = 0, staked = 0, units = 0, probSum = 0, probN = 0;
+  let wins = 0, losses = 0, pushes = 0, staked = 0, units = 0, probSum = 0, probN = 0, clvSum = 0, clvN = 0;
   for (const r of rows) {
+    // CLV is a property of the price, not the result, so pushes count too.
+    if (r.clv != null) { clvSum += r.clv; clvN += 1; }
     if (r.won === null) { pushes += 1; continue; }
     staked += r.stake;
     if (r.won) { wins += 1; units += r.stake * (r.decimal - 1); } else { losses += 1; units -= r.stake; }
@@ -38,6 +43,8 @@ function settle(rows) {
     roi: staked > 0 ? (units / staked) * 100 : null,
     winRate: n > 0 ? (wins / n) * 100 : null,
     meanProb: probN > 0 ? (probSum / probN) * 100 : null,
+    clvBets: clvN,
+    meanCLV: clvN > 0 ? (clvSum / clvN) * 100 : null,
   };
 }
 
@@ -49,8 +56,10 @@ function frozenRow(e) {
   const odds = e.betRecommendedOdds || e.marketOdds;
   const decimal = americanToDecimal(odds);
   if (!side || !decimal) return null;
-  const prob = side === e.fighterA ? e.c6ProbA : side === e.fighterB ? e.c6ProbB : null;
-  return { won: isPush(e.actualWinner) ? null : e.actualWinner === side, stake: 1, decimal, prob };
+  const ab = side === e.fighterA ? 'A' : side === e.fighterB ? 'B' : null;
+  const prob = ab === 'A' ? e.c6ProbA : ab === 'B' ? e.c6ProbB : null;
+  const clv = closingLineValue(e, ab, odds);
+  return { won: isPush(e.actualWinner) ? null : e.actualWinner === side, stake: 1, decimal, prob, clv };
 }
 
 /**

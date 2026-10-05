@@ -309,4 +309,11 @@ export const FORWARD_ONLY_ROI_FIELDS = Object.freeze({
     'execution.stakeUnits': { to: 'Execution.stakeUnits (real stake)' },
     'execution.skipReason': { to: 'Execution.skipReason (LINE_MOVED | NOT_PLACED | OTHER)' },
     '_provenance.gateVersion': { to: 'BettingAssessment.gateVersion (capture-time copy)' },
+    // Closing odds recorded at grading (scripts/grade_upcoming.mjs apply), for
+    // the closing-line-value test. Absent on entries graded before it existed.
+    closing: { to: 'ClosingSnapshot (one per bout; absent -> no closing line recorded)' },
+    'closing.oddsA': { to: 'ClosingSnapshot.oddsA (American, bound to corner A by name)' },
+    'closing.oddsB': { to: 'ClosingSnapshot.oddsB (American, bound to corner B by name)' },
+    'closing.source': { to: 'ClosingSnapshot.source (Pinnacle | Circa | median of N books)' },
+    'closing.capturedAt': { to: 'ClosingSnapshot.capturedAt (when the grade fetched it)' },
 });

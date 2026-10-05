@@ -1341,6 +1341,7 @@ function V3RecordPanel({ entries, compact = false }) {
       </p>
       <p className="text-muted text-xs mt-1 leading-snug">
         {r.bets === 0 ? 'No graded bets yet' : `${r.wins}–${r.losses}${r.pushes ? `–${r.pushes}` : ''} · ${fmtUnits(r.units)}`}
+        {r.meanCLV != null ? ` · CLV ${r.meanCLV >= 0 ? '+' : ''}${r.meanCLV.toFixed(1)}%` : ''}
         {note ? ` · ${note}` : ''}
       </p>
     </div>
@@ -1355,9 +1356,18 @@ function V3RecordPanel({ entries, compact = false }) {
         {!compact && tile('LEAN paper', rec.paper, 'hypothetical, 1u', 'text-yellow-400')}
         {!compact && tile('Every C6 pick', rec.baseline, 'baseline, 1u', 'text-secondary')}
       </div>
-      {s.bets > 0 && s.meanProb != null && (
+      {(s.bets > 0 || s.clvBets > 0) && (
         <p className="text-muted text-xs mt-2">
-          BET calibration: won {s.winRate.toFixed(1)}% vs C6 mean {s.meanProb.toFixed(1)}% · validation needs 30+ BETs with ROI above 0% and positive closing-line value
+          {s.meanCLV != null && (
+            <>
+              <span className={s.meanCLV >= 0 ? 'text-emerald-400 font-semibold' : 'text-red-400 font-semibold'}>
+                Closing-line value {s.meanCLV >= 0 ? '+' : ''}{s.meanCLV.toFixed(1)}%
+              </span>
+              {` over ${s.clvBets} BET${s.clvBets === 1 ? '' : 's'} · `}
+            </>
+          )}
+          {s.bets > 0 && s.meanProb != null && `BET calibration: won ${s.winRate.toFixed(1)}% vs C6 mean ${s.meanProb.toFixed(1)}% · `}
+          validation needs 30+ BETs with ROI above 0% and positive closing-line value
         </p>
       )}
     </div>

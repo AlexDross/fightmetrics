@@ -61,6 +61,17 @@ describe('computeV3Records', () => {
     expect(rec.actual.bets).toBe(0);
   });
 
+  it('mean closing-line value over BETs that have a closing record', () => {
+    const rec = computeV3Records([
+      base({ betAction: 'BET', closing: { oddsA: '-110', oddsB: '-110' } }),           // +110 vs 50/50 close: +5%
+      base({ betAction: 'BET', actualWinner: 'NC', closing: { oddsA: '-110', oddsB: '-110' } }), // push still has a price
+      base({ betAction: 'BET' }),                                                      // no closing: excluded
+    ]);
+    expect(rec.strategy.clvBets).toBe(2);
+    expect(rec.strategy.meanCLV).toBeCloseTo(5, 10);
+    expect(rec.paper.meanCLV).toBeNull();
+  });
+
   it('empty input', () => {
     expect(computeV3Records([]).experimentEntries).toBe(0);
     expect(computeV3Records(undefined).strategy.bets).toBe(0);

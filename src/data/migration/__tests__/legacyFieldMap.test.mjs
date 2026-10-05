@@ -9,6 +9,7 @@ import {
 } from '../legacyFieldMap.mjs';
 import { loadFixture, frozenRoiEntry } from '../../../__tests__/goldenSupport.js';
 import { recheckGateV3, buildExecution } from '../../../domain/betting/gateV3.js';
+import { buildClosingRecord } from '../../../domain/betting/closing.js';
 import { migrateV0ToV1 } from '../migrateV0ToV1.mjs';
 
 // Walks the REAL legacy data recursively and collects every field path, so the
@@ -114,7 +115,11 @@ describe('legacy field map is exhaustive', () => {
         eventName: 'MAP TEST', eventDate: '2099-01-01', modelToggle: 'v2', unitsWagered: 1,
       });
       const check = recheckGateV3(entry, { oddsA: '-150', oddsB: '+130' });
-      const placed = { ...entry, execution: buildExecution(check, { placed: true, acceptedOdds: '+130', stakeUnits: 1 }) };
+      const placed = {
+        ...entry,
+        execution: buildExecution(check, { placed: true, acceptedOdds: '+130', stakeUnits: 1 }),
+        closing: buildClosingRecord({ oddsA: '-160', oddsB: '+140', source: 'Pinnacle' }),
+      };
       const skipped = { ...entry, execution: buildExecution(check, { placed: false, skipReason: 'LINE_MOVED' }) };
       const written = collectPaths([placed, skipped]);
       const phantom = Object.keys(FORWARD_ONLY_ROI_FIELDS).filter((k) => !written.has(k));
