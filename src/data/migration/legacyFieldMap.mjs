@@ -104,6 +104,7 @@ export const LEGACY_FIELD_MAP = Object.freeze({
     betRecommendedOdds: { derived: 'recommendedCorner + MarketSnapshot; "" when there is no recommendation' },
 
     unitsWagered: { to: 'TrackedPosition.stakeUnits (+ stakeSource; absent -> 1 / defaultedFlat1u)' },
+
     notes: { to: 'TrackedPosition.notes ("" -> null)' },
 
     actualWinner: { to: 'Bout.result ("" -> pending; NC -> noContest; DRAW -> draw; else resolved + corner)' },
@@ -276,4 +277,36 @@ export const GENERATED_FIELD_SOURCES = Object.freeze({
   'TrackedPosition.settlement.financialResult': 'computed from the SELECTED corner odds; push/void are always computed 0; uncomputable when that corner has no price',
   'meta.schemaVersion': 'constant 1',
   'meta.migratedAt': 'injected deps.migratedAt (the only place the migration clock appears)',
+});
+
+// Forward-only ROI/Upcoming fields: written by the current code but not yet in
+// the bundled data (the v3 bet gate, 2026-10). They count toward coverage, so
+// the bundled snapshot can pick them up without failing CI, but they are exempt
+// from the stale-entry check until the data carries them. legacyFieldMap.test
+// proves the code actually writes every one. Once the data has them, move each
+// into LEGACY_FIELD_MAP.roiEntry.
+export const FORWARD_ONLY_ROI_FIELDS = Object.freeze({
+    // v3 bet gate (src/domain/betting/gateV3.js). Present only on C6-driven
+    // saves after the freeze; absence means the legacy ladder produced
+    // betAction and must stay absent, never defaulted.
+    gateVersion: { to: 'BettingAssessment.gateVersion ("c6_dog_v3"; absent -> legacy ladder)' },
+    gateReason: { to: 'BettingAssessment.gateReason (NO BET reason code; null for BET/LEAN)' },
+    gateEV: { to: 'BettingAssessment.gateEV (pick-side expected return per unit at the saved price)' },
+    // Fight-day execution record: the re-check plus a placed bet or a skip.
+    // Separate from the frozen recommendation, which it never changes.
+    execution: { to: 'Execution (one per tracked position; null/absent -> none recorded)' },
+    'execution.checkedAt': { to: 'Execution.checkedAt' },
+    'execution.oddsA': { to: 'Execution.recheckMarket.oddsA' },
+    'execution.oddsB': { to: 'Execution.recheckMarket.oddsB' },
+    'execution.tier': { to: 'Execution.recheckTier' },
+    'execution.side': { to: 'Execution.recheckCorner' },
+    'execution.fighter': { derived: 'recheckCorner + Bout corners' },
+    'execution.reason': { to: 'Execution.recheckReason' },
+    'execution.ev': { to: 'Execution.recheckEV' },
+    'execution.c6pA': { to: 'Execution.recheckC6ProbA' },
+    'execution.status': { to: 'Execution.status ("placed" | "skipped")' },
+    'execution.acceptedOdds': { to: 'Execution.acceptedOdds' },
+    'execution.stakeUnits': { to: 'Execution.stakeUnits (real stake)' },
+    'execution.skipReason': { to: 'Execution.skipReason (LINE_MOVED | NOT_PLACED | OTHER)' },
+    '_provenance.gateVersion': { to: 'BettingAssessment.gateVersion (capture-time copy)' },
 });
