@@ -968,3 +968,4 @@ export {
   computeROISummary,
 };
 export { computeV3Records } from './v3Records.js';
+export { computeModelScoreboard } from './scoreboard.js';

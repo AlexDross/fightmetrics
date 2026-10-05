@@ -108,6 +108,7 @@ import {
   buildParlayLeg,
   recheckGateV3,
   buildExecution,
+  GATE_V3,
   describeGateV3Reason,
   SKIP_REASONS,
 } from './domain/betting';
@@ -156,6 +157,7 @@ import {
   computeV2WindowComposition,
   computeV2Summary,
   computeV3Records,
+  computeModelScoreboard,
   computeRoiByMarketBandV2,
   computeCumulativePnlV2,
   computeMonthlyPerformanceV2,
@@ -778,18 +780,11 @@ function RoiByMarketBandChart({ data, modelLabel = 'v1', windowComposition }) {
   const anySamples = data.some((d) => d.n > 0);
   const chartId = `roi-by-market-band-${modelLabel}`;
   const descriptionId = `${chartId}-description`;
-  const compositionText = windowComposition
-    ? windowComposition.reconN > 0
-      ? `${windowComposition.n} frozen tracked-decision fights in window (${windowComposition.liveN} live-captured, ${windowComposition.reconN} reconstructed)`
-      : `${windowComposition.n} frozen tracked-decision fights in window (all live-captured)`
-    : '';
   return (
     <figure className="bg-slate-900 border border-slate-800 rounded-xl p-4" aria-labelledby={chartId} aria-describedby={descriptionId}>
       <h3 id={chartId} className="text-white font-bold text-sm mb-1">ROI by Market Band</h3>
       <p id={descriptionId} className="text-muted text-xs mb-3">
-        {modelLabel === 'v2'
-          ? `Stake-weighted ROI on the frozen tracked decision (the probability stored at prediction/reconstruction time, at that decision's own price), grouped by that decision's raw market-implied probability. Same frozen tracked-decision population as the headline -- ${compositionText}. Dashed line = breakeven (0% ROI).`
-          : "Flat 1u ROI on the actually-staked side, grouped by that side's raw market-implied probability. Dashed line = breakeven (0% ROI)."}
+        ROI grouped by how strongly the market favored the pick. Dashed line = break-even.
       </p>
       {!anySamples ? (
         <p className="text-muted text-sm py-8 text-center">
@@ -806,7 +801,7 @@ function RoiByMarketBandChart({ data, modelLabel = 'v1', windowComposition }) {
               tickFormatter={(v) => `${v}%`}
               axisLine={false}
             />
-            <ReferenceLine y={0} stroke="#94a3b8" strokeDasharray="4 4" label={{ value: 'Breakeven', position: 'insideTopRight', fill: '#94a3b8', fontSize: 10 }} />
+            <ReferenceLine y={0} stroke="#94a3b8" strokeDasharray="4 4" />
             <Tooltip
               {...roiChartTooltipStyle}
               formatter={(v, name, item) =>
@@ -826,9 +821,7 @@ function RoiByMarketBandChart({ data, modelLabel = 'v1', windowComposition }) {
         </ResponsiveContainer>
         </div>
       )}
-      <p className="text-muted text-[10px] mt-2">
-        * n &lt; {ROI_ANALYTICS_LOW_N} — low sample, shown at reduced opacity. Interpret with caution.
-      </p>
+      <p className="text-muted text-[10px] mt-2">{LOW_N_NOTE}</p>
       <AccessibleChartDataTable
         caption="ROI by Market Band data"
         columns={[
@@ -857,17 +850,11 @@ function ModelVsMarketBracketChart({ data, modelLabel = 'v2' }) {
   const marketPatternId = `${chartId}-market-pattern`;
   return (
     <figure className="bg-slate-900 border border-slate-800 rounded-xl p-4" aria-labelledby={chartId} aria-describedby={descriptionId}>
-      <h3 id={chartId} className="text-white font-bold text-sm mb-1">{ML} Pick Win Rate vs. Market-Implied %</h3>
+      <h3 id={chartId} className="text-white font-bold text-sm mb-1">{ML} Win Rate vs. Market Price</h3>
       <p id={descriptionId} className="text-muted text-xs mb-3">
-        {ML}'s picked side, grouped by that side's raw market-implied probability band.
-        Market % is de-vigged (stripVig).
-        {isRestrictedV2 && ' A win rate scored against picks made after the outcome was known is not a fair test — restricted to live-captured v2 picks only.'}
+        How often {ML}'s pick won, against the win rate its price implied.
+        {isRestrictedV2 && ` Live picks only (${totalN}).`}
       </p>
-      {isRestrictedV2 && (
-        <p className="text-muted text-xs mb-3">
-          {totalN} live v2 {totalN === 1 ? 'prediction' : 'predictions'} available in the current filter window.
-        </p>
-      )}
       {!anySamples ? (
         <p className="text-muted text-sm py-8 text-center">
           {isRestrictedV2
@@ -901,15 +888,13 @@ function ModelVsMarketBracketChart({ data, modelLabel = 'v2' }) {
               formatter={(v, name) => (v == null ? ['—', name] : [`${v.toFixed(1)}%`, name])}
             />
             <Legend wrapperStyle={{ fontSize: 11, color: '#94a3b8' }} />
-            <Bar dataKey="actualWinRate" name="Actual Win % (diagonal pattern)" fill={`url(#${actualPatternId})`} radius={[3, 3, 0, 0]} />
-            <Bar dataKey="marketImplied" name="Market Implied % (dot pattern, de-vig)" fill={`url(#${marketPatternId})`} radius={[3, 3, 0, 0]} />
+            <Bar dataKey="actualWinRate" name="Actual (striped)" fill={`url(#${actualPatternId})`} radius={[3, 3, 0, 0]} />
+            <Bar dataKey="marketImplied" name="Market (dotted)" fill={`url(#${marketPatternId})`} radius={[3, 3, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
         </div>
       )}
-      <p className="text-muted text-[10px] mt-2">
-        * n &lt; {ROI_ANALYTICS_LOW_N} — low sample (see x-axis labels). Interpret with caution.
-      </p>
+      <p className="text-muted text-[10px] mt-2">{LOW_N_NOTE}</p>
       <AccessibleChartDataTable
         caption={`${ML} Pick Win Rate versus Market-Implied Probability data`}
         columns={[
@@ -942,15 +927,9 @@ function CalibrationReliabilityChart({ data, modelLabel = 'v2', compact = false 
     <figure className={`bg-slate-900 border border-slate-800 rounded-xl ${compact ? 'p-3' : 'p-4'}`} aria-labelledby={chartId} aria-describedby={descriptionId}>
       <h3 id={chartId} className="text-white font-bold text-sm mb-1">Calibration Reliability</h3>
       <p id={descriptionId} className="text-muted text-xs mb-3">
-        {ML}'s confidence on its picked side, bucketed, vs. actual win rate.
-        Dashed line = mean predicted probability per bucket (perfect calibration reference).
-        {isRestrictedV2 && ' Calibration requires predictions made before the outcome was known — restricted to live-captured v2 picks only.'}
+        When {ML} says X%, does its pick win X% of the time? Dashed line = what it predicted.
+        {isRestrictedV2 && ` Live picks only (${totalN}).`}
       </p>
-      {isRestrictedV2 && (
-        <p className="text-muted text-xs mb-3">
-          {totalN} live v2 {totalN === 1 ? 'prediction' : 'predictions'} available in the current filter window.
-        </p>
-      )}
       {!anySamples ? (
         <p className="text-muted text-sm py-8 text-center">
           {isRestrictedV2
@@ -984,7 +963,7 @@ function CalibrationReliabilityChart({ data, modelLabel = 'v2', compact = false 
               formatter={(v, name) => (v == null ? ['—', name] : [`${v.toFixed(1)}%`, name])}
             />
             <Legend wrapperStyle={{ fontSize: 11, color: '#94a3b8' }} />
-            <Bar dataKey="actualWinRate" name="Actual Win %" radius={[3, 3, 0, 0]}>
+            <Bar dataKey="actualWinRate" name="Actual" fill={`url(#${calibratedPatternId})`} radius={[3, 3, 0, 0]}>
               {data.map((d, i) => (
                 <Cell
                   key={i}
@@ -1002,7 +981,7 @@ function CalibrationReliabilityChart({ data, modelLabel = 'v2', compact = false 
             <Line
               type="monotone"
               dataKey="predictedMean"
-              name="Predicted Mean (perfect calibration ref)"
+              name="Predicted"
               stroke="#e2e8f0"
               strokeWidth={2}
               strokeDasharray="5 3"
@@ -1013,7 +992,7 @@ function CalibrationReliabilityChart({ data, modelLabel = 'v2', compact = false 
         </div>
       )}
       <p className="text-muted text-[10px] mt-2">
-        * n &lt; {ROI_ANALYTICS_LOW_N} — low sample (see x-axis labels). Dotted bars = actual ≥ predicted (not overconfident); diagonal bars = actual &lt; predicted (overconfident). Color is supplemental.
+        Dotted = won at least as often as predicted; striped = overconfident. {LOW_N_NOTE}
       </p>
       <AccessibleChartDataTable
         caption={`${ML} Calibration Reliability data`}
@@ -1058,12 +1037,8 @@ function BetTierWinRateChart({ data }) {
     <figure className="bg-slate-900 border border-slate-800 rounded-xl p-4" aria-labelledby={chartId} aria-describedby={descriptionId}>
       <h3 id={chartId} className="text-white font-bold text-sm mb-1">Win Rate by Bet Tier (pre-v3 gate)</h3>
       <p id={descriptionId} className="text-muted text-xs mb-3">
-        V2's picked-side win rate, grouped by the tier STORED on each entry
-        (including the declined NO BET pool) -- not re-gated against current
-        data. For live-captured picks this is a genuine prediction-time tier;
-        for reconstructed picks it's the original v1-era capture tier, carried
-        over unchanged.
-        {emptyTiers.length > 0 && ` No graded picks in ${emptyTiers.join('/')} this window.`}
+        Pick win rate by the tier saved on each pick under the old gate.
+        {emptyTiers.length > 0 && ` No picks in ${emptyTiers.join('/')}.`}
       </p>
       {!anySamples ? (
         <p className="text-muted text-sm py-8 text-center">
@@ -1096,9 +1071,7 @@ function BetTierWinRateChart({ data }) {
         </ResponsiveContainer>
         </div>
       )}
-      <p className="text-muted text-[10px] mt-2">
-        * n &lt; {ROI_ANALYTICS_LOW_N} — low sample, shown at reduced opacity. Interpret with caution.
-      </p>
+      <p className="text-muted text-[10px] mt-2">{LOW_N_NOTE}</p>
       <AccessibleChartDataTable
         caption="Win Rate by Bet Tier data"
         columns={[
@@ -1122,11 +1095,8 @@ function BetTierRoiChart({ data }) {
     <figure className="bg-slate-900 border border-slate-800 rounded-xl p-4" aria-labelledby={chartId} aria-describedby={descriptionId}>
       <h3 id={chartId} className="text-white font-bold text-sm mb-1">ROI by Bet Tier (pre-v3 gate)</h3>
       <p id={descriptionId} className="text-muted text-xs mb-3">
-        Stake-weighted ROI on the frozen tracked decision (at that decision's
-        own stored price), grouped by the tier STORED on each entry at capture/
-        reconstruction time -- not re-gated against current data. Dashed line
-        = breakeven (0% ROI).
-        {emptyTiers.length > 0 && ` No graded picks in ${emptyTiers.join('/')} this window.`}
+        ROI by the tier saved on each pick under the old gate. Dashed line = break-even.
+        {emptyTiers.length > 0 && ` No picks in ${emptyTiers.join('/')}.`}
       </p>
       {!anySamples ? (
         <p className="text-muted text-sm py-8 text-center">
@@ -1143,7 +1113,7 @@ function BetTierRoiChart({ data }) {
               tickFormatter={(v) => `${v}%`}
               axisLine={false}
             />
-            <ReferenceLine y={0} stroke="#94a3b8" strokeDasharray="4 4" label={{ value: 'Breakeven', position: 'insideTopRight', fill: '#94a3b8', fontSize: 10 }} />
+            <ReferenceLine y={0} stroke="#94a3b8" strokeDasharray="4 4" />
             <Tooltip
               {...roiChartTooltipStyle}
               formatter={(v, name, item) =>
@@ -1163,9 +1133,7 @@ function BetTierRoiChart({ data }) {
         </ResponsiveContainer>
         </div>
       )}
-      <p className="text-muted text-[10px] mt-2">
-        * n &lt; {ROI_ANALYTICS_LOW_N} — low sample, shown at reduced opacity. Interpret with caution.
-      </p>
+      <p className="text-muted text-[10px] mt-2">{LOW_N_NOTE}</p>
       <AccessibleChartDataTable
         caption="ROI by Bet Tier data"
         columns={[
@@ -1181,20 +1149,13 @@ function BetTierRoiChart({ data }) {
 }
 
 function CumulativePnlChart({ data, modelLabel = 'v1', windowComposition }) {
-  const compositionText = windowComposition
-    ? windowComposition.reconN > 0
-      ? `${windowComposition.n} frozen tracked-decision fights in window (${windowComposition.liveN} live-captured, ${windowComposition.reconN} reconstructed)`
-      : `${windowComposition.n} frozen tracked-decision fights in window (all live-captured)`
-    : '';
   const chartId = `cumulative-pnl-${modelLabel}`;
   const descriptionId = `${chartId}-description`;
   return (
     <figure className="bg-slate-900 border border-slate-800 rounded-xl p-4" aria-labelledby={chartId} aria-describedby={descriptionId}>
       <h3 id={chartId} className="text-white font-bold text-sm mb-1">Cumulative P&amp;L by Event</h3>
       <p id={descriptionId} className="text-muted text-xs mb-3">
-        {modelLabel === 'v2'
-          ? `Running net units on the frozen tracked decision (stake-weighted, at that decision's own stored price), one point per event in chronological order. Same frozen tracked-decision population as the headline -- ${compositionText}.`
-          : 'Running net units on the actually-staked side, one point per event in chronological order.'}
+        Running profit on every tracked pick at its stake, one point per event.
       </p>
       {data.length === 0 ? (
         <p className="text-muted text-sm py-8 text-center">
@@ -1206,12 +1167,12 @@ function CumulativePnlChart({ data, modelLabel = 'v1', windowComposition }) {
           <LineChart accessibilityLayer={false} data={data} margin={{ top: 10, right: 10, bottom: 24, left: 0 }}>
             <CartesianGrid stroke="#334155" strokeDasharray="3 3" vertical={false} />
             <XAxis
-              dataKey="eventName"
-              tick={{ fill: '#94a3b8', fontSize: 10 }}
-              interval={0}
-              angle={-20}
-              textAnchor="end"
-              height={50}
+              dataKey="eventDate"
+              tick={{ fill: '#94a3b8', fontSize: 11 }}
+              tickFormatter={shortDate}
+              interval="preserveStartEnd"
+              minTickGap={28}
+              height={24}
             />
             <YAxis
               tick={{ fill: '#94a3b8', fontSize: 11 }}
@@ -1222,7 +1183,7 @@ function CumulativePnlChart({ data, modelLabel = 'v1', windowComposition }) {
             <Tooltip
               {...roiChartTooltipStyle}
               formatter={(v, name, item) => [`${v >= 0 ? '+' : ''}${v.toFixed(2)}u`, `Cumulative (n=${item.payload.n} this event)`]}
-              labelFormatter={(label, items) => `${label} · ${items?.[0]?.payload?.eventDate || ''}`}
+              labelFormatter={(label, items) => `${items?.[0]?.payload?.eventName || ''} · ${shortDate(label)}`}
             />
             <Line
               type="monotone"
@@ -1230,7 +1191,7 @@ function CumulativePnlChart({ data, modelLabel = 'v1', windowComposition }) {
               name="Cumulative Units"
               stroke="#ef4444"
               strokeWidth={2.5}
-              dot={{ r: 4, fill: '#ef4444' }}
+              dot={{ r: 3, fill: '#ef4444' }}
             />
           </LineChart>
         </ResponsiveContainer>
@@ -1254,19 +1215,12 @@ function CumulativePnlChart({ data, modelLabel = 'v1', windowComposition }) {
 function MonthlyPerformanceTable({ data, large = false, modelLabel = 'v1', windowComposition }) {
   const cellPad = large ? 'py-3 pr-6' : 'py-2 pr-4';
   const lastCellPad = large ? 'py-3' : 'py-2';
-  const compositionText = windowComposition
-    ? windowComposition.reconN > 0
-      ? `${windowComposition.n} frozen tracked-decision fights in window (${windowComposition.liveN} live-captured, ${windowComposition.reconN} reconstructed)`
-      : `${windowComposition.n} frozen tracked-decision fights in window (all live-captured)`
-    : '';
   return (
     <div className={`bg-slate-900 border border-slate-800 rounded-xl ${large ? 'p-6' : 'p-4'}`}>
       <h3 className={`text-white font-bold ${large ? 'text-base mb-1' : 'text-sm mb-3'}`}>Monthly Performance</h3>
       {large && (
         <p className="text-muted text-xs mb-4">
-          {modelLabel === 'v2'
-            ? `Bets, win rate, and net profit on the frozen tracked decision (stake-weighted), grouped by calendar month. Same frozen tracked-decision population as the headline -- ${compositionText}.`
-            : 'Bets, win rate, and net profit for the currently selected model, grouped by calendar month.'}
+          Bets, win rate and profit on every tracked pick at its stake, by month.
         </p>
       )}
       {data.length === 0 ? (
@@ -1308,6 +1262,85 @@ function MonthlyPerformanceTable({ data, large = false, modelLabel = 'v1', windo
         </div>
       )}
     </div>
+  );
+}
+
+const GATE_V3_FROZEN_ON = GATE_V3.frozenOn;
+const LOW_N_NOTE = `Faded bars: fewer than ${ROI_ANALYTICS_LOW_N} fights.`;
+const MONTHS_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+// 'YYYY-MM-DD' -> 'Sep 26' (string slicing: no timezone shift).
+const shortDate = (d) => (typeof d === 'string' && d.length >= 10
+  ? `${MONTHS_SHORT[Number(d.slice(5, 7)) - 1]} ${Number(d.slice(8, 10))}`
+  : d ?? '');
+
+// Model scoreboard: C6 vs v2 vs the market on the same live fights.
+function ModelScoreboard({ entries }) {
+  const [windowSize, setWindowSize] = useState('all');
+  const sb = useMemo(
+    () => computeModelScoreboard(entries, windowSize === 'all' ? {} : { last: 50 }),
+    [entries, windowSize]
+  );
+  const scored = sb.rows.filter((r) => r.brier != null);
+  const bestBrier = scored.length ? Math.min(...scored.map((r) => r.brier)) : null;
+  const bestAcc = scored.length ? Math.max(...scored.map((r) => r.accuracy)) : null;
+  return (
+    <section aria-labelledby="model-scoreboard" className="bg-slate-900 border border-slate-800 rounded-xl p-4 mb-6">
+      <div className="flex items-start justify-between gap-3 flex-wrap mb-3">
+        <div>
+          <h2 id="model-scoreboard" className="text-white font-bold text-sm">Model scoreboard</h2>
+          <p className="text-muted text-xs mt-0.5">
+            {sb.fights
+              ? `Same ${sb.fights} live fights for every row · ${shortDate(sb.from)} to ${shortDate(sb.to)}`
+              : 'No live, graded fights in this window yet.'}
+          </p>
+        </div>
+        <div role="group" aria-label="Scoreboard window" className="flex gap-1 bg-slate-800 rounded-lg p-1">
+          {[['all', 'All'], ['last50', 'Last 50']].map(([id, label]) => (
+            <button
+              key={id}
+              onClick={() => setWindowSize(id)}
+              aria-pressed={windowSize === id}
+              className={`inline-flex items-center justify-center min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0 px-3 py-1 text-xs font-bold rounded-md ${windowSize === id ? 'bg-red-600 text-white' : 'text-secondary hover:text-white'}`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      </div>
+      {sb.fights > 0 && (
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="text-muted text-xs uppercase tracking-wider border-b border-slate-800">
+                <th scope="col" className="text-left py-2 pr-3 font-semibold">Model</th>
+                <th scope="col" className="text-right py-2 pr-3 font-semibold">Accuracy</th>
+                <th scope="col" className="text-right py-2 pr-3 font-semibold" title="Mean squared error of the probability; lower is better, 0.25 = coin flip">Brier ↓</th>
+                <th scope="col" className="text-right py-2 font-semibold" title="Flat 1u on every pick, at the saved price">1u ROI</th>
+              </tr>
+            </thead>
+            <tbody>
+              {sb.rows.map((r) => (
+                <tr key={r.model} className="border-b border-slate-800/60 last:border-0">
+                  <th scope="row" className="text-left py-2 pr-3 font-semibold text-slate-200">{r.model}</th>
+                  <td className={`text-right py-2 pr-3 ${r.accuracy === bestAcc ? 'text-white font-bold' : 'text-slate-300'}`}>
+                    {r.accuracy == null ? '—' : `${r.accuracy.toFixed(1)}%`}
+                  </td>
+                  <td className={`text-right py-2 pr-3 font-mono ${r.brier === bestBrier ? 'text-emerald-400 font-bold' : 'text-slate-300'}`}>
+                    {r.brier == null ? '—' : r.brier.toFixed(3)}
+                  </td>
+                  <td className={`text-right py-2 font-semibold ${r.roi == null ? 'text-muted' : r.roi >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                    {r.roi == null ? '—' : `${r.roi >= 0 ? '+' : ''}${r.roi.toFixed(1)}%`}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <p className="text-muted text-[10px] mt-2">
+            Brier: lower is better (0.25 = coin flip). 1u ROI: 1 unit on every pick at the saved price. Bold = best.
+          </p>
+        </div>
+      )}
+    </section>
   );
 }
 
@@ -1437,8 +1470,7 @@ function StatisticsTab({ entries, prospectNameSet, filterSince, setFilterSince, 
         <div>
           <h1 className="text-white font-black text-xl mb-1">Statistics</h1>
           <p className="text-secondary text-sm">
-            Live calibration and ROI analysis of FightMetrics' models, computed
-            from graded ROI entries.
+            How the picks and models are performing, from every graded fight.
           </p>
         </div>
         {/* v1 display hidden 2026-07-21 per single-model view (v2 only) --
@@ -1474,7 +1506,7 @@ function StatisticsTab({ entries, prospectNameSet, filterSince, setFilterSince, 
           </div>
           {v2ScoredFloorDate && (!filterSince || filterSince <= v2ScoredFloorDate) && (
             <span className="text-muted text-xs">
-              Earliest v2-scored fight: {v2ScoredFloorDate}. Dates before this don't change the stats — v2 hadn't scored fights yet.
+              v2 scoring starts {v2ScoredFloorDate}; earlier dates add nothing.
             </span>
           )}
         </div>
@@ -1492,85 +1524,72 @@ function StatisticsTab({ entries, prospectNameSet, filterSince, setFilterSince, 
       ) : (
         <>
           <V3RecordPanel entries={entries} />
-          <p className="text-muted text-xs font-semibold uppercase tracking-wider mb-3">All picks (every model pick at its stake)</p>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6 items-stretch">
-            <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 h-full">
-              <p className="text-muted text-xs uppercase tracking-wider font-semibold">Tracked Fights</p>
-              <p className="font-black text-2xl mt-2 text-white">{summaryV1.total}</p>
-            </div>
-            <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 h-full">
-              <p className="text-muted text-xs uppercase tracking-wider font-semibold">Graded Picks</p>
-              <p className="font-black text-2xl mt-2 text-blue-400">{summaryV1.graded}</p>
-            </div>
-            <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 h-full">
-              <p className="text-muted text-xs uppercase tracking-wider font-semibold">Pick Accuracy</p>
-              {modelView === 'v2' ? (
-                <>
-                  <p className={`font-black text-2xl mt-2 ${summaryV2All.accuracy >= 60 ? 'text-emerald-400' : 'text-yellow-400'}`}>
-                    {summaryV2All.accuracy.toFixed(1)}%
-                  </p>
-                  <p className="text-muted text-[10px] mt-1">
-                    Frozen tracked-decision accuracy across {summaryV2All.graded} decisive fights. Each fight counts once. Frozen at each pick's capture — no lookahead.
-                  </p>
-                </>
-              ) : (
-                <p className={`font-black text-2xl mt-2 ${summaryV1.accuracy >= 60 ? 'text-emerald-400' : 'text-yellow-400'}`}>
-                  {summaryV1.accuracy.toFixed(1)}%
-                </p>
-              )}
-            </div>
-            <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 h-full">
-              <p className="text-muted text-xs uppercase tracking-wider font-semibold">ROI</p>
-              {modelView === 'v2' ? (
-                <>
-                  <p className={`font-black text-2xl mt-2 ${summaryV2All.roi >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                    {summaryV2All.roi >= 0 ? '+' : ''}{summaryV2All.roi.toFixed(1)}%
-                  </p>
-                  <p className="text-muted text-xs mt-1">
-                    {summaryV2All.profit >= 0 ? '+' : ''}{summaryV2All.profit.toFixed(2)}u on {summaryV2All.bets} bets (stake-weighted)
-                  </p>
-                </>
-              ) : (
-                <>
-                  <p className={`font-black text-2xl mt-2 ${summaryV1.roi >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                    {summaryV1.roi >= 0 ? '+' : ''}{summaryV1.roi.toFixed(1)}%
-                  </p>
-                  <p className="text-muted text-xs mt-1">
-                    {summaryV1.profit >= 0 ? '+' : ''}{summaryV1.profit.toFixed(2)}u on {summaryV1.bets} bets
-                  </p>
-                </>
-              )}
-            </div>
-          </div>
+          <ModelScoreboard entries={statsEntries} />
 
-          <div className="mb-6">
-            <MonthlyPerformanceTable
-              data={modelView === 'v2' ? monthlyDataV2 : monthlyDataV1}
-              large
-              modelLabel={modelView === 'v2' ? 'v2' : 'v1'}
-              windowComposition={v2WindowComposition}
-            />
+          <div className="flex items-baseline justify-between gap-3 flex-wrap mb-3">
+            <h2 className="text-white font-bold text-sm">All tracked picks</h2>
+            <p className="text-secondary text-xs">
+              {summaryV2All.graded} graded ·{' '}
+              <span
+                title={`Frozen tracked-decision accuracy across ${summaryV2All.graded} decisive fights. Each fight counts once, frozen at capture.`}
+                className={summaryV2All.accuracy >= 60 ? 'text-emerald-400 font-semibold' : 'text-yellow-400 font-semibold'}
+              >
+                {summaryV2All.accuracy.toFixed(1)}% correct
+              </span>{' · '}
+              <span className={summaryV2All.roi >= 0 ? 'text-emerald-400 font-semibold' : 'text-red-400 font-semibold'}>
+                {summaryV2All.roi >= 0 ? '+' : ''}{summaryV2All.roi.toFixed(1)}% ROI ({summaryV2All.profit >= 0 ? '+' : ''}{summaryV2All.profit.toFixed(2)}u)
+              </span>
+            </p>
           </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
-            <CumulativePnlChart data={modelView === 'v2' ? cumulativeDataV2 : cumulativeDataV1} modelLabel={modelView === 'v2' ? 'v2' : 'v1'} windowComposition={v2WindowComposition} />
-            <RoiByMarketBandChart data={modelView === 'v2' ? roiByBandDataV2 : roiByBandDataV1} modelLabel={modelView === 'v2' ? 'v2' : 'v1'} windowComposition={v2WindowComposition} />
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+            <CumulativePnlChart data={modelView === 'v2' ? cumulativeDataV2 : cumulativeDataV1} modelLabel={modelView === 'v2' ? 'v2' : 'v1'} />
+            <RoiByMarketBandChart data={modelView === 'v2' ? roiByBandDataV2 : roiByBandDataV1} modelLabel={modelView === 'v2' ? 'v2' : 'v1'} />
+            <CalibrationReliabilityChart data={modelView === 'v2' ? calibrationDataV2 : calibrationDataV1} modelLabel={modelView === 'v2' ? 'v2' : 'v1'} />
             <ModelVsMarketBracketChart data={modelView === 'v2' ? modelVsMarketDataV2 : modelVsMarketDataV1} modelLabel={modelView === 'v2' ? 'v2' : 'v1'} />
-            <CalibrationReliabilityChart data={modelView === 'v2' ? calibrationDataV2 : calibrationDataV1} modelLabel={modelView === 'v2' ? 'v2' : 'v1'} compact />
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <BetTierWinRateChart data={betTierData} />
-            <BetTierRoiChart data={betTierData} />
-          </div>
+          <details className="group bg-slate-900/50 border border-slate-800 rounded-xl mb-4">
+            <summary className="cursor-pointer select-none px-4 py-3 min-h-[44px] flex items-center text-sm font-semibold text-slate-300 hover:text-white">
+              More detail: monthly results and old-gate tiers
+            </summary>
+            <div className="px-4 pb-4 space-y-4">
+              <MonthlyPerformanceTable
+                data={modelView === 'v2' ? monthlyDataV2 : monthlyDataV1}
+                large
+                modelLabel={modelView === 'v2' ? 'v2' : 'v1'}
+              />
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <BetTierWinRateChart data={betTierData} />
+                <BetTierRoiChart data={betTierData} />
+              </div>
+            </div>
+          </details>
         </>
       )}
 
       <PropStatsSection picks={propPicks} />
       <ParlayStatsSection parlayEntries={parlayEntries} roiEntries={entries} />
+
+      {entries.length > 0 && (
+        <details className="mt-6 border-t border-slate-800 pt-4 text-xs text-muted">
+          <summary className="cursor-pointer select-none min-h-[44px] flex items-center font-semibold text-secondary hover:text-white">
+            How these numbers are measured
+          </summary>
+          <ul className="list-disc pl-5 space-y-1.5 mt-2 leading-relaxed">
+            <li>Every result grades the pick exactly as it was saved before the fight; nothing is recomputed from today's data.</li>
+            <li>
+              Tracked picks: {v2WindowComposition.n} fights in this window
+              {v2WindowComposition.reconN > 0
+                ? ` (${v2WindowComposition.liveN} saved before the fight, ${v2WindowComposition.reconN} reconstructed afterwards). Reconstructed picks count toward profit charts but never toward calibration or win-rate-vs-market, which need picks made before the result was known.`
+                : ', all saved before the fight.'}
+            </li>
+            <li>The scoreboard uses only fights saved before the event. For fights saved before C6 went live, C6 is computed from that fight's frozen v2 probability and saved odds, the same formula used live.</li>
+            <li>Market percentages remove the bookmaker margin proportionally (no-vig).</li>
+            <li>Bands with fewer than {ROI_ANALYTICS_LOW_N} fights are faded: too few to read much into.</li>
+            <li>The v3 bet record counts only fights saved under the v3 gate (from {GATE_V3_FROZEN_ON}); strategy and paper results are hypothetical 1u bets.</li>
+          </ul>
+        </details>
+      )}
     </div>
   );
 }
@@ -2193,7 +2212,7 @@ function PropStatsSection({ picks }) {
         <h3 className="text-white font-black text-lg">Prop Bets</h3>
       </div>
       <p className="text-muted text-sm mb-5">
-        Manual method-of-victory picks — separate from the model, and unaffected by the v1/v2 toggle above.
+        Manual method-of-victory picks, separate from the model.
       </p>
 
       {picks.length === 0 ? (
@@ -2301,7 +2320,7 @@ function ParlayStatsSection({ parlayEntries, roiEntries }) {
         <h3 className="text-white font-black text-lg">Parlays</h3>
       </div>
       <p className="text-muted text-sm mb-5">
-        Manual multi-fight parlay bets — separate from the model, and unaffected by the v1/v2 toggle above.
+        Manual multi-fight parlay bets, separate from the model.
       </p>
 
       {parlayEntries.length === 0 ? (
