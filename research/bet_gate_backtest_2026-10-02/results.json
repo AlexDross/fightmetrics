@@ -1,0 +1,1816 @@
+{
+ "counts": {
+  "history": 2488,
+  "live_all": 152,
+  "live_captured": 110
+ },
+ "folds": [
+  {
+   "year": 2020,
+   "fitN": 207,
+   "scoreN": 337,
+   "wMarket": 0.841,
+   "wV2": 0.1432
+  },
+  {
+   "year": 2021,
+   "fitN": 544,
+   "scoreN": 399,
+   "wMarket": 0.9457,
+   "wV2": 0.1525
+  },
+  {
+   "year": 2022,
+   "fitN": 943,
+   "scoreN": 402,
+   "wMarket": 0.8416,
+   "wV2": 0.3541
+  },
+  {
+   "year": 2023,
+   "fitN": 1345,
+   "scoreN": 321,
+   "wMarket": 0.8928,
+   "wV2": 0.3992
+  },
+  {
+   "year": 2024,
+   "fitN": 1666,
+   "scoreN": 321,
+   "wMarket": 0.9216,
+   "wV2": 0.466
+  },
+  {
+   "year": 2025,
+   "fitN": 1987,
+   "scoreN": 412,
+   "wMarket": 0.9269,
+   "wV2": 0.4812
+  },
+  {
+   "year": 2026,
+   "fitN": 2399,
+   "scoreN": 89,
+   "wMarket": 0.9019,
+   "wV2": 0.5657
+  }
+ ],
+ "oofN": 2281,
+ "brier": {
+  "v2": 0.22339,
+  "market": 0.21002,
+  "c6": 0.20751
+ },
+ "accuracy": {
+  "v2": 0.637,
+  "market": 0.6708,
+  "c6": 0.6773
+ },
+ "reference_history": {
+  "CURRENT gate on C6": {
+   "n": 29,
+   "wins": 23,
+   "staked": 29.0,
+   "units": 8.53,
+   "roi": 0.2942,
+   "maxDD": 2.0,
+   "roi90": [
+    0.099,
+    0.475
+   ],
+   "pPositive": 0.993
+  },
+  "CURRENT gate on raw v2": {
+   "n": 225,
+   "wins": 126,
+   "staked": 225.0,
+   "units": 28.36,
+   "roi": 0.126,
+   "maxDD": 10.3,
+   "roi90": [
+    0.002,
+    0.251
+   ],
+   "pPositive": 0.951
+  },
+  "Every C6 pick, flat": {
+   "n": 2281,
+   "wins": 1545,
+   "staked": 2281.0,
+   "units": -0.36,
+   "roi": -0.0002,
+   "maxDD": 45.81,
+   "roi90": [
+    -0.023,
+    0.026
+   ],
+   "pPositive": 0.518
+  },
+  "Every market favourite, flat": {
+   "n": 2281,
+   "wins": 1530,
+   "staked": 2281.0,
+   "units": -35.71,
+   "roi": -0.0157,
+   "maxDD": 59.86,
+   "roi90": [
+    -0.04,
+    0.009
+   ],
+   "pPositive": 0.148
+  }
+ },
+ "grid_top15_in_sample": [
+  {
+   "policy": "EV>=0% side=any dog<=+200 favany",
+   "n": 889,
+   "wins": 552,
+   "staked": 889.0,
+   "units": 72.01,
+   "roi": 0.081,
+   "maxDD": 13.58
+  },
+  {
+   "policy": "EV>=2% side=any dog<=+200 favany",
+   "n": 562,
+   "wins": 345,
+   "staked": 562.0,
+   "units": 64.73,
+   "roi": 0.1152,
+   "maxDD": 14.3
+  },
+  {
+   "policy": "EV>=0% side=pick dog<=+200 favany",
+   "n": 591,
+   "wins": 430,
+   "staked": 591.0,
+   "units": 63.11,
+   "roi": 0.1068,
+   "maxDD": 5.85
+  },
+  {
+   "policy": "EV>=0% side=pick dog<=+400 favany",
+   "n": 591,
+   "wins": 430,
+   "staked": 591.0,
+   "units": 63.11,
+   "roi": 0.1068,
+   "maxDD": 5.85
+  },
+  {
+   "policy": "EV>=0% side=pick dogany favany",
+   "n": 591,
+   "wins": 430,
+   "staked": 591.0,
+   "units": 63.11,
+   "roi": 0.1068,
+   "maxDD": 5.85
+  },
+  {
+   "policy": "EV>=0% side=any dog<=+200 fav>=-400",
+   "n": 821,
+   "wins": 487,
+   "staked": 821.0,
+   "units": 63.1,
+   "roi": 0.0769,
+   "maxDD": 13.81
+  },
+  {
+   "policy": "EV>=0% side=any dog<=+400 favany",
+   "n": 1045,
+   "wins": 593,
+   "staked": 1045.0,
+   "units": 60.36,
+   "roi": 0.0578,
+   "maxDD": 28.94
+  },
+  {
+   "policy": "EV>=2% side=any dog<=+200 fav>=-400",
+   "n": 536,
+   "wins": 319,
+   "staked": 536.0,
+   "units": 59.59,
+   "roi": 0.1112,
+   "maxDD": 14.89
+  },
+  {
+   "policy": "EV>=0% side=any dog<=+100 favany",
+   "n": 561,
+   "wins": 413,
+   "staked": 561.0,
+   "units": 57.57,
+   "roi": 0.1026,
+   "maxDD": 6.67
+  },
+  {
+   "policy": "EV>=0% side=pick dog<=+100 favany",
+   "n": 563,
+   "wins": 414,
+   "staked": 563.0,
+   "units": 57.05,
+   "roi": 0.1013,
+   "maxDD": 6.19
+  },
+  {
+   "policy": "EV>=2% side=any dog<=+400 favany",
+   "n": 680,
+   "wins": 376,
+   "staked": 680.0,
+   "units": 56.43,
+   "roi": 0.083,
+   "maxDD": 22.31
+  },
+  {
+   "policy": "EV>=0% side=any dogany favany",
+   "n": 1083,
+   "wins": 598,
+   "staked": 1083.0,
+   "units": 54.61,
+   "roi": 0.0504,
+   "maxDD": 30.34
+  },
+  {
+   "policy": "EV>=0% side=pick dog<=+200 fav>=-400",
+   "n": 523,
+   "wins": 365,
+   "staked": 523.0,
+   "units": 54.19,
+   "roi": 0.1036,
+   "maxDD": 7.49
+  },
+  {
+   "policy": "EV>=0% side=pick dog<=+400 fav>=-400",
+   "n": 523,
+   "wins": 365,
+   "staked": 523.0,
+   "units": 54.19,
+   "roi": 0.1036,
+   "maxDD": 7.49
+  },
+  {
+   "policy": "EV>=0% side=pick dogany fav>=-400",
+   "n": 523,
+   "wins": 365,
+   "staked": 523.0,
+   "units": 54.19,
+   "roi": 0.1036,
+   "maxDD": 7.49
+  }
+ ],
+ "grid_size": 168,
+ "marginals": {
+  "tau": [
+   {
+    "tau": 0.0,
+    "side": "pick",
+    "n": 591,
+    "wins": 430,
+    "staked": 591.0,
+    "units": 63.11,
+    "roi": 0.1068,
+    "maxDD": 5.85,
+    "roi90": [
+     0.059,
+     0.158
+    ],
+    "pPositive": 1.0
+   },
+   {
+    "tau": 0.0,
+    "side": "any",
+    "n": 1083,
+    "wins": 598,
+    "staked": 1083.0,
+    "units": 54.61,
+    "roi": 0.0504,
+    "maxDD": 30.34,
+    "roi90": [
+     -0.004,
+     0.107
+    ],
+    "pPositive": 0.935
+   },
+   {
+    "tau": 0.02,
+    "side": "pick",
+    "n": 356,
+    "wins": 258,
+    "staked": 356.0,
+    "units": 48.77,
+    "roi": 0.137,
+    "maxDD": 8.98,
+    "roi90": [
+     0.07,
+     0.201
+    ],
+    "pPositive": 1.0
+   },
+   {
+    "tau": 0.02,
+    "side": "any",
+    "n": 707,
+    "wins": 379,
+    "staked": 707.0,
+    "units": 49.03,
+    "roi": 0.0694,
+    "maxDD": 25.81,
+    "roi90": [
+     0.001,
+     0.141
+    ],
+    "pPositive": 0.953
+   },
+   {
+    "tau": 0.04,
+    "side": "pick",
+    "n": 217,
+    "wins": 152,
+    "staked": 217.0,
+    "units": 30.81,
+    "roi": 0.142,
+    "maxDD": 5.21,
+    "roi90": [
+     0.051,
+     0.227
+    ],
+    "pPositive": 0.996
+   },
+   {
+    "tau": 0.04,
+    "side": "any",
+    "n": 465,
+    "wins": 238,
+    "staked": 465.0,
+    "units": 39.78,
+    "roi": 0.0855,
+    "maxDD": 22.35,
+    "roi90": [
+     -0.007,
+     0.182
+    ],
+    "pPositive": 0.936
+   },
+   {
+    "tau": 0.06,
+    "side": "pick",
+    "n": 132,
+    "wins": 90,
+    "staked": 132.0,
+    "units": 20.35,
+    "roi": 0.1542,
+    "maxDD": 5.21,
+    "roi90": [
+     0.04,
+     0.272
+    ],
+    "pPositive": 0.989
+   },
+   {
+    "tau": 0.06,
+    "side": "any",
+    "n": 306,
+    "wins": 144,
+    "staked": 306.0,
+    "units": 15.91,
+    "roi": 0.052,
+    "maxDD": 21.25,
+    "roi90": [
+     -0.076,
+     0.176
+    ],
+    "pPositive": 0.752
+   },
+   {
+    "tau": 0.08,
+    "side": "pick",
+    "n": 78,
+    "wins": 52,
+    "staked": 78.0,
+    "units": 13.86,
+    "roi": 0.1777,
+    "maxDD": 4.0,
+    "roi90": [
+     0.028,
+     0.331
+    ],
+    "pPositive": 0.98
+   },
+   {
+    "tau": 0.08,
+    "side": "any",
+    "n": 207,
+    "wins": 89,
+    "staked": 207.0,
+    "units": 9.18,
+    "roi": 0.0444,
+    "maxDD": 21.47,
+    "roi90": [
+     -0.124,
+     0.218
+    ],
+    "pPositive": 0.662
+   },
+   {
+    "tau": 0.1,
+    "side": "pick",
+    "n": 51,
+    "wins": 34,
+    "staked": 51.0,
+    "units": 12.17,
+    "roi": 0.2386,
+    "maxDD": 2.76,
+    "roi90": [
+     0.038,
+     0.456
+    ],
+    "pPositive": 0.972
+   },
+   {
+    "tau": 0.1,
+    "side": "any",
+    "n": 142,
+    "wins": 61,
+    "staked": 142.0,
+    "units": 10.79,
+    "roi": 0.076,
+    "maxDD": 22.99,
+    "roi90": [
+     -0.128,
+     0.288
+    ],
+    "pPositive": 0.73
+   },
+   {
+    "tau": 0.15,
+    "side": "pick",
+    "n": 19,
+    "wins": 16,
+    "staked": 19.0,
+    "units": 12.12,
+    "roi": 0.6381,
+    "maxDD": 2.57,
+    "roi90": [
+     0.32,
+     0.9
+    ],
+    "pPositive": 1.0
+   },
+   {
+    "tau": 0.15,
+    "side": "any",
+    "n": 53,
+    "wins": 28,
+    "staked": 53.0,
+    "units": 20.21,
+    "roi": 0.3814,
+    "maxDD": 8.12,
+    "roi90": [
+     0.004,
+     0.759
+    ],
+    "pPositive": 0.952
+   }
+  ],
+  "side": [],
+  "dog": [
+   {
+    "maxDecimal": 2.0,
+    "n": 193,
+    "wins": 138,
+    "staked": 193.0,
+    "units": 25.35,
+    "roi": 0.1314,
+    "maxDD": 5.38,
+    "roi90": [
+     0.044,
+     0.217
+    ],
+    "pPositive": 0.992
+   },
+   {
+    "maxDecimal": 3.0,
+    "n": 353,
+    "wins": 212,
+    "staked": 353.0,
+    "units": 50.03,
+    "roi": 0.1417,
+    "maxDD": 10.22,
+    "roi90": [
+     0.061,
+     0.225
+    ],
+    "pPositive": 0.999
+   },
+   {
+    "maxDecimal": 5.0,
+    "n": 442,
+    "wins": 235,
+    "staked": 442.0,
+    "units": 43.18,
+    "roi": 0.0977,
+    "maxDD": 19.85,
+    "roi90": [
+     0.012,
+     0.183
+    ],
+    "pPositive": 0.97
+   },
+   {
+    "maxDecimal": 99.0,
+    "n": 465,
+    "wins": 238,
+    "staked": 465.0,
+    "units": 39.78,
+    "roi": 0.0855,
+    "maxDD": 22.35,
+    "roi90": [
+     -0.009,
+     0.175
+    ],
+    "pPositive": 0.931
+   }
+  ],
+  "fav": [
+   {
+    "minDecimal": 1.0,
+    "n": 465,
+    "wins": 238,
+    "staked": 465.0,
+    "units": 39.78,
+    "roi": 0.0855,
+    "maxDD": 22.35,
+    "roi90": [
+     -0.005,
+     0.179
+    ],
+    "pPositive": 0.942
+   },
+   {
+    "minDecimal": 1.25,
+    "n": 459,
+    "wins": 232,
+    "staked": 459.0,
+    "units": 38.64,
+    "roi": 0.0842,
+    "maxDD": 22.35,
+    "roi90": [
+     -0.009,
+     0.174
+    ],
+    "pPositive": 0.924
+   },
+   {
+    "minDecimal": 1.4,
+    "n": 431,
+    "wins": 210,
+    "staked": 431.0,
+    "units": 37.27,
+    "roi": 0.0865,
+    "maxDD": 22.64,
+    "roi90": [
+     -0.011,
+     0.192
+    ],
+    "pPositive": 0.926
+   }
+  ]
+ },
+ "walk_forward": {
+  "choices": [
+   {
+    "year": "2022",
+    "chosen": "EV>=2% side=any dog<=+200 favany",
+    "n": 110,
+    "wins": 60,
+    "staked": 110.0,
+    "units": 12.67,
+    "roi": 0.1151,
+    "maxDD": 7.57
+   },
+   {
+    "year": "2023",
+    "chosen": "EV>=2% side=any dog<=+200 fav>=-250",
+    "n": 92,
+    "wins": 54,
+    "staked": 92.0,
+    "units": 8.98,
+    "roi": 0.0976,
+    "maxDD": 9.97
+   },
+   {
+    "year": "2024",
+    "chosen": "EV>=0% side=pick dog<=+200 favany",
+    "n": 128,
+    "wins": 92,
+    "staked": 128.0,
+    "units": 8.72,
+    "roi": 0.0681,
+    "maxDD": 5.13
+   },
+   {
+    "year": "2025",
+    "chosen": "EV>=0% side=pick dog<=+200 favany",
+    "n": 189,
+    "wins": 137,
+    "staked": 189.0,
+    "units": 13.92,
+    "roi": 0.0736,
+    "maxDD": 4.4
+   },
+   {
+    "year": "2026",
+    "chosen": "EV>=0% side=any dog<=+200 favany",
+    "n": 50,
+    "wins": 36,
+    "staked": 50.0,
+    "units": 4.15,
+    "roi": 0.083,
+    "maxDD": 3.0
+   }
+  ],
+  "pooled_2022_2026": {
+   "n": 569,
+   "wins": 379,
+   "staked": 569.0,
+   "units": 48.43,
+   "roi": 0.0851,
+   "maxDD": 15.59,
+   "roi90": [
+    0.03,
+    0.144
+   ],
+   "pPositive": 0.995
+  }
+ },
+ "reference_2022_2026": {
+  "CURRENT gate on C6": {
+   "n": 29,
+   "wins": 23,
+   "staked": 29.0,
+   "units": 8.53,
+   "roi": 0.2942,
+   "maxDD": 2.0,
+   "roi90": [
+    0.1,
+    0.482
+   ],
+   "pPositive": 0.993
+  },
+  "Every C6 pick, flat": {
+   "n": 1545,
+   "wins": 1077,
+   "staked": 1545.0,
+   "units": 25.2,
+   "roi": 0.0163,
+   "maxDD": 19.66,
+   "roi90": [
+    -0.012,
+    0.046
+   ],
+   "pPositive": 0.817
+  }
+ },
+ "candidates_history": {
+  "A  EV>=4% either side, price -400..+200, flat": {
+   "flat": {
+    "n": 347,
+    "wins": 206,
+    "staked": 347.0,
+    "units": 48.89,
+    "roi": 0.1409,
+    "maxDD": 10.22,
+    "roi90": [
+     0.061,
+     0.224
+    ],
+    "pPositive": 1.0
+   },
+   "quarterKelly": {
+    "n": 347,
+    "wins": 206,
+    "staked": 714.79,
+    "units": 92.59,
+    "roi": 0.1295,
+    "maxDD": 19.46,
+    "roi90": [
+     0.053,
+     0.209
+    ],
+    "pPositive": 0.998
+   },
+   "flat_by_year": {
+    "2020": {
+     "n": 21,
+     "wins": 9,
+     "staked": 21.0,
+     "units": 2.27,
+     "roi": 0.1081,
+     "maxDD": 4.43
+    },
+    "2021": {
+     "n": 4,
+     "wins": 4,
+     "staked": 4.0,
+     "units": 4.35,
+     "roi": 1.0866,
+     "maxDD": 0.0
+    },
+    "2022": {
+     "n": 71,
+     "wins": 36,
+     "staked": 71.0,
+     "units": 3.99,
+     "roi": 0.0561,
+     "maxDD": 6.0
+    },
+    "2023": {
+     "n": 57,
+     "wins": 34,
+     "staked": 57.0,
+     "units": 10.46,
+     "roi": 0.1835,
+     "maxDD": 6.03
+    },
+    "2024": {
+     "n": 71,
+     "wins": 45,
+     "staked": 71.0,
+     "units": 9.82,
+     "roi": 0.1383,
+     "maxDD": 4.59
+    },
+    "2025": {
+     "n": 96,
+     "wins": 61,
+     "staked": 96.0,
+     "units": 16.94,
+     "roi": 0.1764,
+     "maxDD": 4.82
+    },
+    "2026": {
+     "n": 27,
+     "wins": 17,
+     "staked": 27.0,
+     "units": 1.07,
+     "roi": 0.0395,
+     "maxDD": 3.83
+    }
+   }
+  },
+  "B  EV>=2% either side, price -400..+200, flat": {
+   "flat": {
+    "n": 536,
+    "wins": 319,
+    "staked": 536.0,
+    "units": 59.59,
+    "roi": 0.1112,
+    "maxDD": 14.89,
+    "roi90": [
+     0.044,
+     0.178
+    ],
+    "pPositive": 0.998
+   },
+   "quarterKelly": {
+    "n": 536,
+    "wins": 319,
+    "staked": 927.5,
+    "units": 113.29,
+    "roi": 0.1221,
+    "maxDD": 23.43,
+    "roi90": [
+     0.057,
+     0.188
+    ],
+    "pPositive": 0.998
+   },
+   "flat_by_year": {
+    "2020": {
+     "n": 39,
+     "wins": 17,
+     "staked": 39.0,
+     "units": 3.61,
+     "roi": 0.0926,
+     "maxDD": 6.15
+    },
+    "2021": {
+     "n": 13,
+     "wins": 7,
+     "staked": 13.0,
+     "units": 3.2,
+     "roi": 0.2459,
+     "maxDD": 3.0
+    },
+    "2022": {
+     "n": 109,
+     "wins": 59,
+     "staked": 109.0,
+     "units": 12.43,
+     "roi": 0.114,
+     "maxDD": 7.57
+    },
+    "2023": {
+     "n": 99,
+     "wins": 60,
+     "staked": 99.0,
+     "units": 9.88,
+     "roi": 0.0998,
+     "maxDD": 9.28
+    },
+    "2024": {
+     "n": 109,
+     "wins": 68,
+     "staked": 109.0,
+     "units": 6.03,
+     "roi": 0.0553,
+     "maxDD": 5.7
+    },
+    "2025": {
+     "n": 135,
+     "wins": 87,
+     "staked": 135.0,
+     "units": 21.98,
+     "roi": 0.1628,
+     "maxDD": 8.23
+    },
+    "2026": {
+     "n": 32,
+     "wins": 21,
+     "staked": 32.0,
+     "units": 2.46,
+     "roi": 0.0769,
+     "maxDD": 3.03
+    }
+   }
+  },
+  "C  EV>=4% pick side only, -400..+200, flat": {
+   "flat": {
+    "n": 211,
+    "wins": 146,
+    "staked": 211.0,
+    "units": 29.66,
+    "roi": 0.1406,
+    "maxDD": 5.21,
+    "roi90": [
+     0.054,
+     0.229
+    ],
+    "pPositive": 0.996
+   },
+   "quarterKelly": {
+    "n": 211,
+    "wins": 146,
+    "staked": 543.53,
+    "units": 73.03,
+    "roi": 0.1344,
+    "maxDD": 17.31,
+    "roi90": [
+     0.044,
+     0.222
+    ],
+    "pPositive": 0.995
+   },
+   "flat_by_year": {
+    "2020": {
+     "n": 0
+    },
+    "2021": {
+     "n": 2,
+     "wins": 2,
+     "staked": 2.0,
+     "units": 1.65,
+     "roi": 0.8232,
+     "maxDD": 0.0
+    },
+    "2022": {
+     "n": 26,
+     "wins": 21,
+     "staked": 26.0,
+     "units": 9.69,
+     "roi": 0.3725,
+     "maxDD": 2.0
+    },
+    "2023": {
+     "n": 35,
+     "wins": 23,
+     "staked": 35.0,
+     "units": 4.45,
+     "roi": 0.1271,
+     "maxDD": 3.78
+    },
+    "2024": {
+     "n": 51,
+     "wins": 37,
+     "staked": 51.0,
+     "units": 8.22,
+     "roi": 0.1611,
+     "maxDD": 4.88
+    },
+    "2025": {
+     "n": 75,
+     "wins": 48,
+     "staked": 75.0,
+     "units": 4.52,
+     "roi": 0.0602,
+     "maxDD": 5.21
+    },
+    "2026": {
+     "n": 22,
+     "wins": 15,
+     "staked": 22.0,
+     "units": 1.15,
+     "roi": 0.0521,
+     "maxDD": 2.83
+    }
+   }
+  },
+  "D  EV>=6% either side, -400..+200, flat": {
+   "flat": {
+    "n": 217,
+    "wins": 125,
+    "staked": 217.0,
+    "units": 28.46,
+    "roi": 0.1312,
+    "maxDD": 10.65,
+    "roi90": [
+     0.021,
+     0.243
+    ],
+    "pPositive": 0.973
+   },
+   "quarterKelly": {
+    "n": 217,
+    "wins": 125,
+    "staked": 498.42,
+    "units": 67.49,
+    "roi": 0.1354,
+    "maxDD": 19.76,
+    "roi90": [
+     0.029,
+     0.233
+    ],
+    "pPositive": 0.982
+   },
+   "flat_by_year": {
+    "2020": {
+     "n": 5,
+     "wins": 2,
+     "staked": 5.0,
+     "units": -0.25,
+     "roi": -0.05,
+     "maxDD": 2.0
+    },
+    "2021": {
+     "n": 1,
+     "wins": 1,
+     "staked": 1.0,
+     "units": 0.88,
+     "roi": 0.8772,
+     "maxDD": 0.0
+    },
+    "2022": {
+     "n": 45,
+     "wins": 22,
+     "staked": 45.0,
+     "units": 5.71,
+     "roi": 0.1268,
+     "maxDD": 6.62
+    },
+    "2023": {
+     "n": 34,
+     "wins": 18,
+     "staked": 34.0,
+     "units": 3.51,
+     "roi": 0.1033,
+     "maxDD": 4.22
+    },
+    "2024": {
+     "n": 47,
+     "wins": 32,
+     "staked": 47.0,
+     "units": 11.61,
+     "roi": 0.2471,
+     "maxDD": 3.18
+    },
+    "2025": {
+     "n": 64,
+     "wins": 37,
+     "staked": 64.0,
+     "units": 6.54,
+     "roi": 0.1022,
+     "maxDD": 8.83
+    },
+    "2026": {
+     "n": 21,
+     "wins": 13,
+     "staked": 21.0,
+     "units": 0.46,
+     "roi": 0.0219,
+     "maxDD": 2.33
+    }
+   }
+  },
+  "E  EV>=4% either side, no price caps, flat": {
+   "flat": {
+    "n": 465,
+    "wins": 238,
+    "staked": 465.0,
+    "units": 39.78,
+    "roi": 0.0855,
+    "maxDD": 22.35,
+    "roi90": [
+     -0.004,
+     0.18
+    ],
+    "pPositive": 0.939
+   },
+   "quarterKelly": {
+    "n": 465,
+    "wins": 238,
+    "staked": 835.58,
+    "units": 104.56,
+    "roi": 0.1251,
+    "maxDD": 21.95,
+    "roi90": [
+     0.047,
+     0.204
+    ],
+    "pPositive": 0.995
+   },
+   "flat_by_year": {
+    "2020": {
+     "n": 66,
+     "wins": 15,
+     "staked": 66.0,
+     "units": -16.48,
+     "roi": -0.2497,
+     "maxDD": 19.23
+    },
+    "2021": {
+     "n": 6,
+     "wins": 5,
+     "staked": 6.0,
+     "units": 5.85,
+     "roi": 0.9744,
+     "maxDD": 1.0
+    },
+    "2022": {
+     "n": 94,
+     "wins": 41,
+     "staked": 94.0,
+     "units": -0.56,
+     "roi": -0.006,
+     "maxDD": 9.57
+    },
+    "2023": {
+     "n": 71,
+     "wins": 39,
+     "staked": 71.0,
+     "units": 16.81,
+     "roi": 0.2367,
+     "maxDD": 8.42
+    },
+    "2024": {
+     "n": 79,
+     "wins": 46,
+     "staked": 79.0,
+     "units": 5.12,
+     "roi": 0.0648,
+     "maxDD": 5.59
+    },
+    "2025": {
+     "n": 116,
+     "wins": 70,
+     "staked": 116.0,
+     "units": 22.31,
+     "roi": 0.1924,
+     "maxDD": 9.09
+    },
+    "2026": {
+     "n": 33,
+     "wins": 22,
+     "staked": 33.0,
+     "units": 6.74,
+     "roi": 0.2042,
+     "maxDD": 4.83
+    }
+   }
+  }
+ },
+ "live_live": {
+  "n": 110,
+  "CURRENT gate on C6": {
+   "n": 5,
+   "wins": 3,
+   "staked": 5.0,
+   "units": -0.04,
+   "roi": -0.0087,
+   "maxDD": 2.0,
+   "roi90": [
+    -0.682,
+    0.665
+   ],
+   "pPositive": 0.393
+  },
+  "Every C6 pick, flat": {
+   "n": 110,
+   "wins": 80,
+   "staked": 110.0,
+   "units": 6.44,
+   "roi": 0.0585,
+   "maxDD": 5.88,
+   "roi90": [
+    -0.033,
+    0.161
+   ],
+   "pPositive": 0.858
+  },
+  "Every market favourite, flat": {
+   "n": 110,
+   "wins": 77,
+   "staked": 110.0,
+   "units": -0.79,
+   "roi": -0.0072,
+   "maxDD": 9.43,
+   "roi90": [
+    -0.09,
+    0.082
+   ],
+   "pPositive": 0.422
+  },
+  "A  EV>=4% either side, price -400..+200, flat": {
+   "n": 40,
+   "wins": 24,
+   "staked": 40.0,
+   "units": 1.59,
+   "roi": 0.0398,
+   "maxDD": 3.47,
+   "roi90": [
+    -0.157,
+    0.23
+   ],
+   "pPositive": 0.655
+  },
+  "A  EV>=4% either side, price -400..+200, flat (quarter Kelly)": {
+   "n": 40,
+   "wins": 24,
+   "staked": 103.39,
+   "units": -1.81,
+   "roi": -0.0175,
+   "maxDD": 9.44,
+   "roi90": [
+    -0.191,
+    0.163
+   ],
+   "pPositive": 0.457
+  },
+  "B  EV>=2% either side, price -400..+200, flat": {
+   "n": 46,
+   "wins": 28,
+   "staked": 46.0,
+   "units": 1.42,
+   "roi": 0.0309,
+   "maxDD": 4.02,
+   "roi90": [
+    -0.146,
+    0.194
+   ],
+   "pPositive": 0.633
+  },
+  "B  EV>=2% either side, price -400..+200, flat (quarter Kelly)": {
+   "n": 46,
+   "wins": 28,
+   "staked": 115.2,
+   "units": -2.38,
+   "roi": -0.0207,
+   "maxDD": 10.74,
+   "roi90": [
+    -0.189,
+    0.15
+   ],
+   "pPositive": 0.434
+  },
+  "C  EV>=4% pick side only, -400..+200, flat": {
+   "n": 34,
+   "wins": 22,
+   "staked": 34.0,
+   "units": 2.05,
+   "roi": 0.0603,
+   "maxDD": 2.65,
+   "roi90": [
+    -0.097,
+    0.247
+   ],
+   "pPositive": 0.74
+  },
+  "C  EV>=4% pick side only, -400..+200, flat (quarter Kelly)": {
+   "n": 34,
+   "wins": 22,
+   "staked": 92.33,
+   "units": 1.3,
+   "roi": 0.0141,
+   "maxDD": 7.31,
+   "roi90": [
+    -0.137,
+    0.192
+   ],
+   "pPositive": 0.558
+  },
+  "D  EV>=6% either side, -400..+200, flat": {
+   "n": 32,
+   "wins": 19,
+   "staked": 32.0,
+   "units": 1.25,
+   "roi": 0.0391,
+   "maxDD": 5.71,
+   "roi90": [
+    -0.279,
+    0.301
+   ],
+   "pPositive": 0.591
+  },
+  "D  EV>=6% either side, -400..+200, flat (quarter Kelly)": {
+   "n": 32,
+   "wins": 19,
+   "staked": 86.91,
+   "units": -1.63,
+   "roi": -0.0187,
+   "maxDD": 14.63,
+   "roi90": [
+    -0.287,
+    0.215
+   ],
+   "pPositive": 0.458
+  },
+  "E  EV>=4% either side, no price caps, flat": {
+   "n": 47,
+   "wins": 27,
+   "staked": 47.0,
+   "units": 1.21,
+   "roi": 0.0257,
+   "maxDD": 5.95,
+   "roi90": [
+    -0.226,
+    0.232
+   ],
+   "pPositive": 0.566
+  },
+  "E  EV>=4% either side, no price caps, flat (quarter Kelly)": {
+   "n": 47,
+   "wins": 27,
+   "staked": 114.41,
+   "units": 1.7,
+   "roi": 0.0149,
+   "maxDD": 11.31,
+   "roi90": [
+    -0.184,
+    0.202
+   ],
+   "pPositive": 0.562
+  },
+  "brier": {
+   "v2": 0.22542,
+   "market": 0.20407,
+   "c6": 0.20412
+  },
+  "candidateA_bets": [
+   {
+    "date": "2026-09-26",
+    "bet": "John Castaneda",
+    "vs": "Alatengheili",
+    "decimal": 1.351,
+    "c6": 0.774,
+    "ev": 0.046,
+    "won": false
+   },
+   {
+    "date": "2026-09-26",
+    "bet": "Ailin Perez",
+    "vs": "Norma Dumont",
+    "decimal": 1.725,
+    "c6": 0.642,
+    "ev": 0.108,
+    "won": true
+   },
+   {
+    "date": "2026-09-26",
+    "bet": "Elves Brener",
+    "vs": "Josiah Harrell",
+    "decimal": 2.17,
+    "c6": 0.5,
+    "ev": 0.086,
+    "won": true
+   },
+   {
+    "date": "2026-09-26",
+    "bet": "Rodolfo Bellato",
+    "vs": "Christian Edwards",
+    "decimal": 1.588,
+    "c6": 0.692,
+    "ev": 0.099,
+    "won": false
+   },
+   {
+    "date": "2026-09-26",
+    "bet": "Rodolfo Vieira",
+    "vs": "Robert Bryczek",
+    "decimal": 1.694,
+    "c6": 0.647,
+    "ev": 0.096,
+    "won": true
+   },
+   {
+    "date": "2026-09-26",
+    "bet": "Raul Rosas Jr.",
+    "vs": "Raoni Barcelos",
+    "decimal": 1.588,
+    "c6": 0.72,
+    "ev": 0.143,
+    "won": true
+   },
+   {
+    "date": "2026-09-19",
+    "bet": "Casey O'Neill",
+    "vs": "Eduarda Moura",
+    "decimal": 1.481,
+    "c6": 0.788,
+    "ev": 0.167,
+    "won": true
+   },
+   {
+    "date": "2026-09-19",
+    "bet": "Charles Jourdain",
+    "vs": "Marlon Vera",
+    "decimal": 1.503,
+    "c6": 0.697,
+    "ev": 0.048,
+    "won": false
+   },
+   {
+    "date": "2026-09-19",
+    "bet": "Joanderson Brito",
+    "vs": "Giga Chikadze",
+    "decimal": 1.274,
+    "c6": 0.864,
+    "ev": 0.101,
+    "won": true
+   },
+   {
+    "date": "2026-09-19",
+    "bet": "Edmen Shahbazyan",
+    "vs": "Brunno Ferreira",
+    "decimal": 1.599,
+    "c6": 0.701,
+    "ev": 0.121,
+    "won": true
+   },
+   {
+    "date": "2026-09-19",
+    "bet": "Michael Aswell Jr.",
+    "vs": "JooSang Yoo",
+    "decimal": 2.99,
+    "c6": 0.363,
+    "ev": 0.085,
+    "won": true
+   },
+   {
+    "date": "2026-09-19",
+    "bet": "Dooho Choi",
+    "vs": "Patricio Pitbull",
+    "decimal": 1.418,
+    "c6": 0.826,
+    "ev": 0.171,
+    "won": false
+   },
+   {
+    "date": "2026-09-19",
+    "bet": "Iwo Baraniewski",
+    "vs": "Alonzo Menifield",
+    "decimal": 1.439,
+    "c6": 0.755,
+    "ev": 0.087,
+    "won": false
+   },
+   {
+    "date": "2026-09-19",
+    "bet": "Joshua Van",
+    "vs": "Alexandre Pantoja",
+    "decimal": 1.769,
+    "c6": 0.683,
+    "ev": 0.208,
+    "won": true
+   },
+   {
+    "date": "2026-09-19",
+    "bet": "Arman Tsarukyan",
+    "vs": "Mauricio Ruffy",
+    "decimal": 1.342,
+    "c6": 0.796,
+    "ev": 0.068,
+    "won": true
+   },
+   {
+    "date": "2026-09-12",
+    "bet": "Curtis Blaydes",
+    "vs": "Waldo Cortes Acosta",
+    "decimal": 2.55,
+    "c6": 0.438,
+    "ev": 0.116,
+    "won": true
+   },
+   {
+    "date": "2026-09-05",
+    "bet": "Nursulton Ruziboev",
+    "vs": "Michael Page",
+    "decimal": 2.4,
+    "c6": 0.496,
+    "ev": 0.191,
+    "won": false
+   },
+   {
+    "date": "2026-09-05",
+    "bet": "Klaudia Sygula",
+    "vs": "Nora Cornolle",
+    "decimal": 2.1,
+    "c6": 0.594,
+    "ev": 0.247,
+    "won": false
+   },
+   {
+    "date": "2026-08-29",
+    "bet": "Denise Gomes",
+    "vs": "Yan Xiaonan",
+    "decimal": 2.3,
+    "c6": 0.545,
+    "ev": 0.253,
+    "won": true
+   },
+   {
+    "date": "2026-08-22",
+    "bet": "Anthony Hernandez",
+    "vs": "Gregory Rodrigues",
+    "decimal": 1.556,
+    "c6": 0.691,
+    "ev": 0.075,
+    "won": true
+   },
+   {
+    "date": "2026-08-22",
+    "bet": "Kennedy Nzechukwu",
+    "vs": "Shamil Gaziev",
+    "decimal": 2.2,
+    "c6": 0.534,
+    "ev": 0.175,
+    "won": false
+   },
+   {
+    "date": "2026-08-22",
+    "bet": "Chris Padilla",
+    "vs": "Nasrat Haqparast",
+    "decimal": 2.0,
+    "c6": 0.537,
+    "ev": 0.074,
+    "won": true
+   },
+   {
+    "date": "2026-08-15",
+    "bet": "Gillian Robertson",
+    "vs": "Mackenzie Dern",
+    "decimal": 2.6,
+    "c6": 0.44,
+    "ev": 0.144,
+    "won": false
+   },
+   {
+    "date": "2026-08-15",
+    "bet": "Donte Johnson",
+    "vs": "Eric McConico",
+    "decimal": 1.328,
+    "c6": 0.791,
+    "ev": 0.051,
+    "won": true
+   },
+   {
+    "date": "2026-08-15",
+    "bet": "Vicente Luque",
+    "vs": "Tresean Gore",
+    "decimal": 1.909,
+    "c6": 0.57,
+    "ev": 0.087,
+    "won": false
+   },
+   {
+    "date": "2026-08-08",
+    "bet": "Quillan Salkilld",
+    "vs": "Mateusz Gamrot",
+    "decimal": 1.69,
+    "c6": 0.623,
+    "ev": 0.053,
+    "won": true
+   },
+   {
+    "date": "2026-08-08",
+    "bet": "Billy Quarantillo",
+    "vs": "Diego Ferreira",
+    "decimal": 2.45,
+    "c6": 0.461,
+    "ev": 0.131,
+    "won": false
+   },
+   {
+    "date": "2026-08-08",
+    "bet": "Alexia Thainara",
+    "vs": "Amanda Lemos",
+    "decimal": 1.385,
+    "c6": 0.789,
+    "ev": 0.092,
+    "won": true
+   },
+   {
+    "date": "2026-08-08",
+    "bet": "Diyar Nurgozhay",
+    "vs": "Bruno Lopes",
+    "decimal": 1.69,
+    "c6": 0.632,
+    "ev": 0.067,
+    "won": true
+   },
+   {
+    "date": "2026-08-01",
+    "bet": "Navajo Stirling",
+    "vs": "Jan Blachowicz",
+    "decimal": 1.312,
+    "c6": 0.807,
+    "ev": 0.059,
+    "won": true
+   },
+   {
+    "date": "2026-08-01",
+    "bet": "Ludovit Klein",
+    "vs": "Tofiq Musayev",
+    "decimal": 1.417,
+    "c6": 0.769,
+    "ev": 0.09,
+    "won": false
+   },
+   {
+    "date": "2026-07-25",
+    "bet": "Mike Davis",
+    "vs": "Nurullo Aliev",
+    "decimal": 2.6,
+    "c6": 0.4,
+    "ev": 0.04,
+    "won": false
+   },
+   {
+    "date": "2026-07-18",
+    "bet": "Chase Hooper",
+    "vs": "Mitch Ramirez",
+    "decimal": 1.278,
+    "c6": 0.865,
+    "ev": 0.105,
+    "won": true
+   },
+   {
+    "date": "2026-07-18",
+    "bet": "Jose Delgado",
+    "vs": "Austin Bashi",
+    "decimal": 1.909,
+    "c6": 0.547,
+    "ev": 0.045,
+    "won": true
+   },
+   {
+    "date": "2026-07-11",
+    "bet": "Max Holloway",
+    "vs": "Conor McGregor",
+    "decimal": 1.476,
+    "c6": 0.751,
+    "ev": 0.109,
+    "won": true
+   },
+   {
+    "date": "2026-07-11",
+    "bet": "Benoit Saint Denis",
+    "vs": "Paddy Pimblett",
+    "decimal": 1.714,
+    "c6": 0.665,
+    "ev": 0.14,
+    "won": false
+   },
+   {
+    "date": "2026-07-11",
+    "bet": "Mario Bautista",
+    "vs": "Cory Sandhagen",
+    "decimal": 2.1,
+    "c6": 0.504,
+    "ev": 0.058,
+    "won": true
+   },
+   {
+    "date": "2026-07-11",
+    "bet": "Terrance McKinney",
+    "vs": "King Green",
+    "decimal": 1.8,
+    "c6": 0.634,
+    "ev": 0.141,
+    "won": false
+   },
+   {
+    "date": "2026-07-11",
+    "bet": "Nikita Krylov",
+    "vs": "Robert Whittaker",
+    "decimal": 2.15,
+    "c6": 0.507,
+    "ev": 0.091,
+    "won": false
+   },
+   {
+    "date": "2026-07-11",
+    "bet": "Damian Pinas",
+    "vs": "Cesar Almeida",
+    "decimal": 1.385,
+    "c6": 0.791,
+    "ev": 0.095,
+    "won": true
+   }
+  ]
+ },
+ "live_all": {
+  "n": 152,
+  "CURRENT gate on C6": {
+   "n": 7,
+   "wins": 5,
+   "staked": 7.0,
+   "units": 1.48,
+   "roi": 0.2114,
+   "maxDD": 2.0,
+   "roi90": [
+    -0.449,
+    0.742
+   ],
+   "pPositive": 0.744
+  },
+  "Every C6 pick, flat": {
+   "n": 152,
+   "wins": 110,
+   "staked": 152.0,
+   "units": 7.8,
+   "roi": 0.0513,
+   "maxDD": 8.14,
+   "roi90": [
+    -0.03,
+    0.136
+   ],
+   "pPositive": 0.862
+  },
+  "Every market favourite, flat": {
+   "n": 152,
+   "wins": 105,
+   "staked": 152.0,
+   "units": -3.72,
+   "roi": -0.0245,
+   "maxDD": 9.43,
+   "roi90": [
+    -0.094,
+    0.05
+   ],
+   "pPositive": 0.283
+  },
+  "A  EV>=4% either side, price -400..+200, flat": {
+   "n": 50,
+   "wins": 30,
+   "staked": 50.0,
+   "units": 3.04,
+   "roi": 0.0608,
+   "maxDD": 4.32,
+   "roi90": [
+    -0.116,
+    0.224
+   ],
+   "pPositive": 0.731
+  },
+  "A  EV>=4% either side, price -400..+200, flat (quarter Kelly)": {
+   "n": 50,
+   "wins": 30,
+   "staked": 126.2,
+   "units": -0.78,
+   "roi": -0.0061,
+   "maxDD": 12.26,
+   "roi90": [
+    -0.172,
+    0.166
+   ],
+   "pPositive": 0.479
+  },
+  "B  EV>=2% either side, price -400..+200, flat": {
+   "n": 61,
+   "wins": 38,
+   "staked": 61.0,
+   "units": 3.35,
+   "roi": 0.0549,
+   "maxDD": 5.18,
+   "roi90": [
+    -0.098,
+    0.211
+   ],
+   "pPositive": 0.744
+  },
+  "B  EV>=2% either side, price -400..+200, flat (quarter Kelly)": {
+   "n": 61,
+   "wins": 38,
+   "staked": 149.2,
+   "units": -0.02,
+   "roi": -0.0001,
+   "maxDD": 13.63,
+   "roi90": [
+    -0.146,
+    0.161
+   ],
+   "pPositive": 0.514
+  },
+  "C  EV>=4% pick side only, -400..+200, flat": {
+   "n": 43,
+   "wins": 27,
+   "staked": 43.0,
+   "units": 2.3,
+   "roi": 0.0535,
+   "maxDD": 2.85,
+   "roi90": [
+    -0.093,
+    0.204
+   ],
+   "pPositive": 0.715
+  },
+  "C  EV>=4% pick side only, -400..+200, flat (quarter Kelly)": {
+   "n": 43,
+   "wins": 27,
+   "staked": 113.96,
+   "units": 0.92,
+   "roi": 0.008,
+   "maxDD": 9.33,
+   "roi90": [
+    -0.142,
+    0.179
+   ],
+   "pPositive": 0.528
+  },
+  "D  EV>=6% either side, -400..+200, flat": {
+   "n": 38,
+   "wins": 23,
+   "staked": 38.0,
+   "units": 2.87,
+   "roi": 0.0757,
+   "maxDD": 6.66,
+   "roi90": [
+    -0.206,
+    0.327
+   ],
+   "pPositive": 0.661
+  },
+  "D  EV>=6% either side, -400..+200, flat (quarter Kelly)": {
+   "n": 38,
+   "wins": 23,
+   "staked": 102.69,
+   "units": 0.99,
+   "roi": 0.0096,
+   "maxDD": 17.45,
+   "roi90": [
+    -0.253,
+    0.253
+   ],
+   "pPositive": 0.517
+  },
+  "E  EV>=4% either side, no price caps, flat": {
+   "n": 61,
+   "wins": 34,
+   "staked": 61.0,
+   "units": -0.11,
+   "roi": -0.0018,
+   "maxDD": 6.8,
+   "roi90": [
+    -0.204,
+    0.182
+   ],
+   "pPositive": 0.473
+  },
+  "E  EV>=4% either side, no price caps, flat (quarter Kelly)": {
+   "n": 61,
+   "wins": 34,
+   "staked": 145.8,
+   "units": -2.14,
+   "roi": -0.0147,
+   "maxDD": 15.7,
+   "roi90": [
+    -0.19,
+    0.148
+   ],
+   "pPositive": 0.437
+  },
+  "brier": {
+   "v2": 0.22548,
+   "market": 0.20422,
+   "c6": 0.20408
+  }
+ }
+}

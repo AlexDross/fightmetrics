@@ -11,7 +11,13 @@
 // src/upcomingData.js + src/roiData.js. --files forces the bundled files.
 //
 //   node scripts/grade_upcoming.mjs pending [--all] [--files]
-//   node scripts/grade_upcoming.mjs apply <results.json> [--dry-run] [--files]
+//   node scripts/grade_upcoming.mjs apply <results.json> [--dry-run] [--files] [--no-closing]
+//
+// apply also records each fight's CLOSING ODDS (fightodds.io, Pinnacle first;
+// see src/domain/betting/closing.js) on the graded entry as `closing`, for the
+// v3 experiment's closing-line-value test. A fetch failure or an unmatched
+// fight only warns: the grade still applies, without `closing` for that fight.
+// --no-closing skips the fetch.
 //
 // results.json: [{ "id": "...", "actualWinner": "Exact Fighter Name",
 //                  "actualFinish": "KO/TKO" | "SUB" | "DEC" | "" }]
@@ -20,6 +26,8 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { openStore } from './lib/documentStore.mjs';
+import { fetchClosingLines } from './lib/closingOdds.mjs';
+import { buildClosingRecord, closingLineValue } from '../src/domain/betting/closing.js';
 
 const FINISHES = new Set(['KO/TKO', 'SUB', 'DEC', '']);
 
@@ -57,7 +65,34 @@ function pending({ all }) {
   );
 }
 
-async function apply(resultsPath, { dryRun }) {
+// Attach `closing` to graded entries, one aggregator lookup per event.
+async function attachClosing(graded) {
+  const byEvent = new Map();
+  for (const e of graded) {
+    const k = `${e.eventName}|${e.eventDate}`;
+    if (!byEvent.has(k)) byEvent.set(k, []);
+    byEvent.get(k).push(e);
+  }
+  const capturedAt = new Date().toISOString();
+  const out = new Map();
+  for (const entries of byEvent.values()) {
+    const { eventName, eventDate } = entries[0];
+    try {
+      const { event, lines, unmatched } = await fetchClosingLines(eventName, eventDate, entries);
+      if (!event) { console.warn(`closing odds: no fightodds.io event matches "${eventName}" (${eventDate}) -- none recorded`); continue; }
+      for (const [id, line] of lines) out.set(id, buildClosingRecord({ ...line, capturedAt }));
+      for (const id of unmatched) {
+        const e = entries.find((x) => x.id === id);
+        console.warn(`closing odds: no line matched for ${e.fighterA} vs ${e.fighterB} -- none recorded`);
+      }
+    } catch (err) {
+      console.warn(`closing odds: fetch failed for "${eventName}" (${err.message}) -- none recorded`);
+    }
+  }
+  return graded.map((e) => (out.has(e.id) ? { ...e, closing: out.get(e.id) } : e));
+}
+
+async function apply(resultsPath, { dryRun, closing }) {
   const results = JSON.parse(readFileSync(resolve(process.cwd(), resultsPath), 'utf8'));
   if (!Array.isArray(results)) throw new Error('results file must be a JSON array');
 
@@ -94,6 +129,8 @@ async function apply(resultsPath, { dryRun }) {
     process.exit(1);
   }
 
+  if (closing) graded.splice(0, graded.length, ...(await attachClosing(graded)));
+
   const gradedIds = new Set(graded.map((e) => e.id));
   const nextUpcoming = upcoming.filter((e) => !gradedIds.has(e.id));
   const nextRoi = [...graded, ...roi]; // newest first, same as handleGradeUpcoming
@@ -106,7 +143,12 @@ async function apply(resultsPath, { dryRun }) {
   for (const e of graded) {
     const side = e.trackedSide || e.predictedWinner;
     const hit = e.actualWinner === side ? 'HIT ' : e.actualWinner === 'DRAW' || e.actualWinner === 'NC' ? 'PUSH' : 'MISS';
-    console.log(`${hit}  ${e.eventName}  ${e.fighterA} vs ${e.fighterB} -> ${e.actualWinner} (${e.actualFinish || '?'})  [pick: ${side}, ${e.betAction}]`);
+    const sideAB = side === e.fighterA ? 'A' : side === e.fighterB ? 'B' : null;
+    const clv = closingLineValue(e, sideAB, e.marketOdds);
+    const close = e.closing
+      ? `  close ${e.closing.oddsA}/${e.closing.oddsB} (${e.closing.source}), CLV ${clv == null ? '?' : `${clv >= 0 ? '+' : ''}${(clv * 100).toFixed(1)}%`}`
+      : '  no closing line';
+    console.log(`${hit}  ${e.eventName}  ${e.fighterA} vs ${e.fighterB} -> ${e.actualWinner} (${e.actualFinish || '?'})  [pick: ${side}, ${e.betAction}]${close}`);
   }
   console.log(`\n${graded.length} graded | upcoming ${upcoming.length} -> ${nextUpcoming.length} | roi ${roi.length} -> ${nextRoi.length}`);
 
@@ -121,8 +163,8 @@ const args = rest.filter((a) => !a.startsWith('--'));
 
 if (cmd === 'pending') pending({ all: flags.has('--all') });
 else if (cmd === 'apply') {
-  if (!args[0]) { console.error('usage: grade_upcoming.mjs apply <results.json> [--dry-run]'); process.exit(1); }
-  await apply(args[0], { dryRun: flags.has('--dry-run') });
+  if (!args[0]) { console.error('usage: grade_upcoming.mjs apply <results.json> [--dry-run] [--no-closing]'); process.exit(1); }
+  await apply(args[0], { dryRun: flags.has('--dry-run'), closing: !flags.has('--no-closing') });
 } else {
   console.error('usage: grade_upcoming.mjs pending [--all] | apply <results.json> [--dry-run]');
   process.exit(1);

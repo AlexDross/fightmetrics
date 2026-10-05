@@ -48,7 +48,8 @@ import {
 // and buildRoiEntry below both call this SAME function, so the previewed
 // probability and the saved probability can never disagree. See decision.js
 // for the v1 / v2 / C6 selection rules.
-import { resolveDecisionProbability } from './decision.js';
+import { resolveDecisionProbability, evaluateDecisionGate } from './decision.js';
+import { GATE_V3 } from './gateV3.js';
 
 // americanOdds, parseAmericanOdds, stripVig, calcExpectedValue, americanToDecimal,
 // kellyFraction and djb2Checksum now live in ./marketCore.js (dependency-neutral)
@@ -168,7 +169,7 @@ const deriveFrozenV2RoiView = (entry, fighterA, fighterB) => {
 // fields, and -- only when it was 'c6' -- the frozen C6 version/pA/pB that
 // drove it, so provenance is unambiguous about C6 having driven the decision
 // rather than raw v2. Omitted entirely when the caller passes nothing.
-export const buildProvenance = ({ eventDate, result, fA, fB, predictionTimestamp, captureMode, frozenTier, boutContext, decisionProbabilitySource, c6 }) => {
+export const buildProvenance = ({ eventDate, result, fA, fB, predictionTimestamp, captureMode, frozenTier, gateVersion, boutContext, decisionProbabilitySource, c6 }) => {
   const todayIso = new Date().toISOString().slice(0, 10);
   const resolvedCaptureMode =
     captureMode ??
@@ -180,6 +181,7 @@ export const buildProvenance = ({ eventDate, result, fA, fB, predictionTimestamp
     modelVersion: MODEL_V2.version,
     modelCoefHash: djb2Checksum(JSON.stringify(MODEL_V2.coef)),
     ...(frozenTier !== undefined ? { frozenTier } : {}),
+    ...(gateVersion !== undefined ? { gateVersion } : {}),
     ...(boutContext !== undefined ? { boutContext } : {}),
     ...(decisionProbabilitySource !== undefined ? { decisionProbabilitySource } : {}),
     ...(c6 !== undefined ? { c6 } : {}),
@@ -259,8 +261,10 @@ const buildRoiEntry = ({ fA, fB, oddsA, oddsB, eventName, eventDate, modelToggle
   const activePB = decision.pB;
   const activeResult = { ...result, pA: activePA, pB: activePB };
   // C6 and the betting gate consume the ONE market snapshot the resolver
-  // already parsed -- odds are never re-parsed here.
-  const market = evaluateGateOnSnapshot(activeResult, decision.market, fA, fB);
+  // already parsed -- odds are never re-parsed here. A C6 decision runs the
+  // v3 gate (see ./gateV3.js); v1/v2 keep the legacy ladder.
+  const market = evaluateDecisionGate(decision, activeResult, fA, fB);
+  const isV3 = market?.gateVersion === GATE_V3.version;
 
   // predictedWinner/predictedProb stay on the v1 snapshot (consumed by the v1
   // accuracy stats and the "v2 differs" comparisons). trackedSide is the active
@@ -367,10 +371,18 @@ const buildRoiEntry = ({ fA, fB, oddsA, oddsB, eventName, eventDate, modelToggle
     trackedSide,
     trackedProb,
     // Units actually staked on trackedSide at save time. Defaults to 1
-    // (matches every pre-existing entry, which was always flat 1u).
-    unitsWagered,
+    // (matches every pre-existing entry, which was always flat 1u). A v3 entry
+    // is always tracked at the standard strategy stake; real bets live in
+    // `execution` (added at the fight-day re-check), never here.
+    unitsWagered: isV3 ? GATE_V3.strategyStakeUnits : unitsWagered,
     betAction: market?.betAction ?? 'NO BET',
     bestBet: market?.bestBet ?? null,
+    // v3 gate stamp, present only on C6-driven saves: the frozen gate version,
+    // the NO BET reason code (null for BET/LEAN) and the pick side's expected
+    // return per unit. Omitted otherwise so legacy saves are byte-identical.
+    ...(isV3
+      ? { gateVersion: market.gateVersion, gateReason: market.gateReason, gateEV: market.gateEV }
+      : {}),
     betRecommendedFighter,
     betRecommendedOdds,
     marketOdds: trackedOdds,
@@ -413,6 +425,7 @@ const buildRoiEntry = ({ fA, fB, oddsA, oddsB, eventName, eventDate, modelToggle
       fA,
       fB,
       frozenTier: market?.betAction ?? 'NO BET',
+      gateVersion: isV3 ? market.gateVersion : undefined,
       boutContext: normalizedBoutContext ?? undefined,
       decisionProbabilitySource: decision.source,
       c6: decision.source === 'c6' ? { version: decision.c6Version, pA: decision.c6ProbA, pB: decision.c6ProbB } : undefined,
@@ -468,6 +481,7 @@ export {
 };
 export {
   resolveDecisionProbability,
+  evaluateDecisionGate,
   resolveFrozenDecisionView,
   resolveFrozenPerformanceView,
   DECISION_SOURCE_V1,
@@ -478,3 +492,14 @@ export {
   DECISION_LABEL_C6,
 } from './decision.js';
 export { buildParlayLeg } from './parlayLeg.js';
+export {
+  GATE_V3,
+  GATE_V3_REASONS,
+  gateV3,
+  applyGateV3,
+  describeGateV3Reason,
+  recheckGateV3,
+  buildExecution,
+  SKIP_REASONS,
+  isV3ExperimentEntry,
+} from './gateV3.js';

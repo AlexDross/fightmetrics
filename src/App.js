@@ -95,7 +95,7 @@ import {
   createPredictionId,
   kellyFraction,
   computeMarketAnalysis,
-  evaluateGateOnSnapshot,
+  evaluateDecisionGate,
   deriveFrozenV2RoiView,
   djb2Checksum,
   buildProvenance,
@@ -106,6 +106,10 @@ import {
   resolveFrozenPerformanceView,
   DECISION_SOURCE_C6,
   buildParlayLeg,
+  recheckGateV3,
+  buildExecution,
+  describeGateV3Reason,
+  SKIP_REASONS,
 } from './domain/betting';
 // Foundation Stage 4: Upcoming -> ROI transitions extracted verbatim.
 import {
@@ -151,6 +155,7 @@ import {
   gradeFrozenDecision,
   computeV2WindowComposition,
   computeV2Summary,
+  computeV3Records,
   computeRoiByMarketBandV2,
   computeCumulativePnlV2,
   computeMonthlyPerformanceV2,
@@ -1051,7 +1056,7 @@ function BetTierWinRateChart({ data }) {
   const descriptionId = `${chartId}-description`;
   return (
     <figure className="bg-slate-900 border border-slate-800 rounded-xl p-4" aria-labelledby={chartId} aria-describedby={descriptionId}>
-      <h3 id={chartId} className="text-white font-bold text-sm mb-1">Win Rate by Bet Tier</h3>
+      <h3 id={chartId} className="text-white font-bold text-sm mb-1">Win Rate by Bet Tier (pre-v3 gate)</h3>
       <p id={descriptionId} className="text-muted text-xs mb-3">
         V2's picked-side win rate, grouped by the tier STORED on each entry
         (including the declined NO BET pool) -- not re-gated against current
@@ -1115,7 +1120,7 @@ function BetTierRoiChart({ data }) {
   const descriptionId = `${chartId}-description`;
   return (
     <figure className="bg-slate-900 border border-slate-800 rounded-xl p-4" aria-labelledby={chartId} aria-describedby={descriptionId}>
-      <h3 id={chartId} className="text-white font-bold text-sm mb-1">ROI by Bet Tier</h3>
+      <h3 id={chartId} className="text-white font-bold text-sm mb-1">ROI by Bet Tier (pre-v3 gate)</h3>
       <p id={descriptionId} className="text-muted text-xs mb-3">
         Stake-weighted ROI on the frozen tracked decision (at that decision's
         own stored price), grouped by the tier STORED on each entry at capture/
@@ -1311,6 +1316,64 @@ function MonthlyPerformanceTable({ data, large = false, modelLabel = 'v1', windo
 // same population logic (filterRoiEntriesForStats mirrors displayedEntries),
 // same n<8 low-n convention, same de-vig/raw conventions -- this component
 // only relocates rendering, it does not recompute anything differently.
+// v3 gate experiment headline (Statistics + Home). Strategy and paper figures
+// are hypothetical (1u at the saved price); only `actual` reflects bets placed.
+// Counts only live captures stamped with the frozen gate version, regardless
+// of any SINCE filter: the experiment defines its own window.
+const fmtUnits = (u) => `${u >= 0 ? '+' : ''}${u.toFixed(2)}u`;
+const fmtRoi = (r) => (r == null ? '—' : `${r >= 0 ? '+' : ''}${r.toFixed(1)}%`);
+
+function V3RecordPanel({ entries, compact = false }) {
+  const rec = useMemo(() => computeV3Records(entries), [entries]);
+  if (rec.experimentEntries === 0) {
+    return (
+      <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 mb-6">
+        <p className="text-muted text-xs uppercase tracking-wider font-semibold">v3 bet record</p>
+        <p className="text-secondary text-sm mt-2">No fights saved under the v3 gate yet. The record starts with the first card after the freeze.</p>
+      </div>
+    );
+  }
+  const tile = (label, r, note, tone) => (
+    <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 h-full">
+      <p className="text-muted text-xs uppercase tracking-wider font-semibold">{label}</p>
+      <p className={`font-black text-2xl mt-2 ${r.bets === 0 ? 'text-secondary' : r.units >= 0 ? tone : 'text-red-400'}`}>
+        {r.bets === 0 ? '—' : fmtRoi(r.roi)}
+      </p>
+      <p className="text-muted text-xs mt-1 leading-snug">
+        {r.bets === 0 ? 'No graded bets yet' : `${r.wins}–${r.losses}${r.pushes ? `–${r.pushes}` : ''} · ${fmtUnits(r.units)}`}
+        {r.meanCLV != null ? ` · CLV ${r.meanCLV >= 0 ? '+' : ''}${r.meanCLV.toFixed(1)}%` : ''}
+        {note ? ` · ${note}` : ''}
+      </p>
+    </div>
+  );
+  const s = rec.strategy;
+  return (
+    <div className="mb-6">
+      <p className="text-muted text-xs font-semibold uppercase tracking-wider mb-3">v3 bet record (C6 underdog gate)</p>
+      <div className={`grid grid-cols-2 ${compact ? 'md:grid-cols-2' : 'lg:grid-cols-4'} gap-4 items-stretch`}>
+        {tile('BET strategy', s, 'hypothetical, 1u', 'text-emerald-400')}
+        {tile('Actual bets', rec.actual, rec.skipped ? `${rec.skipped} skipped` : 'recorded at fight day', 'text-emerald-400')}
+        {!compact && tile('LEAN paper', rec.paper, 'hypothetical, 1u', 'text-yellow-400')}
+        {!compact && tile('Every C6 pick', rec.baseline, 'baseline, 1u', 'text-secondary')}
+      </div>
+      {(s.bets > 0 || s.clvBets > 0) && (
+        <p className="text-muted text-xs mt-2">
+          {s.meanCLV != null && (
+            <>
+              <span className={s.meanCLV >= 0 ? 'text-emerald-400 font-semibold' : 'text-red-400 font-semibold'}>
+                Closing-line value {s.meanCLV >= 0 ? '+' : ''}{s.meanCLV.toFixed(1)}%
+              </span>
+              {` over ${s.clvBets} BET${s.clvBets === 1 ? '' : 's'} · `}
+            </>
+          )}
+          {s.bets > 0 && s.meanProb != null && `BET calibration: won ${s.winRate.toFixed(1)}% vs C6 mean ${s.meanProb.toFixed(1)}% · `}
+          validation needs 30+ BETs with ROI above 0% and positive closing-line value
+        </p>
+      )}
+    </div>
+  );
+}
+
 function StatisticsTab({ entries, prospectNameSet, filterSince, setFilterSince, propPicks, parlayEntries }) {
   const statsEntries = useMemo(
     () => filterRoiEntriesForStats(entries, prospectNameSet, filterSince),
@@ -1428,6 +1491,8 @@ function StatisticsTab({ entries, prospectNameSet, filterSince, setFilterSince, 
         </div>
       ) : (
         <>
+          <V3RecordPanel entries={entries} />
+          <p className="text-muted text-xs font-semibold uppercase tracking-wider mb-3">All picks (every model pick at its stake)</p>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6 items-stretch">
             <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 h-full">
               <p className="text-muted text-xs uppercase tracking-wider font-semibold">Tracked Fights</p>
@@ -2355,6 +2420,144 @@ function BufferedTextInput({ value, onCommit, ...props }) {
   );
 }
 
+// v3 fight-day check. Reruns the WHOLE v3 gate at the odds you see on fight
+// day (recheckGateV3: C6 recomputed from the entry's frozen v2), then records
+// a placed bet (accepted price + real stake) or a skip with its reason as the
+// entry's `execution`. The frozen recommendation is never touched; the
+// strategy record keeps its own price and 1u stake.
+const SKIP_REASON_LABELS = { LINE_MOVED: 'Line moved', NOT_PLACED: 'Not placed', OTHER: 'Other' };
+
+function FightDayCheck({ entry, onUpdateEntry }) {
+  const [open, setOpen] = useState(false);
+  const [oddsA, setOddsA] = useState(entry.oddsA || '');
+  const [oddsB, setOddsB] = useState(entry.oddsB || '');
+  const [check, setCheck] = useState(null);
+  const [accepted, setAccepted] = useState('');
+  const [stake, setStake] = useState('1');
+  const [skipReason, setSkipReason] = useState('LINE_MOVED');
+  const [error, setError] = useState('');
+  const ex = entry.execution;
+
+  if (ex) {
+    return (
+      <div className="border-t border-slate-800 pt-3 mt-3 flex items-center justify-between gap-3 flex-wrap">
+        <p className="text-xs text-secondary">
+          <span className="text-muted font-semibold uppercase tracking-wider mr-2">Fight day</span>
+          {ex.status === 'placed'
+            ? `Placed ${ex.stakeUnits}u on ${ex.fighter || entry.trackedSide} at ${ex.acceptedOdds}`
+            : `Skipped · ${SKIP_REASON_LABELS[ex.skipReason] ?? ex.skipReason}`}
+          {` · re-check ${ex.tier} at ${ex.oddsA} / ${ex.oddsB}`}
+        </p>
+        <button
+          onClick={() => { if (window.confirm('Clear the fight-day record for this fight?')) onUpdateEntry(entry.id, { execution: null }); }}
+          className="text-muted hover:text-white text-xs font-semibold"
+        >
+          Clear
+        </button>
+      </div>
+    );
+  }
+
+  if (!open) {
+    return (
+      <div className="border-t border-slate-800 pt-3 mt-3">
+        <button
+          onClick={() => setOpen(true)}
+          className="px-3 py-1.5 rounded-lg border border-slate-700 text-secondary text-xs font-semibold hover:text-white hover:border-slate-600 transition-colors"
+        >
+          Fight-day check
+        </button>
+      </div>
+    );
+  }
+
+  const runCheck = () => {
+    setError('');
+    const r = recheckGateV3(entry, { oddsA: oddsA.trim(), oddsB: oddsB.trim() });
+    setCheck(r);
+    setAccepted(r.side === 'A' ? oddsA.trim() : r.side === 'B' ? oddsB.trim() : '');
+  };
+  const save = (fields) => {
+    try {
+      onUpdateEntry(entry.id, { execution: buildExecution(check, fields) });
+      setOpen(false);
+    } catch (e) {
+      setError(e.message.replace(/^buildExecution: /, ''));
+    }
+  };
+  const input = 'w-24 bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-1.5 focus:border-red-500';
+
+  return (
+    <div className="border-t border-slate-800 pt-3 mt-3 space-y-3">
+      <div className="flex items-end gap-3 flex-wrap">
+        <label className="text-xs text-muted">
+          <span className="block mb-1">{entry.fighterA}</span>
+          <input aria-label={`Fight-day odds for ${entry.fighterA}`} value={oddsA} onChange={(e) => setOddsA(e.target.value)} className={input} />
+        </label>
+        <label className="text-xs text-muted">
+          <span className="block mb-1">{entry.fighterB}</span>
+          <input aria-label={`Fight-day odds for ${entry.fighterB}`} value={oddsB} onChange={(e) => setOddsB(e.target.value)} className={input} />
+        </label>
+        <button onClick={runCheck} className="px-3 py-1.5 rounded-lg bg-red-600 text-white text-xs font-semibold hover:bg-red-500">
+          Re-check
+        </button>
+        <button onClick={() => { setOpen(false); setCheck(null); }} className="text-muted hover:text-white text-xs font-semibold">
+          Cancel
+        </button>
+      </div>
+      {check && (
+        <div className="bg-slate-800/40 rounded-lg p-3 space-y-2">
+          <p className="text-sm">
+            <span className={`font-black ${check.tier === 'BET' ? 'text-emerald-400' : check.tier === 'LEAN' ? 'text-yellow-400' : 'text-secondary'}`}>
+              {check.tier}
+            </span>
+            {check.fighter ? <span className="text-white font-semibold"> · {check.fighter}</span> : null}
+            {check.ev != null ? <span className="text-muted text-xs"> · EV {(check.ev * 100).toFixed(1)}%</span> : null}
+          </p>
+          {check.tier !== 'BET' && (
+            <p className="text-muted text-xs">
+              {check.tier === 'LEAN' ? 'Paper only at these odds: no real bet.' : describeGateV3Reason(check.reason)}
+            </p>
+          )}
+          <div className="flex items-end gap-3 flex-wrap">
+            {check.tier === 'BET' && (
+              <>
+                <label className="text-xs text-muted">
+                  <span className="block mb-1">Accepted odds</span>
+                  <input aria-label="Accepted odds" value={accepted} onChange={(e) => setAccepted(e.target.value)} className={input} />
+                </label>
+                <label className="text-xs text-muted">
+                  <span className="block mb-1">Real stake (u)</span>
+                  <input aria-label="Real stake in units" type="number" step="0.1" min="0" value={stake} onChange={(e) => setStake(e.target.value)} className={input} />
+                </label>
+                <button
+                  onClick={() => save({ placed: true, acceptedOdds: accepted.trim(), stakeUnits: Number(stake) })}
+                  className="px-3 py-1.5 rounded-lg bg-emerald-700 text-white text-xs font-semibold hover:bg-emerald-600"
+                >
+                  Record bet
+                </button>
+              </>
+            )}
+            <label className="text-xs text-muted">
+              <span className="block mb-1">Skip reason</span>
+              <select aria-label="Skip reason" value={skipReason} onChange={(e) => setSkipReason(e.target.value)} className="bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-2 py-1.5">
+                {SKIP_REASONS.map((r) => <option key={r} value={r}>{SKIP_REASON_LABELS[r]}</option>)}
+              </select>
+            </label>
+            <button
+              onClick={() => save({ placed: false, skipReason })}
+              className="px-3 py-1.5 rounded-lg border border-slate-700 text-secondary text-xs font-semibold hover:text-white"
+            >
+              Record skip
+            </button>
+          </div>
+          {error && <p className="text-red-400 text-xs">{error}</p>}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // Build Parlay modal -- sibling to PropEntryForm, not a shared refactor.
 // legInputs are the ALREADY-computed per-fight values from
 // UpcomingEventTab's modelPickByEntryId + resolveFrozenDecisionView
@@ -2813,6 +3016,29 @@ function UpcomingEventTab({
         </div>
       ) : (
         <div className="space-y-4">
+          {(() => {
+            // One line per event with v3 entries: "UFC 332: 1 BET · 3 LEAN · 6 no bet".
+            const byEvent = new Map();
+            for (const e of entries) {
+              if (e.gateVersion == null) continue;
+              const k = e.eventName || 'Unnamed event';
+              const c = byEvent.get(k) ?? { BET: 0, LEAN: 0, 'NO BET': 0 };
+              c[e.betAction === 'BET' || e.betAction === 'LEAN' ? e.betAction : 'NO BET'] += 1;
+              byEvent.set(k, c);
+            }
+            if (byEvent.size === 0) return null;
+            return (
+              <div className="bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 space-y-1">
+                {[...byEvent].map(([name, c]) => (
+                  <p key={name} className="text-sm text-secondary">
+                    <span className="text-white font-semibold">{name}:</span>{' '}
+                    <span className={c.BET ? 'text-emerald-400 font-semibold' : ''}>{c.BET} BET</span>
+                    {' · '}{c.LEAN} LEAN{' · '}{c['NO BET']} no bet
+                  </p>
+                ))}
+              </div>
+            );
+          })()}
           {entries.map((entry) => {
             const mp = modelPickByEntryId.get(entry.id);
             const {
@@ -2821,6 +3047,11 @@ function UpcomingEventTab({
             } = mp;
             const isSelected = selectedLegIds.has(entry.id);
             const isOtherEvent = lockedEventName != null && entry.eventName !== lockedEventName;
+            // v3 entries: v2's opinion is the headline pick, C6 only prices it.
+            const isV3 = entry.gateVersion != null;
+            const v2Pick = mp.v2Winner;
+            const c6Agrees = v2Pick === predictedWinner;
+            const gateEVPct = entry.gateEV != null ? entry.gateEV * 100 : null;
 
             return (
               <div key={entry.id} className={`bg-slate-900 border ${tier.border} rounded-xl p-5`}>
@@ -2884,7 +3115,31 @@ function UpcomingEventTab({
                   </div>
                 </div>
 
-                {/* Model Pick */}
+                {/* Model Pick (v3: v2's opinion, with C6 agreement) */}
+                {isV3 ? (
+                <div className="bg-slate-800/40 rounded-lg p-4 mb-3 flex items-baseline justify-between gap-3">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <p className="text-muted text-xs uppercase tracking-wider">v2 Opinion</p>
+                      <span
+                        title={`C6 (v2 blended with the no-vig market) picks ${predictedWinner} at ${(winProb * 100).toFixed(1)}%.`}
+                        className={`text-[10px] font-bold px-1.5 py-0.5 rounded-sm uppercase border ${
+                          c6Agrees
+                            ? 'text-secondary bg-slate-800 border-slate-700'
+                            : 'text-amber-300 bg-amber-900/30 border-amber-700/50'
+                        }`}
+                      >
+                        {c6Agrees ? 'C6 agrees' : 'C6 disagrees'}
+                      </span>
+                    </div>
+                    <p className="text-white font-black text-xl mt-1">{v2Pick}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-emerald-400 font-black text-lg">{(mp.v2WinProb * 100).toFixed(1)}%</p>
+                    <p className="text-muted text-xs mt-0.5">v2 · C6 {(winProb * 100).toFixed(1)}% {predictedWinner.split(' ').slice(-1)[0]}</p>
+                  </div>
+                </div>
+                ) : (
                 <div className="bg-slate-800/40 rounded-lg p-4 mb-3 flex items-baseline justify-between gap-3">
                   <div>
                     <div className="flex items-center gap-2">
@@ -2917,12 +3172,34 @@ function UpcomingEventTab({
                     </p>
                   </div>
                 </div>
+                )}
 
                 {/* Bet Rec + Market Odds */}
                 <div className="grid grid-cols-2 gap-3 mb-4">
                   <div className="bg-slate-800/40 rounded-lg p-3">
                     <p className="text-muted text-xs uppercase tracking-wider">Bet Rec</p>
-                    {actionable ? (
+                    {isV3 ? (
+                      <>
+                        <div className="mt-2">
+                          <span
+                            className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-black ${
+                              betAction === 'BET'
+                                ? 'bg-emerald-900/30 text-emerald-400 border border-emerald-800'
+                                : betAction === 'LEAN'
+                                ? 'bg-yellow-900/30 text-yellow-400 border border-yellow-800'
+                                : 'bg-slate-800 text-secondary border border-slate-700'
+                            }`}
+                          >
+                            {betAction === 'BET' ? 'BET · 1u tracked' : betAction === 'LEAN' ? 'LEAN · paper' : 'No bet'}
+                          </span>
+                        </div>
+                        {actionable ? (
+                          <p className="text-white font-bold text-sm mt-3">{betFighter}</p>
+                        ) : (
+                          <p className="text-muted text-xs mt-2 leading-snug">{describeGateV3Reason(entry.gateReason)}</p>
+                        )}
+                      </>
+                    ) : actionable ? (
                       <>
                         <div className="mt-2">
                           <span
@@ -2949,7 +3226,9 @@ function UpcomingEventTab({
                       {effectiveMarketOdds || '—'}
                     </p>
                     <p className="text-muted text-xs mt-1">
-                      {pickEdge != null
+                      {isV3 && gateEVPct != null
+                        ? `EV ${gateEVPct >= 0 ? '+' : ''}${gateEVPct.toFixed(1)}% on the C6 pick`
+                        : pickEdge != null
                         ? `${pickEdge > 0 ? '+' : ''}${(pickEdge * 100).toFixed(1)}% edge`
                         : 'No saved market edge'}
                     </p>
@@ -2977,6 +3256,9 @@ function UpcomingEventTab({
                       <option value="NC">NC</option>
                     </select>
                   </div>
+                  {isV3 ? (
+                  <p className="text-muted text-xs">Strategy stake 1u (fixed)</p>
+                  ) : (
                   <div className="flex items-center gap-3">
                     <label htmlFor={`upcoming-units-${entry.id}`} className="text-muted text-xs font-semibold uppercase tracking-wider">
                       Units Staked
@@ -2988,7 +3270,11 @@ function UpcomingEventTab({
                       onCommit={(n) => onUpdateEntry(entry.id, { unitsWagered: n })}
                     />
                   </div>
+                  )}
                 </div>
+
+                {/* v3 fight-day re-check: only a BET can become a real bet */}
+                {isV3 && betAction === 'BET' && <FightDayCheck entry={entry} onUpdateEntry={onUpdateEntry} />}
 
                 {propFormFor === entry.id && (
                   <div className="hidden sm:block border-t border-slate-800 mt-3 pt-3">
@@ -4708,7 +4994,9 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
   const [eventDate, setEventDate] = useState('');
   const [unitsWagered, setUnitsWagered] = useState('');
   const [saveFeedback, setSaveFeedback] = useState('');
-  const [modelToggle, setModelToggle] = useState('v2');
+  // v2 only: the v1 toggle was removed from the betting surfaces with the v3
+  // gate. v1 ratings remain on the Explore tab.
+  const modelToggle = 'v2';
   // Scheduled bout context. All three start as '' = UNKNOWN and are never
   // pre-filled with a guess: an unset division must not silently become the
   // roster's, and an unset title/round value must not silently become
@@ -4784,8 +5072,9 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
     if (!result || !decision) return null;
     const activeResult = { ...result, pA: decision.pA, pB: decision.pB };
     // C6 (above) and the gate consume the ONE market snapshot the resolver
-    // already parsed -- odds are never re-parsed here.
-    return evaluateGateOnSnapshot(activeResult, decision.market, fA, fB);
+    // already parsed -- odds are never re-parsed here. Same shared gate as
+    // buildRoiEntry: a C6 decision runs the v3 underdog gate.
+    return evaluateDecisionGate(decision, activeResult, fA, fB);
   }, [result, decision, fA, fB]);
 
   return (
@@ -4958,28 +5247,6 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                     </p>
                     <p className="text-muted text-xs font-mono">{MODEL_VERSION}</p>
                   </div>
-                  {result.v2pA != null && (
-                    <div className="flex items-center gap-1 bg-slate-800 rounded-lg p-1">
-                      <button
-                        onClick={() => setModelToggle('v1')}
-                        aria-pressed={modelToggle === 'v1'}
-                        className={`inline-flex items-center justify-center min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0 px-3 py-1 text-xs font-bold rounded-md transition-colors ${
-                          modelToggle === 'v1' ? 'bg-red-600 text-white' : 'text-secondary hover:text-white'
-                        }`}
-                      >
-                        v1
-                      </button>
-                      <button
-                        onClick={() => setModelToggle('v2')}
-                        aria-pressed={modelToggle === 'v2'}
-                        className={`inline-flex items-center justify-center min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0 px-3 py-1 text-xs font-bold rounded-md transition-colors ${
-                          modelToggle === 'v2' ? 'bg-red-600 text-white' : 'text-secondary hover:text-white'
-                        }`}
-                      >
-                        v2
-                      </button>
-                    </div>
-                  )}
                 </div>
 
                 {/* C6 promotion label + compact comparison. Renders ONLY when
@@ -5118,6 +5385,14 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                   className="w-full h-10 bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:border-red-500"
                 />
               </div>
+              {decision?.source === DECISION_SOURCE_C6 ? (
+              <div>
+                <p className="text-muted text-xs font-semibold uppercase tracking-wider mb-1.5">Stake</p>
+                <p className="text-secondary text-xs leading-snug pt-2">
+                  Tracked at 1u under the v3 gate. Record a real bet from the Upcoming card on fight day.
+                </p>
+              </div>
+              ) : (
               <div>
                 <label htmlFor="simulator-units" className="text-muted text-xs font-semibold uppercase tracking-wider block mb-1.5">
                   Units Staked
@@ -5133,6 +5408,7 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                   className="w-full bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:border-red-500"
                 />
               </div>
+              )}
             </div>
             {/* ── SCHEDULED BOUT CONTEXT ──
                 Every control defaults to Unknown and stays Unknown until set.
@@ -5422,14 +5698,22 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                 // distinct from NO BET (we have conviction but no market value).
                 // Uses market.pickProb, which already reflects the v1/v2 toggle.
                 const pickProbActive = market.pickProb ?? Math.max(activePA, activePB);
-                const noRead = isNoReadProbability(pickProbActive);
+                // The v3 gate decides on price, not conviction: its BETs sit near
+                // 51%, so NO READ never overrides a v3 decision.
+                const isV3 = market.gateVersion != null;
+                const noRead = !isV3 && isNoReadProbability(pickProbActive);
                 const displayAction = noRead ? 'NO READ' : market.betAction;
+                const v2PickA = result.v2pA != null && result.v2pA >= 0.5;
+                const v2Pick = result.v2pA == null ? null : v2PickA ? fA : fB;
+                const v2PickProb = result.v2pA == null ? null : v2PickA ? result.v2pA : result.v2pB;
+                const c6AgreesWithV2 = v2Pick != null && v2Pick === pickFighter;
+                const gateEVPct = market.gateEV != null ? market.gateEV * 100 : null;
 
                 const isBet = !noRead && (market.betAction === 'STRONG BET' || market.betAction === 'BET');
                 const isLean = !noRead && market.betAction === 'LEAN';
                 const isNoBet = !noRead && market.betAction === 'NO BET';
                 const actionable = isBet || isLean;
-                const showBetRec = actionable || noRead;
+                const showBetRec = actionable || noRead || isV3;
 
                 const actionStyles = {
                   'STRONG BET': { bg: 'bg-emerald-950/40 border-emerald-600', badge: 'bg-emerald-500 text-emerald-950', text: 'text-emerald-400' },
@@ -5448,7 +5732,7 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                     <div className={`grid ${showBetRec ? 'grid-cols-3' : 'grid-cols-2'} gap-3`}>
 
                       {/* Model Pick — always shown */}
-                      <div className={`border rounded-xl p-4 ${market.lowConviction ? 'bg-orange-950/10 border-orange-900' : 'bg-slate-900 border-slate-700'}`}>
+                      <div className={`border rounded-xl p-4 ${market.lowConviction && !isV3 ? 'bg-orange-950/10 border-orange-900' : 'bg-slate-900 border-slate-700'}`}>
                         <div className="flex items-center gap-1.5 mb-2">
                           <p className="text-muted text-xs font-semibold uppercase tracking-wider">Model Pick</p>
                           {decision?.source === DECISION_SOURCE_C6 && (
@@ -5458,14 +5742,31 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                           )}
                         </div>
                         <p className="text-white font-black text-base leading-tight">{pickFighter.FIGHTER}</p>
-                        <p className={`text-xs mt-1 ${market.lowConviction ? 'text-orange-400' : 'text-secondary'}`}>
+                        <p className={`text-xs mt-1 ${market.lowConviction && !isV3 ? 'text-orange-400' : 'text-secondary'}`}>
                           {market.pickSide === 'A' ? (activePA * 100).toFixed(1) : (activePB * 100).toFixed(1)}% win prob
-                          {market.lowConviction ? ' ⚠ low conviction' : market.midConviction ? ' · moderate' : ''}
+                          {isV3 ? '' : market.lowConviction ? ' ⚠ low conviction' : market.midConviction ? ' · moderate' : ''}
                         </p>
                         <p className="text-muted text-xs mt-0.5">Fair line: {pickFairLine}</p>
                       </div>
 
-                      {/* Value Signal — where market edge is */}
+                      {/* v3: v2's own opinion, so a C6 pick that only echoes the
+                          market is visible as such. Legacy: Value Signal. */}
+                      {isV3 ? (
+                        <div className="border rounded-xl p-4 bg-slate-900 border-slate-700">
+                          <p className="text-muted text-xs font-semibold uppercase tracking-wider mb-2">v2 Opinion</p>
+                          {v2Pick ? (
+                            <>
+                              <p className="text-white font-black text-base leading-tight">{v2Pick.FIGHTER}</p>
+                              <p className="text-secondary text-xs mt-1">{(v2PickProb * 100).toFixed(1)}% win prob</p>
+                              <p className={`text-xs mt-0.5 font-semibold ${c6AgreesWithV2 ? 'text-secondary' : 'text-amber-400'}`}>
+                                {c6AgreesWithV2 ? 'C6 agrees' : 'C6 disagrees'}
+                              </p>
+                            </>
+                          ) : (
+                            <p className="text-muted text-xs">v2 unavailable</p>
+                          )}
+                        </div>
+                      ) : (
                       <div className={`border rounded-xl p-4 ${
                         market.conflictingSignals
                           ? 'bg-orange-950/20 border-orange-800'
@@ -5498,6 +5799,7 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                           </>
                         )}
                       </div>
+                      )}
 
                       {/* Bet Recommendation — actionable (LEAN/BET/STRONG BET) or NO READ */}
                       {showBetRec && (
@@ -5506,7 +5808,21 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                           <span className={`inline-block text-xs font-black px-2 py-0.5 rounded-full mb-2 ${s.badge}`}>
                             {displayAction}
                           </span>
-                          {noRead ? (
+                          {isV3 ? (
+                            <>
+                              {actionable && <p className={`font-black text-sm ${s.text}`}>{pickFighter.FIGHTER} {pickOdds}</p>}
+                              {gateEVPct != null && (
+                                <p className="text-secondary text-xs mt-1">EV {gateEVPct >= 0 ? '+' : ''}{gateEVPct.toFixed(1)}% on the C6 pick</p>
+                              )}
+                              <p className="text-muted text-xs mt-1 leading-snug">
+                                {isBet
+                                  ? 'C6 underdog pick. Tracked at 1u; real stake 0u until you record a bet.'
+                                  : isLean
+                                  ? 'Paper only: tracked at 1u, never staked.'
+                                  : market.noBetReason}
+                              </p>
+                            </>
+                          ) : noRead ? (
                             <p className="text-muted text-xs leading-snug">Pick under 53% — coin-flip, insufficient confidence to read</p>
                           ) : (
                           <>
@@ -5557,6 +5873,13 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                             </p>
                             <p className="text-muted text-xs mt-0.5">Win rate needed to break even</p>
                           </div>
+                          {isV3 ? (
+                          <div className="bg-slate-900/60 rounded-lg p-3">
+                            <p className="text-muted text-xs mb-1">Stake</p>
+                            <p className="text-white font-black text-xl">{isBet ? '1u tracked' : 'Paper'}</p>
+                            <p className="text-muted text-xs mt-0.5">Flat stakes; no Kelly sizing under v3</p>
+                          </div>
+                          ) : (
                           <div className="bg-slate-900/60 rounded-lg p-3">
                             <p className="text-muted text-xs mb-1">Kelly fraction</p>
                             <p className="text-white font-black text-xl">
@@ -5564,8 +5887,10 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                             </p>
                             <p className="text-muted text-xs mt-0.5">Suggested bankroll size (full Kelly)</p>
                           </div>
+                          )}
                         </div>
-                        {/* Confidence bar */}
+                        {/* Confidence bar (legacy gate only) */}
+                        {!isV3 && (
                         <div className="pt-3 border-t border-slate-700/40">
                           <div className="flex items-center justify-between mb-1.5">
                             <span className="text-muted text-xs">Model confidence</span>
@@ -5583,71 +5908,10 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                             {market.alignedDomains}/6 model domains align · avg credibility {((fA.CREDIBILITY + fB.CREDIBILITY) / 2).toFixed(0)}%
                           </p>
                         </div>
+                        )}
                       </div>
                     )}
 
-                  </div>
-                );
-              })()}
-
-              {/* ── V2 BET RECOMMENDATION (only when modelToggle is v2) ── */}
-              {result?.v2pA != null && modelToggle === 'v2' && (() => {
-                const v2pA = result.v2pA;
-                const v2pB = result.v2pB;
-                const { noVigA, noVigB, rawA, rawB } = market;
-                const edgeA = v2pA - noVigA;
-                const edgeB = v2pB - noVigB;
-                const pickSide = v2pA >= 0.5 ? 'A' : 'B';
-                const pickEdge = pickSide === 'A' ? edgeA : edgeB;
-                const oppEdge  = pickSide === 'A' ? edgeB : edgeA;
-                const pickProb = pickSide === 'A' ? v2pA : v2pB;
-                const pickRawOdds = pickSide === 'A' ? rawA : rawB;
-                const hasPickEdge = pickEdge >= 0.03;
-                const conflictingSignals = !hasPickEdge && oppEdge >= 0.03;
-                let action = 'NO BET';
-                if (!conflictingSignals && hasPickEdge) {
-                  if (pickProb >= 0.70) {
-                    if (pickEdge >= 0.25) action = 'STRONG BET';
-                    else if (pickEdge >= 0.15) action = 'BET';
-                    else action = 'LEAN';
-                  } else if (pickProb >= 0.65) {
-                    if (pickEdge >= 0.30) action = 'BET';
-                    else if (pickEdge >= 0.10) action = 'LEAN';
-                  } else if (pickProb >= 0.60) {
-                    if (pickEdge >= 0.10) action = 'LEAN';
-                  }
-                }
-                const lowCredCap = (fA.CREDIBILITY ?? 0) < 30 || (fB.CREDIBILITY ?? 0) < 30;
-                if (lowCredCap && (action === 'STRONG BET' || action === 'BET')) action = 'LEAN';
-                if (pickRawOdds > 2 / 3 && pickEdge < 0.25 && action !== 'NO BET') action = 'NO BET';
-                const v2Fighter = action !== 'NO BET' ? (pickSide === 'A' ? fA.FIGHTER : fB.FIGHTER) : null;
-                // This card is v2's OWN raw recommendation, independent of the
-                // headline `market` gate above -- which is raw v2 with the C6
-                // flag off, but C6 when it's on. Comparing against whatever
-                // `market` currently represents (never hardcoded to "v1")
-                // keeps the disagreement note honest either way.
-                const headlineAction = market.betAction;
-                const headlineFighter = market.bestBet === 'A' ? fA.FIGHTER : market.bestBet === 'B' ? fB.FIGHTER : null;
-                const disagrees = action !== headlineAction || v2Fighter !== headlineFighter;
-                const badgeStyle =
-                  action === 'STRONG BET' ? 'bg-emerald-500 text-emerald-950' :
-                  action === 'BET'        ? 'bg-emerald-700 text-emerald-100' :
-                  action === 'LEAN'       ? 'bg-yellow-700 text-yellow-100'   :
-                                            'bg-slate-600 text-slate-200';
-                return (
-                  <div className={`flex items-center gap-3 rounded-xl border px-4 py-3 ${disagrees ? 'border-amber-700/50 bg-amber-950/10' : 'border-slate-700 bg-slate-800/40'}`}>
-                    <span className="text-muted text-xs shrink-0">v2 Logistic:</span>
-                    <span className={`text-xs font-black px-2 py-0.5 rounded-full ${badgeStyle}`}>{action}</span>
-                    {v2Fighter && (
-                      <span className={`text-xs font-semibold ${disagrees ? 'text-amber-400' : 'text-slate-300'}`}>
-                        {v2Fighter}
-                      </span>
-                    )}
-                    {disagrees && (
-                      <span className="text-amber-500 text-xs ml-auto">
-                        ⚠ differs from {decision?.source === DECISION_SOURCE_C6 ? 'C6' : 'headline'}
-                      </span>
-                    )}
                   </div>
                 );
               })()}
@@ -7500,9 +7764,11 @@ function HomeTab({ summary, entries, allFighters, filterSince }) {
         </p>
       </div>
 
+      <V3RecordPanel entries={entries} compact />
+
       {/* Track record tiles */}
       <p className="text-muted text-xs font-semibold uppercase tracking-wider mb-3">
-        Model Track Record
+        Model Track Record (all picks)
       </p>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
         <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">

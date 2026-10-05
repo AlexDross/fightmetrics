@@ -111,7 +111,17 @@ The script validates every id, name, and method against the pending entries and
 refuses to write anything if one is wrong. The whole card is then applied as
 **one atomic batch** — every graded fight is deleted from Upcoming and put at the
 top of ROI together, so a failure leaves nothing half-applied. Each entry is
-carried across untouched apart from the two result fields.
+carried across untouched apart from the two result fields and `closing`.
+
+**Closing odds.** `apply` (and `--dry-run`) also fetches each fight's closing
+line from the fightodds.io aggregator — Pinnacle first, then Circa, then the
+sportsbook median — binds it to fighter A/B by name, and stores it on the entry
+as `closing`. Each printed line shows the close and the tracked side's
+closing-line value (CLV). The v3 experiment's success test needs positive mean
+CLV on BETs, so check the dry-run: a `closing odds: …` warning means that fight
+gets no closing line. The grade still applies; mention the warning to the user.
+Only grade after the event has finished, or the "close" is not the close.
+`--no-closing` skips the fetch.
 
 The change is live on fightmetrics.app as soon as the script reports `Saved to
 Supabase …` — there is nothing to commit, push or deploy. Verify by loading the
@@ -121,7 +131,8 @@ offline fallback and rollback copy), `node scripts/fm-store.mjs export
 only if asked.
 
 Finish by reporting the record for the card (hits/misses on tracked sides, and
-separately on entries with `betAction` other than `NO BET`).
+separately on entries with `betAction` other than `NO BET`). For v3 entries
+(`gateVersion` present), report BET and LEAN separately, each with its CLV.
 
 Note that grading through the app's winner dropdown sets `actualWinner` but not
 `actualFinish`, so much of the older ROI history has a blank finish; this script

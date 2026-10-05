@@ -313,6 +313,9 @@ function computeBetTierBreakdown(entries) {
     if (!isResolvedWinner(entry.actualWinner, entry)) return;
     if (isPushResult(entry.actualWinner)) return;
     if (entry.confirmedByUser === false) return;
+    // Legacy-ladder tiers only: a v3 entry's BET/LEAN means something else
+    // (see gateV3.js) and is reported by computeV3Records instead.
+    if (entry.gateVersion != null) return;
     const tier = entry.betAction;
     if (!tier) return;
 
@@ -964,3 +967,4 @@ export {
   computeParlaySummary,
   computeROISummary,
 };
+export { computeV3Records } from './v3Records.js';

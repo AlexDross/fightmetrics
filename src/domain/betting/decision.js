@@ -14,7 +14,8 @@
 // probability -> C6 probability -> existing betting gate. The gate's own
 // output is never fed back into C6.
 
-import { buildMarketInput, americanOdds } from './marketCore.js';
+import { buildMarketInput, americanOdds, evaluateGateOnSnapshot } from './marketCore.js';
+import { applyGateV3 } from './gateV3.js';
 import { computeC6ProbA } from '../shadow/c6.js';
 import { isC6UserFacingActive } from '../shadow/config.js';
 
@@ -132,6 +133,18 @@ export function resolveDecisionProbability({
     c6ProbA: c6.c6pA,
     c6ProbB: c6.c6pB,
   });
+}
+
+/**
+ * The ONE betting decision for a resolved probability, shared by the
+ * Simulator's live preview and buildRoiEntry's save path. A C6-driven
+ * decision uses the v3 underdog gate (./gateV3.js); v1/v2 decisions keep the
+ * legacy ladder. Returns null when there is no valid market (same as before).
+ */
+export function evaluateDecisionGate(decision, activeResult, fA, fB) {
+  const legacy = evaluateGateOnSnapshot(activeResult, decision?.market, fA, fB);
+  if (!legacy || decision?.source !== DECISION_SOURCE_C6) return legacy;
+  return applyGateV3(legacy, decision.market, decision.pA);
 }
 
 /**
