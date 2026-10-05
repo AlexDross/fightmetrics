@@ -21,6 +21,9 @@ import { computeC6ProbA } from '../shadow/c6.js';
 
 export const GATE_V3 = Object.freeze({
   version: 'c6_dog_v3',
+  // Deploy date of this version: the experiment counts only BETs saved from
+  // here on (isV3ExperimentEntry). Earlier entries are never regraded.
+  frozenOn: '2026-10-05',
   minEV: 0.02, // both tiers
   betMaxDecimal: 3.0, // +200: longest underdog price
   leanMinDecimal: 1.25, // -400: shortest favourite price

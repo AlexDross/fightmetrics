@@ -71,7 +71,7 @@ describe('gateV3', () => {
 
   it('constants are frozen', () => {
     expect(Object.isFrozen(GATE_V3)).toBe(true);
-    expect(GATE_V3).toMatchObject({ version: 'c6_dog_v3', minEV: 0.02, betMaxDecimal: 3, leanMinDecimal: 1.25 });
+    expect(GATE_V3).toMatchObject({ version: 'c6_dog_v3', frozenOn: '2026-10-05', minEV: 0.02, betMaxDecimal: 3, leanMinDecimal: 1.25 });
   });
 });
 
