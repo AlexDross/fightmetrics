@@ -575,7 +575,7 @@ const TABLE_COLS = [
     group: 'Rating',
     signed: false,
     dec: 1,
-    tip: 'Master rating: base efficiency × experience factor ± opponent quality adjustment',
+    tip: 'ELO scaled 0–100 within the division (100 = highest ELO in the division)',
   },
   {
     key: 'CREDIBILITY',
@@ -1900,7 +1900,7 @@ function PendingPropsSection({ picks, onGrade, onDelete, manualOpen, onToggleMan
                   <button
                     onClick={() => {
                       const meta = [matchup, pick.eventName, pick.eventDate].filter(Boolean).join(' · ');
-                      if (window.confirm(`Delete this prop pick?\n\n${label}\n${meta}\n\nThis cannot be undone unless you've already run "Copy Updated propPicksData.js".`)) {
+                      if (window.confirm(`Delete this prop pick?\n\n${label}\n${meta}\n\nThis cannot be undone.`)) {
                         onDelete(pick.id);
                       }
                     }}
@@ -1983,7 +1983,7 @@ function PropBetsPanel({ picks, onGrade, onDelete }) {
                     <button
                       onClick={() => {
                         const meta = [matchup, pick.eventName, pick.eventDate].filter(Boolean).join(' · ');
-                        if (window.confirm(`Delete this graded prop?\n\n${label}\n${meta}\n\nThis cannot be undone unless you've already run "Copy Updated propPicksData.js".`)) {
+                        if (window.confirm(`Delete this graded prop?\n\n${label}\n${meta}\n\nThis cannot be undone.`)) {
                           onDelete(pick.id);
                         }
                       }}
@@ -2109,7 +2109,7 @@ function ParlaysPanel({ parlayEntries, roiEntries, onDelete, showSummary = true 
                     <button
                       onClick={() => {
                         const legCount = parlay.legs.length;
-                        if (window.confirm(`Delete this parlay?\n\n${parlay.eventName} · ${legCount} leg${legCount === 1 ? '' : 's'} · ${parlay.combinedOdds}\n\nThis cannot be undone unless you've already run "Copy Updated parlayData.js".`)) {
+                        if (window.confirm(`Delete this parlay?\n\n${parlay.eventName} · ${legCount} leg${legCount === 1 ? '' : 's'} · ${parlay.combinedOdds}\n\nThis cannot be undone.`)) {
                           onDelete(parlay.id);
                         }
                       }}
@@ -3531,7 +3531,7 @@ function BottomNav({ view }) {
   );
 }
 
-function Filters({ wc, setWC, minMin, setMinMin, count }) {
+function Filters({ wc, setWC, minMin, setMinMin, showInactive, setShowInactive, inactiveCount, count }) {
   return (
     <div className="bg-slate-900/80 border-b border-slate-800 px-5 py-3">
       <div className="flex flex-wrap items-end gap-6">
@@ -3575,6 +3575,22 @@ function Filters({ wc, setWC, minMin, setMinMin, count }) {
           <p id="explore-min-minutes-help" className="text-muted text-xs">
             Filter out fighters with very few fight minutes
           </p>
+        </div>
+
+        <div className="flex flex-col gap-1">
+          <span className="text-muted text-xs font-semibold uppercase tracking-wider">
+            Activity
+          </span>
+          <label className="flex items-center gap-2 text-sm text-slate-300 cursor-pointer min-h-[44px] sm:min-h-0">
+            <input
+              type="checkbox"
+              checked={showInactive}
+              onChange={(e) => setShowInactive(e.target.checked)}
+              className="w-4 h-4 accent-red-600"
+            />
+            Show inactive ({inactiveCount})
+          </label>
+          <p className="text-muted text-xs">Inactive = no fight in 2+ years</p>
         </div>
 
         <div className="flex flex-col gap-1">
@@ -3649,7 +3665,7 @@ function DataTable({ fighters }) {
     const r = {};
     TABLE_COLS.forEach(({ key }) => {
       const sorted = [...fighters].sort(
-        (a, b) => (b[key] ?? -999) - (a[key] ?? -999)
+        (a, b) => (b[key] ?? -999) - (a[key] ?? -999) || (b.ELO ?? 0) - (a.ELO ?? 0)
       );
       const m = {};
       sorted.forEach((f, i) => {
@@ -3666,10 +3682,13 @@ function DataTable({ fighters }) {
       const q = search.toLowerCase();
       d = d.filter((f) => f.FIGHTER.toLowerCase().includes(q));
     }
+    // Ties (e.g. every division's top fighter at RTG 100) break on ELO, so
+    // the order among equal values still means something.
     return [...d].sort((a, b) =>
-      sort.dir === 'desc'
+      (sort.dir === 'desc'
         ? (b[sort.col] ?? -999) - (a[sort.col] ?? -999)
-        : (a[sort.col] ?? -999) - (b[sort.col] ?? -999)
+        : (a[sort.col] ?? -999) - (b[sort.col] ?? -999)) ||
+      (sort.dir === 'desc' ? (b.ELO ?? 0) - (a.ELO ?? 0) : (a.ELO ?? 0) - (b.ELO ?? 0))
     );
   }, [fighters, search, sort]);
 
@@ -3699,7 +3718,7 @@ function DataTable({ fighters }) {
       short: 'RTG',
       name: 'Master Rating',
       color: 'text-red-400',
-      desc: 'The primary ranking stat. Base efficiency adjusted for opponent quality (wins vs elite boost it, losses to unranked tank it) and scaled by experience. Replaces raw EFF.',
+      desc: 'ELO scaled 0–100 within each division: 100 = the highest ELO in that division, so every division has one. Across divisions, compare ELO instead. Ties sort by ELO.',
     },
     {
       short: 'CRED%',
@@ -4994,6 +5013,12 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
   const [eventDate, setEventDate] = useState('');
   const [unitsWagered, setUnitsWagered] = useState('');
   const [saveFeedback, setSaveFeedback] = useState('');
+  const saveFeedbackFor = (ok) =>
+    ok === 'duplicate'
+      ? `Already in Upcoming: ${fA?.FIGHTER} vs. ${fB?.FIGHTER} is pending. Delete it there to save a new version.`
+      : ok === false
+      ? 'Not saved — see the status message.'
+      : 'Saved to Upcoming.';
   // v2 only: the v1 toggle was removed from the betting surfaces with the v3
   // gate. v1 ratings remain on the Explore tab.
   const modelToggle = 'v2';
@@ -5354,7 +5379,7 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                 </p>
               </div>
               {saveFeedback && (
-                <span role="status" aria-live="polite" className="text-emerald-400 text-xs font-semibold">
+                <span role="status" aria-live="polite" className={`${saveFeedback.startsWith('Saved') ? 'text-emerald-400' : 'text-amber-400'} text-xs font-semibold text-right max-w-xs`}>
                   {saveFeedback}
                 </span>
               )}
@@ -5560,9 +5585,7 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                     unitsWagered: unitsWagered.trim() ? Number(unitsWagered) : 1,
                     boutContext,
                   });
-                  Promise.resolve(onSaveToUpcoming?.(entry)).then((ok) => {
-                    setSaveFeedback(ok === false ? 'Not saved — see the status message.' : 'Saved to Upcoming.');
-                  });
+                  Promise.resolve(onSaveToUpcoming?.(entry)).then((ok) => setSaveFeedback(saveFeedbackFor(ok)));
                 }}
                 className="px-4 py-2 rounded-lg border border-blue-700 text-blue-300 text-sm font-semibold hover:text-white hover:border-blue-500 transition-colors disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:text-blue-300 disabled:hover:border-blue-700"
               >
@@ -5586,8 +5609,7 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                     unitsWagered: unitsWagered.trim() ? Number(unitsWagered) : 1,
                     boutContext,
                   });
-                  onSaveToUpcomingAndOpen?.(entry);
-                  setSaveFeedback('Saved to Upcoming.');
+                  Promise.resolve(onSaveToUpcomingAndOpen?.(entry)).then((ok) => setSaveFeedback(saveFeedbackFor(ok)));
                 }}
                 className="px-4 py-2 rounded-lg bg-blue-700 text-white text-sm font-semibold hover:bg-blue-600 transition-colors disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-blue-700"
               >
@@ -7513,17 +7535,24 @@ export default function App() {
   // The duplicate check runs INSIDE the queued write, against the latest
   // stored collections -- so two clicks before the first save returns can't
   // both pass it. addPendingEntry returns its input unchanged for an
-  // already-pending matchup: a duplicate save is a silent no-op, as before.
-  const handleSaveToUpcoming = (entry) => store.commit((c) => {
-    const visible = filterVisibleUpcoming(c.upcoming, c.roi, today);
-    return addPendingEntry(visible, entry) === visible ? [] : [put('upcoming', entry)];
-  });
+  // already-pending matchup: nothing is written, and the save resolves
+  // 'duplicate' so the Simulator can say so instead of claiming it saved.
+  const handleSaveToUpcoming = async (entry) => {
+    let duplicate = false;
+    const ok = await store.commit((c) => {
+      const visible = filterVisibleUpcoming(c.upcoming, c.roi, today);
+      duplicate = addPendingEntry(visible, entry) === visible;
+      return duplicate ? [] : [put('upcoming', entry)];
+    });
+    return ok && duplicate ? 'duplicate' : ok;
+  };
 
   const handleSaveToUpcomingAndOpen = async (entry) => {
     const ok = await handleSaveToUpcoming(entry);
     // Programmatic navigation (this is a side effect of saving, not a link the
-    // user clicked). Pushes, so Back returns to the Simulator.
-    if (ok) navigate(pathForView('upcoming'));
+    // user clicked). Pushes, so Back returns to the Simulator. A duplicate
+    // stays put, so the "already in Upcoming" message is seen.
+    if (ok === true) navigate(pathForView('upcoming'));
     return ok;
   };
 
@@ -7977,12 +8006,19 @@ function HomeTab({ summary, entries, allFighters, filterSince }) {
   );
 }
 
+// A fighter with no fight in this many days is "inactive" in Explore and is
+// hidden by default (retired champions otherwise top every rating column).
+// Display only: the models never read this.
+const EXPLORE_INACTIVE_DAYS = 730;
+const isInactiveFighter = (f) => !f.IS_PROSPECT && (f.DAYS_SINCE_LAST ?? 0) > EXPLORE_INACTIVE_DAYS;
+
 function ExploreTab({ allFighters }) {
   const [exploreTab, setExploreTab] = useState('table');
   const [wc, setWC] = useState('All Divisions');
   const [minMin, setMinMin] = useState(0);
+  const [showInactive, setShowInactive] = useState(false);
 
-  const filtered = useMemo(
+  const inDivision = useMemo(
     () =>
       FIGHTERS.filter(
         (f) =>
@@ -7992,6 +8028,11 @@ function ExploreTab({ allFighters }) {
           (f.TOTAL_ROUNDS ?? 0) >= minMin
       ),
     [wc, minMin]
+  );
+  const inactiveCount = useMemo(() => inDivision.filter(isInactiveFighter).length, [inDivision]);
+  const filtered = useMemo(
+    () => (showInactive ? inDivision : inDivision.filter((f) => !isInactiveFighter(f))),
+    [inDivision, showInactive]
   );
 
   return (
@@ -8023,6 +8064,9 @@ function ExploreTab({ allFighters }) {
           setWC={setWC}
           minMin={minMin}
           setMinMin={setMinMin}
+          showInactive={showInactive}
+          setShowInactive={setShowInactive}
+          inactiveCount={inactiveCount}
           count={filtered.length}
         />
       )}
