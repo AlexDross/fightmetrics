@@ -29,10 +29,17 @@ describe('file-mode crash recovery', () => {
     for (const f of FILES) cpSync(join(ROOT, 'src', f), join(scratch, 'src', f), { recursive: true });
     const has = (file, id) => readFileSync(join(scratch, 'src', file), 'utf8').includes(`"id": "${id}"`);
 
-    // Pick the first pending entry and grade it, dying after the first rename.
-    const probe = runStore(`import { openStore } from ${lib}; const s = await openStore(); const c = await s.load(); console.log(c.upcoming[0].id);`);
-    const id = probe.stdout.trim();
-    expect(id).toMatch(/\S/);
+    // Seed our own pending entry (a copy of a graded one) so the test does not
+    // depend on the real card: between events the bundled Upcoming is empty.
+    // Then grade it, dying after the first rename.
+    const id = 'fm-crash-test-pending';
+    const seed = runStore(`
+      import { openStore } from ${lib};
+      const s = await openStore(); const c = await s.load();
+      await s.apply([{ op: 'put', collection: 'upcoming', payload: { ...c.roi[0], id: ${JSON.stringify(id)}, actualWinner: '', actualFinish: '' } }]);
+    `);
+    expect(seed.status, seed.stderr).toBe(0);
+    expect(has('upcomingData.js', id)).toBe(true);
     const crash = runStore(`
       import { openStore } from ${lib};
       const s = await openStore(); const c = await s.load(); const e = c.upcoming.find((x) => x.id === ${JSON.stringify(id)});
