@@ -109,7 +109,6 @@ import {
   recheckGateV3,
   buildExecution,
   GATE_V3,
-  describeGateV3Reason,
   SKIP_REASONS,
 } from './domain/betting';
 // Foundation Stage 4: Upcoming -> ROI transitions extracted verbatim.
@@ -2463,7 +2462,7 @@ function FightDayCheck({ entry, onUpdateEntry }) {
           </p>
           {check.tier !== 'BET' && (
             <p className="text-muted text-xs">
-              {check.tier === 'LEAN' ? 'Paper only at these odds: no real bet.' : describeGateV3Reason(check.reason)}
+              No longer a BET at these odds.
             </p>
           )}
           <div className="flex items-end gap-3 flex-wrap">
@@ -3083,7 +3082,7 @@ function UpcomingEventTab({
                   </div>
                   <div className="text-right">
                     <p className="text-emerald-400 font-black text-lg">{(mp.v2WinProb * 100).toFixed(1)}%</p>
-                    <p className="text-muted text-xs mt-0.5">v2 · C6 {(winProb * 100).toFixed(1)}% {predictedWinner.split(' ').slice(-1)[0]}</p>
+                    <p className="text-muted text-xs mt-0.5">win prob</p>
                   </div>
                 </div>
                 ) : (
@@ -3137,14 +3136,10 @@ function UpcomingEventTab({
                                 : 'bg-slate-800 text-secondary border border-slate-700'
                             }`}
                           >
-                            {betAction === 'BET' ? 'BET · 1u tracked' : betAction === 'LEAN' ? 'LEAN · paper' : 'No bet'}
+                            {betAction === 'BET' || betAction === 'LEAN' ? betAction : 'No bet'}
                           </span>
                         </div>
-                        {actionable ? (
-                          <p className="text-white font-bold text-sm mt-3">{betFighter}</p>
-                        ) : (
-                          <p className="text-muted text-xs mt-2 leading-snug">{describeGateV3Reason(entry.gateReason)}</p>
-                        )}
+                        {actionable && <p className="text-white font-bold text-sm mt-3">{betFighter}</p>}
                       </>
                     ) : actionable ? (
                       <>
@@ -3174,7 +3169,7 @@ function UpcomingEventTab({
                     </p>
                     <p className="text-muted text-xs mt-1">
                       {isV3 && gateEVPct != null
-                        ? `EV ${gateEVPct >= 0 ? '+' : ''}${gateEVPct.toFixed(1)}% on the C6 pick`
+                        ? `EV ${gateEVPct >= 0 ? '+' : ''}${gateEVPct.toFixed(1)}%`
                         : pickEdge != null
                         ? `${pickEdge > 0 ? '+' : ''}${(pickEdge * 100).toFixed(1)}% edge`
                         : 'No saved market edge'}
@@ -3203,9 +3198,7 @@ function UpcomingEventTab({
                       <option value="NC">NC</option>
                     </select>
                   </div>
-                  {isV3 ? (
-                  <p className="text-muted text-xs">Strategy stake 1u (fixed)</p>
-                  ) : (
+                  {isV3 ? null : (
                   <div className="flex items-center gap-3">
                     <label htmlFor={`upcoming-units-${entry.id}`} className="text-muted text-xs font-semibold uppercase tracking-wider">
                       Units Staked
@@ -5361,7 +5354,7 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
               <div>
                 <p className="text-muted text-xs font-semibold uppercase tracking-wider mb-1.5">Stake</p>
                 <p className="text-secondary text-xs leading-snug pt-2">
-                  Tracked at 1u under the v3 gate. Record a real bet from the Upcoming card on fight day.
+                  Record bets from the Upcoming card on fight day.
                 </p>
               </div>
               ) : (
@@ -5781,15 +5774,9 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                             <>
                               {actionable && <p className={`font-black text-sm ${s.text}`}>{pickFighter.FIGHTER} {pickOdds}</p>}
                               {gateEVPct != null && (
-                                <p className="text-secondary text-xs mt-1">EV {gateEVPct >= 0 ? '+' : ''}{gateEVPct.toFixed(1)}% on the C6 pick</p>
+                                <p className="text-secondary text-xs mt-1">EV {gateEVPct >= 0 ? '+' : ''}{gateEVPct.toFixed(1)}%</p>
                               )}
-                              <p className="text-muted text-xs mt-1 leading-snug">
-                                {isBet
-                                  ? 'C6 underdog pick. Tracked at 1u; real stake 0u until you record a bet.'
-                                  : isLean
-                                  ? 'Paper only: tracked at 1u, never staked.'
-                                  : market.noBetReason}
-                              </p>
+                              {!actionable && <p className="text-muted text-xs mt-1 leading-snug">{market.noBetReason}</p>}
                             </>
                           ) : noRead ? (
                             <p className="text-muted text-xs leading-snug">Pick under 53% — coin-flip, insufficient confidence to read</p>
@@ -5844,9 +5831,9 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                           </div>
                           {isV3 ? (
                           <div className="bg-slate-900/60 rounded-lg p-3">
-                            <p className="text-muted text-xs mb-1">Stake</p>
-                            <p className="text-white font-black text-xl">{isBet ? '1u tracked' : 'Paper'}</p>
-                            <p className="text-muted text-xs mt-0.5">Flat stakes; no Kelly sizing under v3</p>
+                            <p className="text-muted text-xs mb-1">Fair line</p>
+                            <p className="text-white font-black text-xl">{pickFairLine}</p>
+                            <p className="text-muted text-xs mt-0.5">The model's price for this pick</p>
                           </div>
                           ) : (
                           <div className="bg-slate-900/60 rounded-lg p-3">
