@@ -157,7 +157,6 @@ import {
   computeV2WindowComposition,
   computeV2Summary,
   computeV3Records,
-  computeModelScoreboard,
   computeRoiByMarketBandV2,
   computeCumulativePnlV2,
   computeMonthlyPerformanceV2,
@@ -1273,77 +1272,6 @@ const shortDate = (d) => (typeof d === 'string' && d.length >= 10
   ? `${MONTHS_SHORT[Number(d.slice(5, 7)) - 1]} ${Number(d.slice(8, 10))}`
   : d ?? '');
 
-// Model scoreboard: C6 vs v2 vs the market on the same live fights.
-function ModelScoreboard({ entries }) {
-  const [windowSize, setWindowSize] = useState('all');
-  const sb = useMemo(
-    () => computeModelScoreboard(entries, windowSize === 'all' ? {} : { last: 50 }),
-    [entries, windowSize]
-  );
-  const scored = sb.rows.filter((r) => r.brier != null);
-  const bestBrier = scored.length ? Math.min(...scored.map((r) => r.brier)) : null;
-  const bestAcc = scored.length ? Math.max(...scored.map((r) => r.accuracy)) : null;
-  return (
-    <section aria-labelledby="model-scoreboard" className="bg-slate-900 border border-slate-800 rounded-xl p-4 mb-6">
-      <div className="flex items-start justify-between gap-3 flex-wrap mb-3">
-        <div>
-          <h2 id="model-scoreboard" className="text-white font-bold text-sm">Model scoreboard</h2>
-          <p className="text-muted text-xs mt-0.5">
-            {sb.fights
-              ? `Same ${sb.fights} live fights for every row · ${shortDate(sb.from)} to ${shortDate(sb.to)}`
-              : 'No live, graded fights in this window yet.'}
-          </p>
-        </div>
-        <div role="group" aria-label="Scoreboard window" className="flex gap-1 bg-slate-800 rounded-lg p-1">
-          {[['all', 'All'], ['last50', 'Last 50']].map(([id, label]) => (
-            <button
-              key={id}
-              onClick={() => setWindowSize(id)}
-              aria-pressed={windowSize === id}
-              className={`inline-flex items-center justify-center min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0 px-3 py-1 text-xs font-bold rounded-md ${windowSize === id ? 'bg-red-600 text-white' : 'text-secondary hover:text-white'}`}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-      </div>
-      {sb.fights > 0 && (
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="text-muted text-xs uppercase tracking-wider border-b border-slate-800">
-                <th scope="col" className="text-left py-2 pr-3 font-semibold">Model</th>
-                <th scope="col" className="text-right py-2 pr-3 font-semibold">Accuracy</th>
-                <th scope="col" className="text-right py-2 pr-3 font-semibold" title="Mean squared error of the probability; lower is better, 0.25 = coin flip">Brier ↓</th>
-                <th scope="col" className="text-right py-2 font-semibold" title="Flat 1u on every pick, at the saved price">1u ROI</th>
-              </tr>
-            </thead>
-            <tbody>
-              {sb.rows.map((r) => (
-                <tr key={r.model} className="border-b border-slate-800/60 last:border-0">
-                  <th scope="row" className="text-left py-2 pr-3 font-semibold text-slate-200">{r.model}</th>
-                  <td className={`text-right py-2 pr-3 ${r.accuracy === bestAcc ? 'text-white font-bold' : 'text-slate-300'}`}>
-                    {r.accuracy == null ? '—' : `${r.accuracy.toFixed(1)}%`}
-                  </td>
-                  <td className={`text-right py-2 pr-3 font-mono ${r.brier === bestBrier ? 'text-emerald-400 font-bold' : 'text-slate-300'}`}>
-                    {r.brier == null ? '—' : r.brier.toFixed(3)}
-                  </td>
-                  <td className={`text-right py-2 font-semibold ${r.roi == null ? 'text-muted' : r.roi >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                    {r.roi == null ? '—' : `${r.roi >= 0 ? '+' : ''}${r.roi.toFixed(1)}%`}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          <p className="text-muted text-[10px] mt-2">
-            Brier: lower is better (0.25 = coin flip). 1u ROI: 1 unit on every pick at the saved price. Bold = best.
-          </p>
-        </div>
-      )}
-    </section>
-  );
-}
-
 // ─── STATISTICS TAB ─────────────────────────────────────────────────────────
 // Read-only analytics view. Charts here are unchanged from the ROI-tab build:
 // same population logic (filterRoiEntriesForStats mirrors displayedEntries),
@@ -1524,7 +1452,6 @@ function StatisticsTab({ entries, prospectNameSet, filterSince, setFilterSince, 
       ) : (
         <>
           <V3RecordPanel entries={entries} />
-          <ModelScoreboard entries={statsEntries} />
 
           <div className="flex items-baseline justify-between gap-3 flex-wrap mb-3">
             <h2 className="text-white font-bold text-sm">All tracked picks</h2>
@@ -1541,6 +1468,13 @@ function StatisticsTab({ entries, prospectNameSet, filterSince, setFilterSince, 
               </span>
             </p>
           </div>
+          <div className="mb-4">
+            <MonthlyPerformanceTable
+              data={modelView === 'v2' ? monthlyDataV2 : monthlyDataV1}
+              large
+              modelLabel={modelView === 'v2' ? 'v2' : 'v1'}
+            />
+          </div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
             <CumulativePnlChart data={modelView === 'v2' ? cumulativeDataV2 : cumulativeDataV1} modelLabel={modelView === 'v2' ? 'v2' : 'v1'} />
             <RoiByMarketBandChart data={modelView === 'v2' ? roiByBandDataV2 : roiByBandDataV1} modelLabel={modelView === 'v2' ? 'v2' : 'v1'} />
@@ -1550,14 +1484,9 @@ function StatisticsTab({ entries, prospectNameSet, filterSince, setFilterSince, 
 
           <details className="group bg-slate-900/50 border border-slate-800 rounded-xl mb-4">
             <summary className="cursor-pointer select-none px-4 py-3 min-h-[44px] flex items-center text-sm font-semibold text-slate-300 hover:text-white">
-              More detail: monthly results and old-gate tiers
+              More detail: old-gate bet tiers
             </summary>
-            <div className="px-4 pb-4 space-y-4">
-              <MonthlyPerformanceTable
-                data={modelView === 'v2' ? monthlyDataV2 : monthlyDataV1}
-                large
-                modelLabel={modelView === 'v2' ? 'v2' : 'v1'}
-              />
+            <div className="px-4 pb-4">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 <BetTierWinRateChart data={betTierData} />
                 <BetTierRoiChart data={betTierData} />
@@ -1583,7 +1512,6 @@ function StatisticsTab({ entries, prospectNameSet, filterSince, setFilterSince, 
                 ? ` (${v2WindowComposition.liveN} saved before the fight, ${v2WindowComposition.reconN} reconstructed afterwards). Reconstructed picks count toward profit charts but never toward calibration or win-rate-vs-market, which need picks made before the result was known.`
                 : ', all saved before the fight.'}
             </li>
-            <li>The scoreboard uses only fights saved before the event. For fights saved before C6 went live, C6 is computed from that fight's frozen v2 probability and saved odds, the same formula used live.</li>
             <li>Market percentages remove the bookmaker margin proportionally (no-vig).</li>
             <li>Bands with fewer than {ROI_ANALYTICS_LOW_N} fights are faded: too few to read much into.</li>
             <li>The v3 bet record counts only fights saved under the v3 gate (from {GATE_V3_FROZEN_ON}); strategy and paper results are hypothetical 1u bets.</li>
