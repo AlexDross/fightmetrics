@@ -40,7 +40,10 @@ from fight_event_dates import (
     apply_event_date_overrides, canonicalize_undated_events, fight_sort_key,
     is_dated, normalize_date,
 )
-from fight_data_integrity import bout_division, canonicalize_aggregate_inputs, load_required_csv
+from fight_data_integrity import (
+    bout_division, canonicalize_aggregate_inputs, load_required_csv,
+    publish_atomically, validate_completed_feed, validate_record_dates,
+)
 from fighter_profiles import (
     PROFILE_FILL_FIELDS, fill_updates, is_empty, profile_values,
     profiles_artifact, read_tott_csv, td_defense,
@@ -280,6 +283,19 @@ for _ev in _unresolved_undated:
 # reach a sort key or date.fromisoformat().
 results_df['DATE'] = results_df['EVENT'].map(event_dates).map(normalize_date)
 
+# ─── Completed-feed gate ──────────────────────────────────────────────────────
+# Runs on the canonicalised, dated inputs and BEFORE anything is computed or
+# written. A bout whose round stats are missing for either fighter, a round
+# longer than five minutes, or a completed result dated after today all used to
+# be accepted with exit 0 -- the first as null rates for the fighter and short
+# absorbed totals for his opponents, the last as a negative days-since-last-fight.
+TODAY = date.today()
+_feed_coverage = validate_completed_feed(
+    results_df, stats_df, TODAY.isoformat(), normalize_name=normalize_name,
+)
+print(f"  Feed gate: {_feed_coverage['eraBouts']} unified-rules bouts fully covered, "
+      f"{_feed_coverage['exemptBouts']} pre-2001/undated bouts exempt")
+
 detail_lookup = {}
 if has_details:
     for _, row in details_df.iterrows():
@@ -339,7 +355,6 @@ for n in fights_by_fighter:
 
 # ─── Compute record updates ────────────────────────────────────────────────────
 print("Computing record stats...")
-TODAY = date.today()
 record_updates = {}
 for name, fights in fights_by_fighter.items():
     wi  = sum(1 for f in fights if f['result'] == 'W')
@@ -355,6 +370,10 @@ for name, fights in fights_by_fighter.items():
     dcw = sum(1 for f in fights if f['result']=='W' and 'DEC' in f['method'])
     record_updates[name] = dict(wi=wi, lo=lo, ws=ws, ls=ls,
                                 lfd=lfd, dsl=dsl, kow=kow, sbw=sbw, dcw=dcw)
+
+# Belt and braces for the feed gate: whatever path a date took, no fighter may
+# leave this run with a last fight after today.
+validate_record_dates(record_updates, TODAY.isoformat())
 
 result_lookup = {}
 for _, row in results_df.iterrows():
@@ -711,17 +730,12 @@ if _written.names != _expected_names:
 print(f"  Identity gate: {len(pristine_entries)} existing identities preserved, "
       f"{len(seeded_names)} seeded")
 
-with open(JS_PATH, 'w') as f:
-    f.write(new_js)
 print(f"  Patched {len(new_lines)} fighters")
 print(f"  Added {new_count} new UFC fighters")
 
 # The tott join for roster names. Committed alongside the roster so the
 # birth-date generator can read it on any machine without the Greco CSV.
-with open(PROFILES_PATH, 'w') as f:
-    f.write(profiles_artifact(tott_profiles, _written.names))
-print(f"  Wrote {PROFILES_PATH} "
-      f"({sum(1 for n in _written.names if n in tott_profiles)} roster fighters)")
+profiles_text = profiles_artifact(tott_profiles, _written.names)
 
 # ─── Rebuild fightHistory.js from source CSVs ─────────────────────────────────
 print("\nRebuilding fightHistory.js from source CSVs...")
@@ -756,9 +770,19 @@ for fighter_name, fights in fights_by_fighter.items():
         rebuilt_history[fighter_name] = entries
 
 fh_json = json.dumps(rebuilt_history, indent=2, ensure_ascii=False)
-with open(FH_PATH, 'w') as f:
-    f.write(f"export const FIGHT_HISTORY = {fh_json};\n")
 print(f"  Rebuilt {len(rebuilt_history)} fighter histories")
+
+# ─── Publish ──────────────────────────────────────────────────────────────────
+# All three artifacts or none. The roster used to be written before the history
+# was even built, so a failure in between shipped a new roster beside an old
+# history.
+publish_atomically({
+    JS_PATH: new_js,
+    PROFILES_PATH: profiles_text,
+    FH_PATH: f"export const FIGHT_HISTORY = {fh_json};\n",
+})
+print(f"  Wrote {JS_PATH}, {PROFILES_PATH} "
+      f"({sum(1 for n in _written.names if n in tott_profiles)} roster fighters), {FH_PATH}")
 
 # ─── Sanity check ─────────────────────────────────────────────────────────────
 print(f"\n✅  Done — {TODAY}")

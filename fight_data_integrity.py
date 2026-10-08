@@ -6,6 +6,8 @@ handling can be exercised against committed fixtures without touching any
 generated artifact.
 """
 
+import os
+import re
 from pathlib import Path
 
 import pandas as pd
@@ -167,3 +169,180 @@ def bout_division(weightclass):
         if division.lower() in text:
             return division
     return None
+
+
+# ─── Completed-feed gates ─────────────────────────────────────────────────────
+# A refresh that loses rows is not a smaller refresh, it is a wrong one: the
+# updater turns a fighter's missing round stats into null rates, and his
+# opponents' missing rows into understated absorbed/defence totals, and exits 0.
+# These gates run on the canonicalised inputs BEFORE any artifact is written.
+
+# Unified-rules era. Every bout from here on has five-minute rounds and complete
+# round-by-round stats for both fighters in the feed. The 21 bouts with no round
+# stats and the 48 rounds longer than 5:00 are all 1994-99 cards, so earlier
+# events are exempt from the per-round checks rather than allowlisted one by one.
+STATS_ERA_START = '2001-01-01'
+MAX_ROUND_SECS = 300
+MAX_ROUNDS = 5
+COMPLETED_OUTCOMES = frozenset({'W/L', 'L/W', 'D/D', 'NC/NC'})
+_MAX_LISTED = 25
+
+
+class FeedIntegrityError(RuntimeError):
+    """The completed-fight feed is incomplete, inconsistent or from the future."""
+
+
+def _bout_fighters(bout):
+    parts = re.split(r'\s+vs\.?\s+', str(bout).strip(), maxsplit=1)
+    return (parts[0].strip(), parts[1].strip()) if len(parts) == 2 else None
+
+
+def _round_number(label):
+    match = re.search(r'(\d+)', str(label))
+    return int(match.group(1)) if match else 0
+
+
+def _clock_secs(value):
+    match = re.fullmatch(r'(\d+):(\d{2})', str(value).strip())
+    return int(match.group(1)) * 60 + int(match.group(2)) if match else None
+
+
+def validate_completed_feed(results_df, stats_df, today, *, era_start=STATS_ERA_START,
+                            normalize_name=None):
+    """Reject a feed that cannot produce correct fighter statistics.
+
+    results_df must already carry the resolved ISO ``DATE`` per row (None for
+    an undated event); both frames must already be alias-canonicalised, so a
+    Noche/Fight Night double listing is one bout here. ``today`` is an ISO date.
+
+    ``normalize_name`` is applied to the two names in each BOUT label, so it
+    must be whatever was already applied to stats_df['FIGHTER'].
+
+    Every failure is collected and raised together, so one run names the whole
+    damage instead of the first symptom. Returns a coverage summary on success.
+    """
+    today = str(today)
+    problems = []
+
+    def note(kind, detail):
+        problems.append(f'{kind}: {detail}')
+
+    stats = stats_df.copy()
+    for col in ('EVENT', 'BOUT', 'FIGHTER'):
+        stats[col] = stats[col].fillna('').astype(str).str.strip()
+    rounds_seen = {}
+    for event, bout, fighter, label in zip(
+        stats['EVENT'], stats['BOUT'], stats['FIGHTER'], stats['ROUND'],
+    ):
+        rounds_seen.setdefault((event, bout), {}).setdefault(fighter, set()).add(
+            _round_number(label))
+
+    era_bouts = 0
+    exempt_bouts = 0
+    result_keys = set()
+    for event, bout, outcome, end_round, clock, event_date in zip(
+        results_df['EVENT'].fillna('').astype(str).str.strip(),
+        results_df['BOUT'].fillna('').astype(str).str.strip(),
+        results_df['OUTCOME'].fillna('').astype(str).str.strip(),
+        results_df['ROUND'],
+        results_df['TIME'],
+        results_df['DATE'],
+    ):
+        key = (event, bout)
+        result_keys.add(key)
+        dated = isinstance(event_date, str) and bool(event_date)
+        if dated and event_date > today:
+            note('future completed result',
+                 f'{bout!r} at {event!r} is dated {event_date}, after {today}')
+        if not dated or event_date < era_start:
+            exempt_bouts += 1
+            continue
+        era_bouts += 1
+        where = f'{bout!r} at {event!r} ({event_date})'
+        if outcome not in COMPLETED_OUTCOMES:
+            note('unknown outcome', f'{where}: {outcome!r}')
+        try:
+            last_round = int(float(str(end_round).strip()))
+        except ValueError:
+            last_round = 0
+        if not 1 <= last_round <= MAX_ROUNDS:
+            note('invalid round', f'{where}: ROUND={end_round!r}')
+            continue
+        secs = _clock_secs(clock)
+        if secs is None or not 0 < secs <= MAX_ROUND_SECS:
+            note('invalid round duration', f'{where}: TIME={clock!r}')
+        fighters = _bout_fighters(bout)
+        if fighters is None:
+            note('unparseable bout', where)
+            continue
+        if normalize_name is not None:
+            fighters = tuple(normalize_name(name) for name in fighters)
+        seen = rounds_seen.get(key, {})
+        expected_rounds = set(range(1, last_round + 1))
+        for fighter in fighters:
+            got = seen.get(fighter)
+            if not got:
+                note('missing round stats', f'{where}: no rows for {fighter!r}')
+            elif got != expected_rounds:
+                note('incomplete round stats',
+                     f'{where}: {fighter!r} has rounds {sorted(got)}, '
+                     f'expected 1-{last_round}')
+        strangers = sorted(set(seen) - set(fighters))
+        if strangers:
+            note('stats for a fighter not in the bout', f'{where}: {strangers}')
+
+    # A stat row whose result row is gone means the result was lost, not that
+    # the fight never happened. Era is unknown without the result row, so this
+    # check is unconditional; the feed has no such rows today.
+    orphans = sorted(set(rounds_seen) - result_keys)
+    for event, bout in orphans:
+        note('round stats without a result', f'{bout!r} at {event!r}')
+
+    if problems:
+        shown = '\n  '.join(problems[:_MAX_LISTED])
+        more = len(problems) - _MAX_LISTED
+        raise FeedIntegrityError(
+            f'Completed-fight feed failed {len(problems)} integrity check(s); '
+            f'no artifact was written.\n  {shown}'
+            + (f'\n  ... and {more} more' if more > 0 else '')
+        )
+    return {'eraBouts': era_bouts, 'exemptBouts': exempt_bouts}
+
+
+def validate_record_dates(record_updates, today):
+    """No fighter may come out of a refresh with a fight after ``today``."""
+    today = str(today)
+    bad = sorted(
+        f"{name}: lfd={rec.get('lfd')} dsl={rec.get('dsl')}"
+        for name, rec in record_updates.items()
+        if (rec.get('lfd') and rec['lfd'] > today)
+        or (rec.get('dsl') is not None and rec['dsl'] < 0)
+    )
+    if bad:
+        raise FeedIntegrityError(
+            f'{len(bad)} fighter record(s) end after {today}; no artifact was '
+            'written.\n  ' + '\n  '.join(bad[:_MAX_LISTED]))
+
+
+def publish_atomically(outputs):
+    """Write every artifact or none of them.
+
+    ``outputs`` maps path -> text. Each file is staged next to its target and
+    only renamed into place once ALL of them are staged, so a failure while
+    staging leaves the previous good artifact set untouched. os.replace is
+    atomic per file; the window between renames is a few syscalls rather than
+    the minutes of computation that used to sit between two writes.
+    """
+    staged = []
+    try:
+        for path, text in outputs.items():
+            tmp = f'{path}.staged'
+            with open(tmp, 'w', encoding='utf-8') as handle:
+                handle.write(text)
+            staged.append((tmp, path))
+    except BaseException:
+        for tmp, _ in staged:
+            Path(tmp).unlink(missing_ok=True)
+        raise
+    for tmp, path in staged:
+        os.replace(tmp, path)

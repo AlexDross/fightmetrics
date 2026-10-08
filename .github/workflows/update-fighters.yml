@@ -26,18 +26,35 @@ jobs:
       - name: Install Python dependencies
         run: pip install pandas requests
 
+      # A shallow clone, not the branch zip: the zip of a moving branch carries
+      # no revision, so a shipped refresh could not be traced to its inputs.
+      # The clone's HEAD is the immutable commit every CSV below came from.
       - name: Download Greco1899 UFC stats CSVs
+        id: greco
         run: |
-          wget -q https://github.com/Greco1899/scrape_ufc_stats/archive/refs/heads/main.zip
-          unzip -q main.zip
-          cp scrape_ufc_stats-main/ufc_fight_results.csv .
-          cp scrape_ufc_stats-main/ufc_event_details.csv .
-          cp scrape_ufc_stats-main/ufc_fight_details.csv .
-          cp scrape_ufc_stats-main/ufc_fight_stats.csv .
-          cp scrape_ufc_stats-main/ufc_fighter_tott.csv .
-          cp scrape_ufc_stats-main/upcoming.csv . 2>/dev/null || true
-          echo "✅  CSVs downloaded"
+          git clone --quiet --depth 1 https://github.com/Greco1899/scrape_ufc_stats.git greco
+          cp greco/ufc_fight_results.csv .
+          cp greco/ufc_event_details.csv .
+          cp greco/ufc_fight_details.csv .
+          cp greco/ufc_fight_stats.csv .
+          cp greco/ufc_fighter_tott.csv .
+          cp greco/upcoming.csv . 2>/dev/null || true
+          echo "revision=$(git -C greco rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          echo "committed_at=$(git -C greco log -1 --format=%cI)" >> "$GITHUB_OUTPUT"
+          echo "✅  CSVs downloaded at $(git -C greco rev-parse --short HEAD)"
           echo "fight_stats rows: $(wc -l < ufc_fight_stats.csv)"
+
+      - name: Test source snapshot pinning
+        run: python test_source_snapshot.py
+
+      # Pins revision + per-file hashes in source_snapshot.json, and fails if any
+      # input has fewer records than the last committed snapshot -- a lost event
+      # or truncated download that the per-bout gates below cannot see.
+      - name: Pin source snapshot
+        run: >-
+          python record_source_snapshot.py
+          --revision "${{ steps.greco.outputs.revision }}"
+          --committed-at "${{ steps.greco.outputs.committed_at }}"
 
       # Guards the undated-event handling BEFORE the updater runs, so a
       # regression fails fast and loudly instead of resurfacing as
@@ -49,6 +66,9 @@ jobs:
       # One event-alias policy must hold across every aggregate input. Runs
       # before the updater so a duplicate-round-stat regression fails on
       # committed fixtures rather than silently inflating rate statistics.
+      # Also holds the completed-feed gate: missing or partial round stats,
+      # invalid round durations and future-dated results fail the updater
+      # before it writes anything.
       - name: Test aggregate input identity gates
         run: python test_fight_data_integrity.py
 
@@ -173,7 +193,7 @@ jobs:
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add src/fightersData.js src/fightHistory.js src/eloModule.js src/cardioModule.js src/fighterBirthdates.js src/sourceManifest.js fighter_profiles.json
+          git add src/fightersData.js src/fightHistory.js src/eloModule.js src/cardioModule.js src/fighterBirthdates.js src/sourceManifest.js fighter_profiles.json source_snapshot.json
           if git diff --staged --quiet; then
             echo "No changes — skipping commit"
           else

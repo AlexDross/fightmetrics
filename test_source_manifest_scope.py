@@ -25,6 +25,7 @@ from datetime import date, timedelta
 from pathlib import Path
 
 import generate_source_manifest as gsm
+import record_source_snapshot as rss
 
 AGGREGATE_INPUTS = [
     'ufc_fight_results.csv',
@@ -77,7 +78,15 @@ def write_feed(directory, max_event_date):
         (directory / name).write_text(
             'EVENT,BOUT\nUFC 999: Test vs. Fixture,A vs. B\n', encoding='utf-8'
         )
+    (directory / 'ufc_fighter_tott.csv').write_text('FIGHTER,REACH\nA,70\n', encoding='utf-8')
+    rss.write_snapshot(
+        rss.build_snapshot(directory, PINNED_REVISION, '2026-08-09T00:00:00Z'),
+        directory / 'source_snapshot.json',
+    )
     return directory
+
+
+PINNED_REVISION = 'f' * 40
 
 
 class RankingsScopeNeedsNoFightInputs(unittest.TestCase):
@@ -102,6 +111,40 @@ class RankingsScopeNeedsNoFightInputs(unittest.TestCase):
                 with self.assertRaises(SystemExit) as caught:
                     gsm.build_manifest(scope='full', input_root=tmp)
                 self.assertIn(omitted, str(caught.exception))
+
+
+class FullScopeStampsThePinnedSnapshot(unittest.TestCase):
+    """Every Greco-backed module records the upstream revision and the hashes of
+    exactly its own lineage, and a feed that is not the pinned one is refused."""
+
+    def test_modules_carry_revision_and_lineage_hashes(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            write_feed(tmp, date(2026, 8, 8))
+            modules = gsm.build_manifest(scope='full', input_root=tmp)['modules']
+            for name in gsm.GRECO_BACKED_MODULES:
+                with self.subTest(module=name):
+                    pinned = modules[name]['sourceSnapshot']
+                    self.assertEqual(pinned['revision'], PINNED_REVISION)
+                    self.assertEqual(list(pinned['inputSha256']), modules[name]['sourceInputs'])
+                    for csv_name, digest in pinned['inputSha256'].items():
+                        self.assertEqual(digest, rss.sha256_of(Path(tmp) / csv_name))
+
+    def test_missing_snapshot_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            write_feed(tmp, date(2026, 8, 8))
+            (Path(tmp) / 'source_snapshot.json').unlink()
+            with self.assertRaises(SystemExit) as caught:
+                gsm.build_manifest(scope='full', input_root=tmp)
+            self.assertIn('source_snapshot.json', str(caught.exception))
+
+    def test_feed_that_is_not_the_pinned_one_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            write_feed(tmp, date(2026, 8, 8))
+            with open(Path(tmp) / 'ufc_fight_stats.csv', 'a', encoding='utf-8') as f:
+                f.write('UFC 999: Test vs. Fixture,C vs. D\n')
+            with self.assertRaises(SystemExit) as caught:
+                gsm.build_manifest(scope='full', input_root=tmp)
+            self.assertIn('ufc_fight_stats.csv', str(caught.exception))
 
 
 class RankingsScopePreservesUnrelatedModules(unittest.TestCase):

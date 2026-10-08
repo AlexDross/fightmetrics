@@ -55,6 +55,21 @@ jobs:
       - name: Correction-5 identity invariants
         run: python test_correction5_identity.py
 
+      # Fighter-refresh gates. The scheduled updater runs these before it touches
+      # the feed; running them on every PR too means a change to the gates or the
+      # snapshot pinning is caught in review, not on the next Monday refresh.
+      - name: Install feed-gate dependencies
+        run: pip install pandas
+
+      - name: Completed-feed and aggregate-identity gates
+        run: python test_fight_data_integrity.py
+
+      - name: Source snapshot pinning
+        run: python test_source_snapshot.py
+
+      - name: Source-manifest scoping
+        run: python test_source_manifest_scope.py
+
       - name: Run Vitest
         run: npm test
 
