@@ -1532,18 +1532,6 @@ const PROP_METHOD_SINGLE = ['KO/TKO', 'Submission', 'Decision'];
 const PROP_METHOD_DOUBLE = ['KO/TKO or Submission', 'KO/TKO or Decision', 'Submission or Decision'];
 const PROP_METHOD_OPTIONS = [...PROP_METHOD_SINGLE, ...PROP_METHOD_DOUBLE];
 
-// Export-string builders -- one definition each, called from both
-// UpcomingEventTab and ROITab so every sub-tab that displays a data type also
-// has a "Copy Updated ...File.js" button, without duplicating the
-// serialization logic in two places. Status/result on each parlay stays
-// as-stored (not frozen at export time) -- re-derived live via
-// computeParlayResult whenever the pasted-over file is reloaded, per the
-// locked no-freeze decision.
-const buildPropsExportedCode = (propPicks) =>
-  `export const PROP_PICKS = ${JSON.stringify(propPicks, null, 2)};\n`;
-const buildParlayExportedCode = (parlayEntries) =>
-  `export const PARLAY_ENTRIES = ${JSON.stringify(parlayEntries, null, 2)};\n`;
-
 const PROP_RESULT_OPTIONS = [
   { value: 'PENDING', label: 'Pending' },
   { value: 'WON', label: 'Won' },
@@ -2678,11 +2666,6 @@ function UpcomingEventTab({
     (allFighters ?? []).forEach((f) => m.set(f.FIGHTER, f));
     return m;
   }, [allFighters]);
-  // Same builders ROITab uses for its own Props/Parlays export buttons --
-  // one serialization each, reused here for the Upcoming-side access point.
-  const propsExportedCode = buildPropsExportedCode(propPicks);
-  const parlayExportedCode = buildParlayExportedCode(parlayEntries ?? []);
-
   // Single-array design (see PROP_PICKS) means "pending" is just a filtered
   // view -- grading a prop (setting result) removes it from this list on the
   // next render with no explicit migration call, mirroring but simplifying
@@ -2887,22 +2870,6 @@ function UpcomingEventTab({
             Save matchups from the Simulator to track pending picks.
           </p>
         </div>
-        {subTab === 'props' && (
-          <button
-            onClick={() => navigator.clipboard.writeText(propsExportedCode)}
-            className="hidden sm:inline-block px-3 py-2 rounded-lg border border-slate-700 text-slate-300 text-xs font-semibold hover:text-white hover:border-slate-600 transition-colors"
-          >
-            Copy Updated propPicksData.js
-          </button>
-        )}
-        {subTab === 'parlays' && (
-          <button
-            onClick={() => navigator.clipboard.writeText(parlayExportedCode)}
-            className="hidden sm:inline-block px-3 py-2 rounded-lg border border-slate-700 text-slate-300 text-xs font-semibold hover:text-white hover:border-slate-600 transition-colors"
-          >
-            Copy Updated parlayData.js
-          </button>
-        )}
       </div>
 
       <div role="tablist" aria-label="Upcoming sections" className="flex items-center flex-wrap gap-1 bg-slate-800 rounded-lg p-1 mb-4 w-fit">
@@ -8027,13 +7994,6 @@ function ROITab({
   parlayEntries,
   onDeleteParlay,
 }) {
-  // Mirrors exportedCode above, but serializes the live propPicks state (the
-  // same state onGradePropPick/onAddPropPick mutate) rather than roiEntries --
-  // props stay isolated from ROI_ENTRIES even in the export path.
-  const propsExportedCode = buildPropsExportedCode(propPicks);
-  // Same pattern for parlays -- serializes the FULL live parlayEntries state
-  // (pending + graded, unfiltered), matching parlayData.js's shape exactly.
-  const parlayExportedCode = buildParlayExportedCode(parlayEntries);
   const evaluatedEntries = useMemo(
     () =>
       entries.map((entry) => {
@@ -8399,22 +8359,6 @@ function ROITab({
                 Clear All
               </button>
             </>
-          )}
-          {isProps && (
-            <button
-              onClick={() => navigator.clipboard.writeText(propsExportedCode)}
-              className="px-3 py-2 rounded-lg border border-slate-700 text-slate-300 text-xs font-semibold hover:text-white hover:border-slate-600 transition-colors"
-            >
-              Copy Updated propPicksData.js
-            </button>
-          )}
-          {isParlays && (
-            <button
-              onClick={() => navigator.clipboard.writeText(parlayExportedCode)}
-              className="px-3 py-2 rounded-lg border border-slate-700 text-slate-300 text-xs font-semibold hover:text-white hover:border-slate-600 transition-colors"
-            >
-              Copy Updated parlayData.js
-            </button>
           )}
         </div>
       </div>
