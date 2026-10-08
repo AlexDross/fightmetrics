@@ -6,6 +6,7 @@ from pathlib import Path
 import pandas as pd
 
 from fight_data_integrity import (
+    bout_division,
     AggregateConflictError,
     canonicalize_aggregate_inputs,
     canonicalize_alias_rows,
@@ -74,6 +75,23 @@ class TestRequiredInputs(unittest.TestCase):
     def test_missing_csv_is_a_hard_failure(self):
         with self.assertRaisesRegex(FileNotFoundError, 'Required aggregate input'):
             load_required_csv(FIXTURES / 'does-not-exist.csv')
+
+
+class TestBoutDivision(unittest.TestCase):
+    def test_plain_and_title_labels(self):
+        self.assertEqual(bout_division('Heavyweight Bout'), 'Heavyweight')
+        self.assertEqual(bout_division('Light Heavyweight Bout'), 'Light Heavyweight')
+        self.assertEqual(bout_division('UFC Interim Light Heavyweight Title Bout'), 'Light Heavyweight')
+        self.assertEqual(bout_division("UFC Women's Flyweight Title Bout"), "Women's Flyweight")
+        self.assertEqual(bout_division('Catch Weight Bout'), 'Catch Weight')
+
+    def test_tournament_labels_keep_their_division(self):
+        self.assertEqual(bout_division('Ultimate Fighter 19 Middleweight Tournament Title Bout'), 'Middleweight')
+        self.assertEqual(bout_division("Road to 3 Women's Strawweight Tournament TitleBout"), "Women's Strawweight")
+
+    def test_no_division_is_none(self):
+        for label in ('UFC 2 Tournament Title Bout', 'Superfight Championship Bout', '', None):
+            self.assertIsNone(bout_division(label))
 
 
 if __name__ == '__main__':

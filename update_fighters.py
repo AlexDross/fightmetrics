@@ -40,7 +40,7 @@ from fight_event_dates import (
     apply_event_date_overrides, canonicalize_undated_events, fight_sort_key,
     is_dated, normalize_date,
 )
-from fight_data_integrity import canonicalize_aggregate_inputs, load_required_csv
+from fight_data_integrity import bout_division, canonicalize_aggregate_inputs, load_required_csv
 from fighter_profiles import (
     PROFILE_FILL_FIELDS, fill_updates, is_empty, profile_values,
     profiles_artifact, read_tott_csv, td_defense,
@@ -312,7 +312,12 @@ for _, row in results_df.iterrows():
     detail   = detail_lookup.get(bout_key, {})
     rn = detail.get('rn', 0)
     ti = detail.get('ti', '5:00')
-    wc = detail.get('wc', '')
+    # ufc_fight_details.csv carries no weight class, so the bout's own division
+    # comes from this results row. Without it every history entry fell back to
+    # the fighter's CURRENT roster division, relabelling a fighter's past bouts
+    # whenever they changed weight. Division only: bout_division never returns
+    # title words, so the title heuristic below sees exactly what it saw before.
+    wc = detail.get('wc', '') or bout_division(row.get('WEIGHTCLASS', '')) or ''
     if has_round:
         try: rn = int(float(str(row.get('ROUND','0')).strip()))
         except: pass
