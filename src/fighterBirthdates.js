@@ -1,4 +1,5 @@
-// Generated from fighters.json by scripts/generate-fighter-birthdates.mjs.
+// Generated from fighters.json (+ fighter_profiles.json for names it lacks)
+// by scripts/generate-fighter-birthdates.mjs.
 // Do not hand-edit. Date of birth is the durable source; the stored integer
 // ages in fightersData.js are fallbacks used only where no DOB is known.
 // Keys are canonical roster names (name_aliases.json applied), sorted by
