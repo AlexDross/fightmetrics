@@ -204,6 +204,13 @@ and never silently picks between two fighters with the same folded name.
   card file and tell them which one and why. Check before assuming: Aswell
   looked missing but was 1-2 in the UFC under a suffixed name.
 - Never edit a roster name to match a source.
+- **Relay every profile warning to the user.** `resolve` also flags fighters
+  the model will run partly on placeholders: unknown age (the `younger`
+  feature is zeroed for the whole bout), missing height/reach (69"/70"
+  substituted), under 30 career minutes (stats mostly the division mean),
+  and a roster division that differs from the bout's. These do not block
+  entry, but list them under the review table in step 5 so the user
+  knows which picks rest on thin data. Do not fix the roster to silence them.
 
 ## 5. Show the user, then apply
 
