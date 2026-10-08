@@ -11,12 +11,10 @@ state at that time. This script records, in source_snapshot.json:
   - per-file SHA-256, byte size and CSV record count for every input the
     fighter artifacts are generated from
 
-It is also the coverage-regression gate. A feed that has FEWER records in any
-input than the last committed snapshot is a lost event, a truncated download or
-an upstream rewrite -- never a normal refresh -- so it fails here, before the
-updater runs. A reviewed, intentional shrink is accepted only with
---allow-shrink "<reason>", run by hand; committing the resulting snapshot makes
-it the new floor for scheduled runs.
+Record counts are informational only. Whether the feed lost or changed fights
+is decided fight by fight against source_ledger.json by update_fighters.py
+(feed_validation.check_ledger_transition): a count can stay level, or grow,
+while an old fight disappears.
 
 The file carries no wall-clock timestamp, so an unchanged upstream revision
 rewrites it byte-for-byte and the bot commits nothing.
@@ -89,18 +87,6 @@ def build_snapshot(source_dir, revision, committed_at, repository=UPSTREAM_REPOS
     }
 
 
-def shrinkage(previous, current):
-    """Inputs whose record count went down since the previous snapshot."""
-    if not previous:
-        return []
-    lost = []
-    for name, now in current['files'].items():
-        before = previous.get('files', {}).get(name)
-        if before and now['records'] < before['records']:
-            lost.append(f"{name}: {before['records']} -> {now['records']} records")
-    return lost
-
-
 def verify_inputs_match(snapshot, source_dir, names):
     """Raise unless each named input on disk is the one the snapshot pinned."""
     source_dir = Path(source_dir)
@@ -135,9 +121,6 @@ def main(argv=None):
     parser.add_argument('--committed-at', required=True,
                         help='Upstream commit timestamp (ISO 8601).')
     parser.add_argument('--out', default=str(SNAPSHOT_PATH))
-    parser.add_argument('--allow-shrink', metavar='REASON',
-                        help='Accept fewer records than the committed snapshot. '
-                             'Manual, reviewed use only.')
     args = parser.parse_args(argv)
 
     try:
@@ -145,16 +128,6 @@ def main(argv=None):
     except SnapshotError as exc:
         print(f'FATAL: {exc}', file=sys.stderr)
         return 1
-
-    lost = shrinkage(load_snapshot(args.out), snapshot)
-    if lost and not args.allow_shrink:
-        print('FATAL: the upstream feed has fewer records than the last committed '
-              'snapshot. A refresh never loses fights; this is a truncated download '
-              'or an upstream rewrite. Nothing was written.\n  ' + '\n  '.join(lost),
-              file=sys.stderr)
-        return 1
-    if lost:
-        print(f'WARNING: accepting shrink ({args.allow_shrink}):\n  ' + '\n  '.join(lost))
 
     write_snapshot(snapshot, args.out)
     print(f"Pinned {snapshot['repository']} @ {snapshot['revision']} "

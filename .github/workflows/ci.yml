@@ -61,8 +61,25 @@ jobs:
       - name: Install feed-gate dependencies
         run: pip install pandas
 
-      - name: Completed-feed and aggregate-identity gates
+      - name: Aggregate-identity gates
         run: python test_fight_data_integrity.py
+
+      - name: Completed-feed validation and ledger
+        run: python test_feed_validation.py
+
+      - name: Artifact publication rollback
+        run: python test_artifact_publish.py
+
+      - name: Updater gates end to end
+        run: python test_updater_gates.py
+
+      - name: Artifact-set verification
+        run: python test_verify_artifact_set.py
+
+      # The committed artifacts must be one generation from one upstream
+      # revision; a hand edit or a partial bot commit fails here.
+      - name: Committed artifact set is consistent
+        run: python scripts/verify_artifact_set.py
 
       - name: Source snapshot pinning
         run: python test_source_snapshot.py

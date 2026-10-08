@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""record_source_snapshot.py pins the upstream feed and refuses a shrinking one.
+"""record_source_snapshot.py pins the upstream feed and the exact inputs.
 
 NON-DESTRUCTIVE: every test works in a temporary directory and never touches
 the committed source_snapshot.json. stdlib unittest -- no extra dependency.
@@ -53,21 +53,27 @@ class SourceSnapshot(unittest.TestCase):
             run(tmp)
             self.assertEqual((Path(tmp) / 'source_snapshot.json').read_bytes(), first)
 
-    def test_shrinking_feed_fails_and_keeps_the_previous_snapshot(self):
+    def test_smaller_feed_is_recorded_counts_are_informational(self):
+        # Losing fights is decided fight by fight by the ledger in
+        # update_fighters.py, not by record counts here.
         with tempfile.TemporaryDirectory() as tmp:
             write_feed(tmp, extra_stat_rows=3)
             run(tmp)
-            before = (Path(tmp) / 'source_snapshot.json').read_bytes()
             write_feed(tmp, extra_stat_rows=1)
-            self.assertEqual(run(tmp), 1)
-            self.assertEqual((Path(tmp) / 'source_snapshot.json').read_bytes(), before)
+            self.assertEqual(run(tmp), 0)
+            snap = json.loads((Path(tmp) / 'source_snapshot.json').read_text())
+            self.assertEqual(snap['files']['ufc_fight_stats.csv']['records'], 2)
 
-    def test_reviewed_shrink_is_accepted_explicitly(self):
+    def test_inputs_must_match_the_pinned_hashes(self):
         with tempfile.TemporaryDirectory() as tmp:
-            write_feed(tmp, extra_stat_rows=3)
+            write_feed(tmp)
             run(tmp)
-            write_feed(tmp, extra_stat_rows=1)
-            self.assertEqual(run(tmp, '--allow-shrink', 'upstream dedup reviewed'), 0)
+            snap = rss.load_snapshot(Path(tmp) / 'source_snapshot.json')
+            rss.verify_inputs_match(snap, tmp, rss.SNAPSHOT_FILES)
+            with open(Path(tmp) / 'ufc_fight_results.csv', 'a', encoding='utf-8') as f:
+                f.write('E,"C vs. D"\n')
+            with self.assertRaises(rss.SnapshotError):
+                rss.verify_inputs_match(snap, tmp, ['ufc_fight_results.csv'])
 
     def test_missing_input_fails(self):
         with tempfile.TemporaryDirectory() as tmp:
