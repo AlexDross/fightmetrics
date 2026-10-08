@@ -233,6 +233,21 @@ def birthdate_source_coverage():
         if canonical_name:
             canonical[canonical_name] = dob
 
+    # Second source, mirroring the generator: fighter_profiles.json fills only
+    # names fighters.json does not date.
+    profiles_path = REPO_ROOT / 'fighter_profiles.json'
+    profile_fills = 0
+    if profiles_path.exists():
+        profiles = json.loads(profiles_path.read_text(encoding='utf-8'))
+        for name, profile in profiles.items():
+            dob = (profile or {}).get('dob') or ''
+            if not date_only.match(dob):
+                continue
+            canonical_name = aliases.get(name, name)
+            if canonical_name not in canonical:
+                canonical[canonical_name] = dob
+                profile_fills += 1
+
     artifact_keys = None
     if artifact_path.exists():
         content = artifact_path.read_text(encoding='utf-8')
@@ -244,7 +259,7 @@ def birthdate_source_coverage():
             )
         )
 
-    return source_rows, valid_dob, aliases_applied, len(canonical), artifact_keys
+    return source_rows, valid_dob, aliases_applied, len(canonical), artifact_keys, profile_fills
 
 
 def event_name_present_in_csv(csv_path, needle_lower, input_root=None):
@@ -580,20 +595,22 @@ def build_manifest(scope='full', input_root=None, existing=None):
 
     coverage = birthdate_source_coverage()
     if coverage:
-        src_rows, valid_dob, aliased, canonical_n, artifact_n = coverage
+        src_rows, valid_dob, aliased, canonical_n, artifact_n, profile_fills = coverage
         stale_warning = (
             ''
             if artifact_n == canonical_n
             else (
-                f" WARNING: the shipped artifact holds {artifact_n} entries but fighters.json "
-                f"currently yields {canonical_n} -- the artifact is STALE. Re-run "
+                f" WARNING: the shipped artifact holds {artifact_n} entries but its sources "
+                f"currently yield {canonical_n} -- the artifact is STALE. Re-run "
                 "scripts/generate-fighter-birthdates.mjs."
             )
         )
         birthdate_verification = (
             f"Recomputed the join from source while writing this manifest: read {src_rows} rows "
             f"from fighters.json, of which {valid_dob} carry a dob matching ^\\d{{4}}-\\d{{2}}-\\d{{2}}$; "
-            f"applied {aliased} name_aliases.json rewrites; produced {canonical_n} canonical "
+            f"applied {aliased} name_aliases.json rewrites; filled {profile_fills} further names "
+            f"from fighter_profiles.json (ufcstats tale of the tape, never overriding "
+            f"fighters.json); produced {canonical_n} canonical "
             f"names, and the shipped artifact contains {artifact_n} entries. "
             "The generator raises on any canonical name that would receive two DIFFERENT birth "
             "dates, so a silent bad join cannot ship. Keys are sorted by UTF-16 code point (not "

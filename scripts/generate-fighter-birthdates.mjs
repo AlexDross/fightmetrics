@@ -17,6 +17,14 @@
 // sort than under a code-point sort. A CI runner whose ICU build differs from a
 // developer's would otherwise reshuffle the whole artifact.
 //
+// Second source: fighter_profiles.json, the tale-of-the-tape join that
+// update_fighters.py writes for roster names (ufcstats, one row per fighter,
+// ambiguous names already dropped). fighters.json is frozen, so without this a
+// fighter who debuted after it was last built never gets a birth date. It only
+// FILLS: a name fighters.json already dates keeps that date, and a
+// disagreement between the two is counted, not thrown, because the second
+// source never overrides the first. Absent file = no second source.
+//
 // Run from repo root:  node scripts/generate-fighter-birthdates.mjs
 // Verify without writing:  node scripts/generate-fighter-birthdates.mjs --check
 
@@ -27,6 +35,7 @@ import { fileURLToPath } from 'node:url';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const fightersPath = path.join(ROOT, 'fighters.json');
 const aliasesPath = path.join(ROOT, 'name_aliases.json');
+const profilesPath = path.join(ROOT, 'fighter_profiles.json');
 const outputPath = path.join(ROOT, 'src', 'fighterBirthdates.js');
 
 const checkOnly = process.argv.includes('--check');
@@ -61,13 +70,32 @@ for (const fighter of fighters) {
   birthdates.set(canonicalName, dob);
 }
 
+let filledFromProfiles = 0;
+let profileDisagreements = 0;
+if (fs.existsSync(profilesPath)) {
+  const profiles = JSON.parse(fs.readFileSync(profilesPath, 'utf8'));
+  for (const [name, profile] of Object.entries(profiles)) {
+    const dob = profile?.dob ?? '';
+    if (!DATE_ONLY_RE.test(dob)) continue;
+    const canonicalName = aliases[name] ?? name;
+    const existing = birthdates.get(canonicalName);
+    if (existing === undefined) {
+      birthdates.set(canonicalName, dob);
+      filledFromProfiles += 1;
+    } else if (existing !== dob) {
+      profileDisagreements += 1;
+    }
+  }
+}
+
 // Code-point ordering. Array.prototype.sort's default comparator already
 // compares UTF-16 code units, which is exactly the stable ordering we want.
 const sortedNames = [...birthdates.keys()].sort();
 const sorted = Object.fromEntries(sortedNames.map((n) => [n, birthdates.get(n)]));
 
 const source =
-  `// Generated from fighters.json by scripts/generate-fighter-birthdates.mjs.\n` +
+  `// Generated from fighters.json (+ fighter_profiles.json for names it lacks)\n` +
+  `// by scripts/generate-fighter-birthdates.mjs.\n` +
   `// Do not hand-edit. Date of birth is the durable source; the stored integer\n` +
   `// ages in fightersData.js are fallbacks used only where no DOB is known.\n` +
   `// Keys are canonical roster names (name_aliases.json applied), sorted by\n` +
@@ -91,6 +119,8 @@ if (checkOnly) {
   fs.writeFileSync(outputPath, source);
   console.log(
     `Wrote ${birthdates.size} fighter birth dates to ${path.relative(ROOT, outputPath)}` +
-      (skippedMalformed ? ` (skipped ${skippedMalformed} malformed dob values)` : ''),
+      (skippedMalformed ? ` (skipped ${skippedMalformed} malformed dob values)` : '') +
+      `; ${filledFromProfiles} filled from fighter_profiles.json` +
+      (profileDisagreements ? `, ${profileDisagreements} disagree with fighters.json (fighters.json kept)` : ''),
   );
 }

@@ -34,6 +34,7 @@ jobs:
           cp scrape_ufc_stats-main/ufc_event_details.csv .
           cp scrape_ufc_stats-main/ufc_fight_details.csv .
           cp scrape_ufc_stats-main/ufc_fight_stats.csv .
+          cp scrape_ufc_stats-main/ufc_fighter_tott.csv .
           cp scrape_ufc_stats-main/upcoming.csv . 2>/dev/null || true
           echo "✅  CSVs downloaded"
           echo "fight_stats rows: $(wc -l < ufc_fight_stats.csv)"
@@ -64,6 +65,12 @@ jobs:
       # quietly freezing a fighter again.
       - name: Test JS roster parser
         run: python test_js_roster_parser.py
+
+      # Tale-of-the-tape parsing and the fill-only-empty rule. A regression here
+      # would let the scrape overwrite curated ages/heights/reaches, or put one
+      # same-named fighter's profile on another.
+      - name: Test fighter profile backfill
+        run: python test_fighter_profiles.py
 
       - name: Run update_fighters.py
         run: python update_fighters.py
@@ -166,7 +173,7 @@ jobs:
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add src/fightersData.js src/fightHistory.js src/eloModule.js src/cardioModule.js src/fighterBirthdates.js src/sourceManifest.js
+          git add src/fightersData.js src/fightHistory.js src/eloModule.js src/cardioModule.js src/fighterBirthdates.js src/sourceManifest.js fighter_profiles.json
           if git diff --staged --quiet; then
             echo "No changes — skipping commit"
           else

@@ -10,11 +10,18 @@ UPDATES:
   fightersData.js  — adds new UFC-only entries for debuting fighters
   fightHistory.js  — rebuilt from source CSVs
 
+FILLS ONLY WHEN EMPTY (fighter_profiles.PROFILE_FILL_FIELDS):
+  ag, ht, rh, st                      — from ufc_fighter_tott.csv (tale of the tape)
+  atd                                 — takedown defense, from the round stats
+  A stored value is never overwritten; the integrity gate enforces it.
+  fighter_profiles.json               — the tott join for roster names, read by
+                                        scripts/generate-fighter-birthdates.mjs
+
 NEVER TOUCHES (leave for their dedicated generators):
   elo, crd                           — rating/calibration artifacts
   eloModule.js, cardioModule.js       — affect rankings/ratings
   dr, p4p                             — rankings
-  tb, ht, rh, st, w, ag              — physical attributes and title provenance
+  tb, w                              — title provenance and division
 
 Every quoted field in the generated modules is read through js_roster_parser,
 which is the one grammar for these files. Identity and division were previously
@@ -34,6 +41,10 @@ from fight_event_dates import (
     is_dated, normalize_date,
 )
 from fight_data_integrity import canonicalize_aggregate_inputs, load_required_csv
+from fighter_profiles import (
+    PROFILE_FILL_FIELDS, fill_updates, is_empty, profile_values,
+    profiles_artifact, read_tott_csv, td_defense,
+)
 # ONE grammar reads every quoted field in the generated modules. Identity and
 # division used to be matched by two separate `[^']` patterns, and both stopped
 # at the backslash of an escaped apostrophe: `n:'Sean O\'Malley'` decoded to
@@ -49,6 +60,8 @@ JS_PATH      = os.path.join(SRC, 'src', 'fightersData.js')
 FH_PATH      = os.path.join(SRC, 'src', 'fightHistory.js')
 PROSPECT_PATH = os.path.join(SRC, 'src', 'prospectsData.js')
 NAME_ALIASES_PATH = os.path.join(SRC, 'name_aliases.json')
+TOTT_PATH    = os.path.join(SRC, 'ufc_fighter_tott.csv')
+PROFILES_PATH = os.path.join(SRC, 'fighter_profiles.json')
 
 # Greco1899's source CSVs spell some fighters differently than our authoritative
 # roster (src/fightersData.js) — e.g. "Zach Reese" vs "Zachary Reese". Without
@@ -196,6 +209,16 @@ stats_df['BOUT'] = stats_df['BOUT'].str.strip()
 stats_df['FIGHTER'] = stats_df['FIGHTER'].str.strip().map(normalize_name)
 
 prospect_fallbacks = load_prospect_fallbacks()
+
+# Required like the other four: without it every debutant ships with no age,
+# height or reach, which is the defect this input exists to close.
+if not os.path.isfile(TOTT_PATH):
+    raise FileNotFoundError(
+        f"Required profile input is missing: {TOTT_PATH}. "
+        "New fighters would be seeded without age/height/reach.")
+tott_profiles, tott_ambiguous = read_tott_csv(TOTT_PATH, NAME_ALIASES)
+print(f"  Tale of the tape: {len(tott_profiles)} fighters, "
+      f"{len(tott_ambiguous)} ambiguous names skipped")
 
 event_dates = dict(zip(events_df['EVENT'].str.strip(), events_df['DATE'].apply(parse_date)))
 results_df['EVENT'] = results_df['EVENT'].str.strip()
@@ -417,9 +440,27 @@ def compute_opponent_stats(name):
     sdef = round2(1 - opp_sig_landed / opp_sig_attempted) if opp_sig_attempted > 0 else None
     return sapm, sdef
 
+def compute_td_defense(name):
+    rows = stats_by_fighter.get(name, [])
+    opp_td_landed = 0
+    opp_td_attempted = 0
+    for r in rows:
+        key = (r['event'], r['bout'], r['round_num'])
+        for opp_name, opp_row in stats_by_bout.get(key, []):
+            if opp_name != name:
+                opp_td_landed += opp_row['td_landed']
+                opp_td_attempted += opp_row['td_attempted']
+    return td_defense(opp_td_landed, opp_td_attempted)
+
 def build_new_fighter_entry(name, record, fights):
     rows = stats_by_fighter.get(name, [])
-    fallback = prospect_fallbacks.get(name, {})
+    # prospectsData.js first (curated), then the tale of the tape for whatever
+    # the prospect file leaves empty.
+    fallback = dict(prospect_fallbacks.get(name, {}))
+    tott = profile_values(tott_profiles.get(name), None, TODAY)
+    for _k in ('ag', 'ht', 'rh', 'st'):
+        if is_empty(fallback.get(_k)) and tott[_k] is not None:
+            fallback[_k] = tott[_k]
     total_duration = sum(r['round_secs'] for r in rows)
     total_sig_landed = sum(r['sig_landed'] for r in rows)
     total_sig_attempted = sum(r['sig_attempted'] for r in rows)
@@ -461,7 +502,7 @@ def build_new_fighter_entry(name, record, fights):
         f"wi:{record['wi']},lo:{record['lo']},ws:{record['ws']},ls:{record['ls']},"
         f"tr:{compute_total_rounds(fights)},tb:{sum(1 for f in fights if 'title' in (f.get('wc') or '').lower() or 'title' in (f.get('event') or '').lower())},"
         f"kow:{record['kow']},sbw:{record['sbw']},dcw:{record['dcw']},"
-        f"asl:{fmt(asl)},asp:{fmt(asp)},asa:{fmt(asa)},atl:{fmt(atl)},atp:{fmt(atp)},"
+        f"asl:{fmt(asl)},asp:{fmt(asp)},asa:{fmt(asa)},atl:{fmt(atl)},atp:{fmt(atp)},atd:{fmt(compute_td_defense(name))},"
         f"kd:{fmt(kd_val)},sapm:{fmt(sapm_val)},sdef:{fmt(sdef_val)},ctrl:{fmt(ctrl_val)},hdpct:{fmt(hdpct_val)},lgpct:{fmt(lgpct_val)},"
         f"elo:null,crd:1.0,"
         f"lfd:{fmt(record['lfd'])},dsl:{fmt(record['dsl'])},"
@@ -576,6 +617,28 @@ for name, entry_str in existing.items():
         existing[name] = entry_str
     new_lines.append(f"  {entry_str}")
 
+# ─── Profile backfill (empty fields only) ─────────────────────────────────────
+# Runs over the patched rows, before new fighters are appended. fill_updates
+# never returns a field whose stored value is non-empty; the gate below
+# re-checks that against the pristine parse.
+profile_fills = {}
+for i, (name, entry_str) in enumerate(existing.items()):
+    current = {k: f.value for k, f in parse_object_fields(entry_str).items()}
+    atd_candidate = compute_td_defense(name) if is_empty(current.get('atd')) else None
+    fills = fill_updates(current, tott_profiles.get(name), atd_candidate, TODAY)
+    if not fills:
+        continue
+    for field in fills:
+        if field not in current:
+            entry_str = append_object_field(entry_str, field, 'null')
+    entry_str = patch_object_fields(entry_str, {k: fmt(v) for k, v in fills.items()})
+    existing[name] = entry_str
+    new_lines[i] = f"  {entry_str}"
+    profile_fills[name] = fills
+_fill_counts = Counter(f for fills in profile_fills.values() for f in fills)
+print(f"  Profile backfill: {len(profile_fills)} fighters, "
+      + ', '.join(f"{k}={_fill_counts[k]}" for k in PROFILE_FILL_FIELDS))
+
 new_count = 0
 seeded_names = []
 for name, record in sorted(record_updates.items()):
@@ -613,12 +676,16 @@ for _name, _patched in existing.items():
     _before = pristine_entries[_name].fields
     _after = parse_object_fields(_patched)
     _expected_keys = list(_before) + [f for f in _NEW_FIELDS if f not in _before]
+    _expected_keys += [f for f in PROFILE_FILL_FIELDS
+                       if f not in _expected_keys and f in profile_fills.get(_name, {})]
     if list(_after) != _expected_keys:
         raise JsParseError(
             f'{_name!r}: field set changed from {list(_before)} to {list(_after)}')
     for _key, _field in _before.items():
         if _key in PATCHED_FIELDS:
             continue
+        if _key in PROFILE_FILL_FIELDS and is_empty(_field.value):
+            continue  # empty -> filled is the one move a profile field may make
         if _after[_key].raw != _field.raw:
             raise JsParseError(
                 f'{_name!r}: untouched field {_key} moved '
@@ -643,6 +710,13 @@ with open(JS_PATH, 'w') as f:
     f.write(new_js)
 print(f"  Patched {len(new_lines)} fighters")
 print(f"  Added {new_count} new UFC fighters")
+
+# The tott join for roster names. Committed alongside the roster so the
+# birth-date generator can read it on any machine without the Greco CSV.
+with open(PROFILES_PATH, 'w') as f:
+    f.write(profiles_artifact(tott_profiles, _written.names))
+print(f"  Wrote {PROFILES_PATH} "
+      f"({sum(1 for n in _written.names if n in tott_profiles)} roster fighters)")
 
 # ─── Rebuild fightHistory.js from source CSVs ─────────────────────────────────
 print("\nRebuilding fightHistory.js from source CSVs...")
