@@ -976,7 +976,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Unknown",
+      "wc": "Welterweight",
       "tb": false,
       "ev": "UFC 332: Silva vs. Wang"
     }
@@ -1577,7 +1577,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "4:58",
-      "wc": "Unknown",
+      "wc": "Featherweight",
       "tb": false,
       "ev": "UFC 332: Silva vs. Wang"
     }
@@ -1614,7 +1614,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "0:23",
-      "wc": "Unknown",
+      "wc": "Heavyweight",
       "tb": false,
       "ev": "UFC 332: Silva vs. Wang"
     }
@@ -1930,7 +1930,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "1:32",
-      "wc": "Unknown",
+      "wc": "Welterweight",
       "tb": false,
       "ev": "UFC 332: Silva vs. Wang"
     }
@@ -29785,7 +29785,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 2,
       "ti": "1:40",
-      "wc": "Heavyweight",
+      "wc": "Light Heavyweight",
       "tb": false,
       "ev": "UFC Fight Night: Du Plessis vs. Usman"
     },
@@ -29796,7 +29796,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Heavyweight",
+      "wc": "Light Heavyweight",
       "tb": false,
       "ev": "UFC Fight Night: Evloev vs. Murphy"
     }
@@ -40987,7 +40987,7 @@ export const FIGHT_HISTORY = {
       "me": "Submission",
       "rn": 2,
       "ti": "4:08",
-      "wc": "Featherweight",
+      "wc": "Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Allen vs. Costa"
     },
@@ -40998,7 +40998,7 @@ export const FIGHT_HISTORY = {
       "me": "Decision - Unanimous",
       "rn": 3,
       "ti": "5:00",
-      "wc": "Featherweight",
+      "wc": "Bantamweight",
       "tb": false,
       "ev": "UFC 322: Della Maddalena vs. Makhachev"
     },
@@ -41009,7 +41009,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "2:37",
-      "wc": "Featherweight",
+      "wc": "Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Usman vs. Buckley"
     },
@@ -41020,7 +41020,7 @@ export const FIGHT_HISTORY = {
       "me": "KO/TKO",
       "rn": 1,
       "ti": "1:59",
-      "wc": "Featherweight",
+      "wc": "Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Machado Garry vs. Prates"
     }
