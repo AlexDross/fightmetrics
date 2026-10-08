@@ -270,8 +270,38 @@ Writing a clean card needs no extra confirmation. Stop and ask instead if:
 - the run had anything unresolved — a name you had to guess at, a bout you could
   not confirm was still on, a fight entered with no odds.
 
-Then report the count, the event, anything dropped, and any BET / STRONG BET
-signals the gate produced, with the live URL.
+Then report the count, the event, anything dropped, and the v3 tiers the gate
+produced (see "The v3 bet gate" below), with the live URL.
+
+## The v3 bet gate (frozen since 2026-10-05)
+
+Every C6-driven entry is graded by the v3 gate (`src/domain/betting/gateV3.js`).
+It is a frozen experiment: never change its thresholds, and never re-enter
+or regrade earlier cards to apply it.
+
+- **BET**: C6 picks the market underdog (lower no-vig %), EV >= 2%, price +200
+  or shorter. This is the only tier that can become a real bet.
+- **LEAN**: C6 picks the favourite with EV >= 2%, price -400 or longer. LEANs
+  are common (often half a card): when v2 agrees with the favourite, C6 rates
+  it above the market.
+- **NO BET**: everything else; each entry stores the reason in `gateReason`.
+  There is no STRONG BET tier under v3.
+
+Report tiers directly, as the app shows them: BET, LEAN, NO BET, with the
+fighter and price. No qualifiers such as "paper", "tracked" or "hypothetical".
+List the BET(s) on their own line. A BET near +100 can flip to NO BET at a
+slightly worse sportsbook price; say so in one line and point to the
+fight-day check.
+
+After saving, verify every entry counts in the experiment -- this must print
+`0`:
+
+```bash
+node scripts/fm-store.mjs export | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{const u=JSON.parse(s).upcoming.filter(e=>e.eventName===process.argv[1]);console.log(u.filter(e=>e.gateVersion!=="c6_dog_v3"||e._provenance?.captureMode!=="live"||e.decisionProbabilitySource!=="c6").length)})' "<eventName>"
+```
+
+A non-zero count means C6 was off, odds were missing, or the event date was in
+the past (saved as reconstructed). Fix it before reporting.
 
 ## Card file format
 
@@ -311,15 +341,26 @@ signals the gate produced, with the live URL.
   means unverified, not "no"** — the app distinguishes the two deliberately. Fill
   in what you verified and leave the rest null.
 - `provenance` is required as soon as any of those three is set. See above.
-- `unitsWagered` is optional and defaults to 1, matching the Simulator. The user
-  sets real stakes in the Upcoming tab.
+- `unitsWagered` is optional, but v3 entries always save it as 1 for the
+  app's internal record. Real bets are recorded per BET on fight day with the
+  Upcoming card's **Fight-day check** (current odds -> the gate reruns ->
+  record the accepted price and stake, or a skip). Never tell the user to set
+  stakes in the Upcoming tab.
 - Odds may be omitted entirely; the entry saves with no market, which means no
   bet signal and no EV/Kelly. Warn rather than silently doing this.
 
 ## Notes
 
-- Both scripts are local-only and not on `origin/main`. If either is missing,
-  say so rather than hand-editing the data file.
+- Both scripts are tracked in the repo (`scripts/enter_upcoming.mjs`,
+  `scripts/fm-store.mjs`). If either is ever missing, say so rather than
+  hand-editing the data file.
+- **Cancellations and replacements after entry.** If a bout is cancelled before
+  the event, delete that entry in the app (never grade it). If a replacement
+  opponent is announced, enter the new pairing before the fight starts, so its
+  price is captured before the result: a fight entered after it happens saves
+  as `reconstructed` and does not count in the v3 experiment.
+- The bundled `src/upcomingData.js` does not need refreshing or committing after
+  a card is entered: the nightly snapshot job does it.
 - `enter_upcoming.mjs` saves with `modelToggle: 'v2'`, the Simulator's default.
   That is correct even though C6 drives the decision: `modelUsed` records the
   base model ('v2') and `decisionProbabilitySource` records what actually drove
