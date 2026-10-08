@@ -103,7 +103,8 @@ if (process.argv.includes('--no-c6')) {
 const { FIGHTERS } = await import('../src/domain/fighters/index.js');
 const { buildRoiEntry, americanOdds } = await import('../src/domain/betting/index.js');
 const { addPendingEntry, pendingMatchupKey } = await import('../src/domain/workflow/index.js');
-const { validateBoutContext } = await import('../src/domain/boutContext/index.js');
+const { validateBoutContext, fightersOutsideRosterDivision } = await import('../src/domain/boutContext/index.js');
+const { resolveFighterAge } = await import('../src/domain/age/index.js');
 const { isC6UserFacingActive } = await import('../src/domain/shadow/config.js');
 const { openStore } = await import('./lib/documentStore.mjs');
 
@@ -161,6 +162,35 @@ function lookupFighter(name) {
     .map((f) => f.FIGHTER)
     .slice(0, 8);
   return { fighter: null, how: 'missing', candidates };
+}
+
+// ── Profile completeness ────────────────────────────────────────────────────
+// Warnings, never errors: a thin profile is still enterable, but the model
+// quietly substitutes placeholders for what is missing, and the person entering
+// the card should see that before it ships. Each check mirrors what v2 does:
+//   - age: resolveFighterAge at the event date (DOB first, stored AGE second);
+//     if EITHER corner is unknown the `younger` feature is zeroed for the bout.
+//   - height/reach: null becomes 69" / 70" (src/domain/model/index.js featsV2).
+//   - career minutes: sampleBlend weights a fighter's own rates by min/75 and
+//     the division mean by the rest. Below 30 min (<40% own) the stats are
+//     mostly the division mean, so only that is flagged -- 30-75 min is just a
+//     newer fighter and would fire on half of every card.
+// Roster vs bout division does not move v2/C6 (normalization follows the bout
+// division) but it is the profile's division everywhere else, so it is flagged.
+const SAMPLE_FULL_TRUST_MIN = 75;
+const THIN_SAMPLE_WARN_MIN = 30;
+
+function profileWarnings(fighter, eventDate) {
+  const gaps = [];
+  if (resolveFighterAge(fighter, eventDate) == null) gaps.push('age unknown (younger feature zeroed for this bout)');
+  if (fighter.HEIGHT_IN == null) gaps.push('height missing (model uses 69")');
+  if (fighter.REACH_IN == null) gaps.push('reach missing (model uses 70")');
+  const mins = fighter.TOTAL_MIN ?? 0;
+  if (mins < THIN_SAMPLE_WARN_MIN) {
+    const trust = Math.round((mins / SAMPLE_FULL_TRUST_MIN) * 100);
+    gaps.push(`${mins.toFixed(1)} career min (stats ${trust}% own, ${100 - trust}% division mean)`);
+  }
+  return gaps;
 }
 
 // ── Odds ────────────────────────────────────────────────────────────────────
@@ -276,6 +306,14 @@ function buildCard(cardPath) {
     if (seen.has(key)) { warnings.push(`${at}: already pending in Upcoming -- skipped`); return; }
     if (roiKeys.has(key)) { warnings.push(`${at}: this matchup is already graded in ROI -- skipped`); return; }
     seen.add(key);
+
+    for (const f of [a.fighter, b.fighter]) {
+      const gaps = profileWarnings(f, eventDate);
+      if (gaps.length) warnings.push(`${at}: ${f.FIGHTER} thin profile -- ${gaps.join('; ')}`);
+    }
+    for (const f of fightersOutsideRosterDivision(boutContext, a.fighter, b.fighter)) {
+      warnings.push(`${at}: ${f.FIGHTER} roster division is ${f.WEIGHT_CLASS}, bout is ${boutContext.division}`);
+    }
 
     // The Simulator's exact save call. modelToggle 'v2' is the UI default.
     const entry = buildRoiEntry({
