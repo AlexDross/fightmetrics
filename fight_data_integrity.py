@@ -140,3 +140,30 @@ def canonicalize_aggregate_inputs(results_df, details_df, stats_df, alias_map):
         'details': detail_summary,
         'stats': stats_summary,
     }
+
+
+# Divisions a bout's WEIGHTCLASS can name, longest first so "Light Heavyweight"
+# and "Women's Flyweight" win over the "Heavyweight"/"Flyweight" inside them.
+BOUT_DIVISIONS = tuple(sorted((
+    'Flyweight', 'Bantamweight', 'Featherweight', 'Lightweight', 'Welterweight',
+    'Middleweight', 'Light Heavyweight', 'Heavyweight', 'Super Heavyweight',
+    "Women's Strawweight", "Women's Flyweight", "Women's Bantamweight",
+    "Women's Featherweight", 'Catch Weight', 'Open Weight',
+), key=len, reverse=True))
+
+
+def bout_division(weightclass):
+    """The division a single bout was fought at, from ufc_fight_results.csv.
+
+    "UFC Light Heavyweight Title Bout" -> "Light Heavyweight",
+    "Ultimate Fighter 19 Middleweight Tournament" -> "Middleweight".
+    None when the label names no division ("UFC 2 Tournament",
+    "Superfight Championship"); the caller keeps its own fallback then.
+    Title words are never part of the result, so a caller deriving title
+    status from this label sees exactly what it saw from a division name.
+    """
+    text = ' '.join(str(weightclass or '').split()).lower()
+    for division in BOUT_DIVISIONS:
+        if division.lower() in text:
+            return division
+    return None
