@@ -155,15 +155,15 @@ describe('(2b) the component and its plumbing are gone file-wide, not just unren
     expect(APP).not.toContain('buildExportedCode');
   });
 
-  it('drops no other export button on the way out', () => {
-    // Props and parlays have their own ungated exporters; they never depended
-    // on the provenance component and must survive.
-    expect(APP).toContain('buildPropsExportedCode');
-    expect(APP).toContain('buildParlayExportedCode');
-    expect(UPCOMING).toContain('Copy Updated propPicksData.js');
-    expect(UPCOMING).toContain('Copy Updated parlayData.js');
-    expect(ROI).toContain('Copy Updated propPicksData.js');
-    expect(ROI).toContain('Copy Updated parlayData.js');
+  it('has no props/parlays "Copy Updated ...Data.js" controls either', () => {
+    // These were the same kind of hand-regeneration tool for committed data
+    // files, so they went too (2026-10-08).
+    expect(APP).not.toContain('buildPropsExportedCode');
+    expect(APP).not.toContain('buildParlayExportedCode');
+    expect(UPCOMING).not.toContain('Copy Updated propPicksData.js');
+    expect(UPCOMING).not.toContain('Copy Updated parlayData.js');
+    expect(ROI).not.toContain('Copy Updated propPicksData.js');
+    expect(ROI).not.toContain('Copy Updated parlayData.js');
   });
 });
 
