@@ -1,8 +1,8 @@
 # Step 1 replay evidence: pinned feed, baseline vs candidate
 
-Re-run on 2026-10-09 after the second Codex review repairs (earlier runs, on
-`d8367ca` and `c28063f`, are superseded; the `c28063f` run gave the same
-result in every compared field).
+Re-run on 2026-10-09 after the third Codex review repairs (earlier runs, on
+`d8367ca`, `c28063f` and `7417e31`, are superseded; the `c28063f` and
+`7417e31` runs gave the same result in every compared field).
 
 Produced by `scripts/integrity/replay_pinned_feed.py` (full output:
 [`replay_evidence.json`](replay_evidence.json)). Re-run with:
@@ -18,7 +18,7 @@ python scripts/integrity/replay_pinned_feed.py --feed-dir /tmp/greco \
 |---|---|
 | Feed | Greco1899/scrape_ufc_stats @ `1ccacc5cd4f642bd2deb8b278405a0205791bfa3` |
 | Baseline | `a2e83a816015abcbe0cfdb13dd9e3908de46f676` (main when Step 1 started) |
-| Candidate | `7417e31e5141c31e7749ad5104c5cc2366dd1687` (Step 1 after the second Codex review repairs: verifier contract and publish leftover refusal; commits after it touch only this README and `replay_evidence.json`) |
+| Candidate | `34f54cf2be2d698a10da66089bdec60875837de6` (Step 1 after the third Codex review repairs: recovery from a verified commit; commits after it touch only this README and `replay_evidence.json`) |
 | Clock | 2026-10-08. Candidate via `FM_TODAY`; the baseline's `date.today()` and both sides' regen_elo / manifest clock reads rewritten in the temporary worktrees (listed under `clockPins`) |
 | Pipeline | `update_fighters.py` → `regen_elo.py` → `generate-fighter-birthdates.mjs` → `generate_source_manifest.py`, as in the scheduled workflow |
 | Verdict | **PASS** |
