@@ -17,7 +17,7 @@
 // measured coverage is the freshness signal there instead.
 
 export const SOURCE_MANIFEST = {
-  "manifestGeneratedAt": "2026-10-08T20:22:15Z",
+  "manifestGeneratedAt": "2026-10-09T16:04:40Z",
   "generatorScript": "generate_source_manifest.py",
   "lastGenerationScope": "full",
   "methodologyRef": "research/source_integrity_audit.md",
@@ -49,7 +49,7 @@ export const SOURCE_MANIFEST = {
         "ufc_fight_details.csv",
         "ufc_fight_stats.csv"
       ],
-      "generatorVersion": "update_fighters.py @ dda9ad618dc417fd5622f5584105e85f4d26ad2a",
+      "generatorVersion": "update_fighters.py @ 2f26e0022be5608a43aedd0863d64c1575aa4641",
       "verificationMethod": "Parsed DATE column of ufc_event_details.csv directly (791 rows); maximum event date found = 2026-10-03. Cross-checked ufc_fight_results.csv, ufc_fight_details.csv, ufc_fight_stats.csv for window-period event names: FOUND (see manual audit). This value is NOT derived from any file mtime, git commit date, or in-file header comment -- see research/source_integrity_audit.md for the original manual methodology this script automates."
     },
     "fightersDataAggregates": {
@@ -82,7 +82,7 @@ export const SOURCE_MANIFEST = {
         "ufc_fight_details.csv",
         "ufc_fight_stats.csv"
       ],
-      "generatorVersion": "update_fighters.py @ dda9ad618dc417fd5622f5584105e85f4d26ad2a",
+      "generatorVersion": "update_fighters.py @ 2f26e0022be5608a43aedd0863d64c1575aa4641",
       "verificationMethod": "Parsed DATE column of ufc_event_details.csv directly (791 rows); maximum event date found = 2026-10-03. Cross-checked ufc_fight_results.csv, ufc_fight_details.csv, ufc_fight_stats.csv for window-period event names: FOUND (see manual audit). This value is NOT derived from any file mtime, git commit date, or in-file header comment -- see research/source_integrity_audit.md for the original manual methodology this script automates."
     },
     "elo": {
