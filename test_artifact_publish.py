@@ -119,5 +119,61 @@ class Publish(unittest.TestCase):
         self.assertEqual(snapshot(self.dir), before)
 
 
+    def test_interrupt_after_a_completed_replacement_rolls_it_back(self):
+        # Codex finding 6: the real os.replace runs, then the interrupt lands.
+        for present in (NAMES, NAMES[:2]):           # all existing / two new targets
+            for position in range(1, len(NAMES) + 1):
+                with self.subTest(present=len(present), position=position):
+                    for p in self.dir.iterdir():
+                        p.unlink()
+                    self.seed(present)
+                    before = snapshot(self.dir)
+                    calls = [0]
+
+                    def replace_then_interrupt(src, dst):
+                        calls[0] += 1
+                        os.replace(src, dst)
+                        if calls[0] == position:
+                            raise KeyboardInterrupt()
+
+                    ap._replace = replace_then_interrupt
+                    with self.assertRaises(ap.PublishError) as caught:
+                        ap.publish_artifacts(self.outputs('new'))
+                    self.assertIn('previous artifacts restored', str(caught.exception))
+                    self.assertEqual(snapshot(self.dir), before)
+
+    def test_failed_restore_after_a_completed_replacement_keeps_every_rollback_copy(self):
+        self.seed()
+        calls = [0]
+
+        def replace_then_fail(src, dst):
+            calls[0] += 1
+            os.replace(src, dst)
+            if calls[0] == 2:
+                raise OSError('failed after replacing (injected)')
+
+        real_replace = os.replace
+
+        def broken_restore(src, dst):
+            if str(src).endswith(ap.ROLLBACK_SUFFIX) and Path(dst).name == 'b.js':
+                raise OSError('restore failed (injected)')
+            return real_replace(src, dst)
+
+        ap._replace = replace_then_fail
+        ap.os.replace = broken_restore
+        try:
+            with self.assertRaises(ap.PublishError) as caught:
+                ap.publish_artifacts(self.outputs('new'))
+        finally:
+            ap.os.replace = real_replace
+        self.assertIn('ROLLBACK INCOMPLETE', str(caught.exception))
+        self.assertIn('b.js', str(caught.exception))
+        # b.js holds the new content, and its old content survives as recovery material.
+        self.assertEqual((self.dir / 'b.js').read_text(), 'new:b.js\n')
+        self.assertEqual((self.dir / ('b.js' + ap.ROLLBACK_SUFFIX)).read_text(), 'old:b.js\n')
+        self.assertEqual((self.dir / 'a.js').read_text(), 'old:a.js\n')
+        for name in ('c.json', 'generation.json'):     # never replaced: untouched
+            self.assertEqual((self.dir / name).read_text(), f'old:{name}\n')
+
 if __name__ == '__main__':
     unittest.main(verbosity=2)

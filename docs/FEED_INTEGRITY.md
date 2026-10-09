@@ -14,6 +14,14 @@ commit SHA and the SHA-256, size and record count of each of the five CSVs.
 pinned hash, so every artifact can name the revision it was built from. Record
 counts are informational only; section 3 decides whether fights were lost.
 
+Every input must also have exactly the reviewed header
+(`feed_validation.INPUT_SCHEMA`, column order included). A new, missing or
+reordered column fails the run before anything is computed: a column the
+updater would read but the ledger does not cover (for example a `WEIGHTCLASS`
+added to `ufc_fight_details.csv`) could otherwise change generated history
+while every ledger row stayed the same. Accepting a new column is a reviewed
+code change to `INPUT_SCHEMA`, and to `build_ledger` if the updater reads it.
+
 To rebuild from a specific upstream revision (for example the one a correction
 was reviewed against), run the workflow by hand with the `greco_revision` input.
 
@@ -27,12 +35,14 @@ completed fight must have:
 | Identity | a `fight-details/<16 hex>` URL; no id used twice |
 | Date | resolved (directly, by reviewed override, or by alias); not after today |
 | Outcome | one of `W/L`, `L/W`, `D/D`, `NC/NC` |
-| Round | 1 to 5 |
-| Clock | `M:SS` with seconds 00–59; at most 5:00 from UFC 21 (1999-07-16) on |
+| Round | 1 to 5, and not after the last period of the scheduled `TIME FORMAT` |
+| Clock | `M:SS` with seconds 00–59; within the scheduled length of the period it ended in; at most 5:00 from UFC 21 (1999-07-16) on |
+| Format | `N Rnd (m-m-…)` or `N Rnd + [k]OT (m-…)` listing every period, or `No Time Limit` (one unbounded period); anything else is refused as unsupported |
+| Identity | the two corners differ after `name_aliases.json` |
 | Round stats | exactly one row per fighter per round 1..ROUND, no strangers |
 | Stat cells | `N of M` with N ≤ M; KD/SUB.ATT/REV. whole numbers |
 | Stat sums | HEAD+BODY+LEG = DISTANCE+CLINCH+GROUND = SIG landed; SIG ≤ TOTAL |
-| Control time | `M:SS`, never longer than the round |
+| Control time | `M:SS`, never longer than the round (or its scheduled period) |
 | Labels | no EVENT+BOUT label shared by two fights |
 | Orphans | no round stats without a completed result |
 
@@ -48,9 +58,9 @@ revision `1ccacc5` all of them are pre-2000 records:
 
 | Category | Fights | Waives |
 |---|---|---|
-| `statsUnavailable` | 21 | coverage and cell checks (placeholder `--` rows only) |
-| `duplicateStatRows` | 2 | repeated (round, fighter) rows |
-| `controlTimeUnavailable` | 181 | CTRL recorded as `--` or blank |
+| `statsUnavailable` | 21 | round coverage, only while every stat row is an empty placeholder; a row with any content is validated in full |
+| `duplicateStatRows` | 2 | repeated (round, fighter) rows, only on a shared rematch label and never more copies than fights sharing it |
+| `controlTimeUnavailable` | 181 | a CTRL of exactly `--` or blank; a malformed clock is still invalid |
 | `sameCardRematch` | 2 | one EVENT+BOUT label shared by the two fights |
 
 Ids no longer needed are reported on each run for removal.
@@ -63,7 +73,8 @@ Ids no longer needed are reported on each run for removal.
 |---|---|---|
 | `event` | event name | **protected** |
 | `date` | ISO event date | **protected** |
-| `bout` | `Fighter A vs. Fighter B` (aliases applied) | **protected** |
+| `bout` | `Fighter A vs. Fighter B` as the feed wrote it | **protected** |
+| `fighters` | the same with `name_aliases.json` applied: the identities history and records are filed under | **protected** |
 | `outcome` | `W/L`, `L/W`, `D/D`, `NC/NC` | **protected** |
 | `detail` | SHA-256 of METHOD, ROUND, TIME, TIME FORMAT, WEIGHTCLASS | reported |
 | `stats` | SHA-256 of the fight's round rows, sorted, over ROUND, FIGHTER, KD, SIG.STR., SIG.STR. %, TOTAL STR., TD, TD %, SUB.ATT, REV., CTRL, HEAD, BODY, LEG, DISTANCE, CLINCH, GROUND | reported |
@@ -72,7 +83,9 @@ Each refresh compares the new feed with the committed ledger fight by fight:
 
 * **A fight that disappears** is refused, even when the total number of fights
   grows.
-* **A change to a protected column** is refused.
+* **A change to a protected column** is refused. That includes an edit to
+  `name_aliases.json` that files an existing fight under another identity,
+  or merges two fighters into one, even though the feed itself did not move.
 * Either is accepted only by an entry in `upstream_corrections.json` that names
   the fight id, the change (`removed` or `modified`), the exact upstream
   revision, and the exact old and new protected values:
@@ -84,8 +97,8 @@ Each refresh compares the new feed with the committed ledger fight by fight:
         "fightId": "514366f770553cc9",
         "change": "modified",
         "upstreamRevision": "<full 40-character Greco commit>",
-        "old": {"event": "...", "date": "...", "bout": "...", "outcome": "L/W"},
-        "new": {"event": "...", "date": "...", "bout": "...", "outcome": "W/L"},
+        "old": {"event": "...", "date": "...", "bout": "...", "fighters": "...", "outcome": "L/W"},
+        "new": {"event": "...", "date": "...", "bout": "...", "fighters": "...", "outcome": "W/L"},
         "reviewedBy": "...",
         "evidence": "link to the ufcstats page or commission record"
       }
@@ -98,7 +111,15 @@ Each refresh compares the new feed with the committed ledger fight by fight:
   describes. A correction at the current revision that matches nothing is
   itself an error, so an entry cannot be stretched to cover a different or
   later change. `"new": null` is used for `removed`.
-* **Statistic and detail changes** (the two hashes) are accepted and printed
+* **Reruns.** When the published ledger is already at the same revision and
+  already holds a correction's `new` state (or no longer holds a removed
+  fight), the correction is reported as already applied, so re-running a
+  reviewed refresh succeeds. A correction at that revision for a fight in any
+  other state still fails.
+* **Statistic and detail changes** (the two hashes) are detected
+  independently of protected changes: a fight whose outcome and statistics
+  both moved is in both lists, and counts toward the bulk alarm. They are
+  accepted and printed
   as `statistics changed upstream: <id>` in the run log; the ledger diff in the
   bot commit is the durable record. ufcstats does correct round statistics
   after events and the app should take those corrections.
@@ -120,15 +141,22 @@ review it, add the entry by hand in a PR, then re-run the workflow with
 3. Each existing target is copied to `<file>.rollback`.
 4. Targets are replaced one at a time (`os.replace`, atomic per file), with
    `artifact_generation.json` last.
-5. If a replacement fails, every replaced target is restored, and a target
-   that did not exist before is deleted. The error says whether the rollback
-   completed.
+5. If a replacement fails, or an exception (including an interrupt) arrives
+   after a replacement completed, every target whose replacement was
+   attempted is restored, and a target that did not exist before is deleted.
+   The error says whether the rollback completed; if any restore fails, every
+   `.rollback` copy is kept for a manual restore.
 
 This is not a filesystem transaction. A process kill or power loss between two
 replacements, or during the rollback, can leave files from two generations on
 disk. That state is detected, not prevented:
 `artifact_generation.json` records the SHA-256 of every other output, and
-`scripts/verify_artifact_set.py` fails on any file that does not match it, on
+`scripts/verify_artifact_set.py` first checks a fixed contract (the four
+updater outputs, the eight manifest modules with their files and hashes, the
+snapshot's five pinned inputs, and the provenance of the three Greco-backed
+modules), so deleting a file together with its metadata entry still fails. It
+then fails on any file that does not match its recorded hash, on any module
+input hash that is not the snapshot's, on
 any manifest `contentHash` mismatch, on any disagreement about the upstream
 revision between the snapshot, ledger, generation record and manifest, and on
 leftover `.staged`/`.rollback` files. It runs:

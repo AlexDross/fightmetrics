@@ -27,6 +27,8 @@ import tempfile
 import unittest
 from pathlib import Path
 
+import feed_validation as fv
+
 ROOT = Path(__file__).resolve().parent
 FEED = ROOT / 'tests' / 'fixtures' / 'updater_feed'
 TODAY = '2026-10-08'
@@ -177,9 +179,30 @@ class UpdaterGates(unittest.TestCase):
     def outcome_change(self, ws):
         ws.edit('ufc_fight_results.csv',
                 lambda h, r: set_cell(h, r, FIGUEIREDO_TALBOTT, 'OUTCOME', 'W/L'))
-        old = dict(zip(('event', 'date', 'bout', 'outcome'),
-                       ws.ledger()['fights'][FIGUEIREDO_TALBOTT][:4]))
+        old = self.protected(ws, FIGUEIREDO_TALBOTT)
         return old, dict(old, outcome='W/L')
+
+    @staticmethod
+    def protected(ws, fid):
+        ledger = ws.ledger()
+        columns = ledger['columns'][:len(fv.PROTECTED_COLUMNS)]
+        assert tuple(columns) == fv.PROTECTED_COLUMNS
+        return dict(zip(columns, ledger['fights'][fid]))
+
+    @staticmethod
+    def modified(fid, old, new, revision=REV_B):
+        return {'fightId': fid, 'change': 'modified', 'upstreamRevision': revision,
+                'old': old, 'new': new}
+
+    def aliases(self, ws, extra):
+        path = ws.path / 'name_aliases.json'
+        path.write_text(json.dumps({**json.loads(path.read_text()), **extra}, indent=2))
+
+    def exceptions(self, ws, category, fids, span=('2026-01-01', '2026-12-31')):
+        path = ws.path / 'feed_exceptions.json'
+        data = json.loads(path.read_text())
+        data['exceptions'][category] = {'reason': 'test', 'dateRange': list(span), 'fightIds': fids}
+        path.write_text(json.dumps(data))
 
     # ── refusals ─────────────────────────────────────────────────────────────
     def test_duplicate_stat_row(self):
@@ -302,6 +325,129 @@ class UpdaterGates(unittest.TestCase):
                 lambda h, r: set_cell(h, r, SILVA_WANG, 'REFEREE', 'Someone Else'))
         self.assertRefused(ws, 'is not the input pinned', pin=None)
 
+    # ── Codex finding 1: effective fighter identity ─────────────────────────
+    def test_alias_reassigning_a_fighter_needs_review(self):
+        ws = self.workspace()
+        self.aliases(ws, {'Deiveson Figueiredo': 'Audit Replacement'})
+        output = self.assertRefused(ws, 'protected fields changed without a reviewed correction')
+        self.assertIn("'Audit Replacement vs. Payton Talbott'", output)
+
+    def test_approved_alias_rename_is_published(self):
+        ws = self.workspace()
+        old = self.protected(ws, FIGUEIREDO_TALBOTT)
+        self.aliases(ws, {'Deiveson Figueiredo': 'Deiveson Alcantara Figueiredo'})
+        ws.corrections([self.modified(FIGUEIREDO_TALBOTT, old, dict(
+            old, fighters='Deiveson Alcantara Figueiredo vs. Payton Talbott'))])
+        self.assertAccepted(ws)
+        self.assertEqual(ws.ledger()['fights'][FIGUEIREDO_TALBOTT][3],
+                         'Deiveson Alcantara Figueiredo vs. Payton Talbott')
+        history = (ws.path / 'src/fightHistory.js').read_text()
+        self.assertIn('Deiveson Alcantara Figueiredo', history)
+
+    def test_alias_collapsing_both_corners_is_refused(self):
+        ws = self.workspace()
+        self.aliases(ws, {'Payton Talbott': 'Deiveson Figueiredo'})
+        self.assertRefused(ws, 'same fighter on both sides')
+
+    def test_alias_merging_two_fighters_across_fights_needs_review(self):
+        ws = self.workspace()
+        self.aliases(ws, {'Payton Talbott': 'Natalia Silva'})   # two people, one identity
+        output = self.assertRefused(ws, 'protected fields changed without a reviewed correction')
+        self.assertIn(FIGUEIREDO_TALBOTT, output)
+
+    # ── Codex finding 2: repeatable corrections, independent reporting ──────
+    def test_approved_correction_reruns_at_the_same_revision(self):
+        ws = self.workspace()
+        old, new = self.outcome_change(ws)
+        ws.corrections([self.modified(FIGUEIREDO_TALBOTT, old, new)])
+        self.assertAccepted(ws)
+        first = ws.published()
+        output = self.assertAccepted(ws)
+        self.assertIn(f'correction already applied at this revision (rerun): {FIGUEIREDO_TALBOTT}',
+                      output)
+        self.assertEqual(ws.published(), first)
+
+    def test_approved_removal_reruns_at_the_same_revision(self):
+        ws = self.workspace()
+        old = self.protected(ws, FIGUEIREDO_TALBOTT)
+        bout = 'Deiveson Figueiredo vs. Payton Talbott'
+        ws.edit('ufc_fight_results.csv',
+                lambda h, r: [x for x in r if not x[h.index('URL')].endswith(FIGUEIREDO_TALBOTT)])
+        ws.edit('ufc_fight_details.csv',
+                lambda h, r: [x for x in r if not x[h.index('URL')].endswith(FIGUEIREDO_TALBOTT)])
+        ws.edit('ufc_fight_stats.csv', lambda h, r: [x for x in r if x[h.index('BOUT')] != bout])
+        ws.corrections([{'fightId': FIGUEIREDO_TALBOTT, 'change': 'removed',
+                         'upstreamRevision': REV_B, 'old': old, 'new': None}])
+        self.assertAccepted(ws)
+        self.assertNotIn(FIGUEIREDO_TALBOTT, ws.ledger()['fights'])
+        first = ws.published()
+        self.assertAccepted(ws)
+        self.assertEqual(ws.published(), first)
+
+    def test_simultaneous_outcome_and_statistic_change_reports_both(self):
+        ws = self.workspace()
+        old, new = self.outcome_change(ws)
+        self.bump_every_fight(ws, only={FIGUEIREDO_TALBOTT})
+        ws.corrections([self.modified(FIGUEIREDO_TALBOTT, old, new)])
+        output = self.assertAccepted(ws)
+        self.assertIn(f'reviewed correction applied: {FIGUEIREDO_TALBOTT}', output)
+        self.assertIn(f'statistics changed upstream: {FIGUEIREDO_TALBOTT}', output)
+
+    # ── Codex finding 3: exceptions cover only the documented condition ─────
+    def test_stats_unavailable_does_not_excuse_real_rows(self):
+        ws = self.workspace()
+        self.exceptions(ws, 'statsUnavailable', [FIGUEIREDO_TALBOTT])
+
+        def corrupt(h, rows):
+            for row in rows:
+                if row[h.index('BOUT')] == 'Deiveson Figueiredo vs. Payton Talbott':
+                    row[h.index('SIG.STR.')] = '999 of 1'
+                    break
+            return rows
+        ws.edit('ufc_fight_stats.csv', corrupt)
+        self.assertRefused(ws, "'999 of 1' lands more than attempted")
+
+    def test_control_time_exception_does_not_excuse_a_malformed_clock(self):
+        ws = self.workspace()
+        self.exceptions(ws, 'controlTimeUnavailable', [FIGUEIREDO_TALBOTT])
+
+        def corrupt(h, rows):
+            for row in rows:
+                if row[h.index('BOUT')] == 'Deiveson Figueiredo vs. Payton Talbott':
+                    row[h.index('CTRL')] = '3:99'
+                    break
+            return rows
+        ws.edit('ufc_fight_stats.csv', corrupt)
+        self.assertRefused(ws, "CTRL='3:99'")
+
+    # ── Codex finding 4: no consumed column outside the ledger ──────────────
+    def test_unreviewed_details_column_is_refused(self):
+        ws = self.workspace()
+
+        def add_weightclass(h, rows):
+            h.append('WEIGHTCLASS')
+            for row in rows:
+                row.append('Heavyweight Title Bout' if row[h.index('URL')].endswith(FIGUEIREDO_TALBOTT)
+                           else '')
+            return rows
+        ws.edit('ufc_fight_details.csv', add_weightclass)
+        self.assertRefused(ws, "ufc_fight_details.csv: header ['EVENT', 'BOUT', 'URL', 'WEIGHTCLASS']")
+
+    def test_reordered_results_columns_are_refused(self):
+        ws = self.workspace()
+        header, rows = ws.csv('ufc_fight_results.csv')
+        order = list(reversed(range(len(header))))
+        write_csv(ws.path / 'ufc_fight_results.csv', [header[i] for i in order],
+                  [[r[i] for i in order] for r in rows])
+        self.assertRefused(ws, 'same columns, different order')
+
+    # ── Codex finding 7: scheduled format ───────────────────────────────────
+    def test_ending_round_after_the_scheduled_format(self):
+        ws = self.workspace()
+        ws.edit('ufc_fight_results.csv',
+                lambda h, r: set_cell(h, r, SILVA_WANG, 'TIME FORMAT', '3 Rnd (5-5-5)'))
+        self.assertRefused(ws, 'round after the scheduled format')
+
     # ── accepted changes ─────────────────────────────────────────────────────
     def test_unchanged_feed_at_a_new_revision_republishes_identical_data(self):
         ws = self.workspace()
@@ -320,7 +466,7 @@ class UpdaterGates(unittest.TestCase):
                          'upstreamRevision': REV_B, 'old': old, 'new': new}])
         before = ws.published()
         self.assertAccepted(ws)
-        self.assertEqual(ws.ledger()['fights'][FIGUEIREDO_TALBOTT][3], 'W/L')
+        self.assertEqual(self.protected(ws, FIGUEIREDO_TALBOTT)['outcome'], 'W/L')
         self.assertNotEqual(ws.published()['src/fightersData.js'], before['src/fightersData.js'])
 
     def test_small_statistic_correction_is_reported_and_published(self):

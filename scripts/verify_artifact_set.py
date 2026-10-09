@@ -6,13 +6,18 @@
 
 Checks
 ------
+0. The mandatory contract (REQUIRED_OUTPUTS, REQUIRED_MODULES, GRECO_MODULES)
+   comes first: every required file, output entry, module, hash and
+   provenance field must exist. Deleting a file together with its metadata
+   entry is a failure, not a smaller set.
 1. artifact_generation.json lists the SHA-256 of every update_fighters.py
    output; each listed file must match. A crash between two file replacements
    (artifact_publish.py) leaves a file from another generation, which fails here.
 2. src/sourceManifest.js lists a contentHash for every tracked data module
    (fight history, roster, Elo, birth dates, cardio, rankings); each must match.
 3. source_snapshot.json, source_ledger.json, artifact_generation.json and every
-   Greco-backed manifest module must name the same upstream revision.
+   Greco-backed manifest module must name the same upstream revision, and each
+   module's recorded input hashes must be the snapshot's.
 4. No *.staged / *.rollback leftovers from an interrupted publish.
 
 --index reads every file from the staged index instead of the working tree and
@@ -27,6 +32,7 @@ stdlib only. Exit 0 = consistent, 1 = not (every problem is listed).
 import argparse
 import hashlib
 import json
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -36,8 +42,33 @@ GENERATION = 'artifact_generation.json'
 SNAPSHOT = 'source_snapshot.json'
 LEDGER = 'source_ledger.json'
 MANIFEST = 'src/sourceManifest.js'
-GRECO_MODULES = ('fightHistory', 'fightersDataAggregates', 'elo')
 LEFTOVER_SUFFIXES = ('.staged', '.rollback')
+
+# ─── The mandatory contract ───────────────────────────────────────────────────
+# Checked BEFORE any hash, so removing a file together with its metadata entry
+# cannot make it optional. Changing these sets is a reviewed code change.
+
+# Every output update_fighters.py publishes besides the generation record.
+REQUIRED_OUTPUTS = ('fighter_profiles.json', 'source_ledger.json',
+                    'src/fightHistory.js', 'src/fightersData.js')
+# Every module the source manifest must describe, with its file.
+REQUIRED_MODULES = {
+    'fightHistory': 'src/fightHistory.js',
+    'fightersDataAggregates': 'src/fightersData.js',
+    'elo': 'src/eloModule.js',
+    'cardio': 'src/cardioModule.js',
+    'rankHistory': 'src/rankHistory.js',
+    'fighterBirthdates': 'src/fighterBirthdates.js',
+    'rankings': 'src/rankingsData.js',
+    'rankingsHistory': 'src/rankingsHistoryData.js',
+}
+# Modules built from the Greco feed: each must carry the pinned snapshot, and
+# its recorded input hashes must be the snapshot's.
+GRECO_MODULES = ('fightHistory', 'fightersDataAggregates', 'elo')
+SNAPSHOT_INPUTS = ('ufc_fight_results.csv', 'ufc_event_details.csv', 'ufc_fight_details.csv',
+                   'ufc_fight_stats.csv', 'ufc_fighter_tott.csv')
+_SHA256 = re.compile(r'[0-9a-f]{64}')
+_REVISION = re.compile(r'[0-9a-f]{40}')
 
 
 class Reader:
@@ -68,67 +99,134 @@ def verify(root=ROOT, index=False):
     problems = []
     checked = {}
 
-    def load_json(rel):
+    def read(rel, what='required'):
         raw = reader.bytes(rel)
         if raw is None:
-            problems.append(f'{rel}: missing')
+            problems.append(f'{rel}: missing ({what})'
+                            + (' from the staged index -- not git-added?' if index else ''))
             return None
         checked[rel] = raw
-        return json.loads(raw)
+        return raw
+
+    def load_json(rel):
+        raw = read(rel)
+        if raw is None:
+            return None
+        try:
+            return json.loads(raw)
+        except ValueError as exc:
+            problems.append(f'{rel}: not valid JSON ({exc})')
+            return None
 
     def expect_hash(rel, digest, owner):
-        raw = reader.bytes(rel)
+        raw = read(rel, f'listed by {owner}')
         if raw is None:
-            problems.append(f'{rel}: missing (listed by {owner})')
             return
-        checked[rel] = raw
         actual = hashlib.sha256(raw).hexdigest()
         if actual != digest:
-            problems.append(f'{rel}: sha256 {actual[:12]} is not the {digest[:12]} recorded '
+            problems.append(f'{rel}: sha256 {actual[:12]} is not the {str(digest)[:12]} recorded '
                             f'by {owner} -- mixed generation or unregenerated provenance')
 
     generation = load_json(GENERATION)
     snapshot = load_json(SNAPSHOT)
-    manifest_raw = reader.bytes(MANIFEST)
-    if manifest_raw is None:
-        problems.append(f'{MANIFEST}: missing')
-        manifest = None
-    else:
-        checked[MANIFEST] = manifest_raw
-        manifest = parse_manifest(manifest_raw)
+    ledger = load_json(LEDGER)
+    manifest_raw = read(MANIFEST)
+    manifest = None
+    if manifest_raw is not None:
+        try:
+            manifest = parse_manifest(manifest_raw)
+        except ValueError as exc:
+            problems.append(f'{MANIFEST}: unparseable ({exc})')
 
-    if generation:
-        for rel, digest in sorted(generation.get('outputs', {}).items()):
-            expect_hash(rel, digest, GENERATION)
-    if manifest:
-        for name, module in sorted(manifest.get('modules', {}).items()):
-            if module.get('file') and module.get('contentHash'):
-                expect_hash(module['file'], module['contentHash'], f'{MANIFEST} ({name})')
-
-    revisions = {}
-    if snapshot:
-        revisions[SNAPSHOT] = snapshot.get('revision')
-    if generation:
-        revisions[GENERATION] = generation.get('sourceRevision')
-    ledger_raw = checked.get(LEDGER)
-    if ledger_raw is not None:
-        revisions[LEDGER] = json.loads(ledger_raw).get('revision')
-    if manifest:
+    # 1. Contract: required entries exist and are well-formed.
+    snap_files = {}
+    if snapshot is not None:
+        if not _REVISION.fullmatch(str(snapshot.get('revision', ''))):
+            problems.append(f'{SNAPSHOT}: revision is not a full commit SHA')
+        snap_files = snapshot.get('files') or {}
+        for name in SNAPSHOT_INPUTS:
+            if not _SHA256.fullmatch(str((snap_files.get(name) or {}).get('sha256', ''))):
+                problems.append(f'{SNAPSHOT}: no sha256 pinned for {name}')
+    if generation is not None:
+        outputs = generation.get('outputs') or {}
+        if sorted(outputs) != sorted(REQUIRED_OUTPUTS):
+            problems.append(f'{GENERATION}: outputs {sorted(outputs)} are not the required '
+                            f'{sorted(REQUIRED_OUTPUTS)}')
+        for key in ('generator', 'sourceRepository', 'sourceRevision'):
+            if not generation.get(key):
+                problems.append(f'{GENERATION}: {key} missing')
+        if snapshot is not None and generation.get('sourceRepository') != snapshot.get('repository'):
+            problems.append(f'{GENERATION}: sourceRepository is not the snapshot repository')
+    modules = (manifest or {}).get('modules') or {}
+    if manifest is not None:
+        for name, rel in REQUIRED_MODULES.items():
+            module = modules.get(name)
+            if module is None:
+                problems.append(f'{MANIFEST}: required module {name} missing')
+                continue
+            if module.get('file') != rel:
+                problems.append(f'{MANIFEST} ({name}): file is {module.get("file")!r}, expected {rel!r}')
+            if not _SHA256.fullmatch(str(module.get('contentHash', ''))):
+                problems.append(f'{MANIFEST} ({name}): contentHash missing or malformed')
         for name in GRECO_MODULES:
-            pinned = manifest.get('modules', {}).get(name, {}).get('sourceSnapshot')
+            pinned = (modules.get(name) or {}).get('sourceSnapshot')
             if not pinned:
                 problems.append(f'{MANIFEST} ({name}): no sourceSnapshot -- provenance not regenerated')
+                continue
+            if snapshot is not None:
+                for key in ('repository', 'revision', 'revisionCommittedAt'):
+                    if pinned.get(key) != snapshot.get(key):
+                        problems.append(f'{MANIFEST} ({name}): sourceSnapshot.{key} '
+                                        f'{str(pinned.get(key))[:40]!r} is not the snapshot\'s')
+                recorded = pinned.get('inputSha256') or {}
+                inputs = modules[name].get('sourceInputs') or []
+                if not recorded or sorted(recorded) != sorted(inputs):
+                    problems.append(f'{MANIFEST} ({name}): inputSha256 covers {sorted(recorded)}, '
+                                    f'expected its sourceInputs {sorted(inputs)}')
+                for file, digest in sorted(recorded.items()):
+                    if digest != (snap_files.get(file) or {}).get('sha256'):
+                        problems.append(f'{MANIFEST} ({name}): inputSha256[{file}] is not the '
+                                        f'{SNAPSHOT} hash')
+    if ledger is not None and not isinstance(ledger.get('fights'), dict):
+        problems.append(f'{LEDGER}: no fights table')
+
+    # 2. Hashes: every required output and module matches its recorded hash.
+    if generation is not None:
+        for rel in REQUIRED_OUTPUTS:
+            digest = (generation.get('outputs') or {}).get(rel)
+            if digest:
+                expect_hash(rel, digest, GENERATION)
             else:
-                revisions[f'{MANIFEST} ({name})'] = pinned.get('revision')
+                read(rel)                     # still required, recorded or not
+    for name, rel in REQUIRED_MODULES.items():
+        digest = (modules.get(name) or {}).get('contentHash')
+        if digest:
+            expect_hash(rel, digest, f'{MANIFEST} ({name})')
+        elif rel not in checked:
+            read(rel)
+
+    # 3. One upstream revision everywhere.
+    revisions = {}
+    if snapshot is not None:
+        revisions[SNAPSHOT] = snapshot.get('revision')
+    if generation is not None:
+        revisions[GENERATION] = generation.get('sourceRevision')
+    if ledger is not None:
+        revisions[LEDGER] = ledger.get('revision')
+    for name in GRECO_MODULES:
+        pinned = (modules.get(name) or {}).get('sourceSnapshot')
+        if pinned:
+            revisions[f'{MANIFEST} ({name})'] = pinned.get('revision')
     if len(set(revisions.values())) > 1:
         problems.append('upstream revision disagrees: ' + ', '.join(
             f'{k}={str(v)[:12]}' for k, v in sorted(revisions.items())))
 
+    # 4. The index must be what is on disk, and no publish may be half-done.
     if index:
         for rel in sorted(checked):
             if reader.worktree_bytes(rel) != checked[rel]:
                 problems.append(f'{rel}: working tree differs from the staged copy (not git-added?)')
-    for rel in sorted(checked):
+    for rel in sorted(set(checked) | set(REQUIRED_OUTPUTS) | {GENERATION}):
         for suffix in LEFTOVER_SUFFIXES:
             if (Path(root) / (rel + suffix)).exists():
                 problems.append(f'{rel}{suffix}: leftover from an interrupted publish')

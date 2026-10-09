@@ -97,8 +97,56 @@ class FeedRejections(unittest.TestCase):
                 self.assertRejected(*frames([f], stats_for(f)), 'invalid round duration')
 
     def test_pre_ufc21_rounds_may_exceed_five_minutes(self):
-        f = fight(date='1996-05-17', rounds=1, time='12:00')
+        f = dict(fight(date='1996-05-17', rounds=1, time='12:00'), **{'TIME FORMAT': '1 Rnd (15)'})
         validate(*frames([f], stats_for(f)))
+
+    # ── Codex finding 7: ending round and clock against the scheduled format ──
+    def test_round_after_the_scheduled_format(self):
+        f = fight(rounds=5, time='2:00')                 # '3 Rnd (5-5-5)'
+        self.assertRejected(*frames([f], stats_for(f)), 'round after the scheduled format')
+
+    def test_clock_past_the_scheduled_period(self):
+        f = dict(fight(date='1997-02-07', rounds=2, time='3:30'),
+                 **{'TIME FORMAT': '1 Rnd + OT (12-3)'})
+        self.assertRejected(*frames([f], stats_for(f)), 'exceeds the 180s period 2')
+
+    def test_control_time_past_a_scheduled_period(self):
+        f = dict(fight(date='1997-02-07', rounds=2, time='2:00'),
+                 **{'TIME FORMAT': '1 Rnd + OT (12-3)'})
+        rows = stats_for(f, over={('Ann A', 1): {'CTRL': '12:30'}})
+        self.assertRejected(*frames([f], rows), 'exceeds the 720s round')
+
+    def test_unsupported_time_format_is_diagnosed(self):
+        for fmt in ('Five rounds', '3 Rnd (5-5)', '3 Rnd', ''):
+            with self.subTest(fmt=fmt):
+                f = dict(fight(), **{'TIME FORMAT': fmt})
+                self.assertRejected(*frames([f], stats_for(f)), 'unsupported time format')
+
+    def test_supported_formats(self):
+        cases = [('5 Rnd (5-5-5-5-5)', 5, '5:00'), ('3 Rnd + OT (5-5-5-5)', 4, '1:00'),
+                 ('1 Rnd + 2OT (15-3-3)', 3, '3:00'), ('No Time Limit', 1, '15:49'),
+                 ('3 Rnd (10-5-5)', 1, '9:59')]
+        for fmt, rounds, clock in cases:
+            with self.subTest(fmt=fmt):
+                f = dict(fight(date='1998-01-01', rounds=rounds, time=clock), **{'TIME FORMAT': fmt})
+                validate(*frames([f], stats_for(f)))
+        self.assertEqual(fv.scheduled_periods('1 Rnd + 2OT (15-3-3)'), [900, 180, 180])
+        self.assertEqual(fv.scheduled_periods('No Time Limit'), [None])
+
+    def test_no_time_limit_is_one_period(self):
+        f = dict(fight(date='1995-01-01', rounds=2, time='1:00'), **{'TIME FORMAT': 'No Time Limit'})
+        self.assertRejected(*frames([f], stats_for(f)), 'round after the scheduled format')
+
+    # ── Codex finding 1 (validator half): an alias may not merge two corners ──
+    def test_alias_collapsing_both_corners_is_rejected(self):
+        f = fight()
+        merge = {'Bea B': 'Ann A'}
+        stats = pd.DataFrame(stats_for(f))
+        stats['FIGHTER'] = stats['FIGHTER'].map(lambda n: merge.get(n, n))
+        with self.assertRaises(fv.FeedIntegrityError) as caught:
+            fv.validate_completed_feed(pd.DataFrame([f]), stats, TODAY, exceptions=fv.no_exceptions(),
+                                       normalize_name=lambda n: merge.get(n, n))
+        self.assertIn('same fighter on both sides', str(caught.exception))
 
     def test_long_round_after_ufc21_is_rejected(self):
         f = fight(date='1999-07-16', rounds=1, time='5:30')
@@ -210,6 +258,47 @@ class ReviewedExceptions(unittest.TestCase):
             validate(*frames([f], stats_for(f, over={('Ann A', 1): {'CTRL': '--', 'TD': '5 of 1'}})), ex)
         self.assertIn('lands more than attempted', str(caught.exception))
 
+    # ── Codex finding 3: each exception covers only its documented condition ──
+    def test_stats_unavailable_covers_only_empty_placeholders(self):
+        f = fight(ID1, date='1996-05-17', rounds=1, time='2:00')
+        ex = self.exceptions('statsUnavailable', [ID1])
+        placeholder = {c: '' for c in stat_row('x', 'x', 1, 'x')}
+        placeholder.update(EVENT=f['EVENT'], BOUT=f['BOUT'])
+        validate(*frames([f], [placeholder, dict(placeholder)]), ex)
+        named = stat_row(f['EVENT'], f['BOUT'], 1, 'Ann A', **{'SIG.STR.': '999 of 1'})
+        with self.assertRaises(fv.FeedIntegrityError) as caught:
+            validate(*frames([f], [named, dict(placeholder)]), ex)
+        self.assertIn("SIG.STR.='999 of 1' lands more than attempted", str(caught.exception))
+
+    def test_control_time_exception_does_not_excuse_a_malformed_clock(self):
+        f = fight(ID1, date='1996-05-17', rounds=1, time='2:00')
+        ex = self.exceptions('controlTimeUnavailable', [ID1])
+        for ctrl in ('--', ''):
+            validate(*frames([f], stats_for(f, over={('Ann A', 1): {'CTRL': ctrl}})), ex)
+        for ctrl in ('3:99', '1:5', 'x', '-1:00'):
+            with self.subTest(ctrl=ctrl):
+                with self.assertRaises(fv.FeedIntegrityError) as caught:
+                    validate(*frames([f], stats_for(f, over={('Ann A', 1): {'CTRL': ctrl}})), ex)
+                self.assertIn('invalid control time', str(caught.exception))
+
+    def test_duplicate_rows_tolerated_only_up_to_the_rematch_count(self):
+        f = fight(ID1, date='1997-12-21', rounds=1, time='3:00')
+        g = fight(ID2, date='1997-12-21', rounds=1, time='3:00')
+        span = ('1994-01-01', '1999-12-31')
+        ex = self.exceptions('sameCardRematch', [ID1, ID2])
+        ex['duplicateStatRows'] = {ID1: span, ID2: span}
+        validate(*frames([f, g], stats_for(f) + stats_for(g)), ex)
+        with self.assertRaises(fv.FeedIntegrityError) as caught:     # a third copy
+            validate(*frames([f, g], stats_for(f) + stats_for(g) + stats_for(f)[:1]), ex)
+        self.assertIn('more copies than the 2 fights sharing the label', str(caught.exception))
+
+    def test_duplicate_rows_exception_needs_a_shared_label(self):
+        f = fight(ID1, date='1997-12-21', rounds=1, time='3:00')
+        ex = self.exceptions('duplicateStatRows', [ID1])
+        with self.assertRaises(fv.FeedIntegrityError) as caught:
+            validate(*frames([f], stats_for(f) + stats_for(f)[:1]), ex)
+        self.assertIn('duplicate stat rows', str(caught.exception))
+
     def test_exception_outside_reviewed_dates_is_refused(self):
         f = fight(ID1, date='2026-10-03')
         ex = self.exceptions('statsUnavailable', [ID1])
@@ -254,13 +343,14 @@ class LedgerTransitions(unittest.TestCase):
         prev = fv.build_ledger(*frames([a, b], stats_for(a) + stats_for(b)))
         return a, b, prev
 
-    def check(self, prev, cur, corrections=(), bulk=()):
-        return fv.check_ledger_transition(prev, cur, self.REV, list(corrections), list(bulk))
+    def check(self, prev, cur, corrections=(), bulk=(), previous_revision='e' * 40):
+        return fv.check_ledger_transition(prev, cur, self.REV, list(corrections), list(bulk),
+                                          previous_revision=previous_revision)
 
     def correction(self, prev, cur, fid, change):
         return {'upstreamRevision': self.REV, 'fightId': fid, 'change': change,
-                'old': dict(zip(fv.PROTECTED_COLUMNS, prev[fid][:4])),
-                'new': dict(zip(fv.PROTECTED_COLUMNS, cur[fid][:4])) if change == 'modified' else None,
+                'old': dict(zip(fv.PROTECTED_COLUMNS, prev[fid])),
+                'new': dict(zip(fv.PROTECTED_COLUMNS, cur[fid])) if change == 'modified' else None,
                 'reason': 'test', 'reviewedBy': 'test', 'reviewedAt': '2026-10-08'}
 
     def test_unchanged_feed(self):
@@ -307,7 +397,7 @@ class LedgerTransitions(unittest.TestCase):
     def test_correction_that_matches_nothing_fails(self):
         a, b, prev = self.ledgers()
         bogus = {'upstreamRevision': self.REV, 'fightId': ID1, 'change': 'removed',
-                 'old': dict(zip(fv.PROTECTED_COLUMNS, prev[ID1][:4])), 'new': None}
+                 'old': dict(zip(fv.PROTECTED_COLUMNS, prev[ID1])), 'new': None}
         with self.assertRaises(fv.FeedIntegrityError) as caught:
             self.check(prev, copy.deepcopy(prev), [bogus])
         self.assertIn('does not match the actual change', str(caught.exception))
@@ -338,6 +428,81 @@ class LedgerTransitions(unittest.TestCase):
         self.check(prev, cur, bulk=[{'upstreamRevision': self.REV, 'fightIds': ids}])
         with self.assertRaises(fv.FeedIntegrityError):
             self.check(prev, cur, bulk=[{'upstreamRevision': self.REV, 'fightIds': ids[:-1]}])
+
+    # ── Codex finding 1: effective identity is protected ──
+    def test_alias_reassignment_is_a_protected_change(self):
+        a, b = fight(ID1), fight(ID2, bout='Cat C vs. Dee D', event='UFC 999', date='2026-09-01')
+        rows = stats_for(a) + stats_for(b)
+        prev = fv.build_ledger(*frames([a, b], rows))
+        alias = {'Ann A': 'Someone Else'}
+        stats = pd.DataFrame(rows)
+        stats['FIGHTER'] = stats['FIGHTER'].map(lambda n: alias.get(n, n))
+        cur = fv.build_ledger(pd.DataFrame([a, b]), stats, lambda n: alias.get(n, n))
+        self.assertEqual(cur[ID1][2], prev[ID1][2])                  # feed label unchanged
+        self.assertEqual(cur[ID1][3], 'Someone Else vs. Bea B')
+        with self.assertRaises(fv.FeedIntegrityError) as caught:
+            self.check(prev, cur)
+        self.assertIn("'fighters': ['Ann A vs. Bea B', 'Someone Else vs. Bea B']", str(caught.exception))
+        report = self.check(prev, cur, [self.correction(prev, cur, ID1, 'modified')])
+        self.assertEqual(report['protectedChanges'], [ID1])
+
+    # ── Codex finding 2: reruns and independent reporting ──
+    def test_approved_modification_survives_a_rerun_at_the_same_revision(self):
+        a, b, prev = self.ledgers()
+        changed = dict(a, OUTCOME='L/W')
+        cur = fv.build_ledger(*frames([changed, b], stats_for(changed) + stats_for(b)))
+        fix = self.correction(prev, cur, ID1, 'modified')
+        self.check(prev, cur, [fix])
+        # Second run: the published ledger is now `cur`, at this revision.
+        report = self.check(cur, copy.deepcopy(cur), [fix], previous_revision=self.REV)
+        self.assertEqual(report['correctionsAlreadyApplied'], [ID1])
+        self.assertEqual(report['protectedChanges'], [])
+
+    def test_approved_removal_survives_a_rerun_at_the_same_revision(self):
+        a, b, prev = self.ledgers()
+        cur = fv.build_ledger(*frames([a], stats_for(a)))
+        fix = self.correction(prev, cur, ID2, 'removed')
+        self.check(prev, cur, [fix])
+        report = self.check(cur, copy.deepcopy(cur), [fix], previous_revision=self.REV)
+        self.assertEqual(report['correctionsAlreadyApplied'], [ID2])
+
+    def test_rerun_allowance_needs_the_same_revision_and_the_new_state(self):
+        a, b, prev = self.ledgers()
+        changed = dict(a, OUTCOME='L/W')
+        cur = fv.build_ledger(*frames([changed, b], stats_for(changed) + stats_for(b)))
+        fix = self.correction(prev, cur, ID1, 'modified')
+        # Previous ledger from another revision: an unmatched correction is an error.
+        with self.assertRaises(fv.FeedIntegrityError):
+            self.check(cur, copy.deepcopy(cur), [fix], previous_revision='e' * 40)
+        # Same revision, but the fight is not in the approved state.
+        with self.assertRaises(fv.FeedIntegrityError):
+            self.check(prev, copy.deepcopy(prev), [fix], previous_revision=self.REV)
+        # A stale approval (another revision) authorises nothing.
+        stale = dict(fix, upstreamRevision='e' * 40)
+        with self.assertRaises(fv.FeedIntegrityError) as caught:
+            self.check(prev, cur, [stale])
+        self.assertIn('protected fields changed without a reviewed correction', str(caught.exception))
+
+    def test_simultaneous_protected_and_statistic_changes_are_both_reported(self):
+        a, b, prev = self.ledgers()
+        changed = dict(a, OUTCOME='L/W')
+        rows = stats_for(changed, over={('Ann A', 1): {'KD': '1.0'}}) + stats_for(b)
+        cur = fv.build_ledger(*frames([changed, b], rows))
+        report = self.check(prev, cur, [self.correction(prev, cur, ID1, 'modified')])
+        self.assertEqual(report['protectedChanges'], [ID1])
+        self.assertEqual(report['statChanges'], [ID1])
+
+    def test_bulk_count_includes_fights_with_approved_protected_changes(self):
+        fights = [fight(f'{i:016x}', event=f'E{i}') for i in range(fv.BULK_STAT_CHANGE_ALARM + 1)]
+        prev = fv.build_ledger(*frames(fights, [r for f in fights for r in stats_for(f)]))
+        moved = [dict(fights[0], OUTCOME='L/W')] + fights[1:]
+        bumped = [r for f in moved for r in stats_for(f, over={('Ann A', 1): {'KD': '1.0'}})]
+        cur = fv.build_ledger(*frames(moved, bumped))
+        fix = self.correction(prev, cur, fights[0]['URL'][-16:], 'modified')
+        with self.assertRaises(fv.FeedIntegrityError) as caught:
+            self.check(prev, cur, [fix])
+        self.assertIn(f'{fv.BULK_STAT_CHANGE_ALARM + 1} existing fights changed statistics',
+                      str(caught.exception))
 
     def test_ledger_serialization_round_trips_and_is_stable(self):
         a, b, prev = self.ledgers()

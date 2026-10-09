@@ -63,28 +63,35 @@ def publish_artifacts(outputs):
         _discard(b for b in backups.values() if b is not None)
         raise
 
-    replaced = []
+    # A target joins `attempted` BEFORE its replacement is tried, so an
+    # exception raised after os.replace() has already moved the new file into
+    # place (an interrupt landing just after the call, say) still rolls that
+    # target back. Restoring a target whose replacement never happened is
+    # harmless: its .rollback copy is the file already there, and a new target
+    # that was never created has nothing to delete.
+    attempted = []
     try:
         for tmp, path in staged:
+            attempted.append(path)
             _replace(tmp, path)
-            replaced.append(path)
     except BaseException as exc:
         restore_errors = []
-        for path in reversed(replaced):
+        for path in reversed(attempted):
             try:
                 if backups[path] is not None:
                     os.replace(backups[path], path)
                     backups[path] = None
                 else:
                     path.unlink(missing_ok=True)
-            except OSError as restore_exc:  # leave the .rollback copy in place
-                restore_errors.append(f'{path}: {restore_exc}')
-        _discard(tmp for tmp, path in staged if path not in replaced)
-        _discard(b for b in backups.values() if b is not None and not restore_errors)
+            except BaseException as restore_exc:  # keep the .rollback copy for a manual restore
+                restore_errors.append(f'{path}: {restore_exc!r}')
+        _discard(tmp for tmp, _ in staged)
+        if not restore_errors:
+            _discard(b for b in backups.values() if b is not None)
         detail = (f'; ROLLBACK INCOMPLETE, restore by hand from *{ROLLBACK_SUFFIX}: '
                   + '; '.join(restore_errors)) if restore_errors else '; previous artifacts restored'
         raise PublishError(f'publishing {len(staged)} artifacts failed at '
-                           f'{len(replaced) + 1} of {len(staged)} ({exc}){detail}') from exc
+                           f'{len(attempted)} of {len(staged)} ({exc!r}){detail}') from exc
     _discard(b for b in backups.values() if b is not None)
 
 

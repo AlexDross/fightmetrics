@@ -62,7 +62,8 @@ from fight_data_integrity import (
     bout_division, canonicalize_aggregate_inputs, load_required_csv,
 )
 from feed_validation import (
-    FeedIntegrityError, build_ledger, check_ledger_transition, load_corrections,
+    FeedIntegrityError, build_ledger, check_input_schema, check_ledger_transition,
+    load_corrections,
     load_exceptions, load_ledger, serialize_ledger, validate_completed_feed,
     validate_record_dates,
 )
@@ -330,6 +331,7 @@ if _snapshot is None:
     raise SystemExit(f"{SNAPSHOT_PATH} is missing: run record_source_snapshot.py on the "
                      "downloaded feed first.")
 rss.verify_inputs_match(_snapshot, SRC, rss.SNAPSHOT_FILES)
+check_input_schema(SRC)
 SOURCE_REVISION = _snapshot['revision']
 print(f"  Inputs match pinned {_snapshot['repository']} @ {SOURCE_REVISION[:12]}")
 
@@ -372,12 +374,13 @@ if _feed_summary['exceptionsUnused']:
 # The previously published ledger is the baseline. Disappearing fights and
 # changes to event/date/fighters/outcome need reviewed corrections bound to
 # this revision; statistic changes are reported, and a bulk of them reviewed.
-_ledger = build_ledger(results_df, stats_df)
+_ledger = build_ledger(results_df, stats_df, normalize_name)
 if os.path.isfile(LEDGER_PATH):
     _previous = load_ledger(LEDGER_PATH)
     _corrections, _bulk_reviews = load_corrections(CORRECTIONS_PATH)
     _changes = check_ledger_transition(
-        _previous['fights'], _ledger, SOURCE_REVISION, _corrections, _bulk_reviews)
+        _previous['fights'], _ledger, SOURCE_REVISION, _corrections, _bulk_reviews,
+        previous_revision=_previous['revision'])
     _changes['previousRevision'] = _previous['revision']
 elif BOOTSTRAP_LEDGER:
     _changes = {'bootstrap': True}
@@ -388,8 +391,14 @@ else:
         "first run.")
 print("  Ledger: " + json.dumps(
     {k: (v if isinstance(v, (bool, int, str)) else len(v)) for k, v in _changes.items()}))
+for _fid in _changes.get('protectedChanges', []):
+    print(f"    reviewed correction applied: {_fid} {_ledger[_fid][3]!r} ({_ledger[_fid][1]})")
+for _fid in _changes.get('removed', []):
+    print(f"    reviewed removal applied: {_fid}")
 for _fid in _changes.get('statChanges', []):
-    print(f"    statistics changed upstream: {_fid} {_ledger[_fid][2]!r} ({_ledger[_fid][1]})")
+    print(f"    statistics changed upstream: {_fid} {_ledger[_fid][3]!r} ({_ledger[_fid][1]})")
+for _fid in _changes.get('correctionsAlreadyApplied', []):
+    print(f"    correction already applied at this revision (rerun): {_fid}")
 
 detail_lookup = {}
 if has_details:
