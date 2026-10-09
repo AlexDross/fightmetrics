@@ -217,7 +217,7 @@
   "problems": [],
   "refs": {
     "baseline": "a2e83a816015abcbe0cfdb13dd9e3908de46f676",
-    "candidate": "c28063f63bda201d60379bf228794e8fb45a4b27"
+    "candidate": "7417e31e5141c31e7749ad5104c5cc2366dd1687"
   },
   "repeatRun": {
     "artifact_generation.json": true,
