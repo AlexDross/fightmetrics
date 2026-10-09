@@ -18,7 +18,7 @@ python scripts/integrity/replay_pinned_feed.py --feed-dir /tmp/greco \
 |---|---|
 | Feed | Greco1899/scrape_ufc_stats @ `1ccacc5cd4f642bd2deb8b278405a0205791bfa3` |
 | Baseline | `a2e83a816015abcbe0cfdb13dd9e3908de46f676` (main when Step 1 started) |
-| Candidate | `7417e31e5141c31e7749ad5104c5cc2366dd1687` (Step 1 after the second Codex review repairs: verifier contract and publish leftover refusal; the only later commits add this evidence and review notes) |
+| Candidate | `7417e31e5141c31e7749ad5104c5cc2366dd1687` (Step 1 after the second Codex review repairs: verifier contract and publish leftover refusal; the only later commit adds this evidence) |
 | Clock | 2026-10-08. Candidate via `FM_TODAY`; the baseline's `date.today()` and both sides' regen_elo / manifest clock reads rewritten in the temporary worktrees (listed under `clockPins`) |
 | Pipeline | `update_fighters.py` → `regen_elo.py` → `generate-fighter-birthdates.mjs` → `generate_source_manifest.py`, as in the scheduled workflow |
 | Verdict | **PASS** |
