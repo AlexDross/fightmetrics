@@ -23,12 +23,7 @@ import verify_artifact_set as vas  # noqa: E402
 REV = 'c' * 40
 REPO = 'Greco1899/scrape_ufc_stats'
 OUTPUTS = vas.REQUIRED_OUTPUTS
-INPUTS = {   # module -> its sourceInputs, as generate_source_manifest.py records them
-    'fightHistory': ['ufc_fight_results.csv', 'ufc_event_details.csv', 'ufc_fight_details.csv'],
-    'fightersDataAggregates': ['ufc_fight_results.csv', 'ufc_event_details.csv',
-                               'ufc_fight_details.csv', 'ufc_fight_stats.csv'],
-    'elo': ['ufc_fight_results.csv', 'ufc_event_details.csv'],
-}
+INPUTS = {name: list(inputs) for name, inputs in vas.MODULE_INPUTS.items()}
 
 
 def sha(data):
@@ -63,7 +58,7 @@ class VerifyArtifactSet(unittest.TestCase):
         """Write one complete generation the way the workflow does."""
         outputs = {}
         for rel in OUTPUTS:
-            body = (json.dumps({'revision': revision, 'fights': {}}) if rel == 'source_ledger.json'
+            body = (json.dumps({'revision': revision, 'fights': {'0123456789abcdef': {}}}) if rel == 'source_ledger.json'
                     else f'// {tag} {rel}\n')
             outputs[rel] = sha(self.write(rel, body.encode()))
         self.write('artifact_generation.json', json.dumps(
@@ -186,14 +181,14 @@ class VerifyArtifactSet(unittest.TestCase):
         manifest['modules']['fightHistory']['sourceSnapshot']['inputSha256'][
             'ufc_fight_results.csv'] = 'f' * 64
         self.manifest(manifest['modules'])
-        self.both_modes_fail('(fightHistory): inputSha256[ufc_fight_results.csv] is not the')
+        self.both_modes_fail('(fightHistory) sourceSnapshot: inputSha256[ufc_fight_results.csv] is not the')
 
     def test_input_hashes_must_cover_the_module_inputs(self):
         manifest = self.load('src/sourceManifest.js')
         del manifest['modules']['fightersDataAggregates']['sourceSnapshot']['inputSha256'][
             'ufc_fight_stats.csv']
         self.manifest(manifest['modules'])
-        self.both_modes_fail('(fightersDataAggregates): inputSha256 covers')
+        self.both_modes_fail('(fightersDataAggregates) sourceSnapshot: inputSha256 covers')
 
     def test_snapshot_must_pin_every_input(self):
         snapshot = self.load('source_snapshot.json')
@@ -214,6 +209,184 @@ class VerifyArtifactSet(unittest.TestCase):
         self.assertEqual(self.problems(), [])
         problems = self.problems(index=True)
         self.assertTrue(any(p.startswith('fighter_profiles.json: sha256') for p in problems), problems)
+
+    # ── Codex r2 finding 1: null / wrong-typed metadata is never "absent" ──
+    def commit(self):
+        git(self.root, 'add', '-A')
+        git(self.root, 'commit', '-q', '-m', 'state under test')
+
+    def test_null_generation_record_with_a_deleted_output_fails(self):
+        self.write('artifact_generation.json', b'null')
+        (self.root / 'fighter_profiles.json').unlink()
+        self.both_modes_fail('artifact_generation.json: is null, expected a JSON object')
+        self.both_modes_fail('fighter_profiles.json: missing')
+
+    def test_null_manifest_with_corrupted_elo_fails(self):
+        self.write('src/sourceManifest.js', b'export const SOURCE_MANIFEST = null;\n')
+        self.write('src/eloModule.js', b'// corrupted\n')
+        self.both_modes_fail('src/sourceManifest.js: is null, expected a JSON object')
+
+    def test_null_snapshot_fails(self):
+        self.write('source_snapshot.json', b'null')
+        self.both_modes_fail('source_snapshot.json: is null, expected a JSON object')
+
+    def test_every_metadata_document_rejects_null_scalars_and_lists(self):
+        documents = {'artifact_generation.json': '{}', 'source_snapshot.json': '{}',
+                     'source_ledger.json': '{}',
+                     'src/sourceManifest.js': 'export const SOURCE_MANIFEST = {};\n'}
+        for rel, template in documents.items():
+            for value, kind in (('null', 'null'), ('7', 'int'), ('"x"', 'str'), ('[]', 'list')):
+                with self.subTest(rel=rel, value=value):
+                    git(self.root, 'reset', '-q', '--hard')
+                    self.write(rel, template.replace('{}', value).encode())
+                    self.both_modes_fail(f'{rel}: is {kind}, expected a JSON object')
+
+    def test_malformed_nested_values_fail(self):
+        cases = [
+            ('artifact_generation.json', ['outputs'], None, 'outputs is null, expected an object'),
+            ('artifact_generation.json', ['outputs'], [], 'outputs is list, expected an object'),
+            ('source_snapshot.json', ['files'], None, 'files is null, expected an object'),
+            ('source_snapshot.json', ['files', 'ufc_fight_stats.csv'], 'abc',
+             'no sha256 pinned for ufc_fight_stats.csv'),
+            ('src/sourceManifest.js', ['modules'], None, 'modules is null, expected an object'),
+            ('src/sourceManifest.js', ['modules', 'elo'], None, 'required module elo missing'),
+            ('src/sourceManifest.js', ['modules', 'cardio'], 'x', 'required module cardio missing'),
+            ('src/sourceManifest.js', ['modules', 'elo', 'sourceSnapshot', 'inputSha256'], None,
+             'inputSha256 is null, expected an object'),
+            ('source_ledger.json', ['fights'], None, 'no fights table'),
+        ]
+        for rel, path, value, needle in cases:
+            with self.subTest(rel=rel, path=path, value=value):
+                git(self.root, 'reset', '-q', '--hard')
+                doc = self.load(rel)
+                target = doc
+                for key in path[:-1]:
+                    target = target[key]
+                target[path[-1]] = value
+                if rel == 'src/sourceManifest.js':
+                    self.manifest(doc['modules'] if isinstance(doc.get('modules'), dict)
+                                  else doc['modules'])
+                else:
+                    self.write(rel, json.dumps(doc).encode())
+                self.both_modes_fail(needle)
+
+    def test_real_committed_artifacts_with_null_metadata_fail(self):
+        # The reproduction against copies of the actual committed artifacts.
+        real = Path(__file__).resolve().parent
+        files = set(vas.REQUIRED_OUTPUTS) | set(vas.REQUIRED_MODULES.values()) | {
+            'artifact_generation.json', 'source_snapshot.json', 'src/sourceManifest.js'}
+        for rel in files:
+            self.write(rel, (real / rel).read_bytes())
+        self.commit()
+        self.assertEqual(self.problems(), [])
+        for rel, mutate in (
+                ('artifact_generation.json', lambda: (self.root / 'fighter_profiles.json').unlink()),
+                ('src/sourceManifest.js', lambda: self.write('src/eloModule.js', b'// corrupted\n')),
+                ('source_snapshot.json', lambda: None)):
+            with self.subTest(rel=rel):
+                git(self.root, 'reset', '-q', '--hard')
+                self.write(rel, b'export const SOURCE_MANIFEST = null;\n'
+                           if rel.endswith('.js') else b'null')
+                mutate()
+                self.both_modes_fail(f'{rel}: is null, expected a JSON object')
+
+    # ── Codex r2 finding 2: every output needs a real digest ──
+    def test_invalid_output_digest_with_altered_contents_fails(self):
+        for digest in ('', None, 0, 123, [], {}, 'f' * 63, 'F' * 64, 'not-a-hash'):
+            for drop in (False, True):
+                with self.subTest(digest=digest, drop=drop):
+                    git(self.root, 'reset', '-q', '--hard')
+                    generation = self.load('artifact_generation.json')
+                    if drop:
+                        del generation['outputs']['fighter_profiles.json']
+                    else:
+                        generation['outputs']['fighter_profiles.json'] = digest
+                    self.write('artifact_generation.json', json.dumps(generation).encode())
+                    self.write('fighter_profiles.json', b'{}')
+                    self.both_modes_fail('fighter_profiles.json' if drop
+                                         else 'outputs[fighter_profiles.json] is')
+
+    def test_invalid_module_content_hash_with_altered_contents_fails(self):
+        for digest in ('', None, 0, 'f' * 63):
+            with self.subTest(digest=digest):
+                git(self.root, 'reset', '-q', '--hard')
+                manifest = self.load('src/sourceManifest.js')
+                manifest['modules']['elo']['contentHash'] = digest
+                self.manifest(manifest['modules'])
+                self.write('src/eloModule.js', b'// corrupted\n')
+                self.both_modes_fail('(elo): contentHash missing or malformed')
+
+    # ── Codex r2 finding 3: the contract does not come from the manifest ──
+    def test_jointly_shortened_input_lists_fail(self):
+        for name, dropped in (('fightersDataAggregates', 'ufc_fight_stats.csv'),
+                              ('fightHistory', 'ufc_fight_details.csv'),
+                              ('elo', 'ufc_event_details.csv')):
+            with self.subTest(name=name):
+                git(self.root, 'reset', '-q', '--hard')
+                manifest = self.load('src/sourceManifest.js')
+                module = manifest['modules'][name]
+                module['sourceInputs'].remove(dropped)
+                del module['sourceSnapshot']['inputSha256'][dropped]
+                self.manifest(manifest['modules'])
+                self.both_modes_fail(f'({name}): sourceInputs')
+                self.both_modes_fail(f'({name}) sourceSnapshot: inputSha256 covers')
+
+    def test_jointly_extended_input_lists_fail(self):
+        manifest = self.load('src/sourceManifest.js')
+        module = manifest['modules']['elo']
+        module['sourceInputs'].append('ufc_fight_stats.csv')
+        snapshot = self.load('source_snapshot.json')
+        module['sourceSnapshot']['inputSha256']['ufc_fight_stats.csv'] = \
+            snapshot['files']['ufc_fight_stats.csv']['sha256']
+        self.manifest(manifest['modules'])
+        self.both_modes_fail('(elo): sourceInputs')
+
+    def test_jointly_missing_provenance_fields_fail(self):
+        for key in ('revisionCommittedAt', 'repository', 'revision'):
+            with self.subTest(key=key):
+                git(self.root, 'reset', '-q', '--hard')
+                snapshot = self.load('source_snapshot.json')
+                del snapshot[key]
+                self.write('source_snapshot.json', json.dumps(snapshot).encode())
+                manifest = self.load('src/sourceManifest.js')
+                for name in vas.MODULE_INPUTS:
+                    del manifest['modules'][name]['sourceSnapshot'][key]
+                self.manifest(manifest['modules'])
+                self.both_modes_fail(f'source_snapshot.json: {key}')
+                self.both_modes_fail(f'(elo) sourceSnapshot: {key}')
+
+    def test_malformed_commit_time_fails(self):
+        for value in ('', 'yesterday', '2026-10-04T18:06:20', 1728064000):
+            with self.subTest(value=value):
+                git(self.root, 'reset', '-q', '--hard')
+                snapshot = self.load('source_snapshot.json')
+                snapshot['revisionCommittedAt'] = value
+                self.write('source_snapshot.json', json.dumps(snapshot).encode())
+                self.both_modes_fail('source_snapshot.json: revisionCommittedAt')
+
+    def test_real_committed_artifacts_with_shortened_inputs_fail(self):
+        real = Path(__file__).resolve().parent
+        files = set(vas.REQUIRED_OUTPUTS) | set(vas.REQUIRED_MODULES.values()) | {
+            'artifact_generation.json', 'source_snapshot.json', 'src/sourceManifest.js'}
+        for rel in files:
+            self.write(rel, (real / rel).read_bytes())
+        self.commit()
+        manifest = self.load('src/sourceManifest.js')
+        module = manifest['modules']['fightersDataAggregates']
+        module['sourceInputs'].remove('ufc_fight_stats.csv')
+        del module['sourceSnapshot']['inputSha256']['ufc_fight_stats.csv']
+        self.manifest(manifest['modules'])
+        self.both_modes_fail('(fightersDataAggregates): sourceInputs')
+
+    def test_contract_matches_the_manifest_generator(self):
+        source = (Path(__file__).resolve().parent / 'generate_source_manifest.py').read_text()
+        for name, inputs in vas.MODULE_INPUTS.items():
+            committed = vas.parse_manifest(
+                (Path(__file__).resolve().parent / 'src/sourceManifest.js').read_bytes())
+            self.assertEqual(committed['modules'][name]['sourceInputs'], list(inputs), name)
+            for file in inputs:
+                self.assertIn(f"'{file}'", source)
+
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)

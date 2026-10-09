@@ -147,19 +147,40 @@ review it, add the entry by hand in a PR, then re-run the workflow with
    The error says whether the rollback completed; if any restore fails, every
    `.rollback` copy is kept for a manual restore.
 
+6. **Before step 2, a publish refuses to start** while any `<file>.staged` or `<file>.rollback`
+   exists beside one of its targets, and writes nothing. After an interrupted
+   publish those files can be the only copy of the previous generation: a
+   retry would otherwise copy an already-replaced target over its
+   `.rollback` and lose the original.
+
 This is not a filesystem transaction. A process kill or power loss between two
 replacements, or during the rollback, can leave files from two generations on
 disk. That state is detected, not prevented:
 `artifact_generation.json` records the SHA-256 of every other output, and
-`scripts/verify_artifact_set.py` first checks a fixed contract (the four
-updater outputs, the eight manifest modules with their files and hashes, the
-snapshot's five pinned inputs, and the provenance of the three Greco-backed
-modules), so deleting a file together with its metadata entry still fails. It
-then fails on any file that does not match its recorded hash, on any module
-input hash that is not the snapshot's, on
-any manifest `contentHash` mismatch, on any disagreement about the upstream
-revision between the snapshot, ledger, generation record and manifest, and on
-leftover `.staged`/`.rollback` files. It runs:
+`scripts/verify_artifact_set.py` first checks a fixed contract defined in the
+script itself, not in the documents it checks:
+
+* `artifact_generation.json`, `source_snapshot.json`, `source_ledger.json` and
+  the `SOURCE_MANIFEST` export must each be a JSON object; `null`, a number, a
+  string or a list is a failure, as is a nested table of the wrong type;
+* the four updater outputs, each with a 64-hex SHA-256 (an empty, `null` or
+  malformed digest fails, and the file is still read);
+* the eight manifest modules, each with its file and a 64-hex `contentHash`;
+* the snapshot's five pinned inputs;
+* for the three Greco-backed modules, the reviewed input set
+  (`MODULE_INPUTS`): `sourceInputs` and `sourceSnapshot.inputSha256` must both
+  be exactly that set, so shortening the two together still fails;
+* `repository` (the Greco repository), `revision` (a full commit SHA) and
+  `revisionCommittedAt` (an ISO-8601 time with offset) in the snapshot and in
+  every module snapshot, validated before they are compared, so a field
+  missing everywhere is not "equal".
+
+Every required file is read whatever its metadata says. The verifier then
+fails on any file that does not match its recorded hash, on any module input
+hash that is not the snapshot's, on any manifest `contentHash` mismatch, on any
+disagreement about the upstream revision between the snapshot, ledger,
+generation record and manifest, and on leftover `.staged`/`.rollback` files.
+It runs:
 
 * in the refresh workflow after the manifest is regenerated (working tree);
 * in the refresh workflow's commit step with `--index`, against what will be
@@ -169,3 +190,26 @@ leftover `.staged`/`.rollback` files. It runs:
 
 A hand edit to a generated artifact therefore fails CI until the generators are
 re-run.
+
+### Recovering from an interrupted publish
+
+The scheduled workflow runs on a fresh runner, so leftovers only survive a
+local run (or a runner kept alive by hand). When `update_fighters.py` stops
+with `an earlier publish was interrupted`, or the verifier reports a
+`leftover from an interrupted publish`:
+
+1. **Stop.** Do not re-run the updater; it will refuse until step 3 is done.
+2. **Pick the generation to keep.** For a tracked artifact the committed copy
+   is always available: `git status` shows which outputs changed.
+   * *Back to the committed set* (usual case): `git checkout -- <outputs>` for
+     every tracked output, then delete every `*.staged` and `*.rollback`
+     beside them.
+   * *Back to the pre-publish files* (when they were not committed): for each
+     target with a `<file>.rollback`, `mv <file>.rollback <file>`. A target
+     with no `.rollback` did not exist before the publish; delete it. Then
+     delete every `*.staged`.
+3. Run `python scripts/verify_artifact_set.py`. It must pass, with no
+   leftovers listed, before the updater is run again.
+
+Never delete a `.rollback` file before deciding which generation to keep: it
+may be the only copy of the previous artifact.

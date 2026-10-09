@@ -18,6 +18,12 @@ What this guarantees, and what it does not
   scripts/verify_artifact_set.py (run in CI, before every bot commit, and by
   the test suite) fails on any file that does not belong to the recorded
   generation. Leftover ``.staged``/``.rollback`` files are also reported there.
+* A publish that finds any ``.staged`` or ``.rollback`` file beside one of its
+  targets refuses before writing anything (UnresolvedPublishError). Those files
+  are the only copy of the previous generation after an interrupted publish;
+  retrying over them would overwrite a ``.rollback`` with an already-replaced
+  target. Recovery is a deliberate manual step: docs/FEED_INTEGRITY.md
+  section 4, "Recovering from an interrupted publish".
 
 The Git commit made by the scheduled workflow is a separate guarantee: see
 scripts/verify_artifact_set.py --index.
@@ -38,6 +44,22 @@ class PublishError(RuntimeError):
     """A replacement failed; the previous artifact set was restored."""
 
 
+class UnresolvedPublishError(PublishError):
+    """Leftovers of an earlier interrupted publish exist; nothing was touched."""
+
+
+def unresolved_leftovers(paths):
+    """Every ``.staged``/``.rollback`` file beside one of ``paths``, sorted."""
+    found = []
+    for path in paths:
+        path = Path(path)
+        for suffix in (STAGED_SUFFIX, ROLLBACK_SUFFIX):
+            candidate = path.with_name(path.name + suffix)
+            if os.path.lexists(candidate):
+                found.append(str(candidate))
+    return sorted(found)
+
+
 def publish_artifacts(outputs):
     """Write ``outputs`` ({path: text}) as a set, restoring the old set on failure.
 
@@ -45,6 +67,14 @@ def publish_artifacts(outputs):
     mid-publish leaves a record that does not describe the files beside it.
     """
     items = [(Path(path), text) for path, text in outputs.items()]
+    # Refuse BEFORE writing anything: a leftover .rollback may be the only copy
+    # of a target an interrupted publish already replaced.
+    leftovers = unresolved_leftovers(path for path, _ in items)
+    if leftovers:
+        raise UnresolvedPublishError(
+            'an earlier publish was interrupted and left recovery files; nothing was '
+            'written. Restore or discard them by hand (docs/FEED_INTEGRITY.md, '
+            '"Recovering from an interrupted publish"), then re-run: ' + ', '.join(leftovers))
     staged, backups = [], {}
     try:
         for path, text in items:

@@ -84,10 +84,10 @@ class Publish(unittest.TestCase):
     def test_failure_while_staging_touches_no_published_file(self):
         self.seed()
         before = snapshot(self.dir)
-        (self.dir / ('c.json' + ap.STAGED_SUFFIX)).mkdir()   # staging c.json cannot write
-        with self.assertRaises(OSError):
-            ap.publish_artifacts(self.outputs('new'))
-        (self.dir / ('c.json' + ap.STAGED_SUFFIX)).rmdir()
+        outputs = self.outputs('new')
+        outputs[self.dir / 'absent-dir' / 'c.json'] = outputs.pop(self.dir / 'c.json')
+        with self.assertRaises(OSError):                     # staging c.json cannot write
+            ap.publish_artifacts(outputs)
         self.assertEqual(snapshot(self.dir), before)
 
     def test_incomplete_rollback_is_reported_and_keeps_the_rollback_copy(self):
@@ -174,6 +174,80 @@ class Publish(unittest.TestCase):
         self.assertEqual((self.dir / 'a.js').read_text(), 'old:a.js\n')
         for name in ('c.json', 'generation.json'):     # never replaced: untouched
             self.assertEqual((self.dir / name).read_text(), f'old:{name}\n')
+
+    # ── Codex r2 finding 4: a retry never destroys recovery material ──
+    def interrupted_state(self):
+        """a.js replaced, b.js not yet, both originals still in .rollback copies."""
+        self.seed()
+        for n in NAMES:
+            (self.dir / (n + ap.ROLLBACK_SUFFIX)).write_text(f'old:{n}\n', encoding='utf-8')
+            (self.dir / (n + ap.STAGED_SUFFIX)).write_text(f'new:{n}\n', encoding='utf-8')
+        os.replace(self.dir / ('a.js' + ap.STAGED_SUFFIX), self.dir / 'a.js')
+        return snapshot(self.dir)
+
+    def test_crash_then_retry_refuses_and_keeps_recovery_material(self):
+        before = self.interrupted_state()
+        self.assertEqual((self.dir / 'a.js').read_text(), 'new:a.js\n')
+        ap._replace = FailAt(1)                     # the retry's first replacement would fail
+        with self.assertRaises(ap.UnresolvedPublishError) as caught:
+            ap.publish_artifacts(self.outputs('newer'))
+        self.assertIn('a.js' + ap.ROLLBACK_SUFFIX, str(caught.exception))
+        self.assertEqual(snapshot(self.dir), before)  # byte-identical, leftovers included
+        self.assertEqual((self.dir / ('a.js' + ap.ROLLBACK_SUFFIX)).read_text(), 'old:a.js\n')
+        self.assertEqual(ap._replace.calls, 0)
+
+    def test_crash_then_retry_without_injected_failure_also_refuses(self):
+        before = self.interrupted_state()
+        with self.assertRaises(ap.UnresolvedPublishError):
+            ap.publish_artifacts(self.outputs('newer'))
+        self.assertEqual(snapshot(self.dir), before)
+
+    def test_any_single_leftover_blocks_a_publish(self):
+        for name in NAMES:
+            for suffix in (ap.STAGED_SUFFIX, ap.ROLLBACK_SUFFIX):
+                with self.subTest(name=name, suffix=suffix):
+                    for p in self.dir.iterdir():
+                        p.unlink()
+                    self.seed()
+                    (self.dir / (name + suffix)).write_text('left over\n', encoding='utf-8')
+                    before = snapshot(self.dir)
+                    with self.assertRaises(ap.UnresolvedPublishError):
+                        ap.publish_artifacts(self.outputs('new'))
+                    self.assertEqual(snapshot(self.dir), before)
+
+    def test_documented_recovery_then_retry_publishes(self):
+        self.interrupted_state()
+        # The documented manual recovery: put every .rollback back, drop .staged.
+        for n in NAMES:
+            os.replace(self.dir / (n + ap.ROLLBACK_SUFFIX), self.dir / n)
+            (self.dir / (n + ap.STAGED_SUFFIX)).unlink(missing_ok=True)
+        self.assertEqual(snapshot(self.dir), {n: f'old:{n}\n'.encode() for n in NAMES})
+        ap.publish_artifacts(self.outputs('newer'))
+        self.assertEqual(snapshot(self.dir), {n: f'newer:{n}\n'.encode() for n in NAMES})
+
+    def test_incomplete_rollback_then_retry_refuses(self):
+        # The state a failed restore leaves (see the test above) is not overwritten.
+        self.seed()
+        ap._replace = FailAt(3)
+        real_replace = os.replace
+
+        def broken_restore(src, dst):
+            if str(src).endswith(ap.ROLLBACK_SUFFIX) and Path(dst).name == 'a.js':
+                raise OSError('restore failed (injected)')
+            return real_replace(src, dst)
+
+        ap.os.replace = broken_restore
+        try:
+            with self.assertRaises(ap.PublishError):
+                ap.publish_artifacts(self.outputs('new'))
+        finally:
+            ap.os.replace = real_replace
+        ap._replace = self.original_replace
+        before = snapshot(self.dir)
+        with self.assertRaises(ap.UnresolvedPublishError):
+            ap.publish_artifacts(self.outputs('newer'))
+        self.assertEqual(snapshot(self.dir), before)
+        self.assertEqual((self.dir / ('a.js' + ap.ROLLBACK_SUFFIX)).read_text(), 'old:a.js\n')
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)
