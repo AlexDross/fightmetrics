@@ -2,11 +2,11 @@
   "candidateProvenance": {
     "artifact_generation.json": {
       "matchesCommitted": true,
-      "sha256": "d714169d545a9f91e65bd70a2b0d7a8a6ef366f0e0925c4ee741598f34104898"
+      "sha256": "ff71f05ca949576e1ed77e77bcced971f9d304ec45b82c165ff7dcde237fe408"
     },
     "source_ledger.json": {
       "matchesCommitted": true,
-      "sha256": "c792b8e9a647302920586fcdfa81c83ffd5b40dec7d5b41b5fa96307d0b69503"
+      "sha256": "0cbf714094a33d850025770277df6b30006901a9988a5fb242311669677c5bd6"
     }
   },
   "clockPins": {
@@ -51,9 +51,9 @@
       "src/fightersData.js": "79bea6b8113eab866f059d9ec75874e995ae0ce624702fe79832202eccfb1ace"
     },
     "candidate": {
-      "artifact_generation.json": "d714169d545a9f91e65bd70a2b0d7a8a6ef366f0e0925c4ee741598f34104898",
+      "artifact_generation.json": "ff71f05ca949576e1ed77e77bcced971f9d304ec45b82c165ff7dcde237fe408",
       "fighter_profiles.json": "268f1cd7236c68da9b9708273071b59d2c3426e1c4b0d0b58798c4ee4340fda6",
-      "source_ledger.json": "c792b8e9a647302920586fcdfa81c83ffd5b40dec7d5b41b5fa96307d0b69503",
+      "source_ledger.json": "0cbf714094a33d850025770277df6b30006901a9988a5fb242311669677c5bd6",
       "src/eloModule.js": "6281990bfa8850a1a789c46b9ed4679d08dededebf1e7e8b49fee4d874f9be49",
       "src/fightHistory.js": "6e9bcfba000ca3e7c47006630178df7b0a388c831843b1258310992bc1ca298f",
       "src/fighterBirthdates.js": "da33ea19f09aaf32368f5e15dbc6918f028dd2be2d936c88b4abd8d07775363b",
@@ -80,7 +80,7 @@
       },
       {
         "baseline": "update_fighters.py @ d337cdc1a914dc68a0aa4acd611d36a6d2b94fa9",
-        "candidate": "update_fighters.py @ dda9ad618dc417fd5622f5584105e85f4d26ad2a",
+        "candidate": "update_fighters.py @ 2f26e0022be5608a43aedd0863d64c1575aa4641",
         "field": "generatorVersion",
         "module": "fightHistory",
         "why": "names the commit of the generating code, which differs by definition"
@@ -103,7 +103,7 @@
       },
       {
         "baseline": "update_fighters.py @ d337cdc1a914dc68a0aa4acd611d36a6d2b94fa9",
-        "candidate": "update_fighters.py @ dda9ad618dc417fd5622f5584105e85f4d26ad2a",
+        "candidate": "update_fighters.py @ 2f26e0022be5608a43aedd0863d64c1575aa4641",
         "field": "generatorVersion",
         "module": "fightersDataAggregates",
         "why": "names the commit of the generating code, which differs by definition"
@@ -141,15 +141,15 @@
       "src/sourceManifest.js": "0b32db8ee231a873eb3c537d6473a02178d8a460e20f923c990fc9ebe0a0703a"
     },
     "candidate": {
-      "artifact_generation.json": "d714169d545a9f91e65bd70a2b0d7a8a6ef366f0e0925c4ee741598f34104898",
+      "artifact_generation.json": "ff71f05ca949576e1ed77e77bcced971f9d304ec45b82c165ff7dcde237fe408",
       "fighter_profiles.json": "268f1cd7236c68da9b9708273071b59d2c3426e1c4b0d0b58798c4ee4340fda6",
-      "source_ledger.json": "c792b8e9a647302920586fcdfa81c83ffd5b40dec7d5b41b5fa96307d0b69503",
+      "source_ledger.json": "0cbf714094a33d850025770277df6b30006901a9988a5fb242311669677c5bd6",
       "source_snapshot.json": "9e9f32c1fa29fe57b4f7aef4119a345741010c0abd2cca657c8ef18458597b5e",
       "src/eloModule.js": "6281990bfa8850a1a789c46b9ed4679d08dededebf1e7e8b49fee4d874f9be49",
       "src/fightHistory.js": "6e9bcfba000ca3e7c47006630178df7b0a388c831843b1258310992bc1ca298f",
       "src/fighterBirthdates.js": "da33ea19f09aaf32368f5e15dbc6918f028dd2be2d936c88b4abd8d07775363b",
       "src/fightersData.js": "79bea6b8113eab866f059d9ec75874e995ae0ce624702fe79832202eccfb1ace",
-      "src/sourceManifest.js": "888d85f7dc7afe56a9356864a792ff00708f575041d7aa0028c0141d7107cd86"
+      "src/sourceManifest.js": "ea6968a65a1811e9a37f42ae00d8eaea09025ead8509be19b7c6f7489165e343"
     }
   },
   "predictionRelevant": {
@@ -217,7 +217,7 @@
   "problems": [],
   "refs": {
     "baseline": "a2e83a816015abcbe0cfdb13dd9e3908de46f676",
-    "candidate": "d8367ca15fba3b36977907a19721e289eeeeea33"
+    "candidate": "c28063f63bda201d60379bf228794e8fb45a4b27"
   },
   "repeatRun": {
     "artifact_generation.json": true,
