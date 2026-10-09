@@ -76,6 +76,9 @@ jobs:
       - name: Artifact-set verification
         run: python test_verify_artifact_set.py
 
+      - name: Test recovery after an interrupted publish
+        run: python test_recover_artifact_set.py
+
       # The committed artifacts must be one generation from one upstream
       # revision; a hand edit or a partial bot commit fails here.
       - name: Committed artifact set is consistent

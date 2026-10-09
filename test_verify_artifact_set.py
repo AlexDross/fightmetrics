@@ -34,7 +34,9 @@ def git(root, *args):
     subprocess.run(['git', *args], cwd=root, check=True, capture_output=True)
 
 
-class VerifyArtifactSet(unittest.TestCase):
+class ArtifactRepo(unittest.TestCase):
+    """A temporary git repository holding one committed, consistent generation."""
+
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
         self.root = Path(self.tmp.name)
@@ -91,6 +93,9 @@ class VerifyArtifactSet(unittest.TestCase):
             return vas.parse_manifest((self.root / rel).read_bytes())
         return json.loads((self.root / rel).read_text())
 
+
+
+class VerifyArtifactSet(ArtifactRepo):
     def both_modes_fail(self, needle, stage=True):
         if stage:
             git(self.root, 'add', '-A')
@@ -378,14 +383,64 @@ class VerifyArtifactSet(unittest.TestCase):
         self.manifest(manifest['modules'])
         self.both_modes_fail('(fightersDataAggregates): sourceInputs')
 
-    def test_contract_matches_the_manifest_generator(self):
-        source = (Path(__file__).resolve().parent / 'generate_source_manifest.py').read_text()
+    def test_contract_matches_the_committed_manifest(self):
+        committed = vas.parse_manifest(
+            (Path(__file__).resolve().parent / 'src/sourceManifest.js').read_bytes())
         for name, inputs in vas.MODULE_INPUTS.items():
-            committed = vas.parse_manifest(
-                (Path(__file__).resolve().parent / 'src/sourceManifest.js').read_bytes())
             self.assertEqual(committed['modules'][name]['sourceInputs'], list(inputs), name)
-            for file in inputs:
-                self.assertIn(f"'{file}'", source)
+
+
+class GeneratorLineage(unittest.TestCase):
+    """Codex r3 finding 2: run the real manifest generator on a fixture feed and
+    compare the lineage it EMITS with the verifier's contract, so a change to
+    any module's generated inputs fails here even if the file names still
+    appear elsewhere in the generator source."""
+
+    def build(self, gsm=None):
+        if gsm is None:
+            import generate_source_manifest as gsm
+        import record_source_snapshot as rss
+        import feed_validation as fv
+        with tempfile.TemporaryDirectory() as tmp:
+            feed = Path(tmp)
+            for name in rss.SNAPSHOT_FILES:
+                rows = [','.join(fv.INPUT_SCHEMA[name])]
+                if name == 'ufc_event_details.csv':
+                    rows.append('UFC 1,http://ufcstats.com/event-details/x,"November 12, 1993",Denver')
+                (feed / name).write_text('\n'.join(rows) + '\n')
+            (feed / 'source_snapshot.json').write_text(json.dumps(
+                rss.build_snapshot(feed, REV, '2026-10-04T18:06:20+00:00')))
+            return gsm.build_manifest('full', input_root=str(feed))['modules']
+
+    def test_generated_lineage_is_the_contract(self):
+        modules = self.build()
+        for name, inputs in vas.MODULE_INPUTS.items():
+            with self.subTest(module=name):
+                self.assertEqual(sorted(modules[name]['sourceInputs']), sorted(inputs))
+                self.assertEqual(len(modules[name]['sourceInputs']), len(inputs))
+                self.assertEqual(sorted(modules[name]['sourceSnapshot']['inputSha256']),
+                                 sorted(inputs))
+
+    def lineage_problems(self, modules):
+        return [name for name, inputs in vas.MODULE_INPUTS.items()
+                if sorted(modules[name]['sourceInputs']) != sorted(inputs)
+                or sorted(modules[name]['sourceSnapshot']['inputSha256']) != sorted(inputs)]
+
+    def test_a_drifted_generator_is_detected(self):
+        # Codex's reproduction: drop ufc_fight_details.csv from history_inputs
+        # only. The file name still appears elsewhere in the generator.
+        import types
+        path = Path(__file__).resolve().parent / 'generate_source_manifest.py'
+        source = path.read_text()
+        original = ("        'ufc_fight_details.csv',\n    ]\n    elo_inputs")
+        self.assertEqual(source.count(original), 1, 'history_inputs layout changed; update this test')
+        drifted = types.ModuleType('generate_source_manifest_drifted')
+        drifted.__file__ = str(path)
+        exec(compile(source.replace(original, '    ]\n    elo_inputs'), str(path), 'exec'),
+             drifted.__dict__)
+        self.assertIn("'ufc_fight_details.csv'", source.replace(original, ''))
+        self.assertEqual(self.lineage_problems(self.build(drifted)), ['fightHistory'])
+        self.assertEqual(self.lineage_problems(self.build()), [])
 
 
 if __name__ == '__main__':

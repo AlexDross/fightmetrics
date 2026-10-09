@@ -33,3 +33,4 @@ build-browser-probe
 .fm-store-journal.json
 .fm-store-journal.json.tmp
 src/*.tmp-*
+.publish-recovery/

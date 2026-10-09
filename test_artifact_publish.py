@@ -142,7 +142,7 @@ class Publish(unittest.TestCase):
                     self.assertIn('previous artifacts restored', str(caught.exception))
                     self.assertEqual(snapshot(self.dir), before)
 
-    def test_failed_restore_after_a_completed_replacement_keeps_every_rollback_copy(self):
+    def test_failed_restore_keeps_the_unrestored_rollback_copy(self):
         self.seed()
         calls = [0]
 
@@ -215,9 +215,11 @@ class Publish(unittest.TestCase):
                         ap.publish_artifacts(self.outputs('new'))
                     self.assertEqual(snapshot(self.dir), before)
 
-    def test_documented_recovery_then_retry_publishes(self):
+    def test_retry_publishes_once_leftovers_are_cleared(self):
+        # The supported recovery is scripts/recover_artifact_set.py (see
+        # test_recover_artifact_set.py). Here every target has a backup, so
+        # clearing the leftovers by hand is safe; the publisher then proceeds.
         self.interrupted_state()
-        # The documented manual recovery: put every .rollback back, drop .staged.
         for n in NAMES:
             os.replace(self.dir / (n + ap.ROLLBACK_SUFFIX), self.dir / n)
             (self.dir / (n + ap.STAGED_SUFFIX)).unlink(missing_ok=True)

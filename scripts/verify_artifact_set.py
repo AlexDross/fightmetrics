@@ -105,13 +105,20 @@ def type_name(value):
     return 'null' if value is None else type(value).__name__
 
 
+# The complete artifact and provenance set: everything the checks below read.
+# scripts/recover_artifact_set.py restores exactly this set from one commit.
+ARTIFACT_SET = tuple(dict.fromkeys(
+    (GENERATION, SNAPSHOT, MANIFEST) + REQUIRED_OUTPUTS + tuple(REQUIRED_MODULES.values())))
+
+
 class Reader:
-    def __init__(self, root, index):
-        self.root, self.index = Path(root), index
+    def __init__(self, root, index, commit=None):
+        self.root, self.index, self.commit = Path(root), index, commit
 
     def bytes(self, rel):
-        if self.index:
-            result = subprocess.run(['git', 'show', f':{rel}'], cwd=self.root,
+        if self.index or self.commit:
+            spec = f'{self.commit}:{rel}' if self.commit else f':{rel}'
+            result = subprocess.run(['git', 'show', spec], cwd=self.root,
                                     capture_output=True)
             return result.stdout if result.returncode == 0 else None
         path = self.root / rel
@@ -128,8 +135,10 @@ def parse_manifest(raw):
     return json.loads(text[start:text.rindex(';')])
 
 
-def verify(root=ROOT, index=False):
-    reader = Reader(root, index)
+def verify(root=ROOT, index=False, commit=None):
+    """Problems with the set in the working tree, the index (index=True) or a
+    commit (commit=<sha>; no working-tree or leftover checks)."""
+    reader = Reader(root, index, commit)
     problems = []
     checked = {}
 
@@ -137,7 +146,8 @@ def verify(root=ROOT, index=False):
         raw = reader.bytes(rel)
         if raw is None:
             problems.append(f'{rel}: missing ({what})'
-                            + (' from the staged index -- not git-added?' if index else ''))
+                            + (f' from commit {commit}' if commit else
+                               ' from the staged index -- not git-added?' if index else ''))
             return None
         checked[rel] = raw
         return raw
@@ -308,6 +318,8 @@ def verify(root=ROOT, index=False):
             f'{k}={str(v)[:12]}' for k, v in sorted(revisions.items())))
 
     # 4. The index must be what is on disk, and no publish may be half-done.
+    if commit:
+        return problems, sorted(checked)
     if index:
         for rel in sorted(checked):
             if reader.worktree_bytes(rel) != checked[rel]:

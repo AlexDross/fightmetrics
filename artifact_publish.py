@@ -22,8 +22,11 @@ What this guarantees, and what it does not
   targets refuses before writing anything (UnresolvedPublishError). Those files
   are the only copy of the previous generation after an interrupted publish;
   retrying over them would overwrite a ``.rollback`` with an already-replaced
-  target. Recovery is a deliberate manual step: docs/FEED_INTEGRITY.md
-  section 4, "Recovering from an interrupted publish".
+  target. Recovery restores the whole set from a verified commit
+  (scripts/recover_artifact_set.py; docs/FEED_INTEGRITY.md section 4,
+  "Recovering from an interrupted publish"). The leftovers alone cannot say
+  what the original state was: a restore that succeeded consumed its backup,
+  and an interruption while backups were being made leaves targets without one.
 
 The Git commit made by the scheduled workflow is a separate guarantee: see
 scripts/verify_artifact_set.py --index.
@@ -73,8 +76,9 @@ def publish_artifacts(outputs):
     if leftovers:
         raise UnresolvedPublishError(
             'an earlier publish was interrupted and left recovery files; nothing was '
-            'written. Restore or discard them by hand (docs/FEED_INTEGRITY.md, '
-            '"Recovering from an interrupted publish"), then re-run: ' + ', '.join(leftovers))
+            'written. Recover with scripts/recover_artifact_set.py --commit <known-good '
+            'commit> (docs/FEED_INTEGRITY.md, "Recovering from an interrupted publish"), '
+            'then re-run: ' + ', '.join(leftovers))
     staged, backups = [], {}
     try:
         for path, text in items:
@@ -113,13 +117,17 @@ def publish_artifacts(outputs):
                     backups[path] = None
                 else:
                     path.unlink(missing_ok=True)
-            except BaseException as restore_exc:  # keep the .rollback copy for a manual restore
+            except BaseException as restore_exc:  # this target keeps its .rollback copy
                 restore_errors.append(f'{path}: {restore_exc!r}')
         _discard(tmp for tmp, _ in staged)
         if not restore_errors:
             _discard(b for b in backups.values() if b is not None)
-        detail = (f'; ROLLBACK INCOMPLETE, restore by hand from *{ROLLBACK_SUFFIX}: '
-                  + '; '.join(restore_errors)) if restore_errors else '; previous artifacts restored'
+        # Restores that succeeded consumed their backups; the originals are the
+        # restored targets. Only the targets that failed keep a .rollback copy.
+        detail = (f'; ROLLBACK INCOMPLETE ({"; ".join(restore_errors)}). Do not move or delete '
+                  f'any *{ROLLBACK_SUFFIX} by hand: recover with '
+                  f'scripts/recover_artifact_set.py --commit <known-good commit>'
+                  ) if restore_errors else '; previous artifacts restored'
         raise PublishError(f'publishing {len(staged)} artifacts failed at '
                            f'{len(attempted)} of {len(staged)} ({exc!r}){detail}') from exc
     _discard(b for b in backups.values() if b is not None)

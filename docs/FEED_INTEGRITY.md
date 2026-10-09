@@ -144,9 +144,10 @@ review it, add the entry by hand in a PR, then re-run the workflow with
 5. If a replacement fails, or an exception (including an interrupt) arrives
    after a replacement completed, every target whose replacement was
    attempted is restored, and a target that did not exist before is deleted.
-   The error says whether the rollback completed; if any restore fails, every
-   `.rollback` copy is kept for a manual restore.
-
+   The error says whether the rollback completed. A restore that succeeds
+   consumes its `.rollback` copy (the original is back in the target); only a
+   target whose restore failed keeps its `.rollback`. So after an incomplete
+   rollback, a target without a `.rollback` may be an original, not a new file.
 6. **Before step 2, a publish refuses to start** while any `<file>.staged` or `<file>.rollback`
    exists beside one of its targets, and writes nothing. After an interrupted
    publish those files can be the only copy of the previous generation: a
@@ -194,22 +195,37 @@ re-run.
 ### Recovering from an interrupted publish
 
 The scheduled workflow runs on a fresh runner, so leftovers only survive a
-local run (or a runner kept alive by hand). When `update_fighters.py` stops
-with `an earlier publish was interrupted`, or the verifier reports a
-`leftover from an interrupted publish`:
+local run (or a runner kept alive by hand). Recover when `update_fighters.py`
+stops with `an earlier publish was interrupted` or `ROLLBACK INCOMPLETE`, or
+the verifier reports a `leftover from an interrupted publish`.
 
-1. **Stop.** Do not re-run the updater; it will refuse until step 3 is done.
-2. **Pick the generation to keep.** For a tracked artifact the committed copy
-   is always available: `git status` shows which outputs changed.
-   * *Back to the committed set* (usual case): `git checkout -- <outputs>` for
-     every tracked output, then delete every `*.staged` and `*.rollback`
-     beside them.
-   * *Back to the pre-publish files* (when they were not committed): for each
-     target with a `<file>.rollback`, `mv <file>.rollback <file>`. A target
-     with no `.rollback` did not exist before the publish; delete it. Then
-     delete every `*.staged`.
-3. Run `python scripts/verify_artifact_set.py`. It must pass, with no
-   leftovers listed, before the updater is run again.
+The files on disk cannot tell you what the original state was. A target
+without a `.rollback` may have been restored already (a successful restore
+consumes its backup), may never have been backed up (an interruption while
+backups were being made), or may have been created by the publish. So do not
+move a `.rollback` back, and do not delete a target, by hand. Recover the whole
+set from a known-good commit instead:
 
-Never delete a `.rollback` file before deciding which generation to keep: it
-may be the only copy of the previous artifact.
+1. **Choose the commit.** It must hold a complete, consistent artifact set,
+   normally the commit the interrupted run started from (`HEAD`, if nothing was
+   committed since). The tool refuses any commit that does not pass
+   `scripts/verify_artifact_set.py` on its own tree.
+2. **Run** `python scripts/recover_artifact_set.py --commit <commit>`. It:
+   * saves the current state under `.publish-recovery/<time>-<commit>/`
+     (git-ignored): a copy of every set file in the working tree, the staged
+     copy of every set file whose index entry differs from the commit, and
+     every `.staged`/`.rollback` leftover, which is moved there;
+   * restores the complete artifact and provenance set
+     (`verify_artifact_set.ARTIFACT_SET`: `artifact_generation.json`,
+     `source_snapshot.json`, `src/sourceManifest.js`, the four updater outputs
+     and every manifest module file) from that commit into **both the working
+     tree and the index** (`git restore --source=<commit> --staged --worktree`).
+     `git checkout -- <files>` is not enough, because it restores from the
+     index, which can hold staged changes;
+   * re-runs the verifier on the working tree and on the index, and exits 0
+     only when both are consistent.
+
+   It never deletes a file. A file the interrupted publish created is replaced
+   by the commit's copy, and its new content is kept under `worktree/`.
+3. **Re-run the updater.** The saved directory can be deleted once you no
+   longer need it.
