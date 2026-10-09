@@ -9,6 +9,24 @@ UPDATES:
   fightersData.js  — records plus tr, asl, asp, asa, atl, atp and detail stats
   fightersData.js  — adds new UFC-only entries for debuting fighters
   fightHistory.js  — rebuilt from source CSVs
+  source_ledger.json — one row per fight: identity, date, outcome and content
+                       hashes; the baseline the next refresh is checked against
+  artifact_generation.json — SHA-256 of every output above, published last
+
+REFUSES TO WRITE ANYTHING (feed_validation.py) when:
+  - the CSVs on disk are not the ones source_snapshot.json pins
+  - the feed is invalid: undated or future-dated results, bad clocks/rounds,
+    missing/duplicate/malformed round stats (reviewed exceptions in
+    feed_exceptions.json are fight-scoped)
+  - a fight disappeared or its event/date/fighters/outcome changed without a
+    matching reviewed entry in upstream_corrections.json, or more than
+    feed_validation.BULK_STAT_CHANGE_ALARM fights changed statistics unreviewed
+
+USAGE:
+  python update_fighters.py                     normal refresh
+  python update_fighters.py --audit-feed        report feed problems, write nothing
+  python update_fighters.py --bootstrap-ledger  first run only: no prior ledger
+  FM_TODAY=YYYY-MM-DD pins "today" (replays/tests only)
 
 FILLS ONLY WHEN EMPTY (fighter_profiles.PROFILE_FILL_FIELDS):
   ag, ht, rh, st                      — from ufc_fighter_tott.csv (tale of the tape)
@@ -40,7 +58,19 @@ from fight_event_dates import (
     apply_event_date_overrides, canonicalize_undated_events, fight_sort_key,
     is_dated, normalize_date,
 )
-from fight_data_integrity import bout_division, canonicalize_aggregate_inputs, load_required_csv
+from fight_data_integrity import (
+    bout_division, canonicalize_aggregate_inputs, load_required_csv,
+)
+from feed_validation import (
+    FeedIntegrityError, build_ledger, check_input_schema, check_ledger_transition,
+    load_corrections,
+    load_exceptions, load_ledger, serialize_ledger, validate_completed_feed,
+    validate_record_dates,
+)
+from artifact_publish import publish_artifacts
+import hashlib
+import sys
+import record_source_snapshot as rss
 from fighter_profiles import (
     PROFILE_FILL_FIELDS, fill_updates, is_empty, profile_values,
     profiles_artifact, read_tott_csv, td_defense,
@@ -62,6 +92,19 @@ PROSPECT_PATH = os.path.join(SRC, 'src', 'prospectsData.js')
 NAME_ALIASES_PATH = os.path.join(SRC, 'name_aliases.json')
 TOTT_PATH    = os.path.join(SRC, 'ufc_fighter_tott.csv')
 PROFILES_PATH = os.path.join(SRC, 'fighter_profiles.json')
+LEDGER_PATH  = os.path.join(SRC, 'source_ledger.json')
+GENERATION_PATH = os.path.join(SRC, 'artifact_generation.json')
+EXCEPTIONS_PATH = os.path.join(SRC, 'feed_exceptions.json')
+CORRECTIONS_PATH = os.path.join(SRC, 'upstream_corrections.json')
+SNAPSHOT_PATH = os.path.join(SRC, 'source_snapshot.json')
+
+AUDIT_ONLY = '--audit-feed' in sys.argv[1:]
+BOOTSTRAP_LEDGER = '--bootstrap-ledger' in sys.argv[1:]
+_unknown_args = set(sys.argv[1:]) - {'--audit-feed', '--bootstrap-ledger'}
+if _unknown_args:
+    raise SystemExit(f"unknown arguments: {sorted(_unknown_args)}")
+# The only clock the updater reads. Pinned by replays and tests; never set in CI.
+TODAY = date.fromisoformat(os.environ['FM_TODAY']) if os.environ.get('FM_TODAY') else date.today()
 
 # Greco1899's source CSVs spell some fighters differently than our authoritative
 # roster (src/fightersData.js) — e.g. "Zach Reese" vs "Zachary Reese". Without
@@ -280,6 +323,83 @@ for _ev in _unresolved_undated:
 # reach a sort key or date.fromisoformat().
 results_df['DATE'] = results_df['EVENT'].map(event_dates).map(normalize_date)
 
+# ─── Pinned inputs ────────────────────────────────────────────────────────────
+# The ledger and the generation record name an upstream revision; that is only
+# true if the CSVs read above are byte-for-byte the ones that revision pinned.
+_snapshot = rss.load_snapshot(SNAPSHOT_PATH)
+if _snapshot is None:
+    raise SystemExit(f"{SNAPSHOT_PATH} is missing: run record_source_snapshot.py on the "
+                     "downloaded feed first.")
+rss.verify_inputs_match(_snapshot, SRC, rss.SNAPSHOT_FILES)
+check_input_schema(SRC)
+SOURCE_REVISION = _snapshot['revision']
+print(f"  Inputs match pinned {_snapshot['repository']} @ {SOURCE_REVISION[:12]}")
+
+# ─── Completed-feed gate ──────────────────────────────────────────────────────
+# Runs on the canonicalised, dated inputs and BEFORE anything is computed or
+# written. Every rule lives in feed_validation.py; every exception is a
+# reviewed, fight-scoped entry in feed_exceptions.json.
+_exceptions = load_exceptions(EXCEPTIONS_PATH)
+if AUDIT_ONLY:
+    _audit = validate_completed_feed(
+        results_df, stats_df, TODAY.isoformat(), exceptions=_exceptions,
+        normalize_name=normalize_name, raise_errors=False,
+    )
+    _by_kind = {}
+    for _kind, _fid, _detail in _audit['problems']:
+        _by_kind.setdefault(_kind, []).append((_fid, _detail))
+    print(f"\nFeed audit ({_audit['fights']} fights; read-only, nothing written):")
+    for _kind, _items in sorted(_by_kind.items()):
+        print(f"  {_kind}: {len(_items)} problem(s) in "
+              f"{len({f for f, _ in _items if f})} fight(s)")
+        for _fid, _detail in _items[:10]:
+            print(f"    {_detail}")
+        print(f"    fight ids: {','.join(sorted({f for f, _ in _items if f}))}")
+    print(f"  exceptions used: {_audit['exceptionsUsed']}")
+    if _audit['exceptionsUnused']:
+        print(f"  exceptions no longer needed: {_audit['exceptionsUnused']}")
+    raise SystemExit(1 if _audit['problems'] else 0)
+
+_feed_summary = validate_completed_feed(
+    results_df, stats_df, TODAY.isoformat(), exceptions=_exceptions,
+    normalize_name=normalize_name,
+)
+print(f"  Feed gate: {_feed_summary['fights']} fights valid; reviewed exceptions used "
+      f"{_feed_summary['exceptionsUsed']}")
+if _feed_summary['exceptionsUnused']:
+    print("  ℹ️  exceptions no longer needed (review and remove; run --audit-feed for ids): "
+          + json.dumps({k: len(v) for k, v in _feed_summary['exceptionsUnused'].items()}))
+
+# ─── Ledger transition gate ───────────────────────────────────────────────────
+# The previously published ledger is the baseline. Disappearing fights and
+# changes to event/date/fighters/outcome need reviewed corrections bound to
+# this revision; statistic changes are reported, and a bulk of them reviewed.
+_ledger = build_ledger(results_df, stats_df, normalize_name)
+if os.path.isfile(LEDGER_PATH):
+    _previous = load_ledger(LEDGER_PATH)
+    _corrections, _bulk_reviews = load_corrections(CORRECTIONS_PATH)
+    _changes = check_ledger_transition(
+        _previous['fights'], _ledger, SOURCE_REVISION, _corrections, _bulk_reviews,
+        previous_revision=_previous['revision'])
+    _changes['previousRevision'] = _previous['revision']
+elif BOOTSTRAP_LEDGER:
+    _changes = {'bootstrap': True}
+else:
+    raise FeedIntegrityError(
+        f"{LEDGER_PATH} is missing, so this feed cannot be checked against the last "
+        "published one. Restore it from git, or pass --bootstrap-ledger for a reviewed "
+        "first run.")
+print("  Ledger: " + json.dumps(
+    {k: (v if isinstance(v, (bool, int, str)) else len(v)) for k, v in _changes.items()}))
+for _fid in _changes.get('protectedChanges', []):
+    print(f"    reviewed correction applied: {_fid} {_ledger[_fid][3]!r} ({_ledger[_fid][1]})")
+for _fid in _changes.get('removed', []):
+    print(f"    reviewed removal applied: {_fid}")
+for _fid in _changes.get('statChanges', []):
+    print(f"    statistics changed upstream: {_fid} {_ledger[_fid][3]!r} ({_ledger[_fid][1]})")
+for _fid in _changes.get('correctionsAlreadyApplied', []):
+    print(f"    correction already applied at this revision (rerun): {_fid}")
+
 detail_lookup = {}
 if has_details:
     for _, row in details_df.iterrows():
@@ -339,7 +459,6 @@ for n in fights_by_fighter:
 
 # ─── Compute record updates ────────────────────────────────────────────────────
 print("Computing record stats...")
-TODAY = date.today()
 record_updates = {}
 for name, fights in fights_by_fighter.items():
     wi  = sum(1 for f in fights if f['result'] == 'W')
@@ -355,6 +474,10 @@ for name, fights in fights_by_fighter.items():
     dcw = sum(1 for f in fights if f['result']=='W' and 'DEC' in f['method'])
     record_updates[name] = dict(wi=wi, lo=lo, ws=ws, ls=ls,
                                 lfd=lfd, dsl=dsl, kow=kow, sbw=sbw, dcw=dcw)
+
+# Belt and braces for the feed gate: whatever path a date took, no fighter may
+# leave this run with a last fight after today.
+validate_record_dates(record_updates, TODAY.isoformat())
 
 result_lookup = {}
 for _, row in results_df.iterrows():
@@ -711,17 +834,12 @@ if _written.names != _expected_names:
 print(f"  Identity gate: {len(pristine_entries)} existing identities preserved, "
       f"{len(seeded_names)} seeded")
 
-with open(JS_PATH, 'w') as f:
-    f.write(new_js)
 print(f"  Patched {len(new_lines)} fighters")
 print(f"  Added {new_count} new UFC fighters")
 
 # The tott join for roster names. Committed alongside the roster so the
 # birth-date generator can read it on any machine without the Greco CSV.
-with open(PROFILES_PATH, 'w') as f:
-    f.write(profiles_artifact(tott_profiles, _written.names))
-print(f"  Wrote {PROFILES_PATH} "
-      f"({sum(1 for n in _written.names if n in tott_profiles)} roster fighters)")
+profiles_text = profiles_artifact(tott_profiles, _written.names)
 
 # ─── Rebuild fightHistory.js from source CSVs ─────────────────────────────────
 print("\nRebuilding fightHistory.js from source CSVs...")
@@ -756,9 +874,32 @@ for fighter_name, fights in fights_by_fighter.items():
         rebuilt_history[fighter_name] = entries
 
 fh_json = json.dumps(rebuilt_history, indent=2, ensure_ascii=False)
-with open(FH_PATH, 'w') as f:
-    f.write(f"export const FIGHT_HISTORY = {fh_json};\n")
 print(f"  Rebuilt {len(rebuilt_history)} fighter histories")
+
+# ─── Publish ──────────────────────────────────────────────────────────────────
+# Every output is computed and validated above; artifact_publish stages them,
+# replaces them one by one and restores the previous set if a replacement
+# fails. artifact_generation.json goes LAST and records the hash of every other
+# output, so an interrupted publish is detectable (scripts/verify_artifact_set.py).
+_outputs = {
+    JS_PATH: new_js,
+    PROFILES_PATH: profiles_text,
+    FH_PATH: f"export const FIGHT_HISTORY = {fh_json};\n",
+    LEDGER_PATH: serialize_ledger(SOURCE_REVISION, _ledger),
+}
+_generation = {
+    'generator': 'update_fighters.py',
+    'sourceRepository': _snapshot['repository'],
+    'sourceRevision': SOURCE_REVISION,
+    'outputs': {
+        os.path.relpath(path, SRC): hashlib.sha256(text.encode('utf-8')).hexdigest()
+        for path, text in _outputs.items()
+    },
+}
+_outputs[GENERATION_PATH] = json.dumps(_generation, indent=2, sort_keys=True) + "\n"
+publish_artifacts(_outputs)
+print(f"  Published {len(_outputs)} artifacts "
+      f"({sum(1 for n in _written.names if n in tott_profiles)} roster fighters with a tott profile)")
 
 # ─── Sanity check ─────────────────────────────────────────────────────────────
 print(f"\n✅  Done — {TODAY}")

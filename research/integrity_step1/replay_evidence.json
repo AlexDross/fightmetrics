@@ -1,0 +1,235 @@
+{
+  "candidateProvenance": {
+    "artifact_generation.json": {
+      "matchesCommitted": true,
+      "sha256": "ff71f05ca949576e1ed77e77bcced971f9d304ec45b82c165ff7dcde237fe408"
+    },
+    "source_ledger.json": {
+      "matchesCommitted": true,
+      "sha256": "0cbf714094a33d850025770277df6b30006901a9988a5fb242311669677c5bd6"
+    }
+  },
+  "clockPins": {
+    "baseline": [
+      {
+        "file": "regen_elo.py",
+        "from": "today = datetime.utcnow().strftime('%b %Y')",
+        "to": "today = datetime(2026, 10, 8).strftime('%b %Y')"
+      },
+      {
+        "file": "generate_source_manifest.py",
+        "from": "now_iso = datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')",
+        "to": "now_iso = '2026-10-08T12:00:00Z'"
+      },
+      {
+        "file": "update_fighters.py",
+        "from": "TODAY = date.today()",
+        "to": "TODAY = date(2026, 10, 8)"
+      }
+    ],
+    "candidate": [
+      {
+        "file": "regen_elo.py",
+        "from": "today = datetime.utcnow().strftime('%b %Y')",
+        "to": "today = datetime(2026, 10, 8).strftime('%b %Y')"
+      },
+      {
+        "file": "generate_source_manifest.py",
+        "from": "now_iso = datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')",
+        "to": "now_iso = '2026-10-08T12:00:00Z'"
+      }
+    ]
+  },
+  "committed": {
+    "baseline": {
+      "artifact_generation.json": null,
+      "fighter_profiles.json": "268f1cd7236c68da9b9708273071b59d2c3426e1c4b0d0b58798c4ee4340fda6",
+      "source_ledger.json": null,
+      "src/eloModule.js": "6281990bfa8850a1a789c46b9ed4679d08dededebf1e7e8b49fee4d874f9be49",
+      "src/fightHistory.js": "6e9bcfba000ca3e7c47006630178df7b0a388c831843b1258310992bc1ca298f",
+      "src/fighterBirthdates.js": "da33ea19f09aaf32368f5e15dbc6918f028dd2be2d936c88b4abd8d07775363b",
+      "src/fightersData.js": "79bea6b8113eab866f059d9ec75874e995ae0ce624702fe79832202eccfb1ace"
+    },
+    "candidate": {
+      "artifact_generation.json": "ff71f05ca949576e1ed77e77bcced971f9d304ec45b82c165ff7dcde237fe408",
+      "fighter_profiles.json": "268f1cd7236c68da9b9708273071b59d2c3426e1c4b0d0b58798c4ee4340fda6",
+      "source_ledger.json": "0cbf714094a33d850025770277df6b30006901a9988a5fb242311669677c5bd6",
+      "src/eloModule.js": "6281990bfa8850a1a789c46b9ed4679d08dededebf1e7e8b49fee4d874f9be49",
+      "src/fightHistory.js": "6e9bcfba000ca3e7c47006630178df7b0a388c831843b1258310992bc1ca298f",
+      "src/fighterBirthdates.js": "da33ea19f09aaf32368f5e15dbc6918f028dd2be2d936c88b4abd8d07775363b",
+      "src/fightersData.js": "79bea6b8113eab866f059d9ec75874e995ae0ce624702fe79832202eccfb1ace"
+    }
+  },
+  "feedRevision": "1ccacc5cd4f642bd2deb8b278405a0205791bfa3",
+  "manifest": {
+    "expectedChanges": [
+      {
+        "baseline": null,
+        "candidate": {
+          "inputSha256": {
+            "ufc_event_details.csv": "7ff5ff0155d6a1dc55a39b4ec61ef569c6ce0f43b1f22edd730744759e7ee66a",
+            "ufc_fight_results.csv": "e7253107447bf2eaab780776401b2543ac5283d0272771b67fde3d1983be139b"
+          },
+          "repository": "Greco1899/scrape_ufc_stats",
+          "revision": "1ccacc5cd4f642bd2deb8b278405a0205791bfa3",
+          "revisionCommittedAt": "2026-10-04T18:06:20+00:00"
+        },
+        "field": "sourceSnapshot",
+        "module": "elo",
+        "why": "new: the pinned upstream revision and input hashes"
+      },
+      {
+        "baseline": "update_fighters.py @ d337cdc1a914dc68a0aa4acd611d36a6d2b94fa9",
+        "candidate": "update_fighters.py @ 2f26e0022be5608a43aedd0863d64c1575aa4641",
+        "field": "generatorVersion",
+        "module": "fightHistory",
+        "why": "names the commit of the generating code, which differs by definition"
+      },
+      {
+        "baseline": null,
+        "candidate": {
+          "inputSha256": {
+            "ufc_event_details.csv": "7ff5ff0155d6a1dc55a39b4ec61ef569c6ce0f43b1f22edd730744759e7ee66a",
+            "ufc_fight_details.csv": "075cb7928c86891d998e9d6a2fda971850979a0ebbbdd2c56ce2baa43d96af86",
+            "ufc_fight_results.csv": "e7253107447bf2eaab780776401b2543ac5283d0272771b67fde3d1983be139b"
+          },
+          "repository": "Greco1899/scrape_ufc_stats",
+          "revision": "1ccacc5cd4f642bd2deb8b278405a0205791bfa3",
+          "revisionCommittedAt": "2026-10-04T18:06:20+00:00"
+        },
+        "field": "sourceSnapshot",
+        "module": "fightHistory",
+        "why": "new: the pinned upstream revision and input hashes"
+      },
+      {
+        "baseline": "update_fighters.py @ d337cdc1a914dc68a0aa4acd611d36a6d2b94fa9",
+        "candidate": "update_fighters.py @ 2f26e0022be5608a43aedd0863d64c1575aa4641",
+        "field": "generatorVersion",
+        "module": "fightersDataAggregates",
+        "why": "names the commit of the generating code, which differs by definition"
+      },
+      {
+        "baseline": null,
+        "candidate": {
+          "inputSha256": {
+            "ufc_event_details.csv": "7ff5ff0155d6a1dc55a39b4ec61ef569c6ce0f43b1f22edd730744759e7ee66a",
+            "ufc_fight_details.csv": "075cb7928c86891d998e9d6a2fda971850979a0ebbbdd2c56ce2baa43d96af86",
+            "ufc_fight_results.csv": "e7253107447bf2eaab780776401b2543ac5283d0272771b67fde3d1983be139b",
+            "ufc_fight_stats.csv": "58f6f0d7ac45f299c877e16135458c33cc3c50454c948abdeec5dc8ea54d2c09"
+          },
+          "repository": "Greco1899/scrape_ufc_stats",
+          "revision": "1ccacc5cd4f642bd2deb8b278405a0205791bfa3",
+          "revisionCommittedAt": "2026-10-04T18:06:20+00:00"
+        },
+        "field": "sourceSnapshot",
+        "module": "fightersDataAggregates",
+        "why": "new: the pinned upstream revision and input hashes"
+      }
+    ],
+    "unexpectedChanges": []
+  },
+  "outputs": {
+    "baseline": {
+      "artifact_generation.json": null,
+      "fighter_profiles.json": "268f1cd7236c68da9b9708273071b59d2c3426e1c4b0d0b58798c4ee4340fda6",
+      "source_ledger.json": null,
+      "source_snapshot.json": null,
+      "src/eloModule.js": "6281990bfa8850a1a789c46b9ed4679d08dededebf1e7e8b49fee4d874f9be49",
+      "src/fightHistory.js": "6e9bcfba000ca3e7c47006630178df7b0a388c831843b1258310992bc1ca298f",
+      "src/fighterBirthdates.js": "da33ea19f09aaf32368f5e15dbc6918f028dd2be2d936c88b4abd8d07775363b",
+      "src/fightersData.js": "79bea6b8113eab866f059d9ec75874e995ae0ce624702fe79832202eccfb1ace",
+      "src/sourceManifest.js": "0b32db8ee231a873eb3c537d6473a02178d8a460e20f923c990fc9ebe0a0703a"
+    },
+    "candidate": {
+      "artifact_generation.json": "ff71f05ca949576e1ed77e77bcced971f9d304ec45b82c165ff7dcde237fe408",
+      "fighter_profiles.json": "268f1cd7236c68da9b9708273071b59d2c3426e1c4b0d0b58798c4ee4340fda6",
+      "source_ledger.json": "0cbf714094a33d850025770277df6b30006901a9988a5fb242311669677c5bd6",
+      "source_snapshot.json": "9e9f32c1fa29fe57b4f7aef4119a345741010c0abd2cca657c8ef18458597b5e",
+      "src/eloModule.js": "6281990bfa8850a1a789c46b9ed4679d08dededebf1e7e8b49fee4d874f9be49",
+      "src/fightHistory.js": "6e9bcfba000ca3e7c47006630178df7b0a388c831843b1258310992bc1ca298f",
+      "src/fighterBirthdates.js": "da33ea19f09aaf32368f5e15dbc6918f028dd2be2d936c88b4abd8d07775363b",
+      "src/fightersData.js": "79bea6b8113eab866f059d9ec75874e995ae0ce624702fe79832202eccfb1ace",
+      "src/sourceManifest.js": "ea6968a65a1811e9a37f42ae00d8eaea09025ead8509be19b7c6f7489165e343"
+    }
+  },
+  "predictionRelevant": {
+    "fighter_profiles.json": {
+      "identical": true,
+      "matchesBaselineCommitted": true,
+      "sha256": "268f1cd7236c68da9b9708273071b59d2c3426e1c4b0d0b58798c4ee4340fda6"
+    },
+    "src/eloModule.js": {
+      "identical": true,
+      "matchesBaselineCommitted": true,
+      "sha256": "6281990bfa8850a1a789c46b9ed4679d08dededebf1e7e8b49fee4d874f9be49"
+    },
+    "src/fightHistory.js": {
+      "identical": true,
+      "matchesBaselineCommitted": true,
+      "sha256": "6e9bcfba000ca3e7c47006630178df7b0a388c831843b1258310992bc1ca298f"
+    },
+    "src/fighterBirthdates.js": {
+      "identical": true,
+      "matchesBaselineCommitted": true,
+      "sha256": "da33ea19f09aaf32368f5e15dbc6918f028dd2be2d936c88b4abd8d07775363b"
+    },
+    "src/fightersData.js": {
+      "identical": true,
+      "matchesBaselineCommitted": true,
+      "sha256": "79bea6b8113eab866f059d9ec75874e995ae0ce624702fe79832202eccfb1ace"
+    }
+  },
+  "predictions": {
+    "allowedDifferences": [
+      "_provenance.sourceManifest"
+    ],
+    "fighters": 2323,
+    "panel": 332,
+    "pending": 12,
+    "sample": [
+      {
+        "betAction": "LEAN",
+        "c6ProbA": 0.5890140325213722,
+        "fighterA": "Brendan Allen",
+        "fighterB": "Christian Leroy Duncan",
+        "trackedSide": "Brendan Allen",
+        "v2pA": 0.5890135602115973
+      },
+      {
+        "betAction": "LEAN",
+        "c6ProbA": 0.7389351195015487,
+        "fighterA": "Matheus Camilo",
+        "fighterB": "Jai Herbert",
+        "trackedSide": "Matheus Camilo",
+        "v2pA": 0.7262679830216908
+      },
+      {
+        "betAction": "LEAN",
+        "c6ProbA": 0.6924026518975004,
+        "fighterA": "Loopy Godinez",
+        "fighterB": "Ketlen Souza",
+        "trackedSide": "Loopy Godinez",
+        "v2pA": 0.5837586963512476
+      }
+    ],
+    "unexpected": []
+  },
+  "problems": [],
+  "refs": {
+    "baseline": "a2e83a816015abcbe0cfdb13dd9e3908de46f676",
+    "candidate": "34f54cf2be2d698a10da66089bdec60875837de6"
+  },
+  "repeatRun": {
+    "artifact_generation.json": true,
+    "fighter_profiles.json": true,
+    "source_ledger.json": true,
+    "source_snapshot.json": true,
+    "src/eloModule.js": true,
+    "src/fightHistory.js": true,
+    "src/fighterBirthdates.js": true,
+    "src/fightersData.js": true,
+    "src/sourceManifest.js": true
+  },
+  "today": "2026-10-08",
+  "verdict": "PASS"
+}

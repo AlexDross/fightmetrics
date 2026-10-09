@@ -1,0 +1,32 @@
+{
+  "repository": "Greco1899/scrape_ufc_stats",
+  "revision": "1ccacc5cd4f642bd2deb8b278405a0205791bfa3",
+  "revisionCommittedAt": "2026-10-04T18:06:20+00:00",
+  "files": {
+    "ufc_fight_results.csv": {
+      "sha256": "e7253107447bf2eaab780776401b2543ac5283d0272771b67fde3d1983be139b",
+      "bytes": 2101833,
+      "records": 8950
+    },
+    "ufc_event_details.csv": {
+      "sha256": "7ff5ff0155d6a1dc55a39b4ec61ef569c6ce0f43b1f22edd730744759e7ee66a",
+      "bytes": 102502,
+      "records": 791
+    },
+    "ufc_fight_details.csv": {
+      "sha256": "075cb7928c86891d998e9d6a2fda971850979a0ebbbdd2c56ce2baa43d96af86",
+      "bytes": 1042165,
+      "records": 8950
+    },
+    "ufc_fight_stats.csv": {
+      "sha256": "58f6f0d7ac45f299c877e16135458c33cc3c50454c948abdeec5dc8ea54d2c09",
+      "bytes": 7653241,
+      "records": 42062
+    },
+    "ufc_fighter_tott.csv": {
+      "sha256": "3296e67941f984cd5484488226e5a5d94de3249c63fe289fbc66d98546311ea1",
+      "bytes": 508399,
+      "records": 4629
+    }
+  }
+}

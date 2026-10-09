@@ -1,0 +1,11 @@
+{
+  "generator": "update_fighters.py",
+  "outputs": {
+    "fighter_profiles.json": "268f1cd7236c68da9b9708273071b59d2c3426e1c4b0d0b58798c4ee4340fda6",
+    "source_ledger.json": "0cbf714094a33d850025770277df6b30006901a9988a5fb242311669677c5bd6",
+    "src/fightHistory.js": "6e9bcfba000ca3e7c47006630178df7b0a388c831843b1258310992bc1ca298f",
+    "src/fightersData.js": "79bea6b8113eab866f059d9ec75874e995ae0ce624702fe79832202eccfb1ace"
+  },
+  "sourceRepository": "Greco1899/scrape_ufc_stats",
+  "sourceRevision": "1ccacc5cd4f642bd2deb8b278405a0205791bfa3"
+}

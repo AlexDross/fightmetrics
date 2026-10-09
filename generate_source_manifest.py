@@ -74,6 +74,8 @@ import subprocess
 from datetime import datetime, timezone
 from pathlib import Path
 
+import record_source_snapshot as rss
+
 REPO_ROOT = Path(__file__).resolve().parent
 
 # Modules whose maxObservedEventDate is read out of the Greco event feed. Only
@@ -466,6 +468,27 @@ def build_manifest(scope='full', input_root=None, existing=None):
             'artifacts whose sources are not on disk.'
         )
 
+    # The inputs must be the exact upstream revision source_snapshot.json pins,
+    # or the hashes stamped into every new prediction describe some other feed.
+    snapshot = rss.load_snapshot(input_base / rss.SNAPSHOT_PATH.name)
+    if snapshot is None:
+        raise SystemExit(
+            'FATAL: source_snapshot.json is missing. Run record_source_snapshot.py '
+            'on the downloaded feed before regenerating provenance.'
+        )
+    try:
+        rss.verify_inputs_match(snapshot, input_base, aggregate_inputs)
+    except rss.SnapshotError as exc:
+        raise SystemExit(f'FATAL: {exc}') from exc
+
+    def pinned(inputs):
+        return {
+            'repository': snapshot['repository'],
+            'revision': snapshot['revision'],
+            'revisionCommittedAt': snapshot['revisionCommittedAt'],
+            'inputSha256': {name: snapshot['files'][name]['sha256'] for name in inputs},
+        }
+
     fight_csvs = [name for name in aggregate_inputs if name != 'ufc_event_details.csv']
     any_window_hit = False
     for csvf in fight_csvs:
@@ -502,6 +525,7 @@ def build_manifest(scope='full', input_root=None, existing=None):
         'contentHash': sha256_of_file('src/fightHistory.js'),
         # Lineage, not prerequisites: fightHistory.js never reads round stats.
         'sourceInputs': history_inputs,
+        'sourceSnapshot': pinned(history_inputs),
         'generatorRequiredInputs': aggregate_inputs,
         'generatorVersion': (
             f"update_fighters.py @ {git_last_commit_hash('update_fighters.py')}"
@@ -520,6 +544,7 @@ def build_manifest(scope='full', input_root=None, existing=None):
         'contentHash': sha256_of_file('src/fightersData.js'),
         # All four: the round-stat file feeds every rate statistic here.
         'sourceInputs': aggregate_inputs,
+        'sourceSnapshot': pinned(aggregate_inputs),
         'generatorRequiredInputs': aggregate_inputs,
         'generatorVersion': (
             f"update_fighters.py @ {git_last_commit_hash('update_fighters.py')}"
@@ -535,6 +560,7 @@ def build_manifest(scope='full', input_root=None, existing=None):
         'maxObservedEventDate': max_event_date,
         'contentHash': sha256_of_file('src/eloModule.js'),
         'sourceInputs': elo_inputs,
+        'sourceSnapshot': pinned(elo_inputs),
         'generatorRequiredInputs': elo_inputs,
         'generatorVersion': (
             f"regen_elo.py @ {git_last_commit_hash('regen_elo.py')}"
