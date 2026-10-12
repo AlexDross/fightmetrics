@@ -2374,38 +2374,6 @@ function UnitsStakedInput({ value, onCommit, id, ariaLabel, describedBy }) {
 const propResultLabel = (result) =>
   PROP_RESULT_OPTIONS.find((o) => o.value === result)?.label ?? result ?? '—';
 
-const actualWinnerLabel = (winner) =>
-  winner === 'NC' ? 'No Contest' : winner === 'DRAW' ? 'Draw' : winner || 'Pending';
-
-function ReadOnlyField({ label, value }) {
-  return (
-    <div>
-      <dt className="text-muted text-xs font-semibold uppercase tracking-wider mb-1.5">{label}</dt>
-      <dd className="text-slate-200 text-sm py-2">{value || '—'}</dd>
-    </div>
-  );
-}
-
-// A text input that edits a local buffer and commits once, on blur or Enter --
-// for fields whose every commit is a server write. Resyncs from `value`
-// whenever it is not being edited.
-function BufferedTextInput({ value, onCommit, ...props }) {
-  const [raw, setRaw] = useState(value);
-  const [editing, setEditing] = useState(false);
-  useEffect(() => { if (!editing) setRaw(value); }, [value, editing]);
-  return (
-    <input
-      {...props}
-      type="text"
-      value={raw}
-      onFocus={() => setEditing(true)}
-      onChange={(e) => setRaw(e.target.value)}
-      onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.blur(); }}
-      onBlur={() => { setEditing(false); if (raw !== value) onCommit(raw); }}
-    />
-  );
-}
-
 // v3 fight-day check. Reruns the WHOLE v3 gate at the odds you see on fight
 // day (recheckGateV3: C6 recomputed from the entry's frozen v2), then records
 // a placed bet (accepted price + real stake) or a skip with its reason as the
@@ -8907,7 +8875,7 @@ function ROITab({
                   </div>
                 </div>
 
-                <p className="sm:hidden text-muted text-xs">
+                <p className="text-muted text-xs">
                   {entry.eventName || '—'}
                   {entry.eventDate ? ` · ${entry.eventDate}` : ''}
                   {' · Pick: '}{effectiveTrackedSide || '—'}
@@ -8915,93 +8883,6 @@ function ROITab({
                   {' · Winner: '}{entry.actualWinner || 'Pending'}
                 </p>
 
-                {!canWrite ? (
-                <dl className="hidden sm:grid grid-cols-5 gap-3">
-                  <ReadOnlyField label="Event Name" value={entry.eventName} />
-                  <ReadOnlyField label="Event Date" value={entry.eventDate} />
-                  <ReadOnlyField label="Pick" value={effectiveTrackedSide} />
-                  <ReadOnlyField label="Odds" value={effectiveOdds} />
-                  <ReadOnlyField label="Actual Winner" value={actualWinnerLabel(entry.actualWinner)} />
-                </dl>
-                ) : (
-                <div className="hidden sm:grid grid-cols-5 gap-3">
-                  <div>
-                    <label htmlFor={`roi-event-name-${entry.id}`} className="text-muted text-xs font-semibold uppercase tracking-wider block mb-1.5">
-                      Event Name
-                    </label>
-                    <BufferedTextInput
-                      id={`roi-event-name-${entry.id}`}
-                      aria-label={`Event name for ${entry.fighterA} versus ${entry.fighterB}`}
-                      value={entry.eventName || ''}
-                      onCommit={(v) => onUpdateEntry(entry.id, { eventName: v })}
-                      className="w-full bg-surface-2 border border-line-strong text-slate-200 text-sm rounded-lg px-3 py-2 focus:border-accent"
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor={`roi-event-date-${entry.id}`} className="text-muted text-xs font-semibold uppercase tracking-wider block mb-1.5">
-                      Event Date
-                    </label>
-                    <input
-                      id={`roi-event-date-${entry.id}`}
-                      aria-label={`Event date for ${entry.fighterA} versus ${entry.fighterB}`}
-                      type="date"
-                      value={entry.eventDate || ''}
-                      onChange={(e) =>
-                        onUpdateEntry(entry.id, { eventDate: e.target.value })
-                      }
-                      className="w-full h-10 bg-surface-2 border border-line-strong text-slate-200 text-sm rounded-lg px-3 py-2 focus:border-accent"
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor={`roi-pick-${entry.id}`} className="text-muted text-xs font-semibold uppercase tracking-wider block mb-1.5">
-                      Pick
-                    </label>
-                    <input
-                      id={`roi-pick-${entry.id}`}
-                      aria-label={`Model pick for ${entry.fighterA} versus ${entry.fighterB}`}
-                      type="text"
-                      value={effectiveTrackedSide || ''}
-                      readOnly
-                      className="w-full bg-surface-2 border border-line-strong text-slate-200 text-sm rounded-lg px-3 py-2"
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor={`roi-odds-${entry.id}`} className="text-muted text-xs font-semibold uppercase tracking-wider block mb-1.5">
-                      Odds
-                    </label>
-                    <input
-                      id={`roi-odds-${entry.id}`}
-                      aria-label={`Odds for the model pick in ${entry.fighterA} versus ${entry.fighterB}`}
-                      type="text"
-                      value={effectiveOdds || ''}
-                      readOnly
-                      className="w-full bg-surface-2 border border-line-strong text-slate-200 text-sm rounded-lg px-3 py-2"
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor={`roi-winner-${entry.id}`} className="text-muted text-xs font-semibold uppercase tracking-wider block mb-1.5">
-                      Actual Winner
-                    </label>
-                    <select
-                      id={`roi-winner-${entry.id}`}
-                      aria-label={`Actual winner for ${entry.fighterA} versus ${entry.fighterB}`}
-                      value={entry.actualWinner || ''}
-                      onChange={(e) =>
-                        onUpdateEntry(entry.id, {
-                          actualWinner: e.target.value,
-                        })
-                      }
-                      className="w-full bg-surface-2 border border-line-strong text-slate-200 text-sm rounded-lg px-3 py-2 focus:border-accent"
-                    >
-                      <option value="">Pending</option>
-                      <option value={entry.fighterA}>{entry.fighterA}</option>
-                      <option value={entry.fighterB}>{entry.fighterB}</option>
-                      <option value="NC">No Contest</option>
-                      <option value="DRAW">Draw</option>
-                    </select>
-                  </div>
-                </div>
-                )}
 
               </div>
             );

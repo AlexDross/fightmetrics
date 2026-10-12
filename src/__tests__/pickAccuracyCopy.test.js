@@ -64,10 +64,14 @@ describe('ROI card labels are model-neutral', () => {
     expect(APP).not.toContain('V2 Odds');
   });
 
-  it('uses model-neutral "Pick" and "Odds" labels and a neutral metadata "Pick:"', () => {
+  it('uses a neutral metadata "Pick:"', () => {
     expect(APP).toContain('· Pick: ');
-    expect(APP).toMatch(/>\s*Pick\s*<\/label>/);
-    expect(APP).toMatch(/>\s*Odds\s*<\/label>/);
+  });
+
+  it('graded ROI cards are read-only: no event, date or winner edit controls', () => {
+    for (const id of ['roi-event-name-', 'roi-event-date-', 'roi-pick-', 'roi-odds-', 'roi-winner-']) {
+      expect(APP).not.toContain(id);
+    }
   });
 });
 

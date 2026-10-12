@@ -286,12 +286,13 @@ async function expectReadOnlyRoi(set) {
   expect(text(main())).toContain('Tracked Fights');
   await expandAllRoiEvents();
   expect(writeControls(), 'ROI All Events write controls').toEqual([]);
-  const fields = (label) => [...main().querySelectorAll('dt')].filter((dt) => text(dt) === label).map((dt) => text(dt.nextElementSibling));
-  expect(fields('Event Name').sort()).toEqual(set.roi.map((e) => e.eventName).sort());
-  expect(fields('Event Date').sort()).toEqual(set.roi.map((e) => e.eventDate).sort());
-  expect(fields('Actual Winner').sort()).toEqual(set.roi.map((e) => e.actualWinner).sort());
-  expect(fields('Pick').length).toBe(set.roi.length);
-  expect(fields('Odds').every((v) => v !== '')).toBe(true);
+  // Graded cards carry no edit row for anyone (#51): every value is on the
+  // card's one-line summary instead.
+  const page = text(main());
+  for (const e of set.roi) {
+    expect(page).toContain(`${e.eventName} · ${e.eventDate} · Pick: `);
+    expect(page).toContain(`· Winner: ${e.actualWinner}`);
+  }
   // The date filter is a view control and stays usable.
   expect(container.querySelector('#roi-since')).not.toBeNull();
 
@@ -423,7 +424,7 @@ describe('writers keep every control', () => {
     expect(cardOrder()).toEqual(expectedOrder(FIX.live).slice(1));
   });
 
-  it('live owner: ROI keeps Clear All, Confirm All/Pick, Delete and the editable fields', async () => {
+  it('live owner: ROI keeps Clear All, Confirm All/Pick and Delete, with no per-card edit fields', async () => {
     await renderApp('/roi', depsFor({ server: fakeServer('ready'), user: 'user-owner', role: 'owner' }));
     await expandAllRoiEvents();
     const labels = buttons().map(text);
@@ -431,9 +432,10 @@ describe('writers keep every control', () => {
     expect(labels).toContain('Confirm All');
     expect(labels).toContain('Confirm Pick');
     expect(labels.filter((l) => l === 'Delete').length).toBe(FIX.live.roi.length);
+    // Graded results are not editable in place, even for an owner (#51).
     for (const e of FIX.live.roi) {
-      expect(container.querySelector(`#roi-event-name-${CSS.escape(e.id)}`)).not.toBeNull();
-      expect(container.querySelector(`#roi-winner-${CSS.escape(e.id)}`)?.value).toBe(e.actualWinner);
+      expect(container.querySelector(`#roi-event-name-${CSS.escape(e.id)}`)).toBeNull();
+      expect(container.querySelector(`#roi-winner-${CSS.escape(e.id)}`)).toBeNull();
     }
     await openSubTab('Prop Bets');
     expect(main().querySelectorAll('select').length).toBe(1);
