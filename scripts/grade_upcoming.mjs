@@ -79,7 +79,7 @@ async function attachClosing(graded) {
     const { eventName, eventDate } = entries[0];
     try {
       const { event, lines, unmatched } = await fetchClosingLines(eventName, eventDate, entries);
-      if (!event) { console.warn(`closing odds: no fightodds.io event matches "${eventName}" (${eventDate}) -- none recorded`); continue; }
+      if (!event) { console.warn(`closing odds: no fightodds.io or bestfightodds.com event matches "${eventName}" (${eventDate}) -- none recorded`); continue; }
       for (const [id, line] of lines) out.set(id, buildClosingRecord({ ...line, capturedAt }));
       for (const id of unmatched) {
         const e = entries.find((x) => x.id === id);
