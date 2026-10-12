@@ -116,9 +116,15 @@ Fallbacks, in order:
   the normal state for Kalshi on a UFC card, so expect to fall back.
 - Novig has no public API. If the user wants Novig prices they read them off and
   give them to you.
-- A sportsbook consensus (BestFightOdds, DraftKings) is acceptable last resort.
-  Those lines carry vig; pass them as American odds in `oddsA`/`oddsB` and the
-  app strips the vig itself.
+- A sportsbook consensus is acceptable last resort:
+  `node scripts/fetch_card_odds.mjs "<event>" --bestfightodds "<a fighter on the card>"`
+  reads bestfightodds.com (found by fighter, since BFO names Fight Nights by
+  number, e.g. "UFC 332") and emits the median sportsbook line per fight as
+  American `oddsA`/`oddsB`. Those carry vig; the app strips it. Check the printed
+  BFO title is the right card, and expect early in fight week that BFO lists only
+  part of the card.
+- Do not use the fightodds.io GraphQL aggregator: since 2026-10 it answers 403
+  "Unknown query" to every real query.
 
 ## 3. Verify the card against two real sources
 

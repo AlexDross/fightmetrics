@@ -3,6 +3,7 @@
 // draft card.json for scripts/enter_upcoming.mjs.
 //
 //   node scripts/fetch_card_odds.mjs "UFC 331" [--date 2026-09-19] [--kalshi] [--out card.json]
+//   node scripts/fetch_card_odds.mjs "UFC 331" --bestfightodds "<a fighter on the card>" [...]
 //
 // Default source is POLYMARKET (gamma-api), which lists each fight as its own
 // event titled "UFC 331: A vs. B (Division, Segment)" and carries a moneyline
@@ -15,11 +16,19 @@
 // this prints the pairings with no prices and you should fall back to
 // Polymarket or a sportsbook.
 //
+// --bestfightodds "<fighter>" is the sportsbook last resort: it reads the
+// bestfightodds.com page of that fighter's newest event (BFO names cards its
+// own way, so it is found by fighter, not by event name) and emits the median
+// sportsbook moneyline per fight as American oddsA/oddsB. Those carry vig; the
+// app strips it. Prediction-market columns on that page are ignored.
+//
 // THE OUTPUT IS A DRAFT, NOT A CARD. It cannot know scheduled rounds or title
 // status, and market name spellings are not roster spellings. Fill those in and
 // run `enter_upcoming.mjs resolve` before adding anything.
 
 import { writeFileSync } from 'node:fs';
+import { fetchBfoCardByFighter } from './lib/closingOdds.mjs';
+import { pickClosingLine } from '../src/domain/betting/closing.js';
 
 const args = process.argv.slice(2);
 const flags = new Map();
@@ -34,7 +43,7 @@ for (let i = 0; i < args.length; i++) {
 }
 const query = positional[0];
 if (!query) {
-  console.error('usage: fetch_card_odds.mjs "UFC 331" [--date YYYY-MM-DD] [--kalshi] [--out card.json]');
+  console.error('usage: fetch_card_odds.mjs "UFC 331" [--date YYYY-MM-DD] [--kalshi | --bestfightodds "<fighter>"] [--out card.json]');
   process.exit(1);
 }
 
@@ -138,10 +147,35 @@ async function fromKalshi() {
   return { fights, source: 'kalshi' };
 }
 
-const { fights, source } = flags.has('kalshi') ? await fromKalshi() : await fromPolymarket();
+async function fromBestFightOdds(fighter) {
+  if (typeof fighter !== 'string') throw new Error('--bestfightodds needs a fighter on the card: --bestfightodds "Brendan Allen"');
+  const card = await fetchBfoCardByFighter(fighter);
+  if (!card) throw new Error(`bestfightodds.com has no fighter matching "${fighter}"`);
+  console.error(`bestfightodds.com: ${card.title} (${card.path}) -- confirm this is the right card`);
+  const fights = card.fights.map((f) => {
+    const line = pickClosingLine(f.offers.map((o) => ({ ...o, oddsA: o.odds1, oddsB: o.odds2 })));
+    return {
+      fighterA: `${f.fighter1.firstName} ${f.fighter1.lastName}`.trim(),
+      fighterB: `${f.fighter2.firstName} ${f.fighter2.lastName}`.trim(),
+      oddsA: line?.oddsA ?? null,
+      oddsB: line?.oddsB ?? null,
+      division: null,
+      isTitleBout: null,
+      scheduledRounds: null,
+      _line: line?.source ?? null,
+      _source: `https://www.bestfightodds.com${card.path}`,
+    };
+  });
+  return { fights, source: 'bestfightodds' };
+}
 
-const priced = fights.filter((f) => f.probA != null && f.probB != null);
-const unpriced = fights.filter((f) => f.probA == null || f.probB == null);
+const { fights, source } = flags.has('bestfightodds')
+  ? await fromBestFightOdds(flags.get('bestfightodds'))
+  : flags.has('kalshi') ? await fromKalshi() : await fromPolymarket();
+
+const isPriced = (f) => (f.probA != null && f.probB != null) || (f.oddsA != null && f.oddsB != null);
+const priced = fights.filter(isPriced);
+const unpriced = fights.filter((f) => !isPriced(f));
 
 const card = {
   eventName: query,

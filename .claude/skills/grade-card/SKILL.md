@@ -114,14 +114,26 @@ top of ROI together, so a failure leaves nothing half-applied. Each entry is
 carried across untouched apart from the two result fields and `closing`.
 
 **Closing odds.** `apply` (and `--dry-run`) also fetches each fight's closing
-line from the fightodds.io aggregator — Pinnacle first, then Circa, then the
-sportsbook median — binds it to fighter A/B by name, and stores it on the entry
-as `closing`. Each printed line shows the close and the tracked side's
-closing-line value (CLV). The v3 experiment's success test needs positive mean
-CLV on BETs, so check the dry-run: a `closing odds: …` warning means that fight
-gets no closing line. The grade still applies; mention the warning to the user.
-Only grade after the event has finished, or the "close" is not the close.
-`--no-closing` skips the fetch.
+line — from the fightodds.io aggregator, falling back to bestfightodds.com's
+event page when fightodds.io refuses (it has answered 403 since 2026-10) — picks
+Pinnacle first, then Circa, then the sportsbook median (prediction markets are
+never the close; they keep trading in-fight), binds it to fighter A/B by name,
+and stores it on the entry as `closing`. The entry's own `marketOdds` is the
+price taken and is never overwritten; CLV compares the two. Each printed line
+shows the close and the tracked side's closing-line value (CLV).
+
+The v3 experiment's success test needs positive mean CLV on BETs, and `closing`
+is only recorded at grading time, so check the dry-run before applying:
+
+- **Every fight has a close** — apply.
+- **Any `closing odds: …` warning that leaves a fight with `no closing line`** —
+  stop and tell the user which fights, and why, before applying. Missing CLV on
+  a BET cannot be backfilled by this script. Grade without it only if the user
+  says so.
+
+Sanity-check one or two closes against the source page (direction and rough
+price) the first time a new source is used. Only grade after the event has
+finished, or the "close" is not the close. `--no-closing` skips the fetch.
 
 The change is live on fightmetrics.app as soon as the script reports `Saved to
 Supabase …` — there is nothing to commit, push or deploy. Verify by loading the
