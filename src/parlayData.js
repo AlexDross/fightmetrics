@@ -1,5 +1,78 @@
 export const PARLAY_ENTRIES = [
   {
+    "id": "1792088363118-21uzfh",
+    "createdAt": "2026-10-15T18:19:23.118Z",
+    "pickSource": "human",
+    "eventName": "UFC Fight Night: Buckley vs. Malott",
+    "eventDate": "2026-10-17",
+    "legs": [
+      {
+        "fightId": "1792083634303-qocopj",
+        "fighterA": "Joaquin Buckley",
+        "fighterB": "Mike Malott",
+        "eventName": "UFC Fight Night: Buckley vs. Malott",
+        "eventDate": "2026-10-17",
+        "pickedFighter": "Mike Malott",
+        "v2DefaultFighter": "Mike Malott",
+        "v2ProbAtBuild": 0.6090150602863189,
+        "overridden": false,
+        "decisionProbabilitySource": "c6",
+        "decisionProbabilityVersion": "c6_sym_zerointercept_full_20260818",
+        "defaultFighter": "Mike Malott",
+        "probabilityAtBuild": 0.5919482626219075
+      },
+      {
+        "fightId": "1792083634302-lubz6l",
+        "fighterA": "Erin Blanchfield",
+        "fighterB": "Jasmine Jasudavicius",
+        "eventName": "UFC Fight Night: Buckley vs. Malott",
+        "eventDate": "2026-10-17",
+        "pickedFighter": "Erin Blanchfield",
+        "v2DefaultFighter": "Erin Blanchfield",
+        "v2ProbAtBuild": 0.6990741832036159,
+        "overridden": false,
+        "decisionProbabilitySource": "c6",
+        "decisionProbabilityVersion": "c6_sym_zerointercept_full_20260818",
+        "defaultFighter": "Erin Blanchfield",
+        "probabilityAtBuild": 0.8102444746303533
+      },
+      {
+        "fightId": "1792083634302-jgkr77",
+        "fighterA": "Marc-Andre Barriault",
+        "fighterB": "Kyle Daukaus",
+        "eventName": "UFC Fight Night: Buckley vs. Malott",
+        "eventDate": "2026-10-17",
+        "pickedFighter": "Kyle Daukaus",
+        "v2DefaultFighter": "Kyle Daukaus",
+        "v2ProbAtBuild": 0.6050560873786437,
+        "overridden": false,
+        "decisionProbabilitySource": "c6",
+        "decisionProbabilityVersion": "c6_sym_zerointercept_full_20260818",
+        "defaultFighter": "Kyle Daukaus",
+        "probabilityAtBuild": 0.6781580475218341
+      },
+      {
+        "fightId": "1792083634301-rs2isj",
+        "fighterA": "Chad Anheliger",
+        "fighterB": "Steven Koslow",
+        "eventName": "UFC Fight Night: Buckley vs. Malott",
+        "eventDate": "2026-10-17",
+        "pickedFighter": "Steven Koslow",
+        "v2DefaultFighter": "Steven Koslow",
+        "v2ProbAtBuild": 0.6157689201486901,
+        "overridden": false,
+        "decisionProbabilitySource": "c6",
+        "decisionProbabilityVersion": "c6_sym_zerointercept_full_20260818",
+        "defaultFighter": "Steven Koslow",
+        "probabilityAtBuild": 0.6489246288727741
+      }
+    ],
+    "combinedOdds": "+453",
+    "unitsWagered": 1,
+    "status": "PENDING",
+    "result": null
+  },
+  {
     "id": "1787956660565-slcl05",
     "createdAt": "2026-08-28T22:37:40.565Z",
     "pickSource": "human",
