@@ -17,7 +17,7 @@
 // measured coverage is the freshness signal there instead.
 
 export const SOURCE_MANIFEST = {
-  "manifestGeneratedAt": "2026-10-15T18:00:45Z",
+  "manifestGeneratedAt": "2026-10-19T19:42:31Z",
   "generatorScript": "generate_source_manifest.py",
   "lastGenerationScope": "full",
   "methodologyRef": "research/source_integrity_audit.md",
@@ -25,9 +25,9 @@ export const SOURCE_MANIFEST = {
     "fightHistory": {
       "file": "src/fightHistory.js",
       "feedsV2": true,
-      "generatedAt": "2026-10-12",
-      "maxObservedEventDate": "2026-10-10",
-      "contentHash": "98d22faff246dedcba8a4c6f66da035465d63e47a99c1b55ca4b7df7460bad6b",
+      "generatedAt": "2026-10-16",
+      "maxObservedEventDate": "2026-10-17",
+      "contentHash": "aba416ae172a2661266be3a734d60f535571231bebc95c4e4c7f3c31188334ed",
       "sourceInputs": [
         "ufc_fight_results.csv",
         "ufc_event_details.csv",
@@ -39,16 +39,16 @@ export const SOURCE_MANIFEST = {
         "ufc_fight_details.csv",
         "ufc_fight_stats.csv"
       ],
-      "generatorVersion": "update_fighters.py @ 256a86d75ac7f27663af972b259fee743f9cc31e",
-      "verificationMethod": "Parsed DATE column of ufc_event_details.csv directly (792 rows); maximum event date found = 2026-10-10. Cross-checked ufc_fight_results.csv, ufc_fight_details.csv, ufc_fight_stats.csv for window-period event names: FOUND (see manual audit). This value is NOT derived from any file mtime, git commit date, or in-file header comment -- see research/source_integrity_audit.md for the original manual methodology this script automates."
+      "generatorVersion": "update_fighters.py @ 98df183d8596ea35c9bb957b35f262ff8cd8f65c",
+      "verificationMethod": "Parsed DATE column of ufc_event_details.csv directly (793 rows); maximum event date found = 2026-10-17. Cross-checked ufc_fight_results.csv, ufc_fight_details.csv, ufc_fight_stats.csv for window-period event names: FOUND (see manual audit). This value is NOT derived from any file mtime, git commit date, or in-file header comment -- see research/source_integrity_audit.md for the original manual methodology this script automates."
     },
     "fightersDataAggregates": {
       "file": "src/fightersData.js",
       "feedsV2": true,
       "note": "Feeds ASL/ASP/ATL/ATP/ASA (sig_str_landed, sig_str_accuracy, sub_attempts, td_landed, td_accuracy) and TR (rounds) -- the highest-weight non-ELO v2 features.",
-      "generatedAt": "2026-10-12",
-      "maxObservedEventDate": "2026-10-10",
-      "contentHash": "5d769b1dc49adee6bd57776577de7ae256627e16e090782e2d5e1409c57788aa",
+      "generatedAt": "2026-10-16",
+      "maxObservedEventDate": "2026-10-17",
+      "contentHash": "4c1a3b622115908816a53a7d93880178c28c07ea269187af679523eacbce03ac",
       "sourceInputs": [
         "ufc_fight_results.csv",
         "ufc_event_details.csv",
@@ -61,15 +61,15 @@ export const SOURCE_MANIFEST = {
         "ufc_fight_details.csv",
         "ufc_fight_stats.csv"
       ],
-      "generatorVersion": "update_fighters.py @ 256a86d75ac7f27663af972b259fee743f9cc31e",
-      "verificationMethod": "Parsed DATE column of ufc_event_details.csv directly (792 rows); maximum event date found = 2026-10-10. Cross-checked ufc_fight_results.csv, ufc_fight_details.csv, ufc_fight_stats.csv for window-period event names: FOUND (see manual audit). This value is NOT derived from any file mtime, git commit date, or in-file header comment -- see research/source_integrity_audit.md for the original manual methodology this script automates."
+      "generatorVersion": "update_fighters.py @ 98df183d8596ea35c9bb957b35f262ff8cd8f65c",
+      "verificationMethod": "Parsed DATE column of ufc_event_details.csv directly (793 rows); maximum event date found = 2026-10-17. Cross-checked ufc_fight_results.csv, ufc_fight_details.csv, ufc_fight_stats.csv for window-period event names: FOUND (see manual audit). This value is NOT derived from any file mtime, git commit date, or in-file header comment -- see research/source_integrity_audit.md for the original manual methodology this script automates."
     },
     "elo": {
       "file": "src/eloModule.js",
       "feedsV2": true,
-      "generatedAt": "2026-10-12",
-      "maxObservedEventDate": "2026-10-10",
-      "contentHash": "2ab934d1686f7ba5346f320c2c8821fa3ab6b14d4cde753026716bc53d502a55",
+      "generatedAt": "2026-10-16",
+      "maxObservedEventDate": "2026-10-17",
+      "contentHash": "dd3c1a7a14ecfb5cfe8a8a895a3725823584d54cd4600fde670b04871a5a033b",
       "sourceInputs": [
         "ufc_fight_results.csv",
         "ufc_event_details.csv"
@@ -78,14 +78,14 @@ export const SOURCE_MANIFEST = {
         "ufc_fight_results.csv",
         "ufc_event_details.csv"
       ],
-      "generatorVersion": "regen_elo.py @ 256a86d75ac7f27663af972b259fee743f9cc31e",
-      "verificationMethod": "Parsed DATE column of ufc_event_details.csv directly (792 rows); maximum event date found = 2026-10-10. Cross-checked ufc_fight_results.csv, ufc_fight_details.csv, ufc_fight_stats.csv for window-period event names: FOUND (see manual audit). This value is NOT derived from any file mtime, git commit date, or in-file header comment -- see research/source_integrity_audit.md for the original manual methodology this script automates. NOTE: eloModule.js's own header comment claims coverage \"through Jul 2026\" -- this is misleading relative to the verified underlying data and should not be trusted; regen_elo.py reads only ufc_fight_results.csv + ufc_event_details.csv. Unlike ELO, the fighter aggregate updater also requires ufc_fight_details.csv and ufc_fight_stats.csv."
+      "generatorVersion": "regen_elo.py @ 98df183d8596ea35c9bb957b35f262ff8cd8f65c",
+      "verificationMethod": "Parsed DATE column of ufc_event_details.csv directly (793 rows); maximum event date found = 2026-10-17. Cross-checked ufc_fight_results.csv, ufc_fight_details.csv, ufc_fight_stats.csv for window-period event names: FOUND (see manual audit). This value is NOT derived from any file mtime, git commit date, or in-file header comment -- see research/source_integrity_audit.md for the original manual methodology this script automates. NOTE: eloModule.js's own header comment claims coverage \"through Jul 2026\" -- this is misleading relative to the verified underlying data and should not be trusted; regen_elo.py reads only ufc_fight_results.csv + ufc_event_details.csv. Unlike ELO, the fighter aggregate updater also requires ufc_fight_details.csv and ufc_fight_stats.csv."
     },
     "cardio": {
       "file": "src/cardioModule.js",
       "feedsV2": false,
       "note": "Does not feed MODEL_V2 (no path into computeLogisticProb's 16 features, confirmed in research/source_integrity_audit.md). Tracked here for future model versions that might use it.",
-      "generatedAt": "2026-10-12",
+      "generatedAt": "2026-10-16",
       "maxObservedEventDate": null,
       "contentHash": "7025f1f440bbf01c15731cc40e65521e50635902ee482536cd07a412738b788c",
       "generatorVersion": "unavailable -- no cardio-generation script found in repo",
@@ -95,7 +95,7 @@ export const SOURCE_MANIFEST = {
       "file": "src/rankHistory.js",
       "feedsV2": false,
       "note": "Does not feed MODEL_V2 (no path into computeLogisticProb's 16 features, confirmed in research/source_integrity_audit.md). Tracked here for future model versions that might use it.",
-      "generatedAt": "2026-10-12",
+      "generatedAt": "2026-10-16",
       "maxObservedEventDate": "2026-03-12",
       "contentHash": "9a706f356ef41fa68b605dd9c52740dd370eda014dfb747b0cb8bdc6313ba244",
       "generatorVersion": "regen_rankhistory.py (untracked in git -- present on disk, no commit history, no recoverable version)",
@@ -105,11 +105,11 @@ export const SOURCE_MANIFEST = {
       "file": "src/fighterBirthdates.js",
       "feedsV2": true,
       "note": "Canonical fighter name -> date of birth. Feeds the v2 'younger' feature and the v1 age differential/age-decay penalty via src/domain/age, which derives every age from DOB -- at app load for the roster, and at the bout date for a prediction. The integer AGE values in fightersData.js are now used only where no birth date exists here.",
-      "generatedAt": "2026-10-12",
+      "generatedAt": "2026-10-16",
       "maxObservedEventDate": null,
-      "contentHash": "da33ea19f09aaf32368f5e15dbc6918f028dd2be2d936c88b4abd8d07775363b",
-      "generatorVersion": "scripts/generate-fighter-birthdates.mjs @ 256a86d75ac7f27663af972b259fee743f9cc31e",
-      "verificationMethod": "Recomputed the join from source while writing this manifest: read 2267 rows from fighters.json, of which 2207 carry a dob matching ^\\d{4}-\\d{2}-\\d{2}$; applied 1 name_aliases.json rewrites; filled 249 further names from fighter_profiles.json (ufcstats tale of the tape, never overriding fighters.json); produced 2456 canonical names, and the shipped artifact contains 2456 entries. The generator raises on any canonical name that would receive two DIFFERENT birth dates, so a silent bad join cannot ship. Keys are sorted by UTF-16 code point (not localeCompare), making regeneration byte-identical across machines and ICU builds; the scheduled workflow enforces this with a --check re-run. maxObservedEventDate is null by nature, not by omission: this artifact holds birth dates, which are not event-scoped, so there is no event date it could be current or stale relative to. Its freshness question is coverage, which is the measured count above."
+      "contentHash": "6793990c565cf1f10e55e387aca0733928e54e8b1d5ab40aabbbec6e2f5e0857",
+      "generatorVersion": "scripts/generate-fighter-birthdates.mjs @ 98df183d8596ea35c9bb957b35f262ff8cd8f65c",
+      "verificationMethod": "Recomputed the join from source while writing this manifest: read 2267 rows from fighters.json, of which 2207 carry a dob matching ^\\d{4}-\\d{2}-\\d{2}$; applied 1 name_aliases.json rewrites; filled 255 further names from fighter_profiles.json (ufcstats tale of the tape, never overriding fighters.json); produced 2462 canonical names, and the shipped artifact contains 2462 entries. The generator raises on any canonical name that would receive two DIFFERENT birth dates, so a silent bad join cannot ship. Keys are sorted by UTF-16 code point (not localeCompare), making regeneration byte-identical across machines and ICU builds; the scheduled workflow enforces this with a --check re-run. maxObservedEventDate is null by nature, not by omission: this artifact holds birth dates, which are not event-scoped, so there is no event date it could be current or stale relative to. Its freshness question is coverage, which is the measured count above."
     },
     "rankings": {
       "file": "src/rankingsData.js",
@@ -127,7 +127,7 @@ export const SOURCE_MANIFEST = {
         "2026-10-03-meta.json",
         "2026-10-06-media.json"
       ],
-      "generatorVersion": "scripts/update_rankings.py @ 256a86d75ac7f27663af972b259fee743f9cc31e",
+      "generatorVersion": "scripts/update_rankings.py @ 98df183d8596ea35c9bb957b35f262ff8cd8f65c",
       "verificationMethod": "Read directly from the generated artifacts and the committed history cache, all produced by scripts/update_rankings.py and regenerating byte-identically from the same inputs. upstreamContentSha256 is the SHA-256 of the Kaggle CSV the cache was built from. No git commit date, file mtime, or header comment is consulted, and a missing artifact, cache or snapshot set is a hard failure rather than a silent fallback."
     },
     "rankingsHistory": {
@@ -142,7 +142,7 @@ export const SOURCE_MANIFEST = {
       "upstreamContentSha256": "2d27b34e64372520e9170cc30f1d1c59e795d046b6726de89db95b9535db9858",
       "upstreamVersion": 49,
       "historyUsedThrough": "2026-06-18",
-      "generatorVersion": "scripts/update_rankings.py @ 256a86d75ac7f27663af972b259fee743f9cc31e",
+      "generatorVersion": "scripts/update_rankings.py @ 98df183d8596ea35c9bb957b35f262ff8cd8f65c",
       "verificationMethod": "Read directly from the generated artifacts and the committed history cache, all produced by scripts/update_rankings.py and regenerating byte-identically from the same inputs. upstreamContentSha256 is the SHA-256 of the Kaggle CSV the cache was built from. No git commit date, file mtime, or header comment is consulted, and a missing artifact, cache or snapshot set is a hard failure rather than a silent fallback."
     }
   }
