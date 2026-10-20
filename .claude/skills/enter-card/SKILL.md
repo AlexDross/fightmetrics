@@ -318,6 +318,9 @@ the past (saved as reconstructed). Fix it before reporting.
 
 ## Card file format
 
+Fights go in **bout order, opener first and main event last** — see the
+`addPendingEntry` note below.
+
 ```json
 {
   "eventName": "UFC 331",
@@ -381,6 +384,11 @@ the past (saved as reconstructed). Fix it before reporting.
   `c6ProbA`/`c6ProbB`/`c6Version`.
 - `addPendingEntry` prepends, so the last fight in the card file ends up first in
   the array — the same order you would get saving them one at a time in the UI.
+  **The Upcoming tab must read main event first, opener last**, so write
+  `fights` in bout order: the first early prelim first, the main event last.
+  Take the order from UFC.com (its event page lists main event first; reverse
+  it), not from the market feed, whose order is arbitrary. To fix the order of
+  a card already entered, `remove --event` and re-`add` while it is pending.
 - The scripts import `src/` through a loader hook that retries a failed
   specifier with `.js` and `/index.js`, because `src/` uses Vite's extensionless
   imports. Same hook `scripts/regen_simulator_bar_anchors.mjs` registers.
