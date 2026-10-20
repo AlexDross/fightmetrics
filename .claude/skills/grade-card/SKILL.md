@@ -1,6 +1,6 @@
 ---
 name: grade-card
-description: Look up real fight results online and grade the pending entries in the Upcoming tab into ROI. Use when the user says grade the card, grade upcoming, settle the picks, or asks to fill in results for an event that already happened.
+description: Look up real fight results online and grade the pending entries in the Upcoming tab into ROI, plus any prop picks entered on those fights. Use when the user says grade the card, grade upcoming, grade the props, settle the picks, or asks to fill in results for an event that already happened.
 ---
 
 # Grade the upcoming card
@@ -134,6 +134,36 @@ is only recorded at grading time, so check the dry-run before applying:
 Sanity-check one or two closes against the source page (direction and rough
 price) the first time a new source is used. Only grade after the event has
 finished, or the "close" is not the close. `--no-closing` skips the fetch.
+
+## 6. Grade the props
+
+Props entered for a card are graded with it. `apply` settles every PENDING prop
+pick on a fight it grades, in the same atomic batch, and prints one
+`PROP WON|LOST|PUSH` line per prop — so step 5 normally covers them. The rules
+(`src/domain/betting/propSettlement.js`): a fighter-level prop wins only when
+that fighter wins by a listed method; a fight-level prop ("Fight Goes to
+Decision") settles on the finish alone, so it **wins on a draw by decision**;
+NC voids every prop, and a draw voids fighter-level props (`PUSH`).
+
+Then catch any prop left behind — one entered after its fight was already
+graded, or on a fight graded in the app:
+
+```bash
+node scripts/grade_upcoming.mjs props --dry-run
+node scripts/grade_upcoming.mjs props
+```
+
+This settles PENDING props against fights already in ROI and reports how many
+are still PENDING. Include the props in the step 4 table (label, odds,
+result). A `PROP ????` line means the result cannot settle it — usually a fight
+graded in the app with no finish recorded. Confirm the method from the sources
+in step 3 and tell the user; it stays PENDING until they grade it in the app.
+Never set a prop result by hand-editing the data.
+
+Report props separately from the fight record: W-L-P and net units at the
+stored odds and stake.
+
+## 7. Confirm
 
 The change is live on fightmetrics.app as soon as the script reports `Saved to
 Supabase …` — there is nothing to commit, push or deploy. Verify by loading the
