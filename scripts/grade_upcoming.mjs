@@ -12,6 +12,13 @@
 //
 //   node scripts/grade_upcoming.mjs pending [--all] [--files]
 //   node scripts/grade_upcoming.mjs apply <results.json> [--dry-run] [--files] [--no-closing]
+//   node scripts/grade_upcoming.mjs props [--dry-run] [--files]
+//
+// apply also settles every PENDING prop pick on a fight it grades, in the same
+// batch (src/domain/betting/propSettlement.js). props settles PENDING props on
+// fights that are already in ROI -- the catch-up for props left behind.
+// A prop the result cannot settle (unknown finish, unknown method) stays
+// PENDING and is listed for review.
 //
 // apply also records each fight's CLOSING ODDS (fightodds.io, Pinnacle first;
 // see src/domain/betting/closing.js) on the graded entry as `closing`, for the
@@ -28,6 +35,7 @@ import { resolve } from 'node:path';
 import { openStore } from './lib/documentStore.mjs';
 import { fetchClosingLines } from './lib/closingOdds.mjs';
 import { buildClosingRecord, closingLineValue } from '../src/domain/betting/closing.js';
+import { settlePropPick } from '../src/domain/betting/propSettlement.js';
 
 const FINISHES = new Set(['KO/TKO', 'SUB', 'DEC', '']);
 
@@ -92,6 +100,53 @@ async function attachClosing(graded) {
   return graded.map((e) => (out.has(e.id) ? { ...e, closing: out.get(e.id) } : e));
 }
 
+// A prop belongs to the fight it was saved from (upcomingId; grading keeps the
+// id), else to the same event and pairing in either corner order.
+const samePair = (p, e) =>
+  p.eventName === e.eventName &&
+  ((p.fighterA === e.fighterA && p.fighterB === e.fighterB) ||
+    (p.fighterA === e.fighterB && p.fighterB === e.fighterA));
+
+// Settle PENDING props against graded fights: { settled: [{ pick, fight,
+// result }], unsettled: [{ pick, fight }] }. A prop whose fight is not among
+// `fights` is neither.
+function settleProps(fights) {
+  const settled = [];
+  const unsettled = [];
+  for (const pick of load('propPicks').filter((p) => p.result === 'PENDING')) {
+    const fight = fights.find((e) => e.id === pick.upcomingId) ?? fights.find((e) => samePair(pick, e));
+    if (!fight) continue;
+    // The pick's side refers to ITS fighterA/B, so settle in its own corner order.
+    const result = settlePropPick(pick, fight);
+    if (result) settled.push({ pick, fight, result });
+    else unsettled.push({ pick, fight });
+  }
+  return { settled, unsettled };
+}
+
+const propOps = (settled) =>
+  settled.map(({ pick, result }) => ({ op: 'put', collection: 'propPicks', payload: { ...pick, result } }));
+
+function reportProps({ settled, unsettled }) {
+  for (const { pick, fight, result } of settled) {
+    console.log(`PROP ${result.padEnd(4)}  ${pick.eventName}  ${pick.label} (${pick.odds}) -> ${fight.actualWinner} (${fight.actualFinish || '?'})`);
+  }
+  for (const { pick, fight } of unsettled) {
+    console.warn(`PROP ????  ${pick.eventName}  ${pick.label} -> ${fight.actualWinner} (${fight.actualFinish || '?'}): cannot settle, left PENDING -- grade it in the app`);
+  }
+}
+
+async function props({ dryRun }) {
+  const outcome = settleProps(load('roi'));
+  reportProps(outcome);
+  const pendingLeft = load('propPicks').filter((p) => p.result === 'PENDING').length - outcome.settled.length;
+  console.log(`\n${outcome.settled.length} prop(s) settled | ${pendingLeft} still PENDING`);
+  if (!outcome.settled.length) return;
+  if (dryRun) { console.log('\n--dry-run: nothing written'); return; }
+  await store.apply(propOps(outcome.settled)).catch((e) => { console.error(`\n${e.message}`); process.exit(1); });
+  console.log(`\nSaved to ${store.describeTarget}`);
+}
+
 async function apply(resultsPath, { dryRun, closing }) {
   const results = JSON.parse(readFileSync(resolve(process.cwd(), resultsPath), 'utf8'));
   if (!Array.isArray(results)) throw new Error('results file must be a JSON array');
@@ -139,6 +194,8 @@ async function apply(resultsPath, { dryRun, closing }) {
     { op: 'delete', collection: 'upcoming', id: e.id },
     { op: 'put', collection: 'roi', payload: e },
   ]);
+  const propOutcome = settleProps(graded);
+  ops.push(...propOps(propOutcome.settled));
 
   for (const e of graded) {
     const side = e.trackedSide || e.predictedWinner;
@@ -150,7 +207,8 @@ async function apply(resultsPath, { dryRun, closing }) {
       : '  no closing line';
     console.log(`${hit}  ${e.eventName}  ${e.fighterA} vs ${e.fighterB} -> ${e.actualWinner} (${e.actualFinish || '?'})  [pick: ${side}, ${e.betAction}]${close}`);
   }
-  console.log(`\n${graded.length} graded | upcoming ${upcoming.length} -> ${nextUpcoming.length} | roi ${roi.length} -> ${nextRoi.length}`);
+  reportProps(propOutcome);
+  console.log(`\n${graded.length} graded | upcoming ${upcoming.length} -> ${nextUpcoming.length} | roi ${roi.length} -> ${nextRoi.length} | ${propOutcome.settled.length} prop(s) settled`);
 
   if (dryRun) { console.log('\n--dry-run: nothing written'); return; }
   await store.apply(ops).catch((e) => { console.error(`\n${e.message}`); process.exit(1); });
@@ -165,7 +223,8 @@ if (cmd === 'pending') pending({ all: flags.has('--all') });
 else if (cmd === 'apply') {
   if (!args[0]) { console.error('usage: grade_upcoming.mjs apply <results.json> [--dry-run] [--no-closing]'); process.exit(1); }
   await apply(args[0], { dryRun: flags.has('--dry-run'), closing: !flags.has('--no-closing') });
-} else {
-  console.error('usage: grade_upcoming.mjs pending [--all] | apply <results.json> [--dry-run]');
+} else if (cmd === 'props') await props({ dryRun: flags.has('--dry-run') });
+else {
+  console.error('usage: grade_upcoming.mjs pending [--all] | apply <results.json> [--dry-run] | props [--dry-run]');
   process.exit(1);
 }
