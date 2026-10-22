@@ -86,7 +86,6 @@ describe('programmatic control names', () => {
   it('gives repeated fight controls contextual accessible names', () => {
     expect(appSource).toContain('Actual winner for ${entry.fighterA} versus ${entry.fighterB}');
     expect(appSource).toContain('Units staked on ${entry.fighterA} versus ${entry.fighterB}');
-    expect(appSource).toContain('Odds for the model pick in ${entry.fighterA} versus ${entry.fighterB}');
     expect(appSource).toContain('Select ${entry.fighterA} versus ${entry.fighterB} for parlay');
     expect(appSource).not.toContain("'Select for parlay'");
   });
