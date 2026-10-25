@@ -1,5 +1,63 @@
 export const PARLAY_ENTRIES = [
   {
+    "id": "1792850478843-63fqdz",
+    "createdAt": "2026-10-24T14:01:18.843Z",
+    "pickSource": "human",
+    "eventName": "UFC 333",
+    "eventDate": "2026-10-24",
+    "legs": [
+      {
+        "fightId": "1792849254074-n4hz73",
+        "fighterA": "Alexander Volkov",
+        "fighterB": "Rizvan Kuniev",
+        "eventName": "UFC 333",
+        "eventDate": "2026-10-24",
+        "pickedFighter": "Alexander Volkov",
+        "v2DefaultFighter": "Alexander Volkov",
+        "v2ProbAtBuild": 0.7108610408350744,
+        "overridden": false,
+        "decisionProbabilitySource": "c6",
+        "decisionProbabilityVersion": "c6_sym_zerointercept_full_20260818",
+        "defaultFighter": "Alexander Volkov",
+        "probabilityAtBuild": 0.650729141353418
+      },
+      {
+        "fightId": "1792849254074-el8vow",
+        "fighterA": "Aaron Pico",
+        "fighterB": "Losene Keita",
+        "eventName": "UFC 333",
+        "eventDate": "2026-10-24",
+        "pickedFighter": "Aaron Pico",
+        "v2DefaultFighter": "Aaron Pico",
+        "v2ProbAtBuild": 0.5286473725436813,
+        "overridden": false,
+        "decisionProbabilitySource": "c6",
+        "decisionProbabilityVersion": "c6_sym_zerointercept_full_20260818",
+        "defaultFighter": "Aaron Pico",
+        "probabilityAtBuild": 0.584191487373273
+      },
+      {
+        "fightId": "1792849254073-ozonm6",
+        "fighterA": "Nikita Krylov",
+        "fighterB": "Abdul Rakhman Yakhyaev",
+        "eventName": "UFC 333",
+        "eventDate": "2026-10-24",
+        "pickedFighter": "Abdul Rakhman Yakhyaev",
+        "v2DefaultFighter": "Abdul Rakhman Yakhyaev",
+        "v2ProbAtBuild": 0.704100387713521,
+        "overridden": false,
+        "decisionProbabilitySource": "c6",
+        "decisionProbabilityVersion": "c6_sym_zerointercept_full_20260818",
+        "defaultFighter": "Abdul Rakhman Yakhyaev",
+        "probabilityAtBuild": 0.8705955055735929
+      }
+    ],
+    "combinedOdds": "+262",
+    "unitsWagered": 1,
+    "status": "PENDING",
+    "result": null
+  },
+  {
     "id": "1792088363118-21uzfh",
     "createdAt": "2026-10-15T18:19:23.118Z",
     "pickSource": "human",
