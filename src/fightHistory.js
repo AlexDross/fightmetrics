@@ -1,4 +1,2667 @@
 export const FIGHT_HISTORY = {
+  "Alexander Volkanovski": [
+    {
+      "dt": "2026-10-24",
+      "op": "Movsar Evloev",
+      "re": "W",
+      "me": "KO/TKO",
+      "rn": 2,
+      "ti": "4:54",
+      "wc": "Featherweight",
+      "tb": false,
+      "ev": "UFC 333: Volkanovski vs. Evloev"
+    },
+    {
+      "dt": "2026-01-31",
+      "op": "Diego Lopes",
+      "re": "W",
+      "me": "Decision - Unanimous",
+      "rn": 5,
+      "ti": "5:00",
+      "wc": "Featherweight",
+      "tb": false,
+      "ev": "UFC 325: Volkanovski vs. Lopes 2"
+    },
+    {
+      "dt": "2025-04-12",
+      "op": "Diego Lopes",
+      "re": "W",
+      "me": "Decision - Unanimous",
+      "rn": 5,
+      "ti": "5:00",
+      "wc": "Featherweight",
+      "tb": false,
+      "ev": "UFC 314: Volkanovski vs. Lopes"
+    },
+    {
+      "dt": "2024-02-17",
+      "op": "Ilia Topuria",
+      "re": "L",
+      "me": "KO/TKO",
+      "rn": 2,
+      "ti": "3:32",
+      "wc": "Featherweight",
+      "tb": false,
+      "ev": "UFC 298: Volkanovski vs. Topuria"
+    },
+    {
+      "dt": "2023-10-21",
+      "op": "Islam Makhachev",
+      "re": "L",
+      "me": "KO/TKO",
+      "rn": 1,
+      "ti": "3:06",
+      "wc": "Lightweight",
+      "tb": false,
+      "ev": "UFC 294: Makhachev vs. Volkanovski 2"
+    },
+    {
+      "dt": "2023-07-08",
+      "op": "Yair Rodriguez",
+      "re": "W",
+      "me": "KO/TKO",
+      "rn": 3,
+      "ti": "4:19",
+      "wc": "Featherweight",
+      "tb": false,
+      "ev": "UFC 290: Volkanovski vs. Rodriguez"
+    },
+    {
+      "dt": "2023-02-11",
+      "op": "Islam Makhachev",
+      "re": "L",
+      "me": "Decision - Unanimous",
+      "rn": 5,
+      "ti": "5:00",
+      "wc": "Lightweight",
+      "tb": false,
+      "ev": "UFC 284: Makhachev vs. Volkanovski"
+    },
+    {
+      "dt": "2022-07-02",
+      "op": "Max Holloway",
+      "re": "W",
+      "me": "Decision - Unanimous",
+      "rn": 5,
+      "ti": "5:00",
+      "wc": "Featherweight",
+      "tb": false,
+      "ev": "UFC 276: Adesanya vs. Cannonier"
+    },
+    {
+      "dt": "2022-04-09",
+      "op": "Chan Sung Jung",
+      "re": "W",
+      "me": "KO/TKO",
+      "rn": 4,
+      "ti": "0:45",
+      "wc": "Featherweight",
+      "tb": false,
+      "ev": "UFC 273: Volkanovski vs. The Korean Zombie"
+    },
+    {
+      "dt": "2021-09-25",
+      "op": "Brian Ortega",
+      "re": "W",
+      "me": "Decision - Unanimous",
+      "rn": 5,
+      "ti": "5:00",
+      "wc": "Featherweight",
+      "tb": false,
+      "ev": "UFC 266: Volkanovski vs. Ortega"
+    },
+    {
+      "dt": "2020-07-11",
+      "op": "Max Holloway",
+      "re": "W",
+      "me": "Decision - Split",
+      "rn": 5,
+      "ti": "5:00",
+      "wc": "Featherweight",
+      "tb": false,
+      "ev": "UFC 251: Usman vs. Masvidal"
+    },
+    {
+      "dt": "2019-12-14",
+      "op": "Max Holloway",
+      "re": "W",
+      "me": "Decision - Unanimous",
+      "rn": 5,
+      "ti": "5:00",
+      "wc": "Featherweight",
+      "tb": false,
+      "ev": "UFC 245: Usman vs. Covington"
+    },
+    {
+      "dt": "2019-05-11",
+      "op": "Jose Aldo",
+      "re": "W",
+      "me": "Decision - Unanimous",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Featherweight",
+      "tb": false,
+      "ev": "UFC 237: Namajunas vs. Andrade"
+    },
+    {
+      "dt": "2018-12-29",
+      "op": "Chad Mendes",
+      "re": "W",
+      "me": "KO/TKO",
+      "rn": 2,
+      "ti": "4:14",
+      "wc": "Featherweight",
+      "tb": false,
+      "ev": "UFC 232: Jones vs. Gustafsson 2"
+    },
+    {
+      "dt": "2018-07-14",
+      "op": "Darren Elkins",
+      "re": "W",
+      "me": "Decision - Unanimous",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Featherweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Dos Santos vs. Ivanov"
+    },
+    {
+      "dt": "2018-02-10",
+      "op": "Jeremy Kennedy",
+      "re": "W",
+      "me": "KO/TKO",
+      "rn": 2,
+      "ti": "4:57",
+      "wc": "Featherweight",
+      "tb": false,
+      "ev": "UFC 221: Romero vs. Rockhold"
+    },
+    {
+      "dt": "2017-11-18",
+      "op": "Shane Young",
+      "re": "W",
+      "me": "Decision - Unanimous",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Catch Weight",
+      "tb": false,
+      "ev": "UFC Fight Night: Werdum vs. Tybura"
+    },
+    {
+      "dt": "2017-06-10",
+      "op": "Mizuto Hirota",
+      "re": "W",
+      "me": "Decision - Unanimous",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Featherweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Lewis vs. Hunt"
+    },
+    {
+      "dt": "2016-11-26",
+      "op": "Yusuke Kasuya",
+      "re": "W",
+      "me": "KO/TKO",
+      "rn": 2,
+      "ti": "2:06",
+      "wc": "Lightweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Whittaker vs. Brunson"
+    }
+  ],
+  "Movsar Evloev": [
+    {
+      "dt": "2026-10-24",
+      "op": "Alexander Volkanovski",
+      "re": "L",
+      "me": "KO/TKO",
+      "rn": 2,
+      "ti": "4:54",
+      "wc": "Featherweight",
+      "tb": false,
+      "ev": "UFC 333: Volkanovski vs. Evloev"
+    },
+    {
+      "dt": "2026-03-21",
+      "op": "Lerone Murphy",
+      "re": "W",
+      "me": "Decision - Majority",
+      "rn": 5,
+      "ti": "5:00",
+      "wc": "Featherweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Evloev vs. Murphy"
+    },
+    {
+      "dt": "2024-12-07",
+      "op": "Aljamain Sterling",
+      "re": "W",
+      "me": "Decision - Unanimous",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Featherweight",
+      "tb": false,
+      "ev": "UFC 310: Pantoja vs. Asakura"
+    },
+    {
+      "dt": "2024-01-20",
+      "op": "Arnold Allen",
+      "re": "W",
+      "me": "Decision - Unanimous",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Featherweight",
+      "tb": false,
+      "ev": "UFC 297: Strickland vs. Du Plessis"
+    },
+    {
+      "dt": "2023-05-06",
+      "op": "Diego Lopes",
+      "re": "W",
+      "me": "Decision - Unanimous",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Featherweight",
+      "tb": false,
+      "ev": "UFC 288: Sterling vs. Cejudo"
+    },
+    {
+      "dt": "2022-06-04",
+      "op": "Dan Ige",
+      "re": "W",
+      "me": "Decision - Unanimous",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Featherweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Volkov vs. Rozenstruik"
+    },
+    {
+      "dt": "2021-06-12",
+      "op": "Hakeem Dawodu",
+      "re": "W",
+      "me": "Decision - Unanimous",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Featherweight",
+      "tb": false,
+      "ev": "UFC 263: Adesanya vs. Vettori 2"
+    },
+    {
+      "dt": "2021-01-23",
+      "op": "Nik Lentz",
+      "re": "W",
+      "me": "Decision - Split",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Catch Weight",
+      "tb": false,
+      "ev": "UFC 257: Poirier vs. McGregor"
+    },
+    {
+      "dt": "2020-07-25",
+      "op": "Mike Grundy",
+      "re": "W",
+      "me": "Decision - Unanimous",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Featherweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Whittaker vs. Till"
+    },
+    {
+      "dt": "2019-10-26",
+      "op": "Enrique Barzola",
+      "re": "W",
+      "me": "Decision - Unanimous",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Featherweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Maia vs. Askren"
+    },
+    {
+      "dt": "2019-04-20",
+      "op": "SeungWoo Choi",
+      "re": "W",
+      "me": "Decision - Unanimous",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Featherweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Overeem vs. Oleinik"
+    }
+  ],
+  "Petr Yan": [
+    {
+      "dt": "2026-10-24",
+      "op": "Merab Dvalishvili",
+      "re": "W",
+      "me": "Decision - Unanimous",
+      "rn": 5,
+      "ti": "5:00",
+      "wc": "Bantamweight",
+      "tb": false,
+      "ev": "UFC 333: Volkanovski vs. Evloev"
+    },
+    {
+      "dt": "2025-12-06",
+      "op": "Merab Dvalishvili",
+      "re": "W",
+      "me": "Decision - Unanimous",
+      "rn": 5,
+      "ti": "5:00",
+      "wc": "Bantamweight",
+      "tb": false,
+      "ev": "UFC 323: Dvalishvili vs. Yan 2"
+    },
+    {
+      "dt": "2025-07-26",
+      "op": "Marcus McGhee",
+      "re": "W",
+      "me": "Decision - Unanimous",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Bantamweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Whittaker vs. De Ridder"
+    },
+    {
+      "dt": "2024-11-23",
+      "op": "Deiveson Figueiredo",
+      "re": "W",
+      "me": "Decision - Unanimous",
+      "rn": 5,
+      "ti": "5:00",
+      "wc": "Bantamweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Yan vs. Figueiredo"
+    },
+    {
+      "dt": "2024-03-09",
+      "op": "Song Yadong",
+      "re": "W",
+      "me": "Decision - Unanimous",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Bantamweight",
+      "tb": false,
+      "ev": "UFC 299: O'Malley vs. Vera 2"
+    },
+    {
+      "dt": "2023-03-11",
+      "op": "Merab Dvalishvili",
+      "re": "L",
+      "me": "Decision - Unanimous",
+      "rn": 5,
+      "ti": "5:00",
+      "wc": "Bantamweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Yan vs. Dvalishvili"
+    },
+    {
+      "dt": "2022-10-22",
+      "op": "Sean O'Malley",
+      "re": "L",
+      "me": "Decision - Split",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Bantamweight",
+      "tb": false,
+      "ev": "UFC 280: Oliveira vs. Makhachev"
+    },
+    {
+      "dt": "2022-04-09",
+      "op": "Aljamain Sterling",
+      "re": "L",
+      "me": "Decision - Split",
+      "rn": 5,
+      "ti": "5:00",
+      "wc": "Bantamweight",
+      "tb": false,
+      "ev": "UFC 273: Volkanovski vs. The Korean Zombie"
+    },
+    {
+      "dt": "2021-10-30",
+      "op": "Cory Sandhagen",
+      "re": "W",
+      "me": "Decision - Unanimous",
+      "rn": 5,
+      "ti": "5:00",
+      "wc": "Bantamweight",
+      "tb": false,
+      "ev": "UFC 267: Blachowicz vs. Teixeira"
+    },
+    {
+      "dt": "2021-03-06",
+      "op": "Aljamain Sterling",
+      "re": "L",
+      "me": "DQ",
+      "rn": 4,
+      "ti": "4:29",
+      "wc": "Bantamweight",
+      "tb": false,
+      "ev": "UFC 259: Blachowicz vs. Adesanya"
+    },
+    {
+      "dt": "2020-07-11",
+      "op": "Jose Aldo",
+      "re": "W",
+      "me": "KO/TKO",
+      "rn": 5,
+      "ti": "3:24",
+      "wc": "Bantamweight",
+      "tb": false,
+      "ev": "UFC 251: Usman vs. Masvidal"
+    },
+    {
+      "dt": "2019-12-14",
+      "op": "Urijah Faber",
+      "re": "W",
+      "me": "KO/TKO",
+      "rn": 3,
+      "ti": "0:43",
+      "wc": "Bantamweight",
+      "tb": false,
+      "ev": "UFC 245: Usman vs. Covington"
+    },
+    {
+      "dt": "2019-06-08",
+      "op": "Jimmie Rivera",
+      "re": "W",
+      "me": "Decision - Unanimous",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Bantamweight",
+      "tb": false,
+      "ev": "UFC 238: Cejudo vs. Moraes"
+    },
+    {
+      "dt": "2019-02-23",
+      "op": "John Dodson",
+      "re": "W",
+      "me": "Decision - Unanimous",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Bantamweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Blachowicz vs. Santos"
+    },
+    {
+      "dt": "2018-12-29",
+      "op": "Douglas Silva de Andrade",
+      "re": "W",
+      "me": "KO/TKO",
+      "rn": 2,
+      "ti": "5:00",
+      "wc": "Bantamweight",
+      "tb": false,
+      "ev": "UFC 232: Jones vs. Gustafsson 2"
+    },
+    {
+      "dt": "2018-09-15",
+      "op": "Jin Soo Son",
+      "re": "W",
+      "me": "Decision - Unanimous",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Bantamweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Hunt vs. Oleinik"
+    },
+    {
+      "dt": "2018-06-23",
+      "op": "Teruto Ishihara",
+      "re": "W",
+      "me": "KO/TKO",
+      "rn": 1,
+      "ti": "3:28",
+      "wc": "Bantamweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Cowboy vs. Edwards"
+    }
+  ],
+  "Merab Dvalishvili": [
+    {
+      "dt": "2026-10-24",
+      "op": "Petr Yan",
+      "re": "L",
+      "me": "Decision - Unanimous",
+      "rn": 5,
+      "ti": "5:00",
+      "wc": "Bantamweight",
+      "tb": false,
+      "ev": "UFC 333: Volkanovski vs. Evloev"
+    },
+    {
+      "dt": "2025-12-06",
+      "op": "Petr Yan",
+      "re": "L",
+      "me": "Decision - Unanimous",
+      "rn": 5,
+      "ti": "5:00",
+      "wc": "Bantamweight",
+      "tb": false,
+      "ev": "UFC 323: Dvalishvili vs. Yan 2"
+    },
+    {
+      "dt": "2025-10-04",
+      "op": "Cory Sandhagen",
+      "re": "W",
+      "me": "Decision - Unanimous",
+      "rn": 5,
+      "ti": "5:00",
+      "wc": "Bantamweight",
+      "tb": false,
+      "ev": "UFC 320: Ankalaev vs. Pereira 2"
+    },
+    {
+      "dt": "2025-06-07",
+      "op": "Sean O'Malley",
+      "re": "W",
+      "me": "Submission",
+      "rn": 3,
+      "ti": "4:42",
+      "wc": "Bantamweight",
+      "tb": false,
+      "ev": "UFC 316: Dvalishvili vs. O'Malley 2"
+    },
+    {
+      "dt": "2025-01-18",
+      "op": "Umar Nurmagomedov",
+      "re": "W",
+      "me": "Decision - Unanimous",
+      "rn": 5,
+      "ti": "5:00",
+      "wc": "Bantamweight",
+      "tb": false,
+      "ev": "UFC 311: Makhachev vs. Moicano"
+    },
+    {
+      "dt": "2024-09-14",
+      "op": "Sean O'Malley",
+      "re": "W",
+      "me": "Decision - Unanimous",
+      "rn": 5,
+      "ti": "5:00",
+      "wc": "Bantamweight",
+      "tb": false,
+      "ev": "UFC 306: Riyadh Season Noche UFC"
+    },
+    {
+      "dt": "2024-02-17",
+      "op": "Henry Cejudo",
+      "re": "W",
+      "me": "Decision - Unanimous",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Bantamweight",
+      "tb": false,
+      "ev": "UFC 298: Volkanovski vs. Topuria"
+    },
+    {
+      "dt": "2023-03-11",
+      "op": "Petr Yan",
+      "re": "W",
+      "me": "Decision - Unanimous",
+      "rn": 5,
+      "ti": "5:00",
+      "wc": "Bantamweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Yan vs. Dvalishvili"
+    },
+    {
+      "dt": "2022-08-20",
+      "op": "Jose Aldo",
+      "re": "W",
+      "me": "Decision - Unanimous",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Bantamweight",
+      "tb": false,
+      "ev": "UFC 278: Usman vs. Edwards"
+    },
+    {
+      "dt": "2021-09-25",
+      "op": "Marlon Moraes",
+      "re": "W",
+      "me": "KO/TKO",
+      "rn": 2,
+      "ti": "4:25",
+      "wc": "Bantamweight",
+      "tb": false,
+      "ev": "UFC 266: Volkanovski vs. Ortega"
+    },
+    {
+      "dt": "2021-05-01",
+      "op": "Cody Stamann",
+      "re": "W",
+      "me": "Decision - Unanimous",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Bantamweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Reyes vs. Prochazka"
+    },
+    {
+      "dt": "2020-08-15",
+      "op": "John Dodson",
+      "re": "W",
+      "me": "Decision - Unanimous",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Bantamweight",
+      "tb": false,
+      "ev": "UFC 252: Miocic vs. Cormier 3"
+    },
+    {
+      "dt": "2020-06-13",
+      "op": "Gustavo Lopez",
+      "re": "W",
+      "me": "Decision - Unanimous",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Catch Weight",
+      "tb": false,
+      "ev": "UFC Fight Night: Eye vs. Calvillo"
+    },
+    {
+      "dt": "2020-02-15",
+      "op": "Casey Kenney",
+      "re": "W",
+      "me": "Decision - Unanimous",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Bantamweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Anderson vs. Blachowicz"
+    },
+    {
+      "dt": "2019-05-04",
+      "op": "Brad Katona",
+      "re": "W",
+      "me": "Decision - Unanimous",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Bantamweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Iaquinta vs. Cowboy"
+    },
+    {
+      "dt": "2018-09-15",
+      "op": "Terrion Ware",
+      "re": "W",
+      "me": "Decision - Unanimous",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Bantamweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Hunt vs. Oleinik"
+    },
+    {
+      "dt": "2018-04-21",
+      "op": "Ricky Simon",
+      "re": "L",
+      "me": "Submission",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Bantamweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Barboza vs. Lee"
+    },
+    {
+      "dt": "2017-12-09",
+      "op": "Frankie Saenz",
+      "re": "L",
+      "me": "Decision - Split",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Bantamweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Swanson vs. Ortega"
+    }
+  ],
+  "Lone'er Kavanagh": [
+    {
+      "dt": "2026-10-24",
+      "op": "Ramazan Temirov",
+      "re": "W",
+      "me": "KO/TKO",
+      "rn": 1,
+      "ti": "4:28",
+      "wc": "Flyweight",
+      "tb": false,
+      "ev": "UFC 333: Volkanovski vs. Evloev"
+    },
+    {
+      "dt": "2026-07-11",
+      "op": "Brandon Royval",
+      "re": "L",
+      "me": "Submission",
+      "rn": 3,
+      "ti": "3:40",
+      "wc": "Flyweight",
+      "tb": false,
+      "ev": "UFC 329: McGregor vs. Holloway 2"
+    },
+    {
+      "dt": "2026-02-28",
+      "op": "Brandon Moreno",
+      "re": "W",
+      "me": "Decision - Unanimous",
+      "rn": 5,
+      "ti": "5:00",
+      "wc": "Flyweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Moreno vs. Kavanagh"
+    },
+    {
+      "dt": "2025-08-23",
+      "op": "Charles Johnson",
+      "re": "L",
+      "me": "KO/TKO",
+      "rn": 2,
+      "ti": "4:35",
+      "wc": "Flyweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Walker vs. Zhang"
+    },
+    {
+      "dt": "2025-03-22",
+      "op": "Felipe dos Santos",
+      "re": "W",
+      "me": "Decision - Unanimous",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Flyweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Edwards vs. Brady"
+    },
+    {
+      "dt": "2024-11-23",
+      "op": "Jose Ochoa",
+      "re": "W",
+      "me": "Decision - Unanimous",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Flyweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Yan vs. Figueiredo"
+    }
+  ],
+  "Ramazan Temirov": [
+    {
+      "dt": "2026-10-24",
+      "op": "Lone'er Kavanagh",
+      "re": "L",
+      "me": "KO/TKO",
+      "rn": 1,
+      "ti": "4:28",
+      "wc": "Flyweight",
+      "tb": false,
+      "ev": "UFC 333: Volkanovski vs. Evloev"
+    },
+    {
+      "dt": "2026-07-25",
+      "op": "Steve Erceg",
+      "re": "W",
+      "me": "KO/TKO",
+      "rn": 1,
+      "ti": "4:21",
+      "wc": "Flyweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Ankalaev vs. Guskov"
+    },
+    {
+      "dt": "2025-03-01",
+      "op": "Charles Johnson",
+      "re": "W",
+      "me": "Decision - Unanimous",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Flyweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Kape vs. Almabayev"
+    },
+    {
+      "dt": "2024-10-12",
+      "op": "CJ Vergara",
+      "re": "W",
+      "me": "KO/TKO",
+      "rn": 1,
+      "ti": "2:50",
+      "wc": "Flyweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Royval vs. Taira"
+    }
+  ],
+  "Alexander Volkov": [
+    {
+      "dt": "2026-10-24",
+      "op": "Rizvan Kuniev",
+      "re": "W",
+      "me": "Decision - Unanimous",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Heavyweight",
+      "tb": false,
+      "ev": "UFC 333: Volkanovski vs. Evloev"
+    },
+    {
+      "dt": "2026-05-09",
+      "op": "Waldo Cortes Acosta",
+      "re": "W",
+      "me": "Decision - Unanimous",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Heavyweight",
+      "tb": false,
+      "ev": "UFC 328: Chimaev vs. Strickland"
+    },
+    {
+      "dt": "2025-10-25",
+      "op": "Jailton Almeida",
+      "re": "W",
+      "me": "Decision - Split",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Heavyweight",
+      "tb": false,
+      "ev": "UFC 321: Aspinall vs. Gane"
+    },
+    {
+      "dt": "2024-12-07",
+      "op": "Ciryl Gane",
+      "re": "L",
+      "me": "Decision - Split",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Heavyweight",
+      "tb": false,
+      "ev": "UFC 310: Pantoja vs. Asakura"
+    },
+    {
+      "dt": "2024-06-22",
+      "op": "Sergei Pavlovich",
+      "re": "W",
+      "me": "Decision - Unanimous",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Heavyweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Whittaker vs. Aliskerov"
+    },
+    {
+      "dt": "2023-09-09",
+      "op": "Tai Tuivasa",
+      "re": "W",
+      "me": "Submission",
+      "rn": 2,
+      "ti": "4:37",
+      "wc": "Heavyweight",
+      "tb": false,
+      "ev": "UFC 293: Adesanya vs. Strickland"
+    },
+    {
+      "dt": "2023-03-11",
+      "op": "Alexandr Romanov",
+      "re": "W",
+      "me": "KO/TKO",
+      "rn": 1,
+      "ti": "2:16",
+      "wc": "Heavyweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Yan vs. Dvalishvili"
+    },
+    {
+      "dt": "2022-06-04",
+      "op": "Jairzinho Rozenstruik",
+      "re": "W",
+      "me": "KO/TKO",
+      "rn": 1,
+      "ti": "2:12",
+      "wc": "Heavyweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Volkov vs. Rozenstruik"
+    },
+    {
+      "dt": "2022-03-19",
+      "op": "Tom Aspinall",
+      "re": "L",
+      "me": "Submission",
+      "rn": 1,
+      "ti": "3:45",
+      "wc": "Heavyweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Volkov vs. Aspinall"
+    },
+    {
+      "dt": "2021-10-30",
+      "op": "Marcin Tybura",
+      "re": "W",
+      "me": "Decision - Unanimous",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Heavyweight",
+      "tb": false,
+      "ev": "UFC 267: Blachowicz vs. Teixeira"
+    },
+    {
+      "dt": "2021-06-26",
+      "op": "Ciryl Gane",
+      "re": "L",
+      "me": "Decision - Unanimous",
+      "rn": 5,
+      "ti": "5:00",
+      "wc": "Heavyweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Gane vs. Volkov"
+    },
+    {
+      "dt": "2021-02-06",
+      "op": "Alistair Overeem",
+      "re": "W",
+      "me": "KO/TKO",
+      "rn": 2,
+      "ti": "2:06",
+      "wc": "Heavyweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Overeem vs. Volkov"
+    },
+    {
+      "dt": "2020-10-24",
+      "op": "Walt Harris",
+      "re": "W",
+      "me": "KO/TKO",
+      "rn": 2,
+      "ti": "1:15",
+      "wc": "Heavyweight",
+      "tb": false,
+      "ev": "UFC 254: Khabib vs. Gaethje"
+    },
+    {
+      "dt": "2020-06-20",
+      "op": "Curtis Blaydes",
+      "re": "L",
+      "me": "Decision - Unanimous",
+      "rn": 5,
+      "ti": "5:00",
+      "wc": "Heavyweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Blaydes vs. Volkov"
+    },
+    {
+      "dt": "2019-11-09",
+      "op": "Greg Hardy",
+      "re": "W",
+      "me": "Decision - Unanimous",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Heavyweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Zabit vs. Kattar"
+    },
+    {
+      "dt": "2018-10-06",
+      "op": "Derrick Lewis",
+      "re": "L",
+      "me": "KO/TKO",
+      "rn": 3,
+      "ti": "4:49",
+      "wc": "Heavyweight",
+      "tb": false,
+      "ev": "UFC 229: Khabib vs. McGregor"
+    },
+    {
+      "dt": "2018-03-17",
+      "op": "Fabricio Werdum",
+      "re": "W",
+      "me": "KO/TKO",
+      "rn": 4,
+      "ti": "1:38",
+      "wc": "Heavyweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Werdum vs. Volkov"
+    },
+    {
+      "dt": "2017-09-02",
+      "op": "Stefan Struve",
+      "re": "W",
+      "me": "KO/TKO",
+      "rn": 3,
+      "ti": "3:30",
+      "wc": "Heavyweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Volkov vs. Struve"
+    },
+    {
+      "dt": "2017-04-15",
+      "op": "Roy Nelson",
+      "re": "W",
+      "me": "Decision - Unanimous",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Heavyweight",
+      "tb": false,
+      "ev": "UFC on FOX: Johnson vs. Reis"
+    },
+    {
+      "dt": "2016-11-19",
+      "op": "Timothy Johnson",
+      "re": "W",
+      "me": "Decision - Split",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Heavyweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Mousasi vs. Hall 2"
+    }
+  ],
+  "Rizvan Kuniev": [
+    {
+      "dt": "2026-10-24",
+      "op": "Alexander Volkov",
+      "re": "L",
+      "me": "Decision - Unanimous",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Heavyweight",
+      "tb": false,
+      "ev": "UFC 333: Volkanovski vs. Evloev"
+    },
+    {
+      "dt": "2026-07-25",
+      "op": "Tyrell Fortune",
+      "re": "W",
+      "me": "KO/TKO",
+      "rn": 3,
+      "ti": "1:12",
+      "wc": "Heavyweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Ankalaev vs. Guskov"
+    },
+    {
+      "dt": "2026-02-07",
+      "op": "Jailton Almeida",
+      "re": "W",
+      "me": "Decision - Unanimous",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Heavyweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Bautista vs. Oliveira"
+    },
+    {
+      "dt": "2025-06-21",
+      "op": "Curtis Blaydes",
+      "re": "L",
+      "me": "Decision - Split",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Heavyweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Hill vs. Rountree Jr."
+    }
+  ],
+  "Aaron Pico": [
+    {
+      "dt": "2026-10-24",
+      "op": "Losene Keita",
+      "re": "W",
+      "me": "KO/TKO",
+      "rn": 1,
+      "ti": "1:14",
+      "wc": "Featherweight",
+      "tb": false,
+      "ev": "UFC 333: Volkanovski vs. Evloev"
+    },
+    {
+      "dt": "2026-04-11",
+      "op": "Patricio Pitbull",
+      "re": "W",
+      "me": "Decision - Unanimous",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Featherweight",
+      "tb": false,
+      "ev": "UFC 327: Prochazka vs. Ulberg"
+    },
+    {
+      "dt": "2025-08-16",
+      "op": "Lerone Murphy",
+      "re": "L",
+      "me": "KO/TKO",
+      "rn": 1,
+      "ti": "3:21",
+      "wc": "Featherweight",
+      "tb": false,
+      "ev": "UFC 319: Du Plessis vs. Chimaev"
+    }
+  ],
+  "Losene Keita": [
+    {
+      "dt": "2026-10-24",
+      "op": "Aaron Pico",
+      "re": "L",
+      "me": "KO/TKO",
+      "rn": 1,
+      "ti": "1:14",
+      "wc": "Featherweight",
+      "tb": false,
+      "ev": "UFC 333: Volkanovski vs. Evloev"
+    },
+    {
+      "dt": "2026-09-05",
+      "op": "Muhammad Naimov",
+      "re": "W",
+      "me": "KO/TKO",
+      "rn": 1,
+      "ti": "2:54",
+      "wc": "Featherweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Hooker vs. Parnasse"
+    },
+    {
+      "dt": "2026-03-21",
+      "op": "Nathaniel Wood",
+      "re": "L",
+      "me": "Decision - Split",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Featherweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Evloev vs. Murphy"
+    }
+  ],
+  "Azamat Murzakanov": [
+    {
+      "dt": "2026-10-24",
+      "op": "Dominick Reyes",
+      "re": "L",
+      "me": "KO/TKO",
+      "rn": 1,
+      "ti": "2:40",
+      "wc": "Light Heavyweight",
+      "tb": false,
+      "ev": "UFC 333: Volkanovski vs. Evloev"
+    },
+    {
+      "dt": "2026-04-11",
+      "op": "Paulo Costa",
+      "re": "L",
+      "me": "KO/TKO",
+      "rn": 3,
+      "ti": "1:23",
+      "wc": "Light Heavyweight",
+      "tb": false,
+      "ev": "UFC 327: Prochazka vs. Ulberg"
+    },
+    {
+      "dt": "2025-10-25",
+      "op": "Aleksandar Rakic",
+      "re": "W",
+      "me": "KO/TKO",
+      "rn": 1,
+      "ti": "3:11",
+      "wc": "Light Heavyweight",
+      "tb": false,
+      "ev": "UFC 321: Aspinall vs. Gane"
+    },
+    {
+      "dt": "2025-06-07",
+      "op": "Brendson Ribeiro",
+      "re": "W",
+      "me": "KO/TKO",
+      "rn": 1,
+      "ti": "3:25",
+      "wc": "Light Heavyweight",
+      "tb": false,
+      "ev": "UFC 316: Dvalishvili vs. O'Malley 2"
+    },
+    {
+      "dt": "2024-08-03",
+      "op": "Alonzo Menifield",
+      "re": "W",
+      "me": "KO/TKO",
+      "rn": 2,
+      "ti": "3:18",
+      "wc": "Light Heavyweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Sandhagen vs. Nurmagomedov"
+    },
+    {
+      "dt": "2023-04-15",
+      "op": "Dustin Jacoby",
+      "re": "W",
+      "me": "Decision - Unanimous",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Light Heavyweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Holloway vs. Allen"
+    },
+    {
+      "dt": "2022-08-13",
+      "op": "Devin Clark",
+      "re": "W",
+      "me": "KO/TKO",
+      "rn": 3,
+      "ti": "1:18",
+      "wc": "Light Heavyweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Vera vs. Cruz"
+    },
+    {
+      "dt": "2022-03-12",
+      "op": "Tafon Nchukwi",
+      "re": "W",
+      "me": "KO/TKO",
+      "rn": 3,
+      "ti": "0:44",
+      "wc": "Light Heavyweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Santos vs. Ankalaev"
+    }
+  ],
+  "Dominick Reyes": [
+    {
+      "dt": "2026-10-24",
+      "op": "Azamat Murzakanov",
+      "re": "W",
+      "me": "KO/TKO",
+      "rn": 1,
+      "ti": "2:40",
+      "wc": "Light Heavyweight",
+      "tb": false,
+      "ev": "UFC 333: Volkanovski vs. Evloev"
+    },
+    {
+      "dt": "2026-04-11",
+      "op": "Johnny Walker",
+      "re": "W",
+      "me": "Decision - Split",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Light Heavyweight",
+      "tb": false,
+      "ev": "UFC 327: Prochazka vs. Ulberg"
+    },
+    {
+      "dt": "2025-09-27",
+      "op": "Carlos Ulberg",
+      "re": "L",
+      "me": "KO/TKO",
+      "rn": 1,
+      "ti": "4:27",
+      "wc": "Light Heavyweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Ulberg vs. Reyes"
+    },
+    {
+      "dt": "2025-04-12",
+      "op": "Nikita Krylov",
+      "re": "W",
+      "me": "KO/TKO",
+      "rn": 1,
+      "ti": "2:24",
+      "wc": "Light Heavyweight",
+      "tb": false,
+      "ev": "UFC 314: Volkanovski vs. Lopes"
+    },
+    {
+      "dt": "2024-12-07",
+      "op": "Anthony Smith",
+      "re": "W",
+      "me": "KO/TKO",
+      "rn": 2,
+      "ti": "4:46",
+      "wc": "Light Heavyweight",
+      "tb": false,
+      "ev": "UFC 310: Pantoja vs. Asakura"
+    },
+    {
+      "dt": "2024-06-08",
+      "op": "Dustin Jacoby",
+      "re": "W",
+      "me": "KO/TKO",
+      "rn": 1,
+      "ti": "2:00",
+      "wc": "Light Heavyweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Cannonier vs. Imavov"
+    },
+    {
+      "dt": "2022-11-12",
+      "op": "Ryan Spann",
+      "re": "L",
+      "me": "KO/TKO",
+      "rn": 1,
+      "ti": "1:20",
+      "wc": "Light Heavyweight",
+      "tb": false,
+      "ev": "UFC 281: Adesanya vs. Pereira"
+    },
+    {
+      "dt": "2021-05-01",
+      "op": "Jiri Prochazka",
+      "re": "L",
+      "me": "KO/TKO",
+      "rn": 2,
+      "ti": "4:29",
+      "wc": "Light Heavyweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Reyes vs. Prochazka"
+    },
+    {
+      "dt": "2020-09-26",
+      "op": "Jan Blachowicz",
+      "re": "L",
+      "me": "KO/TKO",
+      "rn": 2,
+      "ti": "4:36",
+      "wc": "Light Heavyweight",
+      "tb": false,
+      "ev": "UFC 253: Adesanya vs. Costa"
+    },
+    {
+      "dt": "2020-02-08",
+      "op": "Jon Jones",
+      "re": "L",
+      "me": "Decision - Unanimous",
+      "rn": 5,
+      "ti": "5:00",
+      "wc": "Light Heavyweight",
+      "tb": false,
+      "ev": "UFC 247: Jones vs. Reyes"
+    },
+    {
+      "dt": "2019-10-18",
+      "op": "Chris Weidman",
+      "re": "W",
+      "me": "KO/TKO",
+      "rn": 1,
+      "ti": "1:43",
+      "wc": "Light Heavyweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Reyes vs. Weidman"
+    },
+    {
+      "dt": "2019-03-16",
+      "op": "Volkan Oezdemir",
+      "re": "W",
+      "me": "Decision - Split",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Light Heavyweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Till vs. Masvidal"
+    },
+    {
+      "dt": "2018-10-06",
+      "op": "Ovince Saint Preux",
+      "re": "W",
+      "me": "Decision - Unanimous",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Light Heavyweight",
+      "tb": false,
+      "ev": "UFC 229: Khabib vs. McGregor"
+    },
+    {
+      "dt": "2018-05-19",
+      "op": "Jared Cannonier",
+      "re": "W",
+      "me": "KO/TKO",
+      "rn": 1,
+      "ti": "2:55",
+      "wc": "Light Heavyweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Maia vs. Usman"
+    },
+    {
+      "dt": "2017-12-02",
+      "op": "Jeremy Kimball",
+      "re": "W",
+      "me": "Submission",
+      "rn": 1,
+      "ti": "3:39",
+      "wc": "Light Heavyweight",
+      "tb": false,
+      "ev": "UFC 218: Holloway vs. Aldo 2"
+    },
+    {
+      "dt": "2017-06-25",
+      "op": "Joachim Christensen",
+      "re": "W",
+      "me": "KO/TKO",
+      "rn": 1,
+      "ti": "0:29",
+      "wc": "Light Heavyweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Chiesa vs. Lee"
+    }
+  ],
+  "Nikita Krylov": [
+    {
+      "dt": "2026-10-24",
+      "op": "Abdul Rakhman Yakhyaev",
+      "re": "L",
+      "me": "KO/TKO",
+      "rn": 1,
+      "ti": "2:38",
+      "wc": "Light Heavyweight",
+      "tb": false,
+      "ev": "UFC 333: Volkanovski vs. Evloev"
+    },
+    {
+      "dt": "2026-07-11",
+      "op": "Robert Whittaker",
+      "re": "L",
+      "me": "KO/TKO",
+      "rn": 3,
+      "ti": "1:01",
+      "wc": "Light Heavyweight",
+      "tb": false,
+      "ev": "UFC 329: McGregor vs. Holloway 2"
+    },
+    {
+      "dt": "2026-01-24",
+      "op": "Modestas Bukauskas",
+      "re": "W",
+      "me": "KO/TKO",
+      "rn": 3,
+      "ti": "4:57",
+      "wc": "Light Heavyweight",
+      "tb": false,
+      "ev": "UFC 324: Gaethje vs. Pimblett"
+    },
+    {
+      "dt": "2025-07-26",
+      "op": "Bogdan Guskov",
+      "re": "L",
+      "me": "KO/TKO",
+      "rn": 1,
+      "ti": "4:18",
+      "wc": "Light Heavyweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Whittaker vs. De Ridder"
+    },
+    {
+      "dt": "2025-04-12",
+      "op": "Dominick Reyes",
+      "re": "L",
+      "me": "KO/TKO",
+      "rn": 1,
+      "ti": "2:24",
+      "wc": "Light Heavyweight",
+      "tb": false,
+      "ev": "UFC 314: Volkanovski vs. Lopes"
+    },
+    {
+      "dt": "2023-03-11",
+      "op": "Ryan Spann",
+      "re": "W",
+      "me": "Submission",
+      "rn": 1,
+      "ti": "3:38",
+      "wc": "Catch Weight",
+      "tb": false,
+      "ev": "UFC Fight Night: Yan vs. Dvalishvili"
+    },
+    {
+      "dt": "2022-10-22",
+      "op": "Volkan Oezdemir",
+      "re": "W",
+      "me": "Decision - Unanimous",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Light Heavyweight",
+      "tb": false,
+      "ev": "UFC 280: Oliveira vs. Makhachev"
+    },
+    {
+      "dt": "2022-07-23",
+      "op": "Alexander Gustafsson",
+      "re": "W",
+      "me": "KO/TKO",
+      "rn": 1,
+      "ti": "1:07",
+      "wc": "Light Heavyweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Blaydes vs. Aspinall"
+    },
+    {
+      "dt": "2022-03-19",
+      "op": "Paul Craig",
+      "re": "L",
+      "me": "Submission",
+      "rn": 1,
+      "ti": "3:57",
+      "wc": "Light Heavyweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Volkov vs. Aspinall"
+    },
+    {
+      "dt": "2021-02-27",
+      "op": "Magomed Ankalaev",
+      "re": "L",
+      "me": "Decision - Unanimous",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Light Heavyweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Rozenstruik vs. Gane"
+    },
+    {
+      "dt": "2020-03-14",
+      "op": "Johnny Walker",
+      "re": "W",
+      "me": "Decision - Unanimous",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Light Heavyweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Lee vs. Oliveira"
+    },
+    {
+      "dt": "2019-09-14",
+      "op": "Glover Teixeira",
+      "re": "L",
+      "me": "Decision - Split",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Light Heavyweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Cowboy vs. Gaethje"
+    },
+    {
+      "dt": "2019-04-13",
+      "op": "Ovince Saint Preux",
+      "re": "W",
+      "me": "Submission",
+      "rn": 2,
+      "ti": "2:30",
+      "wc": "Light Heavyweight",
+      "tb": false,
+      "ev": "UFC 236: Holloway vs. Poirier 2"
+    },
+    {
+      "dt": "2018-09-15",
+      "op": "Jan Blachowicz",
+      "re": "L",
+      "me": "Submission",
+      "rn": 2,
+      "ti": "2:41",
+      "wc": "Light Heavyweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Hunt vs. Oleinik"
+    },
+    {
+      "dt": "2016-12-10",
+      "op": "Misha Cirkunov",
+      "re": "L",
+      "me": "Submission",
+      "rn": 1,
+      "ti": "4:38",
+      "wc": "Light Heavyweight",
+      "tb": false,
+      "ev": "UFC 206: Holloway vs. Pettis"
+    },
+    {
+      "dt": "2016-07-30",
+      "op": "Ed Herman",
+      "re": "W",
+      "me": "KO/TKO",
+      "rn": 2,
+      "ti": "0:40",
+      "wc": "Light Heavyweight",
+      "tb": false,
+      "ev": "UFC 201: Lawler vs. Woodley"
+    },
+    {
+      "dt": "2016-05-08",
+      "op": "Francimar Barroso",
+      "re": "W",
+      "me": "Submission",
+      "rn": 2,
+      "ti": "3:11",
+      "wc": "Light Heavyweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Overeem vs Arlovski"
+    },
+    {
+      "dt": "2015-08-23",
+      "op": "Marcos Rogerio de Lima",
+      "re": "W",
+      "me": "Submission",
+      "rn": 1,
+      "ti": "2:29",
+      "wc": "Light Heavyweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Holloway vs Oliveira"
+    },
+    {
+      "dt": "2015-01-24",
+      "op": "Stanislav Nedkov",
+      "re": "W",
+      "me": "Submission",
+      "rn": 1,
+      "ti": "1:24",
+      "wc": "Light Heavyweight",
+      "tb": false,
+      "ev": "UFC on FOX: Gustafsson vs Johnson"
+    },
+    {
+      "dt": "2014-07-19",
+      "op": "Cody Donovan",
+      "re": "W",
+      "me": "KO/TKO",
+      "rn": 1,
+      "ti": "4:57",
+      "wc": "Light Heavyweight",
+      "tb": false,
+      "ev": "UFC Fight Night: McGregor vs Brandao"
+    },
+    {
+      "dt": "2014-03-15",
+      "op": "Ovince Saint Preux",
+      "re": "L",
+      "me": "Submission",
+      "rn": 1,
+      "ti": "1:29",
+      "wc": "Light Heavyweight",
+      "tb": false,
+      "ev": "UFC 171: Hendricks vs Lawler"
+    },
+    {
+      "dt": "2014-01-25",
+      "op": "Walt Harris",
+      "re": "W",
+      "me": "KO/TKO",
+      "rn": 1,
+      "ti": "0:25",
+      "wc": "Heavyweight",
+      "tb": false,
+      "ev": "UFC on FOX: Henderson vs Thomson"
+    },
+    {
+      "dt": "2013-08-31",
+      "op": "Soa Palelei",
+      "re": "L",
+      "me": "KO/TKO",
+      "rn": 3,
+      "ti": "1:34",
+      "wc": "Heavyweight",
+      "tb": false,
+      "ev": "UFC 164: Henderson vs Pettis 2"
+    }
+  ],
+  "Abdul Rakhman Yakhyaev": [
+    {
+      "dt": "2026-10-24",
+      "op": "Nikita Krylov",
+      "re": "W",
+      "me": "KO/TKO",
+      "rn": 1,
+      "ti": "2:38",
+      "wc": "Light Heavyweight",
+      "tb": false,
+      "ev": "UFC 333: Volkanovski vs. Evloev"
+    },
+    {
+      "dt": "2026-06-27",
+      "op": "Julius Walker",
+      "re": "W",
+      "me": "KO/TKO",
+      "rn": 1,
+      "ti": "0:08",
+      "wc": "Light Heavyweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Fiziev vs. Torres"
+    },
+    {
+      "dt": "2026-04-04",
+      "op": "Brendson Ribeiro",
+      "re": "W",
+      "me": "Submission",
+      "rn": 1,
+      "ti": "2:52",
+      "wc": "Light Heavyweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Moicano vs. Duncan"
+    },
+    {
+      "dt": "2025-11-22",
+      "op": "Rafael Cerqueira",
+      "re": "W",
+      "me": "Submission",
+      "rn": 1,
+      "ti": "0:33",
+      "wc": "Light Heavyweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Tsarukyan vs. Hooker"
+    }
+  ],
+  "Abus Magomedov": [
+    {
+      "dt": "2026-10-24",
+      "op": "Cam Rowston",
+      "re": "W",
+      "me": "Submission",
+      "rn": 1,
+      "ti": "1:44",
+      "wc": "Middleweight",
+      "tb": false,
+      "ev": "UFC 333: Volkanovski vs. Evloev"
+    },
+    {
+      "dt": "2026-06-27",
+      "op": "Michal Oleksiejczuk",
+      "re": "W",
+      "me": "Submission",
+      "rn": 1,
+      "ti": "3:25",
+      "wc": "Middleweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Fiziev vs. Torres"
+    },
+    {
+      "dt": "2025-10-04",
+      "op": "Joe Pyfer",
+      "re": "L",
+      "me": "Submission",
+      "rn": 2,
+      "ti": "1:46",
+      "wc": "Middleweight",
+      "tb": false,
+      "ev": "UFC 320: Ankalaev vs. Pereira 2"
+    },
+    {
+      "dt": "2025-04-26",
+      "op": "Michel Pereira",
+      "re": "W",
+      "me": "Decision - Unanimous",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Middleweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Machado Garry vs. Prates"
+    },
+    {
+      "dt": "2024-10-26",
+      "op": "Brunno Ferreira",
+      "re": "W",
+      "me": "Submission",
+      "rn": 3,
+      "ti": "3:14",
+      "wc": "Middleweight",
+      "tb": false,
+      "ev": "UFC 308: Topuria vs. Holloway"
+    },
+    {
+      "dt": "2024-05-18",
+      "op": "Warlley Alves",
+      "re": "W",
+      "me": "Decision - Unanimous",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Middleweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Barboza vs. Murphy"
+    },
+    {
+      "dt": "2023-11-04",
+      "op": "Caio Borralho",
+      "re": "L",
+      "me": "Decision - Unanimous",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Middleweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Almeida vs. Lewis"
+    },
+    {
+      "dt": "2023-07-01",
+      "op": "Sean Strickland",
+      "re": "L",
+      "me": "KO/TKO",
+      "rn": 2,
+      "ti": "4:20",
+      "wc": "Middleweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Strickland vs. Magomedov"
+    },
+    {
+      "dt": "2022-09-03",
+      "op": "Dustin Stoltzfus",
+      "re": "W",
+      "me": "KO/TKO",
+      "rn": 1,
+      "ti": "0:19",
+      "wc": "Middleweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Gane vs. Tuivasa"
+    }
+  ],
+  "Cam Rowston": [
+    {
+      "dt": "2026-10-24",
+      "op": "Abus Magomedov",
+      "re": "L",
+      "me": "Submission",
+      "rn": 1,
+      "ti": "1:44",
+      "wc": "Middleweight",
+      "tb": false,
+      "ev": "UFC 333: Volkanovski vs. Evloev"
+    },
+    {
+      "dt": "2026-05-02",
+      "op": "Robert Bryczek",
+      "re": "W",
+      "me": "Decision - Unanimous",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Middleweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Della Maddalena vs. Prates"
+    },
+    {
+      "dt": "2026-01-31",
+      "op": "Cody Brundage",
+      "re": "W",
+      "me": "KO/TKO",
+      "rn": 2,
+      "ti": "4:08",
+      "wc": "Middleweight",
+      "tb": false,
+      "ev": "UFC 325: Volkanovski vs. Lopes 2"
+    },
+    {
+      "dt": "2025-09-27",
+      "op": "Andre Petroski",
+      "re": "W",
+      "me": "KO/TKO",
+      "rn": 1,
+      "ti": "2:41",
+      "wc": "Middleweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Ulberg vs. Reyes"
+    }
+  ],
+  "Grant Dawson": [
+    {
+      "dt": "2026-10-24",
+      "op": "Nurullo Aliev",
+      "re": "W",
+      "me": "Decision - Unanimous",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Lightweight",
+      "tb": false,
+      "ev": "UFC 333: Volkanovski vs. Evloev"
+    },
+    {
+      "dt": "2026-05-09",
+      "op": "Mateusz Rebecki",
+      "re": "W",
+      "me": "Submission",
+      "rn": 3,
+      "ti": "4:42",
+      "wc": "Lightweight",
+      "tb": false,
+      "ev": "UFC 328: Chimaev vs. Strickland"
+    },
+    {
+      "dt": "2025-12-06",
+      "op": "Manuel Torres",
+      "re": "L",
+      "me": "KO/TKO",
+      "rn": 1,
+      "ti": "2:25",
+      "wc": "Lightweight",
+      "tb": false,
+      "ev": "UFC 323: Dvalishvili vs. Yan 2"
+    },
+    {
+      "dt": "2025-01-18",
+      "op": "Diego Ferreira",
+      "re": "W",
+      "me": "Decision - Unanimous",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Lightweight",
+      "tb": false,
+      "ev": "UFC 311: Makhachev vs. Moicano"
+    },
+    {
+      "dt": "2024-10-12",
+      "op": "Rafa Garcia",
+      "re": "W",
+      "me": "KO/TKO",
+      "rn": 2,
+      "ti": "1:42",
+      "wc": "Lightweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Royval vs. Taira"
+    },
+    {
+      "dt": "2024-06-01",
+      "op": "Joe Solecki",
+      "re": "W",
+      "me": "Decision - Unanimous",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Lightweight",
+      "tb": false,
+      "ev": "UFC 302: Makhachev vs. Poirier"
+    },
+    {
+      "dt": "2023-10-07",
+      "op": "King Green",
+      "re": "L",
+      "me": "KO/TKO",
+      "rn": 1,
+      "ti": "0:33",
+      "wc": "Lightweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Dawson vs. Green"
+    },
+    {
+      "dt": "2023-07-01",
+      "op": "Damir Ismagulov",
+      "re": "W",
+      "me": "Decision - Unanimous",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Lightweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Strickland vs. Magomedov"
+    },
+    {
+      "dt": "2022-11-05",
+      "op": "Mark Madsen",
+      "re": "W",
+      "me": "Submission",
+      "rn": 3,
+      "ti": "2:05",
+      "wc": "Lightweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Rodriguez vs. Lemos"
+    },
+    {
+      "dt": "2022-04-30",
+      "op": "Jared Gordon",
+      "re": "W",
+      "me": "Submission",
+      "rn": 3,
+      "ti": "4:11",
+      "wc": "Lightweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Font vs. Vera"
+    },
+    {
+      "dt": "2021-10-23",
+      "op": "Ricky Glenn",
+      "re": "NC",
+      "me": "Decision - Majority",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Lightweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Costa vs. Vettori"
+    },
+    {
+      "dt": "2021-03-20",
+      "op": "Leonardo Santos",
+      "re": "W",
+      "me": "KO/TKO",
+      "rn": 3,
+      "ti": "4:59",
+      "wc": "Lightweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Brunson vs. Holland"
+    },
+    {
+      "dt": "2020-07-18",
+      "op": "Nad Narimani",
+      "re": "W",
+      "me": "Decision - Unanimous",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Catch Weight",
+      "tb": false,
+      "ev": "UFC Fight Night: Figueiredo vs. Benavidez 2"
+    },
+    {
+      "dt": "2020-02-29",
+      "op": "Darrick Minner",
+      "re": "W",
+      "me": "Submission",
+      "rn": 2,
+      "ti": "1:38",
+      "wc": "Featherweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Benavidez vs. Figueiredo"
+    },
+    {
+      "dt": "2019-05-18",
+      "op": "Michael Trizano",
+      "re": "W",
+      "me": "Submission",
+      "rn": 2,
+      "ti": "2:27",
+      "wc": "Featherweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Dos Anjos vs. Lee"
+    },
+    {
+      "dt": "2019-03-09",
+      "op": "Julian Erosa",
+      "re": "W",
+      "me": "Decision - Unanimous",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Featherweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Lewis vs. Dos Santos"
+    }
+  ],
+  "Nurullo Aliev": [
+    {
+      "dt": "2026-10-24",
+      "op": "Grant Dawson",
+      "re": "L",
+      "me": "Decision - Unanimous",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Lightweight",
+      "tb": false,
+      "ev": "UFC 333: Volkanovski vs. Evloev"
+    },
+    {
+      "dt": "2026-07-25",
+      "op": "Mike Davis",
+      "re": "W",
+      "me": "Decision - Unanimous",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Lightweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Ankalaev vs. Guskov"
+    },
+    {
+      "dt": "2025-11-22",
+      "op": "Shem Rock",
+      "re": "W",
+      "me": "Decision - Unanimous",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Lightweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Tsarukyan vs. Hooker"
+    },
+    {
+      "dt": "2025-01-11",
+      "op": "Joe Solecki",
+      "re": "W",
+      "me": "Decision - Unanimous",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Lightweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Dern vs. Ribas 2"
+    },
+    {
+      "dt": "2023-02-25",
+      "op": "Rafael Alves",
+      "re": "W",
+      "me": "Decision - Majority",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Lightweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Muniz vs. Allen"
+    }
+  ],
+  "Colby Thicknesse": [
+    {
+      "dt": "2026-10-24",
+      "op": "Asaf Chopurov",
+      "re": "W",
+      "me": "Decision - Split",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Bantamweight",
+      "tb": false,
+      "ev": "UFC 333: Volkanovski vs. Evloev"
+    },
+    {
+      "dt": "2026-05-02",
+      "op": "Vince Morales",
+      "re": "W",
+      "me": "Decision - Unanimous",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Bantamweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Della Maddalena vs. Prates"
+    },
+    {
+      "dt": "2025-09-27",
+      "op": "Josias Musasa",
+      "re": "W",
+      "me": "Decision - Unanimous",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Bantamweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Ulberg vs. Reyes"
+    },
+    {
+      "dt": "2025-02-08",
+      "op": "Aleksandre Topuria",
+      "re": "L",
+      "me": "Decision - Unanimous",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Bantamweight",
+      "tb": false,
+      "ev": "UFC 312: Du Plessis vs. Strickland 2"
+    }
+  ],
+  "Asaf Chopurov": [
+    {
+      "dt": "2026-10-24",
+      "op": "Colby Thicknesse",
+      "re": "L",
+      "me": "Decision - Split",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Bantamweight",
+      "tb": false,
+      "ev": "UFC 333: Volkanovski vs. Evloev"
+    }
+  ],
+  "Abubakar Vagaev": [
+    {
+      "dt": "2026-10-24",
+      "op": "Jacob Malkoun",
+      "re": "W",
+      "me": "Decision - Unanimous",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Middleweight",
+      "tb": false,
+      "ev": "UFC 333: Volkanovski vs. Evloev"
+    },
+    {
+      "dt": "2026-07-25",
+      "op": "Saygid Izagakhmaev",
+      "re": "W",
+      "me": "Decision - Unanimous",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Welterweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Ankalaev vs. Guskov"
+    }
+  ],
+  "Jacob Malkoun": [
+    {
+      "dt": "2026-10-24",
+      "op": "Abubakar Vagaev",
+      "re": "L",
+      "me": "Decision - Unanimous",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Middleweight",
+      "tb": false,
+      "ev": "UFC 333: Volkanovski vs. Evloev"
+    },
+    {
+      "dt": "2026-05-02",
+      "op": "Gerald Meerschaert",
+      "re": "W",
+      "me": "Decision - Unanimous",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Middleweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Della Maddalena vs. Prates"
+    },
+    {
+      "dt": "2026-01-31",
+      "op": "Torrez Finney",
+      "re": "W",
+      "me": "Decision - Unanimous",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Middleweight",
+      "tb": false,
+      "ev": "UFC 325: Volkanovski vs. Lopes 2"
+    },
+    {
+      "dt": "2024-03-30",
+      "op": "Andre Petroski",
+      "re": "W",
+      "me": "KO/TKO",
+      "rn": 2,
+      "ti": "0:39",
+      "wc": "Middleweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Blanchfield vs. Fiorot"
+    },
+    {
+      "dt": "2023-09-23",
+      "op": "Cody Brundage",
+      "re": "L",
+      "me": "DQ",
+      "rn": 1,
+      "ti": "4:15",
+      "wc": "Middleweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Fiziev vs. Gamrot"
+    },
+    {
+      "dt": "2022-10-15",
+      "op": "Nick Maximov",
+      "re": "W",
+      "me": "Decision - Unanimous",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Middleweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Grasso vs. Araujo"
+    },
+    {
+      "dt": "2022-06-11",
+      "op": "Brendan Allen",
+      "re": "L",
+      "me": "Decision - Unanimous",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Middleweight",
+      "tb": false,
+      "ev": "UFC 275: Teixeira vs. Prochazka"
+    },
+    {
+      "dt": "2022-02-12",
+      "op": "AJ Dobson",
+      "re": "W",
+      "me": "Decision - Unanimous",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Middleweight",
+      "tb": false,
+      "ev": "UFC 271: Adesanya vs. Whittaker 2"
+    },
+    {
+      "dt": "2021-04-17",
+      "op": "Abdul Razak Alhassan",
+      "re": "W",
+      "me": "Decision - Unanimous",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Middleweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Whittaker vs. Gastelum"
+    },
+    {
+      "dt": "2020-10-24",
+      "op": "Phil Hawes",
+      "re": "L",
+      "me": "KO/TKO",
+      "rn": 1,
+      "ti": "0:18",
+      "wc": "Middleweight",
+      "tb": false,
+      "ev": "UFC 254: Khabib vs. Gaethje"
+    }
+  ],
+  "Bolaji Oki": [
+    {
+      "dt": "2026-10-24",
+      "op": "Daniel Santos",
+      "re": "L",
+      "me": "Decision - Unanimous",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Featherweight",
+      "tb": false,
+      "ev": "UFC 333: Volkanovski vs. Evloev"
+    },
+    {
+      "dt": "2026-03-14",
+      "op": "Manoel Sousa",
+      "re": "L",
+      "me": "KO/TKO",
+      "rn": 3,
+      "ti": "4:12",
+      "wc": "Lightweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Emmett vs. Vallejos"
+    },
+    {
+      "dt": "2025-09-06",
+      "op": "Mason Jones",
+      "re": "L",
+      "me": "KO/TKO",
+      "rn": 2,
+      "ti": "3:18",
+      "wc": "Lightweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Imavov vs. Borralho"
+    },
+    {
+      "dt": "2025-05-31",
+      "op": "Michael Aswell Jr.",
+      "re": "W",
+      "me": "Decision - Unanimous",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Lightweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Blanchfield vs. Barber"
+    },
+    {
+      "dt": "2024-09-28",
+      "op": "Chris Duncan",
+      "re": "L",
+      "me": "Submission",
+      "rn": 1,
+      "ti": "3:34",
+      "wc": "Lightweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Moicano vs. Saint Denis"
+    },
+    {
+      "dt": "2024-02-10",
+      "op": "Timmy Cuamba",
+      "re": "W",
+      "me": "Decision - Split",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Lightweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Hermansson vs. Pyfer"
+    }
+  ],
+  "Daniel Santos": [
+    {
+      "dt": "2026-10-24",
+      "op": "Bolaji Oki",
+      "re": "W",
+      "me": "Decision - Unanimous",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Featherweight",
+      "tb": false,
+      "ev": "UFC 333: Volkanovski vs. Evloev"
+    },
+    {
+      "dt": "2026-05-16",
+      "op": "Dooho Choi",
+      "re": "L",
+      "me": "KO/TKO",
+      "rn": 2,
+      "ti": "4:29",
+      "wc": "Featherweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Allen vs. Costa"
+    },
+    {
+      "dt": "2025-10-04",
+      "op": "JooSang Yoo",
+      "re": "W",
+      "me": "KO/TKO",
+      "rn": 2,
+      "ti": "0:21",
+      "wc": "Catch Weight",
+      "tb": false,
+      "ev": "UFC 320: Ankalaev vs. Pereira 2"
+    },
+    {
+      "dt": "2025-05-10",
+      "op": "JeongYeong Lee",
+      "re": "W",
+      "me": "Decision - Unanimous",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Featherweight",
+      "tb": false,
+      "ev": "UFC 315: Muhammad vs. Della Maddalena"
+    },
+    {
+      "dt": "2023-06-03",
+      "op": "Johnny Munoz",
+      "re": "W",
+      "me": "Decision - Unanimous",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Bantamweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Kara-France vs. Albazi"
+    },
+    {
+      "dt": "2022-10-01",
+      "op": "John Castaneda",
+      "re": "W",
+      "me": "KO/TKO",
+      "rn": 2,
+      "ti": "4:28",
+      "wc": "Catch Weight",
+      "tb": false,
+      "ev": "UFC Fight Night: Dern vs. Yan"
+    },
+    {
+      "dt": "2022-04-09",
+      "op": "Julio Arce",
+      "re": "L",
+      "me": "Decision - Unanimous",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Bantamweight",
+      "tb": false,
+      "ev": "UFC 273: Volkanovski vs. The Korean Zombie"
+    }
+  ],
+  "Kody Steele": [
+    {
+      "dt": "2026-10-24",
+      "op": "Noah Gugnon",
+      "re": "W",
+      "me": "KO/TKO",
+      "rn": 1,
+      "ti": "3:54",
+      "wc": "Lightweight",
+      "tb": false,
+      "ev": "UFC 333: Volkanovski vs. Evloev"
+    },
+    {
+      "dt": "2026-05-02",
+      "op": "Dom Mar Fan",
+      "re": "W",
+      "me": "Submission",
+      "rn": 1,
+      "ti": "3:56",
+      "wc": "Lightweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Della Maddalena vs. Prates"
+    },
+    {
+      "dt": "2025-02-08",
+      "op": "Rongzhu",
+      "re": "L",
+      "me": "Decision - Unanimous",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Lightweight",
+      "tb": false,
+      "ev": "UFC 312: Du Plessis vs. Strickland 2"
+    }
+  ],
+  "Noah Gugnon": [
+    {
+      "dt": "2026-10-24",
+      "op": "Kody Steele",
+      "re": "L",
+      "me": "KO/TKO",
+      "rn": 1,
+      "ti": "3:54",
+      "wc": "Lightweight",
+      "tb": false,
+      "ev": "UFC 333: Volkanovski vs. Evloev"
+    },
+    {
+      "dt": "2026-08-01",
+      "op": "Milos Janicic",
+      "re": "W",
+      "me": "Submission",
+      "rn": 1,
+      "ti": "1:21",
+      "wc": "Lightweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Medic vs. Rodriguez"
+    }
+  ],
+  "Iasmin Lucindo": [
+    {
+      "dt": "2026-10-24",
+      "op": "Nicolle Caliari",
+      "re": "W",
+      "me": "Decision - Unanimous",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Women's Strawweight",
+      "tb": false,
+      "ev": "UFC 333: Volkanovski vs. Evloev"
+    },
+    {
+      "dt": "2025-08-09",
+      "op": "Angela Hill",
+      "re": "W",
+      "me": "Decision - Unanimous",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Women's Strawweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Dolidze vs. Hernandez"
+    },
+    {
+      "dt": "2025-03-08",
+      "op": "Amanda Lemos",
+      "re": "L",
+      "me": "Decision - Unanimous",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Women's Strawweight",
+      "tb": false,
+      "ev": "UFC 313: Pereira vs. Ankalaev"
+    },
+    {
+      "dt": "2024-10-05",
+      "op": "Marina Rodriguez",
+      "re": "W",
+      "me": "Decision - Split",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Women's Strawweight",
+      "tb": false,
+      "ev": "UFC 307: Pereira vs. Rountree Jr."
+    },
+    {
+      "dt": "2024-05-04",
+      "op": "Karolina Kowalkiewicz",
+      "re": "W",
+      "me": "Decision - Unanimous",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Women's Strawweight",
+      "tb": false,
+      "ev": "UFC 301: Pantoja vs. Erceg"
+    },
+    {
+      "dt": "2023-08-12",
+      "op": "Polyana Viana",
+      "re": "W",
+      "me": "Submission",
+      "rn": 2,
+      "ti": "3:42",
+      "wc": "Women's Strawweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Luque vs. Dos Anjos"
+    },
+    {
+      "dt": "2023-04-22",
+      "op": "Brogan Walker",
+      "re": "W",
+      "me": "Decision - Unanimous",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Women's Flyweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Pavlovich vs. Blaydes"
+    },
+    {
+      "dt": "2022-08-13",
+      "op": "Yazmin Jauregui",
+      "re": "L",
+      "me": "Decision - Unanimous",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Women's Strawweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Vera vs. Cruz"
+    }
+  ],
+  "Nicolle Caliari": [
+    {
+      "dt": "2026-10-24",
+      "op": "Iasmin Lucindo",
+      "re": "L",
+      "me": "Decision - Unanimous",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Women's Strawweight",
+      "tb": false,
+      "ev": "UFC 333: Volkanovski vs. Evloev"
+    },
+    {
+      "dt": "2026-05-16",
+      "op": "Shauna Bannon",
+      "re": "W",
+      "me": "Submission",
+      "rn": 3,
+      "ti": "3:08",
+      "wc": "Women's Strawweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Allen vs. Costa"
+    },
+    {
+      "dt": "2025-07-19",
+      "op": "Carli Judice",
+      "re": "L",
+      "me": "KO/TKO",
+      "rn": 3,
+      "ti": "1:30",
+      "wc": "Women's Flyweight",
+      "tb": false,
+      "ev": "UFC 318: Holloway vs. Poirier 3"
+    },
+    {
+      "dt": "2025-01-11",
+      "op": "Ernesta Kareckaite",
+      "re": "L",
+      "me": "Decision - Split",
+      "rn": 3,
+      "ti": "5:00",
+      "wc": "Women's Flyweight",
+      "tb": false,
+      "ev": "UFC Fight Night: Dern vs. Ribas 2"
+    }
+  ],
   "Joaquin Buckley": [
     {
       "dt": "2026-10-17",
@@ -16053,30 +18716,6 @@ export const FIGHT_HISTORY = {
       "ev": "UFC Fight Night: Muniz vs. Allen"
     }
   ],
-  "Losene Keita": [
-    {
-      "dt": "2026-09-05",
-      "op": "Muhammad Naimov",
-      "re": "W",
-      "me": "KO/TKO",
-      "rn": 1,
-      "ti": "2:54",
-      "wc": "Featherweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Hooker vs. Parnasse"
-    },
-    {
-      "dt": "2026-03-21",
-      "op": "Nathaniel Wood",
-      "re": "L",
-      "me": "Decision - Split",
-      "rn": 3,
-      "ti": "5:00",
-      "wc": "Featherweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Evloev vs. Murphy"
-    }
-  ],
   "Muhammad Naimov": [
     {
       "dt": "2026-09-05",
@@ -30238,19 +32877,6 @@ export const FIGHT_HISTORY = {
       "ev": "UFC Fight Night: Medic vs. Rodriguez"
     }
   ],
-  "Noah Gugnon": [
-    {
-      "dt": "2026-08-01",
-      "op": "Milos Janicic",
-      "re": "W",
-      "me": "Submission",
-      "rn": 1,
-      "ti": "1:21",
-      "wc": "Lightweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Medic vs. Rodriguez"
-    }
-  ],
   "Ludovit Klein": [
     {
       "dt": "2026-08-01",
@@ -31334,41 +33960,6 @@ export const FIGHT_HISTORY = {
       "ev": "UFC 289: Nunes vs. Aldana"
     }
   ],
-  "Ramazan Temirov": [
-    {
-      "dt": "2026-07-25",
-      "op": "Steve Erceg",
-      "re": "W",
-      "me": "KO/TKO",
-      "rn": 1,
-      "ti": "4:21",
-      "wc": "Flyweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Ankalaev vs. Guskov"
-    },
-    {
-      "dt": "2025-03-01",
-      "op": "Charles Johnson",
-      "re": "W",
-      "me": "Decision - Unanimous",
-      "rn": 3,
-      "ti": "5:00",
-      "wc": "Flyweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Kape vs. Almabayev"
-    },
-    {
-      "dt": "2024-10-12",
-      "op": "CJ Vergara",
-      "re": "W",
-      "me": "KO/TKO",
-      "rn": 1,
-      "ti": "2:50",
-      "wc": "Flyweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Royval vs. Taira"
-    }
-  ],
   "Magomed Zaynukov": [
     {
       "dt": "2026-07-25",
@@ -31395,41 +33986,6 @@ export const FIGHT_HISTORY = {
       "ev": "UFC Fight Night: Ankalaev vs. Guskov"
     }
   ],
-  "Rizvan Kuniev": [
-    {
-      "dt": "2026-07-25",
-      "op": "Tyrell Fortune",
-      "re": "W",
-      "me": "KO/TKO",
-      "rn": 3,
-      "ti": "1:12",
-      "wc": "Heavyweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Ankalaev vs. Guskov"
-    },
-    {
-      "dt": "2026-02-07",
-      "op": "Jailton Almeida",
-      "re": "W",
-      "me": "Decision - Unanimous",
-      "rn": 3,
-      "ti": "5:00",
-      "wc": "Heavyweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Bautista vs. Oliveira"
-    },
-    {
-      "dt": "2025-06-21",
-      "op": "Curtis Blaydes",
-      "re": "L",
-      "me": "Decision - Split",
-      "rn": 3,
-      "ti": "5:00",
-      "wc": "Heavyweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Hill vs. Rountree Jr."
-    }
-  ],
   "Tyrell Fortune": [
     {
       "dt": "2026-07-25",
@@ -31452,19 +34008,6 @@ export const FIGHT_HISTORY = {
       "wc": "Heavyweight",
       "tb": false,
       "ev": "UFC Fight Night: Adesanya vs. Pyfer"
-    }
-  ],
-  "Abubakar Vagaev": [
-    {
-      "dt": "2026-07-25",
-      "op": "Saygid Izagakhmaev",
-      "re": "W",
-      "me": "Decision - Unanimous",
-      "rn": 3,
-      "ti": "5:00",
-      "wc": "Welterweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Ankalaev vs. Guskov"
     }
   ],
   "Saygid Izagakhmaev": [
@@ -32174,52 +34717,6 @@ export const FIGHT_HISTORY = {
       "wc": "Light Heavyweight",
       "tb": false,
       "ev": "UFC Fight Night: Ankalaev vs. Guskov"
-    }
-  ],
-  "Nurullo Aliev": [
-    {
-      "dt": "2026-07-25",
-      "op": "Mike Davis",
-      "re": "W",
-      "me": "Decision - Unanimous",
-      "rn": 3,
-      "ti": "5:00",
-      "wc": "Lightweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Ankalaev vs. Guskov"
-    },
-    {
-      "dt": "2025-11-22",
-      "op": "Shem Rock",
-      "re": "W",
-      "me": "Decision - Unanimous",
-      "rn": 3,
-      "ti": "5:00",
-      "wc": "Lightweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Tsarukyan vs. Hooker"
-    },
-    {
-      "dt": "2025-01-11",
-      "op": "Joe Solecki",
-      "re": "W",
-      "me": "Decision - Unanimous",
-      "rn": 3,
-      "ti": "5:00",
-      "wc": "Lightweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Dern vs. Ribas 2"
-    },
-    {
-      "dt": "2023-02-25",
-      "op": "Rafael Alves",
-      "re": "W",
-      "me": "Decision - Majority",
-      "rn": 3,
-      "ti": "5:00",
-      "wc": "Lightweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Muniz vs. Allen"
     }
   ],
   "Mike Davis": [
@@ -34982,63 +37479,6 @@ export const FIGHT_HISTORY = {
       "ev": "UFC Fight Night: Woodley vs. Burns"
     }
   ],
-  "Lone'er Kavanagh": [
-    {
-      "dt": "2026-07-11",
-      "op": "Brandon Royval",
-      "re": "L",
-      "me": "Submission",
-      "rn": 3,
-      "ti": "3:40",
-      "wc": "Flyweight",
-      "tb": false,
-      "ev": "UFC 329: McGregor vs. Holloway 2"
-    },
-    {
-      "dt": "2026-02-28",
-      "op": "Brandon Moreno",
-      "re": "W",
-      "me": "Decision - Unanimous",
-      "rn": 5,
-      "ti": "5:00",
-      "wc": "Flyweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Moreno vs. Kavanagh"
-    },
-    {
-      "dt": "2025-08-23",
-      "op": "Charles Johnson",
-      "re": "L",
-      "me": "KO/TKO",
-      "rn": 2,
-      "ti": "4:35",
-      "wc": "Flyweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Walker vs. Zhang"
-    },
-    {
-      "dt": "2025-03-22",
-      "op": "Felipe dos Santos",
-      "re": "W",
-      "me": "Decision - Unanimous",
-      "rn": 3,
-      "ti": "5:00",
-      "wc": "Flyweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Edwards vs. Brady"
-    },
-    {
-      "dt": "2024-11-23",
-      "op": "Jose Ochoa",
-      "re": "W",
-      "me": "Decision - Unanimous",
-      "rn": 3,
-      "ti": "5:00",
-      "wc": "Flyweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Yan vs. Figueiredo"
-    }
-  ],
   "Terrance McKinney": [
     {
       "dt": "2026-07-11",
@@ -35193,250 +37633,6 @@ export const FIGHT_HISTORY = {
       "wc": "Lightweight",
       "tb": false,
       "ev": "UFC 263: Adesanya vs. Vettori 2"
-    }
-  ],
-  "Nikita Krylov": [
-    {
-      "dt": "2026-07-11",
-      "op": "Robert Whittaker",
-      "re": "L",
-      "me": "KO/TKO",
-      "rn": 3,
-      "ti": "1:01",
-      "wc": "Light Heavyweight",
-      "tb": false,
-      "ev": "UFC 329: McGregor vs. Holloway 2"
-    },
-    {
-      "dt": "2026-01-24",
-      "op": "Modestas Bukauskas",
-      "re": "W",
-      "me": "KO/TKO",
-      "rn": 3,
-      "ti": "4:57",
-      "wc": "Light Heavyweight",
-      "tb": false,
-      "ev": "UFC 324: Gaethje vs. Pimblett"
-    },
-    {
-      "dt": "2025-07-26",
-      "op": "Bogdan Guskov",
-      "re": "L",
-      "me": "KO/TKO",
-      "rn": 1,
-      "ti": "4:18",
-      "wc": "Light Heavyweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Whittaker vs. De Ridder"
-    },
-    {
-      "dt": "2025-04-12",
-      "op": "Dominick Reyes",
-      "re": "L",
-      "me": "KO/TKO",
-      "rn": 1,
-      "ti": "2:24",
-      "wc": "Light Heavyweight",
-      "tb": false,
-      "ev": "UFC 314: Volkanovski vs. Lopes"
-    },
-    {
-      "dt": "2023-03-11",
-      "op": "Ryan Spann",
-      "re": "W",
-      "me": "Submission",
-      "rn": 1,
-      "ti": "3:38",
-      "wc": "Catch Weight",
-      "tb": false,
-      "ev": "UFC Fight Night: Yan vs. Dvalishvili"
-    },
-    {
-      "dt": "2022-10-22",
-      "op": "Volkan Oezdemir",
-      "re": "W",
-      "me": "Decision - Unanimous",
-      "rn": 3,
-      "ti": "5:00",
-      "wc": "Light Heavyweight",
-      "tb": false,
-      "ev": "UFC 280: Oliveira vs. Makhachev"
-    },
-    {
-      "dt": "2022-07-23",
-      "op": "Alexander Gustafsson",
-      "re": "W",
-      "me": "KO/TKO",
-      "rn": 1,
-      "ti": "1:07",
-      "wc": "Light Heavyweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Blaydes vs. Aspinall"
-    },
-    {
-      "dt": "2022-03-19",
-      "op": "Paul Craig",
-      "re": "L",
-      "me": "Submission",
-      "rn": 1,
-      "ti": "3:57",
-      "wc": "Light Heavyweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Volkov vs. Aspinall"
-    },
-    {
-      "dt": "2021-02-27",
-      "op": "Magomed Ankalaev",
-      "re": "L",
-      "me": "Decision - Unanimous",
-      "rn": 3,
-      "ti": "5:00",
-      "wc": "Light Heavyweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Rozenstruik vs. Gane"
-    },
-    {
-      "dt": "2020-03-14",
-      "op": "Johnny Walker",
-      "re": "W",
-      "me": "Decision - Unanimous",
-      "rn": 3,
-      "ti": "5:00",
-      "wc": "Light Heavyweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Lee vs. Oliveira"
-    },
-    {
-      "dt": "2019-09-14",
-      "op": "Glover Teixeira",
-      "re": "L",
-      "me": "Decision - Split",
-      "rn": 3,
-      "ti": "5:00",
-      "wc": "Light Heavyweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Cowboy vs. Gaethje"
-    },
-    {
-      "dt": "2019-04-13",
-      "op": "Ovince Saint Preux",
-      "re": "W",
-      "me": "Submission",
-      "rn": 2,
-      "ti": "2:30",
-      "wc": "Light Heavyweight",
-      "tb": false,
-      "ev": "UFC 236: Holloway vs. Poirier 2"
-    },
-    {
-      "dt": "2018-09-15",
-      "op": "Jan Blachowicz",
-      "re": "L",
-      "me": "Submission",
-      "rn": 2,
-      "ti": "2:41",
-      "wc": "Light Heavyweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Hunt vs. Oleinik"
-    },
-    {
-      "dt": "2016-12-10",
-      "op": "Misha Cirkunov",
-      "re": "L",
-      "me": "Submission",
-      "rn": 1,
-      "ti": "4:38",
-      "wc": "Light Heavyweight",
-      "tb": false,
-      "ev": "UFC 206: Holloway vs. Pettis"
-    },
-    {
-      "dt": "2016-07-30",
-      "op": "Ed Herman",
-      "re": "W",
-      "me": "KO/TKO",
-      "rn": 2,
-      "ti": "0:40",
-      "wc": "Light Heavyweight",
-      "tb": false,
-      "ev": "UFC 201: Lawler vs. Woodley"
-    },
-    {
-      "dt": "2016-05-08",
-      "op": "Francimar Barroso",
-      "re": "W",
-      "me": "Submission",
-      "rn": 2,
-      "ti": "3:11",
-      "wc": "Light Heavyweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Overeem vs Arlovski"
-    },
-    {
-      "dt": "2015-08-23",
-      "op": "Marcos Rogerio de Lima",
-      "re": "W",
-      "me": "Submission",
-      "rn": 1,
-      "ti": "2:29",
-      "wc": "Light Heavyweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Holloway vs Oliveira"
-    },
-    {
-      "dt": "2015-01-24",
-      "op": "Stanislav Nedkov",
-      "re": "W",
-      "me": "Submission",
-      "rn": 1,
-      "ti": "1:24",
-      "wc": "Light Heavyweight",
-      "tb": false,
-      "ev": "UFC on FOX: Gustafsson vs Johnson"
-    },
-    {
-      "dt": "2014-07-19",
-      "op": "Cody Donovan",
-      "re": "W",
-      "me": "KO/TKO",
-      "rn": 1,
-      "ti": "4:57",
-      "wc": "Light Heavyweight",
-      "tb": false,
-      "ev": "UFC Fight Night: McGregor vs Brandao"
-    },
-    {
-      "dt": "2014-03-15",
-      "op": "Ovince Saint Preux",
-      "re": "L",
-      "me": "Submission",
-      "rn": 1,
-      "ti": "1:29",
-      "wc": "Light Heavyweight",
-      "tb": false,
-      "ev": "UFC 171: Hendricks vs Lawler"
-    },
-    {
-      "dt": "2014-01-25",
-      "op": "Walt Harris",
-      "re": "W",
-      "me": "KO/TKO",
-      "rn": 1,
-      "ti": "0:25",
-      "wc": "Heavyweight",
-      "tb": false,
-      "ev": "UFC on FOX: Henderson vs Thomson"
-    },
-    {
-      "dt": "2013-08-31",
-      "op": "Soa Palelei",
-      "re": "L",
-      "me": "KO/TKO",
-      "rn": 3,
-      "ti": "1:34",
-      "wc": "Heavyweight",
-      "tb": false,
-      "ev": "UFC 164: Henderson vs Pettis 2"
     }
   ],
   "Robert Whittaker": [
@@ -37165,96 +39361,6 @@ export const FIGHT_HISTORY = {
       "ev": "UFC 288: Sterling vs. Cejudo"
     }
   ],
-  "Abus Magomedov": [
-    {
-      "dt": "2026-06-27",
-      "op": "Michal Oleksiejczuk",
-      "re": "W",
-      "me": "Submission",
-      "rn": 1,
-      "ti": "3:25",
-      "wc": "Middleweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Fiziev vs. Torres"
-    },
-    {
-      "dt": "2025-10-04",
-      "op": "Joe Pyfer",
-      "re": "L",
-      "me": "Submission",
-      "rn": 2,
-      "ti": "1:46",
-      "wc": "Middleweight",
-      "tb": false,
-      "ev": "UFC 320: Ankalaev vs. Pereira 2"
-    },
-    {
-      "dt": "2025-04-26",
-      "op": "Michel Pereira",
-      "re": "W",
-      "me": "Decision - Unanimous",
-      "rn": 3,
-      "ti": "5:00",
-      "wc": "Middleweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Machado Garry vs. Prates"
-    },
-    {
-      "dt": "2024-10-26",
-      "op": "Brunno Ferreira",
-      "re": "W",
-      "me": "Submission",
-      "rn": 3,
-      "ti": "3:14",
-      "wc": "Middleweight",
-      "tb": false,
-      "ev": "UFC 308: Topuria vs. Holloway"
-    },
-    {
-      "dt": "2024-05-18",
-      "op": "Warlley Alves",
-      "re": "W",
-      "me": "Decision - Unanimous",
-      "rn": 3,
-      "ti": "5:00",
-      "wc": "Middleweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Barboza vs. Murphy"
-    },
-    {
-      "dt": "2023-11-04",
-      "op": "Caio Borralho",
-      "re": "L",
-      "me": "Decision - Unanimous",
-      "rn": 3,
-      "ti": "5:00",
-      "wc": "Middleweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Almeida vs. Lewis"
-    },
-    {
-      "dt": "2023-07-01",
-      "op": "Sean Strickland",
-      "re": "L",
-      "me": "KO/TKO",
-      "rn": 2,
-      "ti": "4:20",
-      "wc": "Middleweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Strickland vs. Magomedov"
-    },
-    {
-      "dt": "2022-09-03",
-      "op": "Dustin Stoltzfus",
-      "re": "W",
-      "me": "KO/TKO",
-      "rn": 1,
-      "ti": "0:19",
-      "wc": "Middleweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Gane vs. Tuivasa"
-    }
-  ],
   "Michal Oleksiejczuk": [
     {
       "dt": "2026-06-27",
@@ -37477,41 +39583,6 @@ export const FIGHT_HISTORY = {
       "wc": "Welterweight",
       "tb": false,
       "ev": "UFC Fight Night: Fiziev vs. Torres"
-    }
-  ],
-  "Abdul Rakhman Yakhyaev": [
-    {
-      "dt": "2026-06-27",
-      "op": "Julius Walker",
-      "re": "W",
-      "me": "KO/TKO",
-      "rn": 1,
-      "ti": "0:08",
-      "wc": "Light Heavyweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Fiziev vs. Torres"
-    },
-    {
-      "dt": "2026-04-04",
-      "op": "Brendson Ribeiro",
-      "re": "W",
-      "me": "Submission",
-      "rn": 1,
-      "ti": "2:52",
-      "wc": "Light Heavyweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Moicano vs. Duncan"
-    },
-    {
-      "dt": "2025-11-22",
-      "op": "Rafael Cerqueira",
-      "re": "W",
-      "me": "Submission",
-      "rn": 1,
-      "ti": "0:33",
-      "wc": "Light Heavyweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Tsarukyan vs. Hooker"
     }
   ],
   "Kaan Ofli": [
@@ -43679,74 +45750,6 @@ export const FIGHT_HISTORY = {
       "ev": "UFC 283: Teixeira vs. Hill"
     }
   ],
-  "Daniel Santos": [
-    {
-      "dt": "2026-05-16",
-      "op": "Dooho Choi",
-      "re": "L",
-      "me": "KO/TKO",
-      "rn": 2,
-      "ti": "4:29",
-      "wc": "Featherweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Allen vs. Costa"
-    },
-    {
-      "dt": "2025-10-04",
-      "op": "JooSang Yoo",
-      "re": "W",
-      "me": "KO/TKO",
-      "rn": 2,
-      "ti": "0:21",
-      "wc": "Catch Weight",
-      "tb": false,
-      "ev": "UFC 320: Ankalaev vs. Pereira 2"
-    },
-    {
-      "dt": "2025-05-10",
-      "op": "JeongYeong Lee",
-      "re": "W",
-      "me": "Decision - Unanimous",
-      "rn": 3,
-      "ti": "5:00",
-      "wc": "Featherweight",
-      "tb": false,
-      "ev": "UFC 315: Muhammad vs. Della Maddalena"
-    },
-    {
-      "dt": "2023-06-03",
-      "op": "Johnny Munoz",
-      "re": "W",
-      "me": "Decision - Unanimous",
-      "rn": 3,
-      "ti": "5:00",
-      "wc": "Bantamweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Kara-France vs. Albazi"
-    },
-    {
-      "dt": "2022-10-01",
-      "op": "John Castaneda",
-      "re": "W",
-      "me": "KO/TKO",
-      "rn": 2,
-      "ti": "4:28",
-      "wc": "Catch Weight",
-      "tb": false,
-      "ev": "UFC Fight Night: Dern vs. Yan"
-    },
-    {
-      "dt": "2022-04-09",
-      "op": "Julio Arce",
-      "re": "L",
-      "me": "Decision - Unanimous",
-      "rn": 3,
-      "ti": "5:00",
-      "wc": "Bantamweight",
-      "tb": false,
-      "ev": "UFC 273: Volkanovski vs. The Korean Zombie"
-    }
-  ],
   "Juan Diaz": [
     {
       "dt": "2026-05-16",
@@ -44820,41 +46823,6 @@ export const FIGHT_HISTORY = {
       "ev": "UFC Fight Night: Aspinall vs. Tybura"
     }
   ],
-  "Nicolle Caliari": [
-    {
-      "dt": "2026-05-16",
-      "op": "Shauna Bannon",
-      "re": "W",
-      "me": "Submission",
-      "rn": 3,
-      "ti": "3:08",
-      "wc": "Women's Strawweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Allen vs. Costa"
-    },
-    {
-      "dt": "2025-07-19",
-      "op": "Carli Judice",
-      "re": "L",
-      "me": "KO/TKO",
-      "rn": 3,
-      "ti": "1:30",
-      "wc": "Women's Flyweight",
-      "tb": false,
-      "ev": "UFC 318: Holloway vs. Poirier 3"
-    },
-    {
-      "dt": "2025-01-11",
-      "op": "Ernesta Kareckaite",
-      "re": "L",
-      "me": "Decision - Split",
-      "rn": 3,
-      "ti": "5:00",
-      "wc": "Women's Flyweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Dern vs. Ribas 2"
-    }
-  ],
   "Khamzat Chimaev": [
     {
       "dt": "2026-05-09",
@@ -45354,217 +47322,6 @@ export const FIGHT_HISTORY = {
       "wc": "Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Blachowicz vs. Rakic"
-    }
-  ],
-  "Alexander Volkov": [
-    {
-      "dt": "2026-05-09",
-      "op": "Waldo Cortes Acosta",
-      "re": "W",
-      "me": "Decision - Unanimous",
-      "rn": 3,
-      "ti": "5:00",
-      "wc": "Heavyweight",
-      "tb": false,
-      "ev": "UFC 328: Chimaev vs. Strickland"
-    },
-    {
-      "dt": "2025-10-25",
-      "op": "Jailton Almeida",
-      "re": "W",
-      "me": "Decision - Split",
-      "rn": 3,
-      "ti": "5:00",
-      "wc": "Heavyweight",
-      "tb": false,
-      "ev": "UFC 321: Aspinall vs. Gane"
-    },
-    {
-      "dt": "2024-12-07",
-      "op": "Ciryl Gane",
-      "re": "L",
-      "me": "Decision - Split",
-      "rn": 3,
-      "ti": "5:00",
-      "wc": "Heavyweight",
-      "tb": false,
-      "ev": "UFC 310: Pantoja vs. Asakura"
-    },
-    {
-      "dt": "2024-06-22",
-      "op": "Sergei Pavlovich",
-      "re": "W",
-      "me": "Decision - Unanimous",
-      "rn": 3,
-      "ti": "5:00",
-      "wc": "Heavyweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Whittaker vs. Aliskerov"
-    },
-    {
-      "dt": "2023-09-09",
-      "op": "Tai Tuivasa",
-      "re": "W",
-      "me": "Submission",
-      "rn": 2,
-      "ti": "4:37",
-      "wc": "Heavyweight",
-      "tb": false,
-      "ev": "UFC 293: Adesanya vs. Strickland"
-    },
-    {
-      "dt": "2023-03-11",
-      "op": "Alexandr Romanov",
-      "re": "W",
-      "me": "KO/TKO",
-      "rn": 1,
-      "ti": "2:16",
-      "wc": "Heavyweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Yan vs. Dvalishvili"
-    },
-    {
-      "dt": "2022-06-04",
-      "op": "Jairzinho Rozenstruik",
-      "re": "W",
-      "me": "KO/TKO",
-      "rn": 1,
-      "ti": "2:12",
-      "wc": "Heavyweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Volkov vs. Rozenstruik"
-    },
-    {
-      "dt": "2022-03-19",
-      "op": "Tom Aspinall",
-      "re": "L",
-      "me": "Submission",
-      "rn": 1,
-      "ti": "3:45",
-      "wc": "Heavyweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Volkov vs. Aspinall"
-    },
-    {
-      "dt": "2021-10-30",
-      "op": "Marcin Tybura",
-      "re": "W",
-      "me": "Decision - Unanimous",
-      "rn": 3,
-      "ti": "5:00",
-      "wc": "Heavyweight",
-      "tb": false,
-      "ev": "UFC 267: Blachowicz vs. Teixeira"
-    },
-    {
-      "dt": "2021-06-26",
-      "op": "Ciryl Gane",
-      "re": "L",
-      "me": "Decision - Unanimous",
-      "rn": 5,
-      "ti": "5:00",
-      "wc": "Heavyweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Gane vs. Volkov"
-    },
-    {
-      "dt": "2021-02-06",
-      "op": "Alistair Overeem",
-      "re": "W",
-      "me": "KO/TKO",
-      "rn": 2,
-      "ti": "2:06",
-      "wc": "Heavyweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Overeem vs. Volkov"
-    },
-    {
-      "dt": "2020-10-24",
-      "op": "Walt Harris",
-      "re": "W",
-      "me": "KO/TKO",
-      "rn": 2,
-      "ti": "1:15",
-      "wc": "Heavyweight",
-      "tb": false,
-      "ev": "UFC 254: Khabib vs. Gaethje"
-    },
-    {
-      "dt": "2020-06-20",
-      "op": "Curtis Blaydes",
-      "re": "L",
-      "me": "Decision - Unanimous",
-      "rn": 5,
-      "ti": "5:00",
-      "wc": "Heavyweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Blaydes vs. Volkov"
-    },
-    {
-      "dt": "2019-11-09",
-      "op": "Greg Hardy",
-      "re": "W",
-      "me": "Decision - Unanimous",
-      "rn": 3,
-      "ti": "5:00",
-      "wc": "Heavyweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Zabit vs. Kattar"
-    },
-    {
-      "dt": "2018-10-06",
-      "op": "Derrick Lewis",
-      "re": "L",
-      "me": "KO/TKO",
-      "rn": 3,
-      "ti": "4:49",
-      "wc": "Heavyweight",
-      "tb": false,
-      "ev": "UFC 229: Khabib vs. McGregor"
-    },
-    {
-      "dt": "2018-03-17",
-      "op": "Fabricio Werdum",
-      "re": "W",
-      "me": "KO/TKO",
-      "rn": 4,
-      "ti": "1:38",
-      "wc": "Heavyweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Werdum vs. Volkov"
-    },
-    {
-      "dt": "2017-09-02",
-      "op": "Stefan Struve",
-      "re": "W",
-      "me": "KO/TKO",
-      "rn": 3,
-      "ti": "3:30",
-      "wc": "Heavyweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Volkov vs. Struve"
-    },
-    {
-      "dt": "2017-04-15",
-      "op": "Roy Nelson",
-      "re": "W",
-      "me": "Decision - Unanimous",
-      "rn": 3,
-      "ti": "5:00",
-      "wc": "Heavyweight",
-      "tb": false,
-      "ev": "UFC on FOX: Johnson vs. Reis"
-    },
-    {
-      "dt": "2016-11-19",
-      "op": "Timothy Johnson",
-      "re": "W",
-      "me": "Decision - Split",
-      "rn": 3,
-      "ti": "5:00",
-      "wc": "Heavyweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Mousasi vs. Hall 2"
     }
   ],
   "Sean Brady": [
@@ -46110,173 +47867,6 @@ export const FIGHT_HISTORY = {
       "wc": "Welterweight",
       "tb": false,
       "ev": "UFC Fight Night: Royval vs. Kape"
-    }
-  ],
-  "Grant Dawson": [
-    {
-      "dt": "2026-05-09",
-      "op": "Mateusz Rebecki",
-      "re": "W",
-      "me": "Submission",
-      "rn": 3,
-      "ti": "4:42",
-      "wc": "Lightweight",
-      "tb": false,
-      "ev": "UFC 328: Chimaev vs. Strickland"
-    },
-    {
-      "dt": "2025-12-06",
-      "op": "Manuel Torres",
-      "re": "L",
-      "me": "KO/TKO",
-      "rn": 1,
-      "ti": "2:25",
-      "wc": "Lightweight",
-      "tb": false,
-      "ev": "UFC 323: Dvalishvili vs. Yan 2"
-    },
-    {
-      "dt": "2025-01-18",
-      "op": "Diego Ferreira",
-      "re": "W",
-      "me": "Decision - Unanimous",
-      "rn": 3,
-      "ti": "5:00",
-      "wc": "Lightweight",
-      "tb": false,
-      "ev": "UFC 311: Makhachev vs. Moicano"
-    },
-    {
-      "dt": "2024-10-12",
-      "op": "Rafa Garcia",
-      "re": "W",
-      "me": "KO/TKO",
-      "rn": 2,
-      "ti": "1:42",
-      "wc": "Lightweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Royval vs. Taira"
-    },
-    {
-      "dt": "2024-06-01",
-      "op": "Joe Solecki",
-      "re": "W",
-      "me": "Decision - Unanimous",
-      "rn": 3,
-      "ti": "5:00",
-      "wc": "Lightweight",
-      "tb": false,
-      "ev": "UFC 302: Makhachev vs. Poirier"
-    },
-    {
-      "dt": "2023-10-07",
-      "op": "King Green",
-      "re": "L",
-      "me": "KO/TKO",
-      "rn": 1,
-      "ti": "0:33",
-      "wc": "Lightweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Dawson vs. Green"
-    },
-    {
-      "dt": "2023-07-01",
-      "op": "Damir Ismagulov",
-      "re": "W",
-      "me": "Decision - Unanimous",
-      "rn": 3,
-      "ti": "5:00",
-      "wc": "Lightweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Strickland vs. Magomedov"
-    },
-    {
-      "dt": "2022-11-05",
-      "op": "Mark Madsen",
-      "re": "W",
-      "me": "Submission",
-      "rn": 3,
-      "ti": "2:05",
-      "wc": "Lightweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Rodriguez vs. Lemos"
-    },
-    {
-      "dt": "2022-04-30",
-      "op": "Jared Gordon",
-      "re": "W",
-      "me": "Submission",
-      "rn": 3,
-      "ti": "4:11",
-      "wc": "Lightweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Font vs. Vera"
-    },
-    {
-      "dt": "2021-10-23",
-      "op": "Ricky Glenn",
-      "re": "NC",
-      "me": "Decision - Majority",
-      "rn": 3,
-      "ti": "5:00",
-      "wc": "Lightweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Costa vs. Vettori"
-    },
-    {
-      "dt": "2021-03-20",
-      "op": "Leonardo Santos",
-      "re": "W",
-      "me": "KO/TKO",
-      "rn": 3,
-      "ti": "4:59",
-      "wc": "Lightweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Brunson vs. Holland"
-    },
-    {
-      "dt": "2020-07-18",
-      "op": "Nad Narimani",
-      "re": "W",
-      "me": "Decision - Unanimous",
-      "rn": 3,
-      "ti": "5:00",
-      "wc": "Catch Weight",
-      "tb": false,
-      "ev": "UFC Fight Night: Figueiredo vs. Benavidez 2"
-    },
-    {
-      "dt": "2020-02-29",
-      "op": "Darrick Minner",
-      "re": "W",
-      "me": "Submission",
-      "rn": 2,
-      "ti": "1:38",
-      "wc": "Featherweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Benavidez vs. Figueiredo"
-    },
-    {
-      "dt": "2019-05-18",
-      "op": "Michael Trizano",
-      "re": "W",
-      "me": "Submission",
-      "rn": 2,
-      "ti": "2:27",
-      "wc": "Featherweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Dos Anjos vs. Lee"
-    },
-    {
-      "dt": "2019-03-09",
-      "op": "Julian Erosa",
-      "re": "W",
-      "me": "Decision - Unanimous",
-      "rn": 3,
-      "ti": "5:00",
-      "wc": "Featherweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Lewis vs. Dos Santos"
     }
   ],
   "Jim Miller": [
@@ -47610,41 +49200,6 @@ export const FIGHT_HISTORY = {
       "ev": "UFC Fight Night: Ulberg vs. Reyes"
     }
   ],
-  "Cam Rowston": [
-    {
-      "dt": "2026-05-02",
-      "op": "Robert Bryczek",
-      "re": "W",
-      "me": "Decision - Unanimous",
-      "rn": 3,
-      "ti": "5:00",
-      "wc": "Middleweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Della Maddalena vs. Prates"
-    },
-    {
-      "dt": "2026-01-31",
-      "op": "Cody Brundage",
-      "re": "W",
-      "me": "KO/TKO",
-      "rn": 2,
-      "ti": "4:08",
-      "wc": "Middleweight",
-      "tb": false,
-      "ev": "UFC 325: Volkanovski vs. Lopes 2"
-    },
-    {
-      "dt": "2025-09-27",
-      "op": "Andre Petroski",
-      "re": "W",
-      "me": "KO/TKO",
-      "rn": 1,
-      "ti": "2:41",
-      "wc": "Middleweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Ulberg vs. Reyes"
-    }
-  ],
   "Kevin Christian": [
     {
       "dt": "2026-05-02",
@@ -47667,142 +49222,6 @@ export const FIGHT_HISTORY = {
       "wc": "Light Heavyweight",
       "tb": false,
       "ev": "UFC Fight Night: Garcia vs. Onama"
-    }
-  ],
-  "Jacob Malkoun": [
-    {
-      "dt": "2026-05-02",
-      "op": "Gerald Meerschaert",
-      "re": "W",
-      "me": "Decision - Unanimous",
-      "rn": 3,
-      "ti": "5:00",
-      "wc": "Middleweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Della Maddalena vs. Prates"
-    },
-    {
-      "dt": "2026-01-31",
-      "op": "Torrez Finney",
-      "re": "W",
-      "me": "Decision - Unanimous",
-      "rn": 3,
-      "ti": "5:00",
-      "wc": "Middleweight",
-      "tb": false,
-      "ev": "UFC 325: Volkanovski vs. Lopes 2"
-    },
-    {
-      "dt": "2024-03-30",
-      "op": "Andre Petroski",
-      "re": "W",
-      "me": "KO/TKO",
-      "rn": 2,
-      "ti": "0:39",
-      "wc": "Middleweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Blanchfield vs. Fiorot"
-    },
-    {
-      "dt": "2023-09-23",
-      "op": "Cody Brundage",
-      "re": "L",
-      "me": "DQ",
-      "rn": 1,
-      "ti": "4:15",
-      "wc": "Middleweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Fiziev vs. Gamrot"
-    },
-    {
-      "dt": "2022-10-15",
-      "op": "Nick Maximov",
-      "re": "W",
-      "me": "Decision - Unanimous",
-      "rn": 3,
-      "ti": "5:00",
-      "wc": "Middleweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Grasso vs. Araujo"
-    },
-    {
-      "dt": "2022-06-11",
-      "op": "Brendan Allen",
-      "re": "L",
-      "me": "Decision - Unanimous",
-      "rn": 3,
-      "ti": "5:00",
-      "wc": "Middleweight",
-      "tb": false,
-      "ev": "UFC 275: Teixeira vs. Prochazka"
-    },
-    {
-      "dt": "2022-02-12",
-      "op": "AJ Dobson",
-      "re": "W",
-      "me": "Decision - Unanimous",
-      "rn": 3,
-      "ti": "5:00",
-      "wc": "Middleweight",
-      "tb": false,
-      "ev": "UFC 271: Adesanya vs. Whittaker 2"
-    },
-    {
-      "dt": "2021-04-17",
-      "op": "Abdul Razak Alhassan",
-      "re": "W",
-      "me": "Decision - Unanimous",
-      "rn": 3,
-      "ti": "5:00",
-      "wc": "Middleweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Whittaker vs. Gastelum"
-    },
-    {
-      "dt": "2020-10-24",
-      "op": "Phil Hawes",
-      "re": "L",
-      "me": "KO/TKO",
-      "rn": 1,
-      "ti": "0:18",
-      "wc": "Middleweight",
-      "tb": false,
-      "ev": "UFC 254: Khabib vs. Gaethje"
-    }
-  ],
-  "Colby Thicknesse": [
-    {
-      "dt": "2026-05-02",
-      "op": "Vince Morales",
-      "re": "W",
-      "me": "Decision - Unanimous",
-      "rn": 3,
-      "ti": "5:00",
-      "wc": "Bantamweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Della Maddalena vs. Prates"
-    },
-    {
-      "dt": "2025-09-27",
-      "op": "Josias Musasa",
-      "re": "W",
-      "me": "Decision - Unanimous",
-      "rn": 3,
-      "ti": "5:00",
-      "wc": "Bantamweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Ulberg vs. Reyes"
-    },
-    {
-      "dt": "2025-02-08",
-      "op": "Aleksandre Topuria",
-      "re": "L",
-      "me": "Decision - Unanimous",
-      "rn": 3,
-      "ti": "5:00",
-      "wc": "Bantamweight",
-      "tb": false,
-      "ev": "UFC 312: Du Plessis vs. Strickland 2"
     }
   ],
   "Vince Morales": [
@@ -48099,30 +49518,6 @@ export const FIGHT_HISTORY = {
       "wc": "Lightweight",
       "tb": false,
       "ev": "UFC 325: Volkanovski vs. Lopes 2"
-    }
-  ],
-  "Kody Steele": [
-    {
-      "dt": "2026-05-02",
-      "op": "Dom Mar Fan",
-      "re": "W",
-      "me": "Submission",
-      "rn": 1,
-      "ti": "3:56",
-      "wc": "Lightweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Della Maddalena vs. Prates"
-    },
-    {
-      "dt": "2025-02-08",
-      "op": "Rongzhu",
-      "re": "L",
-      "me": "Decision - Unanimous",
-      "rn": 3,
-      "ti": "5:00",
-      "wc": "Lightweight",
-      "tb": false,
-      "ev": "UFC 312: Du Plessis vs. Strickland 2"
     }
   ],
   "Aljamain Sterling": [
@@ -50503,85 +51898,6 @@ export const FIGHT_HISTORY = {
       "ev": "UFC 259: Blachowicz vs. Adesanya"
     }
   ],
-  "Azamat Murzakanov": [
-    {
-      "dt": "2026-04-11",
-      "op": "Paulo Costa",
-      "re": "L",
-      "me": "KO/TKO",
-      "rn": 3,
-      "ti": "1:23",
-      "wc": "Light Heavyweight",
-      "tb": false,
-      "ev": "UFC 327: Prochazka vs. Ulberg"
-    },
-    {
-      "dt": "2025-10-25",
-      "op": "Aleksandar Rakic",
-      "re": "W",
-      "me": "KO/TKO",
-      "rn": 1,
-      "ti": "3:11",
-      "wc": "Light Heavyweight",
-      "tb": false,
-      "ev": "UFC 321: Aspinall vs. Gane"
-    },
-    {
-      "dt": "2025-06-07",
-      "op": "Brendson Ribeiro",
-      "re": "W",
-      "me": "KO/TKO",
-      "rn": 1,
-      "ti": "3:25",
-      "wc": "Light Heavyweight",
-      "tb": false,
-      "ev": "UFC 316: Dvalishvili vs. O'Malley 2"
-    },
-    {
-      "dt": "2024-08-03",
-      "op": "Alonzo Menifield",
-      "re": "W",
-      "me": "KO/TKO",
-      "rn": 2,
-      "ti": "3:18",
-      "wc": "Light Heavyweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Sandhagen vs. Nurmagomedov"
-    },
-    {
-      "dt": "2023-04-15",
-      "op": "Dustin Jacoby",
-      "re": "W",
-      "me": "Decision - Unanimous",
-      "rn": 3,
-      "ti": "5:00",
-      "wc": "Light Heavyweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Holloway vs. Allen"
-    },
-    {
-      "dt": "2022-08-13",
-      "op": "Devin Clark",
-      "re": "W",
-      "me": "KO/TKO",
-      "rn": 3,
-      "ti": "1:18",
-      "wc": "Light Heavyweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Vera vs. Cruz"
-    },
-    {
-      "dt": "2022-03-12",
-      "op": "Tafon Nchukwi",
-      "re": "W",
-      "me": "KO/TKO",
-      "rn": 3,
-      "ti": "0:44",
-      "wc": "Light Heavyweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Santos vs. Ankalaev"
-    }
-  ],
   "Paulo Costa": [
     {
       "dt": "2026-04-11",
@@ -50714,173 +52030,6 @@ export const FIGHT_HISTORY = {
       "wc": "Middleweight",
       "tb": false,
       "ev": "UFC Fight Night: Belfort vs. Gastelum"
-    }
-  ],
-  "Dominick Reyes": [
-    {
-      "dt": "2026-04-11",
-      "op": "Johnny Walker",
-      "re": "W",
-      "me": "Decision - Split",
-      "rn": 3,
-      "ti": "5:00",
-      "wc": "Light Heavyweight",
-      "tb": false,
-      "ev": "UFC 327: Prochazka vs. Ulberg"
-    },
-    {
-      "dt": "2025-09-27",
-      "op": "Carlos Ulberg",
-      "re": "L",
-      "me": "KO/TKO",
-      "rn": 1,
-      "ti": "4:27",
-      "wc": "Light Heavyweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Ulberg vs. Reyes"
-    },
-    {
-      "dt": "2025-04-12",
-      "op": "Nikita Krylov",
-      "re": "W",
-      "me": "KO/TKO",
-      "rn": 1,
-      "ti": "2:24",
-      "wc": "Light Heavyweight",
-      "tb": false,
-      "ev": "UFC 314: Volkanovski vs. Lopes"
-    },
-    {
-      "dt": "2024-12-07",
-      "op": "Anthony Smith",
-      "re": "W",
-      "me": "KO/TKO",
-      "rn": 2,
-      "ti": "4:46",
-      "wc": "Light Heavyweight",
-      "tb": false,
-      "ev": "UFC 310: Pantoja vs. Asakura"
-    },
-    {
-      "dt": "2024-06-08",
-      "op": "Dustin Jacoby",
-      "re": "W",
-      "me": "KO/TKO",
-      "rn": 1,
-      "ti": "2:00",
-      "wc": "Light Heavyweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Cannonier vs. Imavov"
-    },
-    {
-      "dt": "2022-11-12",
-      "op": "Ryan Spann",
-      "re": "L",
-      "me": "KO/TKO",
-      "rn": 1,
-      "ti": "1:20",
-      "wc": "Light Heavyweight",
-      "tb": false,
-      "ev": "UFC 281: Adesanya vs. Pereira"
-    },
-    {
-      "dt": "2021-05-01",
-      "op": "Jiri Prochazka",
-      "re": "L",
-      "me": "KO/TKO",
-      "rn": 2,
-      "ti": "4:29",
-      "wc": "Light Heavyweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Reyes vs. Prochazka"
-    },
-    {
-      "dt": "2020-09-26",
-      "op": "Jan Blachowicz",
-      "re": "L",
-      "me": "KO/TKO",
-      "rn": 2,
-      "ti": "4:36",
-      "wc": "Light Heavyweight",
-      "tb": false,
-      "ev": "UFC 253: Adesanya vs. Costa"
-    },
-    {
-      "dt": "2020-02-08",
-      "op": "Jon Jones",
-      "re": "L",
-      "me": "Decision - Unanimous",
-      "rn": 5,
-      "ti": "5:00",
-      "wc": "Light Heavyweight",
-      "tb": false,
-      "ev": "UFC 247: Jones vs. Reyes"
-    },
-    {
-      "dt": "2019-10-18",
-      "op": "Chris Weidman",
-      "re": "W",
-      "me": "KO/TKO",
-      "rn": 1,
-      "ti": "1:43",
-      "wc": "Light Heavyweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Reyes vs. Weidman"
-    },
-    {
-      "dt": "2019-03-16",
-      "op": "Volkan Oezdemir",
-      "re": "W",
-      "me": "Decision - Split",
-      "rn": 3,
-      "ti": "5:00",
-      "wc": "Light Heavyweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Till vs. Masvidal"
-    },
-    {
-      "dt": "2018-10-06",
-      "op": "Ovince Saint Preux",
-      "re": "W",
-      "me": "Decision - Unanimous",
-      "rn": 3,
-      "ti": "5:00",
-      "wc": "Light Heavyweight",
-      "tb": false,
-      "ev": "UFC 229: Khabib vs. McGregor"
-    },
-    {
-      "dt": "2018-05-19",
-      "op": "Jared Cannonier",
-      "re": "W",
-      "me": "KO/TKO",
-      "rn": 1,
-      "ti": "2:55",
-      "wc": "Light Heavyweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Maia vs. Usman"
-    },
-    {
-      "dt": "2017-12-02",
-      "op": "Jeremy Kimball",
-      "re": "W",
-      "me": "Submission",
-      "rn": 1,
-      "ti": "3:39",
-      "wc": "Light Heavyweight",
-      "tb": false,
-      "ev": "UFC 218: Holloway vs. Aldo 2"
-    },
-    {
-      "dt": "2017-06-25",
-      "op": "Joachim Christensen",
-      "re": "W",
-      "me": "KO/TKO",
-      "rn": 1,
-      "ti": "0:29",
-      "wc": "Light Heavyweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Chiesa vs. Lee"
     }
   ],
   "Cub Swanson": [
@@ -51169,30 +52318,6 @@ export const FIGHT_HISTORY = {
       "wc": "Featherweight",
       "tb": false,
       "ev": "UFC on FOX: Velasquez vs Dos Santos"
-    }
-  ],
-  "Aaron Pico": [
-    {
-      "dt": "2026-04-11",
-      "op": "Patricio Pitbull",
-      "re": "W",
-      "me": "Decision - Unanimous",
-      "rn": 3,
-      "ti": "5:00",
-      "wc": "Featherweight",
-      "tb": false,
-      "ev": "UFC 327: Prochazka vs. Ulberg"
-    },
-    {
-      "dt": "2025-08-16",
-      "op": "Lerone Murphy",
-      "re": "L",
-      "me": "KO/TKO",
-      "rn": 1,
-      "ti": "3:21",
-      "wc": "Featherweight",
-      "tb": false,
-      "ev": "UFC 319: Du Plessis vs. Chimaev"
     }
   ],
   "Randy Brown": [
@@ -53439,118 +54564,6 @@ export const FIGHT_HISTORY = {
       "ev": "UFC Fight Night: Holloway vs. Allen"
     }
   ],
-  "Movsar Evloev": [
-    {
-      "dt": "2026-03-21",
-      "op": "Lerone Murphy",
-      "re": "W",
-      "me": "Decision - Majority",
-      "rn": 5,
-      "ti": "5:00",
-      "wc": "Featherweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Evloev vs. Murphy"
-    },
-    {
-      "dt": "2024-12-07",
-      "op": "Aljamain Sterling",
-      "re": "W",
-      "me": "Decision - Unanimous",
-      "rn": 3,
-      "ti": "5:00",
-      "wc": "Featherweight",
-      "tb": false,
-      "ev": "UFC 310: Pantoja vs. Asakura"
-    },
-    {
-      "dt": "2024-01-20",
-      "op": "Arnold Allen",
-      "re": "W",
-      "me": "Decision - Unanimous",
-      "rn": 3,
-      "ti": "5:00",
-      "wc": "Featherweight",
-      "tb": false,
-      "ev": "UFC 297: Strickland vs. Du Plessis"
-    },
-    {
-      "dt": "2023-05-06",
-      "op": "Diego Lopes",
-      "re": "W",
-      "me": "Decision - Unanimous",
-      "rn": 3,
-      "ti": "5:00",
-      "wc": "Featherweight",
-      "tb": false,
-      "ev": "UFC 288: Sterling vs. Cejudo"
-    },
-    {
-      "dt": "2022-06-04",
-      "op": "Dan Ige",
-      "re": "W",
-      "me": "Decision - Unanimous",
-      "rn": 3,
-      "ti": "5:00",
-      "wc": "Featherweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Volkov vs. Rozenstruik"
-    },
-    {
-      "dt": "2021-06-12",
-      "op": "Hakeem Dawodu",
-      "re": "W",
-      "me": "Decision - Unanimous",
-      "rn": 3,
-      "ti": "5:00",
-      "wc": "Featherweight",
-      "tb": false,
-      "ev": "UFC 263: Adesanya vs. Vettori 2"
-    },
-    {
-      "dt": "2021-01-23",
-      "op": "Nik Lentz",
-      "re": "W",
-      "me": "Decision - Split",
-      "rn": 3,
-      "ti": "5:00",
-      "wc": "Catch Weight",
-      "tb": false,
-      "ev": "UFC 257: Poirier vs. McGregor"
-    },
-    {
-      "dt": "2020-07-25",
-      "op": "Mike Grundy",
-      "re": "W",
-      "me": "Decision - Unanimous",
-      "rn": 3,
-      "ti": "5:00",
-      "wc": "Featherweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Whittaker vs. Till"
-    },
-    {
-      "dt": "2019-10-26",
-      "op": "Enrique Barzola",
-      "re": "W",
-      "me": "Decision - Unanimous",
-      "rn": 3,
-      "ti": "5:00",
-      "wc": "Featherweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Maia vs. Askren"
-    },
-    {
-      "dt": "2019-04-20",
-      "op": "SeungWoo Choi",
-      "re": "W",
-      "me": "Decision - Unanimous",
-      "rn": 3,
-      "ti": "5:00",
-      "wc": "Featherweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Overeem vs. Oleinik"
-    }
-  ],
   "Lerone Murphy": [
     {
       "dt": "2026-03-21",
@@ -54332,63 +55345,6 @@ export const FIGHT_HISTORY = {
       "wc": "Bantamweight",
       "tb": false,
       "ev": "UFC Fight Night: Cannonier vs. Rodrigues"
-    }
-  ],
-  "Bolaji Oki": [
-    {
-      "dt": "2026-03-14",
-      "op": "Manoel Sousa",
-      "re": "L",
-      "me": "KO/TKO",
-      "rn": 3,
-      "ti": "4:12",
-      "wc": "Lightweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Emmett vs. Vallejos"
-    },
-    {
-      "dt": "2025-09-06",
-      "op": "Mason Jones",
-      "re": "L",
-      "me": "KO/TKO",
-      "rn": 2,
-      "ti": "3:18",
-      "wc": "Lightweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Imavov vs. Borralho"
-    },
-    {
-      "dt": "2025-05-31",
-      "op": "Michael Aswell Jr.",
-      "re": "W",
-      "me": "Decision - Unanimous",
-      "rn": 3,
-      "ti": "5:00",
-      "wc": "Lightweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Blanchfield vs. Barber"
-    },
-    {
-      "dt": "2024-09-28",
-      "op": "Chris Duncan",
-      "re": "L",
-      "me": "Submission",
-      "rn": 1,
-      "ti": "3:34",
-      "wc": "Lightweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Moicano vs. Saint Denis"
-    },
-    {
-      "dt": "2024-02-10",
-      "op": "Timmy Cuamba",
-      "re": "W",
-      "me": "Decision - Split",
-      "rn": 3,
-      "ti": "5:00",
-      "wc": "Lightweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Hermansson vs. Pyfer"
     }
   ],
   "Brad Tavares": [
@@ -58118,206 +59074,6 @@ export const FIGHT_HISTORY = {
       "ev": "UFC 320: Ankalaev vs. Pereira 2"
     }
   ],
-  "Alexander Volkanovski": [
-    {
-      "dt": "2026-01-31",
-      "op": "Diego Lopes",
-      "re": "W",
-      "me": "Decision - Unanimous",
-      "rn": 5,
-      "ti": "5:00",
-      "wc": "Featherweight",
-      "tb": false,
-      "ev": "UFC 325: Volkanovski vs. Lopes 2"
-    },
-    {
-      "dt": "2025-04-12",
-      "op": "Diego Lopes",
-      "re": "W",
-      "me": "Decision - Unanimous",
-      "rn": 5,
-      "ti": "5:00",
-      "wc": "Featherweight",
-      "tb": false,
-      "ev": "UFC 314: Volkanovski vs. Lopes"
-    },
-    {
-      "dt": "2024-02-17",
-      "op": "Ilia Topuria",
-      "re": "L",
-      "me": "KO/TKO",
-      "rn": 2,
-      "ti": "3:32",
-      "wc": "Featherweight",
-      "tb": false,
-      "ev": "UFC 298: Volkanovski vs. Topuria"
-    },
-    {
-      "dt": "2023-10-21",
-      "op": "Islam Makhachev",
-      "re": "L",
-      "me": "KO/TKO",
-      "rn": 1,
-      "ti": "3:06",
-      "wc": "Lightweight",
-      "tb": false,
-      "ev": "UFC 294: Makhachev vs. Volkanovski 2"
-    },
-    {
-      "dt": "2023-07-08",
-      "op": "Yair Rodriguez",
-      "re": "W",
-      "me": "KO/TKO",
-      "rn": 3,
-      "ti": "4:19",
-      "wc": "Featherweight",
-      "tb": false,
-      "ev": "UFC 290: Volkanovski vs. Rodriguez"
-    },
-    {
-      "dt": "2023-02-11",
-      "op": "Islam Makhachev",
-      "re": "L",
-      "me": "Decision - Unanimous",
-      "rn": 5,
-      "ti": "5:00",
-      "wc": "Lightweight",
-      "tb": false,
-      "ev": "UFC 284: Makhachev vs. Volkanovski"
-    },
-    {
-      "dt": "2022-07-02",
-      "op": "Max Holloway",
-      "re": "W",
-      "me": "Decision - Unanimous",
-      "rn": 5,
-      "ti": "5:00",
-      "wc": "Featherweight",
-      "tb": false,
-      "ev": "UFC 276: Adesanya vs. Cannonier"
-    },
-    {
-      "dt": "2022-04-09",
-      "op": "Chan Sung Jung",
-      "re": "W",
-      "me": "KO/TKO",
-      "rn": 4,
-      "ti": "0:45",
-      "wc": "Featherweight",
-      "tb": false,
-      "ev": "UFC 273: Volkanovski vs. The Korean Zombie"
-    },
-    {
-      "dt": "2021-09-25",
-      "op": "Brian Ortega",
-      "re": "W",
-      "me": "Decision - Unanimous",
-      "rn": 5,
-      "ti": "5:00",
-      "wc": "Featherweight",
-      "tb": false,
-      "ev": "UFC 266: Volkanovski vs. Ortega"
-    },
-    {
-      "dt": "2020-07-11",
-      "op": "Max Holloway",
-      "re": "W",
-      "me": "Decision - Split",
-      "rn": 5,
-      "ti": "5:00",
-      "wc": "Featherweight",
-      "tb": false,
-      "ev": "UFC 251: Usman vs. Masvidal"
-    },
-    {
-      "dt": "2019-12-14",
-      "op": "Max Holloway",
-      "re": "W",
-      "me": "Decision - Unanimous",
-      "rn": 5,
-      "ti": "5:00",
-      "wc": "Featherweight",
-      "tb": false,
-      "ev": "UFC 245: Usman vs. Covington"
-    },
-    {
-      "dt": "2019-05-11",
-      "op": "Jose Aldo",
-      "re": "W",
-      "me": "Decision - Unanimous",
-      "rn": 3,
-      "ti": "5:00",
-      "wc": "Featherweight",
-      "tb": false,
-      "ev": "UFC 237: Namajunas vs. Andrade"
-    },
-    {
-      "dt": "2018-12-29",
-      "op": "Chad Mendes",
-      "re": "W",
-      "me": "KO/TKO",
-      "rn": 2,
-      "ti": "4:14",
-      "wc": "Featherweight",
-      "tb": false,
-      "ev": "UFC 232: Jones vs. Gustafsson 2"
-    },
-    {
-      "dt": "2018-07-14",
-      "op": "Darren Elkins",
-      "re": "W",
-      "me": "Decision - Unanimous",
-      "rn": 3,
-      "ti": "5:00",
-      "wc": "Featherweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Dos Santos vs. Ivanov"
-    },
-    {
-      "dt": "2018-02-10",
-      "op": "Jeremy Kennedy",
-      "re": "W",
-      "me": "KO/TKO",
-      "rn": 2,
-      "ti": "4:57",
-      "wc": "Featherweight",
-      "tb": false,
-      "ev": "UFC 221: Romero vs. Rockhold"
-    },
-    {
-      "dt": "2017-11-18",
-      "op": "Shane Young",
-      "re": "W",
-      "me": "Decision - Unanimous",
-      "rn": 3,
-      "ti": "5:00",
-      "wc": "Catch Weight",
-      "tb": false,
-      "ev": "UFC Fight Night: Werdum vs. Tybura"
-    },
-    {
-      "dt": "2017-06-10",
-      "op": "Mizuto Hirota",
-      "re": "W",
-      "me": "Decision - Unanimous",
-      "rn": 3,
-      "ti": "5:00",
-      "wc": "Featherweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Lewis vs. Hunt"
-    },
-    {
-      "dt": "2016-11-26",
-      "op": "Yusuke Kasuya",
-      "re": "W",
-      "me": "KO/TKO",
-      "rn": 2,
-      "ti": "2:06",
-      "wc": "Lightweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Whittaker vs. Brunson"
-    }
-  ],
   "Jamie Mullarkey": [
     {
       "dt": "2026-01-31",
@@ -59030,373 +59786,6 @@ export const FIGHT_HISTORY = {
       "wc": "Women's Flyweight",
       "tb": false,
       "ev": "UFC Fight Night: Nzechukwu vs. Cutelaba"
-    }
-  ],
-  "Merab Dvalishvili": [
-    {
-      "dt": "2025-12-06",
-      "op": "Petr Yan",
-      "re": "L",
-      "me": "Decision - Unanimous",
-      "rn": 5,
-      "ti": "5:00",
-      "wc": "Bantamweight",
-      "tb": false,
-      "ev": "UFC 323: Dvalishvili vs. Yan 2"
-    },
-    {
-      "dt": "2025-10-04",
-      "op": "Cory Sandhagen",
-      "re": "W",
-      "me": "Decision - Unanimous",
-      "rn": 5,
-      "ti": "5:00",
-      "wc": "Bantamweight",
-      "tb": false,
-      "ev": "UFC 320: Ankalaev vs. Pereira 2"
-    },
-    {
-      "dt": "2025-06-07",
-      "op": "Sean O'Malley",
-      "re": "W",
-      "me": "Submission",
-      "rn": 3,
-      "ti": "4:42",
-      "wc": "Bantamweight",
-      "tb": false,
-      "ev": "UFC 316: Dvalishvili vs. O'Malley 2"
-    },
-    {
-      "dt": "2025-01-18",
-      "op": "Umar Nurmagomedov",
-      "re": "W",
-      "me": "Decision - Unanimous",
-      "rn": 5,
-      "ti": "5:00",
-      "wc": "Bantamweight",
-      "tb": false,
-      "ev": "UFC 311: Makhachev vs. Moicano"
-    },
-    {
-      "dt": "2024-09-14",
-      "op": "Sean O'Malley",
-      "re": "W",
-      "me": "Decision - Unanimous",
-      "rn": 5,
-      "ti": "5:00",
-      "wc": "Bantamweight",
-      "tb": false,
-      "ev": "UFC 306: Riyadh Season Noche UFC"
-    },
-    {
-      "dt": "2024-02-17",
-      "op": "Henry Cejudo",
-      "re": "W",
-      "me": "Decision - Unanimous",
-      "rn": 3,
-      "ti": "5:00",
-      "wc": "Bantamweight",
-      "tb": false,
-      "ev": "UFC 298: Volkanovski vs. Topuria"
-    },
-    {
-      "dt": "2023-03-11",
-      "op": "Petr Yan",
-      "re": "W",
-      "me": "Decision - Unanimous",
-      "rn": 5,
-      "ti": "5:00",
-      "wc": "Bantamweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Yan vs. Dvalishvili"
-    },
-    {
-      "dt": "2022-08-20",
-      "op": "Jose Aldo",
-      "re": "W",
-      "me": "Decision - Unanimous",
-      "rn": 3,
-      "ti": "5:00",
-      "wc": "Bantamweight",
-      "tb": false,
-      "ev": "UFC 278: Usman vs. Edwards"
-    },
-    {
-      "dt": "2021-09-25",
-      "op": "Marlon Moraes",
-      "re": "W",
-      "me": "KO/TKO",
-      "rn": 2,
-      "ti": "4:25",
-      "wc": "Bantamweight",
-      "tb": false,
-      "ev": "UFC 266: Volkanovski vs. Ortega"
-    },
-    {
-      "dt": "2021-05-01",
-      "op": "Cody Stamann",
-      "re": "W",
-      "me": "Decision - Unanimous",
-      "rn": 3,
-      "ti": "5:00",
-      "wc": "Bantamweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Reyes vs. Prochazka"
-    },
-    {
-      "dt": "2020-08-15",
-      "op": "John Dodson",
-      "re": "W",
-      "me": "Decision - Unanimous",
-      "rn": 3,
-      "ti": "5:00",
-      "wc": "Bantamweight",
-      "tb": false,
-      "ev": "UFC 252: Miocic vs. Cormier 3"
-    },
-    {
-      "dt": "2020-06-13",
-      "op": "Gustavo Lopez",
-      "re": "W",
-      "me": "Decision - Unanimous",
-      "rn": 3,
-      "ti": "5:00",
-      "wc": "Catch Weight",
-      "tb": false,
-      "ev": "UFC Fight Night: Eye vs. Calvillo"
-    },
-    {
-      "dt": "2020-02-15",
-      "op": "Casey Kenney",
-      "re": "W",
-      "me": "Decision - Unanimous",
-      "rn": 3,
-      "ti": "5:00",
-      "wc": "Bantamweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Anderson vs. Blachowicz"
-    },
-    {
-      "dt": "2019-05-04",
-      "op": "Brad Katona",
-      "re": "W",
-      "me": "Decision - Unanimous",
-      "rn": 3,
-      "ti": "5:00",
-      "wc": "Bantamweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Iaquinta vs. Cowboy"
-    },
-    {
-      "dt": "2018-09-15",
-      "op": "Terrion Ware",
-      "re": "W",
-      "me": "Decision - Unanimous",
-      "rn": 3,
-      "ti": "5:00",
-      "wc": "Bantamweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Hunt vs. Oleinik"
-    },
-    {
-      "dt": "2018-04-21",
-      "op": "Ricky Simon",
-      "re": "L",
-      "me": "Submission",
-      "rn": 3,
-      "ti": "5:00",
-      "wc": "Bantamweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Barboza vs. Lee"
-    },
-    {
-      "dt": "2017-12-09",
-      "op": "Frankie Saenz",
-      "re": "L",
-      "me": "Decision - Split",
-      "rn": 3,
-      "ti": "5:00",
-      "wc": "Bantamweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Swanson vs. Ortega"
-    }
-  ],
-  "Petr Yan": [
-    {
-      "dt": "2025-12-06",
-      "op": "Merab Dvalishvili",
-      "re": "W",
-      "me": "Decision - Unanimous",
-      "rn": 5,
-      "ti": "5:00",
-      "wc": "Bantamweight",
-      "tb": false,
-      "ev": "UFC 323: Dvalishvili vs. Yan 2"
-    },
-    {
-      "dt": "2025-07-26",
-      "op": "Marcus McGhee",
-      "re": "W",
-      "me": "Decision - Unanimous",
-      "rn": 3,
-      "ti": "5:00",
-      "wc": "Bantamweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Whittaker vs. De Ridder"
-    },
-    {
-      "dt": "2024-11-23",
-      "op": "Deiveson Figueiredo",
-      "re": "W",
-      "me": "Decision - Unanimous",
-      "rn": 5,
-      "ti": "5:00",
-      "wc": "Bantamweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Yan vs. Figueiredo"
-    },
-    {
-      "dt": "2024-03-09",
-      "op": "Song Yadong",
-      "re": "W",
-      "me": "Decision - Unanimous",
-      "rn": 3,
-      "ti": "5:00",
-      "wc": "Bantamweight",
-      "tb": false,
-      "ev": "UFC 299: O'Malley vs. Vera 2"
-    },
-    {
-      "dt": "2023-03-11",
-      "op": "Merab Dvalishvili",
-      "re": "L",
-      "me": "Decision - Unanimous",
-      "rn": 5,
-      "ti": "5:00",
-      "wc": "Bantamweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Yan vs. Dvalishvili"
-    },
-    {
-      "dt": "2022-10-22",
-      "op": "Sean O'Malley",
-      "re": "L",
-      "me": "Decision - Split",
-      "rn": 3,
-      "ti": "5:00",
-      "wc": "Bantamweight",
-      "tb": false,
-      "ev": "UFC 280: Oliveira vs. Makhachev"
-    },
-    {
-      "dt": "2022-04-09",
-      "op": "Aljamain Sterling",
-      "re": "L",
-      "me": "Decision - Split",
-      "rn": 5,
-      "ti": "5:00",
-      "wc": "Bantamweight",
-      "tb": false,
-      "ev": "UFC 273: Volkanovski vs. The Korean Zombie"
-    },
-    {
-      "dt": "2021-10-30",
-      "op": "Cory Sandhagen",
-      "re": "W",
-      "me": "Decision - Unanimous",
-      "rn": 5,
-      "ti": "5:00",
-      "wc": "Bantamweight",
-      "tb": false,
-      "ev": "UFC 267: Blachowicz vs. Teixeira"
-    },
-    {
-      "dt": "2021-03-06",
-      "op": "Aljamain Sterling",
-      "re": "L",
-      "me": "DQ",
-      "rn": 4,
-      "ti": "4:29",
-      "wc": "Bantamweight",
-      "tb": false,
-      "ev": "UFC 259: Blachowicz vs. Adesanya"
-    },
-    {
-      "dt": "2020-07-11",
-      "op": "Jose Aldo",
-      "re": "W",
-      "me": "KO/TKO",
-      "rn": 5,
-      "ti": "3:24",
-      "wc": "Bantamweight",
-      "tb": false,
-      "ev": "UFC 251: Usman vs. Masvidal"
-    },
-    {
-      "dt": "2019-12-14",
-      "op": "Urijah Faber",
-      "re": "W",
-      "me": "KO/TKO",
-      "rn": 3,
-      "ti": "0:43",
-      "wc": "Bantamweight",
-      "tb": false,
-      "ev": "UFC 245: Usman vs. Covington"
-    },
-    {
-      "dt": "2019-06-08",
-      "op": "Jimmie Rivera",
-      "re": "W",
-      "me": "Decision - Unanimous",
-      "rn": 3,
-      "ti": "5:00",
-      "wc": "Bantamweight",
-      "tb": false,
-      "ev": "UFC 238: Cejudo vs. Moraes"
-    },
-    {
-      "dt": "2019-02-23",
-      "op": "John Dodson",
-      "re": "W",
-      "me": "Decision - Unanimous",
-      "rn": 3,
-      "ti": "5:00",
-      "wc": "Bantamweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Blachowicz vs. Santos"
-    },
-    {
-      "dt": "2018-12-29",
-      "op": "Douglas Silva de Andrade",
-      "re": "W",
-      "me": "KO/TKO",
-      "rn": 2,
-      "ti": "5:00",
-      "wc": "Bantamweight",
-      "tb": false,
-      "ev": "UFC 232: Jones vs. Gustafsson 2"
-    },
-    {
-      "dt": "2018-09-15",
-      "op": "Jin Soo Son",
-      "re": "W",
-      "me": "Decision - Unanimous",
-      "rn": 3,
-      "ti": "5:00",
-      "wc": "Bantamweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Hunt vs. Oleinik"
-    },
-    {
-      "dt": "2018-06-23",
-      "op": "Teruto Ishihara",
-      "re": "W",
-      "me": "KO/TKO",
-      "rn": 1,
-      "ti": "3:28",
-      "wc": "Bantamweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Cowboy vs. Edwards"
     }
   ],
   "Henry Cejudo": [
@@ -65462,85 +65851,6 @@ export const FIGHT_HISTORY = {
       "wc": "Women's Bantamweight",
       "tb": false,
       "ev": "UFC on FOX: Johnson vs Moraga"
-    }
-  ],
-  "Iasmin Lucindo": [
-    {
-      "dt": "2025-08-09",
-      "op": "Angela Hill",
-      "re": "W",
-      "me": "Decision - Unanimous",
-      "rn": 3,
-      "ti": "5:00",
-      "wc": "Women's Strawweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Dolidze vs. Hernandez"
-    },
-    {
-      "dt": "2025-03-08",
-      "op": "Amanda Lemos",
-      "re": "L",
-      "me": "Decision - Unanimous",
-      "rn": 3,
-      "ti": "5:00",
-      "wc": "Women's Strawweight",
-      "tb": false,
-      "ev": "UFC 313: Pereira vs. Ankalaev"
-    },
-    {
-      "dt": "2024-10-05",
-      "op": "Marina Rodriguez",
-      "re": "W",
-      "me": "Decision - Split",
-      "rn": 3,
-      "ti": "5:00",
-      "wc": "Women's Strawweight",
-      "tb": false,
-      "ev": "UFC 307: Pereira vs. Rountree Jr."
-    },
-    {
-      "dt": "2024-05-04",
-      "op": "Karolina Kowalkiewicz",
-      "re": "W",
-      "me": "Decision - Unanimous",
-      "rn": 3,
-      "ti": "5:00",
-      "wc": "Women's Strawweight",
-      "tb": false,
-      "ev": "UFC 301: Pantoja vs. Erceg"
-    },
-    {
-      "dt": "2023-08-12",
-      "op": "Polyana Viana",
-      "re": "W",
-      "me": "Submission",
-      "rn": 2,
-      "ti": "3:42",
-      "wc": "Women's Strawweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Luque vs. Dos Anjos"
-    },
-    {
-      "dt": "2023-04-22",
-      "op": "Brogan Walker",
-      "re": "W",
-      "me": "Decision - Unanimous",
-      "rn": 3,
-      "ti": "5:00",
-      "wc": "Women's Flyweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Pavlovich vs. Blaydes"
-    },
-    {
-      "dt": "2022-08-13",
-      "op": "Yazmin Jauregui",
-      "re": "L",
-      "me": "Decision - Unanimous",
-      "rn": 3,
-      "ti": "5:00",
-      "wc": "Women's Strawweight",
-      "tb": false,
-      "ev": "UFC Fight Night: Vera vs. Cruz"
     }
   ],
   "Rafael Cerquiera": [

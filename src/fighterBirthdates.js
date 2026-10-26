@@ -197,6 +197,7 @@ export const FIGHTER_BIRTHDATES = Object.freeze({
   "Armen Petrosyan": "1990-11-03",
   "Arnold Allen": "1994-01-22",
   "Artem Lobov": "1986-08-11",
+  "Asaf Chopurov": "2001-11-17",
   "Ashkan Mokhtarian": "1985-09-15",
   "Ashlee Evans-Smith": "1987-07-09",
   "Ashley Yoder": "1987-10-20",
