@@ -12,7 +12,7 @@ export const PROP_PICKS = [
     "method": "KO/TKO",
     "odds": "-115",
     "stake": 1,
-    "result": "PENDING",
+    "result": "WON",
     "label": "Fight Ends by KO/TKO",
     "propType": "Fight Outcome"
   },
@@ -29,7 +29,7 @@ export const PROP_PICKS = [
     "method": "Decision",
     "odds": "-295",
     "stake": 1,
-    "result": "PENDING",
+    "result": "WON",
     "label": "Fight Goes to Decision",
     "propType": "Fight Outcome"
   },
@@ -46,7 +46,7 @@ export const PROP_PICKS = [
     "method": "Decision",
     "odds": "-275",
     "stake": 1,
-    "result": "PENDING",
+    "result": "LOST",
     "label": "Fight Goes to Decision",
     "propType": "Fight Outcome"
   },
