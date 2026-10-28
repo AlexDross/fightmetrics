@@ -243,7 +243,19 @@ so re-running after a partial entry is safe.
 When `add` prints `Saved to Supabase …` the card is **already live** on
 fightmetrics.app — there is no commit, push or deploy. Load
 `https://fightmetrics.app/upcoming` and confirm the fights render before telling
-the user it is done.
+the user it is done. Also confirm they render **in fight order**: the first
+prelim at the top, the main event at the bottom (see "Fight order" under the
+card file format).
+
+If a card went in out of order, fix the order without repricing it. Delete the
+event's entries and put the **same stored payloads** back in one
+`store.apply()` batch (`scripts/lib/documentStore.mjs`): the deletes first,
+then one `put` per entry with `expectedRevision: '0'`, main event first and
+opener last. A put of an existing id keeps its old position, so the delete
+has to come first. Then diff the export against a snapshot taken before the
+change: ids, prices and `createdAt` must be unchanged. Do not use
+`remove` + `add` for a reorder, because that re-prices every fight at the
+current odds.
 
 The whole card is written as one atomic batch, and every entry carries the
 revision it was read at, so a card changed elsewhere in the meantime is refused
@@ -318,9 +330,6 @@ the past (saved as reconstructed). Fix it before reporting.
 
 ## Card file format
 
-Fights go in **bout order, opener first and main event last** — see the
-`addPendingEntry` note below.
-
 ```json
 {
   "eventName": "UFC 331",
@@ -364,6 +373,13 @@ Fights go in **bout order, opener first and main event last** — see the
   stakes in the Upcoming tab.
 - Odds may be omitted entirely; the entry saves with no market, which means no
   bet signal and no EV/Kelly. Warn rather than silently doing this.
+- **Fight order: the Upcoming tab must read chronologically, earliest bout at
+  the top and the main event at the bottom.** `add` inserts each fight at the
+  top, so the card file is written in **reverse** chronological order: main
+  event first, then the rest of the main card, then prelims, then early prelims,
+  with the card opener last. That is exactly the order UFC.com's event page
+  lists the bouts top to bottom, so copy it from there. Never keep the market's
+  order: Polymarket's search results come back in no particular order.
 
 ## Notes
 
@@ -384,11 +400,7 @@ Fights go in **bout order, opener first and main event last** — see the
   `c6ProbA`/`c6ProbB`/`c6Version`.
 - `addPendingEntry` prepends, so the last fight in the card file ends up first in
   the array — the same order you would get saving them one at a time in the UI.
-  **The Upcoming tab must read main event first, opener last**, so write
-  `fights` in bout order: the first early prelim first, the main event last.
-  Take the order from UFC.com (its event page lists main event first; reverse
-  it), not from the market feed, whose order is arbitrary. To fix the order of
-  a card already entered, `remove --event` and re-`add` while it is pending.
+  That is why the card file runs main event → opener (see "Fight order").
 - The scripts import `src/` through a loader hook that retries a failed
   specifier with `.js` and `/index.js`, because `src/` uses Vite's extensionless
   imports. Same hook `scripts/regen_simulator_bar_anchors.mjs` registers.
