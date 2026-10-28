@@ -14,6 +14,9 @@ import App from './App';
 // performs no data read — when Supabase is unconfigured it constructs no client
 // and issues no request, so this wrapper is inert in the current build.
 import { AuthProvider } from './auth/AuthProvider.jsx';
+// M1: in-app confirmations (replaces window.confirm). Mounted here, around App,
+// so the dialog sits outside App's routed content and its error boundary.
+import { ConfirmProvider } from './ui/ConfirmDialog.jsx';
 
 const rootElement = document.getElementById('root');
 const root = createRoot(rootElement);
@@ -31,7 +34,9 @@ root.render(
   <StrictMode>
     <BrowserRouter>
       <AuthProvider>
-        <App />
+        <ConfirmProvider>
+          <App />
+        </ConfirmProvider>
       </AuthProvider>
     </BrowserRouter>
   </StrictMode>
