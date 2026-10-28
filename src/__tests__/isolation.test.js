@@ -11,10 +11,31 @@ function testFiles(dir, acc = []) {
   for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
     const p = path.join(dir, e.name);
     if (e.isDirectory()) { if (e.name !== 'node_modules' && e.name !== 'fixtures') testFiles(p, acc); }
-    else if (e.name.endsWith('.test.js')) acc.push(p);
+    else if (e.name.endsWith('.test.js') || e.name.endsWith('.test.mjs')) acc.push(p);
   }
   return acc;
 }
+
+// Top-level `import ... from '...'` AND dynamic `import('...')`. A dynamic import
+// reaches the module just as surely, and the one sanctioned App.js importer
+// below uses one (it has to pin the clock first).
+const importsOf = (src) => [
+  ...[...src.matchAll(/^import[\s\S]*?from\s*'([^']+)';/gm)].map(([stmt, spec]) => ({ stmt, spec })),
+  ...[...src.matchAll(/\bimport\(\s*'([^']+)'\s*\)/g)].map(([stmt, spec]) => ({ stmt, spec })),
+];
+
+// THE ONE EXCEPTION (M1 PR 3). The read-only-views integration test must render
+// the real Upcoming and ROI screens, which exist only inside App.js. It may
+// import App.js -- and nothing else may -- because it removes both reasons for
+// the rule before doing so: it pins the clock (vi.setSystemTime) ahead of the
+// import, so the date-derived values are fixed, and it mocks every live data
+// module App.js reaches directly (the four document snapshots and the assembled
+// FIGHTERS collection) with frozen fixtures. The checks below fail if it ever
+// stops doing either. Documented in section 8 of docs/handoffs/M1_CODEX_REVIEW_HANDOFF.md.
+const APP_IMPORT_ALLOWED = Object.freeze({
+  file: path.join('__tests__', 'appReadOnly.test.mjs'),
+  mustMock: ['../upcomingData', '../roiData', '../propPicksData', '../parlayData', '../domain/fighters'],
+});
 
 // WHAT THIS GUARANTEES, PRECISELY.
 //
@@ -48,10 +69,10 @@ describe('test isolation (direct-import guard)', () => {
     const offenders = [];
     for (const f of files) {
       const src = fs.readFileSync(f, 'utf8');
-      const imports = [...src.matchAll(/^import[\s\S]*?from\s*'([^']+)';/gm)];
-      for (const [stmt, spec] of imports) {
+      const allowed = path.relative(SRC, f) === APP_IMPORT_ALLOWED.file;
+      for (const { stmt, spec } of importsOf(src)) {
         if (/domain\/fighters/.test(spec)) offenders.push(`${path.relative(SRC, f)} imports ${spec}`);
-        if (/\bApp(\.js)?$/.test(spec)) offenders.push(`${path.relative(SRC, f)} imports ${spec}`);
+        if (/\bApp(\.js)?$/.test(spec) && !allowed) offenders.push(`${path.relative(SRC, f)} imports ${spec}`);
         if (/\bFIGHTERS\b/.test(stmt) && !/fighterFixtures/.test(stmt)) {
           offenders.push(`${path.relative(SRC, f)} imports a FIGHTERS binding`);
         }
@@ -60,18 +81,45 @@ describe('test isolation (direct-import guard)', () => {
     expect(offenders, offenders.join('\n')).toEqual([]);
   });
 
-  it('no test reads live ROI_ENTRIES or other live data modules', () => {
+  // Scope unchanged from before M1: .test.js only. The .test.mjs suites under
+  // src/data and the bout-context provenance checks read the committed snapshot
+  // files ON PURPOSE -- they are integrity checks of that data -- and this rule
+  // never applied to them. Extending the scanner to .mjs (above) is about who
+  // may import App.js / FIGHTERS, not about those data checks.
+  it('no .test.js reads live ROI_ENTRIES or other live data modules', () => {
     const live = ['roiData', 'upcomingData', 'propPicksData', 'parlayData', 'fightersData', 'fightHistory', 'eloModule', 'cardioModule', 'prospectsData', 'rankHistory', 'rankingsData', 'rankingsHistoryData'];
     const offenders = [];
-    for (const f of files) {
+    for (const f of files.filter((x) => x.endsWith('.test.js'))) {
       const src = fs.readFileSync(f, 'utf8');
-      for (const [, spec] of src.matchAll(/^import[\s\S]*?from\s*'([^']+)';/gm)) {
+      for (const { spec } of importsOf(src)) {
         if (live.some((m) => spec.endsWith(`/${m}`) || spec.endsWith(`/${m}.js`))) {
           offenders.push(`${path.relative(SRC, f)} imports ${spec}`);
         }
       }
     }
     expect(offenders, offenders.join('\n')).toEqual([]);
+  });
+
+  it('the sanctioned App.js importer pins the clock and mocks live data before importing', () => {
+    const f = path.join(SRC, APP_IMPORT_ALLOWED.file);
+    expect(fs.existsSync(f), `${APP_IMPORT_ALLOWED.file} is gone; remove the exception too`).toBe(true);
+    const src = fs.readFileSync(f, 'utf8');
+    const appImport = src.search(/\bimport\(\s*'\.\.\/App\.js'\s*\)/);
+    expect(appImport, 'expected a dynamic import of ../App.js').toBeGreaterThan(-1);
+    // No top-level import of App.js: it would be hoisted above the clock pin.
+    expect(src).not.toMatch(/^import[\s\S]*?from\s*'\.\.\/App(\.js)?';/m);
+    const pin = src.indexOf('vi.setSystemTime(');
+    expect(pin, 'vi.setSystemTime must run before App.js is imported').toBeGreaterThan(-1);
+    expect(pin).toBeLessThan(appImport);
+    for (const spec of APP_IMPORT_ALLOWED.mustMock) {
+      expect(src, `must vi.mock('${spec}')`).toContain(`vi.mock('${spec}'`);
+    }
+  });
+
+  it('exactly one test is allowed to import App.js', () => {
+    const importers = files.filter((f) =>
+      importsOf(fs.readFileSync(f, 'utf8')).some(({ spec }) => /\bApp(\.js)?$/.test(spec)));
+    expect(importers.map((f) => path.relative(SRC, f))).toEqual([APP_IMPORT_ALLOWED.file]);
   });
 });
 
