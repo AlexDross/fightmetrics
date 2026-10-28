@@ -33,14 +33,18 @@
 //       {
 //         "fighterA": "Exact Name From The Roster",
 //         "fighterB": "Exact Name From The Roster",
-//         "probA": 0.62, "probB": 0.39,      // prediction-market prices, OR
-//         "oddsA": "-155", "oddsB": "+130",  // American odds (wins if both given)
+//         "oddsA": "-155", "oddsB": "+130",  // sportsbook American odds, OR
+//         "probA": 0.62, "probB": 0.39,      // prediction-market prices (refused
+//                                            // for a C6 card: no vig, see below)
+//         "marketSource": { ... },           // where the odds came from (written
+//                                            // by fetch_card_odds.mjs); saved as-is
 //         "division": "Middleweight",        // canonical division, or null
 //         "isTitleBout": false,              // null = unverified, never guessed
 //         "scheduledRounds": 3,              // 3 | 5 | null
 //         "unitsWagered": 1                  // optional, defaults to 1 like the UI
 //       }
 //     ],
+//     "marketSource": { ... },             // optional card-wide default for fights
 //     "provenance": {                      // REQUIRED whenever bout context is set
 //       "sourceUrl": "https://www.ufc.com/news/official-weigh-results-...",
 //       "retrievedAt": "2026-09-18",
@@ -101,7 +105,7 @@ if (process.argv.includes('--no-c6')) {
 }
 
 const { FIGHTERS } = await import('../src/domain/fighters/index.js');
-const { buildRoiEntry, americanOdds } = await import('../src/domain/betting/index.js');
+const { buildRoiEntry, americanOdds, buildMarketInput, ACTIVE_GATE_V3 } = await import('../src/domain/betting/index.js');
 const { addPendingEntry, pendingMatchupKey } = await import('../src/domain/workflow/index.js');
 const { validateBoutContext, fightersOutsideRosterDivision } = await import('../src/domain/boutContext/index.js');
 const { resolveFighterAge } = await import('../src/domain/age/index.js');
@@ -264,6 +268,31 @@ function buildCard(cardPath) {
       warnings.push(`${at}: no odds -- saved without a market (no bet signal, no EV/Kelly)`);
     }
 
+    // Sportsbook-price guard (gate c6_dog_v3_book). A C6 entry priced off a
+    // prediction market carries no vig: the gate would mark it NO BET
+    // (NOT_SPORTSBOOK_PRICE), and the closing line it is graded against is a
+    // sportsbook's. Every c6_dog_v3 entry was priced that way; refuse it here so
+    // it cannot happen silently again. Get a sportsbook line instead:
+    // fetch_card_odds.mjs "<event>" --fighter "<a fighter on the card>".
+    const marketSource = fight.marketSource ?? card.marketSource ?? null;
+    if (odds.from !== 'none' && isC6UserFacingActive()) {
+      const mkt = buildMarketInput({ oddsA: odds.oddsA, oddsB: odds.oddsB });
+      const min = ACTIVE_GATE_V3.minOverround;
+      if (mkt.valid && mkt.overround / 100 < min) {
+        errors.push(
+          `${at}: ${odds.oddsA}/${odds.oddsB} carries ${mkt.overround.toFixed(1)}% vig, under the ` +
+            `${(min * 100).toFixed(1)}% a sportsbook line has -- a prediction-market price? Use a sportsbook line ` +
+            '(fetch_card_odds.mjs --fighter)'
+        );
+        return;
+      }
+      if (marketSource?.kind === 'prediction-market') {
+        errors.push(`${at}: marketSource is a prediction market (${marketSource.name}) -- use a sportsbook line`);
+        return;
+      }
+      if (!marketSource) warnings.push(`${at}: no marketSource -- the odds' origin will not be recorded`);
+    }
+
     const boutContext = {
       division: fight.division ?? null,
       isTitleBout: fight.isTitleBout ?? null,
@@ -326,6 +355,7 @@ function buildCard(cardPath) {
       modelToggle: 'v2',
       unitsWagered: fight.unitsWagered != null ? Number(fight.unitsWagered) : 1,
       boutContext,
+      ...(marketSource ? { marketSource } : {}),
     });
     rows.push({ entry, oddsFrom: odds.from });
   });

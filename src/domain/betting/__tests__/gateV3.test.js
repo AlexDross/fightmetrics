@@ -2,6 +2,8 @@ import { readFileSync } from 'node:fs';
 import { describe, it, expect, afterEach, vi } from 'vitest';
 import {
   GATE_V3,
+  GATE_V3_BOOK,
+  ACTIVE_GATE_V3,
   gateV3,
   applyGateV3,
   recheckGateV3,
@@ -72,6 +74,43 @@ describe('gateV3', () => {
   it('constants are frozen', () => {
     expect(Object.isFrozen(GATE_V3)).toBe(true);
     expect(GATE_V3).toMatchObject({ version: 'c6_dog_v3', frozenOn: '2026-10-05', minEV: 0.02, betMaxDecimal: 3, leanMinDecimal: 1.25 });
+    expect(GATE_V3).not.toHaveProperty('minOverround');
+  });
+});
+
+describe('GATE_V3_BOOK (sportsbook prices)', () => {
+  // UFC 333, Evloev: C6 53%, saved at the Polymarket price +102/-102 (no vig).
+  const poly = buildMarketInput({ oddsA: '+102', oddsB: '-102' });
+  const book = buildMarketInput({ oddsA: '-109', oddsB: '-110' });
+  const at = (m, c6pA) => ({ c6pA, noVigA: m.noVigA, decA: m.decimalA, decB: m.decimalB });
+
+  it('same thresholds as c6_dog_v3, its own version, frozen, and the active one', () => {
+    expect(Object.isFrozen(GATE_V3_BOOK)).toBe(true);
+    expect(GATE_V3_BOOK).toMatchObject({
+      version: 'c6_dog_v3_book', frozenOn: '2026-10-27', minOverround: 0.025,
+      minEV: GATE_V3.minEV, betMaxDecimal: GATE_V3.betMaxDecimal,
+      leanMinDecimal: GATE_V3.leanMinDecimal, strategyStakeUnits: GATE_V3.strategyStakeUnits,
+    });
+    expect(ACTIVE_GATE_V3).toBe(GATE_V3_BOOK);
+  });
+
+  it('refuses a price with less vig than any sportsbook; c6_dog_v3 still reads it as before', () => {
+    expect(gateV3(at(poly, 0.53)).tier).toBe('BET');
+    expect(gateV3(at(poly, 0.53), GATE_V3_BOOK)).toEqual({ tier: 'NO BET', side: null, reason: 'NOT_SPORTSBOOK_PRICE', ev: null });
+  });
+
+  it('on a sportsbook price it is the c6_dog_v3 rule, tier for tier', () => {
+    for (const c6pA of [0.3, 0.45, 0.53, 0.56, 0.62, 0.8]) {
+      expect(gateV3(at(book, c6pA), GATE_V3_BOOK), String(c6pA)).toEqual(gateV3(at(book, c6pA)));
+    }
+  });
+
+  it('the fight-day re-check runs the version the entry was saved under', () => {
+    const odds = { oddsA: '+102', oddsB: '-102' };
+    const old = recheckGateV3({ fighterA: 'A', fighterB: 'B', v2pA: 0.62, gateVersion: 'c6_dog_v3' }, odds);
+    const neu = recheckGateV3({ fighterA: 'A', fighterB: 'B', v2pA: 0.62, gateVersion: 'c6_dog_v3_book' }, odds);
+    expect(old.reason).not.toBe('NOT_SPORTSBOOK_PRICE');
+    expect(neu.reason).toBe('NOT_SPORTSBOOK_PRICE');
   });
 });
 
@@ -104,10 +143,10 @@ describe('applyGateV3', () => {
     const c6 = computeC6ProbA({ noVigA: mkt.noVigA, v2pA: 0.62 });
     const legacy = evaluateGateOnSnapshot(result(c6.c6pA), mkt, f('A'), f('B'));
     const v3 = applyGateV3(legacy, mkt, c6.c6pA);
-    expect(v3.gateVersion).toBe('c6_dog_v3');
+    expect(v3.gateVersion).toBe('c6_dog_v3_book');
     expect(v3.legacyBetAction).toBe(legacy.betAction);
     expect(v3.edgeA).toBe(legacy.edgeA);
-    expect(v3.betAction).toBe(gateV3({ c6pA: c6.c6pA, noVigA: mkt.noVigA, decA: mkt.decimalA, decB: mkt.decimalB }).tier);
+    expect(v3.betAction).toBe(gateV3({ c6pA: c6.c6pA, noVigA: mkt.noVigA, decA: mkt.decimalA, decB: mkt.decimalB }, GATE_V3_BOOK).tier);
     expect(v3.bestBet === null).toBe(v3.betAction === 'NO BET');
   });
 });
@@ -160,16 +199,29 @@ describe('buildRoiEntry with C6 user-facing (v3 save path)', () => {
     vi.stubEnv('VITE_C6_USER_FACING_ENABLED', 'true');
     const e = frozenRoiEntry(ARGS);
     expect(e.decisionProbabilitySource).toBe('c6');
-    expect(e.gateVersion).toBe('c6_dog_v3');
-    expect(e._provenance.gateVersion).toBe('c6_dog_v3');
+    expect(e.gateVersion).toBe('c6_dog_v3_book');
+    expect(e._provenance.gateVersion).toBe('c6_dog_v3_book');
     expect(e._provenance.frozenTier).toBe(e.betAction);
     expect(e.unitsWagered).toBe(1);
     const mkt = buildMarketInput({ oddsA: e.oddsA, oddsB: e.oddsB });
-    const g = gateV3({ c6pA: e.c6ProbA, noVigA: mkt.noVigA, decA: mkt.decimalA, decB: mkt.decimalB });
+    const g = gateV3({ c6pA: e.c6ProbA, noVigA: mkt.noVigA, decA: mkt.decimalA, decB: mkt.decimalB }, GATE_V3_BOOK);
     expect(e.betAction).toBe(g.tier);
     expect(e.gateReason).toBe(g.reason);
     expect(e.gateEV).toBe(g.ev);
-    expect(isV3ExperimentEntry(e)).toBe(true);
+    // Counted in its own experiment only, never pooled with c6_dog_v3.
+    expect(isV3ExperimentEntry(e, 'c6_dog_v3_book')).toBe(true);
+    expect(isV3ExperimentEntry(e)).toBe(false);
+  });
+
+  it('records the market source on the entry and its provenance only when given', () => {
+    vi.stubEnv('VITE_C6_USER_FACING_ENABLED', 'true');
+    const marketSource = { kind: 'sportsbook', name: 'bestfightodds', line: 'median of 5 books', url: 'https://x.test', retrievedAt: '2099-01-01T00:00:00.000Z' };
+    const e = frozenRoiEntry({ ...ARGS, marketSource });
+    expect(e.marketSource).toEqual(marketSource);
+    expect(e._provenance.marketSource).toEqual(marketSource);
+    const bare = frozenRoiEntry(ARGS);
+    expect(bare).not.toHaveProperty('marketSource');
+    expect(bare._provenance).not.toHaveProperty('marketSource');
   });
 
   it('flag off: legacy ladder, no gate stamp, caller stake kept', () => {

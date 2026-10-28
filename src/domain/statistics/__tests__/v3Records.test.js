@@ -48,6 +48,17 @@ describe('computeV3Records', () => {
     expect(rec.strategy.bets).toBe(1);
   });
 
+  it('counts one gate version at a time, never pooled', () => {
+    const entries = [
+      base({ betAction: 'BET' }),
+      base({ betAction: 'BET', actualWinner: 'Bravo', gateVersion: 'c6_dog_v3_book' }),
+      base({ betAction: 'BET', actualWinner: 'Bravo', gateVersion: 'c6_dog_v3_book' }),
+    ];
+    expect(computeV3Records(entries).strategy).toMatchObject({ bets: 1, wins: 1 });
+    expect(computeV3Records(entries, 'c6_dog_v3_book').strategy).toMatchObject({ bets: 2, wins: 0 });
+    expect(computeV3Records(entries, 'c6_dog_v3_book').experimentEntries).toBe(2);
+  });
+
   it('pushes return the stake; pending and skipped are counted, never settled', () => {
     const rec = computeV3Records([
       base({ betAction: 'BET', actualWinner: 'NC' }),

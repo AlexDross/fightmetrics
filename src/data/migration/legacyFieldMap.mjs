@@ -289,7 +289,7 @@ export const FORWARD_ONLY_ROI_FIELDS = Object.freeze({
     // v3 bet gate (src/domain/betting/gateV3.js). Present only on C6-driven
     // saves after the freeze; absence means the legacy ladder produced
     // betAction and must stay absent, never defaulted.
-    gateVersion: { to: 'BettingAssessment.gateVersion ("c6_dog_v3"; absent -> legacy ladder)' },
+    gateVersion: { to: 'BettingAssessment.gateVersion ("c6_dog_v3" | "c6_dog_v3_book"; absent -> legacy ladder)' },
     gateReason: { to: 'BettingAssessment.gateReason (NO BET reason code; null for BET/LEAN)' },
     gateEV: { to: 'BettingAssessment.gateEV (pick-side expected return per unit at the saved price)' },
     // Fight-day execution record: the re-check plus a placed bet or a skip.
@@ -309,6 +309,20 @@ export const FORWARD_ONLY_ROI_FIELDS = Object.freeze({
     'execution.stakeUnits': { to: 'Execution.stakeUnits (real stake)' },
     'execution.skipReason': { to: 'Execution.skipReason (LINE_MOVED | NOT_PLACED | OTHER)' },
     '_provenance.gateVersion': { to: 'BettingAssessment.gateVersion (capture-time copy)' },
+    // Where the saved oddsA/oddsB came from (scripts/enter_upcoming.mjs; the
+    // Simulator records none). Absent -> source not recorded.
+    marketSource: { to: 'MarketSnapshot.source (absent -> not recorded)' },
+    'marketSource.kind': { to: 'MarketSnapshot.sourceKind ("sportsbook" | "prediction-market")' },
+    'marketSource.name': { to: 'MarketSnapshot.sourceName (bestfightodds | polymarket | kalshi | ...)' },
+    'marketSource.line': { to: 'MarketSnapshot.sourceLine (Pinnacle | Circa | median of N books; null for a market price)' },
+    'marketSource.url': { to: 'MarketSnapshot.sourceUrl' },
+    'marketSource.retrievedAt': { to: 'MarketSnapshot.retrievedAt' },
+    '_provenance.marketSource': { to: 'MarketSnapshot.source (capture-time copy)' },
+    '_provenance.marketSource.kind': { to: 'MarketSnapshot.sourceKind (capture-time copy)' },
+    '_provenance.marketSource.name': { to: 'MarketSnapshot.sourceName (capture-time copy)' },
+    '_provenance.marketSource.line': { to: 'MarketSnapshot.sourceLine (capture-time copy)' },
+    '_provenance.marketSource.url': { to: 'MarketSnapshot.sourceUrl (capture-time copy)' },
+    '_provenance.marketSource.retrievedAt': { to: 'MarketSnapshot.retrievedAt (capture-time copy)' },
     // Closing odds recorded at grading (scripts/grade_upcoming.mjs apply), for
     // the closing-line-value test. Absent on entries graded before it existed.
     closing: { to: 'ClosingSnapshot (one per bout; absent -> no closing line recorded)' },

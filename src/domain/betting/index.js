@@ -49,7 +49,7 @@ import {
 // probability and the saved probability can never disagree. See decision.js
 // for the v1 / v2 / C6 selection rules.
 import { resolveDecisionProbability, evaluateDecisionGate } from './decision.js';
-import { GATE_V3 } from './gateV3.js';
+import { ACTIVE_GATE_V3, isV3GateVersion } from './gateV3.js';
 
 // americanOdds, parseAmericanOdds, stripVig, calcExpectedValue, americanToDecimal,
 // kellyFraction and djb2Checksum now live in ./marketCore.js (dependency-neutral)
@@ -169,7 +169,7 @@ const deriveFrozenV2RoiView = (entry, fighterA, fighterB) => {
 // fields, and -- only when it was 'c6' -- the frozen C6 version/pA/pB that
 // drove it, so provenance is unambiguous about C6 having driven the decision
 // rather than raw v2. Omitted entirely when the caller passes nothing.
-export const buildProvenance = ({ eventDate, result, fA, fB, predictionTimestamp, captureMode, frozenTier, gateVersion, boutContext, decisionProbabilitySource, c6 }) => {
+export const buildProvenance = ({ eventDate, result, fA, fB, predictionTimestamp, captureMode, frozenTier, gateVersion, boutContext, decisionProbabilitySource, c6, marketSource }) => {
   const todayIso = new Date().toISOString().slice(0, 10);
   const resolvedCaptureMode =
     captureMode ??
@@ -185,6 +185,7 @@ export const buildProvenance = ({ eventDate, result, fA, fB, predictionTimestamp
     ...(boutContext !== undefined ? { boutContext } : {}),
     ...(decisionProbabilitySource !== undefined ? { decisionProbabilitySource } : {}),
     ...(c6 !== undefined ? { c6 } : {}),
+    ...(marketSource !== undefined ? { marketSource } : {}),
     featureVector: {
       v1: result.feats,
       v2: result.featsV2 ?? null,
@@ -208,7 +209,11 @@ export const buildProvenance = ({ eventDate, result, fA, fB, predictionTimestamp
 // the frozen characterisation tests supply one, and theirs still wins (it sets
 // useStoredAge) so the approved fixtures keep replaying their captured ages.
 // See the comment on computeMatchupEdges.
-const buildRoiEntry = ({ fA, fB, oddsA, oddsB, eventName, eventDate, modelToggle = 'v2', unitsWagered = 1, modelContext, boutContext }) => {
+//
+// marketSource is OPTIONAL: where oddsA/oddsB came from ({ kind:'sportsbook'|
+// 'prediction-market', name, line, url, retrievedAt }). The card CLI passes it;
+// the Simulator collects none. Omitted when absent, so other saves are unchanged.
+const buildRoiEntry = ({ fA, fB, oddsA, oddsB, eventName, eventDate, modelToggle = 'v2', unitsWagered = 1, modelContext, boutContext, marketSource }) => {
   // Correction 3/4: the scheduled context of this bout, normalised once here so
   // the model call, the stored entry and the display all read the same object.
   // null means UNKNOWN and stays unknown -- it is never coerced to non-title or
@@ -264,7 +269,7 @@ const buildRoiEntry = ({ fA, fB, oddsA, oddsB, eventName, eventDate, modelToggle
   // already parsed -- odds are never re-parsed here. A C6 decision runs the
   // v3 gate (see ./gateV3.js); v1/v2 keep the legacy ladder.
   const market = evaluateDecisionGate(decision, activeResult, fA, fB);
-  const isV3 = market?.gateVersion === GATE_V3.version;
+  const isV3 = isV3GateVersion(market?.gateVersion);
 
   // predictedWinner/predictedProb stay on the v1 snapshot (consumed by the v1
   // accuracy stats and the "v2 differs" comparisons). trackedSide is the active
@@ -374,7 +379,7 @@ const buildRoiEntry = ({ fA, fB, oddsA, oddsB, eventName, eventDate, modelToggle
     // (matches every pre-existing entry, which was always flat 1u). A v3 entry
     // is always tracked at the standard strategy stake; real bets live in
     // `execution` (added at the fight-day re-check), never here.
-    unitsWagered: isV3 ? GATE_V3.strategyStakeUnits : unitsWagered,
+    unitsWagered: isV3 ? ACTIVE_GATE_V3.strategyStakeUnits : unitsWagered,
     betAction: market?.betAction ?? 'NO BET',
     bestBet: market?.bestBet ?? null,
     // v3 gate stamp, present only on C6-driven saves: the frozen gate version,
@@ -400,6 +405,7 @@ const buildRoiEntry = ({ fA, fB, oddsA, oddsB, eventName, eventDate, modelToggle
     fairLineB: market?.fairLineB ?? null,
     oddsA,
     oddsB,
+    ...(marketSource ? { marketSource } : {}),
     v2pA: result.v2pA ?? null,
     v2pB: result.v2pB ?? null,
     ...(() => {
@@ -429,6 +435,7 @@ const buildRoiEntry = ({ fA, fB, oddsA, oddsB, eventName, eventDate, modelToggle
       boutContext: normalizedBoutContext ?? undefined,
       decisionProbabilitySource: decision.source,
       c6: decision.source === 'c6' ? { version: decision.c6Version, pA: decision.c6ProbA, pB: decision.c6ProbB } : undefined,
+      marketSource: marketSource ?? undefined,
     }),
   };
 
@@ -477,6 +484,7 @@ export {
   deriveFrozenV2RoiView,
   djb2Checksum,
   buildRoiEntry,
+  buildMarketInput,
   evaluateGateOnSnapshot,
 };
 export {
@@ -494,6 +502,10 @@ export {
 export { buildParlayLeg } from './parlayLeg.js';
 export {
   GATE_V3,
+  GATE_V3_BOOK,
+  ACTIVE_GATE_V3,
+  GATE_V3_VERSIONS,
+  isV3GateVersion,
   GATE_V3_REASONS,
   gateV3,
   applyGateV3,
