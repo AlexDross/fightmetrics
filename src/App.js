@@ -107,6 +107,8 @@ import {
   DECISION_SOURCE_C6,
   buildParlayLeg,
   recheckGateV3,
+  GATE_V3_BOOK,
+  ACTIVE_GATE_V3,
   buildExecution,
   GATE_V3,
   SKIP_REASONS,
@@ -1263,7 +1265,6 @@ function MonthlyPerformanceTable({ data, large = false, modelLabel = 'v1', windo
   );
 }
 
-const GATE_V3_FROZEN_ON = GATE_V3.frozenOn;
 const LOW_N_NOTE = `Faded bars: fewer than ${ROI_ANALYTICS_LOW_N} fights.`;
 const MONTHS_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 // 'YYYY-MM-DD' -> 'Sep 26' (string slicing: no timezone shift).
@@ -1278,18 +1279,24 @@ const shortDate = (d) => (typeof d === 'string' && d.length >= 10
 // only relocates rendering, it does not recompute anything differently.
 // v3 gate experiment headline (Statistics + Home). Strategy and paper figures
 // are hypothetical (1u at the saved price); only `actual` reflects bets placed.
-// Counts only live captures stamped with the frozen gate version, regardless
-// of any SINCE filter: the experiment defines its own window.
+// Counts only live captures stamped with ONE gate version, regardless of any
+// SINCE filter: the experiment defines its own window. c6_dog_v3 (prediction-
+// market prices, closed 2026-10-27) and c6_dog_v3_book are shown apart.
 const fmtUnits = (u) => `${u >= 0 ? '+' : ''}${u.toFixed(2)}u`;
 const fmtRoi = (r) => (r == null ? '—' : `${r >= 0 ? '+' : ''}${r.toFixed(1)}%`);
 
-function V3RecordPanel({ entries, compact = false }) {
-  const rec = useMemo(() => computeV3Records(entries), [entries]);
+const V3_PANEL_TITLE = {
+  [GATE_V3_BOOK.version]: 'v3 bet record (C6 underdog gate, sportsbook prices)',
+  [GATE_V3.version]: 'v3 bet record, prediction-market prices (closed)',
+};
+
+function V3RecordPanel({ entries, compact = false, gate = ACTIVE_GATE_V3 }) {
+  const rec = useMemo(() => computeV3Records(entries, gate.version), [entries, gate.version]);
   if (rec.experimentEntries === 0) {
     return (
       <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 mb-6">
-        <p className="text-muted text-xs uppercase tracking-wider font-semibold">v3 bet record</p>
-        <p className="text-secondary text-sm mt-2">No fights saved under the v3 gate yet. The record starts with the first card after the freeze.</p>
+        <p className="text-muted text-xs uppercase tracking-wider font-semibold">{V3_PANEL_TITLE[gate.version]}</p>
+        <p className="text-secondary text-sm mt-2">No fights saved under {gate.version} yet. The record starts with the first card after {gate.frozenOn}.</p>
       </div>
     );
   }
@@ -1309,7 +1316,7 @@ function V3RecordPanel({ entries, compact = false }) {
   const s = rec.strategy;
   return (
     <div className="mb-6">
-      <p className="text-muted text-xs font-semibold uppercase tracking-wider mb-3">v3 bet record (C6 underdog gate)</p>
+      <p className="text-muted text-xs font-semibold uppercase tracking-wider mb-3">{V3_PANEL_TITLE[gate.version]}</p>
       <div className={`grid grid-cols-2 ${compact ? 'md:grid-cols-2' : 'lg:grid-cols-4'} gap-4 items-stretch`}>
         {tile('BET strategy', s, 'hypothetical, 1u', 'text-emerald-400')}
         {tile('Actual bets', rec.actual, rec.skipped ? `${rec.skipped} skipped` : 'recorded at fight day', 'text-emerald-400')}
@@ -1451,6 +1458,7 @@ function StatisticsTab({ entries, prospectNameSet, filterSince, setFilterSince, 
       ) : (
         <>
           <V3RecordPanel entries={entries} />
+          <V3RecordPanel entries={entries} gate={GATE_V3} />
 
           <div className="flex items-baseline justify-between gap-3 flex-wrap mb-3">
             <h2 className="text-white font-bold text-sm">All tracked picks</h2>
@@ -1513,7 +1521,7 @@ function StatisticsTab({ entries, prospectNameSet, filterSince, setFilterSince, 
             </li>
             <li>Market percentages remove the bookmaker margin proportionally (no-vig).</li>
             <li>Bands with fewer than {ROI_ANALYTICS_LOW_N} fights are faded: too few to read much into.</li>
-            <li>The v3 bet record counts only fights saved under the v3 gate (from {GATE_V3_FROZEN_ON}); strategy and paper results are hypothetical 1u bets.</li>
+            <li>The v3 bet record counts only fights saved under the sportsbook-priced v3 gate (from {GATE_V3_BOOK.frozenOn}); strategy and paper results are hypothetical 1u bets. The earlier prediction-market-priced record ({GATE_V3.frozenOn} to {GATE_V3_BOOK.frozenOn}) is shown separately and never pooled: its prices carried no vig, so its EV and closing-line value read high.</li>
           </ul>
         </details>
       )}

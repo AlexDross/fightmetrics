@@ -1,12 +1,12 @@
 ---
 name: enter-card
-description: Research an upcoming UFC card and its current prediction-market odds, then enter every fight into the Upcoming tab through the Simulator's save path. Use when the user says enter the card, add the upcoming event, load this weekend's fights, or names an event to enter.
+description: Research an upcoming UFC card and its current sportsbook odds, then enter every fight into the Upcoming tab through the Simulator's save path. Use when the user says enter the card, add the upcoming event, load this weekend's fights, or names an event to enter.
 ---
 
 # Enter an upcoming card
 
-Find the full card for an upcoming event, price every bout off a prediction
-market, and save each fight into the Upcoming tab — the same move the
+Find the full card for an upcoming event, price every bout off sportsbook
+lines (bestfightodds.com), and save each fight into the Upcoming tab — the same move the
 Simulator's **Save to Upcoming** button makes, written straight to the Supabase
 document store that fightmetrics.app reads live.
 
@@ -86,43 +86,32 @@ node scripts/enter_upcoming.mjs list
 
 ## 2. Pull the odds
 
-The user prefers prediction markets. **Polymarket is the working default** —
-verified live, full card coverage, and its prices are already no-vig.
+**Sportsbook lines only** (since 2026-10-27, gate `c6_dog_v3_book`). Every
+`c6_dog_v3` entry was priced off Polymarket or Kalshi: those prices carry no vig,
+so EV, the BET/LEAN call and closing-line value against the sportsbook close all
+read high. That experiment is closed; do not price a card off a prediction
+market again.
 
 ```bash
-node scripts/fetch_card_odds.mjs "UFC 331" --date 2026-09-19 --out /tmp/.../card_raw.json
+node scripts/fetch_card_odds.mjs "<event>" --fighter "<a fighter on the card>" --date <YYYY-MM-DD> --out /tmp/.../card_raw.json
 ```
 
-What that script knows, so you do not have to rediscover it:
-
-- The endpoint is `gamma-api.polymarket.com/public-search?q=...`. The plain
-  `/events` listing does **not** surface UFC events — do not spend calls on it.
-- Each fight is its own event titled `UFC 331: A vs. B (Division, Segment)`.
-  The moneyline is the one market whose two outcomes are the **fighter names**;
-  every other market on that event is a prop (method, rounds, per-round).
-- `outcomePrices` are normalised to sum to 1, so they are no-vig probabilities.
-  `enter_upcoming.mjs` converts them with the app's own `americanOdds()`, which
-  produces a symmetric pair like `-292/+292`. That is correct, not a bug — there
-  is no vig to strip.
-- A market with `closed: true` / `acceptingOrders: false` is **not a live line**.
-  Polymarket leaves the last prices (often 0.50/0.50) sitting on a market whose
-  bout was pulled. The script nulls those out and flags them `MARKET CLOSED`.
-  Treat that as "this fight is probably off the card" and confirm in step 3.
-
-Fallbacks, in order:
-
-- `--kalshi` reads series `KXUFCFIGHT`. Fighter names are clean and the pairings
-  are right, but a card that has not traded yet returns **null prices** — that is
-  the normal state for Kalshi on a UFC card, so expect to fall back.
-- Novig has no public API. If the user wants Novig prices they read them off and
-  give them to you.
-- A sportsbook consensus is acceptable last resort:
-  `node scripts/fetch_card_odds.mjs "<event>" --bestfightodds "<a fighter on the card>"`
-  reads bestfightodds.com (found by fighter, since BFO names Fight Nights by
-  number, e.g. "UFC 332") and emits the median sportsbook line per fight as
-  American `oddsA`/`oddsB`. Those carry vig; the app strips it. Check the printed
-  BFO title is the right card, and expect early in fight week that BFO lists only
-  part of the card.
+- It reads bestfightodds.com. BFO names cards its own way (Fight Nights by city
+  or number, e.g. "UFC Edmonton"), so the card is found by a fighter on it.
+  Check the printed BFO title is the right card.
+- Each fight's line is picked exactly like the grading close: Pinnacle, then
+  Circa, then the per-side median of the books offered (usually "median of 5
+  books"). The odds carry vig; the app strips it.
+- Every fight carries `marketSource` (`kind: "sportsbook"`, book/line, URL,
+  retrieval time). Keep it in the card file: `enter_upcoming.mjs` saves it on
+  the entry.
+- **Early in fight week BFO often lists only part of the card.** Enter the
+  fights that have a sportsbook line and add the rest later in the week. Never
+  fill a gap with a prediction-market price.
+- `enter_upcoming.mjs` refuses a C6 fight whose price carries under 2.5% vig or
+  whose `marketSource.kind` is `prediction-market`. Do not work around it: the
+  gate would mark the fight NO BET (`NOT_SPORTSBOOK_PRICE`) anyway.
+- `--polymarket` / `--kalshi` still exist for research only.
 - Do not use the fightodds.io GraphQL aggregator: since 2026-10 it answers 403
   "Unknown query" to every real query.
 
@@ -310,7 +299,7 @@ After saving, verify every entry counts in the experiment -- this must print
 `0`:
 
 ```bash
-node scripts/fm-store.mjs export | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{const u=JSON.parse(s).upcoming.filter(e=>e.eventName===process.argv[1]);console.log(u.filter(e=>e.gateVersion!=="c6_dog_v3"||e._provenance?.captureMode!=="live"||e.decisionProbabilitySource!=="c6").length)})' "<eventName>"
+node scripts/fm-store.mjs export | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{const u=JSON.parse(s).upcoming.filter(e=>e.eventName===process.argv[1]);console.log(u.filter(e=>e.gateVersion!=="c6_dog_v3_book"||e._provenance?.captureMode!=="live"||e.decisionProbabilitySource!=="c6").length)})' "<eventName>"
 ```
 
 A non-zero count means C6 was off, odds were missing, or the event date was in
@@ -329,7 +318,8 @@ Fights go in **bout order, opener first and main event last** — see the
     {
       "fighterA": "Alexandre Pantoja",
       "fighterB": "Joshua Van",
-      "probA": 0.435, "probB": 0.565,
+      "oddsA": "+130", "oddsB": "-155",
+      "marketSource": { "kind": "sportsbook", "name": "bestfightodds", "line": "median of 5 books", "url": "https://www.bestfightodds.com/events/...", "retrievedAt": "2026-09-17T15:00:00.000Z" },
       "division": "Flyweight",
       "isTitleBout": true,
       "scheduledRounds": 5
@@ -338,8 +328,9 @@ Fights go in **bout order, opener first and main event last** — see the
 }
 ```
 
-- `probA`/`probB` are prediction-market prices; `oddsA`/`oddsB` are American
-  odds and win if both are given. Supplying one side only is an error.
+- `oddsA`/`oddsB` are sportsbook American odds. `probA`/`probB`
+  (prediction-market prices) are still parsed but refused for a C6 card (no
+  vig). Supplying one side only is an error.
 - Write American odds as **signed strings**: `"oddsA": "+117", "oddsB": "-127"`.
   An underdog always carries the `+`. A bare JSON number (`117`) once saved as
   `"117"` and read like a favourite's line; `resolveOdds` in

@@ -174,7 +174,9 @@ only if asked.
 
 Finish by reporting the record for the card (hits/misses on tracked sides, and
 separately on entries with `betAction` other than `NO BET`). For v3 entries
-(`gateVersion` present), report BET and LEAN separately, each with its CLV.
+(`gateVersion` present), report BET and LEAN separately, each with its CLV, and
+per gate version: `c6_dog_v3` (prediction-market prices, closed 2026-10-27) and
+`c6_dog_v3_book` (sportsbook prices) are separate experiments, never pooled.
 
 Note that grading through the app's winner dropdown sets `actualWinner` but not
 `actualFinish`, so much of the older ROI history has a blank finish; this script

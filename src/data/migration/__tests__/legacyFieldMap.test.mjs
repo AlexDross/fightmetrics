@@ -113,6 +113,10 @@ describe('legacy field map is exhaustive', () => {
       const entry = frozenRoiEntry({
         fA: fighterFixtures[a], fB: fighterFixtures[b], oddsA: '-150', oddsB: '+130',
         eventName: 'MAP TEST', eventDate: '2099-01-01', modelToggle: 'v2', unitsWagered: 1,
+        marketSource: {
+          kind: 'sportsbook', name: 'bestfightodds', line: 'median of 5 books',
+          url: 'https://www.bestfightodds.com/events/map-test', retrievedAt: '2099-01-01T00:00:00.000Z',
+        },
       });
       const check = recheckGateV3(entry, { oddsA: '-150', oddsB: '+130' });
       const placed = {

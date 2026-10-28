@@ -1,26 +1,25 @@
 #!/usr/bin/env node
-// Pull an upcoming card's moneyline prices off a prediction market and emit a
-// draft card.json for scripts/enter_upcoming.mjs.
+// Pull an upcoming card's moneyline prices and emit a draft card.json for
+// scripts/enter_upcoming.mjs.
 //
-//   node scripts/fetch_card_odds.mjs "UFC 331" [--date 2026-09-19] [--kalshi] [--out card.json]
-//   node scripts/fetch_card_odds.mjs "UFC 331" --bestfightodds "<a fighter on the card>" [...]
+//   node scripts/fetch_card_odds.mjs "UFC 334" --fighter "<a fighter on the card>" [--date 2026-10-31] [--out card.json]
+//   node scripts/fetch_card_odds.mjs "UFC 334" --polymarket | --kalshi [...]
 //
-// Default source is POLYMARKET (gamma-api), which lists each fight as its own
-// event titled "UFC 331: A vs. B (Division, Segment)" and carries a moneyline
-// market whose two outcomes are the fighter names. outcomePrices are normalised
-// to sum to 1, so they are already no-vig probabilities.
+// Default source is SPORTSBOOKS via bestfightodds.com (since 2026-10-27, gate
+// c6_dog_v3_book). BFO names cards its own way, so the card is found by a
+// fighter on it (--fighter; --bestfightodds "<fighter>" is the old spelling of
+// the same thing). Each fight's line is chosen exactly like the grading close
+// (src/domain/betting/closing.js pickClosingLine): Pinnacle, then Circa, then
+// the per-side median of the books offered. Those carry vig; the app strips it.
+// Prediction-market columns on that page are ignored.
 //
-// --kalshi reads series KXUFCFIGHT instead. Its event tickers group the two
-// sides of a fight (KXUFCFIGHT-26SEP19TSARUF-{TSA,RUF}) and its titles are
-// clean, but a card with no trading yet returns null prices -- in that case
-// this prints the pairings with no prices and you should fall back to
-// Polymarket or a sportsbook.
+// --polymarket / --kalshi read a prediction market instead. Those prices carry
+// no vig, so the v3 gate marks every one of them NO BET (NOT_SPORTSBOOK_PRICE)
+// and enter_upcoming.mjs refuses them for a C6 card. They are kept for
+// research, never for entering a card.
 //
-// --bestfightodds "<fighter>" is the sportsbook last resort: it reads the
-// bestfightodds.com page of that fighter's newest event (BFO names cards its
-// own way, so it is found by fighter, not by event name) and emits the median
-// sportsbook moneyline per fight as American oddsA/oddsB. Those carry vig; the
-// app strips it. Prediction-market columns on that page are ignored.
+// Every fight carries `marketSource` ({kind, name, line, url, retrievedAt});
+// enter_upcoming.mjs saves it on the entry.
 //
 // THE OUTPUT IS A DRAFT, NOT A CARD. It cannot know scheduled rounds or title
 // status, and market name spellings are not roster spellings. Fill those in and
@@ -42,10 +41,16 @@ for (let i = 0; i < args.length; i++) {
   } else positional.push(args[i]);
 }
 const query = positional[0];
-if (!query) {
-  console.error('usage: fetch_card_odds.mjs "UFC 331" [--date YYYY-MM-DD] [--kalshi | --bestfightodds "<fighter>"] [--out card.json]');
+const usage =
+  'usage: fetch_card_odds.mjs "UFC 334" --fighter "<a fighter on the card>" [--date YYYY-MM-DD] [--out card.json]\n' +
+  '       fetch_card_odds.mjs "UFC 334" --polymarket | --kalshi [...]   (research only: no vig, never bet on)';
+const bfoFighter = flags.get('fighter') ?? flags.get('bestfightodds');
+if (!query || (!flags.has('polymarket') && !flags.has('kalshi') && typeof bfoFighter !== 'string')) {
+  console.error(usage);
   process.exit(1);
 }
+const retrievedAt = new Date().toISOString();
+const marketSourceFor = (kind, name, line, url) => ({ kind, name, line, url, retrievedAt });
 
 const getJson = async (url) => {
   const res = await fetch(url, { headers: { accept: 'application/json' } });
@@ -109,6 +114,7 @@ async function fromPolymarket() {
       _liquidity: Math.round(moneyline.liquidityNum ?? 0),
       _volume: Math.round(moneyline.volumeNum ?? 0),
       _source: `https://polymarket.com/event/${stub.slug}`,
+      marketSource: marketSourceFor('prediction-market', 'polymarket', null, `https://polymarket.com/event/${stub.slug}`),
     });
   }
   return { fights, source: 'polymarket' };
@@ -142,13 +148,14 @@ async function fromKalshi() {
       isTitleBout: null,
       scheduledRounds: null,
       _source: `https://kalshi.com/markets/${ticker}`,
+      marketSource: marketSourceFor('prediction-market', 'kalshi', null, `https://kalshi.com/markets/${ticker}`),
     });
   }
   return { fights, source: 'kalshi' };
 }
 
 async function fromBestFightOdds(fighter) {
-  if (typeof fighter !== 'string') throw new Error('--bestfightodds needs a fighter on the card: --bestfightodds "Brendan Allen"');
+  if (typeof fighter !== 'string') throw new Error('--fighter needs a fighter on the card: --fighter "Brendan Allen"');
   const card = await fetchBfoCardByFighter(fighter);
   if (!card) throw new Error(`bestfightodds.com has no fighter matching "${fighter}"`);
   console.error(`bestfightodds.com: ${card.title} (${card.path}) -- confirm this is the right card`);
@@ -164,14 +171,17 @@ async function fromBestFightOdds(fighter) {
       scheduledRounds: null,
       _line: line?.source ?? null,
       _source: `https://www.bestfightodds.com${card.path}`,
+      marketSource: line
+        ? marketSourceFor('sportsbook', 'bestfightodds', line.source, `https://www.bestfightodds.com${card.path}`)
+        : null,
     };
   });
   return { fights, source: 'bestfightodds' };
 }
 
-const { fights, source } = flags.has('bestfightodds')
-  ? await fromBestFightOdds(flags.get('bestfightodds'))
-  : flags.has('kalshi') ? await fromKalshi() : await fromPolymarket();
+const { fights, source } = flags.has('polymarket')
+  ? await fromPolymarket()
+  : flags.has('kalshi') ? await fromKalshi() : await fromBestFightOdds(bfoFighter);
 
 const isPriced = (f) => (f.probA != null && f.probB != null) || (f.oddsA != null && f.oddsB != null);
 const priced = fights.filter(isPriced);
@@ -181,7 +191,7 @@ const card = {
   eventName: query,
   eventDate: typeof flags.get('date') === 'string' ? flags.get('date') : null,
   _source: source,
-  _retrievedAt: new Date().toISOString(),
+  _retrievedAt: retrievedAt,
   fights,
 };
 
@@ -203,3 +213,6 @@ for (const f of unpriced) {
   );
 }
 if (!card.eventDate) console.error('\neventDate is null -- set it before running enter_upcoming.mjs');
+if (source !== 'bestfightodds') {
+  console.error(`\n${source} prices carry no vig: the v3 gate marks them NO BET and enter_upcoming.mjs refuses them for a C6 card.`);
+}

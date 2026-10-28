@@ -30,6 +30,32 @@ export const GATE_V3 = Object.freeze({
   strategyStakeUnits: 1, // standard stake for strategy and paper results
 });
 
+// The same rule priced off SPORTSBOOK lines (2026-10-27). Every c6_dog_v3
+// entry (UFC Fight Night: Allen vs. Duncan through UFC 333) was priced from a
+// prediction market: no vig, so its EV, its BET/LEAN call and its CLV against a
+// sportsbook close all read high. Changing the price source changes which
+// fights qualify, so it is a new version, counted on its own and never pooled
+// with c6_dog_v3, which is closed at the BETs it has. Thresholds are
+// identical; the one addition is that a price carrying less vig than any
+// sportsbook (a prediction-market price) cannot qualify.
+export const GATE_V3_BOOK = Object.freeze({
+  version: 'c6_dog_v3_book',
+  frozenOn: '2026-10-27',
+  minEV: GATE_V3.minEV,
+  betMaxDecimal: GATE_V3.betMaxDecimal,
+  leanMinDecimal: GATE_V3.leanMinDecimal,
+  strategyStakeUnits: GATE_V3.strategyStakeUnits,
+  // Two-way overround floor. US books on bestfightodds run 4-6%; Polymarket
+  // prices convert to 0% and Kalshi mids to ~1-2%.
+  minOverround: 0.025,
+});
+
+// The version new C6 saves are stamped with, and every version of this rule.
+export const ACTIVE_GATE_V3 = GATE_V3_BOOK;
+export const GATE_V3_VERSIONS = Object.freeze([GATE_V3.version, GATE_V3_BOOK.version]);
+export const isV3GateVersion = (v) => GATE_V3_VERSIONS.includes(v);
+const gateForVersion = (v) => (v === GATE_V3.version ? GATE_V3 : GATE_V3_BOOK);
+
 export const GATE_V3_REASONS = Object.freeze({
   INVALID_INPUT: 'INVALID_INPUT',
   C6_TIE: 'C6_TIE',
@@ -37,6 +63,7 @@ export const GATE_V3_REASONS = Object.freeze({
   EV_BELOW_FLOOR: 'EV_BELOW_FLOOR',
   PRICE_TOO_LONG: 'PRICE_TOO_LONG',
   PRICE_TOO_SHORT: 'PRICE_TOO_SHORT',
+  NOT_SPORTSBOOK_PRICE: 'NOT_SPORTSBOOK_PRICE',
 });
 
 const isProb = (x) => Number.isFinite(x) && x > 0 && x < 1;
@@ -48,15 +75,20 @@ const isDecimal = (x) => Number.isFinite(x) && x > 1;
  * @param {{c6pA:number, noVigA:number, decA:number, decB:number}} inputs
  *   C6 probability and proportional no-vig probability of fighter A, and both
  *   decimal prices, all from ONE market snapshot.
+ * @param {object} [gate] GATE_V3 (default, the frozen parity rule) or
+ *   GATE_V3_BOOK, which also refuses a price below its vig floor.
  * @returns {{tier:('BET'|'LEAN'|'NO BET'), side:('A'|'B'|null),
  *            reason:(string|null), ev:(number|null)}}
  *   ev is the pick side's expected return per unit (p * decimal - 1).
  */
-export function gateV3({ c6pA, noVigA, decA, decB } = {}) {
+export function gateV3({ c6pA, noVigA, decA, decB } = {}, gate = GATE_V3) {
   const R = GATE_V3_REASONS;
   const out = (tier, side, reason, ev) => ({ tier, side, reason, ev });
   if (!isProb(c6pA) || !isProb(noVigA) || !isDecimal(decA) || !isDecimal(decB)) {
     return out('NO BET', null, R.INVALID_INPUT, null);
+  }
+  if (gate.minOverround != null && 1 / decA + 1 / decB - 1 < gate.minOverround) {
+    return out('NO BET', null, R.NOT_SPORTSBOOK_PRICE, null);
   }
   if (c6pA === 0.5) return out('NO BET', null, R.C6_TIE, null);
   const pickA = c6pA > 0.5;
@@ -66,13 +98,13 @@ export function gateV3({ c6pA, noVigA, decA, decB } = {}) {
   const ev = p * dec - 1;
   const side = pickA ? 'A' : 'B';
   if (pickNoVig === 0.5) return out('NO BET', null, R.MARKET_PICKEM, ev);
-  if (ev < GATE_V3.minEV) return out('NO BET', null, R.EV_BELOW_FLOOR, ev);
+  if (ev < gate.minEV) return out('NO BET', null, R.EV_BELOW_FLOOR, ev);
   if (pickNoVig < 0.5) {
-    return dec <= GATE_V3.betMaxDecimal
+    return dec <= gate.betMaxDecimal
       ? out('BET', side, null, ev)
       : out('NO BET', null, R.PRICE_TOO_LONG, ev);
   }
-  return dec >= GATE_V3.leanMinDecimal
+  return dec >= gate.leanMinDecimal
     ? out('LEAN', side, null, ev)
     : out('NO BET', null, R.PRICE_TOO_SHORT, ev);
 }
@@ -84,6 +116,7 @@ const REASON_TEXT = {
   EV_BELOW_FLOOR: 'Expected return on the C6 pick is under 2%',
   PRICE_TOO_LONG: 'Underdog priced longer than +200',
   PRICE_TOO_SHORT: 'Favourite priced shorter than -400',
+  NOT_SPORTSBOOK_PRICE: 'Price has no sportsbook vig (prediction market?) -- enter a sportsbook line',
 };
 
 export const describeGateV3Reason = (reason) => REASON_TEXT[reason] ?? null;
@@ -96,14 +129,14 @@ export const describeGateV3Reason = (reason) => REASON_TEXT[reason] ?? null;
  */
 export function applyGateV3(market, mkt, c6pA) {
   if (!market) return market;
-  const g = gateV3({ c6pA, noVigA: mkt?.noVigA, decA: mkt?.decimalA, decB: mkt?.decimalB });
+  const g = gateV3({ c6pA, noVigA: mkt?.noVigA, decA: mkt?.decimalA, decB: mkt?.decimalB }, ACTIVE_GATE_V3);
   return {
     ...market,
     legacyBetAction: market.betAction,
     betAction: g.tier,
     bestBet: g.tier === 'NO BET' ? null : g.side,
     noBetReason: g.tier === 'NO BET' ? describeGateV3Reason(g.reason) : null,
-    gateVersion: GATE_V3.version,
+    gateVersion: ACTIVE_GATE_V3.version,
     gateReason: g.reason,
     gateEV: g.ev,
   };
@@ -112,7 +145,8 @@ export function applyGateV3(market, mkt, c6pA) {
 /**
  * Fight-day re-check: rerun the WHOLE gate at current odds, recomputing C6
  * from the entry's frozen v2 probability and the new market. Never mutates or
- * recomputes the frozen recommendation itself.
+ * recomputes the frozen recommendation itself. Runs the version the entry was
+ * saved under.
  *
  * @returns {{checkedAt:string, oddsA:string, oddsB:string, tier:string,
  *            side:(string|null), fighter:(string|null), reason:(string|null),
@@ -126,7 +160,7 @@ export function recheckGateV3(entry, { oddsA, oddsB, checkedAt = new Date().toIS
     noVigA: mkt.noVigA,
     decA: mkt.decimalA,
     decB: mkt.decimalB,
-  });
+  }, gateForVersion(entry?.gateVersion));
   const fighter = g.side === 'A' ? entry?.fighterA : g.side === 'B' ? entry?.fighterB : null;
   return {
     checkedAt,
@@ -164,6 +198,9 @@ export function buildExecution(recheck, { placed, acceptedOdds, stakeUnits, skip
   return { ...recheck, status: 'skipped', skipReason };
 }
 
-/** Is this entry counted in the v3 experiment? Live captures stamped v3 only. */
-export const isV3ExperimentEntry = (entry) =>
-  entry?.gateVersion === GATE_V3.version && entry?._provenance?.captureMode === 'live';
+/**
+ * Is this entry counted in a v3 experiment? Live captures stamped with
+ * `version` only (default: the original c6_dog_v3). Versions are never pooled.
+ */
+export const isV3ExperimentEntry = (entry, version = GATE_V3.version) =>
+  entry?.gateVersion === version && entry?._provenance?.captureMode === 'live';

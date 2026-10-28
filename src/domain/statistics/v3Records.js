@@ -12,10 +12,12 @@
 // closing-line value (closing.js) for strategy and paper -- the success test
 // needs it positive, not just ROI.
 //
-// Only live captures stamped with the frozen gate version count
-// (isV3ExperimentEntry). Pure; reads stored fields only, never a model.
+// Only live captures stamped with ONE gate version count (isV3ExperimentEntry):
+// c6_dog_v3 (prediction-market prices, closed) and c6_dog_v3_book (sportsbook
+// prices) are separate experiments and are never pooled. Pure; reads stored
+// fields only, never a model.
 
-import { americanToDecimal, isV3ExperimentEntry } from '../betting';
+import { americanToDecimal, isV3ExperimentEntry, GATE_V3 } from '../betting';
 import { closingLineValue } from '../betting/closing.js';
 
 const isPush = (w) => w === 'NC' || w === 'DRAW';
@@ -64,11 +66,12 @@ function frozenRow(e) {
 
 /**
  * @param {object[]} entries graded + pending ROI/Upcoming entries
+ * @param {string} [version] gate version to count (default c6_dog_v3)
  * @returns {{strategy, paper, actual, baseline, pending:{bet:number, lean:number},
  *            skipped:number, experimentEntries:number}}
  */
-export function computeV3Records(entries) {
-  const exp = (entries ?? []).filter(isV3ExperimentEntry);
+export function computeV3Records(entries, version = GATE_V3.version) {
+  const exp = (entries ?? []).filter((e) => isV3ExperimentEntry(e, version));
   const done = exp.filter(graded);
 
   const rowsFor = (tier) => done.filter((e) => e.betAction === tier).map(frozenRow).filter(Boolean);
