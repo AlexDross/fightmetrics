@@ -232,7 +232,17 @@ so re-running after a partial entry is safe.
 When `add` prints `Saved to Supabase …` the card is **already live** on
 fightmetrics.app — there is no commit, push or deploy. Load
 `https://fightmetrics.app/upcoming` and confirm the fights render before telling
-the user it is done.
+the user it is done. Also confirm they render **in card order**: the main event
+at the top, the opener at the bottom (see the `addPendingEntry` note below).
+
+If a card went in out of order, fix the order without re-pricing it. Delete the
+event's entries and put the **same stored payloads** back in one
+`store.apply()` batch (`scripts/lib/documentStore.mjs`): the deletes first,
+then one `put` per entry with `expectedRevision: '0'`, opener first and main
+event last (each put lands at the top). A put of an existing id keeps its old
+position, so the delete has to come first. Then diff the export against a
+snapshot taken before the change: ids, prices and `createdAt` must be
+unchanged.
 
 The whole card is written as one atomic batch, and every entry carries the
 revision it was read at, so a card changed elsewhere in the meantime is refused
@@ -379,7 +389,8 @@ Fights go in **bout order, opener first and main event last** — see the
   `fights` in bout order: the first early prelim first, the main event last.
   Take the order from UFC.com (its event page lists main event first; reverse
   it), not from the market feed, whose order is arbitrary. To fix the order of
-  a card already entered, `remove --event` and re-`add` while it is pending.
+  a card already entered, see step 6. Do not use `remove` + `add` for that:
+  it re-prices every fight at the current odds.
 - The scripts import `src/` through a loader hook that retries a failed
   specifier with `.js` and `/index.js`, because `src/` uses Vite's extensionless
   imports. Same hook `scripts/regen_simulator_bar_anchors.mjs` registers.
