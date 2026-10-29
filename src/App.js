@@ -198,6 +198,8 @@ import { isChampionRecord } from './domain/rankings/current.js';
 import AuthFooterPanel from './auth/AuthFooterPanel.jsx';
 import { useDocumentStore } from './store/useDocumentStore.js';
 import SaveStatus from './store/SaveStatus.jsx';
+// M1: in-app confirmations for destructive actions (ConfirmDialog).
+import { useConfirm } from './ui/ConfirmDialog.jsx';
 
 // The bundled snapshot: the dataset in local (unconfigured) mode, and the
 // fallback the document store shows while loading or when the server is
@@ -821,7 +823,7 @@ function RoiByMarketBandChart({ data, modelLabel = 'v1', windowComposition }) {
         </ResponsiveContainer>
         </div>
       )}
-      <p className="text-muted text-[10px] mt-2">{LOW_N_NOTE}</p>
+      <p className="text-muted text-[11px] mt-2">{LOW_N_NOTE}</p>
       <AccessibleChartDataTable
         caption="ROI by Market Band data"
         columns={[
@@ -894,7 +896,7 @@ function ModelVsMarketBracketChart({ data, modelLabel = 'v2' }) {
         </ResponsiveContainer>
         </div>
       )}
-      <p className="text-muted text-[10px] mt-2">{LOW_N_NOTE}</p>
+      <p className="text-muted text-[11px] mt-2">{LOW_N_NOTE}</p>
       <AccessibleChartDataTable
         caption={`${ML} Pick Win Rate versus Market-Implied Probability data`}
         columns={[
@@ -991,7 +993,7 @@ function CalibrationReliabilityChart({ data, modelLabel = 'v2', compact = false 
         </ResponsiveContainer>
         </div>
       )}
-      <p className="text-muted text-[10px] mt-2">
+      <p className="text-muted text-[11px] mt-2">
         Dotted = won at least as often as predicted; striped = overconfident. {LOW_N_NOTE}
       </p>
       <AccessibleChartDataTable
@@ -1071,7 +1073,7 @@ function BetTierWinRateChart({ data }) {
         </ResponsiveContainer>
         </div>
       )}
-      <p className="text-muted text-[10px] mt-2">{LOW_N_NOTE}</p>
+      <p className="text-muted text-[11px] mt-2">{LOW_N_NOTE}</p>
       <AccessibleChartDataTable
         caption="Win Rate by Bet Tier data"
         columns={[
@@ -1133,7 +1135,7 @@ function BetTierRoiChart({ data }) {
         </ResponsiveContainer>
         </div>
       )}
-      <p className="text-muted text-[10px] mt-2">{LOW_N_NOTE}</p>
+      <p className="text-muted text-[11px] mt-2">{LOW_N_NOTE}</p>
       <AccessibleChartDataTable
         caption="ROI by Bet Tier data"
         columns={[
@@ -1786,6 +1788,7 @@ function PropEntryForm({
 // own entry point via the header link, since nesting under a card isn't
 // possible for them.
 function PendingPropsSection({ picks, onGrade, onDelete, manualOpen, onToggleManual, allFighters, onAddManual }) {
+  const confirm = useConfirm();
   return (
     <div className="mt-8">
       <div className="flex items-center justify-between mb-3">
@@ -1840,9 +1843,9 @@ function PendingPropsSection({ picks, onGrade, onDelete, manualOpen, onToggleMan
                     {PROP_RESULT_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
                   </select>
                   <button
-                    onClick={() => {
+                    onClick={async () => {
                       const meta = [matchup, pick.eventName, pick.eventDate].filter(Boolean).join(' · ');
-                      if (window.confirm(`Delete this prop pick?\n\n${label}\n${meta}\n\nThis cannot be undone.`)) {
+                      if (await confirm({ title: 'Delete this prop pick?', details: [label, meta], warning: 'This cannot be undone.' })) {
                         onDelete(pick.id);
                       }
                     }}
@@ -1863,6 +1866,7 @@ function PendingPropsSection({ picks, onGrade, onDelete, manualOpen, onToggleMan
 // Prop Bets sub-tab of the ROI tab. Table of the isolated PROP_PICKS with
 // inline grading + delete. Reads ONLY PROP_PICKS -- no model data, no v1/v2.
 function PropBetsPanel({ picks, onGrade, onDelete }) {
+  const confirm = useConfirm();
   if (picks.length === 0) {
     return (
       <div className="bg-slate-900 border border-slate-800 rounded-xl p-8 text-center text-muted">
@@ -1923,9 +1927,9 @@ function PropBetsPanel({ picks, onGrade, onDelete }) {
                   </td>
                   <td className="px-4 py-3 text-right">
                     <button
-                      onClick={() => {
+                      onClick={async () => {
                         const meta = [matchup, pick.eventName, pick.eventDate].filter(Boolean).join(' · ');
-                        if (window.confirm(`Delete this graded prop?\n\n${label}\n${meta}\n\nThis cannot be undone.`)) {
+                        if (await confirm({ title: 'Delete this graded prop?', details: [label, meta], warning: 'This cannot be undone.' })) {
                           onDelete(pick.id);
                         }
                       }}
@@ -1965,6 +1969,7 @@ const PARLAY_STATUS_BADGE_CLS = {
 // pending-bet list. Default true so ROI's Parlays sub-tab (still an
 // aggregate/performance view) is unaffected; Upcoming passes false.
 function ParlaysPanel({ parlayEntries, roiEntries, onDelete, showSummary = true }) {
+  const confirm = useConfirm();
   const summary = useMemo(
     () => computeParlaySummary(parlayEntries, roiEntries),
     [parlayEntries, roiEntries]
@@ -2049,9 +2054,13 @@ function ParlaysPanel({ parlayEntries, roiEntries, onDelete, showSummary = true 
                   </span>
                   {onDelete && (
                     <button
-                      onClick={() => {
+                      onClick={async () => {
                         const legCount = parlay.legs.length;
-                        if (window.confirm(`Delete this parlay?\n\n${parlay.eventName} · ${legCount} leg${legCount === 1 ? '' : 's'} · ${parlay.combinedOdds}\n\nThis cannot be undone.`)) {
+                        if (await confirm({
+                          title: 'Delete this parlay?',
+                          details: [`${parlay.eventName} · ${legCount} leg${legCount === 1 ? '' : 's'} · ${parlay.combinedOdds}`],
+                          warning: 'This cannot be undone.',
+                        })) {
                           onDelete(parlay.id);
                         }
                       }}
@@ -2370,6 +2379,7 @@ function BufferedTextInput({ value, onCommit, ...props }) {
 const SKIP_REASON_LABELS = { LINE_MOVED: 'Line moved', NOT_PLACED: 'Not placed', OTHER: 'Other' };
 
 function FightDayCheck({ entry, onUpdateEntry }) {
+  const confirm = useConfirm();
   const [open, setOpen] = useState(false);
   const [oddsA, setOddsA] = useState(entry.oddsA || '');
   const [oddsB, setOddsB] = useState(entry.oddsB || '');
@@ -2391,7 +2401,11 @@ function FightDayCheck({ entry, onUpdateEntry }) {
           {` · re-check ${ex.tier} at ${ex.oddsA} / ${ex.oddsB}`}
         </p>
         <button
-          onClick={() => { if (window.confirm('Clear the fight-day record for this fight?')) onUpdateEntry(entry.id, { execution: null }); }}
+          onClick={async () => {
+            if (await confirm({ title: 'Clear the fight-day record for this fight?', confirmLabel: 'Clear' })) {
+              onUpdateEntry(entry.id, { execution: null });
+            }
+          }}
           className="text-muted hover:text-white text-xs font-semibold"
         >
           Clear
@@ -2581,7 +2595,7 @@ function BuildParlayPanel({ legInputs, onConfirm, onCancel }) {
               </div>
               <p className="text-muted text-xs mt-1.5 flex items-center gap-1.5 flex-wrap">
                 <span
-                  className={`text-[10px] font-bold px-1.5 py-0.5 rounded-sm uppercase border ${
+                  className={`text-[11px] font-bold px-1.5 py-0.5 rounded-sm uppercase border ${
                     p.decisionProbabilitySource === 'c6'
                       ? 'text-amber-300 bg-amber-900/30 border-amber-700/50'
                       : 'text-violet-400 bg-violet-900/30 border-violet-700/40'
@@ -2669,6 +2683,7 @@ function UpcomingEventTab({
   roiEntries,
   onDeleteParlay,
 }) {
+  const confirm = useConfirm();
   const fighterMap = useMemo(() => {
     const m = new Map();
     (allFighters ?? []).forEach((f) => m.set(f.FIGHTER, f));
@@ -3022,10 +3037,10 @@ function UpcomingEventTab({
                       {propFormFor === entry.id ? 'Cancel Prop' : '+ Prop'}
                     </button>
                     <button
-                      onClick={() => {
+                      onClick={async () => {
                         const label = `${entry.fighterA} vs. ${entry.fighterB}`;
                         const meta = [entry.eventName, entry.eventDate].filter(Boolean).join(' · ');
-                        if (window.confirm(`Delete this pick?\n\n${label}${meta ? `\n${meta}` : ''}\n\nThis cannot be undone.`)) {
+                        if (await confirm({ title: 'Delete this pick?', details: [label, meta], warning: 'This cannot be undone.' })) {
                           onDelete(entry.id);
                         }
                       }}
@@ -3044,7 +3059,7 @@ function UpcomingEventTab({
                       <p className="text-muted text-xs uppercase tracking-wider">v2 Opinion</p>
                       <span
                         title={`C6 (v2 blended with the no-vig market) picks ${predictedWinner} at ${(winProb * 100).toFixed(1)}%.`}
-                        className={`text-[10px] font-bold px-1.5 py-0.5 rounded-sm uppercase border ${
+                        className={`text-[11px] font-bold px-1.5 py-0.5 rounded-sm uppercase border ${
                           c6Agrees
                             ? 'text-secondary bg-slate-800 border-slate-700'
                             : 'text-amber-300 bg-amber-900/30 border-amber-700/50'
@@ -3070,13 +3085,13 @@ function UpcomingEventTab({
                       {entry.decisionProbabilitySource === 'c6' ? (
                         <span
                           title="This pick's probability and bet recommendation were driven by C6 (v2 blended with the no-vig market)."
-                          className="text-[10px] font-bold text-amber-300 bg-amber-900/30 border border-amber-700/50 px-1.5 py-0.5 rounded-sm uppercase"
+                          className="text-[11px] font-bold text-amber-300 bg-amber-900/30 border border-amber-700/50 px-1.5 py-0.5 rounded-sm uppercase"
                         >
                           C6
                         </span>
                       ) : (
                         hasV2 && modelToggle === 'v2' && (
-                          <span className="text-[10px] font-bold text-violet-400 bg-violet-900/30 border border-violet-700/40 px-1.5 py-0.5 rounded-sm uppercase">
+                          <span className="text-[11px] font-bold text-violet-400 bg-violet-900/30 border border-violet-700/40 px-1.5 py-0.5 rounded-sm uppercase">
                             v2
                           </span>
                         )
@@ -3906,7 +3921,7 @@ function DataTable({ fighters }) {
                         )}
                         {f.IS_PROSPECT && (
                           <span
-                            className="text-[10px] font-black font-mono px-1.5 py-0.5 rounded-sm border bg-amber-900/40 text-amber-400 border-amber-800"
+                            className="text-[11px] font-black font-mono px-1.5 py-0.5 rounded-sm border bg-amber-900/40 text-amber-400 border-amber-800"
                             title="Pre-debut UFC signee — stats from pre-UFC pro fights"
                           >
                             PRE-UFC
@@ -3968,7 +3983,7 @@ function DataTable({ fighters }) {
                           )} ${extra}`}
                         >
                           {rankStatus.symbol && (
-                            <span aria-hidden="true" className="text-[9px] mr-1">{rankStatus.symbol}</span>
+                            <span aria-hidden="true" className="text-[11px] mr-1">{rankStatus.symbol}</span>
                           )}
                           <span className="sr-only">{rankStatus.label}. </span>
                           {display}{' '}
@@ -4074,7 +4089,7 @@ function FighterSearch({
             >
               <span className="text-slate-200 font-medium flex items-center gap-2">
                 {f.IS_PROSPECT && (
-                  <span className="text-[10px] font-black font-mono px-1.5 py-0.5 rounded-sm border bg-amber-900/40 text-amber-400 border-amber-800">
+                  <span className="text-[11px] font-black font-mono px-1.5 py-0.5 rounded-sm border bg-amber-900/40 text-amber-400 border-amber-800">
                     PRE-UFC
                   </span>
                 )}
@@ -4517,11 +4532,11 @@ const FighterPanel = ({ f, setF, color, ph, allFighters, fA, fB, eventDate }) =>
           )}
           {f.FIGHT_HISTORY?.length > 0 && (
             <div className="mb-3">
-              <p className="text-muted text-[10px] uppercase tracking-wider mb-1.5">Recent</p>
+              <p className="text-muted text-[11px] uppercase tracking-wider mb-1.5">Recent</p>
               {f.FIGHT_HISTORY.slice(0, 5).map((fight, i) => (
                 <div key={i} className="flex items-center gap-1.5 mb-1">
                   <span
-                    className={`text-[10px] font-black px-1 py-0.5 rounded leading-none shrink-0 ${
+                    className={`text-[11px] font-black px-1 py-0.5 rounded leading-none shrink-0 ${
                       fight.re === 'W'
                         ? 'bg-emerald-900/50 text-emerald-400'
                         : fight.re === 'L'
@@ -4533,7 +4548,7 @@ const FighterPanel = ({ f, setF, color, ph, allFighters, fA, fB, eventDate }) =>
                   </span>
                   <span className="text-xs text-slate-300 font-medium truncate">{fight.op}</span>
                   {fight.me && (
-                    <span className="text-[10px] text-muted shrink-0">{fight.me}</span>
+                    <span className="text-[11px] text-muted shrink-0">{fight.me}</span>
                   )}
                 </div>
               ))}
@@ -4772,7 +4787,7 @@ function SimulatorContributionPanel({ fA, fB, result, modelToggle, eventDate, is
         <p className="text-secondary text-xs font-semibold uppercase tracking-widest">
           {isC6Active ? 'Underlying v2 Model Contribution' : 'Contribution Breakdown'}
         </p>
-        <span className="text-[10px] font-bold text-muted uppercase tracking-wide">
+        <span className="text-[11px] font-bold text-muted uppercase tracking-wide">
           {modelToggle === 'v2' ? 'v2 logistic' : 'v1 composite'}
         </span>
       </div>
@@ -5196,7 +5211,7 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                 {decision?.c6Requested && (
                   <div className="mb-3">
                     <span
-                      className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded-full border uppercase tracking-wide ${
+                      className={`inline-block text-[11px] font-bold px-2 py-0.5 rounded-full border uppercase tracking-wide ${
                         decision.source === DECISION_SOURCE_C6
                           ? 'text-amber-300 bg-amber-900/30 border-amber-700/50'
                           : 'text-slate-300 bg-slate-800/60 border-slate-700'
@@ -5673,7 +5688,7 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                         <div className="flex items-center gap-1.5 mb-2">
                           <p className="text-muted text-xs font-semibold uppercase tracking-wider">Model Pick</p>
                           {decision?.source === DECISION_SOURCE_C6 && (
-                            <span className="text-[9px] font-bold text-amber-300 bg-amber-900/30 border border-amber-700/50 px-1.5 py-0.5 rounded-sm uppercase">
+                            <span className="text-[11px] font-bold text-amber-300 bg-amber-900/30 border border-amber-700/50 px-1.5 py-0.5 rounded-sm uppercase">
                               C6
                             </span>
                           )}
@@ -6162,7 +6177,7 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                     <p className="text-secondary text-xs font-semibold uppercase tracking-widest">
                       Projected Finish Method
                     </p>
-                    <span className={`text-[10px] font-black uppercase tracking-wider px-2 py-1 rounded-full ${badge.cls}`}>
+                    <span className={`text-[11px] font-black uppercase tracking-wider px-2 py-1 rounded-full ${badge.cls}`}>
                       {badge.label}
                     </span>
                   </div>
@@ -6192,7 +6207,7 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                             {pct}%
                           </p>
                           <p className="text-secondary text-xs mt-0.5 font-semibold">{label}</p>
-                          <p className="text-muted text-[10px] mt-1 leading-tight">{driver}</p>
+                          <p className="text-muted text-[11px] mt-1 leading-tight">{driver}</p>
                         </div>
                       );
                     })}
@@ -7804,7 +7819,7 @@ function HomeTab({ summary, entries, allFighters, filterSince }) {
                 </div>
                 {frozenDecision ? (
                   <p className="text-xs mt-1">
-                    <span className={`font-bold text-[10px] mr-1.5 ${isC6Card ? 'text-sky-400' : 'text-violet-400'}`}>
+                    <span className={`font-bold text-[11px] mr-1.5 ${isC6Card ? 'text-sky-400' : 'text-violet-400'}`}>
                       {isC6Card ? 'C6' : 'v2'}
                     </span>
                     <span className="text-sm font-semibold text-white">
@@ -7849,7 +7864,7 @@ function HomeTab({ summary, entries, allFighters, filterSince }) {
                     </p>
                     {v2Pick && (
                       <p className="text-xs mt-0.5 flex items-center gap-2">
-                        <span className="inline-block text-[9px] font-black bg-violet-900/40 border border-violet-700/40 text-violet-400 px-1.5 py-0.5 rounded-full">v2</span>
+                        <span className="inline-block text-[11px] font-black bg-violet-900/40 border border-violet-700/40 text-violet-400 px-1.5 py-0.5 rounded-full">v2</span>
                         <span className={`text-sm font-bold ${v2Differs ? 'text-amber-400' : 'text-slate-300'}`}>
                           {v2Pick.winner}
                         </span>
@@ -8002,6 +8017,7 @@ function ROITab({
   parlayEntries,
   onDeleteParlay,
 }) {
+  const confirm = useConfirm();
   const evaluatedEntries = useMemo(
     () =>
       entries.map((entry) => {
@@ -8346,20 +8362,29 @@ function ROITab({
                   is intact but unreachable. */}
 
               <button
-                onClick={() => {
+                onClick={async () => {
                   const count = entries.length;
-                  const step1 = window.confirm(
-                    `Clear ALL ${count} ROI ${count === 1 ? 'entry' : 'entries'}?\n\nThis permanently deletes your entire graded bet history — every tracked pick, all P&L, everything.\n\nThis is NOT recoverable.\n\nClick OK to continue to the final confirmation.`
-                  );
+                  const noun = count === 1 ? 'entry' : 'entries';
+                  // Two steps, as before: a warning, then a typed count. The
+                  // old prompt()/alert() pair is folded into step 2 -- Delete
+                  // stays disabled until the typed count matches, so a
+                  // mismatch can no longer be submitted at all.
+                  const step1 = await confirm({
+                    title: `Clear ALL ${count} ROI ${noun}?`,
+                    details: ['This permanently deletes your entire graded bet history — every tracked pick, all P&L, everything.'],
+                    warning: 'This is NOT recoverable.',
+                    confirmLabel: 'Continue',
+                  });
                   if (!step1) return;
-                  const typed = window.prompt(
-                    `Type ${count} to permanently delete all ${count} ${count === 1 ? 'entry' : 'entries'}:`
-                  );
-                  if (typed === null) return;
-                  if (typed.trim() !== String(count)) {
-                    window.alert("That didn't match — nothing was deleted.");
-                    return;
-                  }
+                  const step2 = await confirm({
+                    title: 'Final confirmation',
+                    details: [`Permanently delete all ${count} ${noun}.`],
+                    warning: 'This is NOT recoverable.',
+                    requireText: String(count),
+                    requireTextLabel: `Type ${count} to permanently delete all ${count} ${noun}`,
+                    confirmLabel: 'Delete everything',
+                  });
+                  if (!step2) return;
                   onClearEntries();
                 }}
                 className="px-3 py-2 rounded-lg border border-slate-700 text-secondary text-xs font-semibold hover:text-white hover:border-slate-600 transition-colors"
@@ -8416,7 +8441,7 @@ function ROITab({
             <p className={`font-black text-2xl mt-2 ${roiBannerV2.accuracy >= 60 ? 'text-emerald-400' : 'text-yellow-400'}`}>
               {roiBannerV2.accuracy.toFixed(1)}%
             </p>
-            <p className="text-muted text-[10px] mt-1">
+            <p className="text-muted text-[11px] mt-1">
               Frozen tracked-decision accuracy across {roiBannerV2.graded} decisive fights. Each fight counts once. Frozen at each pick's capture — no lookahead.
             </p>
           </div>
@@ -8683,11 +8708,11 @@ function ROITab({
                       </button>
                     )}
                     <button
-                      onClick={() => {
+                      onClick={async () => {
                         const label = `${entry.fighterA} vs. ${entry.fighterB}`;
                         const meta = [entry.eventName, entry.eventDate].filter(Boolean).join(' · ');
                         const result = entry.actualWinner && entry.actualWinner !== '' ? `Result: ${entry.actualWinner}` : 'Result: Pending';
-                        if (window.confirm(`Delete this graded pick?\n\n${label}${meta ? `\n${meta}` : ''}\n${result}\n\nThis cannot be undone.`)) {
+                        if (await confirm({ title: 'Delete this graded pick?', details: [label, meta, result], warning: 'This cannot be undone.' })) {
                           onDeleteEntry(entry.id);
                         }
                       }}
@@ -8706,7 +8731,7 @@ function ROITab({
                       <p className="text-muted text-xs uppercase tracking-wider">
                         Model Pick
                       </p>
-                      <span className="text-[10px] font-bold text-slate-400 bg-slate-800 border border-slate-700 px-1.5 py-0.5 rounded-sm uppercase">
+                      <span className="text-[11px] font-bold text-slate-400 bg-slate-800 border border-slate-700 px-1.5 py-0.5 rounded-sm uppercase">
                         Unavailable
                       </span>
                     </div>
@@ -8724,12 +8749,12 @@ function ROITab({
                         {isC6Decision ? (
                           <span
                             title="This pick's probability and bet recommendation were driven by C6 (v2 blended with the no-vig market)."
-                            className="text-[10px] font-bold text-amber-300 bg-amber-900/30 border border-amber-700/50 px-1.5 py-0.5 rounded-sm uppercase"
+                            className="text-[11px] font-bold text-amber-300 bg-amber-900/30 border border-amber-700/50 px-1.5 py-0.5 rounded-sm uppercase"
                           >
                             C6
                           </span>
                         ) : (
-                          <span className="text-[10px] font-bold text-violet-400 bg-violet-900/30 border border-violet-700/40 px-1.5 py-0.5 rounded-sm uppercase">
+                          <span className="text-[11px] font-bold text-violet-400 bg-violet-900/30 border border-violet-700/40 px-1.5 py-0.5 rounded-sm uppercase">
                             v2
                           </span>
                         )}
