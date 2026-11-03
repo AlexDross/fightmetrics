@@ -3,6 +3,8 @@ import { Link, NavLink, Navigate, useLocation, useNavigate } from 'react-router-
 // Stage 5: URL <-> screen mapping. The registry is the only place the seven
 // paths are written down; nothing in this file hard-codes a path string.
 import { pathForView, viewForPathname, HOME_PATH } from './app/routes.jsx';
+// M1: the main landmark plus a per-view error boundary. Header/BottomNav stay outside it.
+import RoutedMain from './app/RoutedMain.jsx';
 import {
   RadarChart,
   PolarGrid,
@@ -7483,7 +7485,7 @@ export default function App() {
       <Header view={view} />
       {belowSm && <BottomNav view={view} />}
       <SaveStatus store={store} />
-      <main id="main-content" tabIndex={-1}>
+      <RoutedMain view={view}>
       {/*
         Unknown path: replace rather than push, so a mistyped URL does not leave
         a dead entry in history that Back would land on again. Rendered as an
@@ -7552,7 +7554,7 @@ export default function App() {
         />
       )}
       {view === 'info' && <InfoTab />}
-      </main>
+      </RoutedMain>
     </div>
   );
 }
