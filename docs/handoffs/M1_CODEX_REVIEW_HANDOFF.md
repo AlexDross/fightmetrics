@@ -61,7 +61,7 @@ The modernization review found four problems that every signed-out visitor hits,
   - `unseeded`
   - `offline`
 
-  In every one of these states the rendered output contains zero `input`, `select` or `textarea` elements. It also contains no write action: Delete, Clear All, + Prop, + Parlay, Build Parlay, Grade / actual-winner selection, and the Upcoming fight-day check (record, edit and clear actions).
+  In every one of these states the rendered output contains zero `input`, `select` or `textarea` elements, with one exemption: ROI's **Since** date filter (`#roi-since`) and its **Clear** link. They only change what is shown, not what is stored, so they stay for everyone. It also contains no write action: Delete, Clear All, + Prop, + Parlay, Build Parlay, Grade / actual-winner selection, and the Upcoming fight-day check (record, edit and clear actions).
 - [ ] **Owner unchanged.** With `canWrite === true` the same screens render every control they render today. Covered by a test. `npm run test:api` passes (local Supabase).
 - [ ] **Local mode works.** `npm run dev` with no `VITE_SUPABASE_*` lets you save from the Simulator to Upcoming and grade a fight.
 - [ ] **No internal IDs in copy.** A test renders Home, Upcoming and ROI with fixture data and asserts that the rendered text does not match `/c6_|v3_book|pre-v3|gate/i`. Version strings appear on Info only.
@@ -133,3 +133,25 @@ Do not push commits to the PR branch. Claude applies the fixes, and Alex merges 
 - Auth and read surfaces: `src/auth/AuthProvider.jsx`; `auth.canWrite`, `auth.readSurface`
 - Existing jsdom test examples: `src/auth/__tests__/AuthProvider.test.mjs`, `src/__tests__/accessibility.test.js`
 - Older running log (model work, not this milestone): `CODEX_CLAUDE_HANDOFF.md`
+
+## 8. Testing exception: one test may import `App.js` (PR 3, approved by Alex 2026-10-28)
+
+**Why.** The **Signed-out read-only** box needs jsdom tests that render the real Upcoming and ROI screens. Those screens exist only inside `src/App.js`. `src/__tests__/isolation.test.js` forbids tests from importing `App.js`, because `App.js` assembles `FIGHTERS` from today's date at load time and reads the live snapshot files. Moving the screens out of `App.js` is Milestone 2 work, so it stays out of M1.
+
+**The exception, exactly.** Only `src/__tests__/appReadOnly.test.mjs` may import `App.js`. Before it does, it removes both reasons for the rule:
+1. **It pins the clock.** `vi.useFakeTimers({ toFake: ['Date'] })` and `vi.setSystemTime(...)` run before a dynamic `import('../App.js')`. A top-level import would be hoisted above the pin, so it's forbidden in that file.
+2. **It mocks every live data module `App.js` reads directly:** `../upcomingData`, `../roiData`, `../propPicksData`, `../parlayData` and `../domain/fighters`. The mocks serve frozen fixtures: `src/__tests__/readOnlyViews/collections.json` (real entries copied from the 2026-10-28 snapshot, with the edits listed in its `notes`; kept out of `fixtures/` and `inputs/`, whose contents are hash-pinned) and the golden fighters.
+
+**What stays real.** `AuthProvider`, `resolveAuthState`, the documents repository, `useDocumentStore` and its mode machine, and `App` itself all run unmodified. Only two things are faked:
+- the Supabase client's `rpc`, which is answered by an in-memory server;
+- `fetch`, which throws, and the test asserts it was never called.
+
+So `canWrite` in every scenario is derived by production code, never stubbed.
+
+**How the guard enforces it** (`isolation.test.js`):
+- The scanner now covers `.test.mjs` files and dynamic `import('...')` as well as static imports.
+- Exactly one test may import `App.js`: the file named above. Any other importer fails.
+- That file must call `vi.setSystemTime(` before its dynamic `App.js` import, must not import `App.js` statically, and must `vi.mock` all five modules listed above. Dropping any of these fails the guard.
+- The live-data rule ("no test imports `roiData`/`upcomingData`/…") keeps its original `.test.js` scope. The `.test.mjs` suites under `src/data` and the bout-context provenance checks read the committed snapshots on purpose, as integrity checks of that data, and the rule never applied to them.
+
+**When to remove it.** Once Milestone 2 moves Upcoming and ROI into their own modules, the test should import those instead, and this exception and its allow-list entry should be deleted.

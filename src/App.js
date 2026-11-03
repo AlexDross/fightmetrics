@@ -1789,7 +1789,7 @@ function PropEntryForm({
 // migration call needed here. Manual props (no parent fight card) get their
 // own entry point via the header link, since nesting under a card isn't
 // possible for them.
-function PendingPropsSection({ picks, onGrade, onDelete, manualOpen, onToggleManual, allFighters, onAddManual }) {
+function PendingPropsSection({ picks, onGrade, onDelete, manualOpen, onToggleManual, allFighters, onAddManual, canWrite }) {
   const confirm = useConfirm();
   return (
     <div className="mt-8">
@@ -1799,15 +1799,17 @@ function PendingPropsSection({ picks, onGrade, onDelete, manualOpen, onToggleMan
           <h3 className="text-white font-black text-base">Props</h3>
           <span className="text-muted text-xs hidden sm:inline">pending method-of-victory picks</span>
         </div>
-        <button
-          onClick={onToggleManual}
-          className="hidden sm:inline text-xs font-semibold text-secondary hover:text-white underline decoration-dotted underline-offset-2"
-        >
-          {manualOpen ? 'Cancel manual prop' : '+ Log a manual prop'}
-        </button>
+        {canWrite && (
+          <button
+            onClick={onToggleManual}
+            className="hidden sm:inline text-xs font-semibold text-secondary hover:text-white underline decoration-dotted underline-offset-2"
+          >
+            {manualOpen ? 'Cancel manual prop' : '+ Log a manual prop'}
+          </button>
+        )}
       </div>
 
-      {manualOpen && (
+      {canWrite && manualOpen && (
         <div className="hidden sm:block bg-slate-900 border border-slate-800 rounded-xl p-4 mb-4">
           <PropEntryForm mode="manual" allFighters={allFighters} onAdd={onAddManual} onCancel={onToggleManual} />
         </div>
@@ -1835,6 +1837,9 @@ function PendingPropsSection({ picks, onGrade, onDelete, manualOpen, onToggleMan
                   </p>
                   <p className="text-secondary text-xs mt-1">{pick.odds} · {stake}u</p>
                 </div>
+                {!canWrite ? (
+                  <p className="text-secondary text-xs shrink-0">{propResultLabel(pick.result)}</p>
+                ) : (
                 <div className="hidden sm:flex items-center gap-2 shrink-0">
                   <select
                     aria-label={`Result for prop ${label} in ${matchup}`}
@@ -1856,6 +1861,7 @@ function PendingPropsSection({ picks, onGrade, onDelete, manualOpen, onToggleMan
                     Delete
                   </button>
                 </div>
+                )}
               </div>
             );
           })}
@@ -1867,7 +1873,7 @@ function PendingPropsSection({ picks, onGrade, onDelete, manualOpen, onToggleMan
 
 // Prop Bets sub-tab of the ROI tab. Table of the isolated PROP_PICKS with
 // inline grading + delete. Reads ONLY PROP_PICKS -- no model data, no v1/v2.
-function PropBetsPanel({ picks, onGrade, onDelete }) {
+function PropBetsPanel({ picks, onGrade, onDelete, canWrite }) {
   const confirm = useConfirm();
   if (picks.length === 0) {
     return (
@@ -1909,6 +1915,7 @@ function PropBetsPanel({ picks, onGrade, onDelete }) {
                   <td className="px-4 py-3 text-slate-200 font-semibold">{label}</td>
                   <td className="px-4 py-3 text-secondary whitespace-nowrap">{matchup}</td>
                   <td className="px-4 py-3">
+                    {canWrite ? (
                     <select
                       aria-label={`Result for prop ${label} in ${matchup}`}
                       value={pick.result}
@@ -1917,6 +1924,9 @@ function PropBetsPanel({ picks, onGrade, onDelete }) {
                     >
                       {PROP_RESULT_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
                     </select>
+                    ) : (
+                      <span className="text-secondary text-xs">{propResultLabel(pick.result)}</span>
+                    )}
                   </td>
                   <td className="px-4 py-3 text-secondary whitespace-nowrap">{pick.odds} · {stake}u</td>
                   <td className={`px-4 py-3 text-right font-bold whitespace-nowrap ${
@@ -1928,6 +1938,7 @@ function PropBetsPanel({ picks, onGrade, onDelete }) {
                     {pick.eventName}{pick.eventDate ? ` · ${pick.eventDate}` : ''}
                   </td>
                   <td className="px-4 py-3 text-right">
+                    {canWrite && (
                     <button
                       onClick={async () => {
                         const meta = [matchup, pick.eventName, pick.eventDate].filter(Boolean).join(' · ');
@@ -1939,6 +1950,7 @@ function PropBetsPanel({ picks, onGrade, onDelete }) {
                     >
                       Delete
                     </button>
+                    )}
                   </td>
                 </tr>
               );
@@ -2353,6 +2365,25 @@ function UnitsStakedInput({ value, onCommit, id, ariaLabel, describedBy }) {
   );
 }
 
+// M1 read-only views. Where a non-writer would have seen an editable control
+// holding a value, they see the value: same label, plain text. canWrite comes
+// from useDocumentStore (local mode, or live with a writer role); every other
+// state -- signed out, viewer, loading, unseeded, offline -- is read-only.
+const propResultLabel = (result) =>
+  PROP_RESULT_OPTIONS.find((o) => o.value === result)?.label ?? result ?? '—';
+
+const actualWinnerLabel = (winner) =>
+  winner === 'NC' ? 'No Contest' : winner === 'DRAW' ? 'Draw' : winner || 'Pending';
+
+function ReadOnlyField({ label, value }) {
+  return (
+    <div>
+      <dt className="text-muted text-xs font-semibold uppercase tracking-wider mb-1.5">{label}</dt>
+      <dd className="text-slate-200 text-sm py-2">{value || '—'}</dd>
+    </div>
+  );
+}
+
 // A text input that edits a local buffer and commits once, on blur or Enter --
 // for fields whose every commit is a server write. Resyncs from `value`
 // whenever it is not being edited.
@@ -2380,7 +2411,7 @@ function BufferedTextInput({ value, onCommit, ...props }) {
 // strategy record keeps its own price and 1u stake.
 const SKIP_REASON_LABELS = { LINE_MOVED: 'Line moved', NOT_PLACED: 'Not placed', OTHER: 'Other' };
 
-function FightDayCheck({ entry, onUpdateEntry }) {
+function FightDayCheck({ entry, onUpdateEntry, canWrite }) {
   const confirm = useConfirm();
   const [open, setOpen] = useState(false);
   const [oddsA, setOddsA] = useState(entry.oddsA || '');
@@ -2402,6 +2433,7 @@ function FightDayCheck({ entry, onUpdateEntry }) {
             : `Skipped · ${SKIP_REASON_LABELS[ex.skipReason] ?? ex.skipReason}`}
           {` · re-check ${ex.tier} at ${ex.oddsA} / ${ex.oddsB}`}
         </p>
+        {canWrite && (
         <button
           onClick={async () => {
             if (await confirm({ title: 'Clear the fight-day record for this fight?', confirmLabel: 'Clear' })) {
@@ -2412,9 +2444,14 @@ function FightDayCheck({ entry, onUpdateEntry }) {
         >
           Clear
         </button>
+        )}
       </div>
     );
   }
+
+  // Nothing recorded and no way to record: the check itself only exists to
+  // produce a record, so a read-only viewer sees nothing here.
+  if (!canWrite) return null;
 
   if (!open) {
     return (
@@ -2684,6 +2721,7 @@ function UpcomingEventTab({
   parlayEntries,
   roiEntries,
   onDeleteParlay,
+  canWrite,
 }) {
   const confirm = useConfirm();
   const fighterMap = useMemo(() => {
@@ -2919,7 +2957,7 @@ function UpcomingEventTab({
         ))}
       </div>
 
-      {subTab === 'fights' && selectedLegIds.size > 0 && (
+      {canWrite && subTab === 'fights' && selectedLegIds.size > 0 && (
         <div className="hidden sm:flex items-center justify-between bg-slate-900 border border-red-800/60 rounded-xl px-4 py-3 mb-4">
           <p className="text-secondary text-sm">
             {selectedLegIds.size} leg{selectedLegIds.size === 1 ? '' : 's'} selected
@@ -2996,6 +3034,7 @@ function UpcomingEventTab({
                 {/* Header */}
                 <div className="flex items-start justify-between gap-4 mb-4">
                   <div className="flex items-start gap-3">
+                    {canWrite && (
                     <label
                       title={isOtherEvent && !isSelected ? `Parlay locked to ${lockedEventName}` : `Select ${entry.fighterA} versus ${entry.fighterB} for parlay`}
                       className="hidden sm:flex mt-0.5 w-6 h-6 items-center justify-center cursor-pointer has-disabled:cursor-not-allowed"
@@ -3010,6 +3049,7 @@ function UpcomingEventTab({
                         className="w-4 h-4 accent-red-600 cursor-pointer disabled:cursor-not-allowed disabled:opacity-30"
                       />
                     </label>
+                    )}
                     <div>
                       <div className="flex items-center gap-2 flex-wrap">
                         <h3 className="text-white font-black text-lg">
@@ -3027,6 +3067,7 @@ function UpcomingEventTab({
                       </p>
                     </div>
                   </div>
+                  {canWrite && (
                   <div className="hidden sm:flex items-center gap-2 shrink-0">
                     <button
                       onClick={() => setPropFormFor((id) => (id === entry.id ? null : entry.id))}
@@ -3051,6 +3092,7 @@ function UpcomingEventTab({
                       Delete
                     </button>
                   </div>
+                  )}
                 </div>
 
                 {/* Model Pick (v3: v2's opinion, with C6 agreement) */}
@@ -3170,6 +3212,20 @@ function UpcomingEventTab({
                 </div>
 
                 {/* Actual Winner + Units Staked */}
+                {!canWrite ? (
+                <dl className="hidden sm:flex border-t border-slate-800 pt-3 items-center gap-6 flex-wrap">
+                  <div className="flex items-center gap-3">
+                    <dt className="text-muted text-xs font-semibold uppercase tracking-wider">Actual Winner</dt>
+                    <dd className="text-slate-200 text-sm">Pending</dd>
+                  </div>
+                  {isV3 ? null : (
+                  <div className="flex items-center gap-3">
+                    <dt className="text-muted text-xs font-semibold uppercase tracking-wider">Units Staked</dt>
+                    <dd className="text-slate-200 text-sm">{entry.unitsWagered != null ? entry.unitsWagered : 1}</dd>
+                  </div>
+                  )}
+                </dl>
+                ) : (
                 <div className="hidden sm:flex border-t border-slate-800 pt-3 items-center justify-between gap-3 flex-wrap">
                   <div className="flex items-center gap-3">
                     <label htmlFor={`upcoming-winner-${entry.id}`} className="text-muted text-xs font-semibold uppercase tracking-wider">
@@ -3204,11 +3260,12 @@ function UpcomingEventTab({
                   </div>
                   )}
                 </div>
+                )}
 
                 {/* v3 fight-day re-check: only a BET can become a real bet */}
-                {isV3 && betAction === 'BET' && <FightDayCheck entry={entry} onUpdateEntry={onUpdateEntry} />}
+                {isV3 && betAction === 'BET' && <FightDayCheck entry={entry} onUpdateEntry={onUpdateEntry} canWrite={canWrite} />}
 
-                {propFormFor === entry.id && (
+                {canWrite && propFormFor === entry.id && (
                   <div className="hidden sm:block border-t border-slate-800 mt-3 pt-3">
                     <PropEntryForm
                       mode="fromFight"
@@ -3238,6 +3295,7 @@ function UpcomingEventTab({
           onToggleManual={() => setPropFormFor((f) => (f === 'manual' ? null : 'manual'))}
           allFighters={allFighters}
           onAddManual={addPropAndClose}
+          canWrite={canWrite}
         />
       )}
 
@@ -3245,12 +3303,12 @@ function UpcomingEventTab({
         <ParlaysPanel
           parlayEntries={pendingParlays}
           roiEntries={roiEntries ?? []}
-          onDelete={onDeleteParlay}
+          onDelete={canWrite ? onDeleteParlay : undefined}
           showSummary={false}
         />
       )}
 
-      {showBuildParlay && (
+      {canWrite && showBuildParlay && (
         <div className="hidden sm:block">
         <BuildParlayPanel
           legInputs={selectedLegInputs}
@@ -7536,6 +7594,7 @@ export default function App() {
           parlayEntries={parlayEntries}
           roiEntries={roiEntries}
           onDeleteParlay={handleDeleteParlay}
+          canWrite={store.canWrite}
         />
       )}
       {view === 'explore' && <ExploreTab allFighters={fightersWithProspectsFiltered} />}
@@ -7556,6 +7615,7 @@ export default function App() {
           onDeletePropPick={handleDeletePropPick}
           parlayEntries={parlayEntries}
           onDeleteParlay={handleDeleteParlay}
+          canWrite={store.canWrite}
         />
       )}
       {view === 'statistics' && (
@@ -8018,6 +8078,7 @@ function ROITab({
   onDeletePropPick,
   parlayEntries,
   onDeleteParlay,
+  canWrite,
 }) {
   const confirm = useConfirm();
   const evaluatedEntries = useMemo(
@@ -8339,7 +8400,7 @@ function ROITab({
           </p>
         </div>
         <div className="hidden sm:flex items-center gap-2">
-          {!isProps && !isParlays && entries.length > 0 && (
+          {canWrite && !isProps && !isParlays && entries.length > 0 && (
             <>
               {displayedEntries.some((e) => e.autoGenerated && e.confirmedByUser === false) && (
                 <button
@@ -8487,12 +8548,13 @@ function ROITab({
           picks={propPicks.filter((p) => p.result !== 'PENDING')}
           onGrade={onGradePropPick}
           onDelete={onDeletePropPick}
+          canWrite={canWrite}
         />
       ) : isParlays ? (
         <ParlaysPanel
           parlayEntries={parlayEntries.filter((p) => computeParlayResult(p, entries).status === 'GRADED')}
           roiEntries={entries}
-          onDelete={onDeleteParlay}
+          onDelete={canWrite ? onDeleteParlay : undefined}
         />
       ) : entries.length === 0 ? (
         <div className="bg-slate-900 border border-slate-800 rounded-xl p-8 text-center text-muted">
@@ -8700,6 +8762,7 @@ function ROITab({
                       {entry.eventDate ? ` · ${entry.eventDate}` : ''}
                     </p>
                   </div>
+                  {canWrite && (
                   <div className="hidden sm:flex gap-2">
                     {entry.autoGenerated && entry.confirmedByUser === false && (
                       <button
@@ -8723,6 +8786,7 @@ function ROITab({
                       Delete
                     </button>
                   </div>
+                  )}
                 </div>
 
                 {/* Model pick — neutral unavailable state for a malformed C6
@@ -8872,6 +8936,15 @@ function ROITab({
                   {' · Winner: '}{entry.actualWinner || 'Pending'}
                 </p>
 
+                {!canWrite ? (
+                <dl className="hidden sm:grid grid-cols-5 gap-3">
+                  <ReadOnlyField label="Event Name" value={entry.eventName} />
+                  <ReadOnlyField label="Event Date" value={entry.eventDate} />
+                  <ReadOnlyField label="Pick" value={effectiveTrackedSide} />
+                  <ReadOnlyField label="Odds" value={effectiveOdds} />
+                  <ReadOnlyField label="Actual Winner" value={actualWinnerLabel(entry.actualWinner)} />
+                </dl>
+                ) : (
                 <div className="hidden sm:grid grid-cols-5 gap-3">
                   <div>
                     <label htmlFor={`roi-event-name-${entry.id}`} className="text-muted text-xs font-semibold uppercase tracking-wider block mb-1.5">
@@ -8949,6 +9022,7 @@ function ROITab({
                     </select>
                   </div>
                 </div>
+                )}
 
               </div>
             );
