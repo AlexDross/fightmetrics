@@ -61,7 +61,7 @@ The modernization review found four problems that every signed-out visitor hits,
   - `unseeded`
   - `offline`
 
-  In every one of these states the rendered output contains zero `input`, `select` or `textarea` elements. It also contains no write action: Delete, Clear All, + Prop, + Parlay, Build Parlay, Grade / actual-winner selection, and the Upcoming fight-day check (record, edit and clear actions).
+  In every one of these states the rendered output contains zero `input`, `select` or `textarea` elements, with one exemption: ROI's **Since** date filter (`#roi-since`) and its **Clear** link. They only change what is shown, not what is stored, so they stay for everyone. It also contains no write action: Delete, Clear All, + Prop, + Parlay, Build Parlay, Grade / actual-winner selection, and the Upcoming fight-day check (record, edit and clear actions).
 - [ ] **Owner unchanged.** With `canWrite === true` the same screens render every control they render today. Covered by a test. `npm run test:api` passes (local Supabase).
 - [ ] **Local mode works.** `npm run dev` with no `VITE_SUPABASE_*` lets you save from the Simulator to Upcoming and grade a fight.
 - [ ] **No internal IDs in copy.** A test renders Home, Upcoming and ROI with fixture data and asserts that the rendered text does not match `/c6_|v3_book|pre-v3|gate/i`. Version strings appear on Info only.
