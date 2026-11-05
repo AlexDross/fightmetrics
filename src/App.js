@@ -115,6 +115,7 @@ import {
   GATE_V3,
   SKIP_REASONS,
 } from './domain/betting';
+import { upcomingMarketDisplay, lastName } from './domain/betting/marketDisplay.js';
 // Foundation Stage 4: Upcoming -> ROI transitions extracted verbatim.
 import {
   filterVisibleUpcoming,
@@ -2841,13 +2842,12 @@ function UpcomingEventTab({
       const pickEdge = pA >= pB ? edgeA : edgeB;
       const fairLine = americanOdds(winProb);
       const actionable = betAction === 'LEAN' || betAction === 'BET' || betAction === 'STRONG BET';
-      const effectiveMarketOdds = pA >= pB ? (entry.oddsA || '') : (entry.oddsB || '');
       const v2Winner = hasV2 ? (v2pAOut >= v2pBOut ? entry.fighterA : entry.fighterB) : predictedWinner;
       const v2WinProb = hasV2 ? Math.max(v2pAOut, v2pBOut) : winProb;
       const v1Winner = hasV1 ? (v1pAOut >= v1pBOut ? entry.fighterA : entry.fighterB) : null;
       map.set(entry.id, {
         pA, pB, hasV2, betAction, betFighter, edgeA, edgeB,
-        predictedWinner, winProb, tier, pickEdge, fairLine, actionable, effectiveMarketOdds,
+        predictedWinner, winProb, tier, pickEdge, fairLine, actionable,
         v2Winner, v2WinProb, hasV1, v1Winner,
       });
     });
@@ -3019,7 +3019,7 @@ function UpcomingEventTab({
             const mp = modelPickByEntryId.get(entry.id);
             const {
               hasV2, betAction, betFighter, predictedWinner, winProb,
-              tier, pickEdge, fairLine, actionable, effectiveMarketOdds,
+              tier, pickEdge, fairLine, actionable,
             } = mp;
             const isSelected = selectedLegIds.has(entry.id);
             const isOtherEvent = lockedEventName != null && entry.eventName !== lockedEventName;
@@ -3027,7 +3027,6 @@ function UpcomingEventTab({
             const isV3 = entry.gateVersion != null;
             const v2Pick = mp.v2Winner;
             const c6Agrees = v2Pick === predictedWinner;
-            const gateEVPct = entry.gateEV != null ? entry.gateEV * 100 : null;
 
             return (
               <div key={entry.id} className={`bg-slate-900 border ${tier.border} rounded-xl p-5`}>
@@ -3198,16 +3197,22 @@ function UpcomingEventTab({
                   </div>
                   <div className="bg-slate-800/40 rounded-lg p-3">
                     <p className="text-muted text-xs">Market odds</p>
-                    <p className="text-white font-bold text-sm mt-1">
-                      {effectiveMarketOdds || '—'}
-                    </p>
-                    <p className="text-muted text-xs mt-1">
-                      {isV3 && gateEVPct != null
-                        ? `EV ${gateEVPct >= 0 ? '+' : ''}${gateEVPct.toFixed(1)}%`
-                        : pickEdge != null
-                        ? `${pickEdge > 0 ? '+' : ''}${(pickEdge * 100).toFixed(1)}% edge`
-                        : 'No saved market edge'}
-                    </p>
+                    {(() => {
+                      const md = upcomingMarketDisplay(entry, { isV3, predictedWinner, pickEdge });
+                      return (
+                        <>
+                          <dl className="mt-1 space-y-0.5">
+                            {md.sides.map((s) => (
+                              <div key={s.fighter} className="flex items-baseline justify-between gap-2 text-sm">
+                                <dt className="text-secondary min-w-0 leading-tight">{lastName(s.fighter)}</dt>
+                                <dd className="text-white font-bold tabular-nums shrink-0">{s.odds || '—'}</dd>
+                              </div>
+                            ))}
+                          </dl>
+                          <p className="text-muted text-xs mt-1">{md.valueLine}</p>
+                        </>
+                      );
+                    })()}
                   </div>
                 </div>
 
