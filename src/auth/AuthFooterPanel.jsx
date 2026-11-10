@@ -11,7 +11,7 @@ import { AUTH_STATES } from '../data/repositories/authState.mjs';
 import { CONFIG_STATUS } from '../data/supabase/config.mjs';
 import { useAuth } from './AuthProvider.jsx';
 
-const CARD = 'bg-slate-900 border border-slate-800 rounded-xl p-5';
+const CARD = 'bg-surface border border-line rounded-xl p-5';
 const LABEL = 'text-secondary text-xs leading-relaxed';
 
 /** Error kind -> a sentence a person can act on. Never the raw server text. */
@@ -36,7 +36,7 @@ function errorText(error) {
 
 function ReadOnlyBadge({ children }) {
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-700 bg-slate-800/60 px-2.5 py-1 text-[11px] font-semibold text-slate-300">
+    <span className="inline-flex items-center gap-1.5 rounded-full border border-line-strong bg-surface-2/60 px-2.5 py-1 text-[11px] font-semibold text-slate-300">
       <span aria-hidden="true">•</span>{children}
     </span>
   );
@@ -63,12 +63,12 @@ function SignInForm() {
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         aria-describedby="fm-auth-status"
-        className="w-full sm:w-64 rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:border-blue-500 focus:outline-none"
+        className="w-full sm:w-64 rounded-lg border border-line-strong bg-canvas px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:border-blue-500 focus:outline-none"
       />
       <button
         type="submit"
         disabled={pending}
-        className="rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm font-semibold text-slate-100 hover:bg-slate-700 disabled:opacity-50"
+        className="rounded-lg border border-line-strong bg-surface-2 px-3 py-2 text-sm font-semibold text-slate-100 hover:bg-surface-3 disabled:opacity-50"
       >
         {pending ? 'Sending…' : 'Email me a sign-in link'}
       </button>
@@ -90,7 +90,7 @@ function ClaimOwnership() {
       type="button"
       disabled={pending}
       onClick={() => claimOwnership()}
-      className="mt-2 rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm font-semibold text-slate-100 hover:bg-slate-700 disabled:opacity-50"
+      className="mt-2 rounded-lg border border-line-strong bg-surface-2 px-3 py-2 text-sm font-semibold text-slate-100 hover:bg-surface-3 disabled:opacity-50"
     >
       {pending ? 'Claiming…' : 'Claim ownership of this workspace'}
     </button>
@@ -204,7 +204,7 @@ function SignOutButton({ pending, signOut }) {
       type="button"
       disabled={pending}
       onClick={() => signOut()}
-      className="mt-3 rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm font-semibold text-slate-100 hover:bg-slate-700 disabled:opacity-50"
+      className="mt-3 rounded-lg border border-line-strong bg-surface-2 px-3 py-2 text-sm font-semibold text-slate-100 hover:bg-surface-3 disabled:opacity-50"
     >
       {pending ? 'Signing out…' : 'Sign out'}
     </button>

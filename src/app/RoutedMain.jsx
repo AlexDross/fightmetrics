@@ -43,7 +43,7 @@ export function RouteErrorFallback({ onReload = reloadPage }) {
     <div className="px-5 py-10 flex justify-center">
       <div
         role="alert"
-        className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-xl p-6 text-center"
+        className="w-full max-w-md bg-surface border border-line rounded-xl p-6 text-center"
       >
         <h1 className="text-white font-black text-xl tracking-tight">
           This screen couldn’t load
@@ -55,7 +55,7 @@ export function RouteErrorFallback({ onReload = reloadPage }) {
         <button
           type="button"
           onClick={() => onReload()}
-          className="mt-5 min-h-[44px] px-5 rounded-lg bg-red-600 hover:bg-red-500 text-white text-sm font-semibold"
+          className="mt-5 min-h-[44px] px-5 rounded-lg bg-accent hover:bg-accent-hover text-white text-sm font-semibold"
         >
           Reload
         </button>

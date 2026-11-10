@@ -23,16 +23,72 @@
 @source './**/*.jsx';
 
 /*
-  Semantic foregrounds. Every foreground below is verified against the three
-  dark surfaces used by the application: slate-950 (#020617), slate-900
-  (#0f172a), and slate-800 (#1e293b). The weakest pair is muted on slate-800
-  at 5.23:1, above WCAG 2.2 AA's 4.5:1 requirement for normal text.
+  Design tokens. Components use these semantic names (bg-surface,
+  border-line, text-good, bg-accent ...) rather than raw palette shades, so a
+  colour decision is made once here instead of at ~900 call sites.
+
+  Surfaces, darkest to lightest:
+    canvas     page background
+    surface    cards and panels
+    surface-2  inputs and panels nested inside a card
+    surface-3  chips, hover states, the third nesting level
+  Lines: line for card borders, line-strong for inputs and dividers that need
+  to read against surface-2.
+
+  Every foreground below (text-primary/secondary/muted and the good, bad,
+  warn and info status colours) is verified against all four surfaces in
+  src/__tests__/accessibility.test.js. The weakest pair is muted on surface-3
+  at 5.39:1, above WCAG 2.2 AA's 4.5:1 for normal text.
 */
 :root {
   --fm-text-primary: #f1f5f9;
   --fm-text-secondary: #a8b4c4;
   --fm-text-muted: #8d9caf;
   --fm-focus-ring: #f8fafc;
+}
+
+@theme {
+  --color-canvas: #080b10;
+  --color-surface: #10151c;
+  --color-surface-2: #161d27;
+  --color-surface-3: #1e2733;
+  --color-line: #222c38;
+  --color-line-strong: #2e3a48;
+
+  /* Brand red. White text on it is 4.83:1. */
+  --color-accent: #dc2626;
+  --color-accent-hover: #ef4444;
+
+  --color-good: #3ddc97;
+  --color-bad: #ff6b6b;
+  --color-warn: #ffc547;
+  --color-info: #5eb1ff;
+
+  --font-sans: 'Geist Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'Geist Mono Variable', ui-monospace, SFMono-Regular, monospace;
+}
+
+/* Odds, percentages and records line up in columns. */
+@utility tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+@keyframes fm-shimmer {
+  0% { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+
+@utility skeleton {
+  background: linear-gradient(90deg, var(--color-surface-2) 0px, var(--color-surface-3) 120px, var(--color-surface-2) 240px);
+  background-size: 800px 100%;
+  animation: fm-shimmer 1.4s infinite linear;
+  border-radius: 10px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    animation: none;
+  }
 }
 
 @utility text-primary {

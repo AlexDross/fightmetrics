@@ -203,6 +203,7 @@ import { useDocumentStore } from './store/useDocumentStore.js';
 import SaveStatus from './store/SaveStatus.jsx';
 // M1: in-app confirmations for destructive actions (ConfirmDialog).
 import { useConfirm } from './ui/ConfirmDialog.jsx';
+import { SectionLabel, StatTile, Tag } from './ui/kit.jsx';
 
 // The bundled snapshot: the dataset in local (unconfigured) mode, and the
 // fallback the document store shows while loading or when the server is
@@ -690,11 +691,11 @@ const fmt = (v, dec = 2, signed = false) => {
 };
 const rankColor = (rank, total) => {
   const p = rank / total;
-  if (p <= 0.05) return 'text-emerald-400 font-semibold';
+  if (p <= 0.05) return 'text-good font-semibold';
   if (p <= 0.15) return 'text-emerald-500';
   if (p <= 0.4) return 'text-slate-200';
   if (p <= 0.7) return 'text-secondary';
-  return 'text-red-400';
+  return 'text-bad';
 };
 const rankBand = (rank, total) => {
   const p = rank / total;
@@ -706,20 +707,20 @@ const rankBand = (rank, total) => {
 };
 const credColor = (c) =>
   c >= 80
-    ? 'text-emerald-400'
+    ? 'text-good'
     : c >= 60
-    ? 'text-yellow-400'
+    ? 'text-warn'
     : c >= 40
     ? 'text-orange-400'
-    : 'text-red-400';
+    : 'text-bad';
 const decayColor = (v) =>
   v == null
     ? 'text-muted'
     : v >= 1.2
-    ? 'text-emerald-400'
+    ? 'text-good'
     : v >= 0.95
     ? 'text-slate-200'
-    : 'text-red-400';
+    : 'text-bad';
 function makeBandTick(data) {
   return function BandTick({ x, y, payload }) {
     const row = data[payload?.index];
@@ -786,7 +787,7 @@ function RoiByMarketBandChart({ data, modelLabel = 'v1', windowComposition }) {
   const chartId = `roi-by-market-band-${modelLabel}`;
   const descriptionId = `${chartId}-description`;
   return (
-    <figure className="bg-slate-900 border border-slate-800 rounded-xl p-4" aria-labelledby={chartId} aria-describedby={descriptionId}>
+    <figure className="bg-surface border border-line rounded-xl p-4" aria-labelledby={chartId} aria-describedby={descriptionId}>
       <h3 id={chartId} className="text-white font-bold text-sm mb-1">ROI by Market Band</h3>
       <p id={descriptionId} className="text-muted text-xs mb-3">
         ROI grouped by how strongly the market favored the pick. Dashed line = break-even.
@@ -854,7 +855,7 @@ function ModelVsMarketBracketChart({ data, modelLabel = 'v2' }) {
   const actualPatternId = `${chartId}-actual-pattern`;
   const marketPatternId = `${chartId}-market-pattern`;
   return (
-    <figure className="bg-slate-900 border border-slate-800 rounded-xl p-4" aria-labelledby={chartId} aria-describedby={descriptionId}>
+    <figure className="bg-surface border border-line rounded-xl p-4" aria-labelledby={chartId} aria-describedby={descriptionId}>
       <h3 id={chartId} className="text-white font-bold text-sm mb-1">{ML} Win Rate vs. Market Price</h3>
       <p id={descriptionId} className="text-muted text-xs mb-3">
         How often {ML}'s pick won, against the win rate its price implied.
@@ -929,7 +930,7 @@ function CalibrationReliabilityChart({ data, modelLabel = 'v2', compact = false 
   const calibratedPatternId = `${chartId}-not-overconfident-pattern`;
   const overconfidentPatternId = `${chartId}-overconfident-pattern`;
   return (
-    <figure className={`bg-slate-900 border border-slate-800 rounded-xl ${compact ? 'p-3' : 'p-4'}`} aria-labelledby={chartId} aria-describedby={descriptionId}>
+    <figure className={`bg-surface border border-line rounded-xl ${compact ? 'p-3' : 'p-4'}`} aria-labelledby={chartId} aria-describedby={descriptionId}>
       <h3 id={chartId} className="text-white font-bold text-sm mb-1">Calibration Reliability</h3>
       <p id={descriptionId} className="text-muted text-xs mb-3">
         When {ML} says X%, does its pick win X% of the time? Dashed line = what it predicted.
@@ -1039,7 +1040,7 @@ function BetTierWinRateChart({ data }) {
   const chartId = 'win-rate-by-bet-tier';
   const descriptionId = `${chartId}-description`;
   return (
-    <figure className="bg-slate-900 border border-slate-800 rounded-xl p-4" aria-labelledby={chartId} aria-describedby={descriptionId}>
+    <figure className="bg-surface border border-line rounded-xl p-4" aria-labelledby={chartId} aria-describedby={descriptionId}>
       <h3 id={chartId} className="text-white font-bold text-sm mb-1">Win Rate by Bet Tier (pre-v3 gate)</h3>
       <p id={descriptionId} className="text-muted text-xs mb-3">
         Pick win rate by the tier saved on each pick under the old gate.
@@ -1097,7 +1098,7 @@ function BetTierRoiChart({ data }) {
   const chartId = 'roi-by-bet-tier';
   const descriptionId = `${chartId}-description`;
   return (
-    <figure className="bg-slate-900 border border-slate-800 rounded-xl p-4" aria-labelledby={chartId} aria-describedby={descriptionId}>
+    <figure className="bg-surface border border-line rounded-xl p-4" aria-labelledby={chartId} aria-describedby={descriptionId}>
       <h3 id={chartId} className="text-white font-bold text-sm mb-1">ROI by Bet Tier (pre-v3 gate)</h3>
       <p id={descriptionId} className="text-muted text-xs mb-3">
         ROI by the tier saved on each pick under the old gate. Dashed line = break-even.
@@ -1157,7 +1158,7 @@ function CumulativePnlChart({ data, modelLabel = 'v1', windowComposition }) {
   const chartId = `cumulative-pnl-${modelLabel}`;
   const descriptionId = `${chartId}-description`;
   return (
-    <figure className="bg-slate-900 border border-slate-800 rounded-xl p-4" aria-labelledby={chartId} aria-describedby={descriptionId}>
+    <figure className="bg-surface border border-line rounded-xl p-4" aria-labelledby={chartId} aria-describedby={descriptionId}>
       <h3 id={chartId} className="text-white font-bold text-sm mb-1">Cumulative P&amp;L by Event</h3>
       <p id={descriptionId} className="text-muted text-xs mb-3">
         Running profit on every tracked pick at its stake, one point per event.
@@ -1221,7 +1222,7 @@ function MonthlyPerformanceTable({ data, large = false, modelLabel = 'v1', windo
   const cellPad = large ? 'py-3 pr-6' : 'py-2 pr-4';
   const lastCellPad = large ? 'py-3' : 'py-2';
   return (
-    <div className={`bg-slate-900 border border-slate-800 rounded-xl ${large ? 'p-6' : 'p-4'}`}>
+    <div className={`bg-surface border border-line rounded-xl ${large ? 'p-6' : 'p-4'}`}>
       <h3 className={`text-white font-bold ${large ? 'text-base mb-1' : 'text-sm mb-3'}`}>Monthly Performance</h3>
       {large && (
         <p className="text-muted text-xs mb-4">
@@ -1236,7 +1237,7 @@ function MonthlyPerformanceTable({ data, large = false, modelLabel = 'v1', windo
         <div className="overflow-x-auto">
           <table className={`w-full ${large ? 'text-base' : 'text-sm'}`}>
             <thead>
-              <tr className={`text-muted uppercase tracking-wider border-b border-slate-800 ${large ? 'text-sm' : 'text-xs'}`}>
+              <tr className={`text-muted uppercase tracking-wider border-b border-line ${large ? 'text-sm' : 'text-xs'}`}>
                 <th scope="col" className={`text-left ${cellPad} font-semibold`}>Month</th>
                 <th scope="col" className={`text-right ${cellPad} font-semibold`}>Bets</th>
                 <th scope="col" className={`text-right ${cellPad} font-semibold`}>Win Rate</th>
@@ -1247,17 +1248,17 @@ function MonthlyPerformanceTable({ data, large = false, modelLabel = 'v1', windo
             </thead>
             <tbody>
               {data.map((row) => (
-                <tr key={row.month} className="border-b border-slate-800/60 last:border-0">
+                <tr key={row.month} className="border-b border-line/60 last:border-0">
                   <td className={`${cellPad} text-slate-300`}>{row.month}</td>
                   <td className={`${cellPad} text-right text-slate-300`}>{row.n}</td>
                   <td className={`${cellPad} text-right text-slate-300`}>
                     {row.winRate == null ? '—' : `${row.winRate.toFixed(1)}%`}
                   </td>
                   <td className={`${cellPad} text-right text-slate-300`}>{row.staked.toFixed(2)}u</td>
-                  <td className={`${cellPad} text-right font-semibold ${row.netUnits >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                  <td className={`${cellPad} text-right font-semibold ${row.netUnits >= 0 ? 'text-good' : 'text-bad'}`}>
                     {row.netUnits >= 0 ? '+' : ''}{row.netUnits.toFixed(2)}u
                   </td>
-                  <td className={`${lastCellPad} text-right font-semibold ${row.roi == null ? 'text-muted' : row.roi >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                  <td className={`${lastCellPad} text-right font-semibold ${row.roi == null ? 'text-muted' : row.roi >= 0 ? 'text-good' : 'text-bad'}`}>
                     {row.roi == null ? '—' : `${row.roi >= 0 ? '+' : ''}${row.roi.toFixed(1)}%`}
                   </td>
                 </tr>
@@ -1299,16 +1300,16 @@ function V3RecordPanel({ entries, compact = false, gate = ACTIVE_GATE_V3 }) {
   const rec = useMemo(() => computeV3Records(entries, gate.version), [entries, gate.version]);
   if (rec.experimentEntries === 0) {
     return (
-      <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 mb-6">
+      <div className="bg-surface border border-line rounded-xl p-4 mb-6">
         <p className="text-muted text-xs uppercase tracking-wider font-semibold">{V3_PANEL_TITLE[gate.version]}</p>
         <p className="text-secondary text-sm mt-2">No fights saved under {gate.version} yet. The record starts with the first card after {gate.frozenOn}.</p>
       </div>
     );
   }
   const tile = (label, r, note, tone) => (
-    <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 h-full">
+    <div className="bg-surface border border-line rounded-xl p-4 h-full">
       <p className="text-muted text-xs uppercase tracking-wider font-semibold">{label}</p>
-      <p className={`font-black text-2xl mt-2 ${r.bets === 0 ? 'text-secondary' : r.units >= 0 ? tone : 'text-red-400'}`}>
+      <p className={`font-black text-2xl mt-2 ${r.bets === 0 ? 'text-secondary' : r.units >= 0 ? tone : 'text-bad'}`}>
         {r.bets === 0 ? '—' : fmtRoi(r.roi)}
       </p>
       <p className="text-muted text-xs mt-1 leading-snug">
@@ -1323,16 +1324,16 @@ function V3RecordPanel({ entries, compact = false, gate = ACTIVE_GATE_V3 }) {
     <div className="mb-6">
       <p className="text-muted text-xs font-semibold uppercase tracking-wider mb-3">{V3_PANEL_TITLE[gate.version]}</p>
       <div className={`grid grid-cols-2 ${compact ? 'md:grid-cols-2' : 'lg:grid-cols-4'} gap-4 items-stretch`}>
-        {tile('BET strategy', s, 'hypothetical, 1u', 'text-emerald-400')}
-        {tile('Actual bets', rec.actual, rec.skipped ? `${rec.skipped} skipped` : 'recorded at fight day', 'text-emerald-400')}
-        {!compact && tile('LEAN paper', rec.paper, 'hypothetical, 1u', 'text-yellow-400')}
+        {tile('BET strategy', s, 'hypothetical, 1u', 'text-good')}
+        {tile('Actual bets', rec.actual, rec.skipped ? `${rec.skipped} skipped` : 'recorded at fight day', 'text-good')}
+        {!compact && tile('LEAN paper', rec.paper, 'hypothetical, 1u', 'text-warn')}
         {!compact && tile('Every C6 pick', rec.baseline, 'baseline, 1u', 'text-secondary')}
       </div>
       {(s.bets > 0 || s.clvBets > 0) && (
         <p className="text-muted text-xs mt-2">
           {s.meanCLV != null && (
             <>
-              <span className={s.meanCLV >= 0 ? 'text-emerald-400 font-semibold' : 'text-red-400 font-semibold'}>
+              <span className={s.meanCLV >= 0 ? 'text-good font-semibold' : 'text-bad font-semibold'}>
                 Closing-line value {s.meanCLV >= 0 ? '+' : ''}{s.meanCLV.toFixed(1)}%
               </span>
               {` over ${s.clvBets} BET${s.clvBets === 1 ? '' : 's'} · `}
@@ -1427,7 +1428,7 @@ function StatisticsTab({ entries, prospectNameSet, filterSince, setFilterSince, 
               type="date"
               value={filterSince}
               onChange={e => setFilterSince(e.target.value)}
-              className="bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-1.5 min-h-[44px] sm:min-h-0 sm:h-9 focus:border-red-500"
+              className="bg-surface-2 border border-line-strong text-slate-200 text-sm rounded-lg px-3 py-1.5 min-h-[44px] sm:min-h-0 sm:h-9 focus:border-accent"
             />
             {filterSince && (
               <button
@@ -1452,7 +1453,7 @@ function StatisticsTab({ entries, prospectNameSet, filterSince, setFilterSince, 
       )}
 
       {entries.length === 0 ? (
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-8 text-center text-muted">
+        <div className="bg-surface border border-line rounded-xl p-8 text-center text-muted">
           <BarChart2 size={36} className="mx-auto mb-3 opacity-20" />
           <p className="text-sm">No saved predictions yet.</p>
           <p className="text-xs mt-1">
@@ -1471,11 +1472,11 @@ function StatisticsTab({ entries, prospectNameSet, filterSince, setFilterSince, 
               {summaryV2All.graded} graded ·{' '}
               <span
                 title={`Frozen tracked-decision accuracy across ${summaryV2All.graded} decisive fights. Each fight counts once, frozen at capture.`}
-                className={summaryV2All.accuracy >= 60 ? 'text-emerald-400 font-semibold' : 'text-yellow-400 font-semibold'}
+                className={summaryV2All.accuracy >= 60 ? 'text-good font-semibold' : 'text-warn font-semibold'}
               >
                 {summaryV2All.accuracy.toFixed(1)}% correct
               </span>{' · '}
-              <span className={summaryV2All.roi >= 0 ? 'text-emerald-400 font-semibold' : 'text-red-400 font-semibold'}>
+              <span className={summaryV2All.roi >= 0 ? 'text-good font-semibold' : 'text-bad font-semibold'}>
                 {summaryV2All.roi >= 0 ? '+' : ''}{summaryV2All.roi.toFixed(1)}% ROI ({summaryV2All.profit >= 0 ? '+' : ''}{summaryV2All.profit.toFixed(2)}u)
               </span>
             </p>
@@ -1494,7 +1495,7 @@ function StatisticsTab({ entries, prospectNameSet, filterSince, setFilterSince, 
             <ModelVsMarketBracketChart data={modelView === 'v2' ? modelVsMarketDataV2 : modelVsMarketDataV1} modelLabel={modelView === 'v2' ? 'v2' : 'v1'} />
           </div>
 
-          <details className="group bg-slate-900/50 border border-slate-800 rounded-xl mb-4">
+          <details className="group bg-surface/50 border border-line rounded-xl mb-4">
             <summary className="cursor-pointer select-none px-4 py-3 min-h-[44px] flex items-center text-sm font-semibold text-slate-300 hover:text-white">
               More detail: old-gate bet tiers
             </summary>
@@ -1512,7 +1513,7 @@ function StatisticsTab({ entries, prospectNameSet, filterSince, setFilterSince, 
       <ParlayStatsSection parlayEntries={parlayEntries} roiEntries={entries} />
 
       {entries.length > 0 && (
-        <details className="mt-6 border-t border-slate-800 pt-4 text-xs text-muted">
+        <details className="mt-6 border-t border-line pt-4 text-xs text-muted">
           <summary className="cursor-pointer select-none min-h-[44px] flex items-center font-semibold text-secondary hover:text-white">
             How these numbers are measured
           </summary>
@@ -1553,7 +1554,7 @@ const PROP_RESULT_OPTIONS = [
 ];
 
 const PROP_INPUT_CLS =
-  'w-full bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:border-red-500';
+  'w-full bg-surface-2 border border-line-strong text-slate-200 text-sm rounded-lg px-3 py-2 focus:border-accent';
 const PROP_LABEL_CLS =
   'text-muted text-xs font-semibold uppercase tracking-wider block mb-1.5';
 
@@ -1691,7 +1692,7 @@ function PropEntryForm({
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
         <div>
           <span id={`${formId}-subject-label`} className={PROP_LABEL_CLS}>Prop Subject</span>
-          <div role="group" aria-labelledby={`${formId}-subject-label`} className="flex items-center gap-1 bg-slate-800 rounded-lg p-1">
+          <div role="group" aria-labelledby={`${formId}-subject-label`} className="flex items-center gap-1 bg-surface-2 rounded-lg p-1">
             {sideButtons.map(({ id, label, disabled }) => (
               <button
                 key={id}
@@ -1701,7 +1702,7 @@ function PropEntryForm({
                 title={label}
                 className={`flex-1 min-w-0 px-2 py-1.5 rounded-md text-xs font-semibold transition-colors truncate ${
                   side === id
-                    ? 'bg-red-600 text-white'
+                    ? 'bg-accent text-white'
                     : disabled
                     ? 'text-slate-700 cursor-not-allowed'
                     : 'text-secondary hover:text-white'
@@ -1756,7 +1757,7 @@ function PropEntryForm({
         </div>
       </div>
 
-      <div className="bg-slate-800/40 border border-slate-700/60 rounded-lg px-3 py-2 mb-4">
+      <div className="bg-surface-2/40 border border-line-strong/60 rounded-lg px-3 py-2 mb-4">
         <span className="text-muted text-xs uppercase tracking-wider font-semibold mr-2">This bet</span>
         <span className="text-slate-200 text-sm font-semibold">{previewLabel || '—'}</span>
       </div>
@@ -1766,7 +1767,7 @@ function PropEntryForm({
           onClick={handleSubmit}
           disabled={!canSubmit}
           className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
-            canSubmit ? 'bg-red-600 text-white hover:bg-red-500' : 'bg-slate-800 text-muted cursor-not-allowed'
+            canSubmit ? 'bg-accent text-white hover:bg-accent-hover' : 'bg-surface-2 text-muted cursor-not-allowed'
           }`}
         >
           Log Prop
@@ -1811,13 +1812,13 @@ function PendingPropsSection({ picks, onGrade, onDelete, manualOpen, onToggleMan
       </div>
 
       {canWrite && manualOpen && (
-        <div className="hidden sm:block bg-slate-900 border border-slate-800 rounded-xl p-4 mb-4">
+        <div className="hidden sm:block bg-surface border border-line rounded-xl p-4 mb-4">
           <PropEntryForm mode="manual" allFighters={allFighters} onAdd={onAddManual} onCancel={onToggleManual} />
         </div>
       )}
 
       {picks.length === 0 ? (
-        <div className="bg-slate-900/50 border border-slate-800 rounded-xl p-6 text-center text-muted">
+        <div className="bg-surface/50 border border-line rounded-xl p-6 text-center text-muted">
           <p className="text-sm">No pending props.</p>
           <p className="text-xs mt-1">
             Click <span className="text-secondary font-semibold">+ Prop</span> on a fight card above, or log one manually.
@@ -1830,7 +1831,7 @@ function PendingPropsSection({ picks, onGrade, onDelete, manualOpen, onToggleMan
             const matchup = pick.fighterB ? `${pick.fighterA} vs. ${pick.fighterB}` : (pick.fighterA || '—');
             const stake = Number(pick.stake) || 1;
             return (
-              <div key={pick.id} className="bg-slate-900 border border-slate-800 rounded-xl p-4 flex items-start justify-between gap-4">
+              <div key={pick.id} className="bg-surface border border-line rounded-xl p-4 flex items-start justify-between gap-4">
                 <div>
                   <p className="text-white font-bold text-sm">{label}</p>
                   <p className="text-muted text-xs mt-1">
@@ -1846,7 +1847,7 @@ function PendingPropsSection({ picks, onGrade, onDelete, manualOpen, onToggleMan
                     aria-label={`Result for prop ${label} in ${matchup}`}
                     value={pick.result}
                     onChange={(e) => onGrade(pick.id, e.target.value)}
-                    className="bg-slate-800 border border-slate-700 text-slate-200 text-xs rounded-lg px-2 py-1.5 focus:border-red-500 cursor-pointer"
+                    className="bg-surface-2 border border-line-strong text-slate-200 text-xs rounded-lg px-2 py-1.5 focus:border-accent cursor-pointer"
                   >
                     {PROP_RESULT_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
                   </select>
@@ -1857,7 +1858,7 @@ function PendingPropsSection({ picks, onGrade, onDelete, manualOpen, onToggleMan
                         onDelete(pick.id);
                       }
                     }}
-                    className="text-muted hover:text-red-400 text-xs"
+                    className="text-muted hover:text-bad text-xs"
                   >
                     Delete
                   </button>
@@ -1878,7 +1879,7 @@ function PropBetsPanel({ picks, onGrade, onDelete, canWrite }) {
   const confirm = useConfirm();
   if (picks.length === 0) {
     return (
-      <div className="bg-slate-900 border border-slate-800 rounded-xl p-8 text-center text-muted">
+      <div className="bg-surface border border-line rounded-xl p-8 text-center text-muted">
         <ClipboardList size={36} className="mx-auto mb-3 opacity-20" />
         <p className="text-sm">No graded prop bets yet.</p>
         <p className="text-xs mt-1">
@@ -1888,11 +1889,11 @@ function PropBetsPanel({ picks, onGrade, onDelete, canWrite }) {
     );
   }
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+    <div className="bg-surface border border-line rounded-xl overflow-hidden">
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="text-muted text-xs uppercase tracking-wider border-b border-slate-800">
+            <tr className="text-muted text-xs uppercase tracking-wider border-b border-line">
               <th scope="col" className="text-left font-semibold px-4 py-3">Prop</th>
               <th scope="col" className="text-left font-semibold px-4 py-3">Matchup</th>
               <th scope="col" className="text-left font-semibold px-4 py-3">Result</th>
@@ -1912,7 +1913,7 @@ function PropBetsPanel({ picks, onGrade, onDelete, canWrite }) {
               const profit = propPickProfit(pick);
               const graded = pick.result !== 'PENDING';
               return (
-                <tr key={pick.id} className="border-b border-slate-800/60 last:border-0">
+                <tr key={pick.id} className="border-b border-line/60 last:border-0">
                   <td className="px-4 py-3 text-slate-200 font-semibold">{label}</td>
                   <td className="px-4 py-3 text-secondary whitespace-nowrap">{matchup}</td>
                   <td className="px-4 py-3">
@@ -1921,7 +1922,7 @@ function PropBetsPanel({ picks, onGrade, onDelete, canWrite }) {
                       aria-label={`Result for prop ${label} in ${matchup}`}
                       value={pick.result}
                       onChange={(e) => onGrade(pick.id, e.target.value)}
-                      className="hidden sm:inline-block bg-slate-800 border border-slate-700 text-slate-200 text-xs rounded-lg px-2 py-1.5 focus:border-red-500 cursor-pointer"
+                      className="hidden sm:inline-block bg-surface-2 border border-line-strong text-slate-200 text-xs rounded-lg px-2 py-1.5 focus:border-accent cursor-pointer"
                     >
                       {PROP_RESULT_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
                     </select>
@@ -1931,7 +1932,7 @@ function PropBetsPanel({ picks, onGrade, onDelete, canWrite }) {
                   </td>
                   <td className="px-4 py-3 text-secondary whitespace-nowrap">{pick.odds} · {stake}u</td>
                   <td className={`px-4 py-3 text-right font-bold whitespace-nowrap ${
-                    !graded ? 'text-muted' : profit > 0 ? 'text-emerald-400' : profit < 0 ? 'text-red-400' : 'text-secondary'
+                    !graded ? 'text-muted' : profit > 0 ? 'text-good' : profit < 0 ? 'text-bad' : 'text-secondary'
                   }`}>
                     {!graded ? '—' : pick.result === 'PUSH' ? 'Push' : `${profit > 0 ? '+' : ''}${profit.toFixed(2)}u`}
                   </td>
@@ -1947,7 +1948,7 @@ function PropBetsPanel({ picks, onGrade, onDelete, canWrite }) {
                           onDelete(pick.id);
                         }
                       }}
-                      className="hidden sm:inline text-muted hover:text-red-400 text-xs"
+                      className="hidden sm:inline text-muted hover:text-bad text-xs"
                     >
                       Delete
                     </button>
@@ -1971,10 +1972,10 @@ function PropBetsPanel({ picks, onGrade, onDelete, canWrite }) {
 // every render via computeParlayResult; nothing here freezes a result onto
 // the entry (that happens only at export time, a later commit).
 const PARLAY_STATUS_BADGE_CLS = {
-  PENDING: 'bg-slate-800 text-secondary border-slate-700',
-  WIN: 'bg-emerald-900/30 text-emerald-400 border-emerald-800',
-  LOSS: 'bg-red-900/30 text-red-400 border-red-800',
-  NEEDS_REVIEW: 'bg-amber-900/30 text-amber-400 border-amber-800',
+  PENDING: 'bg-surface-2 text-secondary border-line-strong',
+  WIN: 'bg-emerald-900/30 text-good border-emerald-800',
+  LOSS: 'bg-red-900/30 text-bad border-red-800',
+  NEEDS_REVIEW: 'bg-amber-900/30 text-warn border-amber-800',
 };
 
 // showSummary: the Graded/Win Rate/Net Units/ROI banner is a performance-
@@ -1992,7 +1993,7 @@ function ParlaysPanel({ parlayEntries, roiEntries, onDelete, showSummary = true 
 
   if (parlayEntries.length === 0) {
     return (
-      <div className="bg-slate-900 border border-slate-800 rounded-xl p-8 text-center text-muted">
+      <div className="bg-surface border border-line rounded-xl p-8 text-center text-muted">
         <ClipboardList size={36} className="mx-auto mb-3 opacity-20" />
         <p className="text-sm">No parlays yet.</p>
         <p className="text-xs mt-1">
@@ -2007,26 +2008,26 @@ function ParlaysPanel({ parlayEntries, roiEntries, onDelete, showSummary = true 
       {showSummary && (
         <>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-3 items-stretch">
-            <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 h-full">
+            <div className="bg-surface border border-line rounded-xl p-4 h-full">
               <p className="text-muted text-xs uppercase tracking-wider font-semibold">Graded Parlays</p>
               <p className="font-black text-2xl mt-2 text-white">{summary.graded}</p>
             </div>
-            <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 h-full">
+            <div className="bg-surface border border-line rounded-xl p-4 h-full">
               <p className="text-muted text-xs uppercase tracking-wider font-semibold">Win Rate</p>
-              <p className="font-black text-2xl mt-2 text-blue-400">
+              <p className="font-black text-2xl mt-2 text-info">
                 {summary.graded ? `${summary.winRate.toFixed(1)}%` : '—'}
               </p>
               <p className="text-muted text-xs mt-1">{summary.wins}W of {summary.graded} graded</p>
             </div>
-            <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 h-full">
+            <div className="bg-surface border border-line rounded-xl p-4 h-full">
               <p className="text-muted text-xs uppercase tracking-wider font-semibold">Net Units</p>
-              <p className={`font-black text-2xl mt-2 ${summary.netUnits >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+              <p className={`font-black text-2xl mt-2 ${summary.netUnits >= 0 ? 'text-good' : 'text-bad'}`}>
                 {summary.netUnits >= 0 ? '+' : ''}{summary.netUnits.toFixed(2)}u
               </p>
             </div>
-            <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 h-full">
+            <div className="bg-surface border border-line rounded-xl p-4 h-full">
               <p className="text-muted text-xs uppercase tracking-wider font-semibold">ROI</p>
-              <p className={`font-black text-2xl mt-2 ${summary.roi >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+              <p className={`font-black text-2xl mt-2 ${summary.roi >= 0 ? 'text-good' : 'text-bad'}`}>
                 {summary.staked > 0 ? `${summary.roi >= 0 ? '+' : ''}${summary.roi.toFixed(1)}%` : '—'}
               </p>
             </div>
@@ -2051,7 +2052,7 @@ function ParlaysPanel({ parlayEntries, roiEntries, onDelete, showSummary = true 
           }
           const badgeLabel = derived.status === 'PENDING' ? 'PENDING' : derived.result;
           return (
-            <div key={parlay.id} className="bg-slate-900 border border-slate-800 rounded-xl p-4">
+            <div key={parlay.id} className="bg-surface border border-line rounded-xl p-4">
               <div className="flex items-start justify-between gap-4 mb-3">
                 <div>
                   <p className="text-white font-bold text-sm">{parlay.eventName}</p>
@@ -2079,7 +2080,7 @@ function ParlaysPanel({ parlayEntries, roiEntries, onDelete, showSummary = true 
                           onDelete(parlay.id);
                         }
                       }}
-                      className="hidden sm:inline text-muted hover:text-red-400 text-xs"
+                      className="hidden sm:inline text-muted hover:text-bad text-xs"
                     >
                       Delete
                     </button>
@@ -2099,11 +2100,11 @@ function ParlaysPanel({ parlayEntries, roiEntries, onDelete, showSummary = true 
                     : 'incorrect';
                   const legStatusCls =
                     legStatus === 'correct'
-                      ? 'text-emerald-400 font-semibold'
+                      ? 'text-good font-semibold'
                       : legStatus === 'incorrect'
-                      ? 'text-red-400 font-semibold'
+                      ? 'text-bad font-semibold'
                       : legStatus === 'push'
-                      ? 'text-amber-400 font-semibold'
+                      ? 'text-warn font-semibold'
                       : 'text-muted';
                   const legStatusLabel =
                     legStatus === 'correct'
@@ -2116,7 +2117,7 @@ function ParlaysPanel({ parlayEntries, roiEntries, onDelete, showSummary = true 
                   return (
                     <div
                       key={leg.fightId}
-                      className="flex items-center justify-between text-xs bg-slate-800/40 rounded-lg px-3 py-2"
+                      className="flex items-center justify-between text-xs bg-surface-2/40 rounded-lg px-3 py-2"
                     >
                       <span className="text-slate-300">
                         {leg.pickedFighter}
@@ -2130,7 +2131,7 @@ function ParlaysPanel({ parlayEntries, roiEntries, onDelete, showSummary = true 
 
               <p
                 className={`text-right font-bold text-sm ${
-                  profit == null ? 'text-muted' : profit > 0 ? 'text-emerald-400' : profit < 0 ? 'text-red-400' : 'text-secondary'
+                  profit == null ? 'text-muted' : profit > 0 ? 'text-good' : profit < 0 ? 'text-bad' : 'text-secondary'
                 }`}
               >
                 {profit == null ? '—' : `${profit > 0 ? '+' : ''}${profit.toFixed(2)}u`}
@@ -2153,7 +2154,7 @@ function PropStatsSection({ picks }) {
   const hasLowSample = breakdown.some((b) => b.decisive > 0 && b.decisive < ROI_ANALYTICS_LOW_N);
 
   return (
-    <div className="mt-10 pt-8 border-t border-slate-800">
+    <div className="mt-10 pt-8 border-t border-line">
       <div className="flex items-center gap-2 mb-1">
         <ClipboardList size={18} className="text-secondary" />
         <h3 className="text-white font-black text-lg">Prop Bets</h3>
@@ -2163,46 +2164,46 @@ function PropStatsSection({ picks }) {
       </p>
 
       {picks.length === 0 ? (
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-8 text-center text-muted">
+        <div className="bg-surface border border-line rounded-xl p-8 text-center text-muted">
           <p className="text-sm">No prop bets logged yet.</p>
           <p className="text-xs mt-1">Add one from the Upcoming tab.</p>
         </div>
       ) : (
         <>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6 items-stretch">
-            <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 h-full">
+            <div className="bg-surface border border-line rounded-xl p-4 h-full">
               <p className="text-muted text-xs uppercase tracking-wider font-semibold">Graded Props</p>
               <p className="font-black text-2xl mt-2 text-white">{summary.total}</p>
             </div>
-            <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 h-full">
+            <div className="bg-surface border border-line rounded-xl p-4 h-full">
               <p className="text-muted text-xs uppercase tracking-wider font-semibold">Win Rate</p>
-              <p className="font-black text-2xl mt-2 text-blue-400">
+              <p className="font-black text-2xl mt-2 text-info">
                 {summary.graded ? `${summary.winRate.toFixed(1)}%` : '—'}
               </p>
               <p className="text-muted text-xs mt-1">{summary.wins}W of {summary.graded} graded</p>
             </div>
-            <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 h-full">
+            <div className="bg-surface border border-line rounded-xl p-4 h-full">
               <p className="text-muted text-xs uppercase tracking-wider font-semibold">Net Units</p>
-              <p className={`font-black text-2xl mt-2 ${summary.netUnits >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+              <p className={`font-black text-2xl mt-2 ${summary.netUnits >= 0 ? 'text-good' : 'text-bad'}`}>
                 {summary.netUnits >= 0 ? '+' : ''}{summary.netUnits.toFixed(2)}u
               </p>
             </div>
-            <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 h-full">
+            <div className="bg-surface border border-line rounded-xl p-4 h-full">
               <p className="text-muted text-xs uppercase tracking-wider font-semibold">ROI</p>
-              <p className={`font-black text-2xl mt-2 ${summary.roi >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+              <p className={`font-black text-2xl mt-2 ${summary.roi >= 0 ? 'text-good' : 'text-bad'}`}>
                 {summary.staked > 0 ? `${summary.roi >= 0 ? '+' : ''}${summary.roi.toFixed(1)}%` : '—'}
               </p>
             </div>
           </div>
 
-          <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
-            <div className="px-4 py-3 border-b border-slate-800">
+          <div className="bg-surface border border-line rounded-xl overflow-hidden">
+            <div className="px-4 py-3 border-b border-line">
               <p className="text-muted text-xs uppercase tracking-wider font-semibold">By Prop Type</p>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="text-muted text-xs uppercase tracking-wider border-b border-slate-800">
+                  <tr className="text-muted text-xs uppercase tracking-wider border-b border-line">
                     <th scope="col" className="text-left font-semibold px-4 py-3">Type</th>
                     <th scope="col" className="text-right font-semibold px-4 py-3">Count</th>
                     <th scope="col" className="text-right font-semibold px-4 py-3">Win Rate</th>
@@ -2214,14 +2215,14 @@ function PropStatsSection({ picks }) {
                   {breakdown.map((b) => {
                     const lowN = b.decisive > 0 && b.decisive < ROI_ANALYTICS_LOW_N;
                     return (
-                      <tr key={b.type} className="border-b border-slate-800/60 last:border-0">
+                      <tr key={b.type} className="border-b border-line/60 last:border-0">
                         <td className="px-4 py-3 text-slate-200 font-semibold">{b.type}</td>
                         <td className="px-4 py-3 text-right text-slate-300">{b.count}</td>
                         <td className={`px-4 py-3 text-right ${lowN ? 'text-muted' : 'text-slate-300'}`}>
                           {b.decisive ? `${b.winRate.toFixed(1)}%${lowN ? ' *' : ''}` : '—'}
                         </td>
                         <td className="px-4 py-3 text-right text-slate-300">{b.staked.toFixed(2)}u</td>
-                        <td className={`px-4 py-3 text-right font-bold ${b.netUnits >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                        <td className={`px-4 py-3 text-right font-bold ${b.netUnits >= 0 ? 'text-good' : 'text-bad'}`}>
                           {b.netUnits >= 0 ? '+' : ''}{b.netUnits.toFixed(2)}u
                         </td>
                       </tr>
@@ -2261,7 +2262,7 @@ function ParlayStatsSection({ parlayEntries, roiEntries }) {
   );
 
   return (
-    <div className="mt-10 pt-8 border-t border-slate-800">
+    <div className="mt-10 pt-8 border-t border-line">
       <div className="flex items-center gap-2 mb-1">
         <ClipboardList size={18} className="text-secondary" />
         <h3 className="text-white font-black text-lg">Parlays</h3>
@@ -2271,33 +2272,33 @@ function ParlayStatsSection({ parlayEntries, roiEntries }) {
       </p>
 
       {parlayEntries.length === 0 ? (
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-8 text-center text-muted">
+        <div className="bg-surface border border-line rounded-xl p-8 text-center text-muted">
           <p className="text-sm">No parlays logged yet.</p>
           <p className="text-xs mt-1">Build one from the Upcoming tab.</p>
         </div>
       ) : (
         <>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-2 items-stretch">
-            <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 h-full">
+            <div className="bg-surface border border-line rounded-xl p-4 h-full">
               <p className="text-muted text-xs uppercase tracking-wider font-semibold">Graded Parlays</p>
               <p className="font-black text-2xl mt-2 text-white">{summary.graded}</p>
             </div>
-            <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 h-full">
+            <div className="bg-surface border border-line rounded-xl p-4 h-full">
               <p className="text-muted text-xs uppercase tracking-wider font-semibold">Win Rate</p>
-              <p className="font-black text-2xl mt-2 text-blue-400">
+              <p className="font-black text-2xl mt-2 text-info">
                 {summary.graded ? `${summary.winRate.toFixed(1)}%` : '—'}
               </p>
               <p className="text-muted text-xs mt-1">{summary.wins}W of {summary.graded} graded</p>
             </div>
-            <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 h-full">
+            <div className="bg-surface border border-line rounded-xl p-4 h-full">
               <p className="text-muted text-xs uppercase tracking-wider font-semibold">Net Units</p>
-              <p className={`font-black text-2xl mt-2 ${summary.netUnits >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+              <p className={`font-black text-2xl mt-2 ${summary.netUnits >= 0 ? 'text-good' : 'text-bad'}`}>
                 {summary.netUnits >= 0 ? '+' : ''}{summary.netUnits.toFixed(2)}u
               </p>
             </div>
-            <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 h-full">
+            <div className="bg-surface border border-line rounded-xl p-4 h-full">
               <p className="text-muted text-xs uppercase tracking-wider font-semibold">ROI</p>
-              <p className={`font-black text-2xl mt-2 ${summary.roi >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+              <p className={`font-black text-2xl mt-2 ${summary.roi >= 0 ? 'text-good' : 'text-bad'}`}>
                 {summary.staked > 0 ? `${summary.roi >= 0 ? '+' : ''}${summary.roi.toFixed(1)}%` : '—'}
               </p>
             </div>
@@ -2321,16 +2322,16 @@ const fmtCtrl = (s) => {
 };
 const stanceColor = (s) =>
   s === 'Southpaw'
-    ? 'text-blue-400'
+    ? 'text-info'
     : s === 'Switch'
     ? 'text-purple-400'
     : 'text-slate-300';
 
 const methodColor = (m) => {
   if (!m) return 'text-secondary';
-  if (m === 'KO' || m === 'TKO-Dr') return 'text-red-400';
+  if (m === 'KO' || m === 'TKO-Dr') return 'text-bad';
   if (m === 'Sub') return 'text-purple-400';
-  if (m.startsWith('Dec')) return 'text-blue-400';
+  if (m.startsWith('Dec')) return 'text-info';
   return 'text-secondary';
 };
 export const MODEL_VERSION = 'DrossPom Composite v1.0 · Logistic v2.0';
@@ -2361,7 +2362,7 @@ function UnitsStakedInput({ value, onCommit, id, ariaLabel, describedBy }) {
         if (raw !== '' && !Number.isNaN(n) && n !== value) onCommit(n);
         else setRaw(String(value));
       }}
-      className="w-20 bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-1.5 focus:border-red-500"
+      className="w-20 bg-surface-2 border border-line-strong text-slate-200 text-sm rounded-lg px-3 py-1.5 focus:border-accent"
     />
   );
 }
@@ -2426,7 +2427,7 @@ function FightDayCheck({ entry, onUpdateEntry, canWrite }) {
 
   if (ex) {
     return (
-      <div className="border-t border-slate-800 pt-3 mt-3 flex items-center justify-between gap-3 flex-wrap">
+      <div className="border-t border-line pt-3 mt-3 flex items-center justify-between gap-3 flex-wrap">
         <p className="text-xs text-secondary">
           <span className="text-muted font-semibold uppercase tracking-wider mr-2">Fight day</span>
           {ex.status === 'placed'
@@ -2456,10 +2457,10 @@ function FightDayCheck({ entry, onUpdateEntry, canWrite }) {
 
   if (!open) {
     return (
-      <div className="border-t border-slate-800 pt-3 mt-3">
+      <div className="border-t border-line pt-3 mt-3">
         <button
           onClick={() => setOpen(true)}
-          className="px-3 py-1.5 rounded-lg border border-slate-700 text-secondary text-xs font-semibold hover:text-white hover:border-slate-600 transition-colors"
+          className="px-3 py-1.5 rounded-lg border border-line-strong text-secondary text-xs font-semibold hover:text-white hover:border-line-strong transition-colors"
         >
           Fight-day check
         </button>
@@ -2481,10 +2482,10 @@ function FightDayCheck({ entry, onUpdateEntry, canWrite }) {
       setError(e.message.replace(/^buildExecution: /, ''));
     }
   };
-  const input = 'w-24 bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-1.5 focus:border-red-500';
+  const input = 'w-24 bg-surface-2 border border-line-strong text-slate-200 text-sm rounded-lg px-3 py-1.5 focus:border-accent';
 
   return (
-    <div className="border-t border-slate-800 pt-3 mt-3 space-y-3">
+    <div className="border-t border-line pt-3 mt-3 space-y-3">
       <div className="flex items-end gap-3 flex-wrap">
         <label className="text-xs text-muted">
           <span className="block mb-1">{entry.fighterA}</span>
@@ -2494,7 +2495,7 @@ function FightDayCheck({ entry, onUpdateEntry, canWrite }) {
           <span className="block mb-1">{entry.fighterB}</span>
           <input aria-label={`Fight-day odds for ${entry.fighterB}`} value={oddsB} onChange={(e) => setOddsB(e.target.value)} className={input} />
         </label>
-        <button onClick={runCheck} className="px-3 py-1.5 rounded-lg bg-red-600 text-white text-xs font-semibold hover:bg-red-500">
+        <button onClick={runCheck} className="px-3 py-1.5 rounded-lg bg-accent text-white text-xs font-semibold hover:bg-accent-hover">
           Re-check
         </button>
         <button onClick={() => { setOpen(false); setCheck(null); }} className="text-muted hover:text-white text-xs font-semibold">
@@ -2502,9 +2503,9 @@ function FightDayCheck({ entry, onUpdateEntry, canWrite }) {
         </button>
       </div>
       {check && (
-        <div className="bg-slate-800/40 rounded-lg p-3 space-y-2">
+        <div className="bg-surface-2/40 rounded-lg p-3 space-y-2">
           <p className="text-sm">
-            <span className={`font-black ${check.tier === 'BET' ? 'text-emerald-400' : check.tier === 'LEAN' ? 'text-yellow-400' : 'text-secondary'}`}>
+            <span className={`font-black ${check.tier === 'BET' ? 'text-good' : check.tier === 'LEAN' ? 'text-warn' : 'text-secondary'}`}>
               {check.tier}
             </span>
             {check.fighter ? <span className="text-white font-semibold"> · {check.fighter}</span> : null}
@@ -2536,18 +2537,18 @@ function FightDayCheck({ entry, onUpdateEntry, canWrite }) {
             )}
             <label className="text-xs text-muted">
               <span className="block mb-1">Skip reason</span>
-              <select aria-label="Skip reason" value={skipReason} onChange={(e) => setSkipReason(e.target.value)} className="bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-2 py-1.5">
+              <select aria-label="Skip reason" value={skipReason} onChange={(e) => setSkipReason(e.target.value)} className="bg-surface-2 border border-line-strong text-slate-200 text-sm rounded-lg px-2 py-1.5">
                 {SKIP_REASONS.map((r) => <option key={r} value={r}>{SKIP_REASON_LABELS[r]}</option>)}
               </select>
             </label>
             <button
               onClick={() => save({ placed: false, skipReason })}
-              className="px-3 py-1.5 rounded-lg border border-slate-700 text-secondary text-xs font-semibold hover:text-white"
+              className="px-3 py-1.5 rounded-lg border border-line-strong text-secondary text-xs font-semibold hover:text-white"
             >
               Record skip
             </button>
           </div>
-          {error && <p className="text-red-400 text-xs">{error}</p>}
+          {error && <p className="text-bad text-xs">{error}</p>}
         </div>
       )}
     </div>
@@ -2610,14 +2611,14 @@ function BuildParlayPanel({ legInputs, onConfirm, onCancel }) {
 
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-      <div role="dialog" aria-modal="true" aria-labelledby={`${formId}-title`} className="bg-slate-900 border border-slate-800 rounded-xl p-5 max-w-lg w-full max-h-[85vh] overflow-y-auto">
+      <div role="dialog" aria-modal="true" aria-labelledby={`${formId}-title`} className="bg-surface border border-line rounded-xl p-5 max-w-lg w-full max-h-[85vh] overflow-y-auto">
         <h3 id={`${formId}-title`} className="text-white font-black text-lg mb-4">Build Parlay</h3>
 
         <div className="space-y-3 mb-4">
           {picks.map((p) => (
-            <div key={p.fightId} className="bg-slate-800/40 rounded-lg p-3">
+            <div key={p.fightId} className="bg-surface-2/40 rounded-lg p-3">
               <p className="text-muted text-xs mb-2">{p.fighterA} vs. {p.fighterB}</p>
-              <div className="flex items-center gap-1 bg-slate-800 rounded-lg p-1">
+              <div className="flex items-center gap-1 bg-surface-2 rounded-lg p-1">
                 {[p.fighterA, p.fighterB].map((fighter) => (
                   <button
                     key={fighter}
@@ -2625,7 +2626,7 @@ function BuildParlayPanel({ legInputs, onConfirm, onCancel }) {
                     aria-pressed={p.pickedFighter === fighter}
                     className={`flex-1 min-w-0 px-2 py-1.5 rounded-md text-xs font-semibold transition-colors truncate ${
                       p.pickedFighter === fighter
-                        ? 'bg-red-600 text-white'
+                        ? 'bg-accent text-white'
                         : 'text-secondary hover:text-white'
                     }`}
                   >
@@ -2682,7 +2683,7 @@ function BuildParlayPanel({ legInputs, onConfirm, onCancel }) {
             onClick={handleConfirm}
             disabled={!canSubmit}
             className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
-              canSubmit ? 'bg-red-600 text-white hover:bg-red-500' : 'bg-slate-800 text-muted cursor-not-allowed'
+              canSubmit ? 'bg-accent text-white hover:bg-accent-hover' : 'bg-surface-2 text-muted cursor-not-allowed'
             }`}
           >
             Confirm Parlay
@@ -2935,7 +2936,7 @@ function UpcomingEventTab({
         </div>
       </div>
 
-      <div role="tablist" aria-label="Upcoming sections" className="flex items-center flex-wrap gap-1 bg-slate-800 rounded-lg p-1 mb-4 w-fit">
+      <div role="tablist" aria-label="Upcoming sections" className="flex items-center flex-wrap gap-1 bg-surface-2 rounded-lg p-1 mb-4 w-fit">
         {[
           { id: 'fights', label: 'Upcoming Fights' },
           { id: 'props', label: 'Props' },
@@ -2948,7 +2949,7 @@ function UpcomingEventTab({
             onClick={() => setSubTab(id)}
             className={`inline-flex items-center justify-center min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0 whitespace-nowrap px-3 py-1.5 rounded-md text-xs font-semibold transition-colors ${
               subTab === id
-                ? 'bg-red-600 text-white'
+                ? 'bg-accent text-white'
                 : 'text-secondary hover:text-white'
             }`}
           >
@@ -2958,7 +2959,7 @@ function UpcomingEventTab({
       </div>
 
       {canWrite && subTab === 'fights' && selectedLegIds.size > 0 && (
-        <div className="hidden sm:flex items-center justify-between bg-slate-900 border border-red-800/60 rounded-xl px-4 py-3 mb-4">
+        <div className="hidden sm:flex items-center justify-between bg-surface border border-red-800/60 rounded-xl px-4 py-3 mb-4">
           <p className="text-secondary text-sm">
             {selectedLegIds.size} leg{selectedLegIds.size === 1 ? '' : 's'} selected
             {lockedEventName ? ` · ${lockedEventName}` : ''}
@@ -2973,7 +2974,7 @@ function UpcomingEventTab({
             {selectedLegIds.size >= 2 && (
               <button
                 onClick={() => setShowBuildParlay(true)}
-                className="px-3 py-1.5 rounded-lg bg-red-600 text-white text-xs font-semibold hover:bg-red-500 transition-colors"
+                className="px-3 py-1.5 rounded-lg bg-accent text-white text-xs font-semibold hover:bg-accent-hover transition-colors"
               >
                 Build Parlay
               </button>
@@ -2983,7 +2984,7 @@ function UpcomingEventTab({
       )}
 
       {subTab === 'fights' && (entries.length === 0 ? (
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-8 text-center text-muted">
+        <div className="bg-surface border border-line rounded-xl p-8 text-center text-muted">
           <Zap size={36} className="mx-auto mb-3 opacity-20" />
           <p className="text-sm">No upcoming picks saved.</p>
           <p className="text-xs mt-1">
@@ -3004,11 +3005,11 @@ function UpcomingEventTab({
             }
             if (byEvent.size === 0) return null;
             return (
-              <div className="bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 space-y-1">
+              <div className="bg-surface border border-line rounded-xl px-4 py-3 space-y-1">
                 {[...byEvent].map(([name, c]) => (
                   <p key={name} className="text-sm text-secondary">
                     <span className="text-white font-semibold">{name}:</span>{' '}
-                    <span className={c.BET ? 'text-emerald-400 font-semibold' : ''}>{c.BET} BET</span>
+                    <span className={c.BET ? 'text-good font-semibold' : ''}>{c.BET} BET</span>
                     {' · '}{c.LEAN} LEAN{' · '}{c['NO BET']} no bet
                   </p>
                 ))}
@@ -3029,7 +3030,7 @@ function UpcomingEventTab({
             const c6Agrees = v2Pick === predictedWinner;
 
             return (
-              <div key={entry.id} className={`bg-slate-900 border ${tier.border} rounded-xl p-5`}>
+              <div key={entry.id} className={`bg-surface border ${tier.border} rounded-xl p-5`}>
                 {/* Header */}
                 <div className="flex items-start justify-between gap-4 mb-4">
                   <div className="flex items-start gap-3">
@@ -3054,7 +3055,7 @@ function UpcomingEventTab({
                         <h3 className="text-white font-black text-lg">
                           {entry.fighterA} vs. {entry.fighterB}
                         </h3>
-                        <span className="text-xs font-bold px-2 py-0.5 rounded-full border bg-slate-800 text-secondary border-slate-700">
+                        <span className="text-xs font-bold px-2 py-0.5 rounded-full border bg-surface-2 text-secondary border-line-strong">
                           Pending
                         </span>
                       </div>
@@ -3072,8 +3073,8 @@ function UpcomingEventTab({
                       onClick={() => setPropFormFor((id) => (id === entry.id ? null : entry.id))}
                       className={`px-3 py-1.5 rounded-lg border text-xs font-semibold transition-colors ${
                         propFormFor === entry.id
-                          ? 'border-red-600 text-red-400'
-                          : 'border-slate-700 text-muted hover:text-white hover:border-slate-600'
+                          ? 'border-red-600 text-bad'
+                          : 'border-line-strong text-muted hover:text-white hover:border-line-strong'
                       }`}
                     >
                       {propFormFor === entry.id ? 'Cancel Prop' : '+ Prop'}
@@ -3086,7 +3087,7 @@ function UpcomingEventTab({
                           onDelete(entry.id);
                         }
                       }}
-                      className="px-3 py-1.5 rounded-lg border border-slate-700 text-muted text-xs font-semibold hover:text-white hover:border-slate-600 transition-colors"
+                      className="px-3 py-1.5 rounded-lg border border-line-strong text-muted text-xs font-semibold hover:text-white hover:border-line-strong transition-colors"
                     >
                       Delete
                     </button>
@@ -3096,7 +3097,7 @@ function UpcomingEventTab({
 
                 {/* Model Pick (v3: v2's opinion, with C6 agreement) */}
                 {isV3 ? (
-                <div className="bg-slate-800/40 rounded-lg p-4 mb-3 flex items-baseline justify-between gap-3">
+                <div className="bg-surface-2/40 rounded-lg p-4 mb-3 flex items-baseline justify-between gap-3">
                   <div>
                     <div className="flex items-center gap-2">
                       <p className="text-muted text-xs uppercase tracking-wider">v2 Opinion</p>
@@ -3104,7 +3105,7 @@ function UpcomingEventTab({
                         title={`C6 (v2 blended with the no-vig market) picks ${predictedWinner} at ${(winProb * 100).toFixed(1)}%.`}
                         className={`text-[11px] font-bold px-1.5 py-0.5 rounded-sm uppercase border ${
                           c6Agrees
-                            ? 'text-secondary bg-slate-800 border-slate-700'
+                            ? 'text-secondary bg-surface-2 border-line-strong'
                             : 'text-amber-300 bg-amber-900/30 border-amber-700/50'
                         }`}
                       >
@@ -3114,12 +3115,12 @@ function UpcomingEventTab({
                     <p className="text-white font-black text-xl mt-1">{v2Pick}</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-emerald-400 font-black text-lg">{(mp.v2WinProb * 100).toFixed(1)}%</p>
+                    <p className="text-good font-black text-lg">{(mp.v2WinProb * 100).toFixed(1)}%</p>
                     <p className="text-muted text-xs mt-0.5">win prob</p>
                   </div>
                 </div>
                 ) : (
-                <div className="bg-slate-800/40 rounded-lg p-4 mb-3 flex items-baseline justify-between gap-3">
+                <div className="bg-surface-2/40 rounded-lg p-4 mb-3 flex items-baseline justify-between gap-3">
                   <div>
                     <div className="flex items-center gap-2">
                       <p className="text-muted text-xs uppercase tracking-wider">
@@ -3143,7 +3144,7 @@ function UpcomingEventTab({
                     <p className="text-white font-black text-xl mt-1">{predictedWinner}</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-emerald-400 font-black text-lg">
+                    <p className="text-good font-black text-lg">
                       {(winProb * 100).toFixed(1)}%
                     </p>
                     <p className="text-muted text-xs mt-0.5">
@@ -3155,7 +3156,7 @@ function UpcomingEventTab({
 
                 {/* Bet Rec + Market Odds */}
                 <div className="grid grid-cols-2 gap-3 mb-4">
-                  <div className="bg-slate-800/40 rounded-lg p-3">
+                  <div className="bg-surface-2/40 rounded-lg p-3">
                     <p className="text-muted text-xs uppercase tracking-wider">Bet Rec</p>
                     {isV3 ? (
                       <>
@@ -3163,10 +3164,10 @@ function UpcomingEventTab({
                           <span
                             className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-black ${
                               betAction === 'BET'
-                                ? 'bg-emerald-900/30 text-emerald-400 border border-emerald-800'
+                                ? 'bg-emerald-900/30 text-good border border-emerald-800'
                                 : betAction === 'LEAN'
-                                ? 'bg-yellow-900/30 text-yellow-400 border border-yellow-800'
-                                : 'bg-slate-800 text-secondary border border-slate-700'
+                                ? 'bg-yellow-900/30 text-warn border border-yellow-800'
+                                : 'bg-surface-2 text-secondary border border-line-strong'
                             }`}
                           >
                             {betAction === 'BET' || betAction === 'LEAN' ? betAction : 'No bet'}
@@ -3182,8 +3183,8 @@ function UpcomingEventTab({
                               betAction === 'STRONG BET'
                                 ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
                                 : betAction === 'BET'
-                                ? 'bg-emerald-900/30 text-emerald-400 border border-emerald-800'
-                                : 'bg-yellow-900/30 text-yellow-400 border border-yellow-800'
+                                ? 'bg-emerald-900/30 text-good border border-emerald-800'
+                                : 'bg-yellow-900/30 text-warn border border-yellow-800'
                             }`}
                           >
                             {betAction}
@@ -3195,7 +3196,7 @@ function UpcomingEventTab({
                       <p className="text-muted font-bold text-sm mt-2">No Bet</p>
                     )}
                   </div>
-                  <div className="bg-slate-800/40 rounded-lg p-3">
+                  <div className="bg-surface-2/40 rounded-lg p-3">
                     <p className="text-muted text-xs">Market odds</p>
                     {(() => {
                       const md = upcomingMarketDisplay(entry, { isV3, predictedWinner, pickEdge });
@@ -3218,7 +3219,7 @@ function UpcomingEventTab({
 
                 {/* Actual Winner + Units Staked */}
                 {!canWrite ? (
-                <dl className="hidden sm:flex border-t border-slate-800 pt-3 items-center gap-6 flex-wrap">
+                <dl className="hidden sm:flex border-t border-line pt-3 items-center gap-6 flex-wrap">
                   <div className="flex items-center gap-3">
                     <dt className="text-muted text-xs font-semibold uppercase tracking-wider">Actual Winner</dt>
                     <dd className="text-slate-200 text-sm">Pending</dd>
@@ -3231,7 +3232,7 @@ function UpcomingEventTab({
                   )}
                 </dl>
                 ) : (
-                <div className="hidden sm:flex border-t border-slate-800 pt-3 items-center justify-between gap-3 flex-wrap">
+                <div className="hidden sm:flex border-t border-line pt-3 items-center justify-between gap-3 flex-wrap">
                   <div className="flex items-center gap-3">
                     <label htmlFor={`upcoming-winner-${entry.id}`} className="text-muted text-xs font-semibold uppercase tracking-wider">
                       Actual Winner
@@ -3243,7 +3244,7 @@ function UpcomingEventTab({
                       onChange={(e) => {
                         if (e.target.value) onGrade(entry.id, e.target.value);
                       }}
-                      className="bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-1.5 focus:border-red-500 cursor-pointer"
+                      className="bg-surface-2 border border-line-strong text-slate-200 text-sm rounded-lg px-3 py-1.5 focus:border-accent cursor-pointer"
                     >
                       <option value="">Pending…</option>
                       <option value={entry.fighterA}>{entry.fighterA}</option>
@@ -3271,7 +3272,7 @@ function UpcomingEventTab({
                 {isV3 && betAction === 'BET' && <FightDayCheck entry={entry} onUpdateEntry={onUpdateEntry} canWrite={canWrite} />}
 
                 {canWrite && propFormFor === entry.id && (
-                  <div className="hidden sm:block border-t border-slate-800 mt-3 pt-3">
+                  <div className="hidden sm:block border-t border-line mt-3 pt-3">
                     <PropEntryForm
                       mode="fromFight"
                       fighterA={entry.fighterA}
@@ -3350,9 +3351,9 @@ function Header({ view }) {
     <a href="#main-content" className="sr-only focus:not-sr-only fixed top-2 left-2 z-[100] rounded-lg bg-white px-4 py-2 font-bold text-slate-950">
       Skip to main content
     </a>
-    <header className="bg-slate-900 border-b border-slate-800 px-5 py-3 flex items-center justify-between">
+    <header className="bg-surface border-b border-line px-5 py-3 flex items-center justify-between">
       <div className="flex items-center gap-3">
-        <div className="w-9 h-9 bg-red-600 rounded-lg flex items-center justify-center shadow-lg shadow-red-900/40">
+        <div className="w-9 h-9 bg-accent rounded-lg flex items-center justify-center shadow-lg shadow-accent/40">
           <span className="text-white font-black text-xs tracking-tight">
             UFC
           </span>
@@ -3374,8 +3375,8 @@ function Header({ view }) {
             end
             className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
               view === id
-                ? 'bg-red-600 text-white shadow-lg shadow-red-900/30'
-                : 'text-secondary hover:text-white hover:bg-slate-800'
+                ? 'bg-accent text-white shadow-lg shadow-accent/30'
+                : 'text-secondary hover:text-white hover:bg-surface-2'
             }`}
           >
             <Icon size={14} />
@@ -3460,8 +3461,8 @@ function BottomNav({ view }) {
         />
       )}
       {moreOpen && (
-        <nav id="mobile-more-menu" aria-label="More destinations" className="sm:hidden fixed inset-x-0 bottom-16 z-50 bg-slate-900 border-t border-x border-slate-800 rounded-t-xl overflow-hidden">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800">
+        <nav id="mobile-more-menu" aria-label="More destinations" className="sm:hidden fixed inset-x-0 bottom-16 z-50 bg-surface border-t border-x border-line rounded-t-xl overflow-hidden">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-line">
             <span className="text-secondary text-xs font-black uppercase tracking-widest">
               More
             </span>
@@ -3483,7 +3484,7 @@ function BottomNav({ view }) {
               // the sheet would stay open. Closing here as well covers it.
               onClick={() => setMoreOpen(false)}
               className={`w-full flex items-center gap-3 px-4 min-h-[44px] py-3 text-sm font-medium transition-colors ${
-                view === id ? 'text-red-400' : 'text-slate-300 hover:bg-slate-800'
+                view === id ? 'text-bad' : 'text-slate-300 hover:bg-surface-2'
               }`}
             >
               <Icon size={16} />
@@ -3494,7 +3495,7 @@ function BottomNav({ view }) {
       )}
       <nav
         aria-label="Mobile primary"
-        className="sm:hidden fixed bottom-0 inset-x-0 z-40 bg-slate-900 border-t border-slate-800 flex pb-[env(safe-area-inset-bottom)]"
+        className="sm:hidden fixed bottom-0 inset-x-0 z-40 bg-surface border-t border-line flex pb-[env(safe-area-inset-bottom)]"
         style={{ height: 'calc(64px + env(safe-area-inset-bottom))' }}
       >
         {BOTTOM_NAV_PRIMARY.map(({ id, label, Icon }) => (
@@ -3503,7 +3504,7 @@ function BottomNav({ view }) {
             to={pathForView(id)}
             end
             className={`flex-1 min-w-[44px] min-h-[44px] flex flex-col items-center justify-center gap-0.5 text-[11px] font-semibold transition-colors ${
-              view === id ? 'text-red-400' : 'text-muted hover:text-slate-300'
+              view === id ? 'text-bad' : 'text-muted hover:text-slate-300'
             }`}
           >
             <Icon size={20} />
@@ -3515,7 +3516,7 @@ function BottomNav({ view }) {
           aria-expanded={moreOpen}
           aria-controls="mobile-more-menu"
           className={`flex-1 min-w-[44px] min-h-[44px] flex flex-col items-center justify-center gap-0.5 text-[11px] font-semibold transition-colors ${
-            moreOpen || moreActive ? 'text-red-400' : 'text-muted hover:text-slate-300'
+            moreOpen || moreActive ? 'text-bad' : 'text-muted hover:text-slate-300'
           }`}
         >
           <MoreHorizontal size={20} />
@@ -3528,7 +3529,7 @@ function BottomNav({ view }) {
 
 function Filters({ wc, setWC, minMin, setMinMin, showInactive, setShowInactive, inactiveCount, count }) {
   return (
-    <div className="bg-slate-900/80 border-b border-slate-800 px-5 py-3">
+    <div className="bg-surface/80 border-b border-line px-5 py-3">
       <div className="flex flex-wrap items-end gap-6">
         <div className="flex flex-col gap-1">
           <label htmlFor="explore-division" className="text-muted text-xs font-semibold uppercase tracking-wider flex items-center gap-1">
@@ -3538,7 +3539,7 @@ function Filters({ wc, setWC, minMin, setMinMin, showInactive, setShowInactive, 
             id="explore-division"
             value={wc}
             onChange={(e) => setWC(e.target.value)}
-            className="bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-1.5 min-h-[44px] sm:min-h-0 focus:border-red-500 cursor-pointer min-w-40"
+            className="bg-surface-2 border border-line-strong text-slate-200 text-sm rounded-lg px-3 py-1.5 min-h-[44px] sm:min-h-0 focus:border-accent cursor-pointer min-w-40"
           >
             {WEIGHT_CLASSES.map((w) => (
               <option key={w}>{w}</option>
@@ -3551,7 +3552,7 @@ function Filters({ wc, setWC, minMin, setMinMin, showInactive, setShowInactive, 
             <label htmlFor="explore-min-minutes" className="text-muted text-xs font-semibold uppercase tracking-wider">
               Min Minutes Fought
             </label>
-            <span className="text-red-400 text-xs font-mono font-bold">
+            <span className="text-bad text-xs font-mono font-bold">
               {minMin}m
             </span>
           </div>
@@ -3595,7 +3596,7 @@ function Filters({ wc, setWC, minMin, setMinMin, showInactive, setShowInactive, 
           <div className="text-sm text-slate-300">
             Pre-debut signees always shown
           </div>
-          <p className="text-muted text-xs">Flagged <span className="text-amber-400 font-bold">PRE-UFC</span> in tables</p>
+          <p className="text-muted text-xs">Flagged <span className="text-warn font-bold">PRE-UFC</span> in tables</p>
         </div>
 
         <div className="ml-auto flex flex-col items-end justify-end pb-1">
@@ -3610,12 +3611,12 @@ function Filters({ wc, setWC, minMin, setMinMin, showInactive, setShowInactive, 
 function CredBadge({ cred }) {
   const tier =
     cred >= 80
-      ? { label: 'High', color: 'bg-emerald-900/40 text-emerald-400 border-emerald-800' }
+      ? { label: 'High', color: 'bg-emerald-900/40 text-good border-emerald-800' }
       : cred >= 60
-      ? { label: 'Moderate', color: 'bg-yellow-900/40 text-yellow-400 border-yellow-800' }
+      ? { label: 'Moderate', color: 'bg-yellow-900/40 text-warn border-yellow-800' }
       : cred >= 40
       ? { label: 'Low', color: 'bg-orange-900/40 text-orange-400 border-orange-800' }
-      : { label: 'Very low', color: 'bg-red-900/40 text-red-400 border-red-800' };
+      : { label: 'Very low', color: 'bg-red-900/40 text-bad border-red-800' };
   return (
     <span
       aria-label={`${tier.label} credibility, ${cred.toFixed(0)} percent`}
@@ -3702,9 +3703,9 @@ function DataTable({ fighters }) {
     sort.col !== col ? (
       <ChevronUp size={11} className="text-slate-700" />
     ) : sort.dir === 'desc' ? (
-      <ChevronDown size={11} className="text-red-400" />
+      <ChevronDown size={11} className="text-bad" />
     ) : (
-      <ChevronUp size={11} className="text-red-400" />
+      <ChevronUp size={11} className="text-bad" />
     );
 
   const [showKey, setShowKey] = useState(false);
@@ -3712,13 +3713,13 @@ function DataTable({ fighters }) {
     {
       short: 'RTG',
       name: 'Master Rating',
-      color: 'text-red-400',
+      color: 'text-bad',
       desc: 'ELO scaled 0–100 within each division: 100 = the highest ELO in that division, so every division has one. Across divisions, compare ELO instead. Ties sort by ELO.',
     },
     {
       short: 'CRED%',
       name: 'Credibility %',
-      color: 'text-yellow-400',
+      color: 'text-warn',
       desc: 'How much to trust the EFF. Low fight count = lower credibility = EFF pulled toward division average.',
     },
     {
@@ -3736,7 +3737,7 @@ function DataTable({ fighters }) {
     {
       short: 'TDE',
       name: 'Takedown Efficiency',
-      color: 'text-blue-400',
+      color: 'text-info',
       desc: 'Takedowns landed per 15 minutes, weighted by accuracy. Measures offensive wrestling output.',
     },
     {
@@ -3754,7 +3755,7 @@ function DataTable({ fighters }) {
     {
       short: 'CRDY',
       name: 'Cardio Index',
-      color: 'text-emerald-400',
+      color: 'text-good',
       desc: 'Output in rounds 3–5 divided by rounds 1–2. Above 1.0 = gets stronger late. Below = fades.',
     },
     {
@@ -3791,18 +3792,18 @@ function DataTable({ fighters }) {
 
   return (
     <div className="p-4">
-      <div className="mb-3 bg-slate-900 border border-slate-700 rounded-xl px-4 py-3">
+      <div className="mb-3 bg-surface border border-line-strong rounded-xl px-4 py-3">
         <div className="flex items-start gap-3">
-          <Info size={14} className="text-blue-400 mt-0.5 shrink-0" />
+          <Info size={14} className="text-info mt-0.5 shrink-0" />
           <div className="flex-1">
             <p className="text-secondary text-xs leading-relaxed">
               <span className="text-white font-semibold">
                 Bayesian Credibility Model
               </span>{' '}
               — EFF is shrunk toward the division mean based on sample size.{' '}
-              <span className="text-yellow-400 font-semibold">CRED%</span> = how
+              <span className="text-warn font-semibold">CRED%</span> = how
               much to trust the rating.{' '}
-              <span className="text-emerald-400 font-semibold">CRDY</span> =
+              <span className="text-good font-semibold">CRDY</span> =
               late-round output ratio. Click any column header to sort.{' '}
               <span className="text-orange-400">Age 35+</span> = age decay risk.
             </p>
@@ -3813,15 +3814,15 @@ function DataTable({ fighters }) {
             aria-controls="explore-column-key"
             className={`inline-flex items-center justify-center min-h-[44px] sm:min-h-0 shrink-0 text-xs px-3 py-1 rounded-lg border font-semibold transition-all ${
               showKey
-                ? 'bg-red-600 border-red-700 text-white'
-                : 'bg-slate-800 border-slate-700 text-secondary hover:text-white hover:border-slate-600'
+                ? 'bg-accent border-red-700 text-white'
+                : 'bg-surface-2 border-line-strong text-secondary hover:text-white hover:border-line-strong'
             }`}
           >
             {showKey ? 'Hide Key' : '📖 Column Key'}
           </button>
         </div>
         {showKey && (
-          <div id="explore-column-key" className="mt-4 pt-4 border-t border-slate-800 grid grid-cols-2 gap-x-8 gap-y-3">
+          <div id="explore-column-key" className="mt-4 pt-4 border-t border-line grid grid-cols-2 gap-x-8 gap-y-3">
             {COL_KEY.map(({ short, name, color, desc }) => (
               <div key={short} className="flex gap-3 items-start">
                 <span
@@ -3856,7 +3857,7 @@ function DataTable({ fighters }) {
               setSearch(e.target.value);
               setPage(1);
             }}
-            className="bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg pl-9 pr-4 py-2 w-64 min-h-[44px] sm:min-h-0 focus:border-red-500"
+            className="bg-surface-2 border border-line-strong text-slate-200 text-sm rounded-lg pl-9 pr-4 py-2 w-64 min-h-[44px] sm:min-h-0 focus:border-accent"
           />
         </div>
         <div className="flex items-center gap-3 text-xs text-muted flex-wrap">
@@ -3883,7 +3884,7 @@ function DataTable({ fighters }) {
                   ((lbl === '«' || lbl === '‹') && safePage === 1) ||
                   ((lbl === '›' || lbl === '»') && safePage === totalPages)
                 }
-                className="inline-flex items-center justify-center min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0 px-2.5 py-1 bg-slate-800 rounded-sm disabled:opacity-30 hover:bg-slate-700 text-slate-300 transition-colors"
+                className="inline-flex items-center justify-center min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0 px-2.5 py-1 bg-surface-2 rounded-sm disabled:opacity-30 hover:bg-surface-3 text-slate-300 transition-colors"
               >
                 {lbl}
               </button>
@@ -3894,11 +3895,11 @@ function DataTable({ fighters }) {
           </div>
         </div>
       </div>
-      <div className="bg-slate-900 rounded-xl border border-slate-800 overflow-hidden">
+      <div className="bg-surface rounded-xl border border-line overflow-hidden">
         <div className="overflow-auto contained-table-scroll" style={{ maxHeight: '64vh' }}>
           <table className="w-full text-xs border-collapse">
-            <thead className="sm:sticky sm:top-0 z-10 bg-slate-800">
-              <tr className="border-b border-slate-700">
+            <thead className="sm:sticky sm:top-0 z-10 bg-surface-2">
+              <tr className="border-b border-line-strong">
                 <th colSpan={5} aria-hidden="true" className="px-3 py-1" />
                 {(() => {
                   const groups = [];
@@ -3917,7 +3918,7 @@ function DataTable({ fighters }) {
                       key={label}
                       colSpan={span}
                       scope="colgroup"
-                      className="px-3 py-1 text-center text-muted text-xs font-semibold uppercase tracking-wider border-l border-slate-700"
+                      className="px-3 py-1 text-center text-muted text-xs font-semibold uppercase tracking-wider border-l border-line-strong"
                     >
                       {label}
                     </th>
@@ -3925,7 +3926,7 @@ function DataTable({ fighters }) {
                 })()}
               </tr>
               <tr>
-                <th scope="col" className="text-left px-3 py-3 text-slate-300 font-semibold sm:sticky sm:left-0 bg-slate-800 min-w-44">
+                <th scope="col" className="text-left px-3 py-3 text-slate-300 font-semibold sm:sticky sm:left-0 bg-surface-2 min-w-44">
                   Fighter
                 </th>
                 <th scope="col" className="px-2 py-2 text-muted">DIV</th>
@@ -3943,14 +3944,14 @@ function DataTable({ fighters }) {
                       scope="col"
                       aria-sort={sort.col === key ? (sort.dir === 'desc' ? 'descending' : 'ascending') : 'none'}
                       className={`px-3 py-2 text-right select-none font-medium whitespace-nowrap ${
-                        sort.col === key ? 'text-red-400' : 'text-secondary'
-                      } ${isGroupStart ? 'border-l border-slate-700' : ''}`}
+                        sort.col === key ? 'text-bad' : 'text-secondary'
+                      } ${isGroupStart ? 'border-l border-line-strong' : ''}`}
                     >
                       <button
                         type="button"
                         onClick={() => handleSort(key)}
                         title={tip}
-                        className="w-full min-h-6 flex items-center justify-end gap-1 hover:text-red-400 transition-colors"
+                        className="w-full min-h-6 flex items-center justify-end gap-1 hover:text-bad transition-colors"
                       >
                         <span className="font-mono text-xs">{short}</span>
                         <SortIcon col={key} />
@@ -3966,9 +3967,9 @@ function DataTable({ fighters }) {
                 return (
                   <tr
                     key={f.FIGHTER}
-                    className="border-t border-slate-800/40 hover:bg-slate-800/30 transition-colors"
+                    className="border-t border-line/40 hover:bg-surface-2/30 transition-colors"
                   >
-                    <td className="px-3 py-2.5 font-semibold text-slate-100 sm:sticky sm:left-0 bg-slate-900 whitespace-nowrap">
+                    <td className="px-3 py-2.5 font-semibold text-slate-100 sm:sticky sm:left-0 bg-surface whitespace-nowrap">
                       <div className="flex items-center gap-1.5">
                         <span className="text-muted font-mono text-xs w-5 shrink-0">
                           {ranks['ADJUSTED_RATING'][f.FIGHTER]}
@@ -3977,8 +3978,8 @@ function DataTable({ fighters }) {
                           <span
                             className={`text-xs font-black font-mono px-1.5 py-0.5 rounded border ${
                               isChampionRecord(f.UFC_RANK)
-                                ? 'bg-yellow-900/40 text-yellow-400 border-yellow-800'
-                                : 'bg-slate-800 text-secondary border-slate-700'
+                                ? 'bg-yellow-900/40 text-warn border-yellow-800'
+                                : 'bg-surface-2 text-secondary border-line-strong'
                             }`}
                           >
                             {ufcRankLabel(f.UFC_RANK)}
@@ -3986,7 +3987,7 @@ function DataTable({ fighters }) {
                         )}
                         {f.IS_PROSPECT && (
                           <span
-                            className="text-[11px] font-black font-mono px-1.5 py-0.5 rounded-sm border bg-amber-900/40 text-amber-400 border-amber-800"
+                            className="text-[11px] font-black font-mono px-1.5 py-0.5 rounded-sm border bg-amber-900/40 text-warn border-amber-800"
                             title="Pre-debut UFC signee — stats from pre-UFC pro fights"
                           >
                             PRE-UFC
@@ -4006,7 +4007,7 @@ function DataTable({ fighters }) {
                         f.AGE && f.AGE >= 35 && f.IS_LIGHT
                           ? 'text-orange-400'
                           : f.AGE >= 35
-                          ? 'text-yellow-400'
+                          ? 'text-warn'
                           : 'text-secondary'
                       }`}
                     >
@@ -4110,7 +4111,7 @@ function FighterSearch({
   const bdr =
     accent === 'blue'
       ? 'border-blue-700 focus:border-blue-400'
-      : 'border-slate-700 focus:border-red-500';
+      : 'border-line-strong focus:border-accent';
   return (
     <div className="relative">
       <Search
@@ -4136,10 +4137,10 @@ function FighterSearch({
         onKeyDown={(e) => {
           if (e.key === 'Escape') setOpen(false);
         }}
-        className={`bg-slate-800 border ${bdr} text-slate-200 text-sm rounded-lg pl-9 pr-4 py-2 w-full min-h-[44px] sm:min-h-0 transition-colors`}
+        className={`bg-surface-2 border ${bdr} text-slate-200 text-sm rounded-lg pl-9 pr-4 py-2 w-full min-h-[44px] sm:min-h-0 transition-colors`}
       />
       {open && opts.length > 0 && (
-        <div id={listId} role="listbox" aria-label="Matching fighters" className="absolute top-full left-0 right-0 mt-1 bg-slate-800 border border-slate-600 rounded-xl z-30 shadow-2xl overflow-hidden">
+        <div id={listId} role="listbox" aria-label="Matching fighters" className="absolute top-full left-0 right-0 mt-1 bg-surface-2 border border-line-strong rounded-xl z-30 shadow-2xl overflow-hidden">
           {opts.map((f) => (
             <button
               key={f.FIGHTER}
@@ -4150,11 +4151,11 @@ function FighterSearch({
                 setSearch('');
                 setOpen(false);
               }}
-              className="w-full text-left px-4 py-2.5 hover:bg-slate-700 text-sm flex justify-between items-center transition-colors gap-3"
+              className="w-full text-left px-4 py-2.5 hover:bg-surface-3 text-sm flex justify-between items-center transition-colors gap-3"
             >
               <span className="text-slate-200 font-medium flex items-center gap-2">
                 {f.IS_PROSPECT && (
-                  <span className="text-[11px] font-black font-mono px-1.5 py-0.5 rounded-sm border bg-amber-900/40 text-amber-400 border-amber-800">
+                  <span className="text-[11px] font-black font-mono px-1.5 py-0.5 rounded-sm border bg-amber-900/40 text-warn border-amber-800">
                     PRE-UFC
                   </span>
                 )}
@@ -4162,7 +4163,7 @@ function FighterSearch({
               </span>
               <span className="text-muted text-xs flex items-center gap-2">
                 <span>{DIV_SHORT[f.WEIGHT_CLASS]}</span>
-                <span className="text-red-400 font-bold">
+                <span className="text-bad font-bold">
                   {(f.ADJUSTED_RATING ?? 0).toFixed(1)}
                 </span>
                 <span>{f.RECORD}</span>
@@ -4192,7 +4193,7 @@ function FightCard({ fight, index }) {
       ? 'bg-emerald-950/20 border-emerald-900/40'
       : fight.re === 'L'
       ? 'bg-red-950/20 border-red-900/40'
-      : 'bg-slate-800/30 border-slate-700/40';
+      : 'bg-surface-2/30 border-line-strong/40';
   const badgeBg =
     fight.re === 'W'
       ? 'bg-emerald-500'
@@ -4468,7 +4469,7 @@ const fmtT = (f, { key, dec, signed, pct }) => {
 // state) on every keystroke in the odds/event inputs.
 const FighterPanel = ({ f, setF, color, ph, allFighters, fA, fB, eventDate }) => {
   const [showFull, setShowFull] = useState(false);
-  const tc = color === 'blue' ? 'text-blue-400' : 'text-red-400';
+  const tc = color === 'blue' ? 'text-info' : 'text-bad';
   const bc =
     color === 'blue'
       ? 'border-blue-800 bg-blue-950/20'
@@ -4525,7 +4526,7 @@ const FighterPanel = ({ f, setF, color, ph, allFighters, fA, fB, eventDate }) =>
               header so a collapsed card still previews the profile. The
               divider sits on top only, so nothing dangles below when the
               full-profile disclosure is closed. */}
-          <div className="grid grid-cols-3 gap-2 mt-3 pt-3 border-t border-slate-700/50">
+          <div className="grid grid-cols-3 gap-2 mt-3 pt-3 border-t border-line-strong/50">
             {[
               ['RTG', f.ADJUSTED_RATING.toFixed(1)],
               ['Reach', fmtReach(f.REACH_IN)],
@@ -4543,9 +4544,9 @@ const FighterPanel = ({ f, setF, color, ph, allFighters, fA, fB, eventDate }) =>
             ))}
           </div>
           {showFull && (
-          <div id={`simulator-profile-${color}`} className="mt-3 pt-3 border-t border-slate-700/50">
+          <div id={`simulator-profile-${color}`} className="mt-3 pt-3 border-t border-line-strong/50">
           {/* Secondary stats: Rank, Height, Stance */}
-          <div className="grid grid-cols-3 gap-2 mb-3 pb-3 border-b border-slate-700/50">
+          <div className="grid grid-cols-3 gap-2 mb-3 pb-3 border-b border-line-strong/50">
             {[
               ['Rank', ufcRankLabel(f.UFC_RANK) ?? 'NR'],
               ['Height', fmtHeight(f.HEIGHT_IN)],
@@ -4586,8 +4587,8 @@ const FighterPanel = ({ f, setF, color, ph, allFighters, fA, fB, eventDate }) =>
                   key={i}
                   className={`text-xs font-black px-1.5 py-0.5 rounded ${
                     r === 'W'
-                      ? 'bg-emerald-900/50 text-emerald-400'
-                      : 'bg-red-900/50 text-red-400'
+                      ? 'bg-emerald-900/50 text-good'
+                      : 'bg-red-900/50 text-bad'
                   }`}
                 >
                   {r}
@@ -4603,10 +4604,10 @@ const FighterPanel = ({ f, setF, color, ph, allFighters, fA, fB, eventDate }) =>
                   <span
                     className={`text-[11px] font-black px-1 py-0.5 rounded leading-none shrink-0 ${
                       fight.re === 'W'
-                        ? 'bg-emerald-900/50 text-emerald-400'
+                        ? 'bg-emerald-900/50 text-good'
                         : fight.re === 'L'
-                        ? 'bg-red-900/50 text-red-400'
-                        : 'bg-slate-800 text-secondary'
+                        ? 'bg-red-900/50 text-bad'
+                        : 'bg-surface-2 text-secondary'
                     }`}
                   >
                     {fight.re}
@@ -4847,7 +4848,7 @@ function SimulatorContributionPanel({ fA, fB, result, modelToggle, eventDate, is
   };
 
   return (
-    <div className="bg-slate-900 border border-slate-700 rounded-xl p-5">
+    <div className="bg-surface border border-line-strong rounded-xl p-5">
       <div className="flex items-center justify-between mb-4">
         <p className="text-secondary text-xs font-semibold uppercase tracking-widest">
           {isC6Active ? 'Underlying v2 Model Contribution' : 'Contribution Breakdown'}
@@ -4881,7 +4882,7 @@ function SimulatorContributionPanel({ fA, fB, result, modelToggle, eventDate, is
           const RowWrapper = hasFeatures ? 'button' : 'div';
           const isTechnicalOpen = technicalOpen.has(row.key);
           return (
-            <div key={row.key} className="bg-slate-800/40 rounded-xl overflow-hidden">
+            <div key={row.key} className="bg-surface-2/40 rounded-xl overflow-hidden">
               <RowWrapper
                 {...(hasFeatures ? {
                   onClick: () => toggleExpanded(row.key),
@@ -4904,7 +4905,7 @@ function SimulatorContributionPanel({ fA, fB, result, modelToggle, eventDate, is
                   <p className="text-muted text-xs leading-snug">{nearEmptyCopy}</p>
                 ) : (
                   <>
-                    <div className="h-2 bg-slate-700 rounded-full overflow-hidden flex mb-2">
+                    <div className="h-2 bg-surface-3 rounded-full overflow-hidden flex mb-2">
                       <div
                         className="h-full bg-blue-500 rounded-full transition-all"
                         style={{ width: `${pctA}%` }}
@@ -4916,9 +4917,9 @@ function SimulatorContributionPanel({ fA, fB, result, modelToggle, eventDate, is
                         {headlineStats.map((stat) => (
                           <p key={stat.label} className="text-muted text-xs">
                             {stat.label}:{' '}
-                            <span className={favA ? 'text-blue-400' : 'text-secondary'}>{stat.a}</span>
+                            <span className={favA ? 'text-info' : 'text-secondary'}>{stat.a}</span>
                             {' / '}
-                            <span className={!favA ? 'text-red-400' : 'text-secondary'}>{stat.b}</span>
+                            <span className={!favA ? 'text-bad' : 'text-secondary'}>{stat.b}</span>
                           </p>
                         ))}
                       </div>
@@ -4927,7 +4928,7 @@ function SimulatorContributionPanel({ fA, fB, result, modelToggle, eventDate, is
                 )}
               </RowWrapper>
               {isOpen && hasFeatures && (
-                <div id={`simulator-domain-${row.key}`} className="border-t border-slate-700/50 px-4 pb-3 pt-2 space-y-1.5">
+                <div id={`simulator-domain-${row.key}`} className="border-t border-line-strong/50 px-4 pb-3 pt-2 space-y-1.5">
                   {row.features.map((f) => {
                     const rawA = f.aRawLabel ? fA[f.aRawLabel] : null;
                     const rawB = f.bRawLabel ? fB[f.bRawLabel] : null;
@@ -4969,9 +4970,9 @@ function SimulatorContributionPanel({ fA, fB, result, modelToggle, eventDate, is
                           <span
                             className={`font-mono font-bold ${
                               f.contribution > 0
-                                ? 'text-blue-400'
+                                ? 'text-info'
                                 : f.contribution < 0
-                                ? 'text-red-400'
+                                ? 'text-bad'
                                 : 'text-muted'
                             }`}
                           >
@@ -5134,7 +5135,7 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
       {result && fA && fB ? (
         <div className="space-y-4">
           {/* ── MARKET ODDS INPUT ── */}
-          <div className="bg-slate-900 border border-slate-700 rounded-xl p-5">
+          <div className="bg-surface border border-line-strong rounded-xl p-5">
             <p className="text-white text-xs font-black uppercase tracking-widest mb-1">
               Enter Market Lines
             </p>
@@ -5150,7 +5151,7 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                   <label
                     htmlFor={`simulator-odds-${color}`}
                     className={`text-xs font-bold mb-1.5 block ${
-                      color === 'blue' ? 'text-blue-400' : 'text-red-400'
+                      color === 'blue' ? 'text-info' : 'text-bad'
                     }`}
                   >
                     {f.FIGHTER}
@@ -5170,7 +5171,7 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                         set(v);
                       }}
                       placeholder={ph}
-                      className="w-full bg-slate-800 border border-slate-600 rounded-lg px-4 py-3 text-white font-black text-xl text-center placeholder-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30 transition-colors"
+                      className="w-full bg-surface-2 border border-line-strong rounded-lg px-4 py-3 text-white font-black text-xl text-center placeholder-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30 transition-colors"
                     />
                     {parseAmericanOdds(val) != null && (
                       <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted">
@@ -5235,10 +5236,10 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
               spread >= 0.30 ? 'Clear edge' : spread >= 0.06 ? 'Moderate' : 'Coin flip';
             const confidenceBadgeCls =
               spread >= 0.30
-                ? 'text-emerald-400 bg-emerald-900/20 border-emerald-800/40'
+                ? 'text-good bg-emerald-900/20 border-emerald-800/40'
                 : spread >= 0.06
-                ? 'text-yellow-400 bg-yellow-900/20 border-yellow-800/40'
-                : 'text-slate-300 bg-slate-800/40 border-slate-700/40';
+                ? 'text-warn bg-yellow-900/20 border-yellow-800/40'
+                : 'text-slate-300 bg-surface-2/40 border-line-strong/40';
             // Model Disagreement: moved in from the old Matchup Context Flags
             // list (was one of nine generic pills) -- this is specifically
             // about how the two models the toggle switches between disagree,
@@ -5259,7 +5260,7 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
               }
             }
             return (
-              <div className="bg-slate-900 border border-slate-700 rounded-xl p-5">
+              <div className="bg-surface border border-line-strong rounded-xl p-5">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
                     <p className="text-secondary text-xs font-semibold uppercase tracking-widest">
@@ -5279,7 +5280,7 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                       className={`inline-block text-[11px] font-bold px-2 py-0.5 rounded-full border uppercase tracking-wide ${
                         decision.source === DECISION_SOURCE_C6
                           ? 'text-amber-300 bg-amber-900/30 border-amber-700/50'
-                          : 'text-slate-300 bg-slate-800/60 border-slate-700'
+                          : 'text-slate-300 bg-surface-2/60 border-line-strong'
                       }`}
                     >
                       {decision.label}
@@ -5307,7 +5308,7 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                     outright (it said nothing this doesn't already say). Full
                     name, no width constraint, wraps instead of truncating. */}
                 <p className={lowSample ? 'text-slate-200 font-bold text-xl leading-snug mb-1.5' : 'text-white font-black text-xl leading-snug mb-1.5'}>
-                  <span className={favA ? 'text-blue-400' : 'text-red-400'}>{winner.FIGHTER}</span>
+                  <span className={favA ? 'text-info' : 'text-bad'}>{winner.FIGHTER}</span>
                   {' favored, '}{winnerPct}%
                 </p>
                 <span className={`inline-block text-xs font-bold px-2 py-0.5 rounded-full border mb-3 ${confidenceBadgeCls}`}>
@@ -5318,15 +5319,15 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                     lower-right) instead of fixed-width w-28 truncate side
                     labels -- guarantees no truncation regardless of name
                     length on either side. */}
-                <p className="text-blue-400 font-bold text-sm mb-1">{fA.FIGHTER}</p>
-                <div className="h-3 bg-slate-800 rounded-full overflow-hidden flex">
+                <p className="text-info font-bold text-sm mb-1">{fA.FIGHTER}</p>
+                <div className="h-3 bg-surface-2 rounded-full overflow-hidden flex">
                   <div
                     className="h-full bg-blue-500 rounded-l-full transition-all"
                     style={{ width: `${activePA * 100}%` }}
                   />
                   <div className="h-full bg-red-500 flex-1 rounded-r-full" />
                 </div>
-                <p className="text-red-400 font-bold text-sm text-right mt-1 mb-2">{fB.FIGHTER}</p>
+                <p className="text-bad font-bold text-sm text-right mt-1 mb-2">{fB.FIGHTER}</p>
                 <div className="flex justify-between px-1 mb-2">
                   <span className={lowSample ? 'text-slate-300 font-semibold text-2xl' : 'text-white font-black text-2xl'}>
                     {pctA}%
@@ -5350,7 +5351,7 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                 </p>
 
                 {disagreement && (
-                  <p className="text-amber-400 text-xs text-center bg-amber-950/20 border border-amber-800/40 rounded-lg px-3 py-2 mt-3">
+                  <p className="text-warn text-xs text-center bg-amber-950/20 border border-amber-800/40 rounded-lg px-3 py-2 mt-3">
                     ⚠ Model Disagreement — v1 favors {disagreement.v1Favors}, v2 favors {disagreement.v2Favors}
                   </p>
                 )}
@@ -5362,7 +5363,7 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
             Saving is available on desktop.
           </p>
 
-          <div className="hidden sm:block bg-slate-900 border border-slate-700 rounded-xl p-5">
+          <div className="hidden sm:block bg-surface border border-line-strong rounded-xl p-5">
             <div className="flex items-center justify-between gap-4 mb-4">
               <div>
                 <p className="text-white text-xs font-black uppercase tracking-widest">
@@ -5374,7 +5375,7 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                 </p>
               </div>
               {saveFeedback && (
-                <span role="status" aria-live="polite" className={`${saveFeedback.startsWith('Saved') ? 'text-emerald-400' : 'text-amber-400'} text-xs font-semibold text-right max-w-xs`}>
+                <span role="status" aria-live="polite" className={`${saveFeedback.startsWith('Saved') ? 'text-good' : 'text-warn'} text-xs font-semibold text-right max-w-xs`}>
                   {saveFeedback}
                 </span>
               )}
@@ -5390,7 +5391,7 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                   value={eventName}
                   onChange={(e) => setEventName(e.target.value)}
                   placeholder="UFC 325"
-                  className="w-full bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:border-red-500"
+                  className="w-full bg-surface-2 border border-line-strong text-slate-200 text-sm rounded-lg px-3 py-2 focus:border-accent"
                 />
               </div>
               <div>
@@ -5402,7 +5403,7 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                   type="date"
                   value={eventDate}
                   onChange={(e) => setEventDate(e.target.value)}
-                  className="w-full h-10 bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:border-red-500"
+                  className="w-full h-10 bg-surface-2 border border-line-strong text-slate-200 text-sm rounded-lg px-3 py-2 focus:border-accent"
                 />
               </div>
               {decision?.source === DECISION_SOURCE_C6 ? (
@@ -5425,7 +5426,7 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                   value={unitsWagered}
                   onChange={(e) => setUnitsWagered(e.target.value)}
                   placeholder="1"
-                  className="w-full bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:border-red-500"
+                  className="w-full bg-surface-2 border border-line-strong text-slate-200 text-sm rounded-lg px-3 py-2 focus:border-accent"
                 />
               </div>
               )}
@@ -5444,7 +5445,7 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                   aria-describedby={boutContextIssues.errors.length || boutContextIssues.warnings.length ? 'simulator-bout-context-feedback' : undefined}
                   value={boutDivision}
                   onChange={(e) => setBoutDivision(e.target.value)}
-                  className="w-full h-10 bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:border-red-500"
+                  className="w-full h-10 bg-surface-2 border border-line-strong text-slate-200 text-sm rounded-lg px-3 py-2 focus:border-accent"
                 >
                   <option value="">Unknown</option>
                   {SUPPORTED_DIVISIONS.map((d) => (
@@ -5463,7 +5464,7 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                   aria-describedby={boutContextIssues.errors.length || boutContextIssues.warnings.length ? 'simulator-bout-context-feedback' : undefined}
                   value={boutTitleStatus}
                   onChange={(e) => setBoutTitleStatus(e.target.value)}
-                  className="w-full h-10 bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:border-red-500"
+                  className="w-full h-10 bg-surface-2 border border-line-strong text-slate-200 text-sm rounded-lg px-3 py-2 focus:border-accent"
                 >
                   <option value="">Unknown</option>
                   <option value="title">Title bout</option>
@@ -5479,7 +5480,7 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                   aria-describedby={boutContextIssues.errors.length || boutContextIssues.warnings.length ? 'simulator-bout-context-feedback' : undefined}
                   value={boutRounds}
                   onChange={(e) => setBoutRounds(e.target.value)}
-                  className="w-full h-10 bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:border-red-500"
+                  className="w-full h-10 bg-surface-2 border border-line-strong text-slate-200 text-sm rounded-lg px-3 py-2 focus:border-accent"
                 >
                   <option value="">Unknown</option>
                   <option value="3">3 rounds</option>
@@ -5494,7 +5495,7 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                   <p
                     key={msg}
                     role="alert"
-                    className="text-red-400 text-xs font-semibold bg-red-900/20 border border-red-800/40 rounded-lg px-3 py-2"
+                    className="text-bad text-xs font-semibold bg-red-900/20 border border-red-800/40 rounded-lg px-3 py-2"
                   >
                     Contradictory bout context: {msg}
                   </p>
@@ -5503,7 +5504,7 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                   <p
                     key={msg}
                     role="status"
-                    className="text-amber-400 text-xs bg-amber-900/20 border border-amber-800/40 rounded-lg px-3 py-2"
+                    className="text-warn text-xs bg-amber-900/20 border border-amber-800/40 rounded-lg px-3 py-2"
                   >
                     {msg}
                   </p>
@@ -5515,7 +5516,7 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
               const saveProb = Math.max(activePA, activePB);
               return (
             <div className="grid grid-cols-3 gap-3 mb-4">
-              <div className="bg-slate-800/40 rounded-lg p-3">
+              <div className="bg-surface-2/40 rounded-lg p-3">
                 <p className="text-muted text-xs">Model pick</p>
                 <p className="text-white font-bold text-sm mt-1">
                   {savePick}
@@ -5524,14 +5525,14 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                   {(saveProb * 100).toFixed(1)}% win prob
                 </p>
               </div>
-              <div className="bg-slate-800/40 rounded-lg p-3">
+              <div className="bg-surface-2/40 rounded-lg p-3">
                 <p className="text-muted text-xs">Bet recommendation</p>
                 {market &&
                 (market.betAction === 'LEAN' ||
                   market.betAction === 'BET' ||
                   market.betAction === 'STRONG BET') ? (
                   <>
-                    <p className="font-bold text-sm mt-1 text-emerald-400">
+                    <p className="font-bold text-sm mt-1 text-good">
                       {market.betAction}
                     </p>
                     {market.bestBet && (
@@ -5546,7 +5547,7 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                   </p>
                 )}
               </div>
-              <div className="bg-slate-800/40 rounded-lg p-3">
+              <div className="bg-surface-2/40 rounded-lg p-3">
                 <p className="text-muted text-xs">Saved with market</p>
                 <p className="text-white font-bold text-sm mt-1">
                   {market ? 'Yes' : 'No'}
@@ -5619,9 +5620,9 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
             if (!fA || !fB || !result) return null;
             const flags = [];
             if (result.debutMatchup)
-              flags.push({ label: 'Debut / Prospect', color: 'text-amber-400 bg-amber-900/20 border-amber-800/40' });
+              flags.push({ label: 'Debut / Prospect', color: 'text-warn bg-amber-900/20 border-amber-800/40' });
             if ((fA.TOTAL_ROUNDS ?? fA.tr ?? 0) < 5 || (fB.TOTAL_ROUNDS ?? fB.tr ?? 0) < 5)
-              flags.push({ label: 'Sparse Data', color: 'text-yellow-400 bg-yellow-900/20 border-yellow-800/40' });
+              flags.push({ label: 'Sparse Data', color: 'text-warn bg-yellow-900/20 border-yellow-800/40' });
             if ((fA.CREDIBILITY ?? 100) < 30 || (fB.CREDIBILITY ?? 100) < 30)
               flags.push({ label: 'Low Credibility', color: 'text-orange-400 bg-orange-900/20 border-orange-800/40' });
             // Correction 3. The old flag compared the two fighters' stored
@@ -5645,7 +5646,7 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
             } else if (fA.WEIGHT_CLASS !== fB.WEIGHT_CLASS) {
               flags.push({
                 label: 'Roster divisions differ (bout division unverified)',
-                color: 'text-secondary bg-slate-800/40 border-slate-700',
+                color: 'text-secondary bg-surface-2/40 border-line-strong',
               });
             }
             // Three distinct states, not two. A division on its own does NOT
@@ -5653,11 +5654,11 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
             // half-verified bout starts reading as verified.
             const missingContext = missingBoutContextFields(boutContext);
             if (hasUnknownBoutContext(boutContext)) {
-              flags.push({ label: 'Unknown bout context', color: 'text-secondary bg-slate-800/40 border-slate-700' });
+              flags.push({ label: 'Unknown bout context', color: 'text-secondary bg-surface-2/40 border-line-strong' });
             } else if (missingContext.length > 0) {
               flags.push({
                 label: `Incomplete bout context: ${missingContext.join(', ')} unknown`,
-                color: 'text-amber-400 bg-amber-900/20 border-amber-800/40',
+                color: 'text-warn bg-amber-900/20 border-amber-800/40',
               });
             }
             if (boutContext?.isTitleBout === true)
@@ -5671,16 +5672,16 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
             // Bout-date ages, matching the model. An unknown age stays below
             // the threshold rather than defaulting into it.
             if ((simulatorAge(fA, eventDate) ?? 0) >= 38 || (simulatorAge(fB, eventDate) ?? 0) >= 38)
-              flags.push({ label: 'Veteran Age (38+)', color: 'text-red-400 bg-red-900/20 border-red-800/40' });
+              flags.push({ label: 'Veteran Age (38+)', color: 'text-bad bg-red-900/20 border-red-800/40' });
             if ((result.loseStreakA ?? 0) >= 3 || (result.loseStreakB ?? 0) >= 3)
-              flags.push({ label: 'Active Loss Streak', color: 'text-red-400 bg-red-900/20 border-red-800/40' });
+              flags.push({ label: 'Active Loss Streak', color: 'text-bad bg-red-900/20 border-red-800/40' });
             if (Math.abs(result.qualMomDiff ?? 0) > 0.5)
-              flags.push({ label: `Form Edge: ${(result.qualMomDiff ?? 0) > 0 ? fA.FIGHTER.split(' ').pop() : fB.FIGHTER.split(' ').pop()}`, color: 'text-emerald-400 bg-emerald-900/20 border-emerald-800/40' });
+              flags.push({ label: `Form Edge: ${(result.qualMomDiff ?? 0) > 0 ? fA.FIGHTER.split(' ').pop() : fB.FIGHTER.split(' ').pop()}`, color: 'text-good bg-emerald-900/20 border-emerald-800/40' });
             // Model Disagreement moved to the verdict hero above -- not
             // computed here anymore.
             if (flags.length === 0) return null;
             return (
-              <div className="bg-slate-900 border border-slate-700 rounded-xl p-4">
+              <div className="bg-surface border border-line-strong rounded-xl p-4">
                 <p className="text-muted text-xs font-semibold uppercase tracking-widest mb-2">
                   Matchup Context
                 </p>
@@ -5733,12 +5734,12 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                 const showBetRec = actionable || noRead || isV3;
 
                 const actionStyles = {
-                  'STRONG BET': { bg: 'bg-emerald-950/40 border-emerald-600', badge: 'bg-emerald-500 text-emerald-950', text: 'text-emerald-400' },
-                  'BET':        { bg: 'bg-emerald-950/20 border-emerald-800', badge: 'bg-emerald-700 text-emerald-100', text: 'text-emerald-400' },
-                  'LEAN':       { bg: 'bg-yellow-950/20 border-yellow-800',   badge: 'bg-yellow-700 text-yellow-100',   text: 'text-yellow-400' },
-                  'NO BET':     { bg: 'bg-slate-800/40 border-slate-700',     badge: 'bg-slate-600 text-slate-200',     text: 'text-secondary'  },
+                  'STRONG BET': { bg: 'bg-emerald-950/40 border-emerald-600', badge: 'bg-emerald-500 text-emerald-950', text: 'text-good' },
+                  'BET':        { bg: 'bg-emerald-950/20 border-emerald-800', badge: 'bg-emerald-700 text-emerald-100', text: 'text-good' },
+                  'LEAN':       { bg: 'bg-yellow-950/20 border-yellow-800',   badge: 'bg-yellow-700 text-yellow-100',   text: 'text-warn' },
+                  'NO BET':     { bg: 'bg-surface-2/40 border-line-strong',     badge: 'bg-slate-600 text-slate-200',     text: 'text-secondary'  },
                   // NO READ: muted gray, deliberately dimmer than NO BET.
-                  'NO READ':    { bg: 'bg-slate-900/40 border-slate-800',     badge: 'bg-slate-700 text-secondary',     text: 'text-muted'  },
+                  'NO READ':    { bg: 'bg-surface/40 border-line',     badge: 'bg-surface-3 text-secondary',     text: 'text-muted'  },
                 };
                 const s = actionStyles[displayAction] ?? actionStyles['NO BET'];
 
@@ -5749,7 +5750,7 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                     <div className={`grid ${showBetRec ? 'grid-cols-3' : 'grid-cols-2'} gap-3`}>
 
                       {/* Model Pick — always shown */}
-                      <div className={`border rounded-xl p-4 ${market.lowConviction && !isV3 ? 'bg-orange-950/10 border-orange-900' : 'bg-slate-900 border-slate-700'}`}>
+                      <div className={`border rounded-xl p-4 ${market.lowConviction && !isV3 ? 'bg-orange-950/10 border-orange-900' : 'bg-surface border-line-strong'}`}>
                         <div className="flex items-center gap-1.5 mb-2">
                           <p className="text-muted text-xs font-semibold uppercase tracking-wider">Model Pick</p>
                           {decision?.source === DECISION_SOURCE_C6 && (
@@ -5769,13 +5770,13 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                       {/* v3: v2's own opinion, so a C6 pick that only echoes the
                           market is visible as such. Legacy: Value Signal. */}
                       {isV3 ? (
-                        <div className="border rounded-xl p-4 bg-slate-900 border-slate-700">
+                        <div className="border rounded-xl p-4 bg-surface border-line-strong">
                           <p className="text-muted text-xs font-semibold uppercase tracking-wider mb-2">v2 Opinion</p>
                           {v2Pick ? (
                             <>
                               <p className="text-white font-black text-base leading-tight">{v2Pick.FIGHTER}</p>
                               <p className="text-secondary text-xs mt-1">{(v2PickProb * 100).toFixed(1)}% win prob</p>
-                              <p className={`text-xs mt-0.5 font-semibold ${c6AgreesWithV2 ? 'text-secondary' : 'text-amber-400'}`}>
+                              <p className={`text-xs mt-0.5 font-semibold ${c6AgreesWithV2 ? 'text-secondary' : 'text-warn'}`}>
                                 {c6AgreesWithV2 ? 'C6 agrees' : 'C6 disagrees'}
                               </p>
                             </>
@@ -5789,7 +5790,7 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                           ? 'bg-orange-950/20 border-orange-800'
                           : market.hasPickEdge
                           ? 'bg-emerald-950/20 border-emerald-800'
-                          : 'bg-slate-800/40 border-slate-700'
+                          : 'bg-surface-2/40 border-line-strong'
                       }`}>
                         <p className="text-muted text-xs font-semibold uppercase tracking-wider mb-2">Value Signal</p>
                         {market.conflictingSignals ? (
@@ -5803,7 +5804,7 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                           </>
                         ) : market.hasPickEdge ? (
                           <>
-                            <p className="text-emerald-400 font-black text-sm">✓ Aligned</p>
+                            <p className="text-good font-black text-sm">✓ Aligned</p>
                             <p className="text-secondary text-xs mt-1">
                               +{(market.pickEdge * 100).toFixed(1)}pp edge on pick
                             </p>
@@ -5861,7 +5862,7 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                           </span>
                         </div>
                         <div className="grid grid-cols-2 gap-3 mb-4">
-                          <div className="bg-slate-900/60 rounded-lg p-3">
+                          <div className="bg-surface/60 rounded-lg p-3">
                             <p className="text-muted text-xs mb-1">Edge vs market</p>
                             <p className={`font-black text-xl ${s.text}`}>
                               +{(market.pickEdge * 100).toFixed(1)}pp
@@ -5870,14 +5871,14 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                               Model sees {(market.pickEdge * 100).toFixed(1)}pp more than no-vig line
                             </p>
                           </div>
-                          <div className="bg-slate-900/60 rounded-lg p-3">
+                          <div className="bg-surface/60 rounded-lg p-3">
                             <p className="text-muted text-xs mb-1">EV per $100</p>
-                            <p className={`font-black text-xl ${Number(pickEV ?? 0) > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                            <p className={`font-black text-xl ${Number(pickEV ?? 0) > 0 ? 'text-good' : 'text-bad'}`}>
                               {Number(pickEV ?? 0) > 0 ? '+' : ''}${Number(pickEV ?? 0).toFixed(2)}
                             </p>
                             <p className="text-muted text-xs mt-0.5">Expected return on $100 flat bet</p>
                           </div>
-                          <div className="bg-slate-900/60 rounded-lg p-3">
+                          <div className="bg-surface/60 rounded-lg p-3">
                             <p className="text-muted text-xs mb-1">Break-even %</p>
                             <p className="text-white font-black text-xl">
                               {((pickBreakEven || 0) * 100).toFixed(1)}%
@@ -5885,13 +5886,13 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                             <p className="text-muted text-xs mt-0.5">Win rate needed to break even</p>
                           </div>
                           {isV3 ? (
-                          <div className="bg-slate-900/60 rounded-lg p-3">
+                          <div className="bg-surface/60 rounded-lg p-3">
                             <p className="text-muted text-xs mb-1">Fair line</p>
                             <p className="text-white font-black text-xl">{pickFairLine}</p>
                             <p className="text-muted text-xs mt-0.5">The model's price for this pick</p>
                           </div>
                           ) : (
-                          <div className="bg-slate-900/60 rounded-lg p-3">
+                          <div className="bg-surface/60 rounded-lg p-3">
                             <p className="text-muted text-xs mb-1">Kelly fraction</p>
                             <p className="text-white font-black text-xl">
                               {((pickKelly || 0) * 100).toFixed(1)}%
@@ -5902,14 +5903,14 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                         </div>
                         {/* Confidence bar (legacy gate only) */}
                         {!isV3 && (
-                        <div className="pt-3 border-t border-slate-700/40">
+                        <div className="pt-3 border-t border-line-strong/40">
                           <div className="flex items-center justify-between mb-1.5">
                             <span className="text-muted text-xs">Model confidence</span>
-                            <span className={`text-xs font-bold ${market.betConfidence >= 65 ? 'text-emerald-400' : market.betConfidence >= 40 ? 'text-yellow-400' : 'text-muted'}`}>
+                            <span className={`text-xs font-bold ${market.betConfidence >= 65 ? 'text-good' : market.betConfidence >= 40 ? 'text-warn' : 'text-muted'}`}>
                               {market.betConfidence}/100
                             </span>
                           </div>
-                          <div className="h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                          <div className="h-1.5 bg-surface-2 rounded-full overflow-hidden">
                             <div
                               className={`h-full rounded-full transition-all ${market.betConfidence >= 65 ? 'bg-emerald-500' : market.betConfidence >= 40 ? 'bg-yellow-500' : 'bg-slate-600'}`}
                               style={{ width: `${market.betConfidence ?? 0}%` }}
@@ -5928,7 +5929,7 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
               })()}
 
               {/* VIG + SIDE-BY-SIDE CARDS */}
-              <div className="bg-slate-900 border border-slate-700 rounded-xl p-5">
+              <div className="bg-surface border border-line-strong rounded-xl p-5">
                 <div className="flex items-center justify-between mb-3">
                   <p className="text-muted text-xs font-semibold uppercase tracking-wider">
                     Market Analysis
@@ -5940,7 +5941,7 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                 </div>
 
                 {/* Probability comparison bar */}
-                <div className="bg-slate-800/40 rounded-xl p-4 mb-4">
+                <div className="bg-surface-2/40 rounded-xl p-4 mb-4">
                   <div className="grid grid-cols-3 gap-2 text-center">
                     <div>
                       <p className="text-muted text-xs">Market (no-vig)</p>
@@ -5962,8 +5963,8 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                         <span
                           className={
                             market.edgeA > 0.02
-                              ? 'text-emerald-400'
-                              : 'text-red-400'
+                              ? 'text-good'
+                              : 'text-bad'
                           }
                         >
                           {market.edgeA > 0 ? '+' : ''}
@@ -5973,8 +5974,8 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                         <span
                           className={
                             market.edgeB > 0.02
-                              ? 'text-emerald-400'
-                              : 'text-red-400'
+                              ? 'text-good'
+                              : 'text-bad'
                           }
                         >
                           {market.edgeB > 0 ? '+' : ''}
@@ -6047,8 +6048,8 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                             <p
                               className={`font-bold text-base ${
                                 color === 'blue'
-                                  ? 'text-blue-400'
-                                  : 'text-red-400'
+                                  ? 'text-info'
+                                  : 'text-bad'
                               }`}
                             >
                               {f.FIGHTER}
@@ -6056,12 +6057,12 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                             <span
                               className={`text-xs font-black px-2.5 py-1 rounded-full border ${
                                 grade.label === 'STRONG VALUE' || grade.label === 'VALUE'
-                                  ? 'bg-emerald-900/40 text-emerald-400 border-emerald-700/50'
+                                  ? 'bg-emerald-900/40 text-good border-emerald-700/50'
                                   : grade.label === 'LEAN'
-                                  ? 'bg-yellow-900/40 text-yellow-400 border-yellow-700/50'
+                                  ? 'bg-yellow-900/40 text-warn border-yellow-700/50'
                                   : grade.label === 'FADE'
-                                  ? 'bg-red-900/40 text-red-400 border-red-700/50'
-                                  : 'bg-slate-700 text-secondary border-slate-600'
+                                  ? 'bg-red-900/40 text-bad border-red-700/50'
+                                  : 'bg-surface-3 text-secondary border-line-strong'
                               }`}
                             >
                               {grade.label}
@@ -6108,16 +6109,16 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                                 {val}
                               </div>
                             ))}
-                            <div className="border-t border-slate-700/50 pt-2 mt-2" />
+                            <div className="border-t border-line-strong/50 pt-2 mt-2" />
                             {[
                               [
                                 'Edge (model − market)',
                                 <span
                                   className={`font-black ${
                                     (edge ?? 0) > 0.03
-                                      ? 'text-xl text-emerald-400'
+                                      ? 'text-xl text-good'
                                       : (edge ?? 0) < -0.03
-                                      ? 'text-xl text-red-400'
+                                      ? 'text-xl text-bad'
                                       : 'text-sm text-secondary'
                                   }`}
                                 >
@@ -6130,8 +6131,8 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                                 <span
                                   className={`font-bold ${
                                     (ev ?? 0) > 0
-                                      ? 'text-emerald-400'
-                                      : 'text-red-400'
+                                      ? 'text-good'
+                                      : 'text-bad'
                                   }`}
                                 >
                                   {(ev ?? 0) > 0 ? '+' : ''}$
@@ -6143,7 +6144,7 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                                 <span
                                   className={`font-mono ${
                                     (kelly ?? 0) > 0
-                                      ? 'text-emerald-400'
+                                      ? 'text-good'
                                       : 'text-muted'
                                   }`}
                                 >
@@ -6164,7 +6165,7 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                           </div>
                           {isBest && (
                             <div className="mt-3 pt-2 border-t border-emerald-800/30">
-                              <p className="text-emerald-400 text-xs font-bold text-center">
+                              <p className="text-good text-xs font-bold text-center">
                                 ★ BEST VALUE PLAY
                               </p>
                             </div>
@@ -6186,17 +6187,17 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
           )}
 
           {/* ── SECTION 8: FINISH PROBABILITY ── */}
-          <div className="bg-slate-900 border border-slate-700 rounded-xl p-5">
+          <div className="bg-surface border border-line-strong rounded-xl p-5">
             {(() => {
               const { ko, sub, dec } = computeFinishProbs(fA, fB);
               const dominant = ko > sub && ko > dec ? 'KO/TKO' : sub > dec ? 'SUB' : 'DEC';
 
               const badge =
                 ko > 45
-                  ? { label: 'KO/TKO LIKELY', cls: 'bg-red-950/60 text-red-400 border border-red-800/50' }
+                  ? { label: 'KO/TKO LIKELY', cls: 'bg-red-950/60 text-bad border border-red-800/50' }
                   : sub > 30
                   ? { label: 'SUBMISSION THREAT', cls: 'bg-violet-950/60 text-violet-400 border border-violet-800/50' }
-                  : { label: 'LIKELY DECISION', cls: 'bg-slate-800 text-secondary border border-slate-700' };
+                  : { label: 'LIKELY DECISION', cls: 'bg-surface-2 text-secondary border border-line-strong' };
 
               const koDriver    = (fA.KO_WIN_PCT ?? 0) >= (fB.KO_WIN_PCT ?? 0) ? fA : fB;
               const subDriver   = (fA.SUB_WIN_PCT ?? 0) >= (fB.SUB_WIN_PCT ?? 0) ? fA : fB;
@@ -6211,7 +6212,7 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                   label: 'KO / TKO',
                   pct: ko,
                   color: 'bg-red-500',
-                  tc: 'text-red-400',
+                  tc: 'text-bad',
                   driver: hasKdThreat
                     ? `Driven by ${koDriverName}'s KD rate`
                     : `Driven by ${koDriverName}'s KO%`,
@@ -6267,7 +6268,7 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                     {methods.map(({ key, label, pct, tc, driver }) => {
                       const isDominant = key === dominant;
                       return (
-                        <div key={key} className="bg-slate-800/40 rounded-xl p-3">
+                        <div key={key} className="bg-surface-2/40 rounded-xl p-3">
                           <p className={`font-black ${isDominant ? 'text-2xl' : 'text-lg'} ${tc}`}>
                             {pct}%
                           </p>
@@ -6412,7 +6413,7 @@ function ScoutProfile({ allFighters }) {
       return {
         label: 'Knockout Artist',
         desc: 'Elite finishing power — stops fights standing with a high knockdown rate and finish percentage.',
-        color: 'text-red-400',
+        color: 'text-bad',
         bg: 'bg-red-900/20 border-red-800',
       };
     if (sub > 1.5 && finish > 50)
@@ -6426,7 +6427,7 @@ function ScoutProfile({ allFighters }) {
       return {
         label: 'Pressure Wrestler',
         desc: 'Dominant grappler who controls where fights happen and wears opponents down with relentless top pressure.',
-        color: 'text-blue-400',
+        color: 'text-info',
         bg: 'bg-blue-900/20 border-blue-800',
       };
     if (nsm > 1.5 && acc > 50)
@@ -6440,14 +6441,14 @@ function ScoutProfile({ allFighters }) {
       return {
         label: 'Volume Fighter',
         desc: 'Gets stronger as fights go on — output increases in the late rounds and consistently outworks opponents.',
-        color: 'text-emerald-400',
+        color: 'text-good',
         bg: 'bg-emerald-900/20 border-emerald-800',
       };
     if (nsm < -0.5 && finish > 55)
       return {
         label: 'Brawler',
         desc: 'Willing to trade and absorb damage to land their own shots — high finish rate despite taking hits.',
-        color: 'text-yellow-400',
+        color: 'text-warn',
         bg: 'bg-yellow-900/20 border-yellow-800',
       };
     if (tde > 2 && nsm > 0)
@@ -6461,7 +6462,7 @@ function ScoutProfile({ allFighters }) {
       label: 'Defensive Technician',
       desc: 'Disciplined fighter who avoids damage, controls pace, and wins through efficiency over aggression.',
       color: 'text-slate-300',
-      bg: 'bg-slate-800/60 border-slate-700',
+      bg: 'bg-surface-2/60 border-line-strong',
     };
   }, [fighter]);
 
@@ -6470,14 +6471,14 @@ function ScoutProfile({ allFighters }) {
       key: 'FACTOR_DAMAGE',
       label: 'Damage',
       Icon: Zap,
-      textC: 'text-red-400',
+      textC: 'text-bad',
       bgC: 'bg-red-500',
     },
     {
       key: 'FACTOR_POSITION',
       label: 'Position',
       Icon: Shield,
-      textC: 'text-blue-400',
+      textC: 'text-info',
       bgC: 'bg-blue-500',
     },
     {
@@ -6491,7 +6492,7 @@ function ScoutProfile({ allFighters }) {
       key: 'FACTOR_CARDIO',
       label: 'Cardio',
       Icon: Wind,
-      textC: 'text-emerald-400',
+      textC: 'text-good',
       bgC: 'bg-emerald-500',
     },
   ];
@@ -6573,7 +6574,7 @@ function ScoutProfile({ allFighters }) {
       {fighter ? (
         <div className="space-y-5">
           {/* Hero */}
-          <div className="bg-slate-900 border border-slate-700 rounded-xl p-6">
+          <div className="bg-surface border border-line-strong rounded-xl p-6">
             <div className="flex items-start justify-between mb-4">
               <div>
                 <h3 className="text-3xl font-black text-white">
@@ -6588,13 +6589,13 @@ function ScoutProfile({ allFighters }) {
                     {fighter.RECORD}
                   </span>
                   {divRank && (
-                    <span className="bg-red-900/40 text-red-400 text-xs font-bold px-2 py-0.5 rounded-full border border-red-900">
+                    <span className="bg-red-900/40 text-bad text-xs font-bold px-2 py-0.5 rounded-full border border-red-900">
                       #{divRank.rank}/{divRank.total} DrossPom
                     </span>
                   )}
                   {fighter.IS_PROSPECT && (
                     <span
-                      className="bg-amber-900/40 text-amber-400 text-xs font-black px-2 py-0.5 rounded-full border border-amber-800"
+                      className="bg-amber-900/40 text-warn text-xs font-black px-2 py-0.5 rounded-full border border-amber-800"
                       title="Pre-debut UFC signee — stats from pre-UFC pro fights"
                     >
                       PRE-UFC
@@ -6604,8 +6605,8 @@ function ScoutProfile({ allFighters }) {
                     <span
                       className={`text-xs font-bold px-2 py-0.5 rounded-full border ${
                         isChampionRecord(fighter.UFC_RANK)
-                          ? 'bg-yellow-900/40 text-yellow-400 border-yellow-800'
-                          : 'bg-slate-700 text-slate-300 border-slate-600'
+                          ? 'bg-yellow-900/40 text-warn border-yellow-800'
+                          : 'bg-surface-3 text-slate-300 border-line-strong'
                       }`}
                     >
                       {ufcRankLabel(fighter.UFC_RANK)} UFC Official
@@ -6616,8 +6617,8 @@ function ScoutProfile({ allFighters }) {
                       <span
                         className={`text-xs font-bold px-2 py-0.5 rounded-full border ${
                           fighter.QUALITY_ADJUSTMENT > 0
-                            ? 'bg-emerald-900/40 text-emerald-400 border-emerald-800'
-                            : 'bg-red-900/40 text-red-400 border-red-900'
+                            ? 'bg-emerald-900/40 text-good border-emerald-800'
+                            : 'bg-red-900/40 text-bad border-red-900'
                         }`}
                       >
                         {fighter.QUALITY_ADJUSTMENT > 0 ? '+' : ''}
@@ -6631,7 +6632,7 @@ function ScoutProfile({ allFighters }) {
                       className={`text-xs font-bold px-2 py-0.5 rounded-full border ${
                         pen > 0
                           ? 'bg-orange-900/40 text-orange-400 border-orange-800'
-                          : 'bg-slate-800 text-secondary border-slate-700'
+                          : 'bg-surface-2 text-secondary border-line-strong'
                       }`}
                     >
                       Age {fighter.AGE}
@@ -6702,7 +6703,7 @@ function ScoutProfile({ allFighters }) {
                 const raw = factorCard?.raw ?? 0;
                 const avgRaw = factorCard?.avgRaw ?? 0;
                 return (
-                  <div key={key} className="bg-slate-800 rounded-xl p-3">
+                  <div key={key} className="bg-surface-2 rounded-xl p-3">
                     <div
                       className={`flex items-center gap-1.5 mb-1.5 ${textC}`}
                     >
@@ -6713,7 +6714,7 @@ function ScoutProfile({ allFighters }) {
                     <p className="text-muted text-xs mt-0.5">
                       raw {raw.toFixed(1)} · avg {avgRaw.toFixed(1)}
                     </p>
-                    <div className="mt-2 h-1.5 bg-slate-700 rounded-full overflow-hidden">
+                    <div className="mt-2 h-1.5 bg-surface-3 rounded-full overflow-hidden">
                       <div
                         className={`h-full ${bgC} rounded-full`}
                         style={{ width: `${score}%` }}
@@ -6726,7 +6727,7 @@ function ScoutProfile({ allFighters }) {
           </div>
 
           {/* Sub-tabs */}
-          <div role="tablist" aria-label="Scout sections" className="flex gap-1 bg-slate-900 border border-slate-800 rounded-xl p-1">
+          <div role="tablist" aria-label="Scout sections" className="flex gap-1 bg-surface border border-line rounded-xl p-1">
             {[
               { id: 'overview', label: 'Overview' },
               { id: 'fights', label: `Recent Fights (${fh.length})` },
@@ -6740,7 +6741,7 @@ function ScoutProfile({ allFighters }) {
                 onClick={() => setScoutTab(id)}
                 className={`flex-1 py-2 rounded-lg text-xs font-semibold transition-all ${
                   scoutTab === id
-                    ? 'bg-slate-700 text-white'
+                    ? 'bg-surface-3 text-white'
                     : 'text-muted hover:text-slate-300'
                 }`}
               >
@@ -6753,7 +6754,7 @@ function ScoutProfile({ allFighters }) {
           {scoutTab === 'overview' && (
             <div className="space-y-5">
               <div className="grid grid-cols-2 gap-5">
-                <figure className="bg-slate-900 border border-slate-700 rounded-xl p-5" aria-labelledby="scout-factors-title" aria-describedby="scout-factors-description">
+                <figure className="bg-surface border border-line-strong rounded-xl p-5" aria-labelledby="scout-factors-title" aria-describedby="scout-factors-description">
                   <h3 id="scout-factors-title" className="text-secondary text-xs font-semibold uppercase tracking-wider mb-1">
                     Four Factors vs Division Avg
                   </h3>
@@ -6831,7 +6832,7 @@ function ScoutProfile({ allFighters }) {
                     rows={radarData}
                   />
                 </figure>
-                <div className="bg-slate-900 border border-slate-700 rounded-xl p-5">
+                <div className="bg-surface border border-line-strong rounded-xl p-5">
                   <p className="text-secondary text-xs font-semibold uppercase tracking-wider mb-4">
                     Grappling Floor
                   </p>
@@ -6888,7 +6889,7 @@ function ScoutProfile({ allFighters }) {
                               {hasValue ? suf : ''}
                             </p>
                           </div>
-                          <div className="h-2.5 bg-slate-800 rounded-full overflow-hidden">
+                          <div className="h-2.5 bg-surface-2 rounded-full overflow-hidden">
                             <div
                               className={`h-full bg-linear-to-r ${color} rounded-full`}
                               style={{
@@ -6922,7 +6923,7 @@ function ScoutProfile({ allFighters }) {
               )}
 
               {divPercentiles && (
-                <div className="bg-slate-900 border border-slate-700 rounded-xl p-5">
+                <div className="bg-surface border border-line-strong rounded-xl p-5">
                   <p className="text-secondary text-xs font-semibold uppercase tracking-widest mb-4">
                     Division Percentile Rankings · {fighter.WEIGHT_CLASS}
                   </p>
@@ -6977,18 +6978,18 @@ function ScoutProfile({ allFighters }) {
                           <span
                             className={`text-xs font-black ${
                               pct >= 80
-                                ? 'text-emerald-400'
+                                ? 'text-good'
                                 : pct >= 60
-                                ? 'text-yellow-400'
+                                ? 'text-warn'
                                 : pct >= 40
                                 ? 'text-slate-300'
-                                : 'text-red-400'
+                                : 'text-bad'
                             }`}
                           >
                             {pct}th
                           </span>
                         </div>
-                        <div className="h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                        <div className="h-1.5 bg-surface-2 rounded-full overflow-hidden">
                           <div
                             className={`h-full ${color} rounded-full`}
                             style={{ width: `${pct}%` }}
@@ -7021,7 +7022,7 @@ function ScoutProfile({ allFighters }) {
                 <>
                   {/* Recent fight timeline */}
                   {perfTrendData.length >= 2 && (
-                    <div className="bg-slate-900 border border-slate-700 rounded-xl p-5">
+                    <div className="bg-surface border border-line-strong rounded-xl p-5">
                       <p className="text-secondary text-xs font-semibold uppercase tracking-wider mb-4">
                         Recent Results (Most Recent → Oldest)
                       </p>
@@ -7032,7 +7033,7 @@ function ScoutProfile({ allFighters }) {
                               ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-300'
                               : fight.re === 'L'
                               ? 'bg-red-500/15 border-red-500/30 text-red-300'
-                              : 'bg-slate-700/40 border-slate-600 text-slate-300';
+                              : 'bg-surface-3/40 border-line-strong text-slate-300';
                           const badgeTone =
                             fight.re === 'W'
                               ? 'bg-emerald-500 text-emerald-950'
@@ -7099,7 +7100,7 @@ function ScoutProfile({ allFighters }) {
                     {archetype.desc}
                   </p>
                 </div>
-                <div className="bg-slate-900 border border-slate-700 rounded-xl p-5">
+                <div className="bg-surface border border-line-strong rounded-xl p-5">
                   <p className="text-secondary text-xs font-semibold uppercase tracking-wider mb-3">
                     Projected Finish Method
                   </p>
@@ -7129,7 +7130,7 @@ function ScoutProfile({ allFighters }) {
                             label: 'KO / TKO',
                             pct: ko,
                             color: 'bg-red-500',
-                            tc: 'text-red-400',
+                            tc: 'text-bad',
                             icon: '🥊',
                           },
                           {
@@ -7156,7 +7157,7 @@ function ScoutProfile({ allFighters }) {
                                 {pct}%
                               </span>
                             </div>
-                            <div className="h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                            <div className="h-1.5 bg-surface-2 rounded-full overflow-hidden">
                               <div
                                 className={`h-full ${color} rounded-full`}
                                 style={{ width: `${pct}%` }}
@@ -7172,7 +7173,7 @@ function ScoutProfile({ allFighters }) {
 
               {/* Betting Angles */}
               <div className="grid grid-cols-2 gap-4">
-                <div className="bg-slate-900 border border-slate-700 rounded-xl p-5">
+                <div className="bg-surface border border-line-strong rounded-xl p-5">
                   <p className="text-secondary text-xs font-semibold uppercase tracking-wider mb-3">
                     ✅ Bet On When...
                   </p>
@@ -7216,7 +7217,7 @@ function ScoutProfile({ allFighters }) {
                     )}
                   </ul>
                 </div>
-                <div className="bg-slate-900 border border-slate-700 rounded-xl p-5">
+                <div className="bg-surface border border-line-strong rounded-xl p-5">
                   <p className="text-secondary text-xs font-semibold uppercase tracking-wider mb-3">
                     ⚠️ Fade When...
                   </p>
@@ -7256,7 +7257,7 @@ function ScoutProfile({ allFighters }) {
               </div>
 
               {/* Full Percentile Reference */}
-              <div className="bg-slate-900 border border-slate-700 rounded-xl p-5">
+              <div className="bg-surface border border-line-strong rounded-xl p-5">
                 <p className="text-secondary text-xs font-semibold uppercase tracking-widest mb-4">
                   Full Division Percentile Reference · {fighter.WEIGHT_CLASS}
                 </p>
@@ -7309,18 +7310,18 @@ function ScoutProfile({ allFighters }) {
                         <span
                           className={`text-xs font-black ${
                             pct >= 80
-                              ? 'text-emerald-400'
+                              ? 'text-good'
                               : pct >= 60
-                              ? 'text-yellow-400'
+                              ? 'text-warn'
                               : pct >= 40
                               ? 'text-slate-300'
-                              : 'text-red-400'
+                              : 'text-bad'
                           }`}
                         >
                           {pct}th percentile
                         </span>
                       </div>
-                      <div className="h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                      <div className="h-1.5 bg-surface-2 rounded-full overflow-hidden">
                         <div
                           className={`h-full ${color} rounded-full`}
                           style={{ width: `${pct}%` }}
@@ -7335,14 +7336,14 @@ function ScoutProfile({ allFighters }) {
 
           {/* FULL STATS TAB */}
           {scoutTab === 'stats' && (
-            <div className="bg-slate-900 border border-slate-700 rounded-xl p-5">
+            <div className="bg-surface border border-line-strong rounded-xl p-5">
               <p className="text-secondary text-xs font-semibold uppercase tracking-wider mb-4">
                 Full Statistical Breakdown
               </p>
               <div className="grid grid-cols-3 gap-6">
                 {STAT_GROUPS.map(({ title, stats }) => (
                   <div key={title}>
-                    <p className="text-muted text-xs font-bold uppercase tracking-wider mb-3 pb-1.5 border-b border-slate-800">
+                    <p className="text-muted text-xs font-bold uppercase tracking-wider mb-3 pb-1.5 border-b border-line">
                       {title}
                     </p>
                     <div className="space-y-2">
@@ -7368,8 +7369,8 @@ function ScoutProfile({ allFighters }) {
                               className={`font-mono text-xs font-semibold ${
                                 signed
                                   ? v > 0
-                                    ? 'text-emerald-400'
-                                    : 'text-red-400'
+                                    ? 'text-good'
+                                    : 'text-bad'
                                   : key === 'CREDIBILITY'
                                   ? credColor(v)
                                   : key === 'CARDIO_DECAY'
@@ -7558,7 +7559,7 @@ export default function App() {
 
   return (
     <div
-      className="min-h-screen bg-slate-950 text-primary font-sans pb-[calc(64px+env(safe-area-inset-bottom))] sm:pb-0"
+      className="min-h-screen bg-canvas text-primary font-sans pb-[calc(64px+env(safe-area-inset-bottom))] sm:pb-0"
     >
       <Header view={view} />
       {belowSm && <BottomNav view={view} />}
@@ -7643,10 +7644,10 @@ const betTier = (action) => {
   if (action === 'STRONG BET')
     return { label: 'STRONG BET', cls: 'text-emerald-300 font-bold', border: 'border-emerald-600/60' };
   if (action === 'BET')
-    return { label: 'BET', cls: 'text-emerald-400', border: 'border-emerald-700/50' };
+    return { label: 'BET', cls: 'text-good', border: 'border-emerald-700/50' };
   if (action === 'LEAN')
-    return { label: 'LEAN', cls: 'text-yellow-400', border: 'border-yellow-700/50' };
-  return { label: 'NO BET', cls: 'text-muted font-semibold', border: 'border-slate-800' };
+    return { label: 'LEAN', cls: 'text-warn', border: 'border-yellow-700/50' };
+  return { label: 'NO BET', cls: 'text-muted font-semibold', border: 'border-line' };
 };
 
 function HomeTab({ summary, entries, allFighters, filterSince }) {
@@ -7787,56 +7788,35 @@ function HomeTab({ summary, entries, allFighters, filterSince }) {
       <V3RecordPanel entries={entries} compact />
 
       {/* Track record tiles */}
-      <p className="text-muted text-xs font-semibold uppercase tracking-wider mb-3">
-        Model Track Record (all picks)
-      </p>
+      <SectionLabel>Model Track Record (all picks)</SectionLabel>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
-          <p className="text-muted text-xs uppercase tracking-wider font-semibold mb-2">
-            Pick Accuracy
-          </p>
-          {summaryV2All.graded > 0 ? (
-            <>
-              <p className={`font-black text-3xl ${summaryV2All.accuracy >= 60 ? 'text-emerald-400' : 'text-yellow-400'}`}>
-                {summaryV2All.accuracy.toFixed(1)}%
-              </p>
-              <p className="text-muted text-xs mt-1">
-                Frozen tracked-decision accuracy across {summaryV2All.graded} decisive fights · {filterSince ? `since ${filterSince}` : 'all time'}
-              </p>
-              {/* v1 display hidden 2026-07-21 per single-model view -- restore
-                  by re-adding: {v1Acc != null && <p>v1: {v1Acc.toFixed(1)}%</p>} */}
-            </>
-          ) : (
-            <p className="text-muted text-sm mt-1">No graded picks</p>
-          )}
-        </div>
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
-          <p className="text-muted text-xs uppercase tracking-wider font-semibold mb-2">
-            ROI
-          </p>
-          <p className={`font-black text-3xl ${summaryV2All.roi >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-            {summaryV2All.roi >= 0 ? '+' : ''}{summaryV2All.roi.toFixed(1)}%
-          </p>
-          <p className="text-muted text-xs mt-1">
-            {summaryV2All.profit >= 0 ? '+' : ''}{summaryV2All.profit.toFixed(2)}u on {summaryV2All.bets} bets (stake-weighted)
-          </p>
-        </div>
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
-          <p className="text-muted text-xs uppercase tracking-wider font-semibold mb-2">
-            Tracked Fights
-          </p>
-          <p className="font-black text-3xl text-white">{may23Entries.length}</p>
-          <p className="text-muted text-xs mt-1">{filterSince ? `since ${filterSince}` : 'all time'}</p>
-        </div>
+        <StatTile
+          label="Pick Accuracy"
+          empty={summaryV2All.graded > 0 ? null : 'No graded picks'}
+          value={`${summaryV2All.accuracy.toFixed(1)}%`}
+          tone={summaryV2All.accuracy >= 60 ? 'good' : 'warn'}
+          detail={`Frozen tracked-decision accuracy across ${summaryV2All.graded} decisive fights · ${filterSince ? `since ${filterSince}` : 'all time'}`}
+        />
+        {/* v1 display hidden 2026-07-21 per single-model view -- restore
+            by re-adding: {v1Acc != null && <p>v1: {v1Acc.toFixed(1)}%</p>} */}
+        <StatTile
+          label="ROI"
+          value={`${summaryV2All.roi >= 0 ? '+' : ''}${summaryV2All.roi.toFixed(1)}%`}
+          tone={summaryV2All.roi >= 0 ? 'good' : 'bad'}
+          detail={`${summaryV2All.profit >= 0 ? '+' : ''}${summaryV2All.profit.toFixed(2)}u on ${summaryV2All.bets} bets (stake-weighted)`}
+        />
+        <StatTile
+          label="Tracked Fights"
+          value={may23Entries.length}
+          detail={filterSince ? `since ${filterSince}` : 'all time'}
+        />
       </div>
 
       {/* Recent graded results */}
-      <p className="text-muted text-xs font-semibold uppercase tracking-wider mb-3">
-        Recent Results
-      </p>
+      <SectionLabel>Recent Results</SectionLabel>
       <div className="space-y-2 mb-6">
         {gradedPicks.length === 0 ? (
-          <div className="bg-slate-900 border border-slate-800 rounded-xl px-5 py-6 text-center">
+          <div className="bg-surface border border-line rounded-xl px-5 py-6 text-center">
             <p className="text-muted text-sm">
               No graded picks yet — results appear here after fights are scored.
             </p>
@@ -7854,7 +7834,7 @@ function HomeTab({ summary, entries, allFighters, filterSince }) {
             return (
               <div
                 key={e.id}
-                className={`bg-slate-900 border ${tier.border} border-l-4 ${accentBorder} rounded-xl px-5 py-4`}
+                className={`bg-surface border ${tier.border} border-l-4 ${accentBorder} rounded-xl px-5 py-4`}
               >
                 <div className="flex items-start justify-between gap-4 mb-2">
                   <div className="min-w-0">
@@ -7868,19 +7848,13 @@ function HomeTab({ summary, entries, allFighters, filterSince }) {
                   </div>
                   <div className="shrink-0">
                     {outcome === 'correct' && (
-                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-900/40 text-emerald-400 text-xs font-bold">
-                        ✓ CORRECT
-                      </span>
+                      <Tag tone="good">✓ CORRECT</Tag>
                     )}
                     {outcome === 'incorrect' && (
-                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-red-900/40 text-red-400 text-xs font-bold">
-                        ✗ INCORRECT
-                      </span>
+                      <Tag tone="bad">✗ INCORRECT</Tag>
                     )}
                     {outcome === 'push' && (
-                      <span className="px-2.5 py-1 rounded-lg bg-slate-800 text-secondary text-xs font-semibold">
-                        — NC/DRAW
-                      </span>
+                      <Tag tone="muted">— NC/DRAW</Tag>
                     )}
                   </div>
                 </div>
@@ -7923,7 +7897,7 @@ function HomeTab({ summary, entries, allFighters, filterSince }) {
               return (
                 <div
                   key={e.id}
-                  className={`px-4 py-3 bg-slate-900/60 border ${tier.border} border-l-4 border-l-slate-700 rounded-lg flex items-center justify-between gap-4`}
+                  className={`px-4 py-3 bg-surface/60 border ${tier.border} border-l-4 border-l-slate-700 rounded-lg flex items-center justify-between gap-4`}
                 >
                   <div className="min-w-0">
                     <p className="text-slate-300 text-xs font-semibold truncate">
@@ -7932,7 +7906,7 @@ function HomeTab({ summary, entries, allFighters, filterSince }) {
                     {v2Pick && (
                       <p className="text-xs mt-0.5 flex items-center gap-2">
                         <span className="inline-block text-[11px] font-black bg-violet-900/40 border border-violet-700/40 text-violet-400 px-1.5 py-0.5 rounded-full">v2</span>
-                        <span className={`text-sm font-bold ${v2Differs ? 'text-amber-400' : 'text-slate-300'}`}>
+                        <span className={`text-sm font-bold ${v2Differs ? 'text-warn' : 'text-slate-300'}`}>
                           {v2Pick.winner}
                         </span>
                         <span className="text-muted text-xs">{(v2Pick.prob * 100).toFixed(1)}%</span>
@@ -7982,13 +7956,13 @@ function HomeTab({ summary, entries, allFighters, filterSince }) {
       <div className="flex gap-3">
         <Link
           to={pathForView('simulator')}
-          className="flex-1 py-3 flex items-center justify-center rounded-xl bg-red-600 text-white font-bold text-sm hover:bg-red-500 transition-colors shadow-lg shadow-red-900/30"
+          className="flex-1 py-3 flex items-center justify-center rounded-xl bg-accent text-white font-bold text-sm hover:bg-accent-hover transition-colors shadow-lg shadow-accent/30"
         >
           Build a Matchup →
         </Link>
         <Link
           to={pathForView('roi')}
-          className="flex-1 py-3 flex items-center justify-center rounded-xl border border-slate-700 text-slate-300 font-semibold text-sm hover:text-white hover:border-slate-500 transition-colors"
+          className="flex-1 py-3 flex items-center justify-center rounded-xl border border-line-strong text-slate-300 font-semibold text-sm hover:text-white hover:border-slate-500 transition-colors"
         >
           Full Track Record →
         </Link>
@@ -8029,7 +8003,7 @@ function ExploreTab({ allFighters }) {
   return (
     <div>
       <h1 className="sr-only">Explore fighters</h1>
-      <div role="tablist" aria-label="Explore views" className="bg-slate-900/80 border-b border-slate-800 px-5 py-2 flex gap-1">
+      <div role="tablist" aria-label="Explore views" className="bg-surface/80 border-b border-line px-5 py-2 flex gap-1">
         {[
           { id: 'table', label: 'Database' },
           { id: 'scout', label: 'Scout' },
@@ -8041,7 +8015,7 @@ function ExploreTab({ allFighters }) {
             onClick={() => setExploreTab(id)}
             className={`inline-flex items-center justify-center min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0 px-4 py-1.5 rounded-lg text-sm font-semibold transition-all ${
               exploreTab === id
-                ? 'bg-slate-700 text-white'
+                ? 'bg-surface-3 text-white'
                 : 'text-muted hover:text-slate-300'
             }`}
           >
@@ -8455,7 +8429,7 @@ function ROITab({
                   if (!step2) return;
                   onClearEntries();
                 }}
-                className="px-3 py-2 rounded-lg border border-slate-700 text-secondary text-xs font-semibold hover:text-white hover:border-slate-600 transition-colors"
+                className="px-3 py-2 rounded-lg border border-line-strong text-secondary text-xs font-semibold hover:text-white hover:border-line-strong transition-colors"
               >
                 Clear All
               </button>
@@ -8472,7 +8446,7 @@ function ROITab({
             type="date"
             value={filterSince}
             onChange={e => setFilterSince(e.target.value)}
-            className="bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-1.5 min-h-[44px] sm:min-h-0 sm:h-9 focus:border-red-500"
+            className="bg-surface-2 border border-line-strong text-slate-200 text-sm rounded-lg px-3 py-1.5 min-h-[44px] sm:min-h-0 sm:h-9 focus:border-accent"
           />
           {filterSince && (
             <button
@@ -8496,26 +8470,26 @@ function ROITab({
           showing numbers that don't describe what's on screen. */}
       {entries.length > 0 && !isProps && !isParlays && (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6 items-stretch">
-          <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 h-full">
+          <div className="bg-surface border border-line rounded-xl p-4 h-full">
             <p className="text-muted text-xs uppercase tracking-wider font-semibold">Tracked Fights</p>
             <p className="font-black text-2xl mt-2 text-white">{roiBannerV1.total}</p>
           </div>
-          <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 h-full">
+          <div className="bg-surface border border-line rounded-xl p-4 h-full">
             <p className="text-muted text-xs uppercase tracking-wider font-semibold">Graded Picks</p>
-            <p className="font-black text-2xl mt-2 text-blue-400">{roiBannerV1.graded}</p>
+            <p className="font-black text-2xl mt-2 text-info">{roiBannerV1.graded}</p>
           </div>
-          <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 h-full">
+          <div className="bg-surface border border-line rounded-xl p-4 h-full">
             <p className="text-muted text-xs uppercase tracking-wider font-semibold">Pick Accuracy</p>
-            <p className={`font-black text-2xl mt-2 ${roiBannerV2.accuracy >= 60 ? 'text-emerald-400' : 'text-yellow-400'}`}>
+            <p className={`font-black text-2xl mt-2 ${roiBannerV2.accuracy >= 60 ? 'text-good' : 'text-warn'}`}>
               {roiBannerV2.accuracy.toFixed(1)}%
             </p>
             <p className="text-muted text-[11px] mt-1">
               Frozen tracked-decision accuracy across {roiBannerV2.graded} decisive fights. Each fight counts once. Frozen at each pick's capture — no lookahead.
             </p>
           </div>
-          <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 h-full">
+          <div className="bg-surface border border-line rounded-xl p-4 h-full">
             <p className="text-muted text-xs uppercase tracking-wider font-semibold">ROI</p>
-            <p className={`font-black text-2xl mt-2 ${roiBannerV2.roi >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+            <p className={`font-black text-2xl mt-2 ${roiBannerV2.roi >= 0 ? 'text-good' : 'text-bad'}`}>
               {roiBannerV2.roi >= 0 ? '+' : ''}{roiBannerV2.roi.toFixed(1)}%
             </p>
             <p className="text-muted text-xs mt-1">
@@ -8525,7 +8499,7 @@ function ROITab({
         </div>
       )}
 
-      <div role="tablist" aria-label="ROI sections" className="flex items-center flex-wrap gap-1 bg-slate-800 rounded-lg p-1 mb-4 w-fit">
+      <div role="tablist" aria-label="ROI sections" className="flex items-center flex-wrap gap-1 bg-surface-2 rounded-lg p-1 mb-4 w-fit">
         {[
           { id: 'all', label: 'All Events' },
           { id: 'recent', label: 'Most Recent Event' },
@@ -8539,7 +8513,7 @@ function ROITab({
             onClick={() => setSubTab(id)}
             className={`inline-flex items-center justify-center min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0 whitespace-nowrap px-3 py-1.5 rounded-md text-xs font-semibold transition-colors ${
               subTab === id
-                ? 'bg-red-600 text-white'
+                ? 'bg-accent text-white'
                 : 'text-secondary hover:text-white'
             }`}
           >
@@ -8562,7 +8536,7 @@ function ROITab({
           onDelete={canWrite ? onDeleteParlay : undefined}
         />
       ) : entries.length === 0 ? (
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-8 text-center text-muted">
+        <div className="bg-surface border border-line rounded-xl p-8 text-center text-muted">
           <Calendar size={36} className="mx-auto mb-3 opacity-20" />
           <p className="text-sm">No saved predictions yet.</p>
           <p className="text-xs mt-1">
@@ -8571,7 +8545,7 @@ function ROITab({
           </p>
         </div>
       ) : visibleEntries.length === 0 ? (
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-8 text-center text-muted">
+        <div className="bg-surface border border-line rounded-xl p-8 text-center text-muted">
           <p className="text-sm">No graded results yet to show as "Most Recent Event".</p>
         </div>
       ) : (
@@ -8583,13 +8557,13 @@ function ROITab({
             return (
               <div
                 key={group.key}
-                className="bg-slate-900/40 border border-slate-800 rounded-xl overflow-hidden"
+                className="bg-surface/40 border border-line rounded-xl overflow-hidden"
               >
                 <button
                   onClick={() => toggleEvent(group.key)}
                   aria-expanded={open}
                   aria-controls={`roi-event-${group._i}`}
-                  className="w-full flex items-center justify-between gap-3 px-5 py-4 text-left hover:bg-slate-800/40 transition-colors"
+                  className="w-full flex items-center justify-between gap-3 px-5 py-4 text-left hover:bg-surface-2/40 transition-colors"
                 >
                   <div className="flex items-center gap-3">
                     {open ? (
@@ -8606,7 +8580,7 @@ function ROITab({
                   </div>
                   <div className="flex items-center gap-3 shrink-0">
                     {eventHasV2Bets ? (
-                      <span className={`text-xs font-bold ${eventSummary.profit >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                      <span className={`text-xs font-bold ${eventSummary.profit >= 0 ? 'text-good' : 'text-bad'}`}>
                         {eventSummary.profit >= 0 ? '+' : ''}{eventSummary.profit.toFixed(2)}u
                       </span>
                     ) : (
@@ -8716,7 +8690,7 @@ function ROITab({
             return (
               <div
                 key={entry.id}
-                className={`bg-slate-900 border ${betTier(effBetAction).border} rounded-xl p-5`}
+                className={`bg-surface border ${betTier(effBetAction).border} rounded-xl p-5`}
               >
                 <div className="flex items-start justify-between gap-4 mb-4">
                   <div>
@@ -8741,12 +8715,12 @@ function ROITab({
                       <span
                         className={`text-xs font-bold px-2 py-0.5 rounded-full border ${
                           !graded || ungraded
-                            ? 'bg-slate-800 text-secondary border-slate-700'
+                            ? 'bg-surface-2 text-secondary border-line-strong'
                             : correct
-                            ? 'bg-emerald-900/40 text-emerald-400 border-emerald-800'
+                            ? 'bg-emerald-900/40 text-good border-emerald-800'
                             : isPushResult(entry.actualWinner)
-                            ? 'bg-slate-800 text-slate-300 border-slate-700'
-                            : 'bg-red-900/40 text-red-400 border-red-800'
+                            ? 'bg-surface-2 text-slate-300 border-line-strong'
+                            : 'bg-red-900/40 text-bad border-red-800'
                         }`}
                       >
                         {!graded
@@ -8786,7 +8760,7 @@ function ROITab({
                           onDeleteEntry(entry.id);
                         }
                       }}
-                      className="px-3 py-1.5 rounded-lg border border-slate-700 text-muted text-xs font-semibold hover:text-white hover:border-slate-600 transition-colors"
+                      className="px-3 py-1.5 rounded-lg border border-line-strong text-muted text-xs font-semibold hover:text-white hover:border-line-strong transition-colors"
                     >
                       Delete
                     </button>
@@ -8797,12 +8771,12 @@ function ROITab({
                 {/* Model pick — neutral unavailable state for a malformed C6
                     record (never a raw-v2 fallback), else v2/C6 or v1 view */}
                 {decisionUnavailable ? (
-                  <div className="bg-slate-800/40 rounded-lg p-4 mb-3">
+                  <div className="bg-surface-2/40 rounded-lg p-4 mb-3">
                     <div className="flex items-center gap-2">
                       <p className="text-muted text-xs uppercase tracking-wider">
                         Model Pick
                       </p>
-                      <span className="text-[11px] font-bold text-slate-400 bg-slate-800 border border-slate-700 px-1.5 py-0.5 rounded-sm uppercase">
+                      <span className="text-[11px] font-bold text-slate-400 bg-surface-2 border border-line-strong px-1.5 py-0.5 rounded-sm uppercase">
                         Unavailable
                       </span>
                     </div>
@@ -8811,7 +8785,7 @@ function ROITab({
                     </p>
                   </div>
                 ) : inV2Mode ? (
-                  <div className="bg-slate-800/40 rounded-lg p-4 mb-3 flex items-baseline justify-between gap-3">
+                  <div className="bg-surface-2/40 rounded-lg p-4 mb-3 flex items-baseline justify-between gap-3">
                     <div>
                       <div className="flex items-center gap-2">
                         <p className="text-muted text-xs uppercase tracking-wider">
@@ -8835,7 +8809,7 @@ function ROITab({
                       </p>
                     </div>
                     <div className="text-right">
-                      <p className="text-emerald-400 font-black text-lg">
+                      <p className="text-good font-black text-lg">
                         {(effProb * 100).toFixed(1)}%
                       </p>
                       <p className="text-muted text-xs mt-0.5">
@@ -8844,7 +8818,7 @@ function ROITab({
                     </div>
                   </div>
                 ) : (
-                  <div className="bg-slate-800/40 rounded-lg p-4 mb-3 flex items-baseline justify-between gap-3">
+                  <div className="bg-surface-2/40 rounded-lg p-4 mb-3 flex items-baseline justify-between gap-3">
                     <div>
                       <p className="text-muted text-xs uppercase tracking-wider">
                         Model Pick
@@ -8854,7 +8828,7 @@ function ROITab({
                       </p>
                     </div>
                     <div className="text-right">
-                      <p className="text-emerald-400 font-black text-lg">
+                      <p className="text-good font-black text-lg">
                         {((entry.displayProb ?? 0) * 100).toFixed(1)}%
                       </p>
                       <p className="text-muted text-xs mt-0.5">
@@ -8865,7 +8839,7 @@ function ROITab({
                 )}
 
                 <div className="grid grid-cols-3 gap-3 mb-4">
-                  <div className="bg-slate-800/40 rounded-lg p-3">
+                  <div className="bg-surface-2/40 rounded-lg p-3">
                     <p className="text-muted text-xs uppercase tracking-wider">
                       Bet Rec
                     </p>
@@ -8877,8 +8851,8 @@ function ROITab({
                               effBetAction === 'STRONG BET'
                                 ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
                                 : effBetAction === 'BET'
-                                ? 'bg-emerald-900/30 text-emerald-400 border border-emerald-800'
-                                : 'bg-yellow-900/30 text-yellow-400 border border-yellow-800'
+                                ? 'bg-emerald-900/30 text-good border border-emerald-800'
+                                : 'bg-yellow-900/30 text-warn border border-yellow-800'
                             }`}
                           >
                             {effBetAction}
@@ -8892,7 +8866,7 @@ function ROITab({
                       <p className="text-muted font-bold text-sm mt-2">No Bet</p>
                     )}
                   </div>
-                  <div className="bg-slate-800/40 rounded-lg p-3">
+                  <div className="bg-surface-2/40 rounded-lg p-3">
                     <p className="text-muted text-xs">Market odds</p>
                     <p className="text-white font-bold text-sm mt-1">
                       {effectiveOdds || '—'}
@@ -8905,15 +8879,15 @@ function ROITab({
                         : 'No saved market edge'}
                     </p>
                   </div>
-                  <div className="bg-slate-800/40 rounded-lg p-3">
+                  <div className="bg-surface-2/40 rounded-lg p-3">
                       <p className="text-muted text-xs">Units</p>
                     <p
                       className={`font-bold text-sm mt-1 ${
                         effectiveProfit == null
                           ? 'text-slate-300'
                           : effectiveProfit >= 0
-                          ? 'text-emerald-400'
-                          : 'text-red-400'
+                          ? 'text-good'
+                          : 'text-bad'
                       }`}
                     >
                       {effectiveProfit == null
@@ -8960,7 +8934,7 @@ function ROITab({
                       aria-label={`Event name for ${entry.fighterA} versus ${entry.fighterB}`}
                       value={entry.eventName || ''}
                       onCommit={(v) => onUpdateEntry(entry.id, { eventName: v })}
-                      className="w-full bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:border-red-500"
+                      className="w-full bg-surface-2 border border-line-strong text-slate-200 text-sm rounded-lg px-3 py-2 focus:border-accent"
                     />
                   </div>
                   <div>
@@ -8975,7 +8949,7 @@ function ROITab({
                       onChange={(e) =>
                         onUpdateEntry(entry.id, { eventDate: e.target.value })
                       }
-                      className="w-full h-10 bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:border-red-500"
+                      className="w-full h-10 bg-surface-2 border border-line-strong text-slate-200 text-sm rounded-lg px-3 py-2 focus:border-accent"
                     />
                   </div>
                   <div>
@@ -8988,7 +8962,7 @@ function ROITab({
                       type="text"
                       value={effectiveTrackedSide || ''}
                       readOnly
-                      className="w-full bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2"
+                      className="w-full bg-surface-2 border border-line-strong text-slate-200 text-sm rounded-lg px-3 py-2"
                     />
                   </div>
                   <div>
@@ -9001,7 +8975,7 @@ function ROITab({
                       type="text"
                       value={effectiveOdds || ''}
                       readOnly
-                      className="w-full bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2"
+                      className="w-full bg-surface-2 border border-line-strong text-slate-200 text-sm rounded-lg px-3 py-2"
                     />
                   </div>
                   <div>
@@ -9017,7 +8991,7 @@ function ROITab({
                           actualWinner: e.target.value,
                         })
                       }
-                      className="w-full bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:border-red-500"
+                      className="w-full bg-surface-2 border border-line-strong text-slate-200 text-sm rounded-lg px-3 py-2 focus:border-accent"
                     >
                       <option value="">Pending</option>
                       <option value={entry.fighterA}>{entry.fighterA}</option>
@@ -9049,7 +9023,7 @@ function InfoTab() {
       full: '0–90 Fighter Rating',
       formula:
         "Normalized ELO within each weight class. 100 = division's highest-rated fighter. 50 = division average. Updates every Monday and Thursday after fight results are processed.",
-      color: 'text-red-400',
+      color: 'text-bad',
     },
     {
       term: 'ELO',
@@ -9063,7 +9037,7 @@ function InfoTab() {
       full: 'Overall Quality Index',
       formula:
         "Composite of efficiency, credibility, and output metrics — the primary ranking stat, analogous to KenPom's overall rating.",
-      color: 'text-yellow-400',
+      color: 'text-warn',
     },
     {
       term: 'EFF',
@@ -9084,7 +9058,7 @@ function InfoTab() {
       full: 'Quality Momentum',
       formula:
         'Opponent-quality-adjusted win/loss momentum. Rewards beating highly-rated opponents and penalizes losing to lower-rated ones.',
-      color: 'text-blue-400',
+      color: 'text-info',
     },
     {
       term: 'NSM',
@@ -9147,7 +9121,7 @@ function InfoTab() {
         <p className="text-muted text-xs mb-5 font-mono">DrossPom Composite v1.0 · Learned Logistic v2.0 (parallel)</p>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {/* Card 1 — Prediction Engine */}
-          <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 hover:border-slate-700 transition-colors">
+          <div className="bg-surface border border-line rounded-xl p-4 hover:border-line-strong transition-colors">
             <div className="flex items-center gap-2 mb-2">
               <span className="text-base">🧠</span>
               <h3 className="text-white font-bold text-sm">Prediction Engine</h3>
@@ -9157,7 +9131,7 @@ function InfoTab() {
             </p>
           </div>
           {/* Card 2 — Key Predictors */}
-          <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 hover:border-slate-700 transition-colors">
+          <div className="bg-surface border border-line rounded-xl p-4 hover:border-line-strong transition-colors">
             <div className="flex items-center gap-2 mb-2">
               <span className="text-base">📊</span>
               <h3 className="text-white font-bold text-sm">Key Predictors</h3>
@@ -9171,7 +9145,7 @@ function InfoTab() {
             </ul>
           </div>
           {/* Card 3 — Projected Finish Method */}
-          <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 hover:border-slate-700 transition-colors">
+          <div className="bg-surface border border-line rounded-xl p-4 hover:border-line-strong transition-colors">
             <div className="flex items-center gap-2 mb-2">
               <span className="text-base">🥊</span>
               <h3 className="text-white font-bold text-sm">Projected Finish Method</h3>
@@ -9187,7 +9161,7 @@ function InfoTab() {
       <div>
         <h2 className="text-white font-black text-xl mb-1">Rating &amp; ELO Explained</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 hover:border-slate-700 transition-colors">
+          <div className="bg-surface border border-line rounded-xl p-4 hover:border-line-strong transition-colors">
             <div className="flex items-center gap-2 mb-2">
               <span className="text-base">🏅</span>
               <h3 className="text-white font-bold text-sm">0–100 Fighter Rating</h3>
@@ -9196,7 +9170,7 @@ function InfoTab() {
               Normalized ELO score within each weight class. <span className="text-slate-200">100 = division’s highest-rated fighter.</span> 50 = division average. Updates every Monday and Thursday after fight results are processed. Not the same as UFC rankings — based entirely on performance data.
             </p>
           </div>
-          <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 hover:border-slate-700 transition-colors">
+          <div className="bg-surface border border-line rounded-xl p-4 hover:border-line-strong transition-colors">
             <div className="flex items-center gap-2 mb-2">
               <span className="text-base">📡</span>
               <h3 className="text-white font-bold text-sm">ELO Rating</h3>
@@ -9214,10 +9188,10 @@ function InfoTab() {
         <p className="text-secondary text-sm mb-4">
           Every metric in FightMetrics explained — what it measures, how it was derived, and why it matters.
         </p>
-        <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
-          <div className="divide-y divide-slate-800">
+        <div className="bg-surface border border-line rounded-xl overflow-hidden">
+          <div className="divide-y divide-line">
             {stats.map(({ term, full, formula, color }) => (
-              <div key={term} className="grid grid-cols-[9rem_1fr] gap-4 px-5 py-3 hover:bg-slate-800/40 transition-colors">
+              <div key={term} className="grid grid-cols-[9rem_1fr] gap-4 px-5 py-3 hover:bg-surface-2/40 transition-colors">
                 <div>
                   <span className={`font-black text-sm font-mono ${color}`}>{term}</span>
                   <p className="text-slate-300 text-xs font-semibold mt-0.5 leading-tight">{full}</p>
@@ -9232,11 +9206,11 @@ function InfoTab() {
       {/* Section 4 — Data & Limitations */}
       <div>
         <h2 className="text-white font-black text-xl mb-1">Data &amp; Limitations</h2>
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
+        <div className="bg-surface border border-line rounded-xl p-5">
           <ul className="space-y-3">
             <li className="flex gap-3 text-xs text-secondary leading-relaxed">
               <span className="text-muted shrink-0 mt-0.5">▸</span>
-              <span>Stats sourced from ufcstats.com via automated pipeline — updates Mon/Thu after fight cards. Diagnostic accuracy ({backtest.correct}/{backtest.total} fights): <span className="text-red-400 font-bold">{backtest.accuracy.toFixed(1)}%</span> <span className="text-muted">(ceiling estimate using current career stats, not point-in-time snapshots)</span></span>
+              <span>Stats sourced from ufcstats.com via automated pipeline — updates Mon/Thu after fight cards. Diagnostic accuracy ({backtest.correct}/{backtest.total} fights): <span className="text-bad font-bold">{backtest.accuracy.toFixed(1)}%</span> <span className="text-muted">(ceiling estimate using current career stats, not point-in-time snapshots)</span></span>
             </li>
             <li className="flex gap-3 text-xs text-secondary leading-relaxed">
               <span className="text-muted shrink-0 mt-0.5">▸</span>
