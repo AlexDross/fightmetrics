@@ -127,11 +127,16 @@ describe('bout context — division normalisation', () => {
       ['Neil Magny', 'Ramiz Brahimaj', null],
       ['Islam Makhachev', 'Ian Machado Garry', { division: 'Welterweight', isTitleBout: true, scheduledRounds: 5 }],
     ];
+    // Symmetry holds mathematically, but the two orderings sum their inputs in
+    // a different order, so floating point can land one ulp off 1 (seen as
+    // 1.1e-16 for Donte Johnson vs Eric McConico after the 2026-11-13 fighter
+    // refresh). Real asymmetry would be orders of magnitude larger than 1e-12.
+    const FLOAT_TOLERANCE = 1e-12;
     for (const [a, b, context] of pairs) {
       const fwd = run(get(a), get(b), context);
       const rev = run(get(b), get(a), context);
-      expect(Math.abs(fwd.pA + rev.pA - 1), `${a} vs ${b} v1`).toBe(0);
-      expect(Math.abs(fwd.v2pA + rev.v2pA - 1), `${a} vs ${b} v2`).toBe(0);
+      expect(Math.abs(fwd.pA + rev.pA - 1), `${a} vs ${b} v1`).toBeLessThan(FLOAT_TOLERANCE);
+      expect(Math.abs(fwd.v2pA + rev.v2pA - 1), `${a} vs ${b} v2`).toBeLessThan(FLOAT_TOLERANCE);
     }
   });
 });
