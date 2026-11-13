@@ -5,6 +5,9 @@ import { createRoot } from 'react-dom/client';
 // It already contained the correct @tailwind directives and was imported by
 // nothing; the runtime CDN (cdn.tailwindcss.com) has been removed from
 // index.html.
+// Self-hosted Geist (no third-party font request); style.css maps it to font-sans.
+import '@fontsource-variable/geist';
+import '@fontsource-variable/geist-mono';
 import './style.css';
 
 import { BrowserRouter } from 'react-router-dom';

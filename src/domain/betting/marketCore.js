@@ -122,12 +122,12 @@ export const buildMarketInput = ({ oddsA, oddsB, snapshotId, source, capturedAt 
 const gradeEdge = (edge) => {
   const abs = Math.abs(edge);
   if (abs >= 0.12)
-    return { label: 'STRONG VALUE', color: 'text-emerald-400', bg: 'bg-emerald-900/30 border-emerald-700' };
+    return { label: 'STRONG VALUE', color: 'text-good', bg: 'bg-emerald-900/30 border-emerald-700' };
   if (abs >= 0.06)
-    return { label: 'VALUE', color: 'text-emerald-400', bg: 'bg-emerald-900/20 border-emerald-800' };
+    return { label: 'VALUE', color: 'text-good', bg: 'bg-emerald-900/20 border-emerald-800' };
   if (abs >= 0.03)
-    return { label: 'LEAN', color: 'text-yellow-400', bg: 'bg-yellow-900/20 border-yellow-800' };
-  return { label: 'NO EDGE', color: 'text-slate-500', bg: 'bg-slate-800/40 border-slate-700' };
+    return { label: 'LEAN', color: 'text-warn', bg: 'bg-yellow-900/20 border-yellow-800' };
+  return { label: 'NO EDGE', color: 'text-slate-500', bg: 'bg-surface-2/40 border-line-strong' };
 };
 
 /**
@@ -260,16 +260,16 @@ export const evaluateGateOnSnapshot = (result, mkt, fA, fB) => {
         ? gradeEdge(edgeA)
         : {
             label: edgeA < -0.05 ? 'FADE' : 'NO EDGE',
-            color: edgeA < -0.05 ? 'text-red-400' : 'text-slate-500',
-            bg: edgeA < -0.05 ? 'bg-red-900/20 border-red-800' : 'bg-slate-800/40 border-slate-700',
+            color: edgeA < -0.05 ? 'text-bad' : 'text-slate-500',
+            bg: edgeA < -0.05 ? 'bg-red-900/20 border-red-800' : 'bg-surface-2/40 border-line-strong',
           },
     gradeB:
       edgeB > 0.02
         ? gradeEdge(edgeB)
         : {
             label: edgeB < -0.05 ? 'FADE' : 'NO EDGE',
-            color: edgeB < -0.05 ? 'text-red-400' : 'text-slate-500',
-            bg: edgeB < -0.05 ? 'bg-red-900/20 border-red-800' : 'bg-slate-800/40 border-slate-700',
+            color: edgeB < -0.05 ? 'text-bad' : 'text-slate-500',
+            bg: edgeB < -0.05 ? 'bg-red-900/20 border-red-800' : 'bg-surface-2/40 border-line-strong',
           },
     // bestBet fires only when the model pick survives the FULL gate, including
     // heavy-favourite suppression (2026-08-18 fix: POST suppression, not pre).

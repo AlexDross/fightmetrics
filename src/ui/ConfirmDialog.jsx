@@ -146,7 +146,7 @@ export function ConfirmDialog({
         aria-labelledby={titleId}
         aria-describedby={bodyId}
         onKeyDown={onKeyDown}
-        className="w-full max-w-md bg-slate-900 border border-slate-700 rounded-xl p-5 shadow-2xl"
+        className="w-full max-w-md bg-surface border border-line-strong rounded-xl p-5 shadow-2xl"
       >
         <h2 id={titleId} className="text-white font-bold text-base leading-snug">
           {title}
@@ -170,7 +170,7 @@ export function ConfirmDialog({
               value={typed}
               onChange={(e) => setTyped(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Enter' && matched) { e.preventDefault(); onConfirm(); } }}
-              className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm"
+              className="w-full bg-surface-2 border border-line-strong rounded-lg px-3 py-2 text-white text-sm"
             />
           </div>
         )}
@@ -179,7 +179,7 @@ export function ConfirmDialog({
             ref={cancelRef}
             type="button"
             onClick={onCancel}
-            className="min-h-[44px] px-4 rounded-lg border border-slate-700 text-secondary text-sm font-semibold hover:text-white hover:border-slate-600"
+            className="min-h-[44px] px-4 rounded-lg border border-line-strong text-secondary text-sm font-semibold hover:text-white hover:border-line-strong"
           >
             {cancelLabel}
           </button>
@@ -187,7 +187,7 @@ export function ConfirmDialog({
             type="button"
             onClick={onConfirm}
             disabled={!matched}
-            className="min-h-[44px] px-4 rounded-lg bg-red-600 hover:bg-red-500 text-white text-sm font-semibold disabled:opacity-40 disabled:cursor-not-allowed"
+            className="min-h-[44px] px-4 rounded-lg bg-accent hover:bg-accent-hover text-white text-sm font-semibold disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {confirmLabel}
           </button>

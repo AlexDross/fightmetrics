@@ -25,13 +25,22 @@ const cssToken = (name) => {
 };
 
 describe('semantic text contrast', () => {
-  it('defines primary, secondary and muted foregrounds that pass on every app surface', () => {
+  it('defines text and status foregrounds that pass on every app surface', () => {
     const foregrounds = [
       cssToken('--fm-text-primary'),
       cssToken('--fm-text-secondary'),
       cssToken('--fm-text-muted'),
+      cssToken('--color-good'),
+      cssToken('--color-bad'),
+      cssToken('--color-warn'),
+      cssToken('--color-info'),
     ];
-    const surfaces = ['#020617', '#0f172a', '#1e293b'];
+    const surfaces = [
+      cssToken('--color-canvas'),
+      cssToken('--color-surface'),
+      cssToken('--color-surface-2'),
+      cssToken('--color-surface-3'),
+    ];
 
     for (const foreground of foregrounds) {
       for (const surface of surfaces) {
