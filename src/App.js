@@ -204,6 +204,7 @@ import SaveStatus from './store/SaveStatus.jsx';
 // M1: in-app confirmations for destructive actions (ConfirmDialog).
 import { useConfirm } from './ui/ConfirmDialog.jsx';
 import { SectionLabel, StatTile, Tag } from './ui/kit.jsx';
+import NextCard from './home/NextCard.jsx';
 
 // The bundled snapshot: the dataset in local (unconfigured) mode, and the
 // fallback the document store shows while loading or when the server is
@@ -7542,7 +7543,7 @@ export default function App() {
       */}
       {view === null && <Navigate to={HOME_PATH} replace />}
       {view === 'home' && (
-        <HomeTab summary={roiSummary} entries={roiEntries} allFighters={fightersWithProspectsFiltered} filterSince={filterSince} />
+        <HomeTab summary={roiSummary} entries={roiEntries} upcomingEntries={upcomingEntries} allFighters={fightersWithProspectsFiltered} filterSince={filterSince} />
       )}
       {view === 'simulator' && (
         <MatchupSimulator
@@ -7618,7 +7619,7 @@ const betTier = (action) => {
   return { label: 'NO BET', cls: 'text-muted font-semibold', border: 'border-line' };
 };
 
-function HomeTab({ summary, entries, allFighters, filterSince }) {
+function HomeTab({ summary, entries, upcomingEntries, allFighters, filterSince }) {
   const fighterMap = useMemo(() => {
     const m = new Map();
     (allFighters ?? []).forEach((f) => m.set(f.FIGHTER, f));
@@ -7752,6 +7753,8 @@ function HomeTab({ summary, entries, allFighters, filterSince }) {
           UFC fight prediction engine — {MODEL_VERSION}
         </p>
       </div>
+
+      <NextCard entries={upcomingEntries} />
 
       <V3RecordPanel entries={entries} compact />
 
