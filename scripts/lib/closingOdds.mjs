@@ -155,11 +155,18 @@ export function parseBfoEvent(html) {
 // differently (Daria/Darya, "Kai Kamaka III") -- the only fight on the card
 // featuring the other side. Returns { fight, aIs1 } or null.
 function matchFight(fights, entry) {
+  // Score both orientations: when the two fighters share a surname (Yana vs
+  // Luana Santos) both match on last name, and only the full-name score says
+  // which side is which. A tie there is ambiguous, so it binds nothing.
   const both = fights.flatMap((f) => {
-    const s12 = sameFighter(f.fighter1, entry.fighterA) && sameFighter(f.fighter2, entry.fighterB);
-    const s21 = sameFighter(f.fighter2, entry.fighterA) && sameFighter(f.fighter1, entry.fighterB);
-    return s12 ? [{ fight: f, aIs1: true }] : s21 ? [{ fight: f, aIs1: false }] : [];
+    const a1 = sameFighter(f.fighter1, entry.fighterA), b2 = sameFighter(f.fighter2, entry.fighterB);
+    const a2 = sameFighter(f.fighter2, entry.fighterA), b1 = sameFighter(f.fighter1, entry.fighterB);
+    const s12 = a1 && b2 ? a1 + b2 : 0, s21 = a2 && b1 ? a2 + b1 : 0;
+    if (s12 > s21) return [{ fight: f, aIs1: true }];
+    if (s21 > s12) return [{ fight: f, aIs1: false }];
+    return s12 ? [{ fight: f, aIs1: null }] : [];
   });
+  if (both.some((x) => x.aIs1 === null)) return null;
   if (both.length === 1) return both[0];
   if (both.length > 1) return null;
   const one = fights.flatMap((f) => {

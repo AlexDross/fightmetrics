@@ -133,4 +133,26 @@ describe('fetchClosingLines (fightodds.io refuses -> bestfightodds.com)', () => 
     expect(r.lines.get('e2').oddsA).toBe('-137'); // median in probability space
     expect(r.unmatched).toEqual([]);
   });
+
+  it('binds same-surname fighters by full name, not by listing order', async () => {
+    const event = `<title>UFC 999 for December 1 | Best Fight Odds</title><table><thead><tr>
+<th scope="col" data-b="21"><a href="#">FanDuel</a></th><th scope="col" data-b="24"><a href="#">Caesars</a></th>
+</tr></thead><tbody>
+${cellRow('Luana Santos', 1, 102, [[21, '-340'], [24, '-330']])}
+${cellRow('Yana Santos', 2, 102, [[21, '+275'], [24, '+250']])}
+</tbody></table>`;
+    vi.stubGlobal('fetch', vi.fn(async (url) => {
+      const u = String(url);
+      if (u.includes('fightodds.io')) return { ok: false, status: 403 };
+      const text = u.includes('/search') ? '<a href="/fighters/yana-santos-1">Yana Santos</a>'
+        : u.includes('/fighters/') ? '<a href="/events/ufc-999-1">UFC 999</a>'
+          : event;
+      return { ok: true, text: async () => text };
+    }));
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const entries = [{ id: 's1', fighterA: 'Yana Santos', fighterB: 'Luana Santos' }];
+    const r = await fetchClosingLines('UFC Fight Night: Moicano vs. Nolan', '2026-12-01', entries);
+    expect(Number(r.lines.get('s1').oddsA)).toBeGreaterThan(0); // Yana is the underdog
+    expect(Number(r.lines.get('s1').oddsB)).toBeLessThan(0);
+  });
 });
