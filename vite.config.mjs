@@ -135,5 +135,26 @@ export default defineConfig({
     // Deliberately NOT named VITE_* -- that prefix would embed the value in the
     // client bundle.
     sourcemap: process.env.FM_SOURCEMAP === 'true',
+
+    // Cache-friendly chunks. Bots regenerate the data modules several times a
+    // week; in a single bundle each refresh made every visitor re-download the
+    // whole ~1 MB (gzip), app code and libraries included. Split, a fighter
+    // refresh only invalidates `fighter-data`/`fight-history`, a snapshot only
+    // `ledger`, and an app change only the small entry chunk. All of these are
+    // still loaded up front (no behaviour change); they are just cached apart.
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          const file = id.split('?')[0];
+          if (/[\\/]src[\\/]fightHistory\.js$/.test(file)) return 'fight-history';
+          if (/[\\/]src[\\/](roiData|upcomingData|propPicksData|parlayData)\.js$/.test(file)) return 'ledger';
+          if (/[\\/]src[\\/](fightersData|eloModule|cardioModule|rankHistory|rankingsData|fighterBirthdates|prospectsData|sourceManifest)\.js$/.test(file)) return 'fighter-data';
+          if (!file.includes('node_modules')) return undefined;
+          if (/node_modules[\\/](recharts|d3-[^\\/]+|victory-vendor|decimal\.js-light|react-smooth|recharts-scale)[\\/]/.test(file)) return 'charts';
+          if (/node_modules[\\/]@supabase[\\/]/.test(file)) return 'supabase';
+          return 'vendor';
+        },
+      },
+    },
   },
 });
