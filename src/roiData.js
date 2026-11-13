@@ -1,5 +1,1727 @@
 export const ROI_ENTRIES = [
   {
+    "id": "1793740130191-tlqlld",
+    "createdAt": "2026-11-03T21:08:50.191Z",
+    "eventName": "UFC Fight Night: Cortes-Acosta vs. Walker",
+    "eventDate": "2026-11-07",
+    "fighterA": "Johnny Walker",
+    "fighterB": "Waldo Cortes Acosta",
+    "fighterAIsProspect": false,
+    "fighterBIsProspect": false,
+    "includesProspect": false,
+    "division": "Heavyweight",
+    "boutContext": {
+      "division": "Heavyweight",
+      "isTitleBout": false,
+      "scheduledRounds": null,
+      "provenance": {
+        "sourceUrl": "https://www.ufc.com/event/ufc-fight-night-november-07-2026",
+        "retrievedAt": "2026-11-03",
+        "authority": "official"
+      }
+    },
+    "fighterAProb": 0.5409012366780955,
+    "fighterBProb": 0.45909876332190447,
+    "predictedWinner": "Johnny Walker",
+    "predictedProb": 0.5409012366780955,
+    "modelUsed": "v2",
+    "decisionProbabilitySource": "c6",
+    "c6ProbA": 0.3578897472958872,
+    "c6ProbB": 0.6421102527041128,
+    "c6Version": "c6_sym_zerointercept_full_20260818",
+    "trackedSide": "Waldo Cortes Acosta",
+    "trackedProb": 0.6421102527041128,
+    "unitsWagered": 1,
+    "betAction": "NO BET",
+    "bestBet": null,
+    "gateVersion": "c6_dog_v3_book",
+    "gateReason": "EV_BELOW_FLOOR",
+    "gateEV": -0.07871137655496863,
+    "betRecommendedFighter": "",
+    "betRecommendedOdds": "",
+    "marketOdds": "-230",
+    "edge": -0.019080712388289678,
+    "edgeA": 0.019080712388289678,
+    "edgeB": -0.019080712388289678,
+    "ev": -7.8711376554968595,
+    "evA": 0.20912924284840528,
+    "evB": -7.8711376554968595,
+    "kelly": 0,
+    "kellyA": 0.0011618291269355826,
+    "kellyB": 0,
+    "fairLine": "-179",
+    "fairLineA": "+179",
+    "fairLineB": "-179",
+    "oddsA": "+180",
+    "oddsB": "-230",
+    "marketSource": {
+      "kind": "sportsbook",
+      "name": "bestfightodds",
+      "line": "median of 5 books",
+      "url": "https://www.bestfightodds.com/events/ufc-vegas-124-4437",
+      "retrievedAt": "2026-11-03T20:57:10.065Z"
+    },
+    "v2pA": 0.5149718776193036,
+    "v2pB": 0.48502812238069637,
+    "projectedKO": 55,
+    "projectedSUB": 12,
+    "projectedDEC": 33,
+    "projectedFinish": "KO/TKO",
+    "actualWinner": "Johnny Walker",
+    "actualFinish": "KO/TKO",
+    "notes": "",
+    "_provenance": {
+      "predictionTimestamp": "2026-11-03T21:08:50.191Z",
+      "targetEventDate": "2026-11-07",
+      "captureMode": "live",
+      "modelVersion": "logistic_v2.0_20260709",
+      "modelCoefHash": "256f866e",
+      "frozenTier": "NO BET",
+      "gateVersion": "c6_dog_v3_book",
+      "boutContext": {
+        "division": "Heavyweight",
+        "isTitleBout": false,
+        "scheduledRounds": null,
+        "provenance": {
+          "sourceUrl": "https://www.ufc.com/event/ufc-fight-night-november-07-2026",
+          "retrievedAt": "2026-11-03",
+          "authority": "official"
+        }
+      },
+      "decisionProbabilitySource": "c6",
+      "c6": {
+        "version": "c6_sym_zerointercept_full_20260818",
+        "pA": 0.3578897472958872,
+        "pB": 0.6421102527041128
+      },
+      "marketSource": {
+        "kind": "sportsbook",
+        "name": "bestfightodds",
+        "line": "median of 5 books",
+        "url": "https://www.bestfightodds.com/events/ufc-vegas-124-4437",
+        "retrievedAt": "2026-11-03T20:57:10.065Z"
+      },
+      "featureVector": {
+        "v1": {
+          "sig_str_dif": -0.02574683544303795,
+          "avg_sig_str_pct_dif": 0.8688000000000007,
+          "avg_td_dif": -0.07142857142857141,
+          "avg_td_pct_dif": -0.43478260869565205,
+          "atd_dif": -1.0000000000000002,
+          "avg_sub_att_dif": 0.44285714285714295,
+          "kd_dif": 0.7560000000000001,
+          "control_time_dif": 0,
+          "reach_dif": 0.37037037037037035,
+          "height_dif": 0.21978021978021978,
+          "age_dif": 0,
+          "win_streak_dif": 0.7142857142857143,
+          "lose_streak_dif": 2,
+          "win_dif": -0.22727272727272727,
+          "loss_dif": -1.111111111111111,
+          "total_round_dif": -0.29411764705882354,
+          "deep_round_dif": -0.29411764705882354,
+          "total_title_bout_dif": 0,
+          "ko_dif": 1,
+          "sub_dif": 0.7142857142857143,
+          "elo_dif": -0.8669354838709677,
+          "layoff_dif": 0.105,
+          "cardio_dif": -1.7879166666666668,
+          "peak_elo_dif": -1.1090909090909091,
+          "ufc_fight_count_dif": 0.25,
+          "rank_tier_dif": -0.7320473596627499
+        },
+        "v2": {
+          "modern_form": 0.04977857407837882,
+          "wins": -1,
+          "losses": -3,
+          "rounds": -5,
+          "title_bouts": 0,
+          "ko_wins": 2,
+          "sub_wins": 1,
+          "height": 2,
+          "reach": 4,
+          "younger": 0,
+          "sig_str_landed": -0.4067999999999996,
+          "sig_str_accuracy": 0.08688000000000007,
+          "sub_attempts": 0.31000000000000005,
+          "td_landed": -0.09999999999999998,
+          "td_accuracy": -0.09999999999999998,
+          "elo": -0.43
+        }
+      },
+      "fightHistoryCutoff": {
+        "fighterA": "2026-10-03",
+        "fighterB": "2026-09-12"
+      },
+      "sourceManifest": {
+        "fightHistory": {
+          "file": "src/fightHistory.js",
+          "feedsV2": true,
+          "generatedAt": "2026-10-25",
+          "maxObservedEventDate": "2026-10-24",
+          "contentHash": "b441e13f70c372cf6e2028f408771226253b0463498dce8f637c8bb1524b5d46",
+          "sourceInputs": [
+            "ufc_fight_results.csv",
+            "ufc_event_details.csv",
+            "ufc_fight_details.csv"
+          ],
+          "generatorRequiredInputs": [
+            "ufc_fight_results.csv",
+            "ufc_event_details.csv",
+            "ufc_fight_details.csv",
+            "ufc_fight_stats.csv"
+          ],
+          "generatorVersion": "update_fighters.py @ 889c443a1221e0bafe7ed42efb9a36a6f17deeb2",
+          "verificationMethod": "Parsed DATE column of ufc_event_details.csv directly (794 rows); maximum event date found = 2026-10-24. Cross-checked ufc_fight_results.csv, ufc_fight_details.csv, ufc_fight_stats.csv for window-period event names: FOUND (see manual audit). This value is NOT derived from any file mtime, git commit date, or in-file header comment -- see research/source_integrity_audit.md for the original manual methodology this script automates."
+        },
+        "fightersDataAggregates": {
+          "file": "src/fightersData.js",
+          "feedsV2": true,
+          "note": "Feeds ASL/ASP/ATL/ATP/ASA (sig_str_landed, sig_str_accuracy, sub_attempts, td_landed, td_accuracy) and TR (rounds) -- the highest-weight non-ELO v2 features.",
+          "generatedAt": "2026-10-25",
+          "maxObservedEventDate": "2026-10-24",
+          "contentHash": "ee7834ad4e4fe52bc575c33a293933cec0a9a37b72e1eadbb106566674145cc7",
+          "sourceInputs": [
+            "ufc_fight_results.csv",
+            "ufc_event_details.csv",
+            "ufc_fight_details.csv",
+            "ufc_fight_stats.csv"
+          ],
+          "generatorRequiredInputs": [
+            "ufc_fight_results.csv",
+            "ufc_event_details.csv",
+            "ufc_fight_details.csv",
+            "ufc_fight_stats.csv"
+          ],
+          "generatorVersion": "update_fighters.py @ 889c443a1221e0bafe7ed42efb9a36a6f17deeb2",
+          "verificationMethod": "Parsed DATE column of ufc_event_details.csv directly (794 rows); maximum event date found = 2026-10-24. Cross-checked ufc_fight_results.csv, ufc_fight_details.csv, ufc_fight_stats.csv for window-period event names: FOUND (see manual audit). This value is NOT derived from any file mtime, git commit date, or in-file header comment -- see research/source_integrity_audit.md for the original manual methodology this script automates."
+        },
+        "elo": {
+          "file": "src/eloModule.js",
+          "feedsV2": true,
+          "generatedAt": "2026-10-25",
+          "maxObservedEventDate": "2026-10-24",
+          "contentHash": "d8375f80f2b9135b8ff696169e2214b53fa06aa1dcedf2da32ec3c8c8fd15bd5",
+          "sourceInputs": [
+            "ufc_fight_results.csv",
+            "ufc_event_details.csv"
+          ],
+          "generatorRequiredInputs": [
+            "ufc_fight_results.csv",
+            "ufc_event_details.csv"
+          ],
+          "generatorVersion": "regen_elo.py @ 889c443a1221e0bafe7ed42efb9a36a6f17deeb2",
+          "verificationMethod": "Parsed DATE column of ufc_event_details.csv directly (794 rows); maximum event date found = 2026-10-24. Cross-checked ufc_fight_results.csv, ufc_fight_details.csv, ufc_fight_stats.csv for window-period event names: FOUND (see manual audit). This value is NOT derived from any file mtime, git commit date, or in-file header comment -- see research/source_integrity_audit.md for the original manual methodology this script automates. NOTE: eloModule.js's own header comment claims coverage \"through Jul 2026\" -- this is misleading relative to the verified underlying data and should not be trusted; regen_elo.py reads only ufc_fight_results.csv + ufc_event_details.csv. Unlike ELO, the fighter aggregate updater also requires ufc_fight_details.csv and ufc_fight_stats.csv."
+        },
+        "cardio": {
+          "file": "src/cardioModule.js",
+          "feedsV2": false,
+          "note": "Does not feed MODEL_V2 (no path into computeLogisticProb's 16 features, confirmed in research/source_integrity_audit.md). Tracked here for future model versions that might use it.",
+          "generatedAt": "2026-10-25",
+          "maxObservedEventDate": null,
+          "contentHash": "7025f1f440bbf01c15731cc40e65521e50635902ee482536cd07a412738b788c",
+          "generatorVersion": "unavailable -- no cardio-generation script found in repo",
+          "verificationMethod": "INDETERMINATE: no generator script present in the repository, and no per-fighter date field is embedded in the shipped artifact itself, so maxObservedEventDate cannot be independently verified the way the Greco-CSV-backed modules above were. The file's own header comment self-reports \"fetched 2026-04-14\" -- this is NOT independently verified and should not be treated as authoritative."
+        },
+        "rankHistory": {
+          "file": "src/rankHistory.js",
+          "feedsV2": false,
+          "note": "Does not feed MODEL_V2 (no path into computeLogisticProb's 16 features, confirmed in research/source_integrity_audit.md). Tracked here for future model versions that might use it.",
+          "generatedAt": "2026-10-25",
+          "maxObservedEventDate": "2026-03-12",
+          "contentHash": "9a706f356ef41fa68b605dd9c52740dd370eda014dfb747b0cb8bdc6313ba244",
+          "generatorVersion": "regen_rankhistory.py (untracked in git -- present on disk, no commit history, no recoverable version)",
+          "verificationMethod": "Raw source UFC_rankings_history.csv is not present on disk, so maxObservedEventDate is instead the maximum YYYYMMDD date literally embedded in the shipped rankHistory.js artifact's own HISTORICAL_RANKINGS data -- a defensible proxy (the artifact cannot reflect dates its regeneration process never saw), but distinct from the direct-CSV verification used for the three modules above."
+        },
+        "fighterBirthdates": {
+          "file": "src/fighterBirthdates.js",
+          "feedsV2": true,
+          "note": "Canonical fighter name -> date of birth. Feeds the v2 'younger' feature and the v1 age differential/age-decay penalty via src/domain/age, which derives every age from DOB -- at app load for the roster, and at the bout date for a prediction. The integer AGE values in fightersData.js are now used only where no birth date exists here.",
+          "generatedAt": "2026-10-25",
+          "maxObservedEventDate": null,
+          "contentHash": "5a8fd68909e52ec73c78144d4701f806344e6de6f3a40a0b60790da07b627b7a",
+          "generatorVersion": "scripts/generate-fighter-birthdates.mjs @ 889c443a1221e0bafe7ed42efb9a36a6f17deeb2",
+          "verificationMethod": "Recomputed the join from source while writing this manifest: read 2267 rows from fighters.json, of which 2207 carry a dob matching ^\\d{4}-\\d{2}-\\d{2}$; applied 1 name_aliases.json rewrites; filled 256 further names from fighter_profiles.json (ufcstats tale of the tape, never overriding fighters.json); produced 2463 canonical names, and the shipped artifact contains 2463 entries. The generator raises on any canonical name that would receive two DIFFERENT birth dates, so a silent bad join cannot ship. Keys are sorted by UTF-16 code point (not localeCompare), making regeneration byte-identical across machines and ICU builds; the scheduled workflow enforces this with a --check re-run. maxObservedEventDate is null by nature, not by omission: this artifact holds birth dates, which are not event-scoped, so there is no event date it could be current or stale relative to. Its freshness question is coverage, which is the measured count above."
+        },
+        "rankings": {
+          "file": "src/rankingsData.js",
+          "feedsV2": false,
+          "inProductionBundle": true,
+          "note": "Current official rankings feed fighter-profile/UI rank badges only. Runtime artifact: this is the only rankings file in the production dependency graph. Historical series live in the separate rankingsHistory module below.",
+          "generatedAt": "2026-10-20T21:22:31Z",
+          "maxObservedEventDate": "2026-10-20",
+          "contentHash": "60188ce5eee1534536003bf48c472b3805717bf434d54cc6466b89640b700daf",
+          "officialSnapshots": [
+            "2026-08-01-meta.json",
+            "2026-08-04-media.json",
+            "2026-09-26-meta.json",
+            "2026-09-29-media.json",
+            "2026-10-03-meta.json",
+            "2026-10-06-media.json",
+            "2026-10-17-meta.json",
+            "2026-10-20-media.json"
+          ],
+          "generatorVersion": "scripts/update_rankings.py @ 889c443a1221e0bafe7ed42efb9a36a6f17deeb2",
+          "verificationMethod": "Read directly from the generated artifacts and the committed history cache, all produced by scripts/update_rankings.py and regenerating byte-identically from the same inputs. upstreamContentSha256 is the SHA-256 of the Kaggle CSV the cache was built from. No git commit date, file mtime, or header comment is consulted, and a missing artifact, cache or snapshot set is a hard failure rather than a silent fallback."
+        },
+        "rankingsHistory": {
+          "file": "src/rankingsHistoryData.js",
+          "feedsV2": false,
+          "inProductionBundle": false,
+          "note": "Historical divisional rankings. RESEARCH ARTIFACT: no runtime consumer and no model consumer -- neither the deprecated v1 engine nor the frozen 16-feature MODEL_V2. Kept out of the browser bundle; enforced by src/domain/rankings/__tests__/boundary.test.js (import graph) and scripts/verify-bundle.mjs (emitted assets).",
+          "generatedAt": "2026-10-20T21:22:31Z",
+          "maxObservedEventDate": "2026-10-20",
+          "contentHash": "329c4e7edc9f12070cc4fb923d06c8a911e63ca4b0354bb2614197b52f52c610",
+          "historyCacheSha256": "4f245240e2b53ee088d82f861aa0a718aef9f62bf15d62eb434d4628b3b6b3ad",
+          "upstreamContentSha256": "2d27b34e64372520e9170cc30f1d1c59e795d046b6726de89db95b9535db9858",
+          "upstreamVersion": 49,
+          "historyUsedThrough": "2026-06-18",
+          "generatorVersion": "scripts/update_rankings.py @ 889c443a1221e0bafe7ed42efb9a36a6f17deeb2",
+          "verificationMethod": "Read directly from the generated artifacts and the committed history cache, all produced by scripts/update_rankings.py and regenerating byte-identically from the same inputs. upstreamContentSha256 is the SHA-256 of the Kaggle CSV the cache was built from. No git commit date, file mtime, or header comment is consulted, and a missing artifact, cache or snapshot set is a hard failure rather than a silent fallback."
+        }
+      }
+    },
+    "closing": {
+      "oddsA": "+175",
+      "oddsB": "-225",
+      "source": "median of 5 books (bestfightodds)",
+      "capturedAt": "2026-11-09T18:18:45.822Z"
+    }
+  },
+  {
+    "id": "1793740130191-a422l2",
+    "createdAt": "2026-11-03T21:08:50.191Z",
+    "eventName": "UFC Fight Night: Cortes-Acosta vs. Walker",
+    "eventDate": "2026-11-07",
+    "fighterA": "Tatiana Suarez",
+    "fighterB": "Virna Jandiroba",
+    "fighterAIsProspect": false,
+    "fighterBIsProspect": false,
+    "includesProspect": false,
+    "division": "Women's Strawweight",
+    "boutContext": {
+      "division": "Women's Strawweight",
+      "isTitleBout": false,
+      "scheduledRounds": null,
+      "provenance": {
+        "sourceUrl": "https://www.ufc.com/event/ufc-fight-night-november-07-2026",
+        "retrievedAt": "2026-11-03",
+        "authority": "official"
+      }
+    },
+    "fighterAProb": 0.7075115891685423,
+    "fighterBProb": 0.2924884108314577,
+    "predictedWinner": "Tatiana Suarez",
+    "predictedProb": 0.7075115891685423,
+    "modelUsed": "v2",
+    "decisionProbabilitySource": "c6",
+    "c6ProbA": 0.7190817027221891,
+    "c6ProbB": 0.2809182972778109,
+    "c6Version": "c6_sym_zerointercept_full_20260818",
+    "trackedSide": "Tatiana Suarez",
+    "trackedProb": 0.7190817027221891,
+    "unitsWagered": 1,
+    "betAction": "LEAN",
+    "bestBet": "A",
+    "gateVersion": "c6_dog_v3_book",
+    "gateReason": null,
+    "gateEV": 0.06150156116132677,
+    "betRecommendedFighter": "Tatiana Suarez",
+    "betRecommendedOdds": "-210",
+    "marketOdds": "-210",
+    "edge": 0.07684281062755549,
+    "edgeA": 0.07684281062755549,
+    "edgeB": -0.07684281062755555,
+    "ev": 6.150156116132674,
+    "evA": 6.150156116132674,
+    "evB": -25.556651221380108,
+    "kelly": 0.12915327843878618,
+    "kellyA": 0.12915327843878618,
+    "kellyB": 0,
+    "fairLine": "-256",
+    "fairLineA": "-256",
+    "fairLineB": "+256",
+    "oddsA": "-210",
+    "oddsB": "+165",
+    "marketSource": {
+      "kind": "sportsbook",
+      "name": "bestfightodds",
+      "line": "median of 5 books",
+      "url": "https://www.bestfightodds.com/events/ufc-vegas-124-4437",
+      "retrievedAt": "2026-11-03T20:57:10.065Z"
+    },
+    "v2pA": 0.6745732062304652,
+    "v2pB": 0.32542679376953476,
+    "projectedKO": 17,
+    "projectedSUB": 29,
+    "projectedDEC": 54,
+    "projectedFinish": "DEC",
+    "actualWinner": "Tatiana Suarez",
+    "actualFinish": "DEC",
+    "notes": "",
+    "_provenance": {
+      "predictionTimestamp": "2026-11-03T21:08:50.191Z",
+      "targetEventDate": "2026-11-07",
+      "captureMode": "live",
+      "modelVersion": "logistic_v2.0_20260709",
+      "modelCoefHash": "256f866e",
+      "frozenTier": "LEAN",
+      "gateVersion": "c6_dog_v3_book",
+      "boutContext": {
+        "division": "Women's Strawweight",
+        "isTitleBout": false,
+        "scheduledRounds": null,
+        "provenance": {
+          "sourceUrl": "https://www.ufc.com/event/ufc-fight-night-november-07-2026",
+          "retrievedAt": "2026-11-03",
+          "authority": "official"
+        }
+      },
+      "decisionProbabilitySource": "c6",
+      "c6": {
+        "version": "c6_sym_zerointercept_full_20260818",
+        "pA": 0.7190817027221891,
+        "pB": 0.2809182972778109
+      },
+      "marketSource": {
+        "kind": "sportsbook",
+        "name": "bestfightodds",
+        "line": "median of 5 books",
+        "url": "https://www.bestfightodds.com/events/ufc-vegas-124-4437",
+        "retrievedAt": "2026-11-03T20:57:10.065Z"
+      },
+      "featureVector": {
+        "v1": {
+          "sig_str_dif": 0.037341772151898725,
+          "avg_sig_str_pct_dif": 1.9,
+          "avg_td_dif": 0.9928571428571427,
+          "avg_td_pct_dif": 0.30434782608695654,
+          "atd_dif": -1.0000000000000002,
+          "avg_sub_att_dif": -1.0428571428571427,
+          "kd_dif": 0.096,
+          "control_time_dif": 0.4722222222222222,
+          "reach_dif": 0.18518518518518517,
+          "height_dif": 0.21978021978021978,
+          "age_dif": 0.6976744186046512,
+          "win_streak_dif": 0.7142857142857143,
+          "lose_streak_dif": 0,
+          "win_dif": 0,
+          "loss_dif": 1.111111111111111,
+          "total_round_dif": -0.6470588235294118,
+          "deep_round_dif": -0.23529411764705882,
+          "total_title_bout_dif": 0,
+          "ko_dif": 0,
+          "sub_dif": 1.4285714285714286,
+          "elo_dif": 1.2096774193548387,
+          "layoff_dif": 0.035,
+          "cardio_dif": -1.69,
+          "peak_elo_dif": 1.018181818181818,
+          "ufc_fight_count_dif": -0.375,
+          "rank_tier_dif": 0.13021652240889026
+        },
+        "v2": {
+          "modern_form": 0.07107961204470159,
+          "wins": 0,
+          "losses": 3,
+          "rounds": -11,
+          "title_bouts": 0,
+          "ko_wins": 0,
+          "sub_wins": 2,
+          "height": 2,
+          "reach": 2,
+          "younger": 3,
+          "sig_str_landed": 0.5899999999999999,
+          "sig_str_accuracy": 0.19,
+          "sub_attempts": -0.7299999999999999,
+          "td_landed": 1.3899999999999997,
+          "td_accuracy": 0.07,
+          "elo": 0.6
+        }
+      },
+      "fightHistoryCutoff": {
+        "fighterA": "2026-04-11",
+        "fighterB": "2026-04-04"
+      },
+      "sourceManifest": {
+        "fightHistory": {
+          "file": "src/fightHistory.js",
+          "feedsV2": true,
+          "generatedAt": "2026-10-25",
+          "maxObservedEventDate": "2026-10-24",
+          "contentHash": "b441e13f70c372cf6e2028f408771226253b0463498dce8f637c8bb1524b5d46",
+          "sourceInputs": [
+            "ufc_fight_results.csv",
+            "ufc_event_details.csv",
+            "ufc_fight_details.csv"
+          ],
+          "generatorRequiredInputs": [
+            "ufc_fight_results.csv",
+            "ufc_event_details.csv",
+            "ufc_fight_details.csv",
+            "ufc_fight_stats.csv"
+          ],
+          "generatorVersion": "update_fighters.py @ 889c443a1221e0bafe7ed42efb9a36a6f17deeb2",
+          "verificationMethod": "Parsed DATE column of ufc_event_details.csv directly (794 rows); maximum event date found = 2026-10-24. Cross-checked ufc_fight_results.csv, ufc_fight_details.csv, ufc_fight_stats.csv for window-period event names: FOUND (see manual audit). This value is NOT derived from any file mtime, git commit date, or in-file header comment -- see research/source_integrity_audit.md for the original manual methodology this script automates."
+        },
+        "fightersDataAggregates": {
+          "file": "src/fightersData.js",
+          "feedsV2": true,
+          "note": "Feeds ASL/ASP/ATL/ATP/ASA (sig_str_landed, sig_str_accuracy, sub_attempts, td_landed, td_accuracy) and TR (rounds) -- the highest-weight non-ELO v2 features.",
+          "generatedAt": "2026-10-25",
+          "maxObservedEventDate": "2026-10-24",
+          "contentHash": "ee7834ad4e4fe52bc575c33a293933cec0a9a37b72e1eadbb106566674145cc7",
+          "sourceInputs": [
+            "ufc_fight_results.csv",
+            "ufc_event_details.csv",
+            "ufc_fight_details.csv",
+            "ufc_fight_stats.csv"
+          ],
+          "generatorRequiredInputs": [
+            "ufc_fight_results.csv",
+            "ufc_event_details.csv",
+            "ufc_fight_details.csv",
+            "ufc_fight_stats.csv"
+          ],
+          "generatorVersion": "update_fighters.py @ 889c443a1221e0bafe7ed42efb9a36a6f17deeb2",
+          "verificationMethod": "Parsed DATE column of ufc_event_details.csv directly (794 rows); maximum event date found = 2026-10-24. Cross-checked ufc_fight_results.csv, ufc_fight_details.csv, ufc_fight_stats.csv for window-period event names: FOUND (see manual audit). This value is NOT derived from any file mtime, git commit date, or in-file header comment -- see research/source_integrity_audit.md for the original manual methodology this script automates."
+        },
+        "elo": {
+          "file": "src/eloModule.js",
+          "feedsV2": true,
+          "generatedAt": "2026-10-25",
+          "maxObservedEventDate": "2026-10-24",
+          "contentHash": "d8375f80f2b9135b8ff696169e2214b53fa06aa1dcedf2da32ec3c8c8fd15bd5",
+          "sourceInputs": [
+            "ufc_fight_results.csv",
+            "ufc_event_details.csv"
+          ],
+          "generatorRequiredInputs": [
+            "ufc_fight_results.csv",
+            "ufc_event_details.csv"
+          ],
+          "generatorVersion": "regen_elo.py @ 889c443a1221e0bafe7ed42efb9a36a6f17deeb2",
+          "verificationMethod": "Parsed DATE column of ufc_event_details.csv directly (794 rows); maximum event date found = 2026-10-24. Cross-checked ufc_fight_results.csv, ufc_fight_details.csv, ufc_fight_stats.csv for window-period event names: FOUND (see manual audit). This value is NOT derived from any file mtime, git commit date, or in-file header comment -- see research/source_integrity_audit.md for the original manual methodology this script automates. NOTE: eloModule.js's own header comment claims coverage \"through Jul 2026\" -- this is misleading relative to the verified underlying data and should not be trusted; regen_elo.py reads only ufc_fight_results.csv + ufc_event_details.csv. Unlike ELO, the fighter aggregate updater also requires ufc_fight_details.csv and ufc_fight_stats.csv."
+        },
+        "cardio": {
+          "file": "src/cardioModule.js",
+          "feedsV2": false,
+          "note": "Does not feed MODEL_V2 (no path into computeLogisticProb's 16 features, confirmed in research/source_integrity_audit.md). Tracked here for future model versions that might use it.",
+          "generatedAt": "2026-10-25",
+          "maxObservedEventDate": null,
+          "contentHash": "7025f1f440bbf01c15731cc40e65521e50635902ee482536cd07a412738b788c",
+          "generatorVersion": "unavailable -- no cardio-generation script found in repo",
+          "verificationMethod": "INDETERMINATE: no generator script present in the repository, and no per-fighter date field is embedded in the shipped artifact itself, so maxObservedEventDate cannot be independently verified the way the Greco-CSV-backed modules above were. The file's own header comment self-reports \"fetched 2026-04-14\" -- this is NOT independently verified and should not be treated as authoritative."
+        },
+        "rankHistory": {
+          "file": "src/rankHistory.js",
+          "feedsV2": false,
+          "note": "Does not feed MODEL_V2 (no path into computeLogisticProb's 16 features, confirmed in research/source_integrity_audit.md). Tracked here for future model versions that might use it.",
+          "generatedAt": "2026-10-25",
+          "maxObservedEventDate": "2026-03-12",
+          "contentHash": "9a706f356ef41fa68b605dd9c52740dd370eda014dfb747b0cb8bdc6313ba244",
+          "generatorVersion": "regen_rankhistory.py (untracked in git -- present on disk, no commit history, no recoverable version)",
+          "verificationMethod": "Raw source UFC_rankings_history.csv is not present on disk, so maxObservedEventDate is instead the maximum YYYYMMDD date literally embedded in the shipped rankHistory.js artifact's own HISTORICAL_RANKINGS data -- a defensible proxy (the artifact cannot reflect dates its regeneration process never saw), but distinct from the direct-CSV verification used for the three modules above."
+        },
+        "fighterBirthdates": {
+          "file": "src/fighterBirthdates.js",
+          "feedsV2": true,
+          "note": "Canonical fighter name -> date of birth. Feeds the v2 'younger' feature and the v1 age differential/age-decay penalty via src/domain/age, which derives every age from DOB -- at app load for the roster, and at the bout date for a prediction. The integer AGE values in fightersData.js are now used only where no birth date exists here.",
+          "generatedAt": "2026-10-25",
+          "maxObservedEventDate": null,
+          "contentHash": "5a8fd68909e52ec73c78144d4701f806344e6de6f3a40a0b60790da07b627b7a",
+          "generatorVersion": "scripts/generate-fighter-birthdates.mjs @ 889c443a1221e0bafe7ed42efb9a36a6f17deeb2",
+          "verificationMethod": "Recomputed the join from source while writing this manifest: read 2267 rows from fighters.json, of which 2207 carry a dob matching ^\\d{4}-\\d{2}-\\d{2}$; applied 1 name_aliases.json rewrites; filled 256 further names from fighter_profiles.json (ufcstats tale of the tape, never overriding fighters.json); produced 2463 canonical names, and the shipped artifact contains 2463 entries. The generator raises on any canonical name that would receive two DIFFERENT birth dates, so a silent bad join cannot ship. Keys are sorted by UTF-16 code point (not localeCompare), making regeneration byte-identical across machines and ICU builds; the scheduled workflow enforces this with a --check re-run. maxObservedEventDate is null by nature, not by omission: this artifact holds birth dates, which are not event-scoped, so there is no event date it could be current or stale relative to. Its freshness question is coverage, which is the measured count above."
+        },
+        "rankings": {
+          "file": "src/rankingsData.js",
+          "feedsV2": false,
+          "inProductionBundle": true,
+          "note": "Current official rankings feed fighter-profile/UI rank badges only. Runtime artifact: this is the only rankings file in the production dependency graph. Historical series live in the separate rankingsHistory module below.",
+          "generatedAt": "2026-10-20T21:22:31Z",
+          "maxObservedEventDate": "2026-10-20",
+          "contentHash": "60188ce5eee1534536003bf48c472b3805717bf434d54cc6466b89640b700daf",
+          "officialSnapshots": [
+            "2026-08-01-meta.json",
+            "2026-08-04-media.json",
+            "2026-09-26-meta.json",
+            "2026-09-29-media.json",
+            "2026-10-03-meta.json",
+            "2026-10-06-media.json",
+            "2026-10-17-meta.json",
+            "2026-10-20-media.json"
+          ],
+          "generatorVersion": "scripts/update_rankings.py @ 889c443a1221e0bafe7ed42efb9a36a6f17deeb2",
+          "verificationMethod": "Read directly from the generated artifacts and the committed history cache, all produced by scripts/update_rankings.py and regenerating byte-identically from the same inputs. upstreamContentSha256 is the SHA-256 of the Kaggle CSV the cache was built from. No git commit date, file mtime, or header comment is consulted, and a missing artifact, cache or snapshot set is a hard failure rather than a silent fallback."
+        },
+        "rankingsHistory": {
+          "file": "src/rankingsHistoryData.js",
+          "feedsV2": false,
+          "inProductionBundle": false,
+          "note": "Historical divisional rankings. RESEARCH ARTIFACT: no runtime consumer and no model consumer -- neither the deprecated v1 engine nor the frozen 16-feature MODEL_V2. Kept out of the browser bundle; enforced by src/domain/rankings/__tests__/boundary.test.js (import graph) and scripts/verify-bundle.mjs (emitted assets).",
+          "generatedAt": "2026-10-20T21:22:31Z",
+          "maxObservedEventDate": "2026-10-20",
+          "contentHash": "329c4e7edc9f12070cc4fb923d06c8a911e63ca4b0354bb2614197b52f52c610",
+          "historyCacheSha256": "4f245240e2b53ee088d82f861aa0a718aef9f62bf15d62eb434d4628b3b6b3ad",
+          "upstreamContentSha256": "2d27b34e64372520e9170cc30f1d1c59e795d046b6726de89db95b9535db9858",
+          "upstreamVersion": 49,
+          "historyUsedThrough": "2026-06-18",
+          "generatorVersion": "scripts/update_rankings.py @ 889c443a1221e0bafe7ed42efb9a36a6f17deeb2",
+          "verificationMethod": "Read directly from the generated artifacts and the committed history cache, all produced by scripts/update_rankings.py and regenerating byte-identically from the same inputs. upstreamContentSha256 is the SHA-256 of the Kaggle CSV the cache was built from. No git commit date, file mtime, or header comment is consulted, and a missing artifact, cache or snapshot set is a hard failure rather than a silent fallback."
+        }
+      }
+    },
+    "closing": {
+      "oddsA": "-210",
+      "oddsB": "+165",
+      "source": "median of 5 books (bestfightodds)",
+      "capturedAt": "2026-11-09T18:18:45.822Z"
+    }
+  },
+  {
+    "id": "1793740130190-a64kbz",
+    "createdAt": "2026-11-03T21:08:50.190Z",
+    "eventName": "UFC Fight Night: Cortes-Acosta vs. Walker",
+    "eventDate": "2026-11-07",
+    "fighterA": "Davey Grant",
+    "fighterB": "Elijah Smith",
+    "fighterAIsProspect": false,
+    "fighterBIsProspect": false,
+    "includesProspect": false,
+    "division": "Bantamweight",
+    "boutContext": {
+      "division": "Bantamweight",
+      "isTitleBout": false,
+      "scheduledRounds": null,
+      "provenance": {
+        "sourceUrl": "https://www.ufc.com/event/ufc-fight-night-november-07-2026",
+        "retrievedAt": "2026-11-03",
+        "authority": "official"
+      }
+    },
+    "fighterAProb": 0.2933406630302181,
+    "fighterBProb": 0.7066593369697819,
+    "predictedWinner": "Elijah Smith",
+    "predictedProb": 0.7066593369697819,
+    "modelUsed": "v2",
+    "decisionProbabilitySource": "c6",
+    "c6ProbA": 0.21235941697172012,
+    "c6ProbB": 0.7876405830282799,
+    "c6Version": "c6_sym_zerointercept_full_20260818",
+    "trackedSide": "Elijah Smith",
+    "trackedProb": 0.7876405830282799,
+    "unitsWagered": 1,
+    "betAction": "LEAN",
+    "bestBet": "B",
+    "gateVersion": "c6_dog_v3_book",
+    "gateReason": null,
+    "gateEV": 0.06303938828292321,
+    "betRecommendedFighter": "Elijah Smith",
+    "betRecommendedOdds": "-286",
+    "marketOdds": "-286",
+    "edge": 0.08428982987734235,
+    "edgeA": -0.08428982987734229,
+    "edgeB": 0.08428982987734235,
+    "ev": 6.3039388282923134,
+    "evA": -32.04498656904956,
+    "evB": 6.3039388282923134,
+    "kelly": 0.18029265048916027,
+    "kellyA": 0,
+    "kellyB": 0.18029265048916027,
+    "fairLine": "-371",
+    "fairLineA": "+371",
+    "fairLineB": "-371",
+    "oddsA": "+220",
+    "oddsB": "-286",
+    "marketSource": {
+      "kind": "sportsbook",
+      "name": "bestfightodds",
+      "line": "median of 5 books",
+      "url": "https://www.bestfightodds.com/events/ufc-vegas-124-4437",
+      "retrievedAt": "2026-11-03T20:57:10.065Z"
+    },
+    "v2pA": 0.28154800940870617,
+    "v2pB": 0.7184519905912938,
+    "projectedKO": 33,
+    "projectedSUB": 18,
+    "projectedDEC": 49,
+    "projectedFinish": "DEC",
+    "actualWinner": "Elijah Smith",
+    "actualFinish": "KO/TKO",
+    "notes": "",
+    "_provenance": {
+      "predictionTimestamp": "2026-11-03T21:08:50.190Z",
+      "targetEventDate": "2026-11-07",
+      "captureMode": "live",
+      "modelVersion": "logistic_v2.0_20260709",
+      "modelCoefHash": "256f866e",
+      "frozenTier": "LEAN",
+      "gateVersion": "c6_dog_v3_book",
+      "boutContext": {
+        "division": "Bantamweight",
+        "isTitleBout": false,
+        "scheduledRounds": null,
+        "provenance": {
+          "sourceUrl": "https://www.ufc.com/event/ufc-fight-night-november-07-2026",
+          "retrievedAt": "2026-11-03",
+          "authority": "official"
+        }
+      },
+      "decisionProbabilitySource": "c6",
+      "c6": {
+        "version": "c6_sym_zerointercept_full_20260818",
+        "pA": 0.21235941697172012,
+        "pB": 0.7876405830282799
+      },
+      "marketSource": {
+        "kind": "sportsbook",
+        "name": "bestfightodds",
+        "line": "median of 5 books",
+        "url": "https://www.bestfightodds.com/events/ufc-vegas-124-4437",
+        "retrievedAt": "2026-11-03T20:57:10.065Z"
+      },
+      "featureVector": {
+        "v1": {
+          "sig_str_dif": 0.1330527580153376,
+          "avg_sig_str_pct_dif": -0.24640875912408766,
+          "avg_td_dif": -0.4842440041710117,
+          "avg_td_pct_dif": -0.4669184385909242,
+          "atd_dif": 0.5199999999999998,
+          "avg_sub_att_dif": -0.9244525547445254,
+          "kd_dif": -0.7600000000000001,
+          "control_time_dif": -0.7777777777777779,
+          "reach_dif": -0.18518518518518517,
+          "height_dif": -0.10989010989010989,
+          "age_dif": -3.7209302325581395,
+          "win_streak_dif": -1.4285714285714286,
+          "lose_streak_dif": 0,
+          "win_dif": 1.3636363636363635,
+          "loss_dif": -2.5925925925925926,
+          "total_round_dif": 2.1176470588235294,
+          "deep_round_dif": 0.6470588235294118,
+          "total_title_bout_dif": 0,
+          "ko_dif": 1,
+          "sub_dif": 0,
+          "elo_dif": -0.9879032258064516,
+          "layoff_dif": 0.21,
+          "cardio_dif": 0.30000000000000027,
+          "peak_elo_dif": -0.5818181818181818,
+          "ufc_fight_count_dif": 1.625,
+          "rank_tier_dif": 0
+        },
+        "v2": {
+          "modern_form": -0.2728705062306015,
+          "wins": 6,
+          "losses": -7,
+          "rounds": 36,
+          "title_bouts": 0,
+          "ko_wins": 2,
+          "sub_wins": 0,
+          "height": -1,
+          "reach": -2,
+          "younger": -16,
+          "sig_str_landed": 2.1022335766423343,
+          "sig_str_accuracy": -0.024640875912408766,
+          "sub_attempts": -0.6471167883211677,
+          "td_landed": -0.6779416058394163,
+          "td_accuracy": -0.10739124087591256,
+          "elo": -0.49
+        }
+      },
+      "fightHistoryCutoff": {
+        "fighterA": "2026-04-25",
+        "fighterB": "2026-03-14"
+      },
+      "sourceManifest": {
+        "fightHistory": {
+          "file": "src/fightHistory.js",
+          "feedsV2": true,
+          "generatedAt": "2026-10-25",
+          "maxObservedEventDate": "2026-10-24",
+          "contentHash": "b441e13f70c372cf6e2028f408771226253b0463498dce8f637c8bb1524b5d46",
+          "sourceInputs": [
+            "ufc_fight_results.csv",
+            "ufc_event_details.csv",
+            "ufc_fight_details.csv"
+          ],
+          "generatorRequiredInputs": [
+            "ufc_fight_results.csv",
+            "ufc_event_details.csv",
+            "ufc_fight_details.csv",
+            "ufc_fight_stats.csv"
+          ],
+          "generatorVersion": "update_fighters.py @ 889c443a1221e0bafe7ed42efb9a36a6f17deeb2",
+          "verificationMethod": "Parsed DATE column of ufc_event_details.csv directly (794 rows); maximum event date found = 2026-10-24. Cross-checked ufc_fight_results.csv, ufc_fight_details.csv, ufc_fight_stats.csv for window-period event names: FOUND (see manual audit). This value is NOT derived from any file mtime, git commit date, or in-file header comment -- see research/source_integrity_audit.md for the original manual methodology this script automates."
+        },
+        "fightersDataAggregates": {
+          "file": "src/fightersData.js",
+          "feedsV2": true,
+          "note": "Feeds ASL/ASP/ATL/ATP/ASA (sig_str_landed, sig_str_accuracy, sub_attempts, td_landed, td_accuracy) and TR (rounds) -- the highest-weight non-ELO v2 features.",
+          "generatedAt": "2026-10-25",
+          "maxObservedEventDate": "2026-10-24",
+          "contentHash": "ee7834ad4e4fe52bc575c33a293933cec0a9a37b72e1eadbb106566674145cc7",
+          "sourceInputs": [
+            "ufc_fight_results.csv",
+            "ufc_event_details.csv",
+            "ufc_fight_details.csv",
+            "ufc_fight_stats.csv"
+          ],
+          "generatorRequiredInputs": [
+            "ufc_fight_results.csv",
+            "ufc_event_details.csv",
+            "ufc_fight_details.csv",
+            "ufc_fight_stats.csv"
+          ],
+          "generatorVersion": "update_fighters.py @ 889c443a1221e0bafe7ed42efb9a36a6f17deeb2",
+          "verificationMethod": "Parsed DATE column of ufc_event_details.csv directly (794 rows); maximum event date found = 2026-10-24. Cross-checked ufc_fight_results.csv, ufc_fight_details.csv, ufc_fight_stats.csv for window-period event names: FOUND (see manual audit). This value is NOT derived from any file mtime, git commit date, or in-file header comment -- see research/source_integrity_audit.md for the original manual methodology this script automates."
+        },
+        "elo": {
+          "file": "src/eloModule.js",
+          "feedsV2": true,
+          "generatedAt": "2026-10-25",
+          "maxObservedEventDate": "2026-10-24",
+          "contentHash": "d8375f80f2b9135b8ff696169e2214b53fa06aa1dcedf2da32ec3c8c8fd15bd5",
+          "sourceInputs": [
+            "ufc_fight_results.csv",
+            "ufc_event_details.csv"
+          ],
+          "generatorRequiredInputs": [
+            "ufc_fight_results.csv",
+            "ufc_event_details.csv"
+          ],
+          "generatorVersion": "regen_elo.py @ 889c443a1221e0bafe7ed42efb9a36a6f17deeb2",
+          "verificationMethod": "Parsed DATE column of ufc_event_details.csv directly (794 rows); maximum event date found = 2026-10-24. Cross-checked ufc_fight_results.csv, ufc_fight_details.csv, ufc_fight_stats.csv for window-period event names: FOUND (see manual audit). This value is NOT derived from any file mtime, git commit date, or in-file header comment -- see research/source_integrity_audit.md for the original manual methodology this script automates. NOTE: eloModule.js's own header comment claims coverage \"through Jul 2026\" -- this is misleading relative to the verified underlying data and should not be trusted; regen_elo.py reads only ufc_fight_results.csv + ufc_event_details.csv. Unlike ELO, the fighter aggregate updater also requires ufc_fight_details.csv and ufc_fight_stats.csv."
+        },
+        "cardio": {
+          "file": "src/cardioModule.js",
+          "feedsV2": false,
+          "note": "Does not feed MODEL_V2 (no path into computeLogisticProb's 16 features, confirmed in research/source_integrity_audit.md). Tracked here for future model versions that might use it.",
+          "generatedAt": "2026-10-25",
+          "maxObservedEventDate": null,
+          "contentHash": "7025f1f440bbf01c15731cc40e65521e50635902ee482536cd07a412738b788c",
+          "generatorVersion": "unavailable -- no cardio-generation script found in repo",
+          "verificationMethod": "INDETERMINATE: no generator script present in the repository, and no per-fighter date field is embedded in the shipped artifact itself, so maxObservedEventDate cannot be independently verified the way the Greco-CSV-backed modules above were. The file's own header comment self-reports \"fetched 2026-04-14\" -- this is NOT independently verified and should not be treated as authoritative."
+        },
+        "rankHistory": {
+          "file": "src/rankHistory.js",
+          "feedsV2": false,
+          "note": "Does not feed MODEL_V2 (no path into computeLogisticProb's 16 features, confirmed in research/source_integrity_audit.md). Tracked here for future model versions that might use it.",
+          "generatedAt": "2026-10-25",
+          "maxObservedEventDate": "2026-03-12",
+          "contentHash": "9a706f356ef41fa68b605dd9c52740dd370eda014dfb747b0cb8bdc6313ba244",
+          "generatorVersion": "regen_rankhistory.py (untracked in git -- present on disk, no commit history, no recoverable version)",
+          "verificationMethod": "Raw source UFC_rankings_history.csv is not present on disk, so maxObservedEventDate is instead the maximum YYYYMMDD date literally embedded in the shipped rankHistory.js artifact's own HISTORICAL_RANKINGS data -- a defensible proxy (the artifact cannot reflect dates its regeneration process never saw), but distinct from the direct-CSV verification used for the three modules above."
+        },
+        "fighterBirthdates": {
+          "file": "src/fighterBirthdates.js",
+          "feedsV2": true,
+          "note": "Canonical fighter name -> date of birth. Feeds the v2 'younger' feature and the v1 age differential/age-decay penalty via src/domain/age, which derives every age from DOB -- at app load for the roster, and at the bout date for a prediction. The integer AGE values in fightersData.js are now used only where no birth date exists here.",
+          "generatedAt": "2026-10-25",
+          "maxObservedEventDate": null,
+          "contentHash": "5a8fd68909e52ec73c78144d4701f806344e6de6f3a40a0b60790da07b627b7a",
+          "generatorVersion": "scripts/generate-fighter-birthdates.mjs @ 889c443a1221e0bafe7ed42efb9a36a6f17deeb2",
+          "verificationMethod": "Recomputed the join from source while writing this manifest: read 2267 rows from fighters.json, of which 2207 carry a dob matching ^\\d{4}-\\d{2}-\\d{2}$; applied 1 name_aliases.json rewrites; filled 256 further names from fighter_profiles.json (ufcstats tale of the tape, never overriding fighters.json); produced 2463 canonical names, and the shipped artifact contains 2463 entries. The generator raises on any canonical name that would receive two DIFFERENT birth dates, so a silent bad join cannot ship. Keys are sorted by UTF-16 code point (not localeCompare), making regeneration byte-identical across machines and ICU builds; the scheduled workflow enforces this with a --check re-run. maxObservedEventDate is null by nature, not by omission: this artifact holds birth dates, which are not event-scoped, so there is no event date it could be current or stale relative to. Its freshness question is coverage, which is the measured count above."
+        },
+        "rankings": {
+          "file": "src/rankingsData.js",
+          "feedsV2": false,
+          "inProductionBundle": true,
+          "note": "Current official rankings feed fighter-profile/UI rank badges only. Runtime artifact: this is the only rankings file in the production dependency graph. Historical series live in the separate rankingsHistory module below.",
+          "generatedAt": "2026-10-20T21:22:31Z",
+          "maxObservedEventDate": "2026-10-20",
+          "contentHash": "60188ce5eee1534536003bf48c472b3805717bf434d54cc6466b89640b700daf",
+          "officialSnapshots": [
+            "2026-08-01-meta.json",
+            "2026-08-04-media.json",
+            "2026-09-26-meta.json",
+            "2026-09-29-media.json",
+            "2026-10-03-meta.json",
+            "2026-10-06-media.json",
+            "2026-10-17-meta.json",
+            "2026-10-20-media.json"
+          ],
+          "generatorVersion": "scripts/update_rankings.py @ 889c443a1221e0bafe7ed42efb9a36a6f17deeb2",
+          "verificationMethod": "Read directly from the generated artifacts and the committed history cache, all produced by scripts/update_rankings.py and regenerating byte-identically from the same inputs. upstreamContentSha256 is the SHA-256 of the Kaggle CSV the cache was built from. No git commit date, file mtime, or header comment is consulted, and a missing artifact, cache or snapshot set is a hard failure rather than a silent fallback."
+        },
+        "rankingsHistory": {
+          "file": "src/rankingsHistoryData.js",
+          "feedsV2": false,
+          "inProductionBundle": false,
+          "note": "Historical divisional rankings. RESEARCH ARTIFACT: no runtime consumer and no model consumer -- neither the deprecated v1 engine nor the frozen 16-feature MODEL_V2. Kept out of the browser bundle; enforced by src/domain/rankings/__tests__/boundary.test.js (import graph) and scripts/verify-bundle.mjs (emitted assets).",
+          "generatedAt": "2026-10-20T21:22:31Z",
+          "maxObservedEventDate": "2026-10-20",
+          "contentHash": "329c4e7edc9f12070cc4fb923d06c8a911e63ca4b0354bb2614197b52f52c610",
+          "historyCacheSha256": "4f245240e2b53ee088d82f861aa0a718aef9f62bf15d62eb434d4628b3b6b3ad",
+          "upstreamContentSha256": "2d27b34e64372520e9170cc30f1d1c59e795d046b6726de89db95b9535db9858",
+          "upstreamVersion": 49,
+          "historyUsedThrough": "2026-06-18",
+          "generatorVersion": "scripts/update_rankings.py @ 889c443a1221e0bafe7ed42efb9a36a6f17deeb2",
+          "verificationMethod": "Read directly from the generated artifacts and the committed history cache, all produced by scripts/update_rankings.py and regenerating byte-identically from the same inputs. upstreamContentSha256 is the SHA-256 of the Kaggle CSV the cache was built from. No git commit date, file mtime, or header comment is consulted, and a missing artifact, cache or snapshot set is a hard failure rather than a silent fallback."
+        }
+      }
+    },
+    "closing": {
+      "oddsA": "+260",
+      "oddsB": "-345",
+      "source": "median of 5 books (bestfightodds)",
+      "capturedAt": "2026-11-09T18:18:45.822Z"
+    }
+  },
+  {
+    "id": "1793740130190-5fz58v",
+    "createdAt": "2026-11-03T21:08:50.190Z",
+    "eventName": "UFC Fight Night: Cortes-Acosta vs. Walker",
+    "eventDate": "2026-11-07",
+    "fighterA": "Seokhyeon Ko",
+    "fighterB": "Wellington Turman",
+    "fighterAIsProspect": false,
+    "fighterBIsProspect": false,
+    "includesProspect": false,
+    "division": "Welterweight",
+    "boutContext": {
+      "division": "Welterweight",
+      "isTitleBout": false,
+      "scheduledRounds": null,
+      "provenance": {
+        "sourceUrl": "https://www.ufc.com/event/ufc-fight-night-november-07-2026",
+        "retrievedAt": "2026-11-03",
+        "authority": "official"
+      }
+    },
+    "fighterAProb": 0.6926363959063482,
+    "fighterBProb": 0.3073636040936518,
+    "predictedWinner": "Seokhyeon Ko",
+    "predictedProb": 0.6926363959063482,
+    "modelUsed": "v2",
+    "decisionProbabilitySource": "c6",
+    "c6ProbA": 0.8488140231312898,
+    "c6ProbB": 0.15118597686871016,
+    "c6Version": "c6_sym_zerointercept_full_20260818",
+    "trackedSide": "Seokhyeon Ko",
+    "trackedProb": 0.8488140231312898,
+    "unitsWagered": 1,
+    "betAction": "NO BET",
+    "bestBet": null,
+    "gateVersion": "c6_dog_v3_book",
+    "gateReason": "EV_BELOW_FLOOR",
+    "gateEV": -0.04508422397729894,
+    "betRecommendedFighter": "",
+    "betRecommendedOdds": "",
+    "marketOdds": "-800",
+    "edge": 0.006708759973395151,
+    "edgeA": 0.006708759973395151,
+    "edgeB": -0.006708759973395095,
+    "ev": -4.508422397729893,
+    "evA": -4.508422397729893,
+    "evB": -9.288413878773909,
+    "kelly": 0,
+    "kellyA": 0,
+    "kellyB": 0,
+    "fairLine": "-561",
+    "fairLineA": "-561",
+    "fairLineB": "+561",
+    "oddsA": "-800",
+    "oddsB": "+500",
+    "marketSource": {
+      "kind": "sportsbook",
+      "name": "bestfightodds",
+      "line": "median of 5 books",
+      "url": "https://www.bestfightodds.com/events/ufc-vegas-124-4437",
+      "retrievedAt": "2026-11-03T20:57:10.065Z"
+    },
+    "v2pA": 0.5811765657711593,
+    "v2pB": 0.4188234342288407,
+    "projectedKO": 3,
+    "projectedSUB": 11,
+    "projectedDEC": 86,
+    "projectedFinish": "DEC",
+    "actualWinner": "Seokhyeon Ko",
+    "actualFinish": "DEC",
+    "notes": "",
+    "_provenance": {
+      "predictionTimestamp": "2026-11-03T21:08:50.190Z",
+      "targetEventDate": "2026-11-07",
+      "captureMode": "live",
+      "modelVersion": "logistic_v2.0_20260709",
+      "modelCoefHash": "256f866e",
+      "frozenTier": "NO BET",
+      "gateVersion": "c6_dog_v3_book",
+      "boutContext": {
+        "division": "Welterweight",
+        "isTitleBout": false,
+        "scheduledRounds": null,
+        "provenance": {
+          "sourceUrl": "https://www.ufc.com/event/ufc-fight-night-november-07-2026",
+          "retrievedAt": "2026-11-03",
+          "authority": "official"
+        }
+      },
+      "decisionProbabilitySource": "c6",
+      "c6": {
+        "version": "c6_sym_zerointercept_full_20260818",
+        "pA": 0.8488140231312898,
+        "pB": 0.15118597686871016
+      },
+      "marketSource": {
+        "kind": "sportsbook",
+        "name": "bestfightodds",
+        "line": "median of 5 books",
+        "url": "https://www.bestfightodds.com/events/ufc-vegas-124-4437",
+        "retrievedAt": "2026-11-03T20:57:10.065Z"
+      },
+      "featureVector": {
+        "v1": {
+          "sig_str_dif": 0.034873636537803634,
+          "avg_sig_str_pct_dif": -0.06999814054054088,
+          "avg_td_dif": 0.7522412355212359,
+          "avg_td_pct_dif": 1.2163948296122202,
+          "atd_dif": 1.7999999999999998,
+          "avg_sub_att_dif": -0.5591020849420849,
+          "kd_dif": 0,
+          "control_time_dif": 0.9833333333333335,
+          "reach_dif": -0.09259259259259259,
+          "height_dif": -0.21978021978021978,
+          "age_dif": -0.6976744186046512,
+          "win_streak_dif": 0,
+          "lose_streak_dif": 2,
+          "win_dif": -0.22727272727272727,
+          "loss_dif": 1.8518518518518516,
+          "total_round_dif": -0.7058823529411765,
+          "deep_round_dif": -0.11764705882352941,
+          "total_title_bout_dif": 0,
+          "ko_dif": 0,
+          "sub_dif": -0.7142857142857143,
+          "elo_dif": 1.9354838709677418,
+          "layoff_dif": 4.795,
+          "cardio_dif": -0.3187499999999996,
+          "peak_elo_dif": 0.9636363636363636,
+          "ufc_fight_count_dif": -0.75,
+          "rank_tier_dif": 0
+        },
+        "v2": {
+          "modern_form": 0.3696300939833425,
+          "wins": -1,
+          "losses": 5,
+          "rounds": -12,
+          "title_bouts": 0,
+          "ko_wins": 0,
+          "sub_wins": -1,
+          "height": -2,
+          "reach": -1,
+          "younger": -3,
+          "sig_str_landed": 0.5510034572972975,
+          "sig_str_accuracy": -0.006999814054054088,
+          "sub_attempts": -0.3913714594594594,
+          "td_landed": 1.0531377297297302,
+          "td_accuracy": 0.2797708108108107,
+          "elo": 0.96
+        }
+      },
+      "fightHistoryCutoff": {
+        "fighterA": "2026-07-18",
+        "fighterB": "2023-12-02"
+      },
+      "sourceManifest": {
+        "fightHistory": {
+          "file": "src/fightHistory.js",
+          "feedsV2": true,
+          "generatedAt": "2026-10-25",
+          "maxObservedEventDate": "2026-10-24",
+          "contentHash": "b441e13f70c372cf6e2028f408771226253b0463498dce8f637c8bb1524b5d46",
+          "sourceInputs": [
+            "ufc_fight_results.csv",
+            "ufc_event_details.csv",
+            "ufc_fight_details.csv"
+          ],
+          "generatorRequiredInputs": [
+            "ufc_fight_results.csv",
+            "ufc_event_details.csv",
+            "ufc_fight_details.csv",
+            "ufc_fight_stats.csv"
+          ],
+          "generatorVersion": "update_fighters.py @ 889c443a1221e0bafe7ed42efb9a36a6f17deeb2",
+          "verificationMethod": "Parsed DATE column of ufc_event_details.csv directly (794 rows); maximum event date found = 2026-10-24. Cross-checked ufc_fight_results.csv, ufc_fight_details.csv, ufc_fight_stats.csv for window-period event names: FOUND (see manual audit). This value is NOT derived from any file mtime, git commit date, or in-file header comment -- see research/source_integrity_audit.md for the original manual methodology this script automates."
+        },
+        "fightersDataAggregates": {
+          "file": "src/fightersData.js",
+          "feedsV2": true,
+          "note": "Feeds ASL/ASP/ATL/ATP/ASA (sig_str_landed, sig_str_accuracy, sub_attempts, td_landed, td_accuracy) and TR (rounds) -- the highest-weight non-ELO v2 features.",
+          "generatedAt": "2026-10-25",
+          "maxObservedEventDate": "2026-10-24",
+          "contentHash": "ee7834ad4e4fe52bc575c33a293933cec0a9a37b72e1eadbb106566674145cc7",
+          "sourceInputs": [
+            "ufc_fight_results.csv",
+            "ufc_event_details.csv",
+            "ufc_fight_details.csv",
+            "ufc_fight_stats.csv"
+          ],
+          "generatorRequiredInputs": [
+            "ufc_fight_results.csv",
+            "ufc_event_details.csv",
+            "ufc_fight_details.csv",
+            "ufc_fight_stats.csv"
+          ],
+          "generatorVersion": "update_fighters.py @ 889c443a1221e0bafe7ed42efb9a36a6f17deeb2",
+          "verificationMethod": "Parsed DATE column of ufc_event_details.csv directly (794 rows); maximum event date found = 2026-10-24. Cross-checked ufc_fight_results.csv, ufc_fight_details.csv, ufc_fight_stats.csv for window-period event names: FOUND (see manual audit). This value is NOT derived from any file mtime, git commit date, or in-file header comment -- see research/source_integrity_audit.md for the original manual methodology this script automates."
+        },
+        "elo": {
+          "file": "src/eloModule.js",
+          "feedsV2": true,
+          "generatedAt": "2026-10-25",
+          "maxObservedEventDate": "2026-10-24",
+          "contentHash": "d8375f80f2b9135b8ff696169e2214b53fa06aa1dcedf2da32ec3c8c8fd15bd5",
+          "sourceInputs": [
+            "ufc_fight_results.csv",
+            "ufc_event_details.csv"
+          ],
+          "generatorRequiredInputs": [
+            "ufc_fight_results.csv",
+            "ufc_event_details.csv"
+          ],
+          "generatorVersion": "regen_elo.py @ 889c443a1221e0bafe7ed42efb9a36a6f17deeb2",
+          "verificationMethod": "Parsed DATE column of ufc_event_details.csv directly (794 rows); maximum event date found = 2026-10-24. Cross-checked ufc_fight_results.csv, ufc_fight_details.csv, ufc_fight_stats.csv for window-period event names: FOUND (see manual audit). This value is NOT derived from any file mtime, git commit date, or in-file header comment -- see research/source_integrity_audit.md for the original manual methodology this script automates. NOTE: eloModule.js's own header comment claims coverage \"through Jul 2026\" -- this is misleading relative to the verified underlying data and should not be trusted; regen_elo.py reads only ufc_fight_results.csv + ufc_event_details.csv. Unlike ELO, the fighter aggregate updater also requires ufc_fight_details.csv and ufc_fight_stats.csv."
+        },
+        "cardio": {
+          "file": "src/cardioModule.js",
+          "feedsV2": false,
+          "note": "Does not feed MODEL_V2 (no path into computeLogisticProb's 16 features, confirmed in research/source_integrity_audit.md). Tracked here for future model versions that might use it.",
+          "generatedAt": "2026-10-25",
+          "maxObservedEventDate": null,
+          "contentHash": "7025f1f440bbf01c15731cc40e65521e50635902ee482536cd07a412738b788c",
+          "generatorVersion": "unavailable -- no cardio-generation script found in repo",
+          "verificationMethod": "INDETERMINATE: no generator script present in the repository, and no per-fighter date field is embedded in the shipped artifact itself, so maxObservedEventDate cannot be independently verified the way the Greco-CSV-backed modules above were. The file's own header comment self-reports \"fetched 2026-04-14\" -- this is NOT independently verified and should not be treated as authoritative."
+        },
+        "rankHistory": {
+          "file": "src/rankHistory.js",
+          "feedsV2": false,
+          "note": "Does not feed MODEL_V2 (no path into computeLogisticProb's 16 features, confirmed in research/source_integrity_audit.md). Tracked here for future model versions that might use it.",
+          "generatedAt": "2026-10-25",
+          "maxObservedEventDate": "2026-03-12",
+          "contentHash": "9a706f356ef41fa68b605dd9c52740dd370eda014dfb747b0cb8bdc6313ba244",
+          "generatorVersion": "regen_rankhistory.py (untracked in git -- present on disk, no commit history, no recoverable version)",
+          "verificationMethod": "Raw source UFC_rankings_history.csv is not present on disk, so maxObservedEventDate is instead the maximum YYYYMMDD date literally embedded in the shipped rankHistory.js artifact's own HISTORICAL_RANKINGS data -- a defensible proxy (the artifact cannot reflect dates its regeneration process never saw), but distinct from the direct-CSV verification used for the three modules above."
+        },
+        "fighterBirthdates": {
+          "file": "src/fighterBirthdates.js",
+          "feedsV2": true,
+          "note": "Canonical fighter name -> date of birth. Feeds the v2 'younger' feature and the v1 age differential/age-decay penalty via src/domain/age, which derives every age from DOB -- at app load for the roster, and at the bout date for a prediction. The integer AGE values in fightersData.js are now used only where no birth date exists here.",
+          "generatedAt": "2026-10-25",
+          "maxObservedEventDate": null,
+          "contentHash": "5a8fd68909e52ec73c78144d4701f806344e6de6f3a40a0b60790da07b627b7a",
+          "generatorVersion": "scripts/generate-fighter-birthdates.mjs @ 889c443a1221e0bafe7ed42efb9a36a6f17deeb2",
+          "verificationMethod": "Recomputed the join from source while writing this manifest: read 2267 rows from fighters.json, of which 2207 carry a dob matching ^\\d{4}-\\d{2}-\\d{2}$; applied 1 name_aliases.json rewrites; filled 256 further names from fighter_profiles.json (ufcstats tale of the tape, never overriding fighters.json); produced 2463 canonical names, and the shipped artifact contains 2463 entries. The generator raises on any canonical name that would receive two DIFFERENT birth dates, so a silent bad join cannot ship. Keys are sorted by UTF-16 code point (not localeCompare), making regeneration byte-identical across machines and ICU builds; the scheduled workflow enforces this with a --check re-run. maxObservedEventDate is null by nature, not by omission: this artifact holds birth dates, which are not event-scoped, so there is no event date it could be current or stale relative to. Its freshness question is coverage, which is the measured count above."
+        },
+        "rankings": {
+          "file": "src/rankingsData.js",
+          "feedsV2": false,
+          "inProductionBundle": true,
+          "note": "Current official rankings feed fighter-profile/UI rank badges only. Runtime artifact: this is the only rankings file in the production dependency graph. Historical series live in the separate rankingsHistory module below.",
+          "generatedAt": "2026-10-20T21:22:31Z",
+          "maxObservedEventDate": "2026-10-20",
+          "contentHash": "60188ce5eee1534536003bf48c472b3805717bf434d54cc6466b89640b700daf",
+          "officialSnapshots": [
+            "2026-08-01-meta.json",
+            "2026-08-04-media.json",
+            "2026-09-26-meta.json",
+            "2026-09-29-media.json",
+            "2026-10-03-meta.json",
+            "2026-10-06-media.json",
+            "2026-10-17-meta.json",
+            "2026-10-20-media.json"
+          ],
+          "generatorVersion": "scripts/update_rankings.py @ 889c443a1221e0bafe7ed42efb9a36a6f17deeb2",
+          "verificationMethod": "Read directly from the generated artifacts and the committed history cache, all produced by scripts/update_rankings.py and regenerating byte-identically from the same inputs. upstreamContentSha256 is the SHA-256 of the Kaggle CSV the cache was built from. No git commit date, file mtime, or header comment is consulted, and a missing artifact, cache or snapshot set is a hard failure rather than a silent fallback."
+        },
+        "rankingsHistory": {
+          "file": "src/rankingsHistoryData.js",
+          "feedsV2": false,
+          "inProductionBundle": false,
+          "note": "Historical divisional rankings. RESEARCH ARTIFACT: no runtime consumer and no model consumer -- neither the deprecated v1 engine nor the frozen 16-feature MODEL_V2. Kept out of the browser bundle; enforced by src/domain/rankings/__tests__/boundary.test.js (import graph) and scripts/verify-bundle.mjs (emitted assets).",
+          "generatedAt": "2026-10-20T21:22:31Z",
+          "maxObservedEventDate": "2026-10-20",
+          "contentHash": "329c4e7edc9f12070cc4fb923d06c8a911e63ca4b0354bb2614197b52f52c610",
+          "historyCacheSha256": "4f245240e2b53ee088d82f861aa0a718aef9f62bf15d62eb434d4628b3b6b3ad",
+          "upstreamContentSha256": "2d27b34e64372520e9170cc30f1d1c59e795d046b6726de89db95b9535db9858",
+          "upstreamVersion": 49,
+          "historyUsedThrough": "2026-06-18",
+          "generatorVersion": "scripts/update_rankings.py @ 889c443a1221e0bafe7ed42efb9a36a6f17deeb2",
+          "verificationMethod": "Read directly from the generated artifacts and the committed history cache, all produced by scripts/update_rankings.py and regenerating byte-identically from the same inputs. upstreamContentSha256 is the SHA-256 of the Kaggle CSV the cache was built from. No git commit date, file mtime, or header comment is consulted, and a missing artifact, cache or snapshot set is a hard failure rather than a silent fallback."
+        }
+      }
+    }
+  },
+  {
+    "id": "1793740130189-npg0fa",
+    "createdAt": "2026-11-03T21:08:50.189Z",
+    "eventName": "UFC Fight Night: Cortes-Acosta vs. Walker",
+    "eventDate": "2026-11-07",
+    "fighterA": "Billy Elekana",
+    "fighterB": "Lucas Fernando",
+    "fighterAIsProspect": false,
+    "fighterBIsProspect": false,
+    "includesProspect": false,
+    "division": "Light Heavyweight",
+    "boutContext": {
+      "division": "Light Heavyweight",
+      "isTitleBout": false,
+      "scheduledRounds": null,
+      "provenance": {
+        "sourceUrl": "https://www.ufc.com/event/ufc-fight-night-november-07-2026",
+        "retrievedAt": "2026-11-03",
+        "authority": "official"
+      }
+    },
+    "fighterAProb": 0.5537958776714648,
+    "fighterBProb": 0.44620412232853524,
+    "predictedWinner": "Billy Elekana",
+    "predictedProb": 0.5537958776714648,
+    "modelUsed": "v2",
+    "decisionProbabilitySource": "c6",
+    "c6ProbA": 0.2791532921940252,
+    "c6ProbB": 0.7208467078059748,
+    "c6Version": "c6_sym_zerointercept_full_20260818",
+    "trackedSide": "Lucas Fernando",
+    "trackedProb": 0.7208467078059748,
+    "unitsWagered": 1,
+    "betAction": "NO BET",
+    "bestBet": null,
+    "gateVersion": "c6_dog_v3_book",
+    "gateReason": "EV_BELOW_FLOOR",
+    "gateEV": -0.05031306749371578,
+    "betRecommendedFighter": "",
+    "betRecommendedOdds": "",
+    "marketOdds": "-315",
+    "edge": 0.0001199244950730316,
+    "edgeA": -0.00011992449507308711,
+    "edgeB": 0.0001199244950730316,
+    "ev": -5.0313067493715735,
+    "evA": -5.087880654031437,
+    "evB": -5.0313067493715735,
+    "kelly": 0,
+    "kellyA": 0,
+    "kellyB": 0,
+    "fairLine": "-258",
+    "fairLineA": "+258",
+    "fairLineB": "-258",
+    "oddsA": "+240",
+    "oddsB": "-315",
+    "marketSource": {
+      "kind": "sportsbook",
+      "name": "bestfightodds",
+      "line": "median of 5 books",
+      "url": "https://www.bestfightodds.com/events/ufc-vegas-124-4437",
+      "retrievedAt": "2026-11-03T20:57:10.065Z"
+    },
+    "v2pA": 0.4666545935414828,
+    "v2pB": 0.5333454064585172,
+    "projectedKO": 49,
+    "projectedSUB": 25,
+    "projectedDEC": 26,
+    "projectedFinish": "KO/TKO",
+    "actualWinner": "Lucas Fernando",
+    "actualFinish": "DEC",
+    "notes": "",
+    "_provenance": {
+      "predictionTimestamp": "2026-11-03T21:08:50.190Z",
+      "targetEventDate": "2026-11-07",
+      "captureMode": "live",
+      "modelVersion": "logistic_v2.0_20260709",
+      "modelCoefHash": "256f866e",
+      "frozenTier": "NO BET",
+      "gateVersion": "c6_dog_v3_book",
+      "boutContext": {
+        "division": "Light Heavyweight",
+        "isTitleBout": false,
+        "scheduledRounds": null,
+        "provenance": {
+          "sourceUrl": "https://www.ufc.com/event/ufc-fight-night-november-07-2026",
+          "retrievedAt": "2026-11-03",
+          "authority": "official"
+        }
+      },
+      "decisionProbabilitySource": "c6",
+      "c6": {
+        "version": "c6_sym_zerointercept_full_20260818",
+        "pA": 0.2791532921940252,
+        "pB": 0.7208467078059748
+      },
+      "marketSource": {
+        "kind": "sportsbook",
+        "name": "bestfightodds",
+        "line": "median of 5 books",
+        "url": "https://www.bestfightodds.com/events/ufc-vegas-124-4437",
+        "retrievedAt": "2026-11-03T20:57:10.065Z"
+      },
+      "featureVector": {
+        "v1": {
+          "sig_str_dif": -0.06289359971531691,
+          "avg_sig_str_pct_dif": 0.19042168674698878,
+          "avg_td_dif": -0.006081468732071256,
+          "avg_td_pct_dif": 0.07789418543740176,
+          "atd_dif": -1.3333333333333335,
+          "avg_sub_att_dif": 0.34552495697074004,
+          "kd_dif": -2.6679999999999997,
+          "control_time_dif": 0.31666666666666665,
+          "reach_dif": -0.27777777777777773,
+          "height_dif": 0,
+          "age_dif": -0.46511627906976744,
+          "win_streak_dif": 1.4285714285714286,
+          "lose_streak_dif": 0,
+          "win_dif": 0.45454545454545453,
+          "loss_dif": -0.37037037037037035,
+          "total_round_dif": 0.29411764705882354,
+          "deep_round_dif": 0,
+          "total_title_bout_dif": 0,
+          "ko_dif": -0.5,
+          "sub_dif": 1.4285714285714286,
+          "elo_dif": 0.7862903225806451,
+          "layoff_dif": -0.98,
+          "cardio_dif": 0,
+          "peak_elo_dif": 0.7090909090909091,
+          "ufc_fight_count_dif": 0.375,
+          "rank_tier_dif": 0
+        },
+        "v2": {
+          "modern_form": -0.13875338753387534,
+          "wins": 2,
+          "losses": -1,
+          "rounds": 5,
+          "title_bouts": 0,
+          "ko_wins": -1,
+          "sub_wins": 2,
+          "height": 0,
+          "reach": -3,
+          "younger": -2,
+          "sig_str_landed": -0.9937188755020072,
+          "sig_str_accuracy": 0.01904216867469888,
+          "sub_attempts": 0.24186746987951802,
+          "td_landed": -0.008514056224899758,
+          "td_accuracy": 0.017915662650602404,
+          "elo": 0.39
+        }
+      },
+      "fightHistoryCutoff": {
+        "fighterA": "2026-01-31",
+        "fighterB": "2026-08-15"
+      },
+      "sourceManifest": {
+        "fightHistory": {
+          "file": "src/fightHistory.js",
+          "feedsV2": true,
+          "generatedAt": "2026-10-25",
+          "maxObservedEventDate": "2026-10-24",
+          "contentHash": "b441e13f70c372cf6e2028f408771226253b0463498dce8f637c8bb1524b5d46",
+          "sourceInputs": [
+            "ufc_fight_results.csv",
+            "ufc_event_details.csv",
+            "ufc_fight_details.csv"
+          ],
+          "generatorRequiredInputs": [
+            "ufc_fight_results.csv",
+            "ufc_event_details.csv",
+            "ufc_fight_details.csv",
+            "ufc_fight_stats.csv"
+          ],
+          "generatorVersion": "update_fighters.py @ 889c443a1221e0bafe7ed42efb9a36a6f17deeb2",
+          "verificationMethod": "Parsed DATE column of ufc_event_details.csv directly (794 rows); maximum event date found = 2026-10-24. Cross-checked ufc_fight_results.csv, ufc_fight_details.csv, ufc_fight_stats.csv for window-period event names: FOUND (see manual audit). This value is NOT derived from any file mtime, git commit date, or in-file header comment -- see research/source_integrity_audit.md for the original manual methodology this script automates."
+        },
+        "fightersDataAggregates": {
+          "file": "src/fightersData.js",
+          "feedsV2": true,
+          "note": "Feeds ASL/ASP/ATL/ATP/ASA (sig_str_landed, sig_str_accuracy, sub_attempts, td_landed, td_accuracy) and TR (rounds) -- the highest-weight non-ELO v2 features.",
+          "generatedAt": "2026-10-25",
+          "maxObservedEventDate": "2026-10-24",
+          "contentHash": "ee7834ad4e4fe52bc575c33a293933cec0a9a37b72e1eadbb106566674145cc7",
+          "sourceInputs": [
+            "ufc_fight_results.csv",
+            "ufc_event_details.csv",
+            "ufc_fight_details.csv",
+            "ufc_fight_stats.csv"
+          ],
+          "generatorRequiredInputs": [
+            "ufc_fight_results.csv",
+            "ufc_event_details.csv",
+            "ufc_fight_details.csv",
+            "ufc_fight_stats.csv"
+          ],
+          "generatorVersion": "update_fighters.py @ 889c443a1221e0bafe7ed42efb9a36a6f17deeb2",
+          "verificationMethod": "Parsed DATE column of ufc_event_details.csv directly (794 rows); maximum event date found = 2026-10-24. Cross-checked ufc_fight_results.csv, ufc_fight_details.csv, ufc_fight_stats.csv for window-period event names: FOUND (see manual audit). This value is NOT derived from any file mtime, git commit date, or in-file header comment -- see research/source_integrity_audit.md for the original manual methodology this script automates."
+        },
+        "elo": {
+          "file": "src/eloModule.js",
+          "feedsV2": true,
+          "generatedAt": "2026-10-25",
+          "maxObservedEventDate": "2026-10-24",
+          "contentHash": "d8375f80f2b9135b8ff696169e2214b53fa06aa1dcedf2da32ec3c8c8fd15bd5",
+          "sourceInputs": [
+            "ufc_fight_results.csv",
+            "ufc_event_details.csv"
+          ],
+          "generatorRequiredInputs": [
+            "ufc_fight_results.csv",
+            "ufc_event_details.csv"
+          ],
+          "generatorVersion": "regen_elo.py @ 889c443a1221e0bafe7ed42efb9a36a6f17deeb2",
+          "verificationMethod": "Parsed DATE column of ufc_event_details.csv directly (794 rows); maximum event date found = 2026-10-24. Cross-checked ufc_fight_results.csv, ufc_fight_details.csv, ufc_fight_stats.csv for window-period event names: FOUND (see manual audit). This value is NOT derived from any file mtime, git commit date, or in-file header comment -- see research/source_integrity_audit.md for the original manual methodology this script automates. NOTE: eloModule.js's own header comment claims coverage \"through Jul 2026\" -- this is misleading relative to the verified underlying data and should not be trusted; regen_elo.py reads only ufc_fight_results.csv + ufc_event_details.csv. Unlike ELO, the fighter aggregate updater also requires ufc_fight_details.csv and ufc_fight_stats.csv."
+        },
+        "cardio": {
+          "file": "src/cardioModule.js",
+          "feedsV2": false,
+          "note": "Does not feed MODEL_V2 (no path into computeLogisticProb's 16 features, confirmed in research/source_integrity_audit.md). Tracked here for future model versions that might use it.",
+          "generatedAt": "2026-10-25",
+          "maxObservedEventDate": null,
+          "contentHash": "7025f1f440bbf01c15731cc40e65521e50635902ee482536cd07a412738b788c",
+          "generatorVersion": "unavailable -- no cardio-generation script found in repo",
+          "verificationMethod": "INDETERMINATE: no generator script present in the repository, and no per-fighter date field is embedded in the shipped artifact itself, so maxObservedEventDate cannot be independently verified the way the Greco-CSV-backed modules above were. The file's own header comment self-reports \"fetched 2026-04-14\" -- this is NOT independently verified and should not be treated as authoritative."
+        },
+        "rankHistory": {
+          "file": "src/rankHistory.js",
+          "feedsV2": false,
+          "note": "Does not feed MODEL_V2 (no path into computeLogisticProb's 16 features, confirmed in research/source_integrity_audit.md). Tracked here for future model versions that might use it.",
+          "generatedAt": "2026-10-25",
+          "maxObservedEventDate": "2026-03-12",
+          "contentHash": "9a706f356ef41fa68b605dd9c52740dd370eda014dfb747b0cb8bdc6313ba244",
+          "generatorVersion": "regen_rankhistory.py (untracked in git -- present on disk, no commit history, no recoverable version)",
+          "verificationMethod": "Raw source UFC_rankings_history.csv is not present on disk, so maxObservedEventDate is instead the maximum YYYYMMDD date literally embedded in the shipped rankHistory.js artifact's own HISTORICAL_RANKINGS data -- a defensible proxy (the artifact cannot reflect dates its regeneration process never saw), but distinct from the direct-CSV verification used for the three modules above."
+        },
+        "fighterBirthdates": {
+          "file": "src/fighterBirthdates.js",
+          "feedsV2": true,
+          "note": "Canonical fighter name -> date of birth. Feeds the v2 'younger' feature and the v1 age differential/age-decay penalty via src/domain/age, which derives every age from DOB -- at app load for the roster, and at the bout date for a prediction. The integer AGE values in fightersData.js are now used only where no birth date exists here.",
+          "generatedAt": "2026-10-25",
+          "maxObservedEventDate": null,
+          "contentHash": "5a8fd68909e52ec73c78144d4701f806344e6de6f3a40a0b60790da07b627b7a",
+          "generatorVersion": "scripts/generate-fighter-birthdates.mjs @ 889c443a1221e0bafe7ed42efb9a36a6f17deeb2",
+          "verificationMethod": "Recomputed the join from source while writing this manifest: read 2267 rows from fighters.json, of which 2207 carry a dob matching ^\\d{4}-\\d{2}-\\d{2}$; applied 1 name_aliases.json rewrites; filled 256 further names from fighter_profiles.json (ufcstats tale of the tape, never overriding fighters.json); produced 2463 canonical names, and the shipped artifact contains 2463 entries. The generator raises on any canonical name that would receive two DIFFERENT birth dates, so a silent bad join cannot ship. Keys are sorted by UTF-16 code point (not localeCompare), making regeneration byte-identical across machines and ICU builds; the scheduled workflow enforces this with a --check re-run. maxObservedEventDate is null by nature, not by omission: this artifact holds birth dates, which are not event-scoped, so there is no event date it could be current or stale relative to. Its freshness question is coverage, which is the measured count above."
+        },
+        "rankings": {
+          "file": "src/rankingsData.js",
+          "feedsV2": false,
+          "inProductionBundle": true,
+          "note": "Current official rankings feed fighter-profile/UI rank badges only. Runtime artifact: this is the only rankings file in the production dependency graph. Historical series live in the separate rankingsHistory module below.",
+          "generatedAt": "2026-10-20T21:22:31Z",
+          "maxObservedEventDate": "2026-10-20",
+          "contentHash": "60188ce5eee1534536003bf48c472b3805717bf434d54cc6466b89640b700daf",
+          "officialSnapshots": [
+            "2026-08-01-meta.json",
+            "2026-08-04-media.json",
+            "2026-09-26-meta.json",
+            "2026-09-29-media.json",
+            "2026-10-03-meta.json",
+            "2026-10-06-media.json",
+            "2026-10-17-meta.json",
+            "2026-10-20-media.json"
+          ],
+          "generatorVersion": "scripts/update_rankings.py @ 889c443a1221e0bafe7ed42efb9a36a6f17deeb2",
+          "verificationMethod": "Read directly from the generated artifacts and the committed history cache, all produced by scripts/update_rankings.py and regenerating byte-identically from the same inputs. upstreamContentSha256 is the SHA-256 of the Kaggle CSV the cache was built from. No git commit date, file mtime, or header comment is consulted, and a missing artifact, cache or snapshot set is a hard failure rather than a silent fallback."
+        },
+        "rankingsHistory": {
+          "file": "src/rankingsHistoryData.js",
+          "feedsV2": false,
+          "inProductionBundle": false,
+          "note": "Historical divisional rankings. RESEARCH ARTIFACT: no runtime consumer and no model consumer -- neither the deprecated v1 engine nor the frozen 16-feature MODEL_V2. Kept out of the browser bundle; enforced by src/domain/rankings/__tests__/boundary.test.js (import graph) and scripts/verify-bundle.mjs (emitted assets).",
+          "generatedAt": "2026-10-20T21:22:31Z",
+          "maxObservedEventDate": "2026-10-20",
+          "contentHash": "329c4e7edc9f12070cc4fb923d06c8a911e63ca4b0354bb2614197b52f52c610",
+          "historyCacheSha256": "4f245240e2b53ee088d82f861aa0a718aef9f62bf15d62eb434d4628b3b6b3ad",
+          "upstreamContentSha256": "2d27b34e64372520e9170cc30f1d1c59e795d046b6726de89db95b9535db9858",
+          "upstreamVersion": 49,
+          "historyUsedThrough": "2026-06-18",
+          "generatorVersion": "scripts/update_rankings.py @ 889c443a1221e0bafe7ed42efb9a36a6f17deeb2",
+          "verificationMethod": "Read directly from the generated artifacts and the committed history cache, all produced by scripts/update_rankings.py and regenerating byte-identically from the same inputs. upstreamContentSha256 is the SHA-256 of the Kaggle CSV the cache was built from. No git commit date, file mtime, or header comment is consulted, and a missing artifact, cache or snapshot set is a hard failure rather than a silent fallback."
+        }
+      }
+    },
+    "closing": {
+      "oddsA": "+255",
+      "oddsB": "-335",
+      "source": "median of 5 books (bestfightodds)",
+      "capturedAt": "2026-11-09T18:18:45.822Z"
+    }
+  },
+  {
+    "id": "1793740130189-ek2dmc",
+    "createdAt": "2026-11-03T21:08:50.189Z",
+    "eventName": "UFC Fight Night: Cortes-Acosta vs. Walker",
+    "eventDate": "2026-11-07",
+    "fighterA": "Andre Petroski",
+    "fighterB": "Mantas Kondratavicius",
+    "fighterAIsProspect": false,
+    "fighterBIsProspect": false,
+    "includesProspect": false,
+    "division": "Middleweight",
+    "boutContext": {
+      "division": "Middleweight",
+      "isTitleBout": false,
+      "scheduledRounds": null,
+      "provenance": {
+        "sourceUrl": "https://www.ufc.com/event/ufc-fight-night-november-07-2026",
+        "retrievedAt": "2026-11-03",
+        "authority": "official"
+      }
+    },
+    "fighterAProb": 0.4696602258879666,
+    "fighterBProb": 0.5303397741120335,
+    "predictedWinner": "Mantas Kondratavicius",
+    "predictedProb": 0.5303397741120335,
+    "modelUsed": "v2",
+    "decisionProbabilitySource": "c6",
+    "c6ProbA": 0.226405153542534,
+    "c6ProbB": 0.773594846457466,
+    "c6Version": "c6_sym_zerointercept_full_20260818",
+    "trackedSide": "Mantas Kondratavicius",
+    "trackedProb": 0.773594846457466,
+    "unitsWagered": 1,
+    "betAction": "NO BET",
+    "bestBet": null,
+    "gateVersion": "c6_dog_v3_book",
+    "gateReason": "EV_BELOW_FLOOR",
+    "gateEV": 0.019180511999518757,
+    "betRecommendedFighter": "",
+    "betRecommendedOdds": "",
+    "marketOdds": "-315",
+    "edge": 0.052868063146564226,
+    "edgeA": -0.05286806314656428,
+    "edgeB": 0.052868063146564226,
+    "ev": 1.9180511999518686,
+    "evA": -23.022247795538448,
+    "evB": 1.9180511999518686,
+    "kelly": 0.060418612798483914,
+    "kellyA": 0,
+    "kellyB": 0.060418612798483914,
+    "fairLine": "-342",
+    "fairLineA": "+342",
+    "fairLineB": "-342",
+    "oddsA": "+240",
+    "oddsB": "-315",
+    "marketSource": {
+      "kind": "sportsbook",
+      "name": "bestfightodds",
+      "line": "median of 5 books",
+      "url": "https://www.bestfightodds.com/events/ufc-vegas-124-4437",
+      "retrievedAt": "2026-11-03T20:57:10.065Z"
+    },
+    "v2pA": 0.3442534928279621,
+    "v2pB": 0.6557465071720379,
+    "projectedKO": 8,
+    "projectedSUB": 12,
+    "projectedDEC": 81,
+    "projectedFinish": "DEC",
+    "actualWinner": "Andre Petroski",
+    "actualFinish": "KO/TKO",
+    "notes": "",
+    "_provenance": {
+      "predictionTimestamp": "2026-11-03T21:08:50.189Z",
+      "targetEventDate": "2026-11-07",
+      "captureMode": "live",
+      "modelVersion": "logistic_v2.0_20260709",
+      "modelCoefHash": "256f866e",
+      "frozenTier": "NO BET",
+      "gateVersion": "c6_dog_v3_book",
+      "boutContext": {
+        "division": "Middleweight",
+        "isTitleBout": false,
+        "scheduledRounds": null,
+        "provenance": {
+          "sourceUrl": "https://www.ufc.com/event/ufc-fight-night-november-07-2026",
+          "retrievedAt": "2026-11-03",
+          "authority": "official"
+        }
+      },
+      "decisionProbabilitySource": "c6",
+      "c6": {
+        "version": "c6_sym_zerointercept_full_20260818",
+        "pA": 0.226405153542534,
+        "pB": 0.773594846457466
+      },
+      "marketSource": {
+        "kind": "sportsbook",
+        "name": "bestfightodds",
+        "line": "median of 5 books",
+        "url": "https://www.bestfightodds.com/events/ufc-vegas-124-4437",
+        "retrievedAt": "2026-11-03T20:57:10.065Z"
+      },
+      "featureVector": {
+        "v1": {
+          "sig_str_dif": -0.11094382431914082,
+          "avg_sig_str_pct_dif": -0.5770606060606082,
+          "avg_td_dif": 1.0621357142857146,
+          "avg_td_pct_dif": 0.5598287220026349,
+          "atd_dif": 1.3199999999999998,
+          "avg_sub_att_dif": 0.85384329004329,
+          "kd_dif": 0.25999999999999995,
+          "control_time_dif": 0.5,
+          "reach_dif": -0.18518518518518517,
+          "height_dif": -0.21978021978021978,
+          "age_dif": -1.8604651162790697,
+          "win_streak_dif": -0.7142857142857143,
+          "lose_streak_dif": -3,
+          "win_dif": 1.5909090909090908,
+          "loss_dif": -1.8518518518518516,
+          "total_round_dif": 1.6470588235294117,
+          "deep_round_dif": 0.4117647058823529,
+          "total_title_bout_dif": 0,
+          "ko_dif": 0.5,
+          "sub_dif": 1.4285714285714286,
+          "elo_dif": 0,
+          "layoff_dif": 0.28,
+          "cardio_dif": 0.0658333333333335,
+          "peak_elo_dif": 2.290909090909091,
+          "ufc_fight_count_dif": 1.5,
+          "rank_tier_dif": 0
+        },
+        "v2": {
+          "modern_form": -0.6098196186275144,
+          "wins": 7,
+          "losses": -5,
+          "rounds": 28,
+          "title_bouts": 0,
+          "ko_wins": 1,
+          "sub_wins": 2,
+          "height": -2,
+          "reach": -2,
+          "younger": -8,
+          "sig_str_landed": -1.752912424242425,
+          "sig_str_accuracy": -0.057706060606060816,
+          "sub_attempts": 0.5976903030303029,
+          "td_landed": 1.4869900000000005,
+          "td_accuracy": 0.12876060606060602,
+          "elo": 0
+        }
+      },
+      "fightHistoryCutoff": {
+        "fighterA": "2026-05-16",
+        "fighterB": "2026-03-21"
+      },
+      "sourceManifest": {
+        "fightHistory": {
+          "file": "src/fightHistory.js",
+          "feedsV2": true,
+          "generatedAt": "2026-10-25",
+          "maxObservedEventDate": "2026-10-24",
+          "contentHash": "b441e13f70c372cf6e2028f408771226253b0463498dce8f637c8bb1524b5d46",
+          "sourceInputs": [
+            "ufc_fight_results.csv",
+            "ufc_event_details.csv",
+            "ufc_fight_details.csv"
+          ],
+          "generatorRequiredInputs": [
+            "ufc_fight_results.csv",
+            "ufc_event_details.csv",
+            "ufc_fight_details.csv",
+            "ufc_fight_stats.csv"
+          ],
+          "generatorVersion": "update_fighters.py @ 889c443a1221e0bafe7ed42efb9a36a6f17deeb2",
+          "verificationMethod": "Parsed DATE column of ufc_event_details.csv directly (794 rows); maximum event date found = 2026-10-24. Cross-checked ufc_fight_results.csv, ufc_fight_details.csv, ufc_fight_stats.csv for window-period event names: FOUND (see manual audit). This value is NOT derived from any file mtime, git commit date, or in-file header comment -- see research/source_integrity_audit.md for the original manual methodology this script automates."
+        },
+        "fightersDataAggregates": {
+          "file": "src/fightersData.js",
+          "feedsV2": true,
+          "note": "Feeds ASL/ASP/ATL/ATP/ASA (sig_str_landed, sig_str_accuracy, sub_attempts, td_landed, td_accuracy) and TR (rounds) -- the highest-weight non-ELO v2 features.",
+          "generatedAt": "2026-10-25",
+          "maxObservedEventDate": "2026-10-24",
+          "contentHash": "ee7834ad4e4fe52bc575c33a293933cec0a9a37b72e1eadbb106566674145cc7",
+          "sourceInputs": [
+            "ufc_fight_results.csv",
+            "ufc_event_details.csv",
+            "ufc_fight_details.csv",
+            "ufc_fight_stats.csv"
+          ],
+          "generatorRequiredInputs": [
+            "ufc_fight_results.csv",
+            "ufc_event_details.csv",
+            "ufc_fight_details.csv",
+            "ufc_fight_stats.csv"
+          ],
+          "generatorVersion": "update_fighters.py @ 889c443a1221e0bafe7ed42efb9a36a6f17deeb2",
+          "verificationMethod": "Parsed DATE column of ufc_event_details.csv directly (794 rows); maximum event date found = 2026-10-24. Cross-checked ufc_fight_results.csv, ufc_fight_details.csv, ufc_fight_stats.csv for window-period event names: FOUND (see manual audit). This value is NOT derived from any file mtime, git commit date, or in-file header comment -- see research/source_integrity_audit.md for the original manual methodology this script automates."
+        },
+        "elo": {
+          "file": "src/eloModule.js",
+          "feedsV2": true,
+          "generatedAt": "2026-10-25",
+          "maxObservedEventDate": "2026-10-24",
+          "contentHash": "d8375f80f2b9135b8ff696169e2214b53fa06aa1dcedf2da32ec3c8c8fd15bd5",
+          "sourceInputs": [
+            "ufc_fight_results.csv",
+            "ufc_event_details.csv"
+          ],
+          "generatorRequiredInputs": [
+            "ufc_fight_results.csv",
+            "ufc_event_details.csv"
+          ],
+          "generatorVersion": "regen_elo.py @ 889c443a1221e0bafe7ed42efb9a36a6f17deeb2",
+          "verificationMethod": "Parsed DATE column of ufc_event_details.csv directly (794 rows); maximum event date found = 2026-10-24. Cross-checked ufc_fight_results.csv, ufc_fight_details.csv, ufc_fight_stats.csv for window-period event names: FOUND (see manual audit). This value is NOT derived from any file mtime, git commit date, or in-file header comment -- see research/source_integrity_audit.md for the original manual methodology this script automates. NOTE: eloModule.js's own header comment claims coverage \"through Jul 2026\" -- this is misleading relative to the verified underlying data and should not be trusted; regen_elo.py reads only ufc_fight_results.csv + ufc_event_details.csv. Unlike ELO, the fighter aggregate updater also requires ufc_fight_details.csv and ufc_fight_stats.csv."
+        },
+        "cardio": {
+          "file": "src/cardioModule.js",
+          "feedsV2": false,
+          "note": "Does not feed MODEL_V2 (no path into computeLogisticProb's 16 features, confirmed in research/source_integrity_audit.md). Tracked here for future model versions that might use it.",
+          "generatedAt": "2026-10-25",
+          "maxObservedEventDate": null,
+          "contentHash": "7025f1f440bbf01c15731cc40e65521e50635902ee482536cd07a412738b788c",
+          "generatorVersion": "unavailable -- no cardio-generation script found in repo",
+          "verificationMethod": "INDETERMINATE: no generator script present in the repository, and no per-fighter date field is embedded in the shipped artifact itself, so maxObservedEventDate cannot be independently verified the way the Greco-CSV-backed modules above were. The file's own header comment self-reports \"fetched 2026-04-14\" -- this is NOT independently verified and should not be treated as authoritative."
+        },
+        "rankHistory": {
+          "file": "src/rankHistory.js",
+          "feedsV2": false,
+          "note": "Does not feed MODEL_V2 (no path into computeLogisticProb's 16 features, confirmed in research/source_integrity_audit.md). Tracked here for future model versions that might use it.",
+          "generatedAt": "2026-10-25",
+          "maxObservedEventDate": "2026-03-12",
+          "contentHash": "9a706f356ef41fa68b605dd9c52740dd370eda014dfb747b0cb8bdc6313ba244",
+          "generatorVersion": "regen_rankhistory.py (untracked in git -- present on disk, no commit history, no recoverable version)",
+          "verificationMethod": "Raw source UFC_rankings_history.csv is not present on disk, so maxObservedEventDate is instead the maximum YYYYMMDD date literally embedded in the shipped rankHistory.js artifact's own HISTORICAL_RANKINGS data -- a defensible proxy (the artifact cannot reflect dates its regeneration process never saw), but distinct from the direct-CSV verification used for the three modules above."
+        },
+        "fighterBirthdates": {
+          "file": "src/fighterBirthdates.js",
+          "feedsV2": true,
+          "note": "Canonical fighter name -> date of birth. Feeds the v2 'younger' feature and the v1 age differential/age-decay penalty via src/domain/age, which derives every age from DOB -- at app load for the roster, and at the bout date for a prediction. The integer AGE values in fightersData.js are now used only where no birth date exists here.",
+          "generatedAt": "2026-10-25",
+          "maxObservedEventDate": null,
+          "contentHash": "5a8fd68909e52ec73c78144d4701f806344e6de6f3a40a0b60790da07b627b7a",
+          "generatorVersion": "scripts/generate-fighter-birthdates.mjs @ 889c443a1221e0bafe7ed42efb9a36a6f17deeb2",
+          "verificationMethod": "Recomputed the join from source while writing this manifest: read 2267 rows from fighters.json, of which 2207 carry a dob matching ^\\d{4}-\\d{2}-\\d{2}$; applied 1 name_aliases.json rewrites; filled 256 further names from fighter_profiles.json (ufcstats tale of the tape, never overriding fighters.json); produced 2463 canonical names, and the shipped artifact contains 2463 entries. The generator raises on any canonical name that would receive two DIFFERENT birth dates, so a silent bad join cannot ship. Keys are sorted by UTF-16 code point (not localeCompare), making regeneration byte-identical across machines and ICU builds; the scheduled workflow enforces this with a --check re-run. maxObservedEventDate is null by nature, not by omission: this artifact holds birth dates, which are not event-scoped, so there is no event date it could be current or stale relative to. Its freshness question is coverage, which is the measured count above."
+        },
+        "rankings": {
+          "file": "src/rankingsData.js",
+          "feedsV2": false,
+          "inProductionBundle": true,
+          "note": "Current official rankings feed fighter-profile/UI rank badges only. Runtime artifact: this is the only rankings file in the production dependency graph. Historical series live in the separate rankingsHistory module below.",
+          "generatedAt": "2026-10-20T21:22:31Z",
+          "maxObservedEventDate": "2026-10-20",
+          "contentHash": "60188ce5eee1534536003bf48c472b3805717bf434d54cc6466b89640b700daf",
+          "officialSnapshots": [
+            "2026-08-01-meta.json",
+            "2026-08-04-media.json",
+            "2026-09-26-meta.json",
+            "2026-09-29-media.json",
+            "2026-10-03-meta.json",
+            "2026-10-06-media.json",
+            "2026-10-17-meta.json",
+            "2026-10-20-media.json"
+          ],
+          "generatorVersion": "scripts/update_rankings.py @ 889c443a1221e0bafe7ed42efb9a36a6f17deeb2",
+          "verificationMethod": "Read directly from the generated artifacts and the committed history cache, all produced by scripts/update_rankings.py and regenerating byte-identically from the same inputs. upstreamContentSha256 is the SHA-256 of the Kaggle CSV the cache was built from. No git commit date, file mtime, or header comment is consulted, and a missing artifact, cache or snapshot set is a hard failure rather than a silent fallback."
+        },
+        "rankingsHistory": {
+          "file": "src/rankingsHistoryData.js",
+          "feedsV2": false,
+          "inProductionBundle": false,
+          "note": "Historical divisional rankings. RESEARCH ARTIFACT: no runtime consumer and no model consumer -- neither the deprecated v1 engine nor the frozen 16-feature MODEL_V2. Kept out of the browser bundle; enforced by src/domain/rankings/__tests__/boundary.test.js (import graph) and scripts/verify-bundle.mjs (emitted assets).",
+          "generatedAt": "2026-10-20T21:22:31Z",
+          "maxObservedEventDate": "2026-10-20",
+          "contentHash": "329c4e7edc9f12070cc4fb923d06c8a911e63ca4b0354bb2614197b52f52c610",
+          "historyCacheSha256": "4f245240e2b53ee088d82f861aa0a718aef9f62bf15d62eb434d4628b3b6b3ad",
+          "upstreamContentSha256": "2d27b34e64372520e9170cc30f1d1c59e795d046b6726de89db95b9535db9858",
+          "upstreamVersion": 49,
+          "historyUsedThrough": "2026-06-18",
+          "generatorVersion": "scripts/update_rankings.py @ 889c443a1221e0bafe7ed42efb9a36a6f17deeb2",
+          "verificationMethod": "Read directly from the generated artifacts and the committed history cache, all produced by scripts/update_rankings.py and regenerating byte-identically from the same inputs. upstreamContentSha256 is the SHA-256 of the Kaggle CSV the cache was built from. No git commit date, file mtime, or header comment is consulted, and a missing artifact, cache or snapshot set is a hard failure rather than a silent fallback."
+        }
+      }
+    }
+  },
+  {
     "id": "1793147586472-o6feuw",
     "createdAt": "2026-10-28T00:33:06.472Z",
     "eventName": "UFC Fight Night: Moicano vs. Nolan",
