@@ -8,9 +8,9 @@ import { STORE_MODES } from './useDocumentStore.js';
 
 const TONE = {
   saving: 'border-line-strong bg-surface-2 text-slate-200',
-  saved: 'border-emerald-700 bg-emerald-950 text-emerald-200',
+  saved: 'border-good/30 bg-good/8 text-emerald-200',
   failed: 'border-rose-700 bg-rose-950 text-rose-200',
-  readOnly: 'border-amber-700 bg-amber-950 text-amber-200',
+  readOnly: 'border-warn/30 bg-warn/8 text-warn',
   notice: 'border-line-strong bg-surface text-slate-300',
 };
 

@@ -1973,9 +1973,9 @@ function PropBetsPanel({ picks, onGrade, onDelete, canWrite }) {
 // the entry (that happens only at export time, a later commit).
 const PARLAY_STATUS_BADGE_CLS = {
   PENDING: 'bg-surface-2 text-secondary border-line-strong',
-  WIN: 'bg-emerald-900/30 text-good border-emerald-800',
-  LOSS: 'bg-red-900/30 text-bad border-red-800',
-  NEEDS_REVIEW: 'bg-amber-900/30 text-warn border-amber-800',
+  WIN: 'bg-good/12 text-good border-good/30',
+  LOSS: 'bg-bad/12 text-bad border-bad/30',
+  NEEDS_REVIEW: 'bg-warn/12 text-warn border-warn/30',
 };
 
 // showSummary: the Graded/Win Rate/Net Units/ROI banner is a performance-
@@ -2606,7 +2606,7 @@ function BuildParlayPanel({ legInputs, onConfirm, onCancel }) {
                 <span
                   className={`text-[11px] font-bold px-1.5 py-0.5 rounded-sm uppercase border ${
                     p.decisionProbabilitySource === 'c6'
-                      ? 'text-amber-300 bg-amber-900/30 border-amber-700/50'
+                      ? 'text-warn bg-warn/12 border-warn/30'
                       : 'text-violet-400 bg-violet-900/30 border-violet-700/40'
                   }`}
                 >
@@ -2927,7 +2927,7 @@ function UpcomingEventTab({
       </div>
 
       {canWrite && subTab === 'fights' && selectedLegIds.size > 0 && (
-        <div className="hidden sm:flex items-center justify-between bg-surface border border-red-800/60 rounded-xl px-4 py-3 mb-4">
+        <div className="hidden sm:flex items-center justify-between bg-surface border border-bad/30 rounded-xl px-4 py-3 mb-4">
           <p className="text-secondary text-sm">
             {selectedLegIds.size} leg{selectedLegIds.size === 1 ? '' : 's'} selected
             {lockedEventName ? ` · ${lockedEventName}` : ''}
@@ -3074,7 +3074,7 @@ function UpcomingEventTab({
                         className={`text-[11px] font-bold px-1.5 py-0.5 rounded-sm uppercase border ${
                           c6Agrees
                             ? 'text-secondary bg-surface-2 border-line-strong'
-                            : 'text-amber-300 bg-amber-900/30 border-amber-700/50'
+                            : 'text-warn bg-warn/12 border-warn/30'
                         }`}
                       >
                         {c6Agrees ? 'C6 agrees' : 'C6 disagrees'}
@@ -3097,7 +3097,7 @@ function UpcomingEventTab({
                       {entry.decisionProbabilitySource === 'c6' ? (
                         <span
                           title="This pick's probability and bet recommendation were driven by C6 (v2 blended with the no-vig market)."
-                          className="text-[11px] font-bold text-amber-300 bg-amber-900/30 border border-amber-700/50 px-1.5 py-0.5 rounded-sm uppercase"
+                          className="text-[11px] font-bold text-warn bg-warn/12 border border-warn/30 px-1.5 py-0.5 rounded-sm uppercase"
                         >
                           C6
                         </span>
@@ -3132,9 +3132,9 @@ function UpcomingEventTab({
                           <span
                             className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-black ${
                               betAction === 'BET'
-                                ? 'bg-emerald-900/30 text-good border border-emerald-800'
+                                ? 'bg-good/12 text-good border border-good/30'
                                 : betAction === 'LEAN'
-                                ? 'bg-yellow-900/30 text-warn border border-yellow-800'
+                                ? 'bg-warn/12 text-warn border border-warn/30'
                                 : 'bg-surface-2 text-secondary border border-line-strong'
                             }`}
                           >
@@ -3149,10 +3149,10 @@ function UpcomingEventTab({
                           <span
                             className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-black ${
                               betAction === 'STRONG BET'
-                                ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                                ? 'bg-emerald-500/20 text-good border border-good/60'
                                 : betAction === 'BET'
-                                ? 'bg-emerald-900/30 text-good border border-emerald-800'
-                                : 'bg-yellow-900/30 text-warn border border-yellow-800'
+                                ? 'bg-good/12 text-good border border-good/30'
+                                : 'bg-warn/12 text-warn border border-warn/30'
                             }`}
                           >
                             {betAction}
@@ -3579,12 +3579,12 @@ function Filters({ wc, setWC, minMin, setMinMin, showInactive, setShowInactive, 
 function CredBadge({ cred }) {
   const tier =
     cred >= 80
-      ? { label: 'High', color: 'bg-emerald-900/40 text-good border-emerald-800' }
+      ? { label: 'High', color: 'bg-good/12 text-good border-good/30' }
       : cred >= 60
-      ? { label: 'Moderate', color: 'bg-yellow-900/40 text-warn border-yellow-800' }
+      ? { label: 'Moderate', color: 'bg-warn/12 text-warn border-warn/30' }
       : cred >= 40
       ? { label: 'Low', color: 'bg-orange-900/40 text-orange-400 border-orange-800' }
-      : { label: 'Very low', color: 'bg-red-900/40 text-bad border-red-800' };
+      : { label: 'Very low', color: 'bg-bad/12 text-bad border-bad/30' };
   return (
     <span
       aria-label={`${tier.label} credibility, ${cred.toFixed(0)} percent`}
@@ -3699,7 +3699,7 @@ function DataTable({ fighters }) {
     {
       short: 'STR%',
       name: 'Strike Accuracy %',
-      color: 'text-yellow-300',
+      color: 'text-warn',
       desc: 'Percentage of significant strike attempts that land. Higher accuracy = more efficient offense.',
     },
     {
@@ -3735,7 +3735,7 @@ function DataTable({ fighters }) {
     {
       short: 'DMG',
       name: 'Damage Factor',
-      color: 'text-red-300',
+      color: 'text-bad',
       desc: 'Composite of strikes landed, knockdowns, and finish rate. Overall damage-dealing ability.',
     },
     {
@@ -3782,7 +3782,7 @@ function DataTable({ fighters }) {
             aria-controls="explore-column-key"
             className={`inline-flex items-center justify-center min-h-[44px] sm:min-h-0 shrink-0 text-xs px-3 py-1 rounded-lg border font-semibold transition-all ${
               showKey
-                ? 'bg-accent border-red-700 text-white'
+                ? 'bg-accent border-bad/30 text-white'
                 : 'bg-surface-2 border-line-strong text-secondary hover:text-white hover:border-line-strong'
             }`}
           >
@@ -3946,7 +3946,7 @@ function DataTable({ fighters }) {
                           <span
                             className={`text-xs font-black font-mono px-1.5 py-0.5 rounded border ${
                               isChampionRecord(f.UFC_RANK)
-                                ? 'bg-yellow-900/40 text-warn border-yellow-800'
+                                ? 'bg-warn/12 text-warn border-warn/30'
                                 : 'bg-surface-2 text-secondary border-line-strong'
                             }`}
                           >
@@ -3955,7 +3955,7 @@ function DataTable({ fighters }) {
                         )}
                         {f.IS_PROSPECT && (
                           <span
-                            className="text-[11px] font-black font-mono px-1.5 py-0.5 rounded-sm border bg-amber-900/40 text-warn border-amber-800"
+                            className="text-[11px] font-black font-mono px-1.5 py-0.5 rounded-sm border bg-warn/12 text-warn border-warn/30"
                             title="Pre-debut UFC signee — stats from pre-UFC pro fights"
                           >
                             PRE-UFC
@@ -4078,7 +4078,7 @@ function FighterSearch({
   }, [search, allFighters]);
   const bdr =
     accent === 'blue'
-      ? 'border-blue-700 focus:border-blue-400'
+      ? 'border-info/30 focus:border-blue-400'
       : 'border-line-strong focus:border-accent';
   return (
     <div className="relative">
@@ -4123,7 +4123,7 @@ function FighterSearch({
             >
               <span className="text-slate-200 font-medium flex items-center gap-2">
                 {f.IS_PROSPECT && (
-                  <span className="text-[11px] font-black font-mono px-1.5 py-0.5 rounded-sm border bg-amber-900/40 text-warn border-amber-800">
+                  <span className="text-[11px] font-black font-mono px-1.5 py-0.5 rounded-sm border bg-warn/12 text-warn border-warn/30">
                     PRE-UFC
                   </span>
                 )}
@@ -4158,9 +4158,9 @@ function FighterSearch({
 function FightCard({ fight, index }) {
   const cardBg =
     fight.re === 'W'
-      ? 'bg-emerald-950/20 border-emerald-900/40'
+      ? 'bg-good/8 border-good/30'
       : fight.re === 'L'
-      ? 'bg-red-950/20 border-red-900/40'
+      ? 'bg-bad/8 border-bad/30'
       : 'bg-surface-2/30 border-line-strong/40';
   const badgeBg =
     fight.re === 'W'
@@ -4440,8 +4440,8 @@ const FighterPanel = ({ f, setF, color, ph, allFighters, fA, fB, eventDate }) =>
   const tc = color === 'blue' ? 'text-info' : 'text-bad';
   const bc =
     color === 'blue'
-      ? 'border-blue-800 bg-blue-950/20'
-      : 'border-red-800 bg-red-950/20';
+      ? 'border-info/30 bg-blue-950/20'
+      : 'border-bad/30 bg-bad/8';
   // Bout-date age, so the displayed age and the decay penalty shown on this
   // card are the same ones the model used for the probability alongside it. A
   // fighter who turns 35 between today and the event must not read as
@@ -4555,8 +4555,8 @@ const FighterPanel = ({ f, setF, color, ph, allFighters, fA, fB, eventDate }) =>
                   key={i}
                   className={`text-xs font-black px-1.5 py-0.5 rounded ${
                     r === 'W'
-                      ? 'bg-emerald-900/50 text-good'
-                      : 'bg-red-900/50 text-bad'
+                      ? 'bg-good/12 text-good'
+                      : 'bg-bad/12 text-bad'
                   }`}
                 >
                   {r}
@@ -4572,9 +4572,9 @@ const FighterPanel = ({ f, setF, color, ph, allFighters, fA, fB, eventDate }) =>
                   <span
                     className={`text-[11px] font-black px-1 py-0.5 rounded leading-none shrink-0 ${
                       fight.re === 'W'
-                        ? 'bg-emerald-900/50 text-good'
+                        ? 'bg-good/12 text-good'
                         : fight.re === 'L'
-                        ? 'bg-red-900/50 text-bad'
+                        ? 'bg-bad/12 text-bad'
                         : 'bg-surface-2 text-secondary'
                     }`}
                   >
@@ -5139,7 +5139,7 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                         set(v);
                       }}
                       placeholder={ph}
-                      className="w-full bg-surface-2 border border-line-strong rounded-lg px-4 py-3 text-white font-black text-xl text-center placeholder-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30 transition-colors"
+                      className="w-full bg-surface-2 border border-line-strong rounded-lg px-4 py-3 text-white font-black text-xl text-center placeholder-slate-700 focus:border-info/60 focus:ring-1 focus:ring-blue-500/30 transition-colors"
                     />
                     {parseAmericanOdds(val) != null && (
                       <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted">
@@ -5204,9 +5204,9 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
               spread >= 0.30 ? 'Clear edge' : spread >= 0.06 ? 'Moderate' : 'Coin flip';
             const confidenceBadgeCls =
               spread >= 0.30
-                ? 'text-good bg-emerald-900/20 border-emerald-800/40'
+                ? 'text-good bg-good/12 border-good/30'
                 : spread >= 0.06
-                ? 'text-warn bg-yellow-900/20 border-yellow-800/40'
+                ? 'text-warn bg-warn/12 border-warn/30'
                 : 'text-slate-300 bg-surface-2/40 border-line-strong/40';
             // Model Disagreement: moved in from the old Matchup Context Flags
             // list (was one of nine generic pills) -- this is specifically
@@ -5247,7 +5247,7 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                     <span
                       className={`inline-block text-[11px] font-bold px-2 py-0.5 rounded-full border uppercase tracking-wide ${
                         decision.source === DECISION_SOURCE_C6
-                          ? 'text-amber-300 bg-amber-900/30 border-amber-700/50'
+                          ? 'text-warn bg-warn/12 border-warn/30'
                           : 'text-slate-300 bg-surface-2/60 border-line-strong'
                       }`}
                     >
@@ -5319,7 +5319,7 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                 </p>
 
                 {disagreement && (
-                  <p className="text-warn text-xs text-center bg-amber-950/20 border border-amber-800/40 rounded-lg px-3 py-2 mt-3">
+                  <p className="text-warn text-xs text-center bg-warn/8 border border-warn/30 rounded-lg px-3 py-2 mt-3">
                     ⚠ Model Disagreement — v1 favors {disagreement.v1Favors}, v2 favors {disagreement.v2Favors}
                   </p>
                 )}
@@ -5463,7 +5463,7 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                   <p
                     key={msg}
                     role="alert"
-                    className="text-bad text-xs font-semibold bg-red-900/20 border border-red-800/40 rounded-lg px-3 py-2"
+                    className="text-bad text-xs font-semibold bg-bad/12 border border-bad/30 rounded-lg px-3 py-2"
                   >
                     Contradictory bout context: {msg}
                   </p>
@@ -5472,7 +5472,7 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                   <p
                     key={msg}
                     role="status"
-                    className="text-warn text-xs bg-amber-900/20 border border-amber-800/40 rounded-lg px-3 py-2"
+                    className="text-warn text-xs bg-warn/12 border border-warn/30 rounded-lg px-3 py-2"
                   >
                     {msg}
                   </p>
@@ -5551,7 +5551,7 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                   });
                   Promise.resolve(onSaveToUpcoming?.(entry)).then((ok) => setSaveFeedback(saveFeedbackFor(ok)));
                 }}
-                className="px-4 py-2 rounded-lg border border-blue-700 text-blue-300 text-sm font-semibold hover:text-white hover:border-blue-500 transition-colors disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:text-blue-300 disabled:hover:border-blue-700"
+                className="px-4 py-2 rounded-lg border border-info/30 text-info text-sm font-semibold hover:text-white hover:border-info/60 transition-colors disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:text-info disabled:hover:border-info/30"
               >
                 Save to Upcoming
               </button>
@@ -5588,9 +5588,9 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
             if (!fA || !fB || !result) return null;
             const flags = [];
             if (result.debutMatchup)
-              flags.push({ label: 'Debut / Prospect', color: 'text-warn bg-amber-900/20 border-amber-800/40' });
+              flags.push({ label: 'Debut / Prospect', color: 'text-warn bg-warn/12 border-warn/30' });
             if ((fA.TOTAL_ROUNDS ?? fA.tr ?? 0) < 5 || (fB.TOTAL_ROUNDS ?? fB.tr ?? 0) < 5)
-              flags.push({ label: 'Sparse Data', color: 'text-warn bg-yellow-900/20 border-yellow-800/40' });
+              flags.push({ label: 'Sparse Data', color: 'text-warn bg-warn/12 border-warn/30' });
             if ((fA.CREDIBILITY ?? 100) < 30 || (fB.CREDIBILITY ?? 100) < 30)
               flags.push({ label: 'Low Credibility', color: 'text-orange-400 bg-orange-900/20 border-orange-800/40' });
             // Correction 3. The old flag compared the two fighters' stored
@@ -5626,11 +5626,11 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
             } else if (missingContext.length > 0) {
               flags.push({
                 label: `Incomplete bout context: ${missingContext.join(', ')} unknown`,
-                color: 'text-warn bg-amber-900/20 border-amber-800/40',
+                color: 'text-warn bg-warn/12 border-warn/30',
               });
             }
             if (boutContext?.isTitleBout === true)
-              flags.push({ label: 'Title Bout', color: 'text-yellow-300 bg-yellow-900/20 border-yellow-700/40' });
+              flags.push({ label: 'Title Bout', color: 'text-warn bg-warn/12 border-warn/30' });
             if (boutContext?.scheduledRounds === 5 && boutContext?.isTitleBout === false)
               flags.push({ label: 'Five-Round Non-Title', color: 'text-indigo-300 bg-indigo-900/20 border-indigo-800/40' });
             if (fA.WEIGHT_CLASS?.startsWith("Women's") || fB.WEIGHT_CLASS?.startsWith("Women's"))
@@ -5640,11 +5640,11 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
             // Bout-date ages, matching the model. An unknown age stays below
             // the threshold rather than defaulting into it.
             if ((simulatorAge(fA, eventDate) ?? 0) >= 38 || (simulatorAge(fB, eventDate) ?? 0) >= 38)
-              flags.push({ label: 'Veteran Age (38+)', color: 'text-bad bg-red-900/20 border-red-800/40' });
+              flags.push({ label: 'Veteran Age (38+)', color: 'text-bad bg-bad/12 border-bad/30' });
             if ((result.loseStreakA ?? 0) >= 3 || (result.loseStreakB ?? 0) >= 3)
-              flags.push({ label: 'Active Loss Streak', color: 'text-bad bg-red-900/20 border-red-800/40' });
+              flags.push({ label: 'Active Loss Streak', color: 'text-bad bg-bad/12 border-bad/30' });
             if (Math.abs(result.qualMomDiff ?? 0) > 0.5)
-              flags.push({ label: `Form Edge: ${(result.qualMomDiff ?? 0) > 0 ? fA.FIGHTER.split(' ').pop() : fB.FIGHTER.split(' ').pop()}`, color: 'text-good bg-emerald-900/20 border-emerald-800/40' });
+              flags.push({ label: `Form Edge: ${(result.qualMomDiff ?? 0) > 0 ? fA.FIGHTER.split(' ').pop() : fB.FIGHTER.split(' ').pop()}`, color: 'text-good bg-good/12 border-good/30' });
             // Model Disagreement moved to the verdict hero above -- not
             // computed here anymore.
             if (flags.length === 0) return null;
@@ -5702,9 +5702,9 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                 const showBetRec = actionable || noRead || isV3;
 
                 const actionStyles = {
-                  'STRONG BET': { bg: 'bg-emerald-950/40 border-emerald-600', badge: 'bg-emerald-500 text-emerald-950', text: 'text-good' },
-                  'BET':        { bg: 'bg-emerald-950/20 border-emerald-800', badge: 'bg-emerald-700 text-emerald-100', text: 'text-good' },
-                  'LEAN':       { bg: 'bg-yellow-950/20 border-yellow-800',   badge: 'bg-yellow-700 text-yellow-100',   text: 'text-warn' },
+                  'STRONG BET': { bg: 'bg-good/8 border-good/30', badge: 'bg-emerald-500 text-emerald-950', text: 'text-good' },
+                  'BET':        { bg: 'bg-good/8 border-good/30', badge: 'bg-emerald-700 text-emerald-100', text: 'text-good' },
+                  'LEAN':       { bg: 'bg-warn/8 border-warn/30',   badge: 'bg-yellow-700 text-yellow-100',   text: 'text-warn' },
                   'NO BET':     { bg: 'bg-surface-2/40 border-line-strong',     badge: 'bg-slate-600 text-slate-200',     text: 'text-secondary'  },
                   // NO READ: muted gray, deliberately dimmer than NO BET.
                   'NO READ':    { bg: 'bg-surface/40 border-line',     badge: 'bg-surface-3 text-secondary',     text: 'text-muted'  },
@@ -5722,7 +5722,7 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                         <div className="flex items-center gap-1.5 mb-2">
                           <p className="text-muted text-xs font-semibold uppercase tracking-wider">Model Pick</p>
                           {decision?.source === DECISION_SOURCE_C6 && (
-                            <span className="text-[11px] font-bold text-amber-300 bg-amber-900/30 border border-amber-700/50 px-1.5 py-0.5 rounded-sm uppercase">
+                            <span className="text-[11px] font-bold text-warn bg-warn/12 border border-warn/30 px-1.5 py-0.5 rounded-sm uppercase">
                               C6
                             </span>
                           )}
@@ -5757,7 +5757,7 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                         market.conflictingSignals
                           ? 'bg-orange-950/20 border-orange-800'
                           : market.hasPickEdge
-                          ? 'bg-emerald-950/20 border-emerald-800'
+                          ? 'bg-good/8 border-good/30'
                           : 'bg-surface-2/40 border-line-strong'
                       }`}>
                         <p className="text-muted text-xs font-semibold uppercase tracking-wider mb-2">Value Signal</p>
@@ -6025,11 +6025,11 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                             <span
                               className={`text-xs font-black px-2.5 py-1 rounded-full border ${
                                 grade.label === 'STRONG VALUE' || grade.label === 'VALUE'
-                                  ? 'bg-emerald-900/40 text-good border-emerald-700/50'
+                                  ? 'bg-good/12 text-good border-good/30'
                                   : grade.label === 'LEAN'
-                                  ? 'bg-yellow-900/40 text-warn border-yellow-700/50'
+                                  ? 'bg-warn/12 text-warn border-warn/30'
                                   : grade.label === 'FADE'
-                                  ? 'bg-red-900/40 text-bad border-red-700/50'
+                                  ? 'bg-bad/12 text-bad border-bad/30'
                                   : 'bg-surface-3 text-secondary border-line-strong'
                               }`}
                             >
@@ -6132,7 +6132,7 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                             ))}
                           </div>
                           {isBest && (
-                            <div className="mt-3 pt-2 border-t border-emerald-800/30">
+                            <div className="mt-3 pt-2 border-t border-good/30">
                               <p className="text-good text-xs font-bold text-center">
                                 ★ BEST VALUE PLAY
                               </p>
@@ -6162,7 +6162,7 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
 
               const badge =
                 ko > 45
-                  ? { label: 'KO/TKO LIKELY', cls: 'bg-red-950/60 text-bad border border-red-800/50' }
+                  ? { label: 'KO/TKO LIKELY', cls: 'bg-bad/8 text-bad border border-bad/30' }
                   : sub > 30
                   ? { label: 'SUBMISSION THREAT', cls: 'bg-violet-950/60 text-violet-400 border border-violet-800/50' }
                   : { label: 'LIKELY DECISION', cls: 'bg-surface-2 text-secondary border border-line-strong' };
@@ -6382,7 +6382,7 @@ function ScoutProfile({ allFighters }) {
         label: 'Knockout Artist',
         desc: 'Elite finishing power — stops fights standing with a high knockdown rate and finish percentage.',
         color: 'text-bad',
-        bg: 'bg-red-900/20 border-red-800',
+        bg: 'bg-bad/12 border-bad/30',
       };
     if (sub > 1.5 && finish > 50)
       return {
@@ -6396,7 +6396,7 @@ function ScoutProfile({ allFighters }) {
         label: 'Pressure Wrestler',
         desc: 'Dominant grappler who controls where fights happen and wears opponents down with relentless top pressure.',
         color: 'text-info',
-        bg: 'bg-blue-900/20 border-blue-800',
+        bg: 'bg-info/12 border-info/30',
       };
     if (nsm > 1.5 && acc > 50)
       return {
@@ -6410,14 +6410,14 @@ function ScoutProfile({ allFighters }) {
         label: 'Volume Fighter',
         desc: 'Gets stronger as fights go on — output increases in the late rounds and consistently outworks opponents.',
         color: 'text-good',
-        bg: 'bg-emerald-900/20 border-emerald-800',
+        bg: 'bg-good/12 border-good/30',
       };
     if (nsm < -0.5 && finish > 55)
       return {
         label: 'Brawler',
         desc: 'Willing to trade and absorb damage to land their own shots — high finish rate despite taking hits.',
         color: 'text-warn',
-        bg: 'bg-yellow-900/20 border-yellow-800',
+        bg: 'bg-warn/12 border-warn/30',
       };
     if (tde > 2 && nsm > 0)
       return {
@@ -6557,13 +6557,13 @@ function ScoutProfile({ allFighters }) {
                     {fighter.RECORD}
                   </span>
                   {divRank && (
-                    <span className="bg-red-900/40 text-bad text-xs font-bold px-2 py-0.5 rounded-full border border-red-900">
+                    <span className="bg-bad/12 text-bad text-xs font-bold px-2 py-0.5 rounded-full border border-bad/30">
                       #{divRank.rank}/{divRank.total} DrossPom
                     </span>
                   )}
                   {fighter.IS_PROSPECT && (
                     <span
-                      className="bg-amber-900/40 text-warn text-xs font-black px-2 py-0.5 rounded-full border border-amber-800"
+                      className="bg-warn/12 text-warn text-xs font-black px-2 py-0.5 rounded-full border border-warn/30"
                       title="Pre-debut UFC signee — stats from pre-UFC pro fights"
                     >
                       PRE-UFC
@@ -6573,7 +6573,7 @@ function ScoutProfile({ allFighters }) {
                     <span
                       className={`text-xs font-bold px-2 py-0.5 rounded-full border ${
                         isChampionRecord(fighter.UFC_RANK)
-                          ? 'bg-yellow-900/40 text-warn border-yellow-800'
+                          ? 'bg-warn/12 text-warn border-warn/30'
                           : 'bg-surface-3 text-slate-300 border-line-strong'
                       }`}
                     >
@@ -6585,8 +6585,8 @@ function ScoutProfile({ allFighters }) {
                       <span
                         className={`text-xs font-bold px-2 py-0.5 rounded-full border ${
                           fighter.QUALITY_ADJUSTMENT > 0
-                            ? 'bg-emerald-900/40 text-good border-emerald-800'
-                            : 'bg-red-900/40 text-bad border-red-900'
+                            ? 'bg-good/12 text-good border-good/30'
+                            : 'bg-bad/12 text-bad border-bad/30'
                         }`}
                       >
                         {fighter.QUALITY_ADJUSTMENT > 0 ? '+' : ''}
@@ -6998,9 +6998,9 @@ function ScoutProfile({ allFighters }) {
                         {fh.slice(0, 8).map((fight, i) => {
                           const resultTone =
                             fight.re === 'W'
-                              ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-300'
+                              ? 'bg-emerald-500/15 border-good/60 text-good'
                               : fight.re === 'L'
-                              ? 'bg-red-500/15 border-red-500/30 text-red-300'
+                              ? 'bg-red-500/15 border-red-500/30 text-bad'
                               : 'bg-surface-3/40 border-line-strong text-slate-300';
                           const badgeTone =
                             fight.re === 'W'
@@ -7610,11 +7610,11 @@ export default function App() {
 
 const betTier = (action) => {
   if (action === 'STRONG BET')
-    return { label: 'STRONG BET', cls: 'text-emerald-300 font-bold', border: 'border-emerald-600/60' };
+    return { label: 'STRONG BET', cls: 'text-good font-bold', border: 'border-good/30' };
   if (action === 'BET')
-    return { label: 'BET', cls: 'text-good', border: 'border-emerald-700/50' };
+    return { label: 'BET', cls: 'text-good', border: 'border-good/30' };
   if (action === 'LEAN')
-    return { label: 'LEAN', cls: 'text-warn', border: 'border-yellow-700/50' };
+    return { label: 'LEAN', cls: 'text-warn', border: 'border-warn/30' };
   return { label: 'NO BET', cls: 'text-muted font-semibold', border: 'border-line' };
 };
 
@@ -8358,7 +8358,7 @@ function ROITab({
                         .map((e) => ({ id: e.id, fields: { confirmedByUser: true } }))
                     )
                   }
-                  className="px-3 py-2 rounded-lg border border-blue-700 text-blue-300 text-xs font-semibold hover:text-white hover:border-blue-500 transition-colors"
+                  className="px-3 py-2 rounded-lg border border-info/30 text-info text-xs font-semibold hover:text-white hover:border-info/60 transition-colors"
                 >
                   Confirm All
                 </button>
@@ -8438,32 +8438,25 @@ function ROITab({
           showing numbers that don't describe what's on screen. */}
       {entries.length > 0 && !isProps && !isParlays && (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6 items-stretch">
-          <div className="bg-surface border border-line rounded-xl p-4 h-full">
-            <p className="text-muted text-xs uppercase tracking-wider font-semibold">Tracked Fights</p>
-            <p className="font-black text-2xl mt-2 text-white">{roiBannerV1.total}</p>
-          </div>
-          <div className="bg-surface border border-line rounded-xl p-4 h-full">
-            <p className="text-muted text-xs uppercase tracking-wider font-semibold">Graded Picks</p>
-            <p className="font-black text-2xl mt-2 text-info">{roiBannerV1.graded}</p>
-          </div>
-          <div className="bg-surface border border-line rounded-xl p-4 h-full">
-            <p className="text-muted text-xs uppercase tracking-wider font-semibold">Pick Accuracy</p>
-            <p className={`font-black text-2xl mt-2 ${roiBannerV2.accuracy >= 60 ? 'text-good' : 'text-warn'}`}>
-              {roiBannerV2.accuracy.toFixed(1)}%
-            </p>
-            <p className="text-muted text-[11px] mt-1">
-              Frozen tracked-decision accuracy across {roiBannerV2.graded} decisive fights. Each fight counts once. Frozen at each pick's capture — no lookahead.
-            </p>
-          </div>
-          <div className="bg-surface border border-line rounded-xl p-4 h-full">
-            <p className="text-muted text-xs uppercase tracking-wider font-semibold">ROI</p>
-            <p className={`font-black text-2xl mt-2 ${roiBannerV2.roi >= 0 ? 'text-good' : 'text-bad'}`}>
-              {roiBannerV2.roi >= 0 ? '+' : ''}{roiBannerV2.roi.toFixed(1)}%
-            </p>
-            <p className="text-muted text-xs mt-1">
-              {roiBannerV2.profit >= 0 ? '+' : ''}{roiBannerV2.profit.toFixed(2)}u on {roiBannerV2.bets} bets (stake-weighted)
-            </p>
-          </div>
+          <StatTile size="sm" className="h-full" label="Tracked Fights" value={roiBannerV1.total} />
+          <StatTile size="sm" className="h-full" label="Graded Picks" value={roiBannerV1.graded} tone="info" />
+          <StatTile
+            size="sm"
+            className="h-full"
+            label="Pick Accuracy"
+            value={`${roiBannerV2.accuracy.toFixed(1)}%`}
+            tone={roiBannerV2.accuracy >= 60 ? 'good' : 'warn'}
+            detail={`Frozen tracked-decision accuracy across ${roiBannerV2.graded} decisive fights. Each fight counts once. Frozen at each pick's capture — no lookahead.`}
+          />
+          <StatTile
+            size="sm"
+            className="h-full"
+            label="ROI"
+            value={`${roiBannerV2.roi >= 0 ? '+' : ''}${roiBannerV2.roi.toFixed(1)}%`}
+            tone={roiBannerV2.roi >= 0 ? 'good' : 'bad'}
+            detail={`${roiBannerV2.profit >= 0 ? '+' : ''}${roiBannerV2.profit.toFixed(2)}u on ${roiBannerV2.bets} bets (stake-weighted)`}
+          />
+
         </div>
       )}
 
@@ -8669,28 +8662,18 @@ function ROITab({
                       {entry.includesProspect && (
                         <span
                           title="Includes a debuting prospect — prediction confidence reduced based on tier and record quality"
-                          className="inline-flex items-center gap-1 rounded-full border border-amber-700/70 bg-amber-900/30 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-amber-300"
+                          className="inline-flex items-center gap-1 rounded-full border border-warn/30 bg-warn/12 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-warn"
                         >
                           <AlertTriangle size={12} />
                           Debut Hazard
                         </span>
                       )}
                       {entry.autoGenerated && entry.confirmedByUser === false && (
-                        <span className="inline-flex items-center rounded-full border border-blue-700/70 bg-blue-900/30 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-blue-300">
+                        <span className="inline-flex items-center rounded-full border border-info/30 bg-info/12 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-info">
                           Auto · Pending Review
                         </span>
                       )}
-                      <span
-                        className={`text-xs font-bold px-2 py-0.5 rounded-full border ${
-                          !graded || ungraded
-                            ? 'bg-surface-2 text-secondary border-line-strong'
-                            : correct
-                            ? 'bg-emerald-900/40 text-good border-emerald-800'
-                            : isPushResult(entry.actualWinner)
-                            ? 'bg-surface-2 text-slate-300 border-line-strong'
-                            : 'bg-red-900/40 text-bad border-red-800'
-                        }`}
-                      >
+                      <Tag tone={!graded || ungraded || isPushResult(entry.actualWinner) ? 'muted' : correct ? 'good' : 'bad'}>
                         {!graded
                           ? 'Pending'
                           : isPushResult(entry.actualWinner)
@@ -8700,7 +8683,7 @@ function ROITab({
                           : correct
                           ? 'Correct'
                           : 'Miss'}
-                      </span>
+                      </Tag>
                     </div>
                     <p className="text-muted text-xs mt-1">
                       {entryDisplayDivision(entry)}
@@ -8714,7 +8697,7 @@ function ROITab({
                     {entry.autoGenerated && entry.confirmedByUser === false && (
                       <button
                         onClick={() => onUpdateEntry(entry.id, { confirmedByUser: true })}
-                        className="px-3 py-1.5 rounded-lg border border-blue-700 text-blue-300 text-xs font-semibold hover:text-white hover:border-blue-500 transition-colors"
+                        className="px-3 py-1.5 rounded-lg border border-info/30 text-info text-xs font-semibold hover:text-white hover:border-info/60 transition-colors"
                       >
                         Confirm Pick
                       </button>
@@ -8762,7 +8745,7 @@ function ROITab({
                         {isC6Decision ? (
                           <span
                             title="This pick's probability and bet recommendation were driven by C6 (v2 blended with the no-vig market)."
-                            className="text-[11px] font-bold text-amber-300 bg-amber-900/30 border border-amber-700/50 px-1.5 py-0.5 rounded-sm uppercase"
+                            className="text-[11px] font-bold text-warn bg-warn/12 border border-warn/30 px-1.5 py-0.5 rounded-sm uppercase"
                           >
                             C6
                           </span>
@@ -8817,10 +8800,10 @@ function ROITab({
                           <span
                             className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-black ${
                               effBetAction === 'STRONG BET'
-                                ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                                ? 'bg-emerald-500/20 text-good border border-good/60'
                                 : effBetAction === 'BET'
-                                ? 'bg-emerald-900/30 text-good border border-emerald-800'
-                                : 'bg-yellow-900/30 text-warn border border-yellow-800'
+                                ? 'bg-good/12 text-good border border-good/30'
+                                : 'bg-warn/12 text-warn border border-warn/30'
                             }`}
                           >
                             {effBetAction}
@@ -8974,7 +8957,7 @@ function InfoTab() {
       full: 'Finish Rate',
       formula:
         'Percentage of wins by KO/TKO or submission. High values indicate fight-ending power rather than decision-reliance.',
-      color: 'text-red-300',
+      color: 'text-bad',
     },
     {
       term: 'DMG',

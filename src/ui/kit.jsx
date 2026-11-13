@@ -39,19 +39,27 @@ const TONE_TEXT = {
   neutral: 'text-white',
 };
 
+const TILE_SIZE = {
+  md: { pad: 'p-5', value: 'text-3xl' },
+  // Four-across rows (ROI) need a tighter tile.
+  sm: { pad: 'p-4', value: 'text-2xl' },
+};
+
 /**
  * A headline number with its label and a line of context.
  * `tone` colours the value: good, bad, warn, info or neutral.
+ * `size` is md (default) or sm for four-across rows.
  */
-export function StatTile({ label, value, tone = 'neutral', detail, empty, className }) {
+export function StatTile({ label, value, tone = 'neutral', detail, empty, size = 'md', className }) {
+  const s = TILE_SIZE[size] ?? TILE_SIZE.md;
   return (
-    <Card className={cx('p-5', className)}>
+    <Card className={cx(s.pad, className)}>
       <p className="text-muted text-xs uppercase tracking-wider font-semibold mb-2">{label}</p>
       {empty ? (
         <p className="text-muted text-sm mt-1">{empty}</p>
       ) : (
         <>
-          <p className={cx('tabular font-bold text-3xl tracking-tight', TONE_TEXT[tone] ?? TONE_TEXT.neutral)}>{value}</p>
+          <p className={cx('tabular font-bold tracking-tight', s.value, TONE_TEXT[tone] ?? TONE_TEXT.neutral)}>{value}</p>
           {detail && <p className="text-muted text-xs mt-1">{detail}</p>}
         </>
       )}
