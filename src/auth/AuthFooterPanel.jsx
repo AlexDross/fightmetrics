@@ -63,7 +63,7 @@ function SignInForm() {
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         aria-describedby="fm-auth-status"
-        className="w-full sm:w-64 rounded-lg border border-line-strong bg-canvas px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:border-blue-500 focus:outline-none"
+        className="w-full sm:w-64 rounded-lg border border-line-strong bg-canvas px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:border-info/60 focus:outline-none"
       />
       <button
         type="submit"
@@ -115,13 +115,13 @@ export default function AuthFooterPanel() {
       </p>
 
       {notice && (
-        <div role="alert" className="mb-3 flex items-start justify-between gap-3 rounded-xl border border-amber-700/60 bg-amber-950/40 px-4 py-3">
-          <p className="text-amber-200 text-xs leading-relaxed">{notice}</p>
+        <div role="alert" className="mb-3 flex items-start justify-between gap-3 rounded-xl border border-warn/30 bg-warn/8 px-4 py-3">
+          <p className="text-warn text-xs leading-relaxed">{notice}</p>
           <button
             type="button"
             onClick={dismissNotice}
             aria-label="Dismiss notice"
-            className="shrink-0 rounded-md border border-amber-700/60 px-2 py-0.5 text-[11px] font-semibold text-amber-200 hover:bg-amber-900/40"
+            className="shrink-0 rounded-md border border-warn/30 px-2 py-0.5 text-[11px] font-semibold text-warn hover:bg-warn/12"
           >
             Dismiss
           </button>

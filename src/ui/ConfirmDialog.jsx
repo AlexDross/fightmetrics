@@ -155,7 +155,7 @@ export function ConfirmDialog({
           {lines.map((line, i) => (
             <p key={i} className="text-secondary text-sm">{line}</p>
           ))}
-          {warning && <p className="text-red-300 text-sm font-semibold pt-1">{warning}</p>}
+          {warning && <p className="text-bad text-sm font-semibold pt-1">{warning}</p>}
         </div>
         {needsText && (
           <div className="mt-4">
