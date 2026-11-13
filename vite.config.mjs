@@ -1,6 +1,39 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
+import { encodeFightHistory } from './src/domain/fighters/fightHistoryCodec.js';
+
+// Ships src/fightHistory.js in a compact table form instead of the generated
+// pretty-printed literal: ~2.9 MB -> ~1.0 MB of JavaScript to parse at
+// startup. The decoder rebuilds deep-equal objects (key order included), so
+// every model input is unchanged. The plugin runs under Vitest too, and
+// src/domain/fighters/__tests__/fightHistoryCodec.test.mjs asserts that the
+// module the app imports is deep-equal to the generated file. The file on disk
+// is never touched. See src/domain/fighters/fightHistoryCodec.js.
+const FIGHT_HISTORY_PREFIX = 'export const FIGHT_HISTORY =';
+function compactFightHistory() {
+  return {
+    name: 'fm-compact-fight-history',
+    enforce: 'pre',
+    transform(code, id) {
+      if (!/[\\/]src[\\/]fightHistory\.js$/.test(id.split('?')[0])) return null;
+      const body = code.trim();
+      if (!body.startsWith(FIGHT_HISTORY_PREFIX)) {
+        throw new Error('fightHistory.js no longer starts with `export const FIGHT_HISTORY =`; update fm-compact-fight-history');
+      }
+      // The pipeline writes strict JSON after the prefix (json.dumps); a parse
+      // failure here fails the build rather than shipping something different.
+      const history = JSON.parse(body.slice(FIGHT_HISTORY_PREFIX.length).replace(/;\s*$/, ''));
+      const packed = JSON.stringify(JSON.stringify(encodeFightHistory(history)));
+      return {
+        code:
+          "import { decodeFightHistory } from './domain/fighters/fightHistoryCodec.js';\n" +
+          `export const FIGHT_HISTORY = decodeFightHistory(JSON.parse(${packed}));\n`,
+        map: null,
+      };
+    },
+  };
+}
 
 // Foundation Stage 1a -- replaces react-scripts (CRA 5.0.1, unmaintained since
 // 2022). No application code changes in this stage beyond the dev-guard swap.
@@ -15,6 +48,7 @@ import tailwindcss from '@tailwindcss/vite';
 // here to the Vite plugin, which is the recommended and faster route for Vite.
 export default defineConfig({
   plugins: [
+    compactFightHistory(),
     tailwindcss(),
     // src/App.js and src/index.js contain JSX in .js files (1,068 className
     // sites). esbuild only treats .jsx as JSX by default, so widen it here
