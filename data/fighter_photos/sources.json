@@ -1,0 +1,4494 @@
+{
+ "Aaron Pico": {
+  "kept": true,
+  "qid": "Q18786737",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1996-09-23 matches",
+  "file": "Wrestler Aaron Pico 2014.png",
+  "license": "CC BY-SA 4.0"
+ },
+ "Abner Lloveras": {
+  "kept": false,
+  "why": "several faces; not approved in review"
+ },
+ "Abus Magomedov": {
+  "kept": true,
+  "qid": "Q66132201",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1990-09-02 matches",
+  "file": "Abusupiyan Magomedov on Rue Saint-Honoré, Paris, 2026-02-13 (cropped).jpg",
+  "license": "CC0"
+ },
+ "Aiemann Zahabi": {
+  "kept": true,
+  "qid": "Q30069975",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1987-11-19 matches",
+  "file": "UFC Freedom 250 Press Conference (9747954)(cropped).jpg",
+  "license": "Public domain"
+ },
+ "Al Iaquinta": {
+  "kept": true,
+  "qid": "Q4704073",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1987-04-30 matches",
+  "file": "Al Iaquinta at UFC 230.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Albert Morales": {
+  "kept": false,
+  "why": "rejected in review: grappling shot, face obscured"
+ },
+ "Albert Tumenov": {
+  "kept": true,
+  "qid": "Q16708361",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1991-12-26 matches",
+  "file": "Tumenov.jpg",
+  "license": "CC BY-SA 3.0"
+ },
+ "Alberto Mina": {
+  "kept": true,
+  "qid": "Q24007698",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1982-05-02 matches",
+  "file": "Albertominá.jpg",
+  "license": "CC BY-SA 3.0"
+ },
+ "Aleksandre Topuria": {
+  "kept": true,
+  "qid": "Q124562187",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1996-01-28 matches",
+  "file": "Aleksandre Topuria at the UFC Freedom 250 Ceremony.jpg",
+  "license": "Public domain"
+ },
+ "Aleksei Oleinik": {
+  "kept": true,
+  "qid": "Q4333491",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1977-06-20 matches",
+  "file": "Oliynyk Oleksij.jpg",
+  "license": "CC BY-SA 3.0"
+ },
+ "Alessio Sakara": {
+  "kept": true,
+  "qid": "Q782599",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1981-09-02 matches",
+  "file": "Alessio Sakara La Gazzetta dello Sport 2025.png",
+  "license": "CC BY 4.0"
+ },
+ "Alex Pereira": {
+  "kept": true,
+  "qid": "Q15987809",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1987-07-07 matches",
+  "file": "Alex Pereira in the Oval Office (while President Donald J. Trump is holding a meeting with UFC fighters).jpg",
+  "license": "Public domain"
+ },
+ "Alexa Grasso": {
+  "kept": true,
+  "qid": "Q19560601",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1993-08-09 matches",
+  "file": "Alexa Grasso 2023 03.png",
+  "license": "CC BY 3.0"
+ },
+ "Alexander Gustafsson": {
+  "kept": true,
+  "qid": "Q723744",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1987-01-15 matches",
+  "file": "Alexander \"The Mauler\" Gustafsson 2014.jpg",
+  "license": "CC BY-SA 3.0"
+ },
+ "Alexander Hernandez": {
+  "kept": true,
+  "qid": "Q51883206",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1992-10-01 matches",
+  "file": "Alexander Hernandez Jan 19, 2019.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Alexander Volkanovski": {
+  "kept": true,
+  "qid": "Q30123133",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1988-09-29 matches",
+  "file": "Alexander Volkanovski at UFC 232.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Alexander Volkov": {
+  "kept": true,
+  "qid": "Q4123254",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1988-10-24 matches",
+  "file": "Alexander Volkov in M-1.jpg",
+  "license": "CC BY-SA 4.0"
+ },
+ "Alexandre Pantoja": {
+  "kept": true,
+  "qid": "Q27999203",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1990-04-16 matches",
+  "file": "Alexandre Pantoja.png",
+  "license": "CC BY 3.0"
+ },
+ "Ali Bagautinov": {
+  "kept": true,
+  "qid": "Q15196731",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1985-06-10 matches",
+  "file": "Ali Bagautinov, October 2019.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Aliaskhab Khizriev": {
+  "kept": true,
+  "qid": "Q108059398",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1990-08-24 matches",
+  "file": "Aliaskhab Khizriev, December 2018.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Alistair Overeem": {
+  "kept": true,
+  "qid": "Q458121",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1980-05-17 matches",
+  "file": "Alistair Overeem.png",
+  "license": "CC BY 3.0"
+ },
+ "Aljamain Sterling": {
+  "kept": true,
+  "qid": "Q17403242",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1989-07-31 matches",
+  "file": "Alijamain Sterling at UFC 228.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Allan Nascimento": {
+  "kept": true,
+  "qid": "Q140516374",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1991-09-11 matches",
+  "file": "AllanNascimento.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Alonzo Menifield": {
+  "kept": true,
+  "qid": "Q96103548",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1987-10-18 matches",
+  "file": "Alonzo Menifield Jan 20, 2019.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Amanda Nunes": {
+  "kept": true,
+  "qid": "Q4739716",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1988-05-30 matches",
+  "file": "Ceremonial weigh ins - Amanda Nunes vs Julianna Peña UFC 269 (cropped).jpg",
+  "license": "CC BY 3.0"
+ },
+ "Amanda Ribas": {
+  "kept": true,
+  "qid": "Q85868632",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1993-08-26 matches",
+  "file": "VR5 1744 (52868673328) (cropped).jpg",
+  "license": "CC BY 2.0"
+ },
+ "Amir Sadollah": {
+  "kept": true,
+  "qid": "Q2843489",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1980-08-27 matches",
+  "file": "Amir Sadollah.jpg",
+  "license": "CC BY-SA 3.0"
+ },
+ "Anderson Silva": {
+  "kept": true,
+  "qid": "Q356871",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1975-04-14 matches",
+  "file": "Anderson Silva.jpg",
+  "license": "CC BY-SA 3.0"
+ },
+ "Andrei Arlovski": {
+  "kept": true,
+  "qid": "Q2072192",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1979-02-04 matches",
+  "file": "Arlovski.png",
+  "license": "CC BY 2.0"
+ },
+ "Angela Hill": {
+  "kept": true,
+  "qid": null,
+  "confidence": "COMMONS",
+  "match": "commons title search: exact name in \"Angela Hill victorious at Friday Night Fights.jpg\", combat-sports category/description",
+  "file": "Angela Hill victorious at Friday Night Fights.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Anthony Johnson": {
+  "kept": true,
+  "qid": "Q576548",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1984-03-06 matches",
+  "file": "Anthony johnson MMA.jpg",
+  "license": "CC BY-SA 4.0"
+ },
+ "Anthony Njokuani": {
+  "kept": true,
+  "qid": "Q4773195",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1980-03-01 matches",
+  "file": "Sledgehammer Brigade welcomes UFC stars DVIDS722696.jpg",
+  "license": "Public domain"
+ },
+ "Anthony Pettis": {
+  "kept": true,
+  "qid": "Q2057232",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1987-01-27 matches",
+  "file": "USO Spring 2016 Entertainment Tour (cropped).jpg",
+  "license": "Public domain"
+ },
+ "Antonio Banuelos": {
+  "kept": true,
+  "qid": "Q4776437",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1979-09-23 matches",
+  "file": "Abanuelos wiki.jpg",
+  "license": "CC BY-SA 3.0"
+ },
+ "Antonio Carlos Junior": {
+  "kept": true,
+  "qid": "Q17465610",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1990-03-16 matches",
+  "file": "Antonio Cara de Sapato at Big Brother Brasil 23.png",
+  "license": "CC BY 3.0"
+ },
+ "Antonio Silva": {
+  "kept": true,
+  "qid": "Q2526336",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1979-09-14 matches",
+  "file": "AntonioBigFootSilva.png",
+  "license": "CC BY-SA 3.0"
+ },
+ "Ariane Lipski": {
+  "kept": true,
+  "qid": "Q26251018",
+  "confidence": "MEDIUM",
+  "match": "pass 1: occupation pool, exact name; roster has no DOB to compare",
+  "file": "Ariane Lipski.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Arman Tsarukyan": {
+  "kept": true,
+  "qid": "Q61996306",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1996-10-11 matches",
+  "file": "Arman Tsarukyan 2024.png",
+  "license": "CC BY 3.0"
+ },
+ "Arnold Allen": {
+  "kept": true,
+  "qid": null,
+  "confidence": "COMMONS",
+  "match": "commons title search: exact name in \"Arnold Allen at UFC Fight Night 147 in London.jpg\", combat-sports category/description",
+  "file": "Arnold Allen at UFC Fight Night 147 in London.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Ashlee Evans-Smith": {
+  "kept": true,
+  "qid": "Q18097353",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1987-07-09 matches",
+  "file": "Ashlee Evans-Smith OF.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Aspen Ladd": {
+  "kept": true,
+  "qid": "Q23799819",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1995-03-01 matches",
+  "file": "Aspen Ladd UFC229 weigh-in.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Asu Almabayev": {
+  "kept": true,
+  "qid": "Q128803907",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1994-01-25 matches",
+  "file": "AsuAlmabayev.png",
+  "license": "CC BY 4.0"
+ },
+ "Austin Arnett": {
+  "kept": false,
+  "why": "rejected in review: photo is a grappling demo; the crop lands on his training partner"
+ },
+ "Austin Vanderford": {
+  "kept": true,
+  "qid": "Q53127448",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1990-03-21 matches",
+  "file": "Web Summit 2018 - Backstage DSC05300 (44891996805).jpg",
+  "license": "CC BY 2.0"
+ },
+ "Bart Palaszewski": {
+  "kept": false,
+  "why": "several faces; not approved in review"
+ },
+ "Bec Rawlings": {
+  "kept": true,
+  "qid": "Q3275768",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1989-02-11 matches",
+  "file": "Meet Bareknuckle Fighter Bec Rawlings on OnlyFans Fighter MMA - YouTube - 0 35 (cropped).jpg",
+  "license": "CC BY 3.0"
+ },
+ "Bekzat Almakhan": {
+  "kept": true,
+  "qid": "Q131471409",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1997-10-08 matches",
+  "file": "BekzatAlmahan.png",
+  "license": "CC BY 3.0"
+ },
+ "Belal Muhammad": {
+  "kept": true,
+  "qid": "Q27068531",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1988-07-09 matches",
+  "file": "Belal Muhammad UFC.jpg",
+  "license": "CC BY-SA 4.0"
+ },
+ "Ben Askren": {
+  "kept": true,
+  "qid": "Q203633",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1984-07-18 matches",
+  "file": "Ben Askren Nov 2018.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Ben Rothwell": {
+  "kept": true,
+  "qid": "Q1277223",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1981-10-17 matches",
+  "file": "Ben Rothwell weighs in UFC 115.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Beneil Dariush": {
+  "kept": true,
+  "qid": "Q17505060",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1989-05-06 matches",
+  "file": "MMA Holiday Tour at Al Asad Air Base 11 (cropped).jpg",
+  "license": "CC BY-SA 4.0"
+ },
+ "Benoit Saint Denis": {
+  "kept": true,
+  "qid": "Q112241194",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1995-12-18 matches",
+  "file": "BSD training in 2020.jpg",
+  "license": "CC0"
+ },
+ "Benson Henderson": {
+  "kept": true,
+  "qid": "Q1349552",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1983-11-16 matches",
+  "file": "Benhendersonfighter.jpg",
+  "license": "CC0"
+ },
+ "Bethe Correia": {
+  "kept": true,
+  "qid": "Q16336900",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1983-06-22 matches",
+  "file": "A-tough-casualty-Bethe-Correia-out-of-UFC-Fight-Island.jpg",
+  "license": "CC BY-SA 4.0"
+ },
+ "Bo Nickal": {
+  "kept": true,
+  "qid": "Q86752584",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1996-01-14 matches",
+  "file": "Bo Nickal (52791819473).jpg",
+  "license": "Public domain"
+ },
+ "Brad Pickett": {
+  "kept": true,
+  "qid": "Q2063710",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1978-09-24 matches",
+  "file": "Brad Pickett WEC 53.jpg",
+  "license": "CC BY-SA 3.0"
+ },
+ "Brad Tavares": {
+  "kept": true,
+  "qid": "Q4954303",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1987-12-21 matches",
+  "file": "A world away- UFC fighter and Soldier reunite DVIDS3377581 (cropped).jpg",
+  "license": "Public domain"
+ },
+ "Brandon Moreno": {
+  "kept": true,
+  "qid": "Q27957350",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1993-12-07 matches",
+  "file": "Brandon Moreno February 2021.jpg",
+  "license": "CC BY-SA 4.0"
+ },
+ "Brandon Vera": {
+  "kept": true,
+  "qid": "Q2721223",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1977-10-10 matches",
+  "file": "Brandon Vera v. Mauro Cerilli Conquest of Champions (cropped).jpg",
+  "license": "Public domain"
+ },
+ "Brendan Allen": {
+  "kept": true,
+  "qid": "Q96694248",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1995-12-28 matches",
+  "file": "BrendanAllen.png",
+  "license": "CC BY 4.0"
+ },
+ "Brendan Loughnane": {
+  "kept": false,
+  "why": "rejected in review: crop is an older man beside him, not Loughnane"
+ },
+ "Brendan Schaub": {
+  "kept": true,
+  "qid": "Q2703487",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1983-03-18 matches",
+  "file": "Brendan Schaub, co-host of \"The Fighter and the Kid\" Podcast.jpg",
+  "license": "CC BY-SA 4.0"
+ },
+ "Brian Bowles": {
+  "kept": true,
+  "qid": "Q2059631",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1980-06-22 matches",
+  "file": "Brian-bowles.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Brian Ortega": {
+  "kept": true,
+  "qid": "Q4964959",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1991-02-21 matches",
+  "file": "Brian Ortega on MMAnytt.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Brian Stann": {
+  "kept": true,
+  "qid": "Q2696703",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1980-09-24 matches",
+  "file": "Brian Stann.png",
+  "license": "Public domain"
+ },
+ "Bristol Marunde": {
+  "kept": true,
+  "qid": null,
+  "confidence": "COMMONS",
+  "match": "commons title search: exact name in \"Bristol marunde.jpg\", combat-sports category/description",
+  "file": "Bristol marunde.jpg",
+  "license": "CC0"
+ },
+ "Brock Lesnar": {
+  "kept": true,
+  "qid": "Q220556",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1977-07-12 matches",
+  "file": "Brock Lesnar At SummerSlam 2023 (cropped).jpg",
+  "license": "CC BY 2.0"
+ },
+ "Bruno Santos": {
+  "kept": true,
+  "qid": "Q16911913",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1987-07-17 matches",
+  "file": "Brunod.jpg",
+  "license": "CC BY-SA 4.0"
+ },
+ "Bruno Silva": {
+  "kept": false,
+  "why": "rejected in review: common name; Commons photo is a street snapshot not clearly the UFC fighter"
+ },
+ "Buddy Roberts": {
+  "kept": false,
+  "why": "rejected in review: Commons photo is a vintage pro wrestler of the same name"
+ },
+ "CM Punk": {
+  "kept": true,
+  "qid": "Q215447",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1978-10-26 matches",
+  "file": "CM Punk at San Diego Comic Con 2026.jpg",
+  "license": "CC BY 4.0"
+ },
+ "Cain Velasquez": {
+  "kept": true,
+  "qid": "Q455759",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1982-07-28 matches",
+  "file": "Cain Velasquez.jpg",
+  "license": "CC BY-SA 3.0"
+ },
+ "Caio Borralho": {
+  "kept": true,
+  "qid": "Q120264548",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1993-01-16 matches",
+  "file": "Borralho en Future FC.png",
+  "license": "CC BY 3.0"
+ },
+ "Caio Magalhaes": {
+  "kept": true,
+  "qid": "Q5017633",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1987-12-14 matches",
+  "file": "Caio Magalhães at \"Teixeira MMA & Fitness\".jpg",
+  "license": "CC BY-SA 4.0"
+ },
+ "Callan Potter": {
+  "kept": true,
+  "qid": null,
+  "confidence": "COMMONS",
+  "match": "commons title search: exact name in \"Callan Potter at UFC 234 open workout.jpg\", combat-sports category/description",
+  "file": "Callan Potter at UFC 234 open workout.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Carla Esparza": {
+  "kept": true,
+  "qid": "Q2679034",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1987-10-10 matches",
+  "file": "Carla Esparza 2022 01.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Carlos Condit": {
+  "kept": true,
+  "qid": "Q1189705",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1984-04-26 matches",
+  "file": "Carloscondit.jpg",
+  "license": "CC BY-SA 3.0"
+ },
+ "Carlos Prates": {
+  "kept": true,
+  "qid": "Q131010375",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1993-08-17 matches",
+  "file": "Carlos Prates 2026.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Cat Zingano": {
+  "kept": true,
+  "qid": "Q5051076",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1982-07-01 matches",
+  "file": "Cat Zingano OF 02.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Cathal Pendred": {
+  "kept": true,
+  "qid": "Q18242799",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1987-09-02 matches",
+  "file": "Cathal Pendred Red Carpet (cropped).png",
+  "license": "CC BY-SA 4.0"
+ },
+ "Chad Mendes": {
+  "kept": true,
+  "qid": "Q2057808",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1985-05-01 matches",
+  "file": "Chad Mendes.jpeg",
+  "license": "CC BY 2.0"
+ },
+ "Chael Sonnen": {
+  "kept": true,
+  "qid": "Q1058745",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1977-04-03 matches",
+  "file": "Chael Sonnen - 2018.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Chan Sung Jung": {
+  "kept": true,
+  "qid": "Q498065",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1987-03-17 matches",
+  "file": "Jung Chan-Sung from acrofan (2).jpg",
+  "license": "CC BY-SA 3.0"
+ },
+ "Chance Rencountre": {
+  "kept": true,
+  "qid": "Q65092174",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1986-12-31 matches",
+  "file": "Chance Rencountre at UFC Fight Night 143.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Charles Oliveira": {
+  "kept": true,
+  "qid": null,
+  "confidence": "COMMONS",
+  "match": "commons title search: exact name in \"Charles Oliveira do Bronxs.jpg\", combat-sports category/description",
+  "file": "Charles Oliveira do Bronxs.jpg",
+  "license": "CC0"
+ },
+ "Charles Rosa": {
+  "kept": true,
+  "qid": "Q20011584",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1986-08-24 matches",
+  "file": "Charles Rosa (cropped).jpg",
+  "license": "Public domain"
+ },
+ "Chase Hooper": {
+  "kept": true,
+  "qid": "Q95145837",
+  "confidence": "COMMONS",
+  "match": "commons title search: exact name in \"Chase Hooper 2022.png\", combat-sports category/description",
+  "file": "Chase Hooper 2022.png",
+  "license": "CC BY 3.0"
+ },
+ "Cheick Kongo": {
+  "kept": true,
+  "qid": "Q383487",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1975-05-17 matches",
+  "file": "Cheick Kongo.jpg",
+  "license": "Public domain"
+ },
+ "Chris Barnett": {
+  "kept": true,
+  "qid": "Q109467173",
+  "confidence": "COMMONS",
+  "match": "commons title search: exact name in \"Chris Barnett 2017.png\", combat-sports category/description",
+  "file": "Chris Barnett 2017.png",
+  "license": "CC BY 3.0"
+ },
+ "Chris Leben": {
+  "kept": true,
+  "qid": "Q970370",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1980-07-21 matches",
+  "file": "CHRIS LEBEN TALKS BARE KNUCKLE BOXING FIGHT - YouTube - 2 29 (cropped).jpg",
+  "license": "CC BY 3.0"
+ },
+ "Chris Lytle": {
+  "kept": true,
+  "qid": "Q2964788",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1974-08-18 matches",
+  "file": "Chris Lytle.png",
+  "license": "CC BY-SA 2.5"
+ },
+ "Chris Weidman": {
+  "kept": true,
+  "qid": "Q565237",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1984-06-17 matches",
+  "file": "Chris Weidman at UFC 230.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Christos Giagos": {
+  "kept": true,
+  "qid": "Q19957893",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1990-01-23 matches",
+  "file": "Christos Giagos - 2019.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Chuck Liddell": {
+  "kept": true,
+  "qid": "Q380050",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1969-12-17 matches",
+  "file": "Chuck Liddell in Santa Monica-California 2005 photo by Ithaka Darin Pappas.jpg",
+  "license": "CC BY-SA 4.0"
+ },
+ "Chuck O'Neil": {
+  "kept": true,
+  "qid": "Q5115645",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1985-09-22 matches",
+  "file": "Con33.jpg",
+  "license": "CC BY-SA 4.0"
+ },
+ "Cindy Dandois": {
+  "kept": true,
+  "qid": "Q24852037",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1984-10-26 matches",
+  "file": "Cindy Dandois 1 (cropped).png",
+  "license": "CC BY-SA 4.0"
+ },
+ "Ciryl Gane": {
+  "kept": true,
+  "qid": "Q79372882",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1990-04-12 matches",
+  "file": "Ciryl Gane in the Oval Office (while President Donald J. Trump is holding a meeting with UFC fighters).jpg",
+  "license": "Public domain"
+ },
+ "Claudia Gadelha": {
+  "kept": true,
+  "qid": "Q14308711",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1988-12-07 matches",
+  "file": "Claudinha Gadelha @ Praça da Convivência, Mossoró.jpg",
+  "license": "CC BY 2.0"
+ },
+ "Clay Guida": {
+  "kept": true,
+  "qid": "Q2697063",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1981-12-08 matches",
+  "file": "Clay Guida.png",
+  "license": "CC BY-SA 3.0"
+ },
+ "Clint Hester": {
+  "kept": true,
+  "qid": "Q15732888",
+  "confidence": "COMMONS",
+  "match": "commons title search: exact name in \"Clint Hester.jpg\", combat-sports category/description",
+  "file": "Clint Hester.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Cody Garbrandt": {
+  "kept": true,
+  "qid": "Q20669352",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1991-07-07 matches",
+  "file": "Cody Garbrandt.png",
+  "license": "CC BY 3.0"
+ },
+ "Colby Covington": {
+  "kept": true,
+  "qid": "Q19668838",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1988-02-22 matches",
+  "file": "ColbyCovingtonFortJackson2022(cropped).jpg",
+  "license": "CC0"
+ },
+ "Cole Miller": {
+  "kept": true,
+  "qid": "Q5142677",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1984-04-26 matches",
+  "file": "ColeMiller.jpg",
+  "license": "CC BY-SA 3.0"
+ },
+ "Conor McGregor": {
+  "kept": true,
+  "qid": "Q5162259",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1988-07-14 matches",
+  "file": "Conor McGregor, UFC 189 World Tour London (2).jpg",
+  "license": "CC BY-SA 2.0"
+ },
+ "Corey Anderson": {
+  "kept": true,
+  "qid": "Q17385566",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1989-09-22 matches",
+  "file": "CoreyAnderson.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Cory Sandhagen": {
+  "kept": true,
+  "qid": "Q60769310",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1992-04-20 matches",
+  "file": "UFC's Corey Sandhagen brings his fighting spirit to the 1st SOW (1) (cropped).jpg",
+  "license": "Public domain"
+ },
+ "Court McGee": {
+  "kept": true,
+  "qid": "Q5178264",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1984-12-12 matches",
+  "file": "Court McGee 2012 (cropped).jpg",
+  "license": "Public domain"
+ },
+ "Cris Cyborg": {
+  "kept": true,
+  "qid": "Q264979",
+  "confidence": "MEDIUM",
+  "match": "pass 1: occupation pool, exact name; roster has no DOB to compare",
+  "file": "Cris Cyborg - SDCC 2023.jpg",
+  "license": "CC BY 4.0"
+ },
+ "Cub Swanson": {
+  "kept": true,
+  "qid": "Q3699031",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1983-11-02 matches",
+  "file": "Cubswanson.jpg",
+  "license": "CC BY-SA 3.0"
+ },
+ "Cung Le": {
+  "kept": true,
+  "qid": "Q952839",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1972-05-25 matches",
+  "file": "Cung Le at Inside MMA.jpg",
+  "license": "CC BY 2.0"
+ },
+ "Curtis Blaydes": {
+  "kept": true,
+  "qid": "Q28709155",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1991-02-18 matches",
+  "file": "Curtis Blaydes at UFC 221.png",
+  "license": "CC BY 3.0"
+ },
+ "Curtis Millender": {
+  "kept": true,
+  "qid": "Q21066227",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1987-12-01 matches",
+  "file": "Curtis Milender at UFC 232.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Cyrille Diabate": {
+  "kept": true,
+  "qid": "Q3009122",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1973-10-06 matches",
+  "file": "Cyrille diabiate as champ.jpg",
+  "license": "CC BY-SA 3.0"
+ },
+ "DaMarques Johnson": {
+  "kept": true,
+  "qid": "Q5207179",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1982-06-28 matches",
+  "file": "DaMarques Johnson - UFC 100 Fan Expo - Mandalay Bay Casino, Las Vegas.jpg",
+  "license": "CC BY 2.0"
+ },
+ "Damian Grabowski": {
+  "kept": false,
+  "why": "several faces; not approved in review"
+ },
+ "Damir Hadzovic": {
+  "kept": true,
+  "qid": "Q31193474",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1986-08-08 matches",
+  "file": "Damir Hadžović.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Dan Hardy": {
+  "kept": true,
+  "qid": "Q390290",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1982-05-17 matches",
+  "file": "Dan Hardy.jpg",
+  "license": "CC BY-SA 2.0"
+ },
+ "Dan Henderson": {
+  "kept": true,
+  "qid": "Q548861",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1970-08-24 matches",
+  "file": "DanHenderson.png",
+  "license": "CC BY-SA 3.0"
+ },
+ "Dan Hooker": {
+  "kept": true,
+  "qid": "Q19946041",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1990-02-13 matches",
+  "file": "DanHooker2016.png",
+  "license": "CC BY 3.0"
+ },
+ "Dan Ige": {
+  "kept": true,
+  "qid": "Q48226886",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1991-08-06 matches",
+  "file": "Dan Ige at UFC Fight Night 147 in London.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Dan Miller": {
+  "kept": false,
+  "why": "rejected in review: Commons photo is a vintage portrait of a different Dan Miller"
+ },
+ "Daniel Cormier": {
+  "kept": true,
+  "qid": "Q644831",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1979-03-20 matches",
+  "file": "Daniel Cormier taking a picture with a fan..jpg",
+  "license": "CC BY-SA 4.0"
+ },
+ "Daniel Marcos": {
+  "kept": true,
+  "qid": "Q124538366",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1993-03-07 matches",
+  "file": "Daniel Marcos.png",
+  "license": "CC BY 3.0"
+ },
+ "Daniel Omielanczuk": {
+  "kept": true,
+  "qid": "Q11692792",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1982-08-31 matches",
+  "file": "ДО.jpg",
+  "license": "CC BY-SA 4.0"
+ },
+ "Daniel Teymur": {
+  "kept": true,
+  "qid": "Q31612539",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1988-02-03 matches",
+  "file": "Daniel Teymur at UFC Fight Night 153 in Stockholm, Sweden.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Darrell Horcher": {
+  "kept": true,
+  "qid": "Q18350346",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1987-07-28 matches",
+  "file": "Даррелл Хорчер.jpg",
+  "license": "CC BY-SA 4.0"
+ },
+ "Darren Elkins": {
+  "kept": true,
+  "qid": "Q5224904",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1984-05-16 matches",
+  "file": "Darren-Elkins.jpg",
+  "license": "CC BY-SA 3.0"
+ },
+ "Darren Stewart": {
+  "kept": true,
+  "qid": "Q41251816",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1990-12-30 matches",
+  "file": "Darren Stewart at UFC 228.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Darren Till": {
+  "kept": true,
+  "qid": "Q30134627",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1992-12-24 matches",
+  "file": "Darren Till in 2020.png",
+  "license": "CC BY 3.0"
+ },
+ "Darrick Minner": {
+  "kept": true,
+  "qid": "Q105620387",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1990-04-28 matches",
+  "file": "Darrick Minner at MCF 18.jpg",
+  "license": "CC BY-SA 4.0"
+ },
+ "Dave Herman": {
+  "kept": true,
+  "qid": "Q11320295",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1984-10-03 matches",
+  "file": "Dave-Herman.jpg",
+  "license": "CC BY 2.0"
+ },
+ "Davi Ramos": {
+  "kept": true,
+  "qid": "Q51140970",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1986-11-05 matches",
+  "file": "Davi Ramos before ACA JJ 14.png",
+  "license": "CC BY 3.0"
+ },
+ "David Zawada": {
+  "kept": true,
+  "qid": "Q48849509",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1990-08-01 matches",
+  "file": "David Zawada.png",
+  "license": "CC BY 3.0"
+ },
+ "Deiveson Figueiredo": {
+  "kept": true,
+  "qid": "Q48122905",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1987-12-18 matches",
+  "file": "Deiveson Figueiredo 2024.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Demetrious Johnson": {
+  "kept": true,
+  "qid": "Q2698272",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1986-08-13 matches",
+  "file": "Demetrious Johnson 2024.png",
+  "license": "CC BY 3.0"
+ },
+ "Demian Maia": {
+  "kept": true,
+  "qid": "Q2408759",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1977-11-06 matches",
+  "file": "Demian Maia.jpg",
+  "license": "CC BY 2.0"
+ },
+ "Dennis Bermudez": {
+  "kept": true,
+  "qid": "Q5258197",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1986-12-13 matches",
+  "file": "Bermund.jpg",
+  "license": "CC BY-SA 4.0"
+ },
+ "Dennis Siver": {
+  "kept": true,
+  "qid": "Q66581",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1979-01-13 matches",
+  "file": "Dennis siver ufc mma fighter germany.JPG",
+  "license": "Public domain"
+ },
+ "Derrick Lewis": {
+  "kept": true,
+  "qid": "Q17182975",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1985-02-07 matches",
+  "file": "Derrick Lewis after UFC 239.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Devonte Smith": {
+  "kept": true,
+  "qid": "Q66528628",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1993-07-30 matches",
+  "file": "Devonte Smith post fight interview at UFC 234.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Diana Belbita": {
+  "kept": true,
+  "qid": "Q55606061",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1996-06-26 matches",
+  "file": "Diana Belbita July 2021.jpg",
+  "license": "CC BY-SA 4.0"
+ },
+ "Diego Brandao": {
+  "kept": true,
+  "qid": "Q5274592",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1987-05-27 matches",
+  "file": "Diego Brandao BJJ.png",
+  "license": "CC0"
+ },
+ "Diego Lopes": {
+  "kept": true,
+  "qid": "Q124217612",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1994-12-30 matches",
+  "file": "Diego Lopes 2025.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Diego Nunes": {
+  "kept": false,
+  "why": "several faces; not approved in review"
+ },
+ "Diego Sanchez": {
+  "kept": true,
+  "qid": "Q611391",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1981-12-31 matches",
+  "file": "DiegoSanchez.png",
+  "license": "CC BY-SA 3.0"
+ },
+ "Dominick Cruz": {
+  "kept": true,
+  "qid": "Q713618",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1985-03-09 matches",
+  "file": "Dom Cruz 2.png",
+  "license": "Public domain"
+ },
+ "Dominick Reyes": {
+  "kept": true,
+  "qid": "Q30323656",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1989-12-26 matches",
+  "file": "Dominick Reyes 2024.png",
+  "license": "CC BY 3.0"
+ },
+ "Don Madge": {
+  "kept": true,
+  "qid": "Q112972204",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1990-11-12 matches",
+  "file": "Don Madge - 2018.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Donald Cerrone": {
+  "kept": true,
+  "qid": "Q2057895",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1983-03-29 matches",
+  "file": "VCJCS hosts USO Spring Tour 160312-D-HU462-263.jpg",
+  "license": "Public domain"
+ },
+ "Dong Hyun Kim": {
+  "kept": true,
+  "qid": "Q484455",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1981-11-17 matches",
+  "file": "Kim Dong-Hyun (fighter) from acrofan.jpg",
+  "license": "CC BY-SA 3.0"
+ },
+ "Drakkar Klose": {
+  "kept": true,
+  "qid": "Q30595230",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1988-03-09 matches",
+  "file": "Drakkar Klose .jpg",
+  "license": "CC BY-SA 4.0"
+ },
+ "Dricus Du Plessis": {
+  "kept": true,
+  "qid": "Q48870794",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1994-01-14 matches",
+  "file": "IMG-Dricus-Duplessis(cropped).jpg",
+  "license": "CC0"
+ },
+ "Duane Ludwig": {
+  "kept": true,
+  "qid": "Q426179",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1978-08-04 matches",
+  "file": "Duane Ludwig 2011.jpg",
+  "license": "CC BY 2.0"
+ },
+ "Dusko Todorovic": {
+  "kept": true,
+  "qid": "Q107124934",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1994-05-19 matches",
+  "file": "Duško Todorović (1).jpg",
+  "license": "CC BY-SA 4.0"
+ },
+ "Dustin Hazelett": {
+  "kept": true,
+  "qid": "Q5317102",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1986-04-29 matches",
+  "file": "Dustin Hazelett.jpg",
+  "license": "Public domain"
+ },
+ "Dustin Jacoby": {
+  "kept": true,
+  "qid": "Q5317107",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1988-04-04 matches",
+  "file": "JTF-DC - Freedom 250 UFC Fan Fest Day 2 (1) (cropped).jpg",
+  "license": "Public domain"
+ },
+ "Dustin Poirier": {
+  "kept": true,
+  "qid": "Q2060146",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1989-01-19 matches",
+  "file": "DustinPoirier.png",
+  "license": "CC BY-SA 3.0"
+ },
+ "Ed Herman": {
+  "kept": true,
+  "qid": "Q5334935",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1980-10-02 matches",
+  "file": "Ed Herman 2022 (cropped).jpg",
+  "license": "Public domain"
+ },
+ "Eddie Alvarez": {
+  "kept": true,
+  "qid": "Q3718919",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1984-01-11 matches",
+  "file": "Eddie Alvarez.jpg",
+  "license": "CC BY-SA 3.0"
+ },
+ "Eddie Gordon": {
+  "kept": true,
+  "qid": "Q17379587",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1983-07-22 matches",
+  "file": "Eddie Gordon.jpg",
+  "license": "CC BY-SA 4.0"
+ },
+ "Eddie Wineland": {
+  "kept": true,
+  "qid": "Q3718958",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1984-06-26 matches",
+  "file": "Eddie Wineland WEC 53.jpg",
+  "license": "CC BY-SA 3.0"
+ },
+ "Edgar Chairez": {
+  "kept": true,
+  "qid": "Q124259496",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1996-01-27 matches",
+  "file": "Edgar Chairez 2024.png",
+  "license": "CC BY 3.0"
+ },
+ "Edmen Shahbazyan": {
+  "kept": true,
+  "qid": "Q65122318",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1997-11-20 matches",
+  "file": "Edmen Shahbazyan.jpg",
+  "license": "CC BY-SA 4.0"
+ },
+ "Efrain Escudero": {
+  "kept": true,
+  "qid": "Q5347573",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1986-01-15 matches",
+  "file": "Efrain Escudero (cropped).png",
+  "license": "CC BY-SA 3.0"
+ },
+ "Elias Silverio": {
+  "kept": true,
+  "qid": "Q16337401",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1986-09-22 matches",
+  "file": "Elias Silverio.jpg",
+  "license": "CC BY-SA 3.0"
+ },
+ "Elias Theodorou": {
+  "kept": true,
+  "qid": "Q18167875",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1988-05-31 matches",
+  "file": "Elias Theodorou at UFC 231.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Emil Meek": {
+  "kept": true,
+  "qid": "Q17104474",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1988-08-20 matches",
+  "file": "Emil Meek (34352206024) (cropped).jpg",
+  "license": "CC BY 2.0"
+ },
+ "Enrique Barzola": {
+  "kept": true,
+  "qid": "Q29810460",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1989-04-28 matches",
+  "file": "Barzolamma.jpg",
+  "license": "CC BY-SA 4.0"
+ },
+ "Eric Schafer": {
+  "kept": true,
+  "qid": "Q5387444",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1977-09-20 matches",
+  "file": "Eric Schafer.jpg",
+  "license": "CC BY-SA 3.0"
+ },
+ "Erick Silva": {
+  "kept": true,
+  "qid": "Q5388185",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1984-06-21 matches",
+  "file": "Érick Silva.jpg",
+  "license": "CC BY-SA 3.0"
+ },
+ "Erik Koch": {
+  "kept": true,
+  "qid": "Q2060216",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1988-10-04 matches",
+  "file": "Erik Koch.jpg",
+  "license": "CC BY 2.0"
+ },
+ "Eryk Anders": {
+  "kept": true,
+  "qid": "Q33103889",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1987-04-21 matches",
+  "file": "UFC fighter Eryk Anders trains with NAVROTA Airmen during Warrior Heart Day (1) (cropped).jpg",
+  "license": "Public domain"
+ },
+ "Fabio Maldonado": {
+  "kept": true,
+  "qid": "Q5511358",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1980-03-17 matches",
+  "file": "Fábio Maldonado 2022.jpg",
+  "license": "CC BY-SA 4.0"
+ },
+ "Fabricio Werdum": {
+  "kept": true,
+  "qid": "Q574476",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1977-07-30 matches",
+  "file": "Fabrício Werdum Web Summit Rio 2023.jpg",
+  "license": "CC BY 2.0"
+ },
+ "Felice Herrig": {
+  "kept": true,
+  "qid": "Q1402979",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1984-09-18 matches",
+  "file": "Felice Herrig at UFC 229.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Felipe Arantes": {
+  "kept": true,
+  "qid": "Q1956587",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1988-02-09 matches",
+  "file": "Felipe Sertanejo Arantes.jpg",
+  "license": "CC BY-SA 3.0"
+ },
+ "Felipe Silva": {
+  "kept": false,
+  "why": "rejected in review: Commons photo is a judoka of the same name"
+ },
+ "Francis Ngannou": {
+  "kept": true,
+  "qid": "Q23883298",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1986-09-05 matches",
+  "file": "Francis Ngannou 2023 (cropped).png",
+  "license": "CC BY 3.0"
+ },
+ "Frank Mir": {
+  "kept": true,
+  "qid": "Q459362",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1979-05-24 matches",
+  "file": "Frank Mir.jpg",
+  "license": "CC BY-SA 3.0"
+ },
+ "Frankie Edgar": {
+  "kept": true,
+  "qid": "Q552182",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1981-10-16 matches",
+  "file": "Frankie Edgar.jpg",
+  "license": "CC BY-SA 2.0"
+ },
+ "Gable Steveson": {
+  "kept": true,
+  "qid": "Q97610308",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 2000-05-31 matches",
+  "file": "GableSteveson.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Gabriel Bonfim": {
+  "kept": true,
+  "qid": "Q121590551",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1997-08-20 matches",
+  "file": "Gabriel Bonfim 2025.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Gabriel Gonzaga": {
+  "kept": true,
+  "qid": "Q2421065",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1979-05-18 matches",
+  "file": "Gabriel Gonzaga.png",
+  "license": "CC BY-SA 3.0"
+ },
+ "Gaetano Pirrello": {
+  "kept": true,
+  "qid": "Q112123324",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1992-04-29 matches",
+  "file": "Pirrello-gaetano-mma.jpg",
+  "license": "CC BY-SA 4.0"
+ },
+ "Geane Herrera": {
+  "kept": true,
+  "qid": "Q24450532",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1990-05-27 matches",
+  "file": "Geane Herrera.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Gegard Mousasi": {
+  "kept": true,
+  "qid": "Q1188997",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1985-08-01 matches",
+  "file": "Gegard Mousasi.jpg",
+  "license": "CC BY 2.0"
+ },
+ "Geoff Neal": {
+  "kept": true,
+  "qid": "Q61046269",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1990-08-28 matches",
+  "file": "Geoff Neal at UFC 228.jpg",
+  "license": "CC BY 3.0"
+ },
+ "George Sotiropoulos": {
+  "kept": true,
+  "qid": "Q788076",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1977-07-09 matches",
+  "file": "George UFC (7609266100).jpg",
+  "license": "CC BY-SA 2.0"
+ },
+ "Georges St-Pierre": {
+  "kept": true,
+  "qid": "Q356271",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1981-05-19 matches",
+  "file": "Georges St-Pierre crop.jpg",
+  "license": "CC BY-SA 3.0"
+ },
+ "Gerald Meerschaert": {
+  "kept": true,
+  "qid": "Q30323752",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1987-12-18 matches",
+  "file": "GeraldMeerschaert.png",
+  "license": "CC BY 3.0"
+ },
+ "Germaine de Randamie": {
+  "kept": true,
+  "qid": "Q14943759",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1984-04-24 matches",
+  "file": "Germaine de Randamie at UFC Copenhagen.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Giga Chikadze": {
+  "kept": true,
+  "qid": "Q95453345",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1988-08-25 matches",
+  "file": "Giga Chikadze post fight interview at UFC Fight Night 160 in Copenhagen.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Gilbert Burns": {
+  "kept": true,
+  "qid": "Q5560829",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1986-07-20 matches",
+  "file": "GilbertBurns.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Gilbert Melendez": {
+  "kept": true,
+  "qid": "Q2696560",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1982-04-12 matches",
+  "file": "Gilbert Melendez.jpg",
+  "license": "CC BY 2.0"
+ },
+ "Gilbert Yvel": {
+  "kept": true,
+  "qid": "Q3105897",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1976-06-30 matches",
+  "file": "Gilbert Yvel UFC 115 (cropped).jpg",
+  "license": "CC BY 3.0"
+ },
+ "Gillian Robertson": {
+  "kept": true,
+  "qid": "Q47523129",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1995-05-17 matches",
+  "file": "Gillian Robertson.png",
+  "license": "CC BY 3.0"
+ },
+ "Glover Teixeira": {
+  "kept": true,
+  "qid": "Q3788849",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1979-10-28 matches",
+  "file": "Glover Teixeira.jpg",
+  "license": "CC BY 2.0"
+ },
+ "Goran Reljic": {
+  "kept": true,
+  "qid": "Q24702881",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1984-03-20 matches",
+  "file": "Goran Reljić, 2018 (cropped).jpg",
+  "license": "CC BY-SA 4.0"
+ },
+ "Gray Maynard": {
+  "kept": true,
+  "qid": "Q2627589",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1979-05-09 matches",
+  "file": "Graymaynard.jpg",
+  "license": "CC BY-SA 2.0"
+ },
+ "Gregor Gillespie": {
+  "kept": true,
+  "qid": null,
+  "confidence": "COMMONS",
+  "match": "commons title search: exact name in \"Gregor Gillespie at UFC Fight Night 143.jpg\", combat-sports category/description",
+  "file": "Gregor Gillespie at UFC Fight Night 143.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Gregory Rodrigues": {
+  "kept": true,
+  "qid": "Q111027480",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1992-02-17 matches",
+  "file": "GregoryRodrigues.png",
+  "license": "CC BY 3.0"
+ },
+ "Guido Cannetti": {
+  "kept": true,
+  "qid": "Q20810595",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1979-12-19 matches",
+  "file": "Guido Cannetti - 2014.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Gunnar Nelson": {
+  "kept": true,
+  "qid": "Q3480456",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1988-07-28 matches",
+  "file": "Gunnar about2.jpg",
+  "license": "CC BY-SA 3.0"
+ },
+ "Guto Inocente": {
+  "kept": true,
+  "qid": "Q5621834",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1986-05-29 matches",
+  "file": "Guto Inocente.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Hakeem Dawodu": {
+  "kept": true,
+  "qid": "Q45175157",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1991-07-02 matches",
+  "file": "Hakeem Dawodu at UFC 244.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Hans Stringer": {
+  "kept": true,
+  "qid": "Q20744721",
+  "confidence": "COMMONS",
+  "match": "commons title search: exact name in \"Hans Stringer (7177659240).jpg\", combat-sports category/description",
+  "file": "Hans Stringer (7177659240).jpg",
+  "license": "CC BY 2.0"
+ },
+ "Hatsu Hioki": {
+  "kept": true,
+  "qid": "Q3783656",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1983-07-18 matches",
+  "file": "Hioki.jpg",
+  "license": "Public domain"
+ },
+ "Henry Cejudo": {
+  "kept": true,
+  "qid": "Q933481",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1987-02-09 matches",
+  "file": "Henry Cejudo (54235464255) (cropped).jpg",
+  "license": "CC BY-SA 2.0"
+ },
+ "Holly Holm": {
+  "kept": true,
+  "qid": "Q2414305",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1981-10-17 matches",
+  "file": "Holly Holm at UFC 246.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Ian Machado Garry": {
+  "kept": true,
+  "qid": "Q109657967",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1997-11-17 matches",
+  "file": "IanGarry.jpg",
+  "license": "CC BY-SA 4.0"
+ },
+ "Ian McCall": {
+  "kept": true,
+  "qid": null,
+  "confidence": "COMMONS",
+  "match": "commons title search: exact name in \"Ian McCall (cropped).jpg\", combat-sports category/description",
+  "file": "Ian McCall (cropped).jpg",
+  "license": "CC BY-SA 4.0"
+ },
+ "Ignacio Bahamondes": {
+  "kept": true,
+  "qid": "Q111023906",
+  "confidence": "COMMONS",
+  "match": "commons title search: exact name in \"Ignacio-Bahamondes-e1774272916557-3905x2198.webp\", combat-sports category/description",
+  "file": "Ignacio-Bahamondes-e1774272916557-3905x2198.webp",
+  "license": "CC BY 4.0"
+ },
+ "Igor Pokrajac": {
+  "kept": true,
+  "qid": "Q16218735",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1979-01-02 matches",
+  "file": "Igor Pokrajac.JPG",
+  "license": "CC BY-SA 3.0"
+ },
+ "Ikram Aliskerov": {
+  "kept": true,
+  "qid": "Q25693551",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1992-12-07 matches",
+  "file": "Ikram Aliskerov 2024.png",
+  "license": "CC BY 3.0"
+ },
+ "Ilia Topuria": {
+  "kept": true,
+  "qid": "Q97185032",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1997-01-21 matches",
+  "file": "Ilia Topuria in the Oval Office (while President Donald J. Trump is holding a meeting with UFC fighters).jpg",
+  "license": "Public domain"
+ },
+ "Ilir Latifi": {
+  "kept": true,
+  "qid": "Q5939663",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1982-07-28 matches",
+  "file": "Ilir Latifi at UFC 232.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Irene Aldana": {
+  "kept": true,
+  "qid": "Q19559930",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1988-03-26 matches",
+  "file": "Irene Aldana UFC 2023 02.png",
+  "license": "CC BY 3.0"
+ },
+ "Islam Makhachev": {
+  "kept": true,
+  "qid": "Q18637676",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1991-10-27 matches",
+  "file": "Islam Makhachev 2022 UFC belt.png",
+  "license": "CC BY 3.0"
+ },
+ "Ismail Naurdiev": {
+  "kept": true,
+  "qid": "Q48869871",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1996-08-18 matches",
+  "file": "Ismail Naurdiev at UFC Fight Night 160 in Copenhagen.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Israel Adesanya": {
+  "kept": true,
+  "qid": "Q27050195",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1989-07-22 matches",
+  "file": "Israel Adesanya 2014.jpg",
+  "license": "CC BY-SA 4.0"
+ },
+ "Jacare Souza": {
+  "kept": true,
+  "qid": null,
+  "confidence": "COMMONS",
+  "match": "commons title search: exact name in \"Ronaldo Jacaré Souza.jpg\", combat-sports category/description",
+  "file": "Ronaldo Jacaré Souza.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Jack Hermansson": {
+  "kept": true,
+  "qid": "Q26844722",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1988-06-10 matches",
+  "file": "Jack Hermansson on MMAnytt.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Jack Marshman": {
+  "kept": true,
+  "qid": "Q30502234",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1989-12-19 matches",
+  "file": "Jack Marshman at UFC 230.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Jack Shore": {
+  "kept": true,
+  "qid": "Q106459264",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1995-02-06 matches",
+  "file": "Jack Shore at CAGE Warrior 100.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Jairzinho Rozenstruik": {
+  "kept": true,
+  "qid": "Q73362309",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1988-03-17 matches",
+  "file": "Jairzinho Rozenstruik at UFC 244.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Jake Ellenberger": {
+  "kept": true,
+  "qid": "Q2056536",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1985-03-28 matches",
+  "file": "Jake Ellenberger at MMA Holiday Tour at Al Asad Air Base (cropped).jpg",
+  "license": "Public domain"
+ },
+ "Jake Matthews": {
+  "kept": false,
+  "why": "several faces; not approved in review"
+ },
+ "Jake Shields": {
+  "kept": true,
+  "qid": "Q511173",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1979-01-09 matches",
+  "file": "Jake Shields.jpg",
+  "license": "CC BY-SA 3.0"
+ },
+ "Jalin Turner": {
+  "kept": true,
+  "qid": "Q59660366",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1995-05-18 matches",
+  "file": "Jalin Turner at UFC 234.jpg",
+  "license": "CC BY 3.0"
+ },
+ "James Irvin": {
+  "kept": true,
+  "qid": "Q6125373",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1978-09-12 matches",
+  "file": "James Irvin (fighter).png",
+  "license": "CC BY-SA 2.5"
+ },
+ "James McSweeney": {
+  "kept": true,
+  "qid": "Q6139572",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1980-10-24 matches",
+  "file": "James McSweeney.JPG",
+  "license": "CC BY-SA 3.0"
+ },
+ "James Te Huna": {
+  "kept": true,
+  "qid": "Q6144067",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1981-09-29 matches",
+  "file": "James Te Huna.jpg",
+  "license": "CC BY-SA 3.0"
+ },
+ "James Toney": {
+  "kept": true,
+  "qid": "Q535572",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1968-08-24 matches",
+  "file": "James Toney2011.jpg",
+  "license": "CC BY-SA 2.0"
+ },
+ "Jamie Varner": {
+  "kept": true,
+  "qid": "Q6125359",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1984-10-12 matches",
+  "file": "Jamie Varner.jpg",
+  "license": "CC BY 2.0"
+ },
+ "Jan Blachowicz": {
+  "kept": true,
+  "qid": null,
+  "confidence": "COMMONS",
+  "match": "commons title search: exact name in \"Jan Blachowicz at UFC Fight Night 136.jpg\", combat-sports category/description",
+  "file": "Jan Blachowicz at UFC Fight Night 136.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Jared Cannonier": {
+  "kept": true,
+  "qid": "Q27957217",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1984-03-16 matches",
+  "file": "Jared Cannonier at UFC Fight Night 160 in Copenhagen.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Jarred Brooks": {
+  "kept": true,
+  "qid": "Q32857433",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1993-05-02 matches",
+  "file": "Jarred Brooks 2018.png",
+  "license": "CC BY 3.0"
+ },
+ "Jasmine Jasudavicius": {
+  "kept": true,
+  "qid": "Q128115823",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1989-03-01 matches",
+  "file": "Jasmine Jasudavicius 2023.png",
+  "license": "CC BY 3.0"
+ },
+ "Jason Knight": {
+  "kept": true,
+  "qid": "Q28701103",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1992-07-14 matches",
+  "file": "Jason Knight1.jpg",
+  "license": "CC BY-SA 3.0"
+ },
+ "Jason MacDonald": {
+  "kept": true,
+  "qid": "Q6163012",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1975-06-03 matches",
+  "file": "Jason MacDonald.png",
+  "license": "CC BY-SA 3.0"
+ },
+ "Jason Miller": {
+  "kept": true,
+  "qid": "Q1683956",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1980-12-24 matches",
+  "file": "Jason Mayhem Miller.jpg",
+  "license": "CC BY-SA 3.0"
+ },
+ "Jay Hieron": {
+  "kept": true,
+  "qid": "Q5805008",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1976-07-29 matches",
+  "file": "Jay Hieron.jpg",
+  "license": "CC BY 2.0"
+ },
+ "Jean Silva": {
+  "kept": true,
+  "qid": null,
+  "confidence": "COMMONS",
+  "match": "commons title search: exact name in \"Jean Silva (54451587575).jpg\", combat-sports category/description",
+  "file": "Jean Silva (54451587575).jpg",
+  "license": "Public domain"
+ },
+ "Jeff Hougland": {
+  "kept": true,
+  "qid": "Q15987618",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1978-08-02 matches",
+  "file": "Jeff Hougland.jpg",
+  "license": "CC BY-SA 3.0"
+ },
+ "Jennifer Maia": {
+  "kept": true,
+  "qid": "Q15987716",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1988-10-06 matches",
+  "file": "Jennifer Maia.jpg",
+  "license": "CC BY-SA 4.0"
+ },
+ "Jeremy Stephens": {
+  "kept": true,
+  "qid": null,
+  "confidence": "COMMONS",
+  "match": "commons title search: exact name in \"Jeremy Stephens (cropped).jpg\", combat-sports category/description",
+  "file": "Jeremy Stephens (cropped).jpg",
+  "license": "Public domain"
+ },
+ "Jessamyn Duke": {
+  "kept": true,
+  "qid": "Q15987785",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1986-06-24 matches",
+  "file": "Jessamyn Duke in Afghanistan 2016.jpg",
+  "license": "Public domain"
+ },
+ "Jesse Taylor": {
+  "kept": true,
+  "qid": "Q6186907",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1983-01-02 matches",
+  "file": "Jesse Taylor.jpg",
+  "license": "CC BY 2.0"
+ },
+ "Jessica Andrade": {
+  "kept": true,
+  "qid": "Q15131640",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1991-09-25 matches",
+  "file": "Jessica Andrade at UFC 228.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Jessica Eye": {
+  "kept": false,
+  "why": "rejected in review: extreme close-up, face mostly cut off"
+ },
+ "Jessica Penne": {
+  "kept": true,
+  "qid": "Q3808148",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1983-01-30 matches",
+  "file": "Jessica Penne OF.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Jim Crute": {
+  "kept": true,
+  "qid": "Q61483392",
+  "confidence": "MEDIUM",
+  "match": "pass 1: occupation pool, exact name; roster has no DOB to compare",
+  "file": "Jimmy Crute at UFC 234 (cropped).jpg",
+  "license": "CC BY 3.0"
+ },
+ "Jim Miller": {
+  "kept": true,
+  "qid": "Q742812",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1983-08-30 matches",
+  "file": "Jim.miller.2.jpg",
+  "license": "CC0"
+ },
+ "Jimi Manuwa": {
+  "kept": true,
+  "qid": "Q10306925",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1980-02-18 matches",
+  "file": "Jimi Manuwa.jpg",
+  "license": "CC BY-SA 4.0"
+ },
+ "Jimmie Rivera": {
+  "kept": true,
+  "qid": "Q15987709",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1989-06-29 matches",
+  "file": "Jimmie Rivera at UFC Fight Night 143.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Jimmy Crute": {
+  "kept": true,
+  "qid": null,
+  "confidence": "COMMONS",
+  "match": "commons title search: exact name in \"Jimmy Crute at UFC 234 (cropped).jpg\", combat-sports category/description",
+  "file": "Jimmy Crute at UFC 234 (cropped).jpg",
+  "license": "CC BY 3.0"
+ },
+ "Jimy Hettes": {
+  "kept": true,
+  "qid": null,
+  "confidence": "COMMONS",
+  "match": "commons title search: exact name in \"Jimy Hettes at Mohegan Sun Arena after winning MMA Melee Featherweight Championship.jpg\", combat-sports category/description",
+  "file": "Jimy Hettes at Mohegan Sun Arena after winning MMA Melee Featherweight Championship.jpg",
+  "license": "CC BY-SA 4.0"
+ },
+ "Jiri Prochazka": {
+  "kept": true,
+  "qid": "Q27917811",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1992-10-14 matches",
+  "file": "JiriProchazka2022.png",
+  "license": "CC BY 3.0"
+ },
+ "Joanna Jedrzejczyk": {
+  "kept": true,
+  "qid": "Q14436702",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1987-08-18 matches",
+  "file": "Joanna Jędrzejczyk.png",
+  "license": "CC BY 3.0"
+ },
+ "Joanne Calderwood": {
+  "kept": true,
+  "qid": null,
+  "confidence": "COMMONS",
+  "match": "commons title search: exact name in \"Joanne Calderwood at UFC Brooklyn.jpg\", combat-sports category/description",
+  "file": "Joanne Calderwood at UFC Brooklyn.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Joaquim Silva": {
+  "kept": true,
+  "qid": "Q26689637",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1989-02-05 matches",
+  "file": "Joaquim \"Netto BJJ\" Silva por Photo Fight.png",
+  "license": "CC BY-SA 4.0"
+ },
+ "Joe Lauzon": {
+  "kept": true,
+  "qid": "Q6132508",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1984-05-22 matches",
+  "file": "JLauzon.jpg",
+  "license": "Public domain"
+ },
+ "Joe Pyfer": {
+  "kept": true,
+  "qid": "Q124447415",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1996-09-17 matches",
+  "file": "JoePyfer.jpg",
+  "license": "CC BY 4.0"
+ },
+ "Joe Riggs": {
+  "kept": true,
+  "qid": "Q9284888",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1982-09-23 matches",
+  "file": "Joe Riggs.png",
+  "license": "CC BY-SA 2.5"
+ },
+ "Joe Stevenson": {
+  "kept": true,
+  "qid": "Q943729",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1982-06-15 matches",
+  "file": "Joe Stevenson - UFC 100 Fan Expo - Mandalay Bay Casino, Las Vegas.jpg",
+  "license": "CC BY 2.0"
+ },
+ "Joel Alvarez": {
+  "kept": true,
+  "qid": "Q61855450",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1993-03-02 matches",
+  "file": "Joel-alvarez-posando.jpg",
+  "license": "CC BY-SA 4.0"
+ },
+ "John Howard": {
+  "kept": true,
+  "qid": "Q6240032",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1983-03-01 matches",
+  "file": "JHOWARDCHAMP.jpg",
+  "license": "CC BY-SA 4.0"
+ },
+ "John Moraga": {
+  "kept": true,
+  "qid": "Q2107177",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1984-03-20 matches",
+  "file": "ESPN UFC John Moraga - YouTube - 0 55 (cropped).jpg",
+  "license": "CC BY 3.0"
+ },
+ "John Phillips": {
+  "kept": true,
+  "qid": "Q48468627",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1985-06-09 matches",
+  "file": "John Phillips at UFC Fight Night 160 in Copenhagen.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Johnny Munoz": {
+  "kept": true,
+  "qid": "Q112245002",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1993-02-16 matches",
+  "file": "Johnny Muñoz training.jpg",
+  "license": "CC BY-SA 4.0"
+ },
+ "Johnny Walker": {
+  "kept": true,
+  "qid": "Q61478503",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1992-03-30 matches",
+  "file": "AFSOC celebrates Outstanding Airmen of the Year (5).jpg",
+  "license": "Public domain"
+ },
+ "Johny Hendricks": {
+  "kept": true,
+  "qid": "Q2481750",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1983-09-12 matches",
+  "file": "Johny Hendricks MMA.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Jon Fitch": {
+  "kept": true,
+  "qid": "Q2480113",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1978-02-24 matches",
+  "file": "Jon Fitch.JPG",
+  "license": "CC BY-SA 3.0"
+ },
+ "Jon Jones": {
+  "kept": true,
+  "qid": "Q285450",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1987-07-19 matches",
+  "file": "Jon Jones being interviewed.png",
+  "license": "CC BY 3.0"
+ },
+ "Jon Olav Einemo": {
+  "kept": true,
+  "qid": "Q1810841",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1975-12-10 matches",
+  "file": "Jon Olav Einemo.jpg",
+  "license": "CC BY 2.0"
+ },
+ "Jonathan Brookins": {
+  "kept": true,
+  "qid": "Q6272653",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1985-08-13 matches",
+  "file": "JonathanBrookinsUFC.jpg",
+  "license": "CC BY-SA 3.0"
+ },
+ "Jonathan Goulet": {
+  "kept": false,
+  "why": "rejected in review: two men in frame; crop is not clearly him"
+ },
+ "Jonathan Martinez": {
+  "kept": true,
+  "qid": "Q65555171",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1994-04-20 matches",
+  "file": "Jonathan Martinez at UFC 234 in Melbourne, Australia.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Jordan Johnson": {
+  "kept": true,
+  "qid": "Q28819604",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1988-11-18 matches",
+  "file": "Jordan Johnson at UFC Fight Night 136.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Jordan Rinaldi": {
+  "kept": true,
+  "qid": "Q41130639",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1987-09-25 matches",
+  "file": "Jordan Rinaldi - NAGA Charlotte 2011.jpg",
+  "license": "CC BY-SA 3.0"
+ },
+ "Jorge Masvidal": {
+  "kept": true,
+  "qid": "Q6136509",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1984-11-12 matches",
+  "file": "Jorge Masvidal 2022.png",
+  "license": "Public domain"
+ },
+ "Jorge Rivera": {
+  "kept": true,
+  "qid": "Q3183875",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1972-02-28 matches",
+  "file": "Jorge Rivera (fighter).jpg",
+  "license": "Public domain"
+ },
+ "Jorge Santiago": {
+  "kept": true,
+  "qid": "Q6139230",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1980-10-09 matches",
+  "file": "JorgeSantiago.png",
+  "license": "Public domain"
+ },
+ "Jose Aldo": {
+  "kept": true,
+  "qid": "Q512119",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1986-09-09 matches",
+  "file": "José Aldo, UFC 189 World Tour London (2) (cropped).jpg",
+  "license": "CC BY-SA 2.0"
+ },
+ "Jose Torres": {
+  "kept": true,
+  "qid": "Q55177979",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1992-08-02 matches",
+  "file": "Shorty Torres Wikipedia.jpg",
+  "license": "CC BY 4.0"
+ },
+ "Joseph Benavidez": {
+  "kept": true,
+  "qid": "Q2059587",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1984-07-31 matches",
+  "file": "Joseph Benavidez in 2017.jpg",
+  "license": "CC BY-SA 4.0"
+ },
+ "Josh Barnett": {
+  "kept": true,
+  "qid": "Q2407490",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1977-11-10 matches",
+  "file": "Josh Barnett 2010.jpg",
+  "license": "CC BY-SA 3.0"
+ },
+ "Josh Hokit": {
+  "kept": true,
+  "qid": "Q108055029",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1997-11-12 matches",
+  "file": "UFC Freedom 250 Press Conference (9747953) (cropped).jpg",
+  "license": "Public domain"
+ },
+ "Josh Koscheck": {
+  "kept": true,
+  "qid": "Q2696749",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1977-11-30 matches",
+  "file": "JoshKoscheck.png",
+  "license": "CC BY-SA 2.5"
+ },
+ "Josh Neer": {
+  "kept": true,
+  "qid": "Q4792867",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1983-03-24 matches",
+  "file": "Josh Neer.jpg",
+  "license": "CC BY-SA 3.0"
+ },
+ "Josh Samman": {
+  "kept": true,
+  "qid": "Q15987697",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1988-03-14 matches",
+  "file": "Josh Samman Fighter.png",
+  "license": "CC BY 3.0"
+ },
+ "Josh Thomson": {
+  "kept": true,
+  "qid": "Q3810333",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1978-09-21 matches",
+  "file": "Bellator-USO visit MCBH (1) (cropped).jpg",
+  "license": "Public domain"
+ },
+ "Joshua Van": {
+  "kept": true,
+  "qid": "Q131411649",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 2001-10-10 matches",
+  "file": "Joshua Van 1.png",
+  "license": "CC BY 4.0"
+ },
+ "Juan Espino": {
+  "kept": true,
+  "qid": "Q13475333",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1980-10-09 matches",
+  "file": "Lutte sénégalaise Bercy 2013 - Juan - 02.jpg",
+  "license": "CC BY-SA 3.0"
+ },
+ "Julianna Pena": {
+  "kept": true,
+  "qid": "Q15987784",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1989-08-19 matches",
+  "file": "Ceremonial weigh ins - Amanda Nunes vs Julianna Peña UFC 269 - YouTube - 0 23 (cropped).jpg",
+  "license": "CC BY 3.0"
+ },
+ "Julie Kedzie": {
+  "kept": true,
+  "qid": "Q10963573",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1981-03-18 matches",
+  "file": "Julie Kedzie (born 1981) in the video 'Invicta Julie Kedzie talks loss to Miesha Tate at Strikeforce UFC MMA ESPN'.png",
+  "license": "CC BY 3.0"
+ },
+ "Junior Dos Santos": {
+  "kept": false,
+  "why": "several faces; not approved in review"
+ },
+ "Jussier Formiga": {
+  "kept": true,
+  "qid": "Q6315683",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1985-04-14 matches",
+  "file": "Jussier Formiga.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Justin Gaethje": {
+  "kept": true,
+  "qid": "Q15634226",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1988-11-14 matches",
+  "file": "Justin Gaethje in the Oval Office (while President Donald J. Trump is holding a meeting with UFC fighters).jpg",
+  "license": "Public domain"
+ },
+ "Kai Asakura": {
+  "kept": true,
+  "qid": "Q53764876",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1993-10-31 matches",
+  "file": "Kai Asakura 2023.png",
+  "license": "CC BY 4.0"
+ },
+ "Kai Kara-France": {
+  "kept": true,
+  "qid": "Q27999448",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1993-03-26 matches",
+  "file": "Kaikarafrance.png",
+  "license": "CC0"
+ },
+ "Kajan Johnson": {
+  "kept": true,
+  "qid": "Q21066335",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1984-04-21 matches",
+  "file": "Kajan Johnson at UFN 136 in Moscow.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Kamaru Usman": {
+  "kept": true,
+  "qid": "Q21290332",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1987-05-11 matches",
+  "file": "KamaruUsmanPress2018.png",
+  "license": "CC BY-SA 3.0"
+ },
+ "Karl Roberson": {
+  "kept": true,
+  "qid": "Q23664723",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1990-10-04 matches",
+  "file": "Karl Roberson Jan 19, 2019.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Karolina Kowalkiewicz": {
+  "kept": true,
+  "qid": "Q16565693",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1985-10-15 matches",
+  "file": "Karolina Kowalkiewicz ważenie KSW 30.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Katlyn Cerminara": {
+  "kept": true,
+  "qid": "Q26256197",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1988-12-28 matches",
+  "file": "Katlyn Chookagian at UFC 230.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Katlyn Chookagian": {
+  "kept": true,
+  "qid": "Q26256197",
+  "confidence": "MEDIUM",
+  "match": "pass 1: occupation pool, exact name; roster has no DOB to compare",
+  "file": "Katlyn Chookagian at UFC 230.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Kayla Harrison": {
+  "kept": true,
+  "qid": "Q2358331",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1990-07-02 matches",
+  "file": "President Donald Trump congratulates Kayla Harrison after her victory during UFC 316 (54577590491) (cropped).jpg",
+  "license": "Public domain"
+ },
+ "Keita Nakamura": {
+  "kept": true,
+  "qid": "Q6383921",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1984-05-22 matches",
+  "file": "Keita Nakamura.jpg",
+  "license": "Public domain"
+ },
+ "Keith Jardine": {
+  "kept": true,
+  "qid": "Q2617121",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1975-10-31 matches",
+  "file": "Keith Jardine - UFC 100 Fan Expo - Mandalay Bay Casino, Las Vegas (crop).jpg",
+  "license": "CC BY 2.0"
+ },
+ "Kelvin Gastelum": {
+  "kept": true,
+  "qid": "Q10863578",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1991-10-24 matches",
+  "file": "Kelvin Gastelum.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Kendall Grove": {
+  "kept": false,
+  "why": "rejected in review: crop falls between two people"
+ },
+ "Kenny Florian": {
+  "kept": true,
+  "qid": "Q1365755",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1976-05-26 matches",
+  "file": "Kenny Florian wearing Ranger Up Geardo shirt.jpg",
+  "license": "CC BY-SA 3.0"
+ },
+ "Kevin Holland": {
+  "kept": true,
+  "qid": "Q62788166",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1992-11-05 matches",
+  "file": "Kevin Holland at UFC 316 (54576727207).jpg",
+  "license": "Public domain"
+ },
+ "Kevin Lee": {
+  "kept": true,
+  "qid": "Q18157401",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1992-09-04 matches",
+  "file": "Kevin Lee.jpg",
+  "license": "CC BY-SA 4.0"
+ },
+ "Khabib Nurmagomedov": {
+  "kept": true,
+  "qid": "Q3526023",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1988-09-20 matches",
+  "file": "Khabib nurmagomedov.jpg",
+  "license": "CC BY-SA 4.0"
+ },
+ "Khalid Murtazaliev": {
+  "kept": true,
+  "qid": "Q109490176",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1993-07-15 matches",
+  "file": "Khalid Murtazaliev at UFC Fight Night 136.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Khalil Rountree Jr.": {
+  "kept": true,
+  "qid": "Q31270277",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1990-02-26 matches",
+  "file": "Khalil Rountree, Jr.. (cropped).jpg",
+  "license": "CC BY-SA 4.0"
+ },
+ "Khamzat Chimaev": {
+  "kept": true,
+  "qid": "Q76476288",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1994-05-01 matches",
+  "file": "Khamzat Chimaev 2022.png",
+  "license": "CC BY 3.0"
+ },
+ "Kiichi Kunimoto": {
+  "kept": true,
+  "qid": "Q11312418",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1981-05-01 matches",
+  "file": "Holographic collage Kiichi Strasser ：.jpg",
+  "license": "Public domain"
+ },
+ "Krzysztof Jotko": {
+  "kept": true,
+  "qid": "Q11749319",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1989-08-19 matches",
+  "file": "Krzysztof Jotko.JPG",
+  "license": "CC BY 2.0"
+ },
+ "Krzysztof Soszynski": {
+  "kept": true,
+  "qid": "Q2464363",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1977-08-02 matches",
+  "file": "Krzysztof-soszynski.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Kurt Pellegrino": {
+  "kept": true,
+  "qid": "Q1793951",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1979-05-07 matches",
+  "file": "KurtPellegrino.png",
+  "license": "CC BY 2.0"
+ },
+ "Kyle Daukaus": {
+  "kept": true,
+  "qid": "Q106774423",
+  "confidence": "COMMONS",
+  "match": "commons title search: exact name in \"Kyle Daukaus.png\", combat-sports category/description",
+  "file": "Kyle Daukaus.png",
+  "license": "CC BY 4.0"
+ },
+ "Kyle Kingsbury": {
+  "kept": true,
+  "qid": "Q6451240",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1982-03-22 matches",
+  "file": "Kyle Kingsbury, 2008.jpg",
+  "license": "Public domain"
+ },
+ "Kyle Nelson": {
+  "kept": true,
+  "qid": "Q71631455",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1991-04-20 matches",
+  "file": "Kyle Nelson.png",
+  "license": "CC BY 3.0"
+ },
+ "Kyle Noke": {
+  "kept": true,
+  "qid": "Q3200931",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1980-03-18 matches",
+  "file": "Kyle Noke.jpg",
+  "license": "CC BY-SA 3.0"
+ },
+ "Kyoji Horiguchi": {
+  "kept": true,
+  "qid": "Q6451952",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1990-10-12 matches",
+  "file": "Kyoji Horiguchi 2017.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Larissa Pacheco": {
+  "kept": true,
+  "qid": "Q17612713",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1994-09-07 matches",
+  "file": "Larissa Pacheco 02.png",
+  "license": "CC BY 3.0"
+ },
+ "Leandro Issa": {
+  "kept": true,
+  "qid": "Q18687957",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1983-09-19 matches",
+  "file": "Leandro Issa - 2013 (cropped).jpg",
+  "license": "CC BY 2.0"
+ },
+ "Leon Edwards": {
+  "kept": true,
+  "qid": "Q19872938",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1991-08-25 matches",
+  "file": "Leon Edwards 2021.png",
+  "license": "CC BY 3.0"
+ },
+ "Lina Lansberg": {
+  "kept": true,
+  "qid": "Q4964487",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1982-03-13 matches",
+  "file": "Lina Länsberg at UFC 229.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Livinha Souza": {
+  "kept": true,
+  "qid": "Q20055103",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1991-03-11 matches",
+  "file": "Livia Renata Souza.jpg",
+  "license": "CC BY-SA 4.0"
+ },
+ "Liz Carmouche": {
+  "kept": true,
+  "qid": "Q1523288",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1984-02-19 matches",
+  "file": "Liz carmouche.jpg",
+  "license": "CC0"
+ },
+ "Lorenz Larkin": {
+  "kept": false,
+  "why": "rejected in review: military event photo; face hidden behind a rifle"
+ },
+ "Luana Santos": {
+  "kept": true,
+  "qid": null,
+  "confidence": "COMMONS",
+  "match": "commons title search: exact name in \"Luana Santos at the UFC by Maritza Sanchez 01.jpg\", combat-sports category/description",
+  "file": "Luana Santos at the UFC by Maritza Sanchez 01.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Lucas Martins": {
+  "kept": true,
+  "qid": "Q10320210",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1988-11-11 matches",
+  "file": "Lucas-Martins-BRAVE CF.jpg",
+  "license": "CC BY 4.0"
+ },
+ "Ludovit Klein": {
+  "kept": true,
+  "qid": "Q100396352",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1995-02-22 matches",
+  "file": "Ludovit Klein.jpg",
+  "license": "CC BY-SA 3.0"
+ },
+ "Luiz Cane": {
+  "kept": true,
+  "qid": null,
+  "confidence": "COMMONS",
+  "match": "commons title search: exact name in \"Luiz Cane.jpg\", combat-sports category/description",
+  "file": "Luiz Cane.jpg",
+  "license": "Public domain"
+ },
+ "Luke Rockhold": {
+  "kept": true,
+  "qid": "Q967452",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1984-10-17 matches",
+  "file": "Luke Rockhold 2025.jpg",
+  "license": "CC0"
+ },
+ "Lyman Good": {
+  "kept": true,
+  "qid": "Q11346566",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1985-05-26 matches",
+  "file": "Lyman Good at UFC 230.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Lyoto Machida": {
+  "kept": true,
+  "qid": "Q369167",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1978-05-30 matches",
+  "file": "Lyoto Machida by Marcos Joel Reis.jpg",
+  "license": "CC BY 2.0"
+ },
+ "Mac Danzig": {
+  "kept": true,
+  "qid": "Q971179",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1980-01-02 matches",
+  "file": "Mac Danzig.jpg",
+  "license": "CC BY-SA 3.0"
+ },
+ "Mackenzie Dern": {
+  "kept": true,
+  "qid": "Q21005601",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1993-03-24 matches",
+  "file": "Mackenzie Dern.png",
+  "license": "CC BY 3.0"
+ },
+ "Mads Burnell": {
+  "kept": true,
+  "qid": "Q54860978",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1994-03-06 matches",
+  "file": "Mads Burnell.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Magnus Cedenblad": {
+  "kept": true,
+  "qid": "Q16632853",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1982-04-10 matches",
+  "file": "Magnus Cedenblad.jpg",
+  "license": "CC BY-SA 3.0"
+ },
+ "Magomed Ankalaev": {
+  "kept": true,
+  "qid": "Q50278013",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1992-06-02 matches",
+  "file": "Magomed Ankalaev at UFC Fight Night 136 in Moscow, Russia.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Magomed Zaynukov": {
+  "kept": false,
+  "why": "rejected in review: Commons file is a vehicle drug search, not a portrait of him"
+ },
+ "Mairbek Taisumov": {
+  "kept": true,
+  "qid": "Q16354676",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1988-08-08 matches",
+  "file": "Mairbek Taisumov.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Makhmud Muradov": {
+  "kept": true,
+  "qid": "Q67761308",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1990-02-08 matches",
+  "file": "Muradov2021.png",
+  "license": "CC BY 3.0"
+ },
+ "Manel Kape": {
+  "kept": true,
+  "qid": "Q56886154",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1993-11-14 matches",
+  "file": "ManelKape2017.png",
+  "license": "CC BY 3.0"
+ },
+ "Manon Fiorot": {
+  "kept": true,
+  "qid": "Q106358942",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1990-02-17 matches",
+  "file": "MANON FIOROT ET ALDRIC CASSATA, LE COUPLE GOAL DU MMA - MMA EXTRA ROUND -22 - YouTube - 0-28-31 (cropped).jpg",
+  "license": "CC BY 3.0"
+ },
+ "Marc Diakiese": {
+  "kept": true,
+  "qid": "Q26250955",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1993-03-16 matches",
+  "file": "Marc Diakese UFC Fight Night 160 in Copenhagen.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Marc-Andre Barriault": {
+  "kept": true,
+  "qid": "Q65954962",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1990-02-18 matches",
+  "file": "Marc-André Barriault.png",
+  "license": "CC BY 3.0"
+ },
+ "Marcin Held": {
+  "kept": true,
+  "qid": "Q6757213",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1992-01-18 matches",
+  "file": "Marcin Held.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Marcos Rogerio de Lima": {
+  "kept": true,
+  "qid": "Q18685656",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1985-06-25 matches",
+  "file": "Marcos Rogerio Pezao de Lima.jpg",
+  "license": "CC BY-SA 4.0"
+ },
+ "Marcus Brimage": {
+  "kept": true,
+  "qid": "Q6758054",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1985-04-06 matches",
+  "file": "Marcus Brimage enjoying his first Brunch in Fort Lauderdale, FL- 2013-10-12 12-23.jpg",
+  "license": "CC BY-SA 3.0"
+ },
+ "Marcus Davis": {
+  "kept": true,
+  "qid": "Q3246556",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1973-08-24 matches",
+  "file": "Marcus Davis UFC 80.JPG",
+  "license": "CC BY-SA 3.0"
+ },
+ "Marcus LeVesseur": {
+  "kept": true,
+  "qid": "Q6758281",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1982-07-17 matches",
+  "file": "091218-Marcus-LeVesseur.jpg",
+  "license": "CC BY-SA 3.0"
+ },
+ "Mark Hunt": {
+  "kept": true,
+  "qid": "Q714678",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1974-03-23 matches",
+  "file": "Mark Hunt on 22 November 2007.jpg",
+  "license": "CC BY-SA 3.0"
+ },
+ "Mark Madsen": {
+  "kept": true,
+  "qid": "Q6768700",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1984-09-23 matches",
+  "file": "Mark Madsen 2016-08-14.jpg",
+  "license": "CC BY 4.0"
+ },
+ "Mark Munoz": {
+  "kept": true,
+  "qid": "Q642248",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1978-02-09 matches",
+  "file": "SF UFC Mark Munoz Interview - YouTube - 3-23 (cropped).jpg",
+  "license": "CC BY 3.0"
+ },
+ "Mark Striegl": {
+  "kept": true,
+  "qid": "Q6769887",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1988-06-23 matches",
+  "file": "Mark Striegl.jpg",
+  "license": "CC BY-SA 3.0"
+ },
+ "Marlon Moraes": {
+  "kept": true,
+  "qid": "Q15731012",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1988-04-26 matches",
+  "file": "Marlon Moraes.jpg",
+  "license": "CC BY-SA 4.0"
+ },
+ "Marlon Vera": {
+  "kept": true,
+  "qid": "Q18704247",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1992-12-02 matches",
+  "file": "Marlon \"Chito\" Vera 2019.jpg",
+  "license": "CC BY-SA 2.0"
+ },
+ "Martin Kampmann": {
+  "kept": true,
+  "qid": "Q1361780",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1982-04-17 matches",
+  "file": "Martin Kampman talks dream fight with GSP, next Dane in UFC MORE - 0-0-00 (cropped).jpg",
+  "license": "CC BY 3.0"
+ },
+ "Martin Svensson": {
+  "kept": true,
+  "qid": "Q6198861",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1985-04-25 matches",
+  "file": "Martin Svensson MMA.jpg",
+  "license": "CC BY-SA 3.0"
+ },
+ "Marvin Vettori": {
+  "kept": true,
+  "qid": "Q26509559",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1993-09-20 matches",
+  "file": "Marvin Vettori La Gazzetta dello Sport 2025.png",
+  "license": "CC BY 3.0"
+ },
+ "Mateusz Gamrot": {
+  "kept": true,
+  "qid": "Q19521996",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1990-12-11 matches",
+  "file": "Mateusz Gamrot.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Mats Nilsson": {
+  "kept": true,
+  "qid": "Q6011200",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1983-12-05 matches",
+  "file": "Mats Nilsson MMA Fighter.JPG",
+  "license": "CC0"
+ },
+ "Matt Bessette": {
+  "kept": true,
+  "qid": "Q16199127",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1984-12-28 matches",
+  "file": "Matt Bessette.jpg",
+  "license": "CC BY-SA 4.0"
+ },
+ "Matt Brown": {
+  "kept": true,
+  "qid": "Q3558605",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1981-01-10 matches",
+  "file": "Mattbrown.jpg",
+  "license": "CC BY-SA 3.0"
+ },
+ "Matt Frevola": {
+  "kept": true,
+  "qid": "Q51140985",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1990-06-11 matches",
+  "file": "Matt Frevola - post fight interview at UFC 230.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Matt Hughes": {
+  "kept": true,
+  "qid": "Q455763",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1973-10-13 matches",
+  "file": "Matt Hughes (cropped).png",
+  "license": "CC BY 2.0"
+ },
+ "Matt Mitrione": {
+  "kept": true,
+  "qid": "Q859780",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1978-07-15 matches",
+  "file": "Matt Mitrione.jpg",
+  "license": "Public domain"
+ },
+ "Matt Serra": {
+  "kept": true,
+  "qid": "Q968201",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1974-06-02 matches",
+  "file": "Matt Serra 2007.png",
+  "license": "CC BY 2.0"
+ },
+ "Matt Wiman": {
+  "kept": true,
+  "qid": "Q11340521",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1983-09-19 matches",
+  "file": "Matt Wiman thumbnail.jpg",
+  "license": "CC BY-SA 4.0"
+ },
+ "Matthew Riddle": {
+  "kept": true,
+  "qid": "Q3867244",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1986-01-14 matches",
+  "file": "Riddle3 (cropped).jpg",
+  "license": "CC BY-SA 4.0"
+ },
+ "Mauricio Rua": {
+  "kept": true,
+  "qid": "Q447881",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1981-11-25 matches",
+  "file": "MauricioRua.png",
+  "license": "CC BY-SA 2.0"
+ },
+ "Mauricio Ruffy": {
+  "kept": true,
+  "qid": "Q131228114",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1996-06-17 matches",
+  "file": "UFC Freedom 250 press conference at the Lincoln Memorial in Washington, D.C., Friday, June 12, 2026 - 22(cropped).jpg",
+  "license": "Public domain"
+ },
+ "Max Holloway": {
+  "kept": true,
+  "qid": "Q6794874",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1991-12-04 matches",
+  "file": "Blue Angels' VIP Rider Max Holloway (1) (cropped).jpg",
+  "license": "Public domain"
+ },
+ "Maycee Barber": {
+  "kept": true,
+  "qid": "Q58454724",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1998-05-18 matches",
+  "file": "Maycee Barber (cropped).png",
+  "license": "CC BY 4.0"
+ },
+ "Megan Anderson": {
+  "kept": true,
+  "qid": "Q24006756",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1990-02-11 matches",
+  "file": "Megan Anderson at UFC 232.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Mehdi Baghdad": {
+  "kept": true,
+  "qid": "Q24702875",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1985-04-13 matches",
+  "file": "Mehdi Baghdad.jpg",
+  "license": "CC BY-SA 4.0"
+ },
+ "Melvin Guillard": {
+  "kept": true,
+  "qid": "Q2481780",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1983-03-30 matches",
+  "file": "Melvinguillard.jpg",
+  "license": "CC BY-SA 3.0"
+ },
+ "Merab Dvalishvili": {
+  "kept": true,
+  "qid": "Q48471377",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1991-01-10 matches",
+  "file": "Merab Dvalishvili at UFC 316 (cropped).jpg",
+  "license": "Public domain"
+ },
+ "Michael Bisping": {
+  "kept": true,
+  "qid": "Q973762",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1979-02-28 matches",
+  "file": "Michael Bisping.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Michael Chandler": {
+  "kept": true,
+  "qid": "Q614630",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1986-04-24 matches",
+  "file": "MichaelChandler0523 (cropped).jpg",
+  "license": "CC BY-SA 2.0"
+ },
+ "Michael Chiesa": {
+  "kept": true,
+  "qid": "Q6829235",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1987-12-07 matches",
+  "file": "Michael Chiesa at UFC 232.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Michael Johnson": {
+  "kept": true,
+  "qid": "Q4896337",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1986-06-04 matches",
+  "file": "Michael Johnson 2018.jpg",
+  "license": "CC BY-SA 4.0"
+ },
+ "Michael Morales": {
+  "kept": true,
+  "qid": "Q115298767",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1999-06-24 matches",
+  "file": "Michael Morales. QUITO, 27 DE MAYO DEL 2025 (cropped).jpg",
+  "license": "Public domain"
+ },
+ "Michael Page": {
+  "kept": true,
+  "qid": "Q6833334",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1987-04-07 matches",
+  "file": "Michael Venom Page.png",
+  "license": "CC0"
+ },
+ "Michelle Waterson": {
+  "kept": true,
+  "qid": "Q6837288",
+  "confidence": "MEDIUM",
+  "match": "pass 1: occupation pool, exact name; roster has no DOB to compare",
+  "file": "Michelle Waterson smiling UFC 229.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Miesha Tate": {
+  "kept": true,
+  "qid": "Q1138101",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1986-08-18 matches",
+  "file": "MIESHA TATE BREAKS DOWN CONOR MCGREGOR VS KHABIB NURMAGOMEDOV UFC 229 - YouTube - 0-46 (cropped).jpg",
+  "license": "CC BY 3.0"
+ },
+ "Mike Brown": {
+  "kept": true,
+  "qid": "Q2757687",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1975-09-08 matches",
+  "file": "Mike Brown WEC 51.jpg",
+  "license": "CC BY-SA 3.0"
+ },
+ "Mike Davis": {
+  "kept": true,
+  "qid": "Q97186201",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1992-10-07 matches",
+  "file": "Mike Davis at Vyralcon 2022 (3) (cropped).jpg",
+  "license": "CC BY 2.0"
+ },
+ "Mike Grundy": {
+  "kept": true,
+  "qid": null,
+  "confidence": "COMMONS",
+  "match": "commons title search: exact name in \"Mike Grundy at UFC Fight Night 147 in London.jpg\", combat-sports category/description",
+  "file": "Mike Grundy at UFC Fight Night 147 in London.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Mike Jackson": {
+  "kept": false,
+  "why": "rejected in review: grainy, face unreadable"
+ },
+ "Mike Malott": {
+  "kept": true,
+  "qid": "Q108332236",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1991-11-07 matches",
+  "file": "Mike-malott-2023-ufc-fighter-canada.png",
+  "license": "CC BY-SA 4.0"
+ },
+ "Mike Perry": {
+  "kept": true,
+  "qid": "Q27749823",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1991-09-15 matches",
+  "file": "ED8A3538.jpg",
+  "license": "CC BY-SA 4.0"
+ },
+ "Mike Pyle": {
+  "kept": true,
+  "qid": "Q6848480",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1975-09-18 matches",
+  "file": "UFC 160 Mike Pyle Post Fight Interview - YouTube - 0-4-46 (cropped).jpg",
+  "license": "CC BY 3.0"
+ },
+ "Mike Rio": {
+  "kept": true,
+  "qid": "Q6848578",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1981-07-06 matches",
+  "file": "Mike Picture Photo by Annette Rodriguez.jpg",
+  "license": "CC BY-SA 3.0"
+ },
+ "Mike Swick": {
+  "kept": false,
+  "why": "rejected in review: face turned down and obscured"
+ },
+ "Mirko Cro Cop": {
+  "kept": true,
+  "qid": "Q354790",
+  "confidence": "MEDIUM",
+  "match": "pass 1: occupation pool, exact name; roster has no DOB to compare",
+  "file": "Mirko Cro Cop.png",
+  "license": "CC BY 3.0"
+ },
+ "Misha Cirkunov": {
+  "kept": true,
+  "qid": "Q23007951",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1987-02-27 matches",
+  "file": "Misha Cirkunov (photo by Todd Prescott).jpg",
+  "license": "CC BY 4.0"
+ },
+ "Molly McCann": {
+  "kept": true,
+  "qid": "Q64875539",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1990-05-04 matches",
+  "file": "Molly McCann 2018.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Montana De La Rosa": {
+  "kept": true,
+  "qid": "Q47502989",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1995-02-14 matches",
+  "file": "Montana De La Rosa on MMAnytt.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Montel Jackson": {
+  "kept": true,
+  "qid": null,
+  "confidence": "COMMONS",
+  "match": "commons title search: exact name in \"Montel Jackson at UFC 232.jpg\", combat-sports category/description",
+  "file": "Montel Jackson at UFC 232.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Montserrat Conejo": {
+  "kept": true,
+  "qid": null,
+  "confidence": "COMMONS",
+  "match": "commons title search: exact name in \"Montserrat 'Conejo' Ruiz.png\", combat-sports category/description",
+  "file": "Montserrat 'Conejo' Ruiz.png",
+  "license": "CC BY 3.0"
+ },
+ "Montserrat Conejo Ruiz": {
+  "kept": true,
+  "qid": null,
+  "confidence": "COMMONS",
+  "match": "commons title search: exact name in \"Montserrat 'Conejo' Ruiz.png\", combat-sports category/description",
+  "file": "Montserrat 'Conejo' Ruiz.png",
+  "license": "CC BY 3.0"
+ },
+ "Morgan Charriere": {
+  "kept": true,
+  "qid": "Q65123042",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1995-10-26 matches",
+  "file": "MorganCharriereCW109.jpg",
+  "license": "CC BY-SA 4.0"
+ },
+ "Mounir Lazzez": {
+  "kept": true,
+  "qid": "Q60711351",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1987-11-16 matches",
+  "file": "Mounir lazzez VS Dmitrijs Homjakovs.jpg",
+  "license": "CC BY-SA 4.0"
+ },
+ "Movsar Evloev": {
+  "kept": true,
+  "qid": "Q47453148",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1994-02-11 matches",
+  "file": "Movsar Evloev M-1 Challenge 2018.jpg",
+  "license": "CC BY 4.0"
+ },
+ "Muhammad Mokaev": {
+  "kept": true,
+  "qid": "Q109492182",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 2000-07-30 matches",
+  "file": "Возвращение на родину Мухаммад Мокаев ЛЮДИ СПОРТА 1-20.png",
+  "license": "CC BY-SA 3.0"
+ },
+ "Muslim Salikhov": {
+  "kept": true,
+  "qid": "Q6942961",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1984-06-09 matches",
+  "file": "Muslim Salikhov.png",
+  "license": "CC BY 3.0"
+ },
+ "Nadia Kassem": {
+  "kept": true,
+  "qid": "Q32538232",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1995-11-15 matches",
+  "file": "Nadia Kassem at UFC 234.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Nassourdine Imavov": {
+  "kept": true,
+  "qid": null,
+  "confidence": "COMMONS",
+  "match": "commons title search: exact name in \"Nassourdine Imavov 2024.png\", combat-sports category/description",
+  "file": "Nassourdine Imavov 2024.png",
+  "license": "CC BY 3.0"
+ },
+ "Natalia Silva": {
+  "kept": true,
+  "qid": "Q121898011",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1997-02-03 matches",
+  "file": "Natália Silva 2025.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Natan Levy": {
+  "kept": true,
+  "qid": "Q101460620",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1991-09-30 matches",
+  "file": "P1940546-2 (cropped).jpg",
+  "license": "CC BY-SA 4.0"
+ },
+ "Nate Diaz": {
+  "kept": true,
+  "qid": "Q2698008",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1985-04-16 matches",
+  "file": "Nate Diaz 2009.jpg",
+  "license": "Public domain"
+ },
+ "Nate Marquardt": {
+  "kept": true,
+  "qid": "Q2704820",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1979-04-20 matches",
+  "file": "Nate-Marquardt.jpg",
+  "license": "CC BY-SA 3.0"
+ },
+ "Nate Quarry": {
+  "kept": true,
+  "qid": "Q4355637",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1972-03-18 matches",
+  "file": "Nate Quarry.png",
+  "license": "CC BY-SA 3.0"
+ },
+ "Nathaniel Wood": {
+  "kept": true,
+  "qid": null,
+  "confidence": "COMMONS",
+  "match": "commons title search: exact name in \"Nathaniel Wood Cage Warriors belt 02062017.jpg\", combat-sports category/description",
+  "file": "Nathaniel Wood Cage Warriors belt 02062017.jpg",
+  "license": "CC BY-SA 4.0"
+ },
+ "Neil Magny": {
+  "kept": true,
+  "qid": "Q15987654",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1987-08-03 matches",
+  "file": "Neil Magny.jpg",
+  "license": "Public domain"
+ },
+ "Neil Seery": {
+  "kept": true,
+  "qid": "Q17403081",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1979-08-30 matches",
+  "file": "Neil Seery - Wheels120715.png",
+  "license": "CC BY-SA 4.0"
+ },
+ "Nicco Montano": {
+  "kept": true,
+  "qid": "Q43444547",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1988-12-16 matches",
+  "file": "Nicco Montano.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Nick Diaz": {
+  "kept": true,
+  "qid": "Q919177",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1983-08-02 matches",
+  "file": "Nick Diaz 2009.jpg",
+  "license": "Public domain"
+ },
+ "Nicolas Dalby": {
+  "kept": true,
+  "qid": "Q20080409",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1984-11-16 matches",
+  "file": "Nicolas Dalby at UFC Fight Night 160 in Copenhagen.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Nik Lentz": {
+  "kept": true,
+  "qid": "Q4189685",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1984-08-13 matches",
+  "file": "Nik Lentz at UFC 229.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Niklas Backstrom": {
+  "kept": true,
+  "qid": "Q16945176",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1989-08-22 matches",
+  "file": "Niklas Backstrom wikipedia.jpg",
+  "license": "CC BY-SA 3.0"
+ },
+ "Nina Milosevic": {
+  "kept": true,
+  "qid": null,
+  "confidence": "COMMONS",
+  "match": "commons title search: exact name in \"Nina Milošević (SLO) 2015.jpg\", combat-sports category/description",
+  "file": "Nina Milošević (SLO) 2015.jpg",
+  "license": "CC BY 2.0"
+ },
+ "Noad Lahat": {
+  "kept": true,
+  "qid": "Q17505313",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1984-06-08 matches",
+  "file": "Noad Lahat.jpg",
+  "license": "CC BY-SA 4.0"
+ },
+ "Norma Dumont": {
+  "kept": true,
+  "qid": "Q106950074",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1990-10-01 matches",
+  "file": "Norma Dumont OF.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Norman Parke": {
+  "kept": true,
+  "qid": "Q13582660",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1986-12-22 matches",
+  "file": "Norman Parke.png",
+  "license": "CC BY 3.0"
+ },
+ "Nursulton Ruziboev": {
+  "kept": true,
+  "qid": "Q109493783",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1993-11-19 matches",
+  "file": "NursultonRuziboev2024.png",
+  "license": "CC BY 3.0"
+ },
+ "Oli Thompson": {
+  "kept": true,
+  "qid": "Q7086769",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1980-01-02 matches",
+  "file": "Oli Thompson.JPG",
+  "license": "CC BY-SA 3.0"
+ },
+ "Oskar Piechota": {
+  "kept": true,
+  "qid": "Q24430795",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1990-01-24 matches",
+  "file": "Oskar Piechota.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Ovince Saint Preux": {
+  "kept": true,
+  "qid": "Q7114164",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1983-04-08 matches",
+  "file": "Ovince Saint Preux.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Paddy Holohan": {
+  "kept": true,
+  "qid": "Q18387050",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1988-05-03 matches",
+  "file": "Paddy Holohan, 2019.jpg",
+  "license": "CC BY 2.0"
+ },
+ "Paddy Pimblett": {
+  "kept": true,
+  "qid": "Q57409501",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1995-01-03 matches",
+  "file": "UFC Star Paddy The Baddy Pimblett tells his story (cropped).jpg",
+  "license": "CC BY 3.0"
+ },
+ "Paige VanZant": {
+  "kept": true,
+  "qid": "Q10343583",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1994-03-26 matches",
+  "file": "Paige VanZant 180428-D-SW162-1542 (cropped).jpg",
+  "license": "CC BY 2.0"
+ },
+ "Pannie Kianzad": {
+  "kept": true,
+  "qid": "Q16595472",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1991-12-08 matches",
+  "file": "Pannie Kianzad on MMAnytt.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Pat Barry": {
+  "kept": true,
+  "qid": "Q1101480",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1979-07-07 matches",
+  "file": "Pat Barry weighs in UFC 115.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Patrick Cote": {
+  "kept": true,
+  "qid": "Q645863",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1980-02-29 matches",
+  "file": "Patrick Côté (fighter).jpg",
+  "license": "CC BY-SA 3.0"
+ },
+ "Paul Felder": {
+  "kept": true,
+  "qid": "Q18764053",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1984-04-25 matches",
+  "file": "Paul Felder (cropped).jpg",
+  "license": "Public domain"
+ },
+ "Paul Kelly": {
+  "kept": true,
+  "qid": "Q7151731",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1984-09-12 matches",
+  "file": "Paul Kelly 2025.png",
+  "license": "CC BY 4.0"
+ },
+ "Paul Taylor": {
+  "kept": true,
+  "qid": "Q7153941",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1979-12-15 matches",
+  "file": "Paul Taylor (fighter).jpg",
+  "license": "Public domain"
+ },
+ "Paulo Costa": {
+  "kept": true,
+  "qid": "Q30108735",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1991-04-21 matches",
+  "file": "Borrachinha galo.jpg",
+  "license": "CC BY-SA 4.0"
+ },
+ "Paulo Thiago": {
+  "kept": false,
+  "why": "several faces; not approved in review"
+ },
+ "Pawel Pawlak": {
+  "kept": true,
+  "qid": "Q16586779",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1989-02-08 matches",
+  "file": "Paweł Pawlak (zawodnik MMA).png",
+  "license": "CC BY 3.0"
+ },
+ "Pedro Munhoz": {
+  "kept": true,
+  "qid": "Q17518893",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1986-09-07 matches",
+  "file": "Dominick Cruz vs. Pedro Munhoz - UFC 269 weigh-in & staredown - YouTube - 0-49 (cropped).jpg",
+  "license": "CC BY 3.0"
+ },
+ "Peter Sobotta": {
+  "kept": true,
+  "qid": "Q92022",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1987-01-11 matches",
+  "file": "Peter Sobotta.jpg",
+  "license": "CC BY 2.0"
+ },
+ "Phil Baroni": {
+  "kept": true,
+  "qid": "Q3378740",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1976-04-16 matches",
+  "file": "PhilBaroni.jpg",
+  "license": "CC BY 2.0"
+ },
+ "Phil Davis": {
+  "kept": true,
+  "qid": "Q576360",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1984-09-25 matches",
+  "file": "UFC fighter visits Freedom Crossing 121116-A-UK859-003 (cropped).jpg",
+  "license": "Public domain"
+ },
+ "Polyana Viana": {
+  "kept": true,
+  "qid": "Q48468666",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1992-06-14 matches",
+  "file": "Polyana Viana OF 02.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Puja Tomar": {
+  "kept": true,
+  "qid": null,
+  "confidence": "COMMONS",
+  "match": "commons title search: exact name in \"Puja Tomar 2024.png\", combat-sports category/description",
+  "file": "Puja Tomar 2024.png",
+  "license": "CC BY 3.0"
+ },
+ "Rachael Ostovich": {
+  "kept": true,
+  "qid": null,
+  "confidence": "COMMONS",
+  "match": "commons title search: exact name in \"Rachael Ostovich poses after weigh-in.jpg\", combat-sports category/description",
+  "file": "Rachael Ostovich poses after weigh-in.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Rafael Fiziev": {
+  "kept": true,
+  "qid": "Q75012682",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1993-03-05 matches",
+  "file": "Fiziev 2023.png",
+  "license": "CC BY 3.0"
+ },
+ "Rafaello Oliveira": {
+  "kept": true,
+  "qid": "Q7282392",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1982-01-26 matches",
+  "file": "Rafaello Oliveira.jpg",
+  "license": "Public domain"
+ },
+ "Ramazan Temirov": {
+  "kept": true,
+  "qid": "Q112790841",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1997-01-31 matches",
+  "file": "Ramazan Temurov 2.jpg",
+  "license": "CC BY-SA 4.0"
+ },
+ "Ramsey Nijem": {
+  "kept": true,
+  "qid": "Q7290238",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1988-04-01 matches",
+  "file": "Ramseynijem.jpg",
+  "license": "CC BY-SA 3.0"
+ },
+ "Randy Couture": {
+  "kept": true,
+  "qid": "Q352733",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1963-06-22 matches",
+  "file": "Randy Couture by Gage Skidmore.jpg",
+  "license": "CC BY-SA 3.0"
+ },
+ "Raoni Barcelos": {
+  "kept": true,
+  "qid": "Q20028301",
+  "confidence": "COMMONS",
+  "match": "commons title search: exact name in \"Photo of Raoni Barcelos.png\", combat-sports category/description",
+  "file": "Photo of Raoni Barcelos.png",
+  "license": "CC0"
+ },
+ "Raquel Pennington": {
+  "kept": true,
+  "qid": "Q15987788",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1988-09-05 matches",
+  "file": "Raquel Pennington UFC (29214885452) (cropped).jpg",
+  "license": "CC BY-SA 2.0"
+ },
+ "Rashad Evans": {
+  "kept": true,
+  "qid": "Q508652",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1979-09-25 matches",
+  "file": "RashadEvans.png",
+  "license": "CC BY-SA 3.0"
+ },
+ "Raul Rosas Jr.": {
+  "kept": true,
+  "qid": "Q124527491",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 2004-10-08 matches",
+  "file": "Raúl Rosas Jr. 2024.png",
+  "license": "CC BY 3.0"
+ },
+ "Raulian Paiva": {
+  "kept": true,
+  "qid": "Q87074053",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1995-10-17 matches",
+  "file": "Raulian Paiva at UFC 269.jpg",
+  "license": "CC BY-SA 4.0"
+ },
+ "Reinier de Ridder": {
+  "kept": true,
+  "qid": "Q103783008",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1990-09-07 matches",
+  "file": "Reinier post training 2.jpg",
+  "license": "CC BY-SA 4.0"
+ },
+ "Renan Barao": {
+  "kept": true,
+  "qid": null,
+  "confidence": "COMMONS",
+  "match": "commons title search: exact name in \"UFC 173 Renan Barao Media Day Interview - YouTube - 0-0-10 (cropped).jpg\", combat-sports category/description",
+  "file": "UFC 173 Renan Barao Media Day Interview - YouTube - 0-0-10 (cropped).jpg",
+  "license": "CC BY 3.0"
+ },
+ "Renato Moicano": {
+  "kept": true,
+  "qid": null,
+  "confidence": "COMMONS",
+  "match": "commons title search: exact name in \"Renato Moicano 2024.png\", combat-sports category/description",
+  "file": "Renato Moicano 2024.png",
+  "license": "CC BY 3.0"
+ },
+ "Renzo Gracie": {
+  "kept": true,
+  "qid": "Q2735261",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1967-03-11 matches",
+  "file": "RenzoCropped.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Reza Madadi": {
+  "kept": true,
+  "qid": "Q5017304",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1978-06-20 matches",
+  "file": "Reza Madadi.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Rhys McKee": {
+  "kept": true,
+  "qid": "Q138750827",
+  "confidence": "COMMONS",
+  "match": "commons title search: exact name in \"Rhys McKee at CAGE Warrior 100.jpg\", combat-sports category/description",
+  "file": "Rhys McKee at CAGE Warrior 100.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Rich Franklin": {
+  "kept": true,
+  "qid": "Q557704",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1974-10-05 matches",
+  "file": "RichFranklin2.png",
+  "license": "Public domain"
+ },
+ "Ricky Simon": {
+  "kept": true,
+  "qid": "Q61663571",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1992-08-31 matches",
+  "file": "Ricky Simón 2019.jpg",
+  "license": "Public domain"
+ },
+ "Rin Nakai": {
+  "kept": true,
+  "qid": "Q3242787",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1986-10-22 matches",
+  "file": "Annotation 2019-10-07 113506.png",
+  "license": "CC BY 3.0"
+ },
+ "Rinat Fakhretdinov": {
+  "kept": true,
+  "qid": "Q97664397",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1991-09-28 matches",
+  "file": "Akhmetshin, Kapkaev and Fakhretdinov (2021-02-04) 02.jpg",
+  "license": "CC BY 4.0"
+ },
+ "Rob Font": {
+  "kept": true,
+  "qid": "Q17466006",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1987-06-25 matches",
+  "file": "FONT.jpg",
+  "license": "CC BY-SA 4.0"
+ },
+ "Robbie Lawler": {
+  "kept": true,
+  "qid": "Q4900149",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1982-03-20 matches",
+  "file": "Robbie Lawler.png",
+  "license": "CC BY 3.0"
+ },
+ "Robert Whittaker": {
+  "kept": true,
+  "qid": "Q4845777",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1990-12-20 matches",
+  "file": "Robert whittaker.jpg",
+  "license": "CC0"
+ },
+ "Roberto Soldic": {
+  "kept": true,
+  "qid": "Q46706516",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1995-01-25 matches",
+  "file": "Roberto Soldić.png",
+  "license": "CC BY-SA 3.0"
+ },
+ "Rodolfo Vieira": {
+  "kept": false,
+  "why": "several faces; not approved in review"
+ },
+ "Roger Gracie": {
+  "kept": true,
+  "qid": "Q3051931",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1981-09-26 matches",
+  "file": "RogerGracie.JPG",
+  "license": "CC BY-SA 3.0"
+ },
+ "Rolando Dy": {
+  "kept": true,
+  "qid": null,
+  "confidence": "COMMONS",
+  "match": "commons title search: exact name in \"Rolando Dy.jpg\", combat-sports category/description",
+  "file": "Rolando Dy.jpg",
+  "license": "CC BY 4.0"
+ },
+ "Roman Dolidze": {
+  "kept": true,
+  "qid": "Q64861182",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1988-07-15 matches",
+  "file": "Dolidze 2019.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Ronda Rousey": {
+  "kept": true,
+  "qid": "Q242201",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1987-02-01 matches",
+  "file": "Rousey HOF 2018 (cropped).jpg",
+  "license": "CC BY-SA 2.0"
+ },
+ "Rory MacDonald": {
+  "kept": true,
+  "qid": "Q723762",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1989-07-22 matches",
+  "file": "Redkingrorymacdonald.jpg",
+  "license": "CC BY-SA 4.0"
+ },
+ "Rory Markham": {
+  "kept": true,
+  "qid": "Q7366909",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1982-03-25 matches",
+  "file": "Rory Markham.JPG",
+  "license": "CC BY-SA 3.0"
+ },
+ "Rose Namajunas": {
+  "kept": true,
+  "qid": "Q16226725",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1992-06-29 matches",
+  "file": "Rose Namajunas.jpg",
+  "license": "CC BY-SA 4.0"
+ },
+ "Rosi Sexton": {
+  "kept": true,
+  "qid": "Q5975915",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1977-07-16 matches",
+  "file": "Rosi Sexton.jpg",
+  "license": "CC BY-SA 3.0"
+ },
+ "Ross Pearson": {
+  "kept": true,
+  "qid": "Q2756376",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1984-09-26 matches",
+  "file": "Ross Pearson.jpg",
+  "license": "Public domain"
+ },
+ "Roxanne Modafferi": {
+  "kept": true,
+  "qid": "Q7372368",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1982-09-24 matches",
+  "file": "Roxanne Modafferi on The Unknown Room.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Rustam Khabilov": {
+  "kept": true,
+  "qid": "Q4494408",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1986-11-04 matches",
+  "file": "Rustam Khabilov at UFC Fight Night 136.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Ryan Bader": {
+  "kept": true,
+  "qid": "Q2479163",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1983-06-07 matches",
+  "file": "Ryan Bader 2011.jpg",
+  "license": "CC BY-SA 2.0"
+ },
+ "Ryan Hall": {
+  "kept": true,
+  "qid": "Q7384116",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1985-02-22 matches",
+  "file": "Ryan Hall at UFC 232.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Sage Northcutt": {
+  "kept": true,
+  "qid": "Q21090267",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1996-03-01 matches",
+  "file": "Sage Northcutt.png",
+  "license": "CC BY-SA 4.0"
+ },
+ "Said Nurmagomedov": {
+  "kept": true,
+  "qid": "Q48471434",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1992-04-05 matches",
+  "file": "Said 2022.png",
+  "license": "CC BY 3.0"
+ },
+ "Salahdine Parnasse": {
+  "kept": true,
+  "qid": "Q55392509",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1997-12-04 matches",
+  "file": "ParnasseMMA2023.png",
+  "license": "CC BY 3.0"
+ },
+ "Sam Alvey": {
+  "kept": true,
+  "qid": "Q17403157",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1986-05-06 matches",
+  "file": "SamAlvey.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Santiago Ponzinibbio": {
+  "kept": true,
+  "qid": "Q20078686",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1986-09-26 matches",
+  "file": "Santiago Ponzinibbio.jpg",
+  "license": "CC BY-SA 4.0"
+ },
+ "Sarah Kaufman": {
+  "kept": true,
+  "qid": "Q2060995",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1985-09-20 matches",
+  "file": "Strikeforce Women's Welterweight Champion, Sarah Kaufman.jpg",
+  "license": "CC BY-SA 2.0"
+ },
+ "Sean Brady": {
+  "kept": true,
+  "qid": "Q98780764",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1992-11-23 matches",
+  "file": "SeanBrady.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Sean O'Malley": {
+  "kept": true,
+  "qid": "Q45189135",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1994-10-24 matches",
+  "file": "Sean O'Malley in 2024.jpg",
+  "license": "CC0"
+ },
+ "Sean Sherk": {
+  "kept": true,
+  "qid": "Q2534447",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1973-08-05 matches",
+  "file": "Sean-sherk.jpg",
+  "license": "Public domain"
+ },
+ "Sean Strickland": {
+  "kept": true,
+  "qid": "Q17180973",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1991-02-27 matches",
+  "file": "Sean Strickland at UFN 200.png",
+  "license": "CC BY-SA 4.0"
+ },
+ "Sergei Pavlovich": {
+  "kept": true,
+  "qid": "Q72386202",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1992-05-13 matches",
+  "file": "SergeiPavlovich2018.png",
+  "license": "CC BY 3.0"
+ },
+ "Sergey Khandozhko": {
+  "kept": true,
+  "qid": "Q21661135",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1992-05-19 matches",
+  "file": "Сергей Хандожко на турнире Плотформа S-70.jpg",
+  "license": "CC BY 4.0"
+ },
+ "Shamil Abdurakhimov": {
+  "kept": true,
+  "qid": null,
+  "confidence": "COMMONS",
+  "match": "commons title search: exact name in \"Shamil Abdurakhimov at UFC Fight Night 136.png\", combat-sports category/description",
+  "file": "Shamil Abdurakhimov at UFC Fight Night 136.png",
+  "license": "CC BY 3.0"
+ },
+ "Shane Burgos": {
+  "kept": true,
+  "qid": "Q30639697",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1991-03-19 matches",
+  "file": "Shane Burgos at UFC 230.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Shane Carwin": {
+  "kept": true,
+  "qid": "Q116896",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1975-01-04 matches",
+  "file": "Shane Carwin.JPG",
+  "license": "CC BY-SA 3.0"
+ },
+ "Shane Young": {
+  "kept": true,
+  "qid": null,
+  "confidence": "COMMONS",
+  "match": "commons title search: exact name in \"Shane Young post fight interview at UFC 234.jpg\", combat-sports category/description",
+  "file": "Shane Young post fight interview at UFC 234.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Shara Magomedov": {
+  "kept": true,
+  "qid": "Q123384660",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1994-05-16 matches",
+  "file": "Sharabutdin Magomedov 2024.png",
+  "license": "CC BY 3.0"
+ },
+ "Shavkat Rakhmonov": {
+  "kept": true,
+  "qid": "Q110825847",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1994-10-23 matches",
+  "file": "Shavkat Rakhmonov (cropped).jpg",
+  "license": "CC0"
+ },
+ "Shayna Baszler": {
+  "kept": true,
+  "qid": "Q5975900",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1980-08-08 matches",
+  "file": "Baszler TakeOver NOLA.jpg",
+  "license": "CC BY-SA 2.0"
+ },
+ "Sheila Gaff": {
+  "kept": true,
+  "qid": "Q7493052",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1989-12-29 matches",
+  "file": "Sheila \"the german Tank\" Gaff.jpg",
+  "license": "CC BY-SA 3.0"
+ },
+ "Sijara Eubanks": {
+  "kept": true,
+  "qid": "Q35123649",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1985-04-27 matches",
+  "file": "Sijara Eubanks after weigh in at UFC 230.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Sirwan Kakai": {
+  "kept": true,
+  "qid": "Q16945305",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1989-10-03 matches",
+  "file": "Sirwan Kakai.jpg",
+  "license": "CC BY-SA 3.0"
+ },
+ "Soa Palelei": {
+  "kept": true,
+  "qid": "Q7549736",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1977-07-12 matches",
+  "file": "Soa 'The Hulk' Palelei.jpg",
+  "license": "CC BY-SA 3.0"
+ },
+ "Song Yadong": {
+  "kept": true,
+  "qid": "Q56809033",
+  "confidence": "COMMONS",
+  "match": "commons title search: exact name in \"Song Yadong at UFC Macau.jpg\", combat-sports category/description",
+  "file": "Song Yadong at UFC Macau.jpg",
+  "license": "CC BY 4.0"
+ },
+ "Spencer Fisher": {
+  "kept": true,
+  "qid": "Q3493018",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1976-05-09 matches",
+  "file": "Spencer The King Fisher.jpg",
+  "license": "CC BY-SA 3.0 us"
+ },
+ "Stefan Struve": {
+  "kept": true,
+  "qid": "Q2095691",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1988-02-18 matches",
+  "file": "Stefan Struve with a fan (5096781392) (cropped).jpg",
+  "license": "CC BY 2.0"
+ },
+ "Stephan Bonnar": {
+  "kept": true,
+  "qid": "Q2566133",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1977-04-04 matches",
+  "file": "Stephan-bonnar-flickr-fight-launch.jpeg",
+  "license": "CC BY 2.0"
+ },
+ "Stephen Thompson": {
+  "kept": true,
+  "qid": "Q11253984",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1983-02-11 matches",
+  "file": "From cancer to company commander 130802-M-AR522-306 (cropped).jpg",
+  "license": "Public domain"
+ },
+ "Steve Garcia": {
+  "kept": true,
+  "qid": "Q18043912",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1992-05-22 matches",
+  "file": "UFC Freedom 250 press conference at the Lincoln Memorial in Washington, D.C., Friday, June 12, 2026 - 10(cropped).jpg",
+  "license": "Public domain"
+ },
+ "Stipe Miocic": {
+  "kept": true,
+  "qid": "Q40266",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1982-08-19 matches",
+  "file": "Stipebrowns4.jpg",
+  "license": "CC BY-SA 4.0"
+ },
+ "Syuri Kondo": {
+  "kept": true,
+  "qid": "Q5965720",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1989-02-08 matches",
+  "file": "Syuri in April 2024.jpg",
+  "license": "CC BY 2.0"
+ },
+ "TJ Dillashaw": {
+  "kept": true,
+  "qid": "Q7668016",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1986-02-07 matches",
+  "file": "TJ Dillashaw.png",
+  "license": "CC BY 3.0"
+ },
+ "TJ Grant": {
+  "kept": true,
+  "qid": "Q3787352",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1984-02-26 matches",
+  "file": "TJ Grant.jpg",
+  "license": "CC BY-SA 4.0"
+ },
+ "TJ Waldburger": {
+  "kept": true,
+  "qid": "Q7670531",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1988-04-25 matches",
+  "file": "Tj-waldburger.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Tai Tuivasa": {
+  "kept": true,
+  "qid": "Q30675529",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1993-03-16 matches",
+  "file": "Tai Tuivasa at UFC 234.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Takanori Gomi": {
+  "kept": false,
+  "why": "several faces; not approved in review"
+ },
+ "Tallison Teixeira": {
+  "kept": true,
+  "qid": "Q134289443",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1999-12-07 matches",
+  "file": "Tallison Teixeira 2025.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Tatiana Suarez": {
+  "kept": true,
+  "qid": "Q7688105",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1990-12-19 matches",
+  "file": "Tatiana Suarez at UFC 228.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Tatsuro Taira": {
+  "kept": true,
+  "qid": "Q108109936",
+  "confidence": "COMMONS",
+  "match": "commons title search: exact name in \"Tatsuro taira 2025.png\", combat-sports category/description",
+  "file": "Tatsuro taira 2025.png",
+  "license": "CC BY 3.0"
+ },
+ "Tatsuya Kawajiri": {
+  "kept": true,
+  "qid": "Q2605547",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1978-05-08 matches",
+  "file": "Tatsuya Kiwajiri.jpg",
+  "license": "CC BY-SA 3.0"
+ },
+ "Thales Leites": {
+  "kept": true,
+  "qid": "Q2411774",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1981-09-06 matches",
+  "file": "Thales Leites.png",
+  "license": "CC BY-SA 3.0"
+ },
+ "Thiago Alves": {
+  "kept": true,
+  "qid": "Q2697334",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1983-10-03 matches",
+  "file": "Thiago Alves.JPG",
+  "license": "CC BY-SA 3.0"
+ },
+ "Thiago Silva": {
+  "kept": false,
+  "why": "rejected in review: Commons file is a mug shot"
+ },
+ "Tim Kennedy": {
+  "kept": true,
+  "qid": "Q3991364",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1979-09-01 matches",
+  "file": "Tim Kennedy blood donor.jpg",
+  "license": "Public domain"
+ },
+ "Tito Ortiz": {
+  "kept": true,
+  "qid": "Q459809",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1975-01-23 matches",
+  "file": "Tito Ortiz.jpg",
+  "license": "Public domain"
+ },
+ "Todd Duffee": {
+  "kept": true,
+  "qid": "Q959413",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1985-12-06 matches",
+  "file": "Todd Image.jpg",
+  "license": "CC BY-SA 3.0"
+ },
+ "Tom Lawlor": {
+  "kept": true,
+  "qid": "Q7816544",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1983-05-15 matches",
+  "file": "Tomlawlormma.jpg",
+  "license": "CC BY-SA 3.0"
+ },
+ "Tomasz Drwal": {
+  "kept": true,
+  "qid": "Q7818388",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1982-01-22 matches",
+  "file": "Tomasz Drwal.JPG",
+  "license": "CC BY 3.0"
+ },
+ "Tony Ferguson": {
+  "kept": true,
+  "qid": "Q7822327",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1984-02-12 matches",
+  "file": "Tony Ferguson 2025.jpg",
+  "license": "CC0"
+ },
+ "Tracy Cortez": {
+  "kept": false,
+  "why": "rejected in review: face obscured by equipment"
+ },
+ "Travis Browne": {
+  "kept": true,
+  "qid": "Q2615294",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1982-07-17 matches",
+  "file": "UFC 170 Q&A with Luke Rockhold & Travis Browne - YouTube - 0-4-21 (cropped).jpg",
+  "license": "CC BY 3.0"
+ },
+ "Tuco Tokkos": {
+  "kept": true,
+  "qid": "Q138464562",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1990-06-30 matches",
+  "file": "Tuco Tukkos (55115751025).jpg",
+  "license": "CC BY 4.0"
+ },
+ "Tyron Woodley": {
+  "kept": true,
+  "qid": "Q2075426",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1982-04-07 matches",
+  "file": "Tyron Woodley.png",
+  "license": "CC BY 3.0"
+ },
+ "Tyson Griffin": {
+  "kept": true,
+  "qid": "Q3044125",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1984-04-20 matches",
+  "file": "Tyson Griffin.jpg",
+  "license": "CC BY-SA 3.0"
+ },
+ "Tyson Pedro": {
+  "kept": true,
+  "qid": "Q29525226",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1991-09-17 matches",
+  "file": "Tyson Pedro at UFC 234.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Ulka Sasaki": {
+  "kept": true,
+  "qid": "Q11382247",
+  "confidence": "MEDIUM",
+  "match": "pass 1: occupation pool, exact name; roster has no DOB to compare",
+  "file": "佐々木憂流迦.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Umar Nurmagomedov": {
+  "kept": true,
+  "qid": "Q56315142",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1996-01-03 matches",
+  "file": "UmarNurmagomedov.png",
+  "license": "CC BY 3.0"
+ },
+ "Uriah Hall": {
+  "kept": true,
+  "qid": "Q10388252",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1984-07-31 matches",
+  "file": "Uriah Hall at UFC 232.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Urijah Faber": {
+  "kept": true,
+  "qid": "Q2704462",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1979-05-14 matches",
+  "file": "Urijah Faber 24 July 2009.jpg",
+  "license": "CC BY 2.0"
+ },
+ "Vagner Rocha": {
+  "kept": false,
+  "why": "several faces; not approved in review"
+ },
+ "Valentina Shevchenko": {
+  "kept": true,
+  "qid": "Q4522047",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1988-03-07 matches",
+  "file": "Valentina Shevchenko 2020.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Vince Morales": {
+  "kept": true,
+  "qid": "Q96282727",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1990-11-12 matches",
+  "file": "Vince Morales.jpg",
+  "license": "CC BY-SA 4.0"
+ },
+ "Vinicius Oliveira": {
+  "kept": true,
+  "qid": "Q132012973",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1995-11-30 matches",
+  "file": "Vinicius Oliveira 2026.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Vinny Magalhaes": {
+  "kept": true,
+  "qid": "Q7932687",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1984-07-02 matches",
+  "file": "Vinny Magalhaes.png",
+  "license": "CC BY-SA 3.0"
+ },
+ "Viscardi Andrade": {
+  "kept": true,
+  "qid": "Q14495342",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1984-03-08 matches",
+  "file": "Viscarde de Andrade MMA.jpg",
+  "license": "CC BY-SA 3.0"
+ },
+ "Vitor Belfort": {
+  "kept": true,
+  "qid": "Q458716",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1977-04-01 matches",
+  "file": "Vitor belfort cropped.jpg",
+  "license": "CC BY 2.0"
+ },
+ "Vitor Petrino": {
+  "kept": true,
+  "qid": "Q125798867",
+  "confidence": "COMMONS",
+  "match": "commons title search: exact name in \"Vitor Petrino.png\", combat-sports category/description",
+  "file": "Vitor Petrino.png",
+  "license": "CC BY 4.0"
+ },
+ "Viviane Araujo": {
+  "kept": false,
+  "why": "rejected in review: action shot, face hidden by a glove"
+ },
+ "Volkan Oezdemir": {
+  "kept": true,
+  "qid": null,
+  "confidence": "COMMONS",
+  "match": "commons title search: exact name in \"Volkan Oezdemir at UFC Fight Night 153 in Stockholm, Sweden.jpg\", combat-sports category/description",
+  "file": "Volkan Oezdemir at UFC Fight Night 153 in Stockholm, Sweden.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Wanderlei Silva": {
+  "kept": true,
+  "qid": "Q458749",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1976-07-03 matches",
+  "file": "Wanderlei Cesar Silva (2006) retusche.jpg",
+  "license": "CC BY 2.0"
+ },
+ "Weili Zhang": {
+  "kept": true,
+  "qid": "Q61949317",
+  "confidence": "MEDIUM",
+  "match": "pass 1: occupation pool, exact name; roster has no DOB to compare",
+  "file": "张伟丽.png",
+  "license": "CC BY 3.0"
+ },
+ "Wilson Reis": {
+  "kept": true,
+  "qid": "Q6121270",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1985-01-06 matches",
+  "file": "WilsonGloveWeb01.jpg",
+  "license": "Public domain"
+ },
+ "Yair Rodriguez": {
+  "kept": true,
+  "qid": "Q19668247",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1992-10-06 matches",
+  "file": "Carrera con Yair \"Pantera\" Rodríguez -i---i- (30657689682) cropped.jpg",
+  "license": "CC0"
+ },
+ "Yoel Romero": {
+  "kept": true,
+  "qid": "Q941268",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1977-04-30 matches",
+  "file": "Yoel Romero.jpg",
+  "license": "CC0"
+ },
+ "Yoshihiro Akiyama": {
+  "kept": true,
+  "qid": "Q487335",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1975-07-29 matches",
+  "file": "추성훈.jpg",
+  "license": "CC BY-SA 4.0"
+ },
+ "Yousri Belgaroui": {
+  "kept": true,
+  "qid": "Q27063332",
+  "confidence": "COMMONS",
+  "match": "commons title search: exact name in \"Yousri Belgaroui.jpg\", combat-sports category/description",
+  "file": "Yousri Belgaroui.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Yves Edwards": {
+  "kept": false,
+  "why": "several faces; not approved in review"
+ },
+ "Zabit Magomedsharipov": {
+  "kept": true,
+  "qid": "Q23656188",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1991-03-01 matches",
+  "file": "Zabit Magomedsharipov at UFC Fight Night 136.jpg",
+  "license": "CC BY 3.0"
+ },
+ "Zarrukh Adashev": {
+  "kept": false,
+  "why": "rejected in review: action shot, face hidden"
+ },
+ "Zhalgas Zhumagulov": {
+  "kept": true,
+  "qid": "Q107485020",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1988-08-29 matches",
+  "file": "Жалгас Жумагулов - сидит во дворе .jpg",
+  "license": "CC BY-SA 4.0"
+ },
+ "Zhang Weili": {
+  "kept": true,
+  "qid": "Q61949317",
+  "confidence": "HIGH",
+  "match": "pass 1: occupation pool, exact name; DOB 1989-08-13 matches",
+  "file": "张伟丽.png",
+  "license": "CC BY 3.0"
+ }
+}

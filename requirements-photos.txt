@@ -1,0 +1,5 @@
+# Fighter photo sourcing (scripts/fighter_photos/source_photos.py) -- not needed to build the app.
+requests==2.34.2
+pillow==13.0.0
+numpy==2.5.4
+opencv-python-headless==5.0.0.93
