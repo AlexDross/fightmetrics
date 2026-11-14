@@ -205,6 +205,8 @@ import SaveStatus from './store/SaveStatus.jsx';
 import { useConfirm } from './ui/ConfirmDialog.jsx';
 import { SectionLabel, StatTile, Tag } from './ui/kit.jsx';
 import NextCard from './home/NextCard.jsx';
+import FighterAvatar from './ui/FighterAvatar.jsx';
+import PhotoCredits from './ui/PhotoCredits.jsx';
 
 // The bundled snapshot: the dataset in local (unconfigured) mode, and the
 // fallback the document store shows while loading or when the server is
@@ -4469,7 +4471,9 @@ const FighterPanel = ({ f, setF, color, ph, allFighters, fA, fB, eventDate }) =>
               is dropped from the full-profile disclosure since it would be
               a word-for-word repeat of this block once expanded. */}
           <div className="flex items-center justify-between gap-3">
-            <div className="min-w-0">
+            <div className="min-w-0 flex items-center gap-3">
+              <FighterAvatar name={f.FIGHTER} size={48} />
+              <div className="min-w-0">
               <p className={`text-xs font-bold ${tc}`}>
                 {color === 'blue' ? 'Fighter A' : 'Fighter B'}
               </p>
@@ -4479,6 +4483,7 @@ const FighterPanel = ({ f, setF, color, ph, allFighters, fA, fB, eventDate }) =>
               <p className="text-muted text-xs mt-0.5">
                 {f.WEIGHT_CLASS} · {f.RECORD}
               </p>
+              </div>
             </div>
             <button
               type="button"
@@ -6545,7 +6550,9 @@ function ScoutProfile({ allFighters }) {
           {/* Hero */}
           <div className="bg-surface border border-line-strong rounded-xl p-6">
             <div className="flex items-start justify-between mb-4">
-              <div>
+              <div className="flex items-start gap-4 min-w-0">
+              <FighterAvatar name={fighter.FIGHTER} size={72} className="hidden sm:inline-flex" />
+              <div className="min-w-0">
                 <h3 className="text-3xl font-black text-white">
                   {fighter.FIGHTER}
                 </h3>
@@ -6637,6 +6644,7 @@ function ScoutProfile({ allFighters }) {
                     <FormDots form={recentForm(fh)} />
                   </div>
                 )}
+              </div>
               </div>
               <div className="text-right">
                 <p className="text-6xl font-black text-red-500">
@@ -9094,6 +9102,8 @@ function InfoTab() {
           </ul>
         </div>
       </div>
+
+      <PhotoCredits />
 
       {/* Section 5 — Account (Stage 7 Gate 4). Renders nothing at all unless
           Supabase is configured, so the current build is visually unchanged. */}

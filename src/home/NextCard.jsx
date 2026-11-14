@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { resolveFrozenDecisionView } from '../domain/betting';
 import { Card, SectionLabel, Tag } from '../ui/kit.jsx';
+import FighterAvatar from '../ui/FighterAvatar.jsx';
 
 /**
  * Home's "next card" panel: the nearest pending event in Upcoming, every
@@ -84,7 +85,12 @@ function FightRow({ entry }) {
         bet ? 'bg-good/8 border-l-2 border-good' : 'border-l-2 border-transparent'
       }`}
     >
-      <div className="min-w-0">
+      <div className="min-w-0 flex items-center gap-3">
+        <div className="hidden sm:flex -space-x-2 shrink-0">
+          <FighterAvatar name={entry.fighterA} size={30} />
+          <FighterAvatar name={entry.fighterB} size={30} />
+        </div>
+        <div className="min-w-0">
         <p className="text-sm font-semibold text-primary sm:truncate">
           {entry.fighterA} <span className="text-muted font-normal">vs</span> {entry.fighterB}
         </p>
@@ -92,6 +98,7 @@ function FightRow({ entry }) {
           {title && <Tag tone="accent">TITLE</Tag>}
           {[division, rounds ? `${rounds} rds` : null].filter(Boolean).join(' · ')}
         </p>
+        </div>
       </div>
 
       <div className="col-start-1 text-sm sm:col-start-2 sm:row-start-1 sm:text-right">

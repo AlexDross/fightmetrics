@@ -148,7 +148,7 @@ export default defineConfig({
           const file = id.split('?')[0];
           if (/[\\/]src[\\/]fightHistory\.js$/.test(file)) return 'fight-history';
           if (/[\\/]src[\\/](roiData|upcomingData|propPicksData|parlayData)\.js$/.test(file)) return 'ledger';
-          if (/[\\/]src[\\/](fightersData|eloModule|cardioModule|rankHistory|rankingsData|fighterBirthdates|prospectsData|sourceManifest)\.js$/.test(file)) return 'fighter-data';
+          if (/[\\/]src[\\/](fightersData|eloModule|cardioModule|rankHistory|rankingsData|fighterBirthdates|prospectsData|sourceManifest|fighterPhotos)\.js$/.test(file)) return 'fighter-data';
           if (!file.includes('node_modules')) return undefined;
           if (/node_modules[\\/](recharts|d3-[^\\/]+|victory-vendor|decimal\.js-light|react-smooth|recharts-scale)[\\/]/.test(file)) return 'charts';
           if (/node_modules[\\/]@supabase[\\/]/.test(file)) return 'supabase';
