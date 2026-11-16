@@ -2092,6 +2092,7 @@ export const FIGHTER_BIRTHDATES = Object.freeze({
   "Sam Sicilia": "1986-02-01",
   "Sam Stout": "1984-04-23",
   "Sammy Morgan": "1981-09-28",
+  "Samuel Sanches": "2003-01-28",
   "Samy Schiavo": "1975-12-24",
   "Sangwook Kim": "1993-10-17",
   "Santiago Luna": "2004-08-06",
