@@ -6,13 +6,12 @@ UFC-only fighters when they make their debut. Rankings and rating artifacts are
 not touched.
 
 UPDATES:
-  fightersData.js  — records plus tr, asl, asp, asa, atl, atp and detail stats
+  fightersData.js  — records plus tr, asl, asp, asa, atl, atp, atd and detail stats
   fightersData.js  — adds new UFC-only entries for debuting fighters
   fightHistory.js  — rebuilt from source CSVs
 
 FILLS ONLY WHEN EMPTY (fighter_profiles.PROFILE_FILL_FIELDS):
   ag, ht, rh, st                      — from ufc_fighter_tott.csv (tale of the tape)
-  atd                                 — takedown defense, from the round stats
   A stored value is never overwritten; the integrity gate enforces it.
   fighter_profiles.json               — the tott join for roster names, read by
                                         scripts/generate-fighter-birthdates.mjs
@@ -462,7 +461,7 @@ def build_new_fighter_entry(name, record, fights):
     # prospectsData.js first (curated), then the tale of the tape for whatever
     # the prospect file leaves empty.
     fallback = dict(prospect_fallbacks.get(name, {}))
-    tott = profile_values(tott_profiles.get(name), None, TODAY)
+    tott = profile_values(tott_profiles.get(name), TODAY)
     for _k in ('ag', 'ht', 'rh', 'st'):
         if is_empty(fallback.get(_k)) and tott[_k] is not None:
             fallback[_k] = tott[_k]
@@ -551,6 +550,9 @@ def compute_stat_updates(name, fights):
         'sapm': sapm,
         'sdef': sdef,
         'ctrl': round2(total_ctrl / n_fights_stats) if n_fights_stats > 0 else None,
+        # Recomputed every run, like sdef. None (written as null, so the app
+        # uses its 0.60 default) when no opponent has attempted a takedown.
+        'atd': compute_td_defense(name),
         'hdpct': round2(total_head_landed / total_sig_landed) if total_sig_landed > 0 else None,
         'lgpct': round2(total_leg_landed / total_sig_landed) if total_sig_landed > 0 else None,
     }
@@ -585,14 +587,14 @@ RECORD_FIELDS = ['wi','lo','ws','ls','kow','sbw','dcw','dsl']
 # fight record a recomputed tb is an event-name heuristic, and repairing the
 # identity parser without this removal would have overwritten Sean O'Malley's
 # stored tb:4 with 0. Authoritative title provenance is correction 6.
-STAT_FIELDS = ['tr', 'asl', 'asp', 'asa', 'atl', 'atp', 'kd', 'sapm', 'sdef', 'ctrl', 'hdpct', 'lgpct']
+STAT_FIELDS = ['tr', 'asl', 'asp', 'asa', 'atl', 'atp', 'atd', 'kd', 'sapm', 'sdef', 'ctrl', 'hdpct', 'lgpct']
 # Fields whose stored value this updater must never rewrite, enforced below
 # regardless of what STAT_FIELDS happens to contain.
 PRESERVED_FIELDS = ('tb',)
 assert not (set(STAT_FIELDS) & set(PRESERVED_FIELDS)), \
     'a preserved field must not also be recomputed'
 
-_NEW_FIELDS = ['kd', 'sapm', 'sdef', 'ctrl', 'hdpct', 'lgpct']
+_NEW_FIELDS = ['kd', 'sapm', 'sdef', 'ctrl', 'hdpct', 'lgpct', 'atd']
 for _name in list(existing):
     _entry = existing[_name]
     _present = parse_object_fields(_entry)
@@ -629,8 +631,7 @@ for name, entry_str in existing.items():
 profile_fills = {}
 for i, (name, entry_str) in enumerate(existing.items()):
     current = {k: f.value for k, f in parse_object_fields(entry_str).items()}
-    atd_candidate = compute_td_defense(name) if is_empty(current.get('atd')) else None
-    fills = fill_updates(current, tott_profiles.get(name), atd_candidate, TODAY)
+    fills = fill_updates(current, tott_profiles.get(name), TODAY)
     if not fills:
         continue
     for field in fills:
