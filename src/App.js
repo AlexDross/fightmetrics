@@ -2995,10 +2995,15 @@ function UpcomingEventTab({
             } = mp;
             const isSelected = selectedLegIds.has(entry.id);
             const isOtherEvent = lockedEventName != null && entry.eventName !== lockedEventName;
-            // v3 entries: v2's opinion is the headline pick, C6 only prices it.
+            // v3 entries: the headline is the TRACKED side -- the frozen C6
+            // decision ROI grades (resolveFrozenPerformanceView) and Home shows.
+            // v2's own opinion is secondary context underneath.
             const isV3 = entry.gateVersion != null;
             const v2Pick = mp.v2Winner;
-            const c6Agrees = v2Pick === predictedWinner;
+            const tracked = resolveFrozenDecisionView(entry);
+            const trackedName = tracked?.winner ?? predictedWinner;
+            const trackedProb = tracked?.probability ?? winProb;
+            const v2Agrees = v2Pick === trackedName;
 
             return (
               <div key={entry.id} className={`bg-surface border ${tier.border} rounded-xl p-5`}>
@@ -3066,36 +3071,45 @@ function UpcomingEventTab({
                   )}
                 </div>
 
-                {/* Model Pick (v3: v2's opinion, with C6 agreement) */}
+                {/* Tracked side (v3: the frozen C6 decision, v2's opinion beneath) */}
                 {isV3 ? (
-                <div className="bg-surface-2/40 rounded-lg p-4 mb-3 flex items-baseline justify-between gap-3">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <p className="text-muted text-xs uppercase tracking-wider">v2 Opinion</p>
-                      <span
-                        title={`C6 (v2 blended with the no-vig market) picks ${predictedWinner} at ${(winProb * 100).toFixed(1)}%.`}
-                        className={`text-[11px] font-bold px-1.5 py-0.5 rounded-sm uppercase border ${
-                          c6Agrees
-                            ? 'text-secondary bg-surface-2 border-line-strong'
-                            : 'text-warn bg-warn/12 border-warn/30'
-                        }`}
-                      >
-                        {c6Agrees ? 'C6 agrees' : 'C6 disagrees'}
-                      </span>
+                <div className="bg-surface-2/40 rounded-lg p-4 mb-3">
+                  <div className="flex items-baseline justify-between gap-3">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <p className="text-muted text-xs uppercase tracking-wider">Tracking</p>
+                        {tracked && (
+                          <span
+                            title="The side ROI grades this fight on: C6, v2 blended with the no-vig market."
+                            className="text-[11px] font-bold text-warn bg-warn/12 border border-warn/30 px-1.5 py-0.5 rounded-sm uppercase"
+                          >
+                            C6
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-white font-black text-xl mt-1">{trackedName}</p>
                     </div>
-                    <p className="text-white font-black text-xl mt-1">{v2Pick}</p>
+                    <div className="text-right">
+                      <p className="text-good font-black text-lg">{(trackedProb * 100).toFixed(1)}%</p>
+                      <p className="text-muted text-xs mt-0.5">
+                        win prob{tracked?.fairLine ? ` · ${tracked.fairLine}` : ''}
+                      </p>
+                    </div>
                   </div>
-                  <div className="text-right">
-                    <p className="text-good font-black text-lg">{(mp.v2WinProb * 100).toFixed(1)}%</p>
-                    <p className="text-muted text-xs mt-0.5">win prob</p>
-                  </div>
+                  {hasV2 && v2Pick && (
+                    <p className={`text-xs mt-2 ${v2Agrees ? 'text-muted' : 'text-warn'}`}>
+                      {v2Agrees
+                        ? `v2 agrees · ${(mp.v2WinProb * 100).toFixed(1)}%`
+                        : `v2 favors ${v2Pick} · ${(mp.v2WinProb * 100).toFixed(1)}%`}
+                    </p>
+                  )}
                 </div>
                 ) : (
                 <div className="bg-surface-2/40 rounded-lg p-4 mb-3 flex items-baseline justify-between gap-3">
                   <div>
                     <div className="flex items-center gap-2">
                       <p className="text-muted text-xs uppercase tracking-wider">
-                        Model Pick
+                        {entry.decisionProbabilitySource === 'c6' ? 'Tracking' : 'Model Pick'}
                       </p>
                       {entry.decisionProbabilitySource === 'c6' ? (
                         <span

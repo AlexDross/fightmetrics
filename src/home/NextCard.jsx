@@ -59,6 +59,17 @@ export function frozenPick(entry) {
   return null;
 }
 
+/**
+ * Raw v2's own pick when it differs from the tracked pick, else null. Only a
+ * C6-tracked entry can disagree: for a v2-tracked one the two are the same.
+ */
+export function v2Dissent(entry, pick) {
+  if (!pick || pick.source !== 'C6' || entry.v2pA == null || entry.v2pB == null) return null;
+  const aWins = entry.v2pA >= entry.v2pB;
+  const name = aWins ? entry.fighterA : entry.fighterB;
+  return name === pick.name ? null : { name, prob: Math.max(entry.v2pA, entry.v2pB) };
+}
+
 const ACTION_TONE = { 'STRONG BET': 'good', BET: 'good', LEAN: 'warn' };
 const isBet = (action) => action === 'BET' || action === 'STRONG BET';
 
@@ -71,6 +82,7 @@ const formatOdds = (o) => {
 
 function FightRow({ entry }) {
   const pick = frozenPick(entry);
+  const dissent = v2Dissent(entry, pick);
   const action = entry.betAction || 'NO BET';
   const bet = isBet(action);
   const title = entry.boutContext?.isTitleBout;
@@ -104,13 +116,25 @@ function FightRow({ entry }) {
       <div className="col-start-1 text-sm sm:col-start-2 sm:row-start-1 sm:text-right">
         {pick ? (
           <>
-            <span className="text-muted text-xs mr-1.5">{pick.source}</span>
+            <span
+              className="text-muted text-xs mr-1.5"
+              title={pick.source === 'C6'
+                ? 'The side ROI grades this fight on: C6, v2 blended with the no-vig market.'
+                : 'The side ROI grades this fight on: the v2 model.'}
+            >
+              Tracking · {pick.source}
+            </span>
             <span className="font-semibold text-primary">{pick.name}</span>
             <span className="tabular text-secondary ml-1.5">{(pick.prob * 100).toFixed(1)}%</span>
             {pickOdds && <span className="tabular text-muted text-xs ml-1.5">{pickOdds}</span>}
           </>
         ) : (
           <span className="text-muted text-xs">No pick recorded</span>
+        )}
+        {dissent && (
+          <p className="text-xs text-warn mt-0.5">
+            v2 favors {dissent.name} <span className="tabular">{(dissent.prob * 100).toFixed(1)}%</span>
+          </p>
         )}
         {bet && entry.betRecommendedFighter && (
           <p className="text-xs text-good mt-0.5">
