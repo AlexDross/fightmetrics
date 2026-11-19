@@ -5505,7 +5505,9 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
               return (
             <div className="grid grid-cols-3 gap-3 mb-4">
               <div className="bg-surface-2/40 rounded-lg p-3">
-                <p className="text-muted text-xs">Model pick</p>
+                <p className="text-muted text-xs">
+                  {decision?.source === DECISION_SOURCE_C6 ? 'Will track · C6' : 'Model pick'}
+                </p>
                 <p className="text-white font-bold text-sm mt-1">
                   {savePick}
                 </p>
@@ -5737,12 +5739,19 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                     {/* ── ROW 1: Signal summary (Bet Rec column only when actionable) ── */}
                     <div className={`grid ${showBetRec ? 'grid-cols-3' : 'grid-cols-2'} gap-3`}>
 
-                      {/* Model Pick — always shown */}
+                      {/* Model Pick — always shown. Under C6 it is the side a
+                          save freezes as trackedSide and ROI grades, so it reads
+                          "Tracking", as on the Upcoming card and Home. */}
                       <div className={`border rounded-xl p-4 ${market.lowConviction && !isV3 ? 'bg-orange-950/10 border-orange-900' : 'bg-surface border-line-strong'}`}>
                         <div className="flex items-center gap-1.5 mb-2">
-                          <p className="text-muted text-xs font-semibold uppercase tracking-wider">Model Pick</p>
+                          <p className="text-muted text-xs font-semibold uppercase tracking-wider">
+                            {decision?.source === DECISION_SOURCE_C6 ? 'Tracking' : 'Model Pick'}
+                          </p>
                           {decision?.source === DECISION_SOURCE_C6 && (
-                            <span className="text-[11px] font-bold text-warn bg-warn/12 border border-warn/30 px-1.5 py-0.5 rounded-sm uppercase">
+                            <span
+                              title="The side ROI grades this fight on: C6, v2 blended with the no-vig market."
+                              className="text-[11px] font-bold text-warn bg-warn/12 border border-warn/30 px-1.5 py-0.5 rounded-sm uppercase"
+                            >
                               C6
                             </span>
                           )}
@@ -5755,8 +5764,9 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                         <p className="text-muted text-xs mt-0.5">Fair line: {pickFairLine}</p>
                       </div>
 
-                      {/* v3: v2's own opinion, so a C6 pick that only echoes the
-                          market is visible as such. Legacy: Value Signal. */}
+                      {/* v3: v2's own opinion beside the tracked side, so a C6
+                          pick that only echoes the market is visible as such.
+                          Legacy: Value Signal. */}
                       {isV3 ? (
                         <div className="border rounded-xl p-4 bg-surface border-line-strong">
                           <p className="text-muted text-xs font-semibold uppercase tracking-wider mb-2">v2 Opinion</p>
@@ -5765,7 +5775,7 @@ function MatchupSimulator({ allFighters, onSaveToUpcoming, onSaveToUpcomingAndOp
                               <p className="text-white font-black text-base leading-tight">{v2Pick.FIGHTER}</p>
                               <p className="text-secondary text-xs mt-1">{(v2PickProb * 100).toFixed(1)}% win prob</p>
                               <p className={`text-xs mt-0.5 font-semibold ${c6AgreesWithV2 ? 'text-secondary' : 'text-warn'}`}>
-                                {c6AgreesWithV2 ? 'C6 agrees' : 'C6 disagrees'}
+                                {c6AgreesWithV2 ? 'Agrees with tracked side' : 'Differs from tracked side'}
                               </p>
                             </>
                           ) : (
