@@ -203,34 +203,67 @@ export async function fetchBfoCardByFighter(name) {
   return { path, title, fights: parseBfoEvent(html) };
 }
 
-async function bfoCandidateEvents(entries) {
+// Fighter-page lookups allowed per card. Each costs a search plus a fighter
+// page, so a card BFO does not list at all gives up instead of searching
+// every fighter on it.
+const BFO_MAX_FIGHTER_LOOKUPS = 8;
+
+// The BFO event pages a card's entries are on. BFO sometimes splits one card
+// across pages (UFC 334: main card on one page, prelims on another), so this
+// keeps looking, from the first entry no fetched page lists yet, until every
+// entry is on some page or the lookup budget is spent.
+async function bfoPagesFor(entries) {
+  const pages = [];
   const seen = new Set();
-  for (const entry of entries.slice(0, 3)) {
+  const listed = (entry) => pages.some((p) => matchFight(p.fights, entry));
+  let lookups = 0;
+  for (const entry of entries) {
     for (const name of [entry.fighterA, entry.fighterB]) {
-      const events = await bfoFighterEvents(name);
-      const fresh = events.filter((e) => !seen.has(e));
-      fresh.forEach((e) => seen.add(e));
-      if (fresh.length) return fresh;
+      if (listed(entry) || lookups >= BFO_MAX_FIGHTER_LOOKUPS) break;
+      lookups += 1;
+      for (const path of await bfoFighterEvents(name)) {
+        if (seen.has(path)) continue;
+        seen.add(path);
+        pages.push({ path, fights: parseBfoEvent(await bfoGet(path)) });
+      }
     }
   }
-  return [];
+  return pages;
 }
 
-async function fetchFromBestFightOdds(eventName, eventDate, entries) {
-  // The event: the candidate covering at least half the entries (a past
-  // meeting of the same two fighters never covers the rest of the card).
-  let best = null;
-  for (const path of await bfoCandidateEvents(entries)) {
-    const fights = parseBfoEvent(await bfoGet(path));
-    const covered = entries.filter((e) => matchFight(fights, e)).length;
-    if (!best || covered > best.covered) best = { path, fights, covered };
+/**
+ * Bind entries to fights across one or more parsed BFO event pages.
+ *
+ * A page counts only when it lists at least two of the entries (one, for a
+ * one-entry card): a fighter's older event that happens to hold an earlier
+ * meeting of the same pair lists that one fight and nothing else on the card,
+ * so it is never mistaken for the close. Each entry takes its fight from the
+ * counted page listing the most entries. The card as a whole needs at least
+ * half its entries matched, as before.
+ *
+ * @param {Array<{path:string, fights:Array}>} pages parsed with parseBfoEvent
+ * @returns {{event:(object|null), lines:Map<string,{oddsA,oddsB,source}>, unmatched:string[]}}
+ */
+export function bindBfoPages(pages, entries) {
+  const minListed = Math.min(2, entries.length);
+  const counted = pages
+    .map((p) => ({ ...p, listed: entries.filter((e) => matchFight(p.fights, e)).length }))
+    .filter((p) => p.listed >= minListed)
+    .sort((a, b) => b.listed - a.listed);
+
+  const hits = new Map();
+  for (const entry of entries) {
+    for (const page of counted) {
+      const hit = matchFight(page.fights, entry);
+      if (hit) { hits.set(entry.id, { ...hit, path: page.path }); break; }
+    }
   }
-  if (!best || best.covered * 2 < entries.length) return { event: null, lines: new Map(), unmatched: entries.map((e) => e.id) };
+  if (hits.size * 2 < entries.length) return { event: null, lines: new Map(), unmatched: entries.map((e) => e.id) };
 
   const lines = new Map();
   const unmatched = [];
   for (const entry of entries) {
-    const hit = matchFight(best.fights, entry);
+    const hit = hits.get(entry.id);
     const offers = hit
       ? hit.fight.offers.map((o) => ({
           book: o.book, isPredictionMarket: o.isPredictionMarket,
@@ -241,7 +274,12 @@ async function fetchFromBestFightOdds(eventName, eventDate, entries) {
     if (line) lines.set(entry.id, { ...line, source: `${line.source} (bestfightodds)` });
     else unmatched.push(entry.id);
   }
-  return { event: { name: best.path, provider: 'bestfightodds.com' }, lines, unmatched };
+  const used = [...new Set([...hits.values()].map((h) => h.path))];
+  return { event: { name: used.join(' + '), provider: 'bestfightodds.com' }, lines, unmatched };
+}
+
+async function fetchFromBestFightOdds(eventName, eventDate, entries) {
+  return bindBfoPages(await bfoPagesFor(entries), entries);
 }
 
 /**

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { pickClosingLine, buildClosingRecord, closingLineValue } from '../closing.js';
-import { fetchClosingLines, parseBfoEvent } from '../../../../scripts/lib/closingOdds.mjs';
+import { fetchClosingLines, parseBfoEvent, bindBfoPages } from '../../../../scripts/lib/closingOdds.mjs';
 
 describe('pickClosingLine', () => {
   const offers = [
@@ -154,5 +154,76 @@ ${cellRow('Yana Santos', 2, 102, [[21, '+275'], [24, '+250']])}
     const r = await fetchClosingLines('UFC Fight Night: Moicano vs. Nolan', '2026-12-01', entries);
     expect(Number(r.lines.get('s1').oddsA)).toBeGreaterThan(0); // Yana is the underdog
     expect(Number(r.lines.get('s1').oddsB)).toBeLessThan(0);
+  });
+});
+
+// BFO sometimes splits one card across two event pages (UFC 334: main card on
+// one, prelims on the other). Each page here lists two of the four entries.
+const bfoPage = (rows) => `<title>UFC 999 | Best Fight Odds</title><table><thead><tr>
+<th scope="col" data-b="21"><a href="#">FanDuel</a></th><th scope="col" data-b="24"><a href="#">Caesars</a></th>
+</tr></thead><tbody>${rows.join('\n')}</tbody></table>`;
+const MAIN_PAGE = bfoPage([
+  cellRow('Ciryl Gane', 1, 1, [[21, '-215'], [24, '-205']]), cellRow('Josh Hokit', 2, 1, [[21, '+180'], [24, '+170']]),
+  cellRow('Amanda Nunes', 1, 2, [[21, '+134'], [24, '+125']]), cellRow('Kayla Harrison', 2, 2, [[21, '-158'], [24, '-150']]),
+]);
+const PRELIM_PAGE = bfoPage([
+  cellRow('Charles Radtke', 1, 3, [[21, '+110'], [24, '+105']]), cellRow('Stephen Thompson', 2, 3, [[21, '-130'], [24, '-125']]),
+  cellRow('Chris Duncan', 1, 4, [[21, '-190'], [24, '-185']]), cellRow('Drew Dober', 2, 4, [[21, '+150'], [24, '+145']]),
+]);
+const SPLIT_ENTRIES = [
+  { id: 'm1', fighterA: 'Ciryl Gane', fighterB: 'Josh Hokit' },
+  { id: 'm2', fighterA: 'Amanda Nunes', fighterB: 'Kayla Harrison' },
+  { id: 'p1', fighterA: 'Charles Radtke', fighterB: 'Stephen Thompson' },
+  { id: 'p2', fighterA: 'Chris Duncan', fighterB: 'Drew Dober' },
+];
+
+describe('bestfightodds.com card split across event pages', () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it('finds the second page from the first entry the first page misses', async () => {
+    const MAIN = new Set(['Ciryl Gane', 'Josh Hokit', 'Amanda Nunes', 'Kayla Harrison']);
+    const fetchMock = vi.fn(async (url) => {
+      const u = decodeURIComponent(String(url));
+      if (u.includes('fightodds.io')) return { ok: false, status: 403 };
+      let text;
+      if (u.includes('/search?query=')) {
+        const name = u.split('query=')[1];
+        text = `<a href="/fighters/${name.replace(/ /g, '-')}">${name}</a>`;
+      } else if (u.includes('/fighters/')) {
+        const name = u.split('/fighters/')[1].replace(/-/g, ' ');
+        text = `<a href="/events/${MAIN.has(name) ? 'ufc-999-main' : 'ufc-999-prelims'}">UFC 999</a>`;
+      } else {
+        text = u.endsWith('ufc-999-main') ? MAIN_PAGE : PRELIM_PAGE;
+      }
+      return { ok: true, text: async () => text };
+    });
+    vi.stubGlobal('fetch', fetchMock);
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const r = await fetchClosingLines('UFC 999', '2026-12-01', SPLIT_ENTRIES);
+    expect(r.unmatched).toEqual([]);
+    expect([...r.lines.keys()].sort()).toEqual(['m1', 'm2', 'p1', 'p2']);
+    expect(r.event.name).toBe('/events/ufc-999-main + /events/ufc-999-prelims');
+    expect(Number(r.lines.get('p1').oddsA)).toBeGreaterThan(0); // Radtke the underdog
+    // one lookup per page, not one per fighter on the card
+    expect(fetchMock.mock.calls.filter(([u]) => String(u).includes('/search')).length).toBe(2);
+  });
+
+  it('never takes an older single meeting of the same pair as the close', () => {
+    const OLD_MEETING = bfoPage([
+      cellRow('Chris Duncan', 1, 9, [[21, '+300'], [24, '+290']]), cellRow('Drew Dober', 2, 9, [[21, '-400'], [24, '-380']]),
+    ]);
+    const entries = SPLIT_ENTRIES.filter((e) => e.id !== 'p1');
+    const r = bindBfoPages([
+      { path: '/events/old', fights: parseBfoEvent(OLD_MEETING) },
+      { path: '/events/main', fights: parseBfoEvent(MAIN_PAGE) },
+    ], entries);
+    expect(r.event.name).toBe('/events/main');
+    expect(r.unmatched).toEqual(['p2']);
+  });
+
+  it('still needs half the card matched', () => {
+    const r = bindBfoPages([{ path: '/events/main', fights: parseBfoEvent(MAIN_PAGE) }],
+      [...SPLIT_ENTRIES, { id: 'x', fighterA: 'No One', fighterB: 'Some One' }]);
+    expect(r.event).toBeNull();
   });
 });

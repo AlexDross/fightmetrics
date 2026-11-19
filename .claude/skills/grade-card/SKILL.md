@@ -115,7 +115,9 @@ carried across untouched apart from the two result fields and `closing`.
 
 **Closing odds.** `apply` (and `--dry-run`) also fetches each fight's closing
 line — from the fightodds.io aggregator, falling back to bestfightodds.com's
-event page when fightodds.io refuses (it has answered 403 since 2026-10) — picks
+event page(s) when fightodds.io refuses (it has answered 403 since 2026-10;
+BFO sometimes splits a card across two pages, e.g. main card and prelims, and
+the lookup combines them) — picks
 Pinnacle first, then Circa, then the sportsbook median (prediction markets are
 never the close; they keep trading in-fight), binds it to fighter A/B by name,
 and stores it on the entry as `closing`. The entry's own `marketOdds` is the
