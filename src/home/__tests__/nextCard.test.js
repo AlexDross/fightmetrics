@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { eventDateLabel, frozenPick, pickNextEvent } from '../NextCard.jsx';
+import { eventDateLabel, frozenPick, pickNextEvent, v2Dissent } from '../NextCard.jsx';
 
 const fight = (over) => ({
   id: Math.random().toString(36).slice(2),
@@ -60,5 +60,20 @@ describe('frozenPick', () => {
 
   it('returns null when nothing was frozen', () => {
     expect(frozenPick(fight({}))).toBeNull();
+  });
+});
+
+describe('v2Dissent', () => {
+  it('names raw v2 when it favors the other side of a C6-tracked pick', () => {
+    const e = fight({ decisionProbabilitySource: 'c6', trackedSide: 'B', trackedProb: 0.531, v2pA: 0.644, v2pB: 0.356 });
+    expect(v2Dissent(e, frozenPick(e))).toEqual({ name: 'A', prob: 0.644 });
+  });
+
+  it('is null when v2 agrees, or when v2 is itself the tracked model', () => {
+    const agrees = fight({ decisionProbabilitySource: 'c6', trackedSide: 'A', trackedProb: 0.6, v2pA: 0.55, v2pB: 0.45 });
+    expect(v2Dissent(agrees, frozenPick(agrees))).toBeNull();
+    const v2 = fight({ v2pA: 0.42, v2pB: 0.58 });
+    expect(v2Dissent(v2, frozenPick(v2))).toBeNull();
+    expect(v2Dissent(fight({}), null)).toBeNull();
   });
 });

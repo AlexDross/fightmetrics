@@ -1,10 +1,10 @@
 // What the Upcoming card's "Market odds" box prints.
 //
-// The card's headline and its market box can be about different fighters: on a
-// v3 entry the headline is v2's opinion, while the saved price, EV and bet call
-// belong to the C6 side. Printing one bare price ("-230") under a headline
-// naming the other fighter read as that fighter's line. So the box names every
-// number it shows: both corners' prices, and which fighter the EV/edge is for.
+// The card's headline is the tracked side (on a v3 entry, the frozen C6
+// decision), but v2's opinion and the bet side can name the other fighter.
+// Printing one bare price ("-230") read as whichever fighter was nearest. So
+// the box names every number it shows: both corners' prices, and which
+// fighter the EV/edge is for.
 //
 // Display only: reads the frozen entry, never recomputes anything.
 
