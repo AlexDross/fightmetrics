@@ -7,8 +7,7 @@ ufcstats fighter page: FIGHTER, HEIGHT, WEIGHT, REACH, STANCE, DOB, URL.
 Two jobs:
   1. Seed a debuting fighter's age, height, reach and stance (prospectsData.js
      still wins where it has a value).
-  2. Backfill the same fields, plus takedown defense, on existing roster rows
-     WHERE THEY ARE EMPTY. A stored value is never overwritten: curated data
+  2. Backfill the same fields on existing roster rows WHERE THEY ARE EMPTY. A stored value is never overwritten: curated data
      and the hand-entered roster both outrank the scrape.
 
 Identity is by name only, and ufcstats has distinct fighters who share one
@@ -28,7 +27,13 @@ from datetime import date, datetime
 # Fields the backfill may fill. Every one of them is filled ONLY when the
 # stored value is missing, null or ''. update_fighters.py's integrity gate
 # enforces the same rule on the written roster.
-PROFILE_FILL_FIELDS = ('ag', 'ht', 'rh', 'st', 'atd')
+#
+# Takedown defense (atd) is NOT here. It is a career rate like sdef, so
+# update_fighters.py recomputes it from the round stats on every run. As a
+# fill-once field it froze at whatever value it first received (the April 2026
+# seed, or a debut-night 0) and drifted from ufcstats by 0.2+ for dozens of
+# active fighters.
+PROFILE_FILL_FIELDS = ('ag', 'ht', 'rh', 'st')
 
 _HEIGHT_RE = re.compile(r"^\s*(\d+)'\s*(\d+)\"\s*$")
 _INCHES_RE = re.compile(r'^\s*(\d+(?:\.\d+)?)"\s*$')
@@ -126,7 +131,7 @@ def is_empty(value):
     return value is None or value == ''
 
 
-def profile_values(profile, atd, today):
+def profile_values(profile, today):
     """The candidate value for each fillable field (None = nothing to offer)."""
     profile = profile or {}
     return {
@@ -134,11 +139,10 @@ def profile_values(profile, atd, today):
         'ht': profile.get('ht'),
         'rh': profile.get('rh'),
         'st': profile.get('st'),
-        'atd': atd,
     }
 
 
-def fill_updates(current, profile, atd, today):
+def fill_updates(current, profile, today):
     """Values to write onto a roster row: only for fields that are empty now.
 
     current: field name -> stored Python value, for the fields the row has
@@ -147,7 +151,7 @@ def fill_updates(current, profile, atd, today):
     value is non-empty, and never contains a None.
     """
     out = {}
-    for field, value in profile_values(profile, atd, today).items():
+    for field, value in profile_values(profile, today).items():
         if value is None:
             continue
         if is_empty(current.get(field)):

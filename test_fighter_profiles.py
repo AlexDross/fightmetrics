@@ -77,35 +77,38 @@ class FillOnlyEmpty(unittest.TestCase):
         self.profiles, _ = FP.load_tott_profiles([SHAHBAZYAN, FRYE], {})
 
     def test_fills_every_empty_field(self):
-        current = {'ag': None, 'ht': None, 'rh': None, 'st': ''}  # atd key absent
-        fills = FP.fill_updates(current, self.profiles['Leon Shahbazyan'], 0.5, TODAY)
-        self.assertEqual(fills, {'ag': 30, 'ht': 76.0, 'rh': 74.0, 'st': 'Orthodox', 'atd': 0.5})
+        current = {'ag': None, 'ht': None, 'rh': None}  # st key absent
+        fills = FP.fill_updates(current, self.profiles['Leon Shahbazyan'], TODAY)
+        self.assertEqual(fills, {'ag': 30, 'ht': 76.0, 'rh': 74.0, 'st': 'Orthodox'})
 
     def test_never_overwrites_a_stored_value(self):
-        current = {'ag': 29, 'ht': 75.0, 'rh': 0.0, 'st': 'Southpaw', 'atd': 0.0}
-        fills = FP.fill_updates(current, self.profiles['Leon Shahbazyan'], 0.9, TODAY)
+        current = {'ag': 29, 'ht': 75.0, 'rh': 0.0, 'st': 'Southpaw'}
+        fills = FP.fill_updates(current, self.profiles['Leon Shahbazyan'], TODAY)
         # 0 / 0.0 are stored values, not gaps.
         self.assertEqual(fills, {})
 
     def test_source_gaps_stay_gaps(self):
-        current = {'ag': None, 'ht': None, 'rh': None, 'st': '', 'atd': None}
-        fills = FP.fill_updates(current, self.profiles['Allen Frye Jr.'], None, TODAY)
+        current = {'ag': None, 'ht': None, 'rh': None, 'st': ''}
+        fills = FP.fill_updates(current, self.profiles['Allen Frye Jr.'], TODAY)
         self.assertEqual(fills, {'ag': 28})
         self.assertNotIn(None, fills.values())
 
-    def test_no_profile_still_offers_atd(self):
-        self.assertEqual(FP.fill_updates({'atd': None}, None, 0.75, TODAY), {'atd': 0.75})
+    def test_takedown_defense_is_not_a_fill_field(self):
+        # atd is a career rate recomputed every run by update_fighters.py; as a
+        # fill-once field it froze at its first value.
+        self.assertNotIn('atd', FP.PROFILE_FILL_FIELDS)
+        self.assertEqual(FP.fill_updates({'atd': None}, None, TODAY), {})
 
     def test_fill_fields_are_the_declared_set(self):
         current = dict.fromkeys(FP.PROFILE_FILL_FIELDS)
-        fills = FP.fill_updates(current, self.profiles['Leon Shahbazyan'], 0.5, TODAY)
+        fills = FP.fill_updates(current, self.profiles['Leon Shahbazyan'], TODAY)
         self.assertEqual(set(fills), set(FP.PROFILE_FILL_FIELDS))
 
     def test_round_trip_through_the_roster_grammar(self):
         """The updater's exact splice: append absent keys as null, then patch."""
-        entry = "{n:'Leon Shahbazyan',w:'Welterweight',ag:null,ht:null,rh:null,st:'',wi:0,lo:1}"
+        entry = "{n:'Leon Shahbazyan',w:'Welterweight',ag:null,ht:null,rh:null,wi:0,lo:1}"
         current = {k: f.value for k, f in P.parse_object_fields(entry).items()}
-        fills = FP.fill_updates(current, self.profiles['Leon Shahbazyan'], 0.5, TODAY)
+        fills = FP.fill_updates(current, self.profiles['Leon Shahbazyan'], TODAY)
         for field in fills:
             if field not in current:
                 entry = P.append_object_field(entry, field, 'null')
@@ -113,9 +116,8 @@ class FillOnlyEmpty(unittest.TestCase):
         out = P.parse_object_fields(entry)
         self.assertEqual(out['ht'].value, 76.0)
         self.assertEqual(out['st'].value, 'Orthodox')
-        self.assertEqual(out['atd'].value, 0.5)
         self.assertEqual(out['wi'].raw, '0')
-        self.assertEqual(list(out)[-1], 'atd')
+        self.assertEqual(list(out)[-1], 'st')
 
 
 class TakedownDefense(unittest.TestCase):
