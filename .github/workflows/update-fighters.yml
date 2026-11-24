@@ -72,6 +72,12 @@ jobs:
       - name: Test fighter profile backfill
         run: python test_fighter_profiles.py
 
+      # Two men sharing one ufcstats name (the Bruno Silvas) must stay two
+      # profiles. update_fighters.py and regen_elo.py also fail the run if a
+      # listed split bout stops matching the downloaded feed.
+      - name: Test same-name fighter splits
+        run: python test_name_splits.py
+
       - name: Run update_fighters.py
         run: python update_fighters.py
 

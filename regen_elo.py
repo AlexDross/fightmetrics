@@ -18,6 +18,8 @@ import json
 import math
 import pathlib
 import sys
+
+from name_splits import load_name_splits, require_all_matched, split_bout_label
 from collections import defaultdict
 from datetime import datetime
 
@@ -116,8 +118,18 @@ def build_elo(event_dates: dict):
     skipped_no_date = 0
     skipped_non_decisive = 0
 
+    # Same split update_fighters.py applies: two men sharing one ufcstats name
+    # must not share one rating. See name_splits.py.
+    name_splits = load_name_splits()
+    split_hits = set()
+
     with open(RESULTS_CSV, newline='', encoding='utf-8') as f:
         for row in csv.DictReader(f):
+            label, hit = split_bout_label(row.get('EVENT', ''), row.get('BOUT', ''), name_splits)
+            if hit is not None:
+                a, b = (n.strip() for n in row['BOUT'].split(' vs. ', 1))
+                split_hits.add((row['EVENT'].strip(), frozenset((a, b))))
+                row['BOUT'] = label
             outcome = row.get('OUTCOME', '').strip()
             if outcome not in ('W/L', 'L/W'):
                 skipped_non_decisive += 1
@@ -129,6 +141,7 @@ def build_elo(event_dates: dict):
                 continue
             rows.append((d, row))
 
+    require_all_matched(name_splits, split_hits, str(RESULTS_CSV))
     rows.sort(key=lambda x: x[0])
 
     ratings      = defaultdict(lambda: ELO_BASE)

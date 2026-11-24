@@ -327,7 +327,7 @@ export const FIGHTER_BIRTHDATES = Object.freeze({
   "Bruno Korea": "1991-06-28",
   "Bruno Lopes": "1993-04-24",
   "Bruno Santos": "1987-07-17",
-  "Bruno Silva": "1989-07-13",
+  "Bruno Silva": "1990-03-16",
   "Bruno Souza": "1996-03-07",
   "Bryan Barberena": "1989-05-03",
   "Bryan Battle": "1994-09-21",
