@@ -12,6 +12,11 @@
 //
 //   node scripts/enter_upcoming.mjs resolve <card.json>
 //   node scripts/enter_upcoming.mjs add <card.json> [--dry-run] [--no-c6]
+//
+// resolve and add refuse unless the model's data files match origin/main
+// (scripts/lib/dataFreshness.mjs): prices are frozen at save time, so a
+// checkout behind the scheduled data updates would freeze stale prices.
+// --allow-stale-data overrides it deliberately.
 //   node scripts/enter_upcoming.mjs remove --event "UFC 331" [--dry-run]
 //   node scripts/enter_upcoming.mjs list
 //   (any command) --files   use src/*Data.js even when Supabase is configured
@@ -111,6 +116,7 @@ const { validateBoutContext, fightersOutsideRosterDivision } = await import('../
 const { resolveFighterAge } = await import('../src/domain/age/index.js');
 const { isC6UserFacingActive } = await import('../src/domain/shadow/config.js');
 const { openStore } = await import('./lib/documentStore.mjs');
+const { freshnessErrors } = await import('./lib/dataFreshness.mjs');
 
 // One read of the store up front; every command works from this snapshot and
 // writes back with the revisions it read, so a concurrent change is refused
@@ -416,9 +422,10 @@ function checkRegime(rows) {
 }
 
 // ── Commands ────────────────────────────────────────────────────────────────
-function cmdResolve(cardPath, { allowRegimeChange }) {
+function cmdResolve(cardPath, { allowRegimeChange, allowStaleData }) {
   const { errors, warnings, rows } = buildCard(cardPath);
   if (!allowRegimeChange) errors.push(...checkRegime(rows));
+  errors.push(...freshnessErrors({ allowStaleData }));
   for (const w of warnings) console.log(`warn: ${w}`);
   if (errors.length) {
     console.error(`\n${errors.length} problem(s):`);
@@ -432,9 +439,11 @@ function cmdResolve(cardPath, { allowRegimeChange }) {
   );
 }
 
-async function cmdAdd(cardPath, { dryRun, allowRegimeChange }) {
+async function cmdAdd(cardPath, { dryRun, allowRegimeChange, allowStaleData }) {
   const { errors, warnings, rows, existingUpcoming } = buildCard(cardPath);
   if (!allowRegimeChange) errors.push(...checkRegime(rows));
+  // Prices are frozen at save time, so they must come from the published data.
+  errors.push(...freshnessErrors({ allowStaleData }));
   for (const w of warnings) console.log(`warn: ${w}`);
   if (errors.length) {
     console.error(`\nRefusing to write -- ${errors.length} problem(s):`);
@@ -508,10 +517,11 @@ const args = rest.filter((a) => !a.startsWith('--'));
 
 const usage =
   'usage: enter_upcoming.mjs resolve <card.json> [--no-c6] | add <card.json> [--dry-run] [--no-c6] ' +
-  '[--allow-regime-change] | remove --event "<name>" [--dry-run] | list   (add --files to use src/*Data.js)';
+  '[--allow-regime-change] [--allow-stale-data] | remove --event "<name>" [--dry-run] | list   (add --files to use src/*Data.js)';
 const opts = {
   dryRun: flags.has('--dry-run'),
   allowRegimeChange: flags.has('--allow-regime-change'),
+  allowStaleData: flags.has('--allow-stale-data'),
 };
 if (cmd === 'list') cmdList();
 else if (cmd === 'remove') {

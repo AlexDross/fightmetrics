@@ -78,6 +78,22 @@ node scripts/fm-store.mjs whoami
   `src/upcomingData.js` (the pre-database workflow). Say so: that changes only
   the local snapshot, not the live site.
 
+**Price from current fighter data.** Every probability is frozen at save
+time, and the scheduled workflows commit fresh fighter data and rankings to
+`origin/main` after each card. Work from an up-to-date main:
+
+```bash
+git switch main && git pull --ff-only
+```
+
+`resolve` and `add` enforce this themselves (`scripts/lib/dataFreshness.mjs`):
+they fetch `origin/main` and **refuse** if any model data file
+(`src/fightersData.js`, `fightHistory.js`, `eloModule.js`, `cardioModule.js`,
+`fighterBirthdates.js`, `rankingsData.js`, `rankHistory.js`, `prospectsData.js`,
+`sourceManifest.js`) differs from it, or if origin cannot be reached. A branch
+cut before the last data update fails this. `--allow-stale-data` overrides it;
+use it only when the user explicitly asks to price from that data.
+
 Then see what is already there, so you do not re-enter a card:
 
 ```bash
