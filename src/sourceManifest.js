@@ -17,9 +17,9 @@
 // measured coverage is the freshness signal there instead.
 
 export const SOURCE_MANIFEST = {
-  "manifestGeneratedAt": "2026-11-24T01:31:30Z",
+  "manifestGeneratedAt": "2026-11-25T01:59:37Z",
   "generatorScript": "generate_source_manifest.py",
-  "lastGenerationScope": "full",
+  "lastGenerationScope": "rankings",
   "methodologyRef": "research/source_integrity_audit.md",
   "modules": {
     "fightHistory": {
@@ -116,9 +116,9 @@ export const SOURCE_MANIFEST = {
       "feedsV2": false,
       "inProductionBundle": true,
       "note": "Current official rankings feed fighter-profile/UI rank badges only. Runtime artifact: this is the only rankings file in the production dependency graph. Historical series live in the separate rankingsHistory module below.",
-      "generatedAt": "2026-11-18T00:42:30Z",
-      "maxObservedEventDate": "2026-11-17",
-      "contentHash": "64ee63ab3538d434a033dabb8961245bb6b654ebecce35cad1e0b1f2044b5867",
+      "generatedAt": "2026-11-25T01:59:36Z",
+      "maxObservedEventDate": "2026-11-24",
+      "contentHash": "6c03c60b23c4b65fb0c70299ec0d52fad55b8c3b674dec2e1027e289c0c53c86",
       "officialSnapshots": [
         "2026-08-01-meta.json",
         "2026-08-04-media.json",
@@ -133,9 +133,11 @@ export const SOURCE_MANIFEST = {
         "2026-11-07-meta.json",
         "2026-11-10-media.json",
         "2026-11-14-meta.json",
-        "2026-11-17-media.json"
+        "2026-11-17-media.json",
+        "2026-11-21-meta.json",
+        "2026-11-24-media.json"
       ],
-      "generatorVersion": "scripts/update_rankings.py @ 8ad5ba4dc7a3a4ee9fd017e6aa9b1a7a1801846d",
+      "generatorVersion": "scripts/update_rankings.py @ a2bb2de73c5691ea1caa3f16b29cfea41540e630",
       "verificationMethod": "Read directly from the generated artifacts and the committed history cache, all produced by scripts/update_rankings.py and regenerating byte-identically from the same inputs. upstreamContentSha256 is the SHA-256 of the Kaggle CSV the cache was built from. No git commit date, file mtime, or header comment is consulted, and a missing artifact, cache or snapshot set is a hard failure rather than a silent fallback."
     },
     "rankingsHistory": {
@@ -143,14 +145,14 @@ export const SOURCE_MANIFEST = {
       "feedsV2": false,
       "inProductionBundle": false,
       "note": "Historical divisional rankings. RESEARCH ARTIFACT: no runtime consumer and no model consumer -- neither the deprecated v1 engine nor the frozen 16-feature MODEL_V2. Kept out of the browser bundle; enforced by src/domain/rankings/__tests__/boundary.test.js (import graph) and scripts/verify-bundle.mjs (emitted assets).",
-      "generatedAt": "2026-11-18T00:42:30Z",
-      "maxObservedEventDate": "2026-11-17",
-      "contentHash": "b8293c368d62f964a17b8dafb764335c65dc6232344608de348751f6ddfcb7ba",
+      "generatedAt": "2026-11-25T01:59:36Z",
+      "maxObservedEventDate": "2026-11-24",
+      "contentHash": "430515916ca7503b229a928320c589f9b4aa157f85dd282fb11130f674767018",
       "historyCacheSha256": "4f245240e2b53ee088d82f861aa0a718aef9f62bf15d62eb434d4628b3b6b3ad",
       "upstreamContentSha256": "2d27b34e64372520e9170cc30f1d1c59e795d046b6726de89db95b9535db9858",
       "upstreamVersion": 49,
       "historyUsedThrough": "2026-06-18",
-      "generatorVersion": "scripts/update_rankings.py @ 8ad5ba4dc7a3a4ee9fd017e6aa9b1a7a1801846d",
+      "generatorVersion": "scripts/update_rankings.py @ a2bb2de73c5691ea1caa3f16b29cfea41540e630",
       "verificationMethod": "Read directly from the generated artifacts and the committed history cache, all produced by scripts/update_rankings.py and regenerating byte-identically from the same inputs. upstreamContentSha256 is the SHA-256 of the Kaggle CSV the cache was built from. No git commit date, file mtime, or header comment is consulted, and a missing artifact, cache or snapshot set is a hard failure rather than a silent fallback."
     }
   }
