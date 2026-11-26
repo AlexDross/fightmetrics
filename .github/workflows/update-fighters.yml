@@ -1,8 +1,13 @@
 name: Update Fighters JSON
 
 on:
+  # Greco1899 refreshes on Sundays at ~18:00 UTC (sometimes mid-week too).
+  # The Sunday run picks up Saturday's card the same day; GitHub often starts
+  # scheduled jobs hours late, so Monday stays as the fallback and Thursday
+  # catches mid-week upstream refreshes.
   schedule:
-    - cron: '0 14 * * 1'   # Monday  14:00 UTC
+    - cron: '30 19 * * 0'  # Sunday   19:30 UTC
+    - cron: '0 14 * * 1'   # Monday   14:00 UTC
     - cron: '0 14 * * 4'   # Thursday 14:00 UTC
   workflow_dispatch:
 
@@ -38,6 +43,21 @@ jobs:
           cp scrape_ufc_stats-main/upcoming.csv . 2>/dev/null || true
           echo "✅  CSVs downloaded"
           echo "fight_stats rows: $(wc -l < ufc_fight_stats.csv)"
+
+      # A stale upstream used to look like a quiet week: identical artifacts,
+      # "No changes", green check. Fail instead, so a missing card is noticed
+      # rather than left out of the model. For a scheduled UFC break, re-run
+      # manually with FRESHNESS_MAX_EVENT_AGE_DAYS raised (repo variable).
+      - name: Test data-freshness guard
+        run: python test_data_freshness.py
+
+      - name: Check source data is fresh
+        env:
+          FRESHNESS_MAX_EVENT_AGE_DAYS: ${{ vars.FRESHNESS_MAX_EVENT_AGE_DAYS }}
+        run: >
+          python check_data_freshness.py --archive main.zip
+          --events ufc_event_details.csv --results ufc_fight_results.csv
+          --history src/fightHistory.js
 
       # Guards the undated-event handling BEFORE the updater runs, so a
       # regression fails fast and loudly instead of resurfacing as
