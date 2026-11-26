@@ -1,0 +1,56 @@
+{
+  "_comment": "Distinct UFC fighters who share one ufcstats name. Every input row is keyed by name, so without this their fights merge into one profile. Each bout listed here is rewritten to the split-off name before any record, stat, history or Elo is computed. Key bouts by event + opponent, never by weight class (the per-round stats and fight details carry none).",
+  "splits": [
+    {
+      "name": "Bruno Silva",
+      "as": "Bruno Silva (Middleweight)",
+      "note": "Bruno 'Blindado' Silva, middleweight, b. 1989-07-13. The roster's Bruno Silva is the flyweight 'Bulldog' (b. 1990-03-16).",
+      "bouts": [
+        {
+          "event": "UFC 315: Muhammad vs. Della Maddalena",
+          "opponent": "Marc-Andre Barriault"
+        },
+        {
+          "event": "UFC 308: Topuria vs. Holloway",
+          "opponent": "Ismail Naurdiev"
+        },
+        {
+          "event": "UFC Fight Night: Blanchfield vs. Fiorot",
+          "opponent": "Chris Weidman"
+        },
+        {
+          "event": "UFC 294: Makhachev vs. Volkanovski 2",
+          "opponent": "Shara Magomedov"
+        },
+        {
+          "event": "UFC Fight Night: Emmett vs. Topuria",
+          "opponent": "Brendan Allen"
+        },
+        {
+          "event": "UFC Fight Night: Pavlovich vs. Blaydes",
+          "opponent": "Brad Tavares"
+        },
+        {
+          "event": "UFC Fight Night: Vera vs. Cruz",
+          "opponent": "Gerald Meerschaert"
+        },
+        {
+          "event": "UFC Fight Night: Santos vs. Ankalaev",
+          "opponent": "Alex Pereira"
+        },
+        {
+          "event": "UFC 269: Oliveira vs. Poirier",
+          "opponent": "Jordan Wright"
+        },
+        {
+          "event": "UFC Fight Night: Ladd vs. Dumont",
+          "opponent": "Andrew Sanchez"
+        },
+        {
+          "event": "UFC Fight Night: Jung vs. Ige",
+          "opponent": "Wellington Turman"
+        }
+      ]
+    }
+  ]
+}

@@ -41,6 +41,7 @@ from fight_event_dates import (
     is_dated, normalize_date,
 )
 from fight_data_integrity import bout_division, canonicalize_aggregate_inputs, load_required_csv
+from name_splits import apply_name_splits, load_name_splits, require_all_matched
 from fighter_profiles import (
     PROFILE_FILL_FIELDS, fill_updates, is_empty, profile_values,
     profiles_artifact, read_tott_csv, td_defense,
@@ -223,6 +224,17 @@ print(f"  Tale of the tape: {len(tott_profiles)} fighters, "
 event_dates = dict(zip(events_df['EVENT'].str.strip(), events_df['DATE'].apply(parse_date)))
 results_df['EVENT'] = results_df['EVENT'].str.strip()
 results_df['BOUT']  = results_df['BOUT'].str.strip() if 'BOUT' in results_df.columns else ''
+
+# Distinct fighters who share one ufcstats name (two Bruno Silvas). Rewritten in
+# all three frames BEFORE any record, stat or history is built, and every listed
+# bout must be found in the results feed. See name_splits.py.
+_name_splits = load_name_splits()
+if _name_splits:
+    _split_hits = apply_name_splits(results_df, _name_splits)
+    require_all_matched(_name_splits, _split_hits, 'ufc_fight_results.csv')
+    apply_name_splits(details_df, _name_splits)
+    apply_name_splits(stats_df, _name_splits, fighter_column='FIGHTER')
+    print(f"  ✔ name splits: {len(_split_hits)} bouts reassigned")
 
 # ─── Undated events ───────────────────────────────────────────────────────────
 # Some events in ufc_fight_results.csv have no row in ufc_event_details.csv, so
